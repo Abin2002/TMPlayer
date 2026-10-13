@@ -64,7 +64,7 @@ fun rememberMeta(fileName: String, caption: String?, showOnly: Boolean = false):
 /** [rememberMeta] for a Telegram video: its file name, else its title, and its caption. */
 @Composable
 fun rememberMeta(item: MediaItem, showOnly: Boolean = false): MetaInfo? =
-    rememberMeta(item.fileName.ifBlank { item.title }, item.caption, showOnly)
+    rememberMeta(item.nameForParsing, item.caption, showOnly)
 
 /** The picture at [url], once it is on the disk and decoded; nothing until then. */
 @Composable

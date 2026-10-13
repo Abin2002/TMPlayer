@@ -22,8 +22,11 @@ sealed interface VideoChange {
     /** A message whose content changed and is now a video; the new version has to be read again. */
     data class Edited(override val chatId: Long, val messageId: Long) : VideoChange
 
-    /** Messages deleted for good. Whether they were videos is not known, so a listing checks its own. */
-    data class Removed(override val chatId: Long, val messageIds: Set<Long>) : VideoChange
+    /**
+     * Messages deleted for good, or [byEdit] edited into something that is not a video. Whether
+     * they were videos is not known, so a listing checks its own.
+     */
+    data class Removed(override val chatId: Long, val messageIds: Set<Long>, val byEdit: Boolean = false) : VideoChange
 }
 
 /** What changed in one chat over one window, with the window's contradictions already settled. */

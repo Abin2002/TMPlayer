@@ -491,7 +491,7 @@ private fun promoVideoSearch(): VideoSearchSource {
         }
         VideoSearchSource { query, cursor ->
             delay(PROMO_SEARCH_WAIT_MS)
-            val hits = Fuzzy.rank(pool, query) { it.fileName.ifBlank { it.title } }
+            val hits = Fuzzy.rank(pool, query) { it.searchText }
             val start = cursor.videoOffset.toIntOrNull() ?: 0
             val page = hits.drop(start).take(PROMO_SEARCH_PAGE)
             val next = start + page.size

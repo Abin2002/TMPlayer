@@ -294,7 +294,7 @@ private fun TitleBlock(
     progress: Boolean = true,
 ) {
     val s = LocalStrings.current
-    val parsed = remember(item) { MediaName.parse(item.fileName.ifBlank { item.title }, item.caption) }
+    val parsed = remember(item) { MediaName.parse(item.nameForParsing, item.caption) }
     val facts = remember(item) { MediaFacts.of(item) }
     val heading = meta?.title?.takeIf { it.isNotBlank() }
         ?: parsed.title.ifBlank { item.title }.let { if (' ' in it) it else it.replace(JOINERS, " ") }

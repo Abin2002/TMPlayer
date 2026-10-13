@@ -58,7 +58,7 @@ object EpisodeNeighbours {
             .filterIsInstance<ShelfEntry.Show>()
             .map { it.series }
             .firstOrNull { series -> series.episodes.any { holds(it, current) } }
-            ?: return EpisodeSteps(current = tagOf(current))
+            ?: return LessonSteps.around(current, all) ?: EpisodeSteps(current = tagOf(current))
         val episodes = show.episodes
         val at = episodes.indexOfFirst { holds(it, current) }
         val before = episodes.getOrNull(at - 1)
@@ -83,8 +83,11 @@ object EpisodeNeighbours {
     fun showOf(item: MediaItem): String? {
         tagOf(item)?.show?.takeIf { it.isNotBlank() }?.let { return it }
         val caption = item.caption.lineSequence().firstOrNull { it.isNotBlank() }
-        return listOfNotNull(item.fileName.ifBlank { item.title }.ifBlank { null }, caption)
+        return listOfNotNull(item.nameForParsing.ifBlank { null }, caption)
             .firstNotNullOfOrNull { MediaName.looseEpisode(it) }?.title?.takeIf { it.isNotBlank() }
+            // Not a show, but a numbered course: "Lecture 5", "Part 3", "Day 14". The search is for
+            // the course's name, and empty when there is none, which lists the chat plainly.
+            ?: LessonSteps.lessonOf(item)?.searchFor
     }
 
     /**
@@ -104,7 +107,7 @@ object EpisodeNeighbours {
      */
     fun nameOf(item: MediaItem): String? {
         val caption = item.caption.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
-        return listOfNotNull(item.fileName.ifBlank { item.title }.ifBlank { null }, caption)
+        return listOfNotNull(item.nameForParsing.ifBlank { null }, caption)
             .firstNotNullOfOrNull { MediaName.episodeName(it) }
     }
 
@@ -112,4 +115,81 @@ object EpisodeNeighbours {
 
     private fun tag(episode: SeriesEpisode, item: MediaItem, show: String) =
         EpisodeTag(episode.code, nameOf(item), show, episode.season, episode.episode)
+}
+
+/**
+ * Study videos and other numbered runs that are not television: "Lecture 5", "Lec-05", "Lesson 4",
+ * "Class 7", "Part 3", "Chapter 2", "Module 6", "Day 14", "Session 9", "Video 10".
+ *
+ * Kept apart from [MediaName]'s episode reading on purpose. Taught there, "Class 12" would make
+ * every grade-twelve physics video an episode and fill the Series view with courses. Here it is
+ * only the player's question, what comes next, asked once nothing reads as a show.
+ *
+ * The number read is the last one in the name, since that is the finest step: "Physics Class 12
+ * Chapter 3 Lecture 2" is lecture 2, and its neighbours are lectures 1 and 3 of the same chapter.
+ * Everything before it is the course, and a neighbour must share it word for word, or lecture 3 of
+ * one chapter would follow lecture 2 of another. A name with no lesson word in it reads nothing.
+ */
+object LessonSteps {
+
+    /** One video's place in a run: the course before the number, the word, the number. */
+    data class Lesson(val course: String, val word: String, val number: Int, val name: String?) {
+        /** What to search the chat for to find the rest of the run: the course, as written. */
+        val searchFor: String get() = course
+        val code: String get() = "${word.replaceFirstChar { it.uppercase() }} $number"
+    }
+
+    fun lessonOf(item: MediaItem): Lesson? {
+        val caption = item.caption.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
+        return listOfNotNull(item.nameForParsing.ifBlank { null }, caption).firstNotNullOfOrNull(::read)
+    }
+
+    /** The lessons either side of [current] among [items], or null when it is not one. */
+    fun around(current: MediaItem, items: List<MediaItem>): EpisodeSteps? {
+        val here = lessonOf(current) ?: return null
+        val run = items.mapNotNull { item -> lessonOf(item)?.let { item to it } }
+            .filter { (_, lesson) -> lesson.word == here.word && key(lesson.course) == key(here.course) }
+        // The nearest number either side, not exactly one more: a run with a lecture missing still
+        // steps on. Of two copies of one lecture, the newest post.
+        val previous = run.filter { it.second.number < here.number }
+            .maxWithOrNull(compareBy({ it.second.number }, { it.first.messageId }))
+        val next = run.filter { it.second.number > here.number }
+            .minWithOrNull(compareBy<Pair<MediaItem, Lesson>> { it.second.number }.thenByDescending { it.first.messageId })
+        if (previous == null && next == null) return null
+        fun tag(lesson: Lesson) = EpisodeTag(lesson.code, lesson.name, lesson.course, 1, lesson.number)
+        return EpisodeSteps(
+            previous = previous?.first,
+            next = next?.first,
+            current = tag(here),
+            previousTag = previous?.second?.let(::tag),
+            nextTag = next?.second?.let(::tag),
+        )
+    }
+
+    internal fun read(text: String): Lesson? {
+        val clean = text.substringBeforeLast('.').takeIf { '.' in text && text.substringAfterLast('.').length in 2..4 }
+            ?: text
+        val spaced = clean.replace(SEPARATORS, " ").replace(SPACES, " ").trim()
+        val match = LESSON.findAll(spaced).lastOrNull() ?: return null
+        val number = match.groupValues[2].toIntOrNull() ?: return null
+        val course = spaced.substring(0, match.range.first).trim().trimEnd('-', ':', '|', ',').trim()
+        val name = spaced.substring(match.range.last + 1).trim().trimStart('-', ':', '|', ',', '.').trim()
+            .takeIf { it.isNotEmpty() && it.any(Char::isLetter) }
+        return Lesson(course, match.groupValues[1].lowercase().let { WORDS[it] ?: it }, number, name)
+    }
+
+    private fun key(course: String) = course.lowercase().replace(NOT_WORD, "")
+
+    private val SEPARATORS = Regex("""[._]+""")
+    private val SPACES = Regex("""\s+""")
+    private val NOT_WORD = Regex("""[^\p{L}\p{N}]+""")
+    private val LESSON = Regex(
+        """\b(lecture|lec|lesson|class|part|pt|chapter|ch|module|mod|day|session|unit|video|vid|tutorial|tut|week)[\s#:-]*0*(\d{1,3})(?!\d)""",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /** Short forms read as the word they stand for, so "Lec 4" and "Lecture 5" are one run. */
+    private val WORDS = mapOf(
+        "lec" to "lecture", "pt" to "part", "ch" to "chapter", "mod" to "module", "vid" to "video", "tut" to "tutorial",
+    )
 }

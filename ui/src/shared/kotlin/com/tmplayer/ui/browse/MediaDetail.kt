@@ -176,7 +176,7 @@ fun MediaDetailPanel(
     onOpenItem: ((MediaItem) -> Unit)? = null,
 ) {
     val s = LocalStrings.current
-    val parsed = remember(item) { MediaName.parse(item.fileName.ifBlank { item.title }, item.caption) }
+    val parsed = remember(item) { MediaName.parse(item.nameForParsing, item.caption) }
     val facts = remember(item) { MediaFacts.of(item) }
     val meta = rememberMeta(item)
     // "small-shelf-part-1" reads as a title once its joiners are spaces; a name with spaces in it

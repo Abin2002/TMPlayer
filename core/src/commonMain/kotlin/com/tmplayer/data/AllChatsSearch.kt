@@ -89,7 +89,7 @@ object AllChatsSearch {
      * as Telegram gave it; a page for the [fallbackQuery] is screened against the whole query.
      */
     fun keep(items: List<MediaItem>, query: String, fallback: Boolean): List<MediaItem> =
-        if (!fallback) items else items.filter { Fuzzy.score(it.fileName.ifBlank { it.title }, query) > 0 }
+        if (!fallback) items else items.filter { Fuzzy.score(it.searchText, query) > 0 }
 
     /** Both halves together, for the screen. */
     fun split(

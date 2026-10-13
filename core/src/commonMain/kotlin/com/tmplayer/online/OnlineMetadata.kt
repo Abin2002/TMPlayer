@@ -491,7 +491,7 @@ class OnlineMetadata(
         val asked = HashMap<String, MetaInfo?>()
         val best = LinkedHashMap<String, Pair<KnownTitle, Int>>()
         for (item in items) {
-            val full = MetaQuery.of(item.fileName.ifBlank { item.title }, item.caption) ?: continue
+            val full = MetaQuery.of(item.nameForParsing, item.caption) ?: continue
             val show = full.showOnly()
             val cacheKey = show.cacheKey(lang)
             val info = if (cacheKey in asked) asked[cacheKey] else cachedMatch(show).also { asked[cacheKey] = it }

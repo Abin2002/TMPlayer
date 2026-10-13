@@ -140,6 +140,7 @@ import com.tmplayer.data.FormFactor
 import com.tmplayer.data.LocalDownloads
 import com.tmplayer.data.MediaFeedEntry
 import com.tmplayer.data.MediaItem
+import com.tmplayer.data.MediaMapper
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.SettingsStore
@@ -208,7 +209,9 @@ private class MediaListViewModelFactory(
             minSize,
             maxSize,
             onSearched = { settings.addRecentSearch(it) },
-        ) { LocalDownloads.presentIds(settings) } as T
+            downloadedIds = { LocalDownloads.presentIds(settings) },
+            topicMemory = settings.topicMemory(),
+        ) as T
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -264,6 +267,7 @@ fun MediaGridScreen(
         .collectAsStateWithLifecycle(initialValue = 0)
     LaunchedEffect(queueSize) { viewModel.refreshLocalAvailability() }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val topicBar by viewModel.topics.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     var query by remember { mutableStateOf("") }
     val recentStore = remember(context) { SettingsStore(context) }
@@ -431,6 +435,7 @@ fun MediaGridScreen(
             }
             // Every file on its own, episodes included: a chat lists what was posted, one by one.
             val shelf = remember(list.items) { list.items.map { ShelfEntry.File(it) } }
+            val repeatedCaptions = remember(list.items) { MediaMapper.repeatedCaptionLines(list.items) }
             val feed = remember(shelf, list.sponsored) {
                 placeSponsored(shelf, list.sponsored)
             }
@@ -577,6 +582,7 @@ fun MediaGridScreen(
                                     val item = shelved.item
                                     MediaRow(
                                         item = item,
+                                        captionLine = MediaMapper.captionLine(item, repeatedCaptions),
                                         watched = watchProgress[
                                             SettingsStore.progressKey(item.chatId, item.messageId),
                                         ],
@@ -746,6 +752,9 @@ fun MediaGridScreen(
             onRefresh = refresh,
             recentSearches = recentSearches,
             onClearRecent = clearRecent,
+            topicTabs = topicBar?.let { bar ->
+                { TopicTabs(bar, viewModel::selectTopic, Modifier.padding(vertical = 6.dp), edge = edge) }
+            },
             selectionBar = if (!selecting) null else {
                 {
                     SelectionBar(
@@ -803,6 +812,11 @@ fun MediaGridScreen(
                     recentSearches = recentSearches,
                     onClearRecent = clearRecent,
                 )
+            }
+            // Under the heading and over the grid, so Up from the first row of tiles reaches it.
+            // Not while videos are being ticked: a pick would throw the ticked ones away.
+            topicBar?.let { bar ->
+                if (!selecting) TopicTabs(bar, viewModel::selectTopic, Modifier.padding(bottom = 12.dp), edge = edge)
             }
             listing()
         }
@@ -863,6 +877,8 @@ internal fun TouchMediaScaffold(
     /** Offered as chips while the search is open and still empty. */
     recentSearches: List<String> = emptyList(),
     onClearRecent: () -> Unit = {},
+    /** The topic row of a group with topics, under the bar. Null for every other chat. */
+    topicTabs: (@Composable () -> Unit)? = null,
     /** Opens with the search already showing, for the screenshot fixture. */
     startSearching: Boolean = false,
     /**
@@ -993,6 +1009,7 @@ internal fun TouchMediaScaffold(
                     onClear = onClearRecent,
                 )
             }
+            if (selectionBar == null) topicTabs?.invoke()
             Box(Modifier.fillMaxSize()) { content() }
         }
     }
@@ -1714,6 +1731,8 @@ private fun MediaRow(
     onLongClick: (() -> Unit)? = null,
     /** As on the tile: ticked, unticked, or `null` outside a selection entirely. */
     selected: Boolean? = null,
+    /** The caption's line worth showing under the title, see [MediaMapper.captionLine]. */
+    captionLine: String? = null,
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -1770,6 +1789,17 @@ private fun MediaRow(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                // What the poster wrote under it, when that is more than the title already says:
+                // in a chat of camera files, the caption is the only thing telling two rows apart.
+                if (captionLine != null) {
+                    Text(
+                        captionLine,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Tone.muted,
+                        maxLines = if (touch) 1 else 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 MetaLine(item, watched, finished = finished)
             }
         }

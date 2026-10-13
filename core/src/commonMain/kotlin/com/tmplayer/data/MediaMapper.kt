@@ -64,6 +64,12 @@ data class MediaItem(
      * that is the only copy, and for an episode, whose copies live on its [SeriesEpisode].
      */
     val versions: List<MediaItem> = emptyList(),
+    /**
+     * The forum topic the post is in, for a group that has topics turned on, or 0. Lets a topic's
+     * listing tell its own live posts from the rest of the group's, and the player keep the next
+     * episode inside the topic the viewer was browsing.
+     */
+    val topicId: Int = 0,
 ) {
     /** This copy with the same [versions] list, for moving from one version to another. */
     fun asVersion(of: MediaItem): MediaItem = if (of.versions.isEmpty()) this else copy(versions = of.versions)
@@ -119,6 +125,23 @@ data class MediaItem(
 
     val id: String get() = "$chatId:$messageId"
 
+    /**
+     * The name to read a show, an episode or a year out of: the file's own, unless a camera or
+     * Telegram made it up, in which case the title, which is then the caption's first line.
+     */
+    val nameForParsing: String by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        if (fileName.isBlank() || MediaMapper.isGenericName(fileName)) title else fileName
+    }
+
+    /**
+     * Everything a search inside a chat is matched against: Telegram finds a video by its caption
+     * as well as by its file name, so ranking by the name alone threw away every video it found
+     * through the words under it.
+     */
+    val searchText: String by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        listOf(fileName, title, caption).filter { it.isNotBlank() }.distinct().joinToString("\n")
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is MediaItem) return false
@@ -138,6 +161,7 @@ data class MediaItem(
             caption == other.caption &&
             width == other.width &&
             height == other.height &&
+            topicId == other.topicId &&
             miniThumbnail.contentEquals(other.miniThumbnail)
     }
 
@@ -158,6 +182,7 @@ data class MediaItem(
         result = 31 * result + caption.hashCode()
         result = 31 * result + width
         result = 31 * result + height
+        result = 31 * result + topicId
         result = 31 * result + (miniThumbnail?.contentHashCode() ?: 0)
         return result
     }
@@ -200,13 +225,38 @@ object MediaMapper {
      */
     fun isVideoContent(content: dev.g000sha256.tdl.dto.MessageContent): Boolean = when (content) {
         is MessageVideo, is MessageAnimation -> true
+        is dev.g000sha256.tdl.dto.MessagePaidMedia -> content.media.any { it is dev.g000sha256.tdl.dto.PaidMediaVideo }
         is MessageDocument -> looksLikeVideo(content.document.fileName.orEmpty(), content.document.mimeType.orEmpty())
         else -> false
     }
 
+    private fun fromVideo(message: Message, video: dev.g000sha256.tdl.dto.Video, caption: String?) = MediaItem(
+        chatId = message.chatId,
+        messageId = message.id,
+        fileId = video.video.id,
+        title = displayTitle(video.fileName, caption, L.mediaUntitledVideo),
+        fileName = video.fileName,
+        sizeBytes = fileSize(video.video.size, video.video.expectedSize),
+        durationSec = video.duration,
+        mimeType = video.mimeType.orEmpty(),
+        thumbnailFileId = video.thumbnail?.file?.id ?: 0,
+        miniThumbnail = video.minithumbnail?.data,
+        date = message.date,
+        onDevice = onDevice(video.video),
+        caption = captionOf(caption),
+        width = video.width,
+        height = video.height,
+    )
+
     /** The video in [message] with its saving rule applied, whatever its timer says. */
     private fun mapped(message: Message, chatProtected: Boolean): MediaItem? {
-        val item = video(message) ?: return null
+        // Not a post yet: a scheduled one has a stand-in id until it goes out, and one still
+        // sending may yet fail. Either would be a tile pointing at a message that does not exist.
+        if (message.schedulingState != null || message.sendingState != null) return null
+        // Withheld by Telegram on this platform or in this country. Listed, it opens to an error.
+        if (!message.restrictionInfo?.restrictionReason.isNullOrEmpty()) return null
+        val topic = (message.topicId as? dev.g000sha256.tdl.dto.MessageTopicForum)?.forumTopicId ?: 0
+        val item = video(message)?.let { if (topic != 0) it.copy(topicId = topic) else it } ?: return null
         return when (ContentProtection.verdict(message.canBeSaved, chatProtected, selfDestructs = false)) {
             ContentProtection.Verdict.Full -> item
             else -> item.copy(canBeSaved = false)
@@ -214,26 +264,13 @@ object MediaMapper {
     }
 
     private fun video(message: Message): MediaItem? = when (val content = message.content) {
-        is MessageVideo -> {
-            val video = content.video
-            MediaItem(
-                chatId = message.chatId,
-                messageId = message.id,
-                fileId = video.video.id,
-                title = displayTitle(video.fileName, content.caption?.text, L.mediaUntitledVideo),
-                fileName = video.fileName,
-                sizeBytes = fileSize(video.video.size, video.video.expectedSize),
-                durationSec = video.duration,
-                mimeType = video.mimeType.orEmpty(),
-                thumbnailFileId = video.thumbnail?.file?.id ?: 0,
-                miniThumbnail = video.minithumbnail?.data,
-                date = message.date,
-                onDevice = onDevice(video.video),
-                caption = captionOf(content.caption?.text),
-                width = video.width,
-                height = video.height,
-            )
-        }
+        is MessageVideo -> fromVideo(message, content.video, content.caption?.text)
+        // A post sold for Stars, or one the viewer has bought: the video is there once unlocked.
+        // Still locked it is a preview with no file, and nothing to play. A post of several takes
+        // the first: a tile is one message, and the rest are a tap away in Telegram.
+        is dev.g000sha256.tdl.dto.MessagePaidMedia -> content.media
+            .firstNotNullOfOrNull { it as? dev.g000sha256.tdl.dto.PaidMediaVideo }
+            ?.let { fromVideo(message, it.video, content.caption?.text) }
 
         is MessageDocument -> {
             val document = content.document
@@ -310,17 +347,108 @@ object MediaMapper {
 
     private val RESOLUTION_4K = Regex("""\b(2160p|4k|uhd)\b""")
 
-    /** A file name beats a caption, and a caption beats nothing. */
+    /** A name a person chose beats a caption, a caption beats a made-up name, and either beats nothing. */
     fun displayTitle(fileName: String?, caption: String?, fallback: String): String {
         val name = fileName?.trim().orEmpty()
-        if (name.isNotEmpty()) return name
-        val firstCaptionLine = caption?.lineSequence()?.firstOrNull { it.isNotBlank() }?.trim().orEmpty()
-        if (firstCaptionLine.isNotEmpty()) return firstCaptionLine.take(120)
+        val firstCaptionLine = captionOf(caption).lineSequence().firstOrNull { it.isNotBlank() }?.trim().orEmpty()
+        // A name a phone or Telegram made up says nothing a viewer can choose by, and the caption
+        // the poster wrote under it usually does: "Episode 5, The Storm" over VID_20241013_1200.
+        if (name.isNotEmpty() && !(isGenericName(name) && firstCaptionLine.isNotEmpty())) return name
+        if (firstCaptionLine.isNotEmpty()) return firstCaptionLine.take(TITLE_MAX)
         return fallback
     }
 
-    /** Kept short: it is read for an episode and shown as a synopsis, never as a whole post. */
-    private fun captionOf(text: String?): String = text?.trim()?.take(CAPTION_MAX).orEmpty()
+    /**
+     * Whether [fileName] is one a camera, a messenger or a screen recorder chose rather than a
+     * person: `VID_20241013_120000.mp4`, `video_2024-10-13_12-00-00.mp4`, `IMG_1234.MOV`,
+     * `PXL_20240101_093000.mp4`, `VID-20240101-WA0001.mp4`, `video.mp4`, a bare number or a hash.
+     * A release name such as `1917.2019.1080p.mkv` carries words or tags and is never one.
+     */
+    fun isGenericName(fileName: String): Boolean {
+        val base = fileName.trim().substringBeforeLast('.').trim().lowercase()
+        if (base.isEmpty()) return true
+        return GENERIC_NAMES.any { it.matches(base) }
+    }
+
+    /**
+     * The first line of the caption that is not the title already, for a second line under it.
+     * Null when the caption has nothing more to say.
+     */
+    fun captionLine(item: MediaItem, repeated: Set<String> = emptySet()): String? =
+        item.caption.lineSequence().map { it.trim() }
+            .firstOrNull {
+                it.isNotEmpty() && !it.equals(item.title.trim(), ignoreCase = true) && it.lowercase() !in repeated
+            }
+
+    /**
+     * Caption lines a chat puts under most of its posts, lowercased: a channel's signature, a
+     * "New every Friday", a quality note. Shown under every row they would read as part of each
+     * video and tell none of them apart, so [captionLine] skips them. A line counts once it is on
+     * at least three posts and on at least [REPEAT_SHARE] of the ones listed.
+     */
+    fun repeatedCaptionLines(items: List<MediaItem>): Set<String> {
+        if (items.size < MIN_REPEATS) return emptySet()
+        val counts = HashMap<String, Int>()
+        for (item in items) {
+            item.caption.lineSequence().map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
+                .forEach { counts[it] = (counts[it] ?: 0) + 1 }
+        }
+        val needed = maxOf(MIN_REPEATS, (items.size * REPEAT_SHARE).toInt())
+        return counts.filterValues { it >= needed }.keys
+    }
+
+    private const val MIN_REPEATS = 3
+    private const val REPEAT_SHARE = 0.4
+
+    /**
+     * The caption with the channel's boilerplate taken off and kept short: it is read for an
+     * episode and shown as a synopsis, never as a whole post.
+     *
+     * A line that is nothing but links, @mentions and #hashtags, or one of those behind "Join" or
+     * "Subscribe", is the channel advertising itself under every post. It says nothing about the
+     * video, and as a synopsis or a title it would be the same line on every tile.
+     */
+    internal fun captionOf(text: String?): String {
+        if (text.isNullOrBlank()) return ""
+        return text.lineSequence()
+            .map { it.trimEnd() }
+            .filterNot { isBoilerplate(it) }
+            .joinToString("\n")
+            .replace(BLANK_RUN, "\n\n")
+            .trim()
+            .take(CAPTION_MAX)
+    }
+
+    private fun isBoilerplate(line: String): Boolean {
+        if (line.isBlank() || !LINKISH.containsMatchIn(line)) return false
+        val rest = line.replace(LINKISH, " ").replace(NOT_A_LETTER, " ").trim().lowercase()
+        if (rest.isEmpty()) return true
+        return rest.split(' ').filter { it.isNotEmpty() }.all { it in CALL_WORDS }
+    }
+
+    private const val TITLE_MAX = 120
+
+    private val GENERIC_NAMES = listOf(
+        // Camera rolls, Telegram's own saves and screen recorders: a prefix, then the date and time.
+        Regex("""(vid|img|mov|pxl|mvimg|video|movie|clip|file|document|telegram|tg|record|recording|screen[ _-]?record(ing)?|screenrecorder|wa)[ _-]*\d[\d _.:-]*(wa\d+)?([ _-]?\(\d+\))?"""),
+        // "video", "video (2)", "untitled".
+        Regex("""(video|vid|movie|clip|file|untitled|new video)([ _-]*\(?\d+\)?)?"""),
+        // A number and nothing else, or a date and time and nothing else.
+        Regex("""[\d _.:-]+"""),
+        // A hash or a UUID.
+        Regex("""[0-9a-f]{16,}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"""),
+    )
+
+    private val LINKISH = Regex("""(https?://\S+|www\.\S+|t\.me/\S+|telegram\.me/\S+|@[A-Za-z0-9_]{4,}|#\S+)""")
+    private val NOT_A_LETTER = Regex("""[^\p{L}\p{N} ]+""")
+    private val BLANK_RUN = Regex("""\n{3,}""")
+
+    /** The words a channel puts in front of its own link; a line of only these and a link is an ad. */
+    private val CALL_WORDS = setOf(
+        "join", "us", "subscribe", "follow", "share", "channel", "our", "for", "more", "via", "by",
+        "from", "on", "telegram", "main", "backup", "group", "updates", "official", "here", "click",
+        "visit", "and", "to", "the", "now", "link", "links",
+    )
 
     private const val CAPTION_MAX = 600
 

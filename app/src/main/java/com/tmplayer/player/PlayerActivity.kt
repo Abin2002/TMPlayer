@@ -1945,8 +1945,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             if (chatId == 0L) return@launch
             val session = Td.awaitAuthorizedSession()
             val repository = ChatRepository(session.client)
+            // In a group with topics the next episode is looked for in this video's own topic, or
+            // the plain listing below would step into whichever section posted last.
+            val topic = here.topicId.takeIf { it != 0 }
+                ?: runCatching { repository.topicOf(chatId, messageId) }.getOrDefault(0)
             suspend fun page(query: String) =
-                runCatching { repository.mediaPage(chatId, query = query).items }.getOrNull().orEmpty()
+                runCatching { repository.mediaPage(chatId, query = query, topicId = topic).items }.getOrNull().orEmpty()
             var steps = EpisodeNeighbours.around(here, page(show))
             if (steps.previous == null && steps.next == null) {
                 steps = EpisodeNeighbours.around(here, page(""))

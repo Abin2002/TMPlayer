@@ -10,6 +10,7 @@ import dev.g000sha256.tdl.dto.ChatListFolder
 import dev.g000sha256.tdl.dto.ChatListMain
 import dev.g000sha256.tdl.dto.ChatTypeBasicGroup
 import dev.g000sha256.tdl.dto.ChatTypeSupergroup
+import dev.g000sha256.tdl.dto.MessageTopicForum
 import dev.g000sha256.tdl.dto.SearchMessagesFilterAnimation
 import dev.g000sha256.tdl.dto.SearchMessagesFilterDocument
 import dev.g000sha256.tdl.dto.SearchMessagesFilterVideo
@@ -143,6 +144,24 @@ data class ChatSync(val chats: List<ChatSummary>, val failure: String? = null) {
 /** TDLib's answer to `loadChats` once every chat in the list is already local: code 404. */
 internal fun isAllLoaded(code: Int, message: String): Boolean =
     code == 404 || message.contains("404")
+
+/**
+ * One topic of a group that has Telegram's topics turned on, as much of it as a chip needs.
+ *
+ * [hasVideos] is false only when Telegram counted no videos and no files in it at all: a "Rules"
+ * or "Chat" topic, which the picker leaves out rather than offer as a dead end. Files are counted
+ * because most long videos are posted as files, and Telegram has no count of "files that are
+ * videos", so a topic of nothing but PDFs is still offered and says it has no videos when opened.
+ */
+@androidx.compose.runtime.Immutable
+data class ForumTopicSummary(
+    val id: Int,
+    val name: String,
+    val isPinned: Boolean = false,
+    val isClosed: Boolean = false,
+    val unreadCount: Int = 0,
+    val hasVideos: Boolean = true,
+)
 
 /** One page of media, plus the cursors needed to ask for the next one. */
 data class MediaPage(
@@ -363,6 +382,8 @@ class ChatRepository(private val td: TdlClient) {
         query: String = "",
         /** Messages asked for per search. Home's rows want a handful, the chat grid a full page. */
         pageSize: Int = PAGE_SIZE,
+        /** A forum topic to keep to, or 0 for the whole chat. */
+        topicId: Int = 0,
     ): MediaPage =
         // Off Main for the whole page. The mapper asks the filesystem twice per message to decide
         // whether the file is already on disk, and this runs three searches of forty messages each
@@ -374,20 +395,24 @@ class ChatRepository(private val td: TdlClient) {
             val chatProtected = td.getChat(chatId).valueOrNull?.hasProtectedContent ?: false
             val videos = async {
                 if (cursors.videoDone) null
-                else search(chatId, cursors.video, SearchMessagesFilterVideo(), query, chatProtected, pageSize)
+                else attempt { search(chatId, cursors.video, SearchMessagesFilterVideo(), query, chatProtected, pageSize, topicId) }
             }
             val documents = async {
                 if (cursors.documentDone) null
-                else search(chatId, cursors.document, SearchMessagesFilterDocument(), query, chatProtected, pageSize)
+                else attempt { search(chatId, cursors.document, SearchMessagesFilterDocument(), query, chatProtected, pageSize, topicId) }
             }
             val animations = async {
                 if (cursors.animationDone) null
-                else search(chatId, cursors.animation, SearchMessagesFilterAnimation(), query, chatProtected, pageSize)
+                else attempt { search(chatId, cursors.animation, SearchMessagesFilterAnimation(), query, chatProtected, pageSize, topicId) }
             }
 
-            val videoResult = videos.await()
-            val documentResult = documents.await()
-            val animationResult = animations.await()
+            val attempts = listOf(videos.await(), documents.await(), animations.await())
+            // One of the three failing is not the page failing: whatever the others found is still
+            // shown, and the failed one keeps its cursor to be asked again on the next page. Only
+            // when every search asked for failed is it the chat that failed, and that is thrown.
+            val asked = attempts.filterNotNull()
+            if (asked.isNotEmpty() && asked.all { it.isFailure }) throw asked.first().exceptionOrNull()!!
+            val (videoResult, documentResult, animationResult) = attempts.map { it?.getOrNull() }
 
             val items = buildList {
                 videoResult?.let { addAll(it.items) }
@@ -399,9 +424,9 @@ class ChatRepository(private val td: TdlClient) {
                 video = videoResult?.next ?: cursors.video,
                 document = documentResult?.next ?: cursors.document,
                 animation = animationResult?.next ?: cursors.animation,
-                videoDone = cursors.videoDone || videoResult?.done ?: true,
-                documentDone = cursors.documentDone || documentResult?.done ?: true,
-                animationDone = cursors.animationDone || animationResult?.done ?: true,
+                videoDone = cursors.videoDone || videoResult?.done ?: (attempts[0] == null),
+                documentDone = cursors.documentDone || documentResult?.done ?: (attempts[1] == null),
+                animationDone = cursors.animationDone || animationResult?.done ?: (attempts[2] == null),
             )
             val hidden = listOfNotNull(videoResult, documentResult, animationResult).sumOf { it.selfDestructing }
             // "More like this" offers only titles the viewer has; this is how it knows them.
@@ -409,6 +434,67 @@ class ChatRepository(private val td: TdlClient) {
             MediaPage(items, next, next.allDone, hidden)
         }
         }
+
+    /**
+     * The topics of [chatId] when it is a group with Telegram's topics turned on, in Telegram's own
+     * order (pinned first, then by latest post), or an empty list for any other chat.
+     *
+     * A list of topics is all Telegram gives: whether one holds any videos is asked of each in
+     * turn, two counts apiece, a few at a time. Those are server calls, so this is for the moment
+     * a group is opened, not for every refresh. A count that fails leaves its topic in: offering a
+     * topic that turns out empty is a smaller harm than hiding the one the viewer came for.
+     */
+    suspend fun forumTopics(chatId: Long): List<ForumTopicSummary> = withContext(Dispatchers.IO) {
+        val chat = td.getChat(chatId).valueOrNull ?: return@withContext emptyList()
+        val type = chat.type as? ChatTypeSupergroup ?: return@withContext emptyList()
+        if (type.isChannel) return@withContext emptyList()
+        val group = td.getSupergroup(type.supergroupId).valueOrNull ?: return@withContext emptyList()
+        if (!group.isForum) return@withContext emptyList()
+
+        val topics = mutableListOf<dev.g000sha256.tdl.dto.ForumTopic>()
+        var offsetDate = 0
+        var offsetMessage = 0L
+        var offsetTopic = 0
+        while (topics.size < TOPIC_LIMIT) {
+            val page = td.getForumTopics(chatId, "", offsetDate, offsetMessage, offsetTopic, TOPIC_PAGE)
+                .valueOrNull ?: break
+            topics += page.topics
+            if (page.topics.isEmpty() || (page.nextOffsetDate == 0 && page.nextOffsetMessageId == 0L &&
+                    page.nextOffsetForumTopicId == 0)
+            ) break
+            offsetDate = page.nextOffsetDate
+            offsetMessage = page.nextOffsetMessageId
+            offsetTopic = page.nextOffsetForumTopicId
+        }
+
+        coroutineScope {
+            topics.distinctBy { it.info.forumTopicId }.chunked(COUNT_CHUNK).flatMap { chunk ->
+                chunk.map { topic ->
+                    async {
+                        val id = topic.info.forumTopicId
+                        suspend fun count(filter: dev.g000sha256.tdl.dto.SearchMessagesFilter) =
+                            td.getChatMessageCount(chatId, MessageTopicForum(id), filter, false).valueOrNull?.count
+                        val videos = count(SearchMessagesFilterVideo())
+                        val files = if (videos != null && videos > 0) videos else count(SearchMessagesFilterDocument())
+                        ForumTopicSummary(
+                            id = id,
+                            name = topic.info.name.ifBlank { L.gridTopicUntitled },
+                            isPinned = topic.isPinned,
+                            isClosed = topic.info.isClosed,
+                            unreadCount = topic.unreadCount,
+                            hasVideos = videos == null || files == null || videos > 0 || files > 0,
+                        )
+                    }
+                }.awaitAll()
+            }
+        }
+    }
+
+    /** The forum topic [messageId] was posted in, or 0, for a player handed only the two ids. */
+    suspend fun topicOf(chatId: Long, messageId: Long): Int = withContext(Dispatchers.IO) {
+        val message = td.getMessage(chatId, messageId).valueOrNull ?: return@withContext 0
+        (message.topicId as? MessageTopicForum)?.forumTopicId ?: 0
+    }
 
     /**
      * The newest videos across every chat in the main list, newest first, for Home's "Recently
@@ -574,6 +660,15 @@ class ChatRepository(private val td: TdlClient) {
         else -> ChatKind.Direct
     }
 
+    private suspend fun <T> attempt(block: suspend () -> T): Result<T> =
+        try {
+            Result.success(block())
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
     private class SearchResult(
         val items: List<MediaItem>,
         val next: Long,
@@ -588,10 +683,11 @@ class ChatRepository(private val td: TdlClient) {
         query: String = "",
         chatProtected: Boolean = false,
         pageSize: Int = PAGE_SIZE,
+        topicId: Int = 0,
     ): SearchResult {
         val found = td.searchChatMessages(
             chatId = chatId,
-            topicId = null,
+            topicId = if (topicId != 0) MessageTopicForum(topicId) else null,
             // Telegram matches a document search against its file name, which is exactly how
             // videos are named in these chats.
             query = query,
@@ -632,6 +728,15 @@ class ChatRepository(private val td: TdlClient) {
          */
         const val ARCHIVE_LIMIT = 100
         private const val CHAT_PAGE = 100
+
+        /** Topics read per `getForumTopics` call; Telegram's own cap is 100. */
+        private const val TOPIC_PAGE = 100
+
+        /** Past this a group is a forum of forums, and a chip row is the wrong way to browse it. */
+        const val TOPIC_LIMIT = 300
+
+        /** Topics whose videos are counted at once: two server calls each. */
+        private const val COUNT_CHUNK = 8
 
         /**
          * How many chats are read from TDLib at once.

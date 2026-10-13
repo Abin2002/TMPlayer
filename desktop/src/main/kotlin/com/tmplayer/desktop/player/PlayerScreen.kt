@@ -790,7 +790,7 @@ fun PlayerScreen(
         }
         val at = status.positionMs
         // The name the title bar shows ("Night Train S01E02"), not the release name with its dots.
-        val parsed = MediaName.parse(item.fileName.ifBlank { item.title })
+        val parsed = MediaName.parse(item.nameForParsing, item.caption)
         val name = listOfNotNull(parsed.title.ifBlank { null }, parsed.episodeCode).joinToString(" ").ifBlank { item.title }
         scope.launch {
             val file = kotlinx.coroutines.withContext(Dispatchers.IO) {

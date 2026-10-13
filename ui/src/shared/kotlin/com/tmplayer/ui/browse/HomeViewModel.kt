@@ -16,6 +16,7 @@ import com.tmplayer.data.ResumeRecord
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.Td
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.Flow
@@ -76,7 +77,9 @@ object TdHomeSource : HomeSource {
         Td.localFileAvailability(item.fileId) == LocalFileAvailability.Complete
 
     override fun changedChats(): Flow<Set<Long>> =
-        Td.videoChanges.batched(LIVE_WINDOW_MS).map { batches -> batches.mapTo(HashSet()) { it.chatId } }
+        // Not for every message edited into text: a busy group edits all day, and each would be a
+        // search of that chat. A row showing a video edited away catches up at the next refresh.
+        Td.videoChanges.filterNot { it is com.tmplayer.data.VideoChange.Removed && it.byEdit }.batched(LIVE_WINDOW_MS).map { batches -> batches.mapTo(HashSet()) { it.chatId } }
 
     override suspend fun follow(chatId: Long): AutoCloseable? {
         Td.awaitAuthorizedSession()

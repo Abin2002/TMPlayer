@@ -113,6 +113,7 @@ import com.tmplayer.desktop.setWatched
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.player.StreamStats
 import com.tmplayer.ui.browse.MediaListViewModel
+import com.tmplayer.ui.browse.topicMemory
 import com.tmplayer.ui.components.MediaArt
 import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.UiState
@@ -150,7 +151,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             Centred { CircularProgressIndicator() }
             return@Column
         }
-        val model = rememberViewModel(Triple(chat.id, min, max)) { MediaListViewModel(chat.id, min, max, onSearched = { state.settings.addRecentSearch(it) }) { DownloadIndex.presentIds(state.settings) } }
+        val model = rememberViewModel(Triple(chat.id, min, max)) { MediaListViewModel(chat.id, min, max, onSearched = { state.settings.addRecentSearch(it) }, downloadedIds = { DownloadIndex.presentIds(state.settings) }, topicMemory = state.settings.topicMemory()) }
         val ui by model.state.collectAsState()
         var query by remember(chat.id) { mutableStateOf("") }
         // The grid's keyboard focus, once the grid exists; the search field's Down arrow enters it.
@@ -180,6 +181,10 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         val scope = rememberCoroutineScope()
         if (query.isBlank()) {
             RecentSearchRow(recent, onPick = { query = it }, onClear = { scope.launch { state.settings.clearRecentSearches() } })
+        }
+        val topicBar by model.topics.collectAsState()
+        topicBar?.let { bar ->
+            com.tmplayer.ui.browse.TopicTabs(bar, model::selectTopic, Modifier.padding(bottom = 12.dp), edge = 24.dp)
         }
         StateBox(ui, onRetry = { model.load() }, onAction = model::act) { content ->
             val grid = rememberLazyGridState()

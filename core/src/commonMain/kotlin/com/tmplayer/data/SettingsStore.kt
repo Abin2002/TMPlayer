@@ -154,6 +154,9 @@ private fun durationKey(chatId: Long, messageId: Long) =
 private fun metaKey(chatId: Long, messageId: Long) =
     stringPreferencesKey("meta_${chatId}_$messageId")
 
+/** The forum topic last browsed in one group, so it opens where the viewer left it. 0 is all. */
+private fun topicKey(chatId: Long) = longPreferencesKey("topic_$chatId")
+
 /** The subtitle and audio offsets the viewer set for one file. See [SyncDelays]. */
 private fun delayKey(chatId: Long, messageId: Long) =
     stringPreferencesKey("delay_${chatId}_$messageId")
@@ -312,6 +315,13 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     suspend fun rememberChatOpened(chatId: Long) {
         prefs.edit { it[LAST_CHAT] = chatId }
+    }
+
+    /** The forum topic last picked in [chatId], or 0 for all of them. */
+    suspend fun chosenTopic(chatId: Long): Int = (prefs.data.first()[topicKey(chatId)] ?: 0L).toInt()
+
+    suspend fun rememberTopic(chatId: Long, topicId: Int) {
+        prefs.edit { if (topicId == 0) it.remove(topicKey(chatId)) else it[topicKey(chatId)] = topicId.toLong() }
     }
 
     suspend fun forgetLastChat() {

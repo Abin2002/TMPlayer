@@ -249,6 +249,11 @@ object Td {
                 td.messageContentUpdates.collect { update ->
                     if (MediaMapper.isVideoContent(update.newContent)) {
                         _videoChanges.tryEmit(VideoChange.Edited(update.chatId, update.messageId))
+                    } else {
+                        // Edited into a photo or a text: its tile has to go, or it plays a file
+                        // the post no longer has. A message that never was a video is not listed,
+                        // so removing it changes nothing.
+                        _videoChanges.tryEmit(VideoChange.Removed(update.chatId, setOf(update.messageId), byEdit = true))
                     }
                 }
             }

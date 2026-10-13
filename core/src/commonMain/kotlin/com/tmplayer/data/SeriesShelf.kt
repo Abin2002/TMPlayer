@@ -96,7 +96,7 @@ object SeriesShelf {
 
     /** The parse a file is grouped by: its name first, its caption second. */
     fun episodeOf(item: MediaItem): ParsedName =
-        MediaName.parse(item.fileName.ifBlank { item.title }, item.caption)
+        MediaName.parse(item.nameForParsing, item.caption)
 
     /** "harbour notes" for "Harbour.Notes", "Harbour Notes:" and "HARBOUR NOTES". */
     fun keyOf(title: String): String =
@@ -185,7 +185,7 @@ object SeriesShelf {
         if (name.isSeries) return null
         val key = keyOf(name.title)
         if (key.isEmpty()) return null
-        if (name.year == null && EpisodeCopies.markers(item.fileName.ifBlank { item.title }).isEmpty()) return null
+        if (name.year == null && EpisodeCopies.markers(item.nameForParsing).isEmpty()) return null
         return "$key|${name.year ?: ""}"
     }
 
@@ -195,7 +195,7 @@ object SeriesShelf {
      */
     private fun loose(item: MediaItem): Found? {
         val caption = item.caption.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
-        val name = listOfNotNull(item.fileName.ifBlank { item.title }.ifBlank { null }, caption)
+        val name = listOfNotNull(item.nameForParsing.ifBlank { null }, caption)
             .firstNotNullOfOrNull { MediaName.looseEpisode(it) }
             ?: return null
         val key = keyOf(name.title)

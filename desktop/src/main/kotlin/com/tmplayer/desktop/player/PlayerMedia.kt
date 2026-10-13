@@ -293,7 +293,10 @@ class TelegramPlayerMedia(
         if (item.chatId == 0L) return Episodes(current = tag)
         val session = Td.awaitAuthorizedSession()
         val repository = ChatRepository(session.client)
-        suspend fun page(query: String) = runCatching { repository.mediaPage(item.chatId, query = query).items }
+        // In a group with topics, the neighbours are looked for in this video's own topic.
+        val topic = item.topicId.takeIf { it != 0 }
+            ?: runCatching { repository.topicOf(item.chatId, item.messageId) }.getOrDefault(0)
+        suspend fun page(query: String) = runCatching { repository.mediaPage(item.chatId, query = query, topicId = topic).items }
             .onFailure { Logger.w(TAG, "Episode lookup failed", it) }.getOrNull().orEmpty()
         val steps = EpisodeNeighbours.around(item, page(show))
         if (steps.previous != null || steps.next != null) return steps

@@ -8,6 +8,7 @@ import com.tmplayer.data.Account
 import com.tmplayer.data.AuthState
 import com.tmplayer.data.ChatRepository
 import com.tmplayer.data.ChatSummary
+import com.tmplayer.data.ForumTopicSummary
 import com.tmplayer.data.arrangeChats
 import com.tmplayer.data.Failures
 import com.tmplayer.data.Fuzzy
@@ -489,6 +490,17 @@ fun noVideosWithin(minBytes: Long, maxBytes: Long): String {
     }
 }
 
+/**
+ * The topic chips of a group with Telegram's topics turned on: the topics worth offering, and the
+ * one being shown, 0 for all of them. Null on [MediaListViewModel.topics] for every other chat,
+ * which is how the screens know to draw no row at all.
+ */
+@androidx.compose.runtime.Immutable
+data class TopicBar(val topics: List<ForumTopicSummary>, val selected: Int = 0) {
+    /** The name of [id], for a tile in the all-topics listing, or null when it is not offered. */
+    fun nameOf(id: Int): String? = if (id == 0) null else topics.firstOrNull { it.id == id }?.name
+}
+
 data class MediaListState(
     val items: List<MediaItem> = emptyList(),
     val sponsored: SponsoredBatch? = null,
@@ -511,7 +523,26 @@ class MediaListViewModel(
      */
     private val onSearched: (suspend (String) -> Unit)? = null,
     private val downloadedIds: (suspend () -> Set<String>)? = null,
+    /**
+     * Reads and writes the topic last picked in this chat, so a group opens on the section the
+     * viewer was in rather than back on all of them. Null where nothing is remembered.
+     */
+    private val topicMemory: TopicMemory? = null,
 ) : ViewModel() {
+
+    /** Where [MediaListViewModel] keeps the topic picked in each group. */
+    interface TopicMemory {
+        suspend fun chosen(chatId: Long): Int
+        suspend fun remember(chatId: Long, topicId: Int)
+    }
+
+    /** The forum topic being listed, or 0 for the whole chat. */
+    private var topicId = 0
+
+    private val _topics = MutableStateFlow<TopicBar?>(null)
+
+    /** Null until the chat turns out to have topics, and for good when it has none. */
+    val topics: StateFlow<TopicBar?> = _topics.asStateFlow()
 
     private var cursors = MediaCursors()
     private var pageJob: Job? = null
@@ -551,8 +582,53 @@ class MediaListViewModel(
     private var watching: AutoCloseable? = null
 
     init {
-        load()
+        val memory = topicMemory
+        if (memory == null) {
+            load()
+        } else {
+            // The remembered topic is read before the first page is asked for, so a group the viewer
+            // left on "Movies" never flashes its whole listing first. It is one local read.
+            viewModelScope.launch {
+                topicId = runCatching { memory.chosen(chatId) }.getOrDefault(0)
+                load()
+            }
+        }
+        loadTopics()
         followChanges()
+    }
+
+    /**
+     * Finds out whether this chat has topics and which of them hold videos.
+     *
+     * Runs beside the first page rather than ahead of it: counting each topic's videos is a pair of
+     * server calls per topic, and the listing should not wait on a row of chips. A remembered topic
+     * that has since been deleted, or a group that has turned topics off, falls back to all.
+     */
+    private fun loadTopics() {
+        viewModelScope.launch {
+            val session = Td.awaitAuthorizedSession()
+            val found = runCatching { ChatRepository(session.client).forumTopics(chatId) }
+                .onFailure { if (it is CancellationException) throw it }
+                .getOrNull() ?: return@launch
+            if (!session.isCurrent()) return@launch
+            val offered = found.filter { it.hasVideos || it.id == topicId }
+            if (topicId != 0 && offered.none { it.id == topicId }) {
+                _topics.value = if (offered.isEmpty()) null else TopicBar(offered, 0)
+                selectTopic(0)
+                return@launch
+            }
+            _topics.value = if (offered.isEmpty()) null else TopicBar(offered, topicId)
+        }
+    }
+
+    /** A topic chip: lists [id] alone, or the whole chat for 0, and remembers the choice. */
+    fun selectTopic(id: Int) {
+        _topics.value?.let { bar -> if (bar.selected != id) _topics.value = bar.copy(selected = id) }
+        if (id == topicId) return
+        topicId = id
+        topicMemory?.let { memory -> viewModelScope.launch { runCatching { memory.remember(chatId, id) } } }
+        recordJob?.cancel()
+        load(preserveContent = false)
     }
 
     override fun onCleared() {
@@ -585,7 +661,8 @@ class MediaListViewModel(
         val repository = ChatRepository(session.client)
         // A search lists what matched, ranked: a new post is not part of it, a deleted one still goes.
         val searching = query.isNotBlank()
-        val added = if (searching) emptyList() else marked(keepLive(batch.added))
+        // A topic's listing takes only the posts made in that topic.
+        val added = if (searching) emptyList() else marked(keepLive(batch.added.filter { topicId == 0 || it.topicId == topicId }))
         val listed = (_state.value as? UiState.Content)?.value?.items.orEmpty().mapTo(HashSet()) { it.messageId }
         val edits = batch.edited.filter { !searching || it in listed }.associateWith { id ->
             runCatching { repository.mediaItem(chatId, id) }.getOrNull()?.let { marked(keepLive(listOf(it))).firstOrNull() }
@@ -741,7 +818,7 @@ class MediaListViewModel(
      * and every page is ranked locally against what the viewer actually typed.
      */
     private suspend fun firstPage(repository: ChatRepository): MediaPage {
-        val whole = repository.mediaPage(chatId, MediaCursors(), query)
+        val whole = repository.mediaPage(chatId, MediaCursors(), query, topicId = topicId)
         if (whole.items.isNotEmpty() || query.isBlank()) return whole
 
         val words = Fuzzy.tokens(query)
@@ -752,7 +829,7 @@ class MediaListViewModel(
 
         for (word in words) {
             if (word == query) continue
-            val page = repository.mediaPage(chatId, MediaCursors(), word)
+            val page = repository.mediaPage(chatId, MediaCursors(), word, topicId = topicId)
             if (page.items.isNotEmpty()) {
                 serverQuery = word
                 return page
@@ -771,7 +848,7 @@ class MediaListViewModel(
     private fun keep(items: List<MediaItem>): List<MediaItem> {
         // A search names the video the viewer is after, so the size limits stand aside for it: an
         // episode a little smaller than its neighbours is exactly the one a viewer goes looking for.
-        if (query.isNotBlank()) return Fuzzy.rank(items, query) { it.fileName.ifBlank { it.title } }
+        if (query.isNotBlank()) return Fuzzy.rank(items, query) { it.searchText }
         if (showAllSizes) return items
         val split = SizeFilter.split(items, minSizeBytes, maxSizeBytes) { it.sizeBytes }
         hiddenBySize += split.hidden
@@ -884,11 +961,16 @@ class MediaListViewModel(
         // filter doing the work, and offer to lift it on the spot rather than send the viewer to
         // Settings.
         val hidden = if (query.isBlank() && hiddenBySize > 0) L.browseHiddenBySize(hiddenBySize) else null
+        // Inside a topic, the empty answer names it: "nothing here" in a group of ten sections
+        // reads as the whole group being empty.
+        val topic = _topics.value?.nameOf(topicId)
         return when {
+            query.isNotBlank() && topic != null -> UiState.Empty(L.gridTopicNoMatch(topic, query))
             query.isNotBlank() -> UiState.Empty(L.browseNoMatch(query))
             !reachedEnd && hidden != null -> UiState.Empty("$STILL_MORE_TO_SEARCH\n\n$hidden", StateAction.ShowHidden)
             !reachedEnd -> UiState.Empty(STILL_MORE_TO_SEARCH, StateAction.KeepLooking)
             hidden != null -> UiState.Empty("${noVideosWithin(minSizeBytes, maxSizeBytes)}\n\n$hidden", StateAction.ShowHidden)
+            topic != null -> UiState.Empty(L.gridTopicEmpty(topic))
             else -> UiState.Empty(L.browseNoPlayableVideos)
         }
     }
@@ -970,7 +1052,7 @@ class MediaListViewModel(
             !failed &&
             attempts++ < MAX_EMPTY_PAGES
         ) {
-            runCatching { repository.mediaPage(chatId, cursors, serverQuery) }
+            runCatching { repository.mediaPage(chatId, cursors, serverQuery, topicId = topicId) }
                 .onSuccess { rawPage ->
                     val page = rawPage.copy(items = marked(keep(rawPage.items)))
                     cursors = page.cursors
@@ -1019,5 +1101,14 @@ class MediaListViewModel(
 
         /** Three retries is already three round trips; past that the wait is the worse answer. */
         const val MAX_FALLBACK_WORDS = 3
+    }
+}
+
+/** The topic picked in each group, kept in the app's settings. */
+fun com.tmplayer.data.SettingsStore.topicMemory(): MediaListViewModel.TopicMemory {
+    val store = this
+    return object : MediaListViewModel.TopicMemory {
+        override suspend fun chosen(chatId: Long): Int = store.chosenTopic(chatId)
+        override suspend fun remember(chatId: Long, topicId: Int) = store.rememberTopic(chatId, topicId)
     }
 }
