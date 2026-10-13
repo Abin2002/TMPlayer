@@ -794,13 +794,13 @@ fun SeriesPanel(
                 if (tv) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         hero(Modifier)
-                        others.forEach { (label, icon, run) -> RoundAction(label, icon, run) }
+                        others.forEach { (label, icon, run) -> RoundAction(label, icon, run, short = roundLabel(label, s)) }
                     }
                 } else {
                     hero(if (wide) Modifier else Modifier.fillMaxWidth())
                     if (others.isNotEmpty()) {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            others.forEach { (label, icon, run) -> RoundAction(label, icon, run) }
+                            others.forEach { (label, icon, run) -> RoundAction(label, icon, run, short = roundLabel(label, s)) }
                         }
                     }
                 }

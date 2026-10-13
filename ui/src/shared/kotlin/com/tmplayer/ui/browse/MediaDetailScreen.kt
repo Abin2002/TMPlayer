@@ -393,12 +393,12 @@ private fun Actions(
         if (tv) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 hero(Modifier)
-                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail) }
+                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s)) }
             }
         } else {
             hero(if (primaryFullWidth) Modifier.fillMaxWidth() else Modifier)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail) }
+                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s)) }
             }
         }
         trailers.unopened?.let { TrailerQr(it, Modifier.padding(vertical = 8.dp)) }

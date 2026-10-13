@@ -359,6 +359,24 @@
     "resolution": "റെസല്യൂഷൻ",
     "resume_at": "{time}-ൽ നിന്ന് തുടരുക",
     "resume_at_detail": "നിർത്തിയിടത്ത് നിന്ന് തുടരും",
+    "round_chat": "ചാറ്റ്",
+    "round_delete": "മായ്ക്കുക",
+    "round_download": "ഡൗൺലോഡ്",
+    "round_downloaded": "ഡൗൺലോഡായി",
+    "round_link": "ലിങ്ക്",
+    "round_open_with": "മറ്റ് ആപ്പ്",
+    "round_remove": "നീക്കുക",
+    "round_restart": "ആദ്യം മുതൽ",
+    "round_save": "സേവ്",
+    "round_season": "സീസൺ",
+    "round_select": "സെലക്ട്",
+    "round_show_info": "വിവരം",
+    "round_stop": "നിർത്തുക",
+    "round_trailer": "ട്രെയിലർ",
+    "round_unseen": "കാണാത്തവ",
+    "round_unwatched": "കണ്ടില്ല",
+    "round_watch_later": "പിന്നീട്",
+    "round_watched": "കണ്ടു",
     "season_starts": "സീസൺ {number} {date}-ന് തുടങ്ങും",
     "seasons_count": "{count, plural, one {# സീസൺ} other {# സീസണുകൾ}}",
     "show_ended": "അവസാനിച്ചു",
@@ -691,10 +709,15 @@
     "row_continue": "കാണുന്നത് തുടരുക",
     "row_new_episodes": "പുതിയ എപ്പിസോഡുകൾ",
     "row_recent": "നക്ഷത്രമിട്ട ചാറ്റുകളിൽ അടുത്തിടെ ചേർത്തവ",
+    "row_scroll_back": "പിന്നിലേക്ക് സ്ക്രോൾ ചെയ്യുക",
+    "row_scroll_on": "മുന്നോട്ട് സ്ക്രോൾ ചെയ്യുക",
     "row_watch_later": "പിന്നീട് കാണാൻ",
     "see_all": "എല്ലാം കാണുക",
     "see_all_count": "{count, plural, one {# വീഡിയോ} other {# വീഡിയോകൾ}}",
-    "see_all_count_at_least": "{count, plural, one {#+ വീഡിയോ} other {#+ വീഡിയോകൾ}}"
+    "see_all_count_at_least": "{count, plural, one {#+ വീഡിയോ} other {#+ വീഡിയോകൾ}}",
+    "spotlight_next": "അടുത്തത്",
+    "spotlight_position": "{count}-ൽ {index}",
+    "spotlight_previous": "മുമ്പത്തേത്"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "ബോക്സ് ഇല്ല",
     "subtitles": "സബ്ടൈറ്റിലുകൾ",
     "support_detail": "GitHub Sponsors അല്ലെങ്കിൽ Buy Me a Coffee, ഓരോന്നിനും ഒരു QR കോഡ്",
+    "system_title_bar": "സിസ്റ്റം ടൈറ്റിൽ ബാർ ഉപയോഗിക്കുക",
+    "system_title_bar_off": "TMPlayer സ്വന്തം വിൻഡോ ബട്ടണുകൾ വരയ്ക്കുന്നു. റീസ്റ്റാർട്ടിന് ശേഷം പ്രാബല്യത്തിൽ വരും",
+    "system_title_bar_on": "വിൻഡോ സിസ്റ്റം ടൈറ്റിൽ ബാർ വരയ്ക്കുന്നു. റീസ്റ്റാർട്ടിന് ശേഷം പ്രാബല്യത്തിൽ വരും",
     "tap_plays": "ടാപ്പ് ചെയ്താൽ പ്ലേ, പോസ്",
     "tap_plays_off": "ഓഫ്: ടാപ്പ് ചെയ്താൽ നിയന്ത്രണങ്ങൾ കാണിക്കും, വലിയ ബട്ടൺ പോസ് ചെയ്യും",
     "tap_plays_on": "ടാപ്പ് ചെയ്താൽ പോസ് ആകുകയും നിയന്ത്രണങ്ങൾ കാണിക്കുകയും ചെയ്യും; വീണ്ടും ടാപ്പ് ചെയ്താൽ പ്ലേ ആകും",
@@ -2001,5 +2027,11 @@
     "highlight_series": "സീരീസ് കാഴ്ച: എപ്പിസോഡുകൾ സീസൺ അനുസരിച്ച്, ഓരോന്നിനും ടാബുകൾ",
     "subtitle": "ഈ പതിപ്പിന്റെ പ്രധാന സവിശേഷതകൾ",
     "title": "{version}-ൽ പുതിയതെന്താണ്"
+  },
+  "window": {
+    "close": "അടയ്ക്കുക",
+    "maximize": "വലുതാക്കുക",
+    "minimize": "ചെറുതാക്കുക",
+    "restore": "പുനഃസ്ഥാപിക്കുക"
   }
 }

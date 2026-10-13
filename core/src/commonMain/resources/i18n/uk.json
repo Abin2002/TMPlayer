@@ -359,6 +359,24 @@
     "resolution": "Роздільність",
     "resume_at": "Продовжити з {time}",
     "resume_at_detail": "З місця, де ви зупинилися",
+    "round_chat": "Чат",
+    "round_delete": "Видалити",
+    "round_download": "Скачати",
+    "round_downloaded": "Скачано",
+    "round_link": "Посилання",
+    "round_open_with": "Відкрити в",
+    "round_remove": "Прибрати",
+    "round_restart": "Спочатку",
+    "round_save": "Зберегти",
+    "round_season": "Сезон",
+    "round_select": "Вибрати",
+    "round_show_info": "Опис",
+    "round_stop": "Стоп",
+    "round_trailer": "Трейлер",
+    "round_unseen": "Решта",
+    "round_unwatched": "Не переглянуто",
+    "round_watch_later": "Пізніше",
+    "round_watched": "Переглянуто",
     "season_starts": "Сезон {number} починається {date}",
     "seasons_count": "{count, plural, one {# сезон} few {# сезони} many {# сезонів} other {# сезону}}",
     "show_ended": "Завершено",
@@ -691,10 +709,15 @@
     "row_continue": "Продовжити перегляд",
     "row_new_episodes": "Нові серії",
     "row_recent": "Нещодавно додано в чатах із зірочкою",
+    "row_scroll_back": "Прокрутити назад",
+    "row_scroll_on": "Прокрутити далі",
     "row_watch_later": "Переглянути пізніше",
     "see_all": "Показати все",
     "see_all_count": "{count, plural, one {# відео} few {# відео} many {# відео} other {# відео}}",
-    "see_all_count_at_least": "{count, plural, one {#+ відео} few {#+ відео} many {#+ відео} other {#+ відео}}"
+    "see_all_count_at_least": "{count, plural, one {#+ відео} few {#+ відео} many {#+ відео} other {#+ відео}}",
+    "spotlight_next": "Далі",
+    "spotlight_position": "{index} з {count}",
+    "spotlight_previous": "Назад"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "Без плашки",
     "subtitles": "Субтитри",
     "support_detail": "GitHub Sponsors або Buy Me a Coffee, з QR-кодом для кожного",
+    "system_title_bar": "Використовувати системний заголовок вікна",
+    "system_title_bar_off": "TMPlayer малює власні кнопки вікна. Діє після перезапуску",
+    "system_title_bar_on": "Заголовок вікна малює система. Діє після перезапуску",
     "tap_plays": "Торкніться зображення, щоб відтворити або призупинити",
     "tap_plays_off": "Вимк.: дотик показує елементи керування, а велика кнопка ставить на паузу",
     "tap_plays_on": "Дотик ставить на паузу й показує елементи керування; ще один дотик відтворює",
@@ -2001,5 +2027,11 @@
     "highlight_series": "Перегляд серіалів: серії за сезонами, з вкладкою для кожного",
     "subtitle": "Головне в цій версії",
     "title": "Що нового у {version}"
+  },
+  "window": {
+    "close": "Закрити",
+    "maximize": "Розгорнути",
+    "minimize": "Згорнути",
+    "restore": "Відновити"
   }
 }

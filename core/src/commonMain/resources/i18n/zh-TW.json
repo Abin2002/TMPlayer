@@ -359,6 +359,24 @@
     "resolution": "解析度",
     "resume_at": "從 {time} 繼續",
     "resume_at_detail": "從你停下的地方繼續",
+    "round_chat": "聊天",
+    "round_delete": "刪除",
+    "round_download": "下載",
+    "round_downloaded": "已下載",
+    "round_link": "連結",
+    "round_open_with": "開啟方式",
+    "round_remove": "移除",
+    "round_restart": "從頭",
+    "round_save": "儲存",
+    "round_season": "整季",
+    "round_select": "選取",
+    "round_show_info": "簡介",
+    "round_stop": "停止",
+    "round_trailer": "預告片",
+    "round_unseen": "未看的",
+    "round_unwatched": "未看",
+    "round_watch_later": "稍後觀看",
+    "round_watched": "已看",
     "season_starts": "第 {number} 季 {date} 開播",
     "seasons_count": "{count, plural, other {# 季}}",
     "show_ended": "已完結",
@@ -691,10 +709,15 @@
     "row_continue": "繼續觀看",
     "row_new_episodes": "新集數",
     "row_recent": "加星號聊天的最新內容",
+    "row_scroll_back": "向後捲動",
+    "row_scroll_on": "向前捲動",
     "row_watch_later": "稍後觀看",
     "see_all": "查看全部",
     "see_all_count": "{count, plural, other {# 部影片}}",
-    "see_all_count_at_least": "{count, plural, other {#+ 部影片}}"
+    "see_all_count_at_least": "{count, plural, other {#+ 部影片}}",
+    "spotlight_next": "下一個",
+    "spotlight_position": "第 {index} 項，共 {count} 項",
+    "spotlight_previous": "上一個"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "無方塊",
     "subtitles": "字幕",
     "support_detail": "GitHub Sponsors 或 Buy Me a Coffee，各有一個 QR 碼",
+    "system_title_bar": "使用系統標題列",
+    "system_title_bar_off": "TMPlayer 自行繪製視窗按鈕。重新啟動後生效",
+    "system_title_bar_on": "由視窗系統繪製標題列。重新啟動後生效",
     "tap_plays": "點畫面來播放或暫停",
     "tap_plays_off": "關閉：點一下會顯示控制列，大按鈕用來暫停",
     "tap_plays_on": "點一下會暫停並顯示控制列；再點一下即播放",
@@ -2001,5 +2027,11 @@
     "highlight_series": "影集檢視：集數依季分組，每一季都有分頁",
     "subtitle": "此版本的重點",
     "title": "{version} 的新功能"
+  },
+  "window": {
+    "close": "關閉",
+    "maximize": "最大化",
+    "minimize": "最小化",
+    "restore": "還原"
   }
 }

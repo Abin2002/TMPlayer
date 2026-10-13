@@ -359,6 +359,24 @@
     "resolution": "Risoluzione",
     "resume_at": "Riprendi da {time}",
     "resume_at_detail": "Riparte da dove ti eri fermato",
+    "round_chat": "Chat",
+    "round_delete": "Elimina",
+    "round_download": "Scarica",
+    "round_downloaded": "Scaricato",
+    "round_link": "Link",
+    "round_open_with": "Apri con",
+    "round_remove": "Rimuovi",
+    "round_restart": "Da capo",
+    "round_save": "Salva",
+    "round_season": "Stagione",
+    "round_select": "Seleziona",
+    "round_show_info": "Info",
+    "round_stop": "Ferma",
+    "round_trailer": "Trailer",
+    "round_unseen": "Non visti",
+    "round_unwatched": "Non visto",
+    "round_watch_later": "Più tardi",
+    "round_watched": "Visto",
     "season_starts": "La stagione {number} inizia il {date}",
     "seasons_count": "{count, plural, one {# stagione} many {# di stagioni} other {# stagioni}}",
     "show_ended": "Conclusa",
@@ -691,10 +709,15 @@
     "row_continue": "Continua a guardare",
     "row_new_episodes": "Nuovi episodi",
     "row_recent": "Aggiunti di recente nelle chat con stella",
+    "row_scroll_back": "Scorri indietro",
+    "row_scroll_on": "Scorri avanti",
     "row_watch_later": "Guarda più tardi",
     "see_all": "Vedi tutto",
     "see_all_count": "{count, plural, one {# video} many {# di video} other {# video}}",
-    "see_all_count_at_least": "{count, plural, one {#+ video} many {#+ di video} other {#+ video}}"
+    "see_all_count_at_least": "{count, plural, one {#+ video} many {#+ di video} other {#+ video}}",
+    "spotlight_next": "Successivo",
+    "spotlight_position": "{index} di {count}",
+    "spotlight_previous": "Precedente"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "Senza riquadro",
     "subtitles": "Sottotitoli",
     "support_detail": "GitHub Sponsors o Buy Me a Coffee, con un codice QR per ciascuno",
+    "system_title_bar": "Usa la barra del titolo di sistema",
+    "system_title_bar_off": "TMPlayer disegna i propri pulsanti della finestra. Ha effetto dopo il riavvio",
+    "system_title_bar_on": "Il sistema delle finestre disegna la barra del titolo. Ha effetto dopo il riavvio",
     "tap_plays": "Tocca l'immagine per riprodurre o mettere in pausa",
     "tap_plays_off": "No: un tocco mostra i controlli, e il grande pulsante mette in pausa",
     "tap_plays_on": "Un tocco mette in pausa e mostra i controlli; un altro tocco riproduce",
@@ -2001,5 +2027,11 @@
     "highlight_series": "Vista Serie: episodi raggruppati per stagione, con una scheda per ciascuna",
     "subtitle": "Le novità principali di questa versione",
     "title": "Novità della {version}"
+  },
+  "window": {
+    "close": "Chiudi",
+    "maximize": "Ingrandisci",
+    "minimize": "Riduci a icona",
+    "restore": "Ripristina"
   }
 }

@@ -359,6 +359,24 @@
     "resolution": "রেজোলিউশন",
     "resume_at": "{time} থেকে চালিয়ে যান",
     "resume_at_detail": "যেখানে থামিয়েছিলেন সেখান থেকে চালিয়ে যায়",
+    "round_chat": "চ্যাট",
+    "round_delete": "মুছুন",
+    "round_download": "ডাউনলোড",
+    "round_downloaded": "ডাউনলোড হয়েছে",
+    "round_link": "লিংক",
+    "round_open_with": "অন্য অ্যাপে",
+    "round_remove": "সরান",
+    "round_restart": "শুরু থেকে",
+    "round_save": "সেভ",
+    "round_season": "সিজন",
+    "round_select": "বাছুন",
+    "round_show_info": "তথ্য",
+    "round_stop": "থামান",
+    "round_trailer": "ট্রেলার",
+    "round_unseen": "না দেখা",
+    "round_unwatched": "দেখা হয়নি",
+    "round_watch_later": "পরে দেখুন",
+    "round_watched": "দেখা হয়েছে",
     "season_starts": "সিজন {number} শুরু হবে {date}-এ",
     "seasons_count": "{count, plural, one {#টি সিজন} other {#টি সিজন}}",
     "show_ended": "শেষ হয়েছে",
@@ -691,10 +709,15 @@
     "row_continue": "দেখা চালিয়ে যান",
     "row_new_episodes": "নতুন পর্ব",
     "row_recent": "স্টার দেওয়া চ্যাটে সম্প্রতি যোগ হয়েছে",
+    "row_scroll_back": "পিছনে স্ক্রল করুন",
+    "row_scroll_on": "সামনে স্ক্রল করুন",
     "row_watch_later": "পরে দেখুন",
     "see_all": "সব দেখুন",
     "see_all_count": "{count, plural, one {#টি ভিডিও} other {#টি ভিডিও}}",
-    "see_all_count_at_least": "{count, plural, one {#+টি ভিডিও} other {#+টি ভিডিও}}"
+    "see_all_count_at_least": "{count, plural, one {#+টি ভিডিও} other {#+টি ভিডিও}}",
+    "spotlight_next": "পরবর্তী",
+    "spotlight_position": "{count}টির মধ্যে {index}",
+    "spotlight_previous": "আগের"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "বক্স ছাড়া",
     "subtitles": "সাবটাইটেল",
     "support_detail": "GitHub Sponsors বা Buy Me a Coffee, প্রতিটির জন্য একটি QR কোডসহ",
+    "system_title_bar": "সিস্টেমের টাইটেল বার ব্যবহার করুন",
+    "system_title_bar_off": "TMPlayer নিজের উইন্ডো বোতাম নিজেই আঁকে। রিস্টার্টের পরে কার্যকর হবে",
+    "system_title_bar_on": "টাইটেল বার আঁকে উইন্ডো সিস্টেম। রিস্টার্টের পরে কার্যকর হবে",
     "tap_plays": "ছবিতে ট্যাপ করে চালান বা বিরতি দিন",
     "tap_plays_off": "বন্ধ: ট্যাপে কন্ট্রোল দেখায়, আর বড় বোতামে বিরতি হয়",
     "tap_plays_on": "ট্যাপে বিরতি হয় ও কন্ট্রোল দেখায়; আরেকটি ট্যাপে চলে",
@@ -2001,5 +2027,11 @@
     "highlight_series": "সিরিজ ভিউ: পর্বগুলো সিজন অনুযায়ী সাজানো, প্রতিটির জন্য ট্যাবসহ",
     "subtitle": "এই সংস্করণের মূল আকর্ষণ",
     "title": "{version}-এ নতুন কী"
+  },
+  "window": {
+    "close": "বন্ধ করুন",
+    "maximize": "বড় করুন",
+    "minimize": "ছোট করুন",
+    "restore": "পুনরুদ্ধার করুন"
   }
 }

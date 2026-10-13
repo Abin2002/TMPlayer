@@ -359,6 +359,24 @@
     "resolution": "解像度",
     "resume_at": "{time}から再開",
     "resume_at_detail": "止めたところから続けます",
+    "round_chat": "チャット",
+    "round_delete": "削除",
+    "round_download": "ダウンロード",
+    "round_downloaded": "保存済み",
+    "round_link": "リンク",
+    "round_open_with": "別アプリ",
+    "round_remove": "外す",
+    "round_restart": "最初から",
+    "round_save": "保存",
+    "round_season": "シーズン",
+    "round_select": "選択",
+    "round_show_info": "詳細",
+    "round_stop": "停止",
+    "round_trailer": "予告編",
+    "round_unseen": "未視聴分",
+    "round_unwatched": "未視聴",
+    "round_watch_later": "あとで見る",
+    "round_watched": "視聴済み",
     "season_starts": "シーズン{number}は{date}開始",
     "seasons_count": "{count, plural, other {#シーズン}}",
     "show_ended": "終了",
@@ -691,10 +709,15 @@
     "row_continue": "視聴中",
     "row_new_episodes": "新しいエピソード",
     "row_recent": "スター付きチャットの新着",
+    "row_scroll_back": "前へスクロール",
+    "row_scroll_on": "次へスクロール",
     "row_watch_later": "あとで見る",
     "see_all": "すべて表示",
     "see_all_count": "{count, plural, other {#本の動画}}",
-    "see_all_count_at_least": "{count, plural, other {#本以上の動画}}"
+    "see_all_count_at_least": "{count, plural, other {#本以上の動画}}",
+    "spotlight_next": "次へ",
+    "spotlight_position": "{index} / {count}",
+    "spotlight_previous": "前へ"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "ボックスなし",
     "subtitles": "字幕",
     "support_detail": "GitHub SponsorsまたはBuy Me a Coffee。それぞれQRコードがあります",
+    "system_title_bar": "システムのタイトルバーを使う",
+    "system_title_bar_off": "TMPlayer が独自のウィンドウボタンを描画します。再起動後に有効になります",
+    "system_title_bar_on": "タイトルバーをウィンドウシステムが描画します。再起動後に有効になります",
     "tap_plays": "画面のタップで再生または一時停止",
     "tap_plays_off": "オフ: タップでコントロールを表示し、大きなボタンで一時停止します",
     "tap_plays_on": "タップで一時停止してコントロールを表示し、もう一度タップで再生します",
@@ -2001,5 +2027,11 @@
     "highlight_series": "シリーズ表示: エピソードをシーズンごとにまとめ、それぞれタブで切り替え",
     "subtitle": "このバージョンの主な変更点",
     "title": "{version}の新機能"
+  },
+  "window": {
+    "close": "閉じる",
+    "maximize": "最大化",
+    "minimize": "最小化",
+    "restore": "元に戻す"
   }
 }

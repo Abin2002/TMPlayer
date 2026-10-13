@@ -359,6 +359,24 @@
     "resolution": "Resolução",
     "resume_at": "Retomar em {time}",
     "resume_at_detail": "Continua de onde você parou",
+    "round_chat": "Chat",
+    "round_delete": "Excluir",
+    "round_download": "Baixar",
+    "round_downloaded": "Baixado",
+    "round_link": "Link",
+    "round_open_with": "Abrir com",
+    "round_remove": "Remover",
+    "round_restart": "Recomeçar",
+    "round_save": "Salvar",
+    "round_season": "Temporada",
+    "round_select": "Selecionar",
+    "round_show_info": "Info",
+    "round_stop": "Parar",
+    "round_trailer": "Trailer",
+    "round_unseen": "Não vistos",
+    "round_unwatched": "Não visto",
+    "round_watch_later": "Mais tarde",
+    "round_watched": "Assistido",
     "season_starts": "A temporada {number} começa em {date}",
     "seasons_count": "{count, plural, one {# temporada} many {# de temporadas} other {# temporadas}}",
     "show_ended": "Encerrada",
@@ -691,10 +709,15 @@
     "row_continue": "Continuar assistindo",
     "row_new_episodes": "Episódios novos",
     "row_recent": "Adicionados recentemente nos chats com estrela",
+    "row_scroll_back": "Rolar para trás",
+    "row_scroll_on": "Rolar para frente",
     "row_watch_later": "Assistir mais tarde",
     "see_all": "Ver tudo",
     "see_all_count": "{count, plural, one {# vídeo} many {# de vídeos} other {# vídeos}}",
-    "see_all_count_at_least": "{count, plural, one {#+ vídeo} many {#+ de vídeos} other {#+ vídeos}}"
+    "see_all_count_at_least": "{count, plural, one {#+ vídeo} many {#+ de vídeos} other {#+ vídeos}}",
+    "spotlight_next": "Próximo",
+    "spotlight_position": "{index} de {count}",
+    "spotlight_previous": "Anterior"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "Sem caixa",
     "subtitles": "Legendas",
     "support_detail": "GitHub Sponsors ou Buy Me a Coffee, com um QR code para cada",
+    "system_title_bar": "Usar a barra de título do sistema",
+    "system_title_bar_off": "O TMPlayer desenha os próprios botões da janela. Vale depois de reiniciar",
+    "system_title_bar_on": "O sistema de janelas desenha a barra de título. Vale depois de reiniciar",
     "tap_plays": "Toque na imagem para reproduzir ou pausar",
     "tap_plays_off": "Desativado: um toque mostra os controles, e o botão grande pausa",
     "tap_plays_on": "Um toque pausa e mostra os controles; outro toque reproduz",
@@ -2001,5 +2027,11 @@
     "highlight_series": "Visão de séries: episódios agrupados por temporada, com uma aba para cada",
     "subtitle": "Os destaques desta versão",
     "title": "Novidades da versão {version}"
+  },
+  "window": {
+    "close": "Fechar",
+    "maximize": "Maximizar",
+    "minimize": "Minimizar",
+    "restore": "Restaurar"
   }
 }

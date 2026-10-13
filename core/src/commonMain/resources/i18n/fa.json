@@ -359,6 +359,24 @@
     "resolution": "وضوح",
     "resume_at": "ادامه از {time}",
     "resume_at_detail": "از همان‌جا که رها کردید ادامه می‌دهد",
+    "round_chat": "گفتگو",
+    "round_delete": "حذف",
+    "round_download": "دانلود",
+    "round_downloaded": "دانلودشده",
+    "round_link": "لینک",
+    "round_open_with": "بازکردن با",
+    "round_remove": "برداشتن",
+    "round_restart": "از اول",
+    "round_save": "ذخیره",
+    "round_season": "فصل",
+    "round_select": "انتخاب",
+    "round_show_info": "اطلاعات",
+    "round_stop": "توقف",
+    "round_trailer": "تریلر",
+    "round_unseen": "دیده‌نشده‌ها",
+    "round_unwatched": "دیده‌نشده",
+    "round_watch_later": "بعداً",
+    "round_watched": "دیده‌شده",
     "season_starts": "فصل {number} از {date} شروع می‌شود",
     "seasons_count": "{count, plural, one {# فصل} other {# فصل}}",
     "show_ended": "پایان‌یافته",
@@ -691,10 +709,15 @@
     "row_continue": "ادامه تماشا",
     "row_new_episodes": "قسمت‌های جدید",
     "row_recent": "تازه‌های گفتگوهای ستاره‌دار",
+    "row_scroll_back": "پیمایش به عقب",
+    "row_scroll_on": "پیمایش به جلو",
     "row_watch_later": "تماشا در بعد",
     "see_all": "مشاهدهٔ همه",
     "see_all_count": "{count, plural, one {# ویدیو} other {# ویدیو}}",
-    "see_all_count_at_least": "{count, plural, one {+# ویدیو} other {+# ویدیو}}"
+    "see_all_count_at_least": "{count, plural, one {+# ویدیو} other {+# ویدیو}}",
+    "spotlight_next": "بعدی",
+    "spotlight_position": "{index} از {count}",
+    "spotlight_previous": "قبلی"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "بدون کادر",
     "subtitles": "زیرنویس",
     "support_detail": "GitHub Sponsors یا Buy Me a Coffee، با یک کد QR برای هرکدام",
+    "system_title_bar": "استفاده از نوار عنوان سیستم",
+    "system_title_bar_off": "TMPlayer دکمه‌های پنجره را خودش می‌کشد. پس از راه‌اندازی دوباره اعمال می‌شود",
+    "system_title_bar_on": "نوار عنوان را سیستم پنجره می‌کشد. پس از راه‌اندازی دوباره اعمال می‌شود",
     "tap_plays": "ضربه روی تصویر برای پخش یا توقف",
     "tap_plays_off": "خاموش: ضربه کنترل‌ها را نشان می‌دهد و دکمهٔ بزرگ متوقف می‌کند",
     "tap_plays_on": "ضربه متوقف می‌کند و کنترل‌ها را نشان می‌دهد؛ ضربهٔ دیگر پخش می‌کند",
@@ -2001,5 +2027,11 @@
     "highlight_series": "نمای سریال: قسمت‌ها بر اساس فصل، با زبانه برای هرکدام",
     "subtitle": "نکات برجستهٔ این نسخه",
     "title": "تازه‌های {version}"
+  },
+  "window": {
+    "close": "بستن",
+    "maximize": "بزرگ کردن",
+    "minimize": "کوچک کردن",
+    "restore": "بازگرداندن"
   }
 }

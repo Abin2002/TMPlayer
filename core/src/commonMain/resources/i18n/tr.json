@@ -359,6 +359,24 @@
     "resolution": "Çözünürlük",
     "resume_at": "{time} noktasından devam et",
     "resume_at_detail": "Kaldığın yerden sürer",
+    "round_chat": "Sohbet",
+    "round_delete": "Sil",
+    "round_download": "İndir",
+    "round_downloaded": "İndirildi",
+    "round_link": "Bağlantı",
+    "round_open_with": "Diğer oynatıcı",
+    "round_remove": "Kaldır",
+    "round_restart": "Baştan",
+    "round_save": "Kaydet",
+    "round_season": "Sezon",
+    "round_select": "Seç",
+    "round_show_info": "Bilgi",
+    "round_stop": "Durdur",
+    "round_trailer": "Fragman",
+    "round_unseen": "İzlenmeyenler",
+    "round_unwatched": "İzlenmedi",
+    "round_watch_later": "Sonra izle",
+    "round_watched": "İzlendi",
     "season_starts": "{number}. sezon {date} tarihinde başlıyor",
     "seasons_count": "{count, plural, one {# sezon} other {# sezon}}",
     "show_ended": "Bitti",
@@ -691,10 +709,15 @@
     "row_continue": "İzlemeye devam et",
     "row_new_episodes": "Yeni bölümler",
     "row_recent": "Yıldızlı sohbetlere son eklenenler",
+    "row_scroll_back": "Geri kaydır",
+    "row_scroll_on": "İleri kaydır",
     "row_watch_later": "Daha sonra izle",
     "see_all": "Tümünü gör",
     "see_all_count": "{count, plural, one {# video} other {# video}}",
-    "see_all_count_at_least": "{count, plural, one {#+ video} other {#+ video}}"
+    "see_all_count_at_least": "{count, plural, one {#+ video} other {#+ video}}",
+    "spotlight_next": "Sonraki",
+    "spotlight_position": "{index} / {count}",
+    "spotlight_previous": "Önceki"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "Kutusuz",
     "subtitles": "Altyazı",
     "support_detail": "GitHub Sponsors ya da Buy Me a Coffee, her biri için QR koduyla",
+    "system_title_bar": "Sistem başlık çubuğunu kullan",
+    "system_title_bar_off": "TMPlayer kendi pencere düğmelerini çizer. Yeniden başlatınca geçerli olur",
+    "system_title_bar_on": "Başlık çubuğunu pencere sistemi çizer. Yeniden başlatınca geçerli olur",
     "tap_plays": "Oynatmak ya da duraklatmak için görüntüye dokun",
     "tap_plays_off": "Kapalı: dokunuş kontrolleri gösterir, büyük düğme duraklatır",
     "tap_plays_on": "Dokunuş duraklatır ve kontrolleri gösterir; bir dokunuş daha oynatır",
@@ -2001,5 +2027,11 @@
     "highlight_series": "Dizi görünümü: bölümler sezona göre gruplanır, her biri için sekmelerle",
     "subtitle": "Bu sürümün öne çıkanları",
     "title": "{version} sürümündeki yenilikler"
+  },
+  "window": {
+    "close": "Kapat",
+    "maximize": "Ekranı kapla",
+    "minimize": "Simge durumuna küçült",
+    "restore": "Önceki boyut"
   }
 }

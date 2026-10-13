@@ -359,6 +359,24 @@
     "resolution": "الدقة",
     "resume_at": "استئناف من {time}",
     "resume_at_detail": "يتابع من حيث توقفت",
+    "round_chat": "دردشة",
+    "round_delete": "حذف",
+    "round_download": "تنزيل",
+    "round_downloaded": "مُنزَّل",
+    "round_link": "رابط",
+    "round_open_with": "فتح باستخدام",
+    "round_remove": "إزالة",
+    "round_restart": "من البداية",
+    "round_save": "حفظ",
+    "round_season": "الموسم",
+    "round_select": "تحديد",
+    "round_show_info": "معلومات",
+    "round_stop": "إيقاف",
+    "round_trailer": "الإعلان",
+    "round_unseen": "غير المُشاهَد",
+    "round_unwatched": "غير مُشاهَد",
+    "round_watch_later": "لاحقًا",
+    "round_watched": "مُشاهَد",
     "season_starts": "يبدأ الموسم {number} في {date}",
     "seasons_count": "{count, plural, zero {لا مواسم} one {موسم واحد} two {موسمان} few {# مواسم} many {# موسمًا} other {# موسم}}",
     "show_ended": "انتهى",
@@ -691,10 +709,15 @@
     "row_continue": "متابعة المشاهدة",
     "row_new_episodes": "حلقات جديدة",
     "row_recent": "أُضيف مؤخرًا في المحادثات المميّزة",
+    "row_scroll_back": "التمرير للخلف",
+    "row_scroll_on": "التمرير للأمام",
     "row_watch_later": "المشاهدة لاحقًا",
     "see_all": "عرض الكل",
     "see_all_count": "{count, plural, zero {لا فيديوهات} one {فيديو واحد} two {فيديوهان} few {# فيديوهات} many {# فيديو} other {# فيديو}}",
-    "see_all_count_at_least": "{count, plural, zero {لا فيديوهات} one {فيديو واحد أو أكثر} two {فيديوهان أو أكثر} few {#+ فيديوهات} many {#+ فيديو} other {#+ فيديو}}"
+    "see_all_count_at_least": "{count, plural, zero {لا فيديوهات} one {فيديو واحد أو أكثر} two {فيديوهان أو أكثر} few {#+ فيديوهات} many {#+ فيديو} other {#+ فيديو}}",
+    "spotlight_next": "التالي",
+    "spotlight_position": "{index} من {count}",
+    "spotlight_previous": "السابق"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "بلا مربع",
     "subtitles": "الترجمة",
     "support_detail": "GitHub Sponsors أو Buy Me a Coffee، مع رمز QR لكل منهما",
+    "system_title_bar": "استخدام شريط عنوان النظام",
+    "system_title_bar_off": "يرسم TMPlayer أزرار النافذة بنفسه. يسري بعد إعادة التشغيل",
+    "system_title_bar_on": "يرسم نظام النوافذ شريط العنوان. يسري بعد إعادة التشغيل",
     "tap_plays": "انقر على الصورة للتشغيل أو الإيقاف المؤقت",
     "tap_plays_off": "متوقف: النقرة تُظهر عناصر التحكم، والزر الكبير يوقف مؤقتًا",
     "tap_plays_on": "النقرة توقف مؤقتًا وتُظهر عناصر التحكم، ونقرة أخرى تشغّل",
@@ -2001,5 +2027,11 @@
     "highlight_series": "عرض المسلسلات: الحلقات مجمّعة حسب الموسم، مع تبويب لكل موسم",
     "subtitle": "أبرز ما في هذا الإصدار",
     "title": "ما الجديد في {version}"
+  },
+  "window": {
+    "close": "إغلاق",
+    "maximize": "تكبير",
+    "minimize": "تصغير",
+    "restore": "استعادة"
   }
 }
