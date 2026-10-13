@@ -166,17 +166,19 @@ class NewEpisodesTest {
     }
 
     @Test
-    fun `Home lists new episodes right after Continue watching`() {
+    fun `Home lists new episodes after Continue watching and Watch later`() {
         val one = video("Harbour.Notes.S01E01.mkv", before)
         val two = video("Harbour.Notes.S01E02.mkv", after)
         val other = video("Lecture notes.mp4", before, chatId = 5)
+        val saved = video("Night Train (2019) 1080p.mkv", before, chatId = 6)
         val rows = HomeRows.build(
             continueWatching = listOf(resume(other)),
             favourites = listOf(ChatSummary(1, "Chat", null, 0, ChatKind.Channel)),
             loaded = mapOf(1L to listOf(two, one)),
             recent = null,
+            watchLater = listOf(WatchLaterRecord.of(saved, "Films", addedAt = visit)),
             fresh = listOf(NewEpisode(two, "Harbour Notes", "S01E02")),
         )
-        assertEquals(listOf("continue", "new-episodes", "chat-1"), rows.map { it.key })
+        assertEquals(listOf("continue", "watch-later", "new-episodes", "chat-1"), rows.map { it.key })
     }
 }

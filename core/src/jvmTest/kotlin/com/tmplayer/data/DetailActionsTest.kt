@@ -1,5 +1,6 @@
 package com.tmplayer.data
 
+import com.tmplayer.data.DetailAction.AddWatchLater
 import com.tmplayer.data.DetailAction.CancelDownload
 import com.tmplayer.data.DetailAction.CopyLink
 import com.tmplayer.data.DetailAction.Download
@@ -10,6 +11,7 @@ import com.tmplayer.data.DetailAction.OpenChat
 import com.tmplayer.data.DetailAction.OpenElsewhere
 import com.tmplayer.data.DetailAction.Play
 import com.tmplayer.data.DetailAction.RemoveDownload
+import com.tmplayer.data.DetailAction.RemoveWatchLater
 import com.tmplayer.data.DetailAction.Resume
 import com.tmplayer.data.DetailAction.SaveToDownloads
 import com.tmplayer.data.DetailAction.SelectVideos
@@ -97,5 +99,13 @@ class DetailActionsTest {
     fun `outside the chat, Home and search offer the chat and no selecting`() {
         val home = DetailContext(canBeSaved = true, outsideChat = true)
         assertEquals(listOf(Play, MarkWatched, Download, OpenChat), DetailActions.of(home))
+    }
+
+    @Test
+    fun `watch later sits beside the watched mark, restricted chats included`() {
+        assertEquals(listOf(Play, MarkWatched, AddWatchLater), DetailActions.of(DetailContext(canBeSaved = false, watchLater = false)))
+        val saved = DetailActions.of(phoneGrid.copy(watchLater = true))
+        assertEquals(listOf(Play, MarkWatched, RemoveWatchLater, Download), saved.take(4))
+        assertFalse(DetailActions.keepsACopy(AddWatchLater))
     }
 }

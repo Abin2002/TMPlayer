@@ -146,11 +146,13 @@ internal fun SeriesOpened(
     onPlay: (MediaItem) -> Unit,
     onDismiss: () -> Unit,
     onLongClick: ((MediaItem) -> Unit)? = null,
+    /** Download season and Download unwatched; see [queueSeason]. Null leaves them out. */
+    onDownload: ((SeasonDownloadRequest) -> Unit)? = null,
 ) {
     if (isTouch()) {
-        SeriesSheet(series, watch, onPlay, onDismiss, onLongClick)
+        SeriesSheet(series, watch, onPlay, onDismiss, onLongClick, onDownload)
     } else {
-        TvSeriesPage(series, watch, onPlay, onDismiss)
+        TvSeriesPage(series, watch, onPlay, onDismiss, onDownload)
     }
 }
 
@@ -162,6 +164,7 @@ private fun SeriesSheet(
     onPlay: (MediaItem) -> Unit,
     onDismiss: () -> Unit,
     onLongClick: ((MediaItem) -> Unit)?,
+    onDownload: ((SeasonDownloadRequest) -> Unit)?,
 ) {
     // Opened all the way: half a sheet of episodes is two rows, and the list is the point.
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -174,6 +177,7 @@ private fun SeriesSheet(
             watch = watch,
             onPlay = { onDismiss(); onPlay(it) },
             onLongClick = onLongClick,
+            onDownload = onDownload,
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
             modifier = Modifier.fillMaxWidth().fillMaxHeight(0.92f).keepScrollInSheet(),
         )
@@ -191,6 +195,7 @@ private fun TvSeriesPage(
     watch: SeriesWatch,
     onPlay: (MediaItem) -> Unit,
     onDismiss: () -> Unit,
+    onDownload: ((SeasonDownloadRequest) -> Unit)?,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -201,6 +206,7 @@ private fun TvSeriesPage(
                 series = series,
                 watch = watch,
                 onPlay = { onDismiss(); onPlay(it) },
+                onDownload = onDownload,
                 contentPadding = PaddingValues(start = Tv.SafeH, end = Tv.SafeH, top = 4.dp, bottom = Tv.SafeV),
                 modifier = Modifier.fillMaxSize().padding(top = Tv.SafeV + 8.dp),
             )

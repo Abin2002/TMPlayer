@@ -43,6 +43,7 @@ class HomeRowsTest {
 
     private fun ids(row: HomeRow): List<Long> = when (row) {
         is HomeRow.Continue -> row.records.map { it.messageId }
+        is HomeRow.WatchLater -> row.records.map { it.messageId }
         is HomeRow.Chat -> row.entries.flatMap(::idsOf)
         is HomeRow.NewEpisodes -> row.episodes.map { it.item.messageId }
         is HomeRow.Recent -> row.entries.flatMap(::idsOf)
@@ -91,6 +92,7 @@ class HomeRowsTest {
         rows.forEach { row ->
             val size = when (row) {
                 is HomeRow.Continue -> row.records.size
+                is HomeRow.WatchLater -> row.records.size
                 is HomeRow.Chat -> row.entries.size
                 is HomeRow.NewEpisodes -> row.episodes.size
                 is HomeRow.Recent -> row.entries.size
@@ -216,5 +218,23 @@ class HomeRowsTest {
         assertTrue(row.more.isEmpty())
         assertTrue(row.hasMore)
         assertTrue(row.totalAtLeast)
+    }
+
+    @Test
+    fun `watch later follows Continue, leaves out what was started, and is not repeated below`() {
+        val saved = (1..3).map { video(1) }
+        val started = saved[0]
+        val later = saved.mapIndexed { i, item -> WatchLaterRecord.of(item, "Chat 1", addedAt = 10L - i) }
+        val rows = HomeRows.build(
+            listOf(resume(started)),
+            listOf(chat(1)),
+            mapOf(1L to saved + video(1)),
+            recent = emptyList(),
+            watchLater = later,
+        )
+        assertEquals(listOf("continue", "watch-later", "chat-1"), rows.map { it.key })
+        assertEquals(saved.drop(1).map { it.messageId }, ids(rows[1]))
+        assertEquals(1, ids(rows[2]).size)
+        assertTrue(HomeRows.build(emptyList(), emptyList(), emptyMap(), recent = emptyList(), watchLater = emptyList()).isEmpty())
     }
 }

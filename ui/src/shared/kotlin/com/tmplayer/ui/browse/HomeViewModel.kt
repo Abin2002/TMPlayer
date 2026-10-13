@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
+import com.tmplayer.data.WatchLaterRecord
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.emptyFlow
@@ -158,7 +159,7 @@ class HomeViewModel(
 
     private val _art = MutableStateFlow<Map<String, MediaItem>>(emptyMap())
 
-    /** Continue watching videos as Telegram describes them, by progress key, for their pictures. */
+    /** Continue watching and Watch later videos as Telegram describes them, by progress key, for their pictures. */
     val art: StateFlow<Map<String, MediaItem>> = _art.asStateFlow()
 
     private val gate = Semaphore(PARALLEL)
@@ -280,10 +281,15 @@ class HomeViewModel(
     }
 
     /** Looks up a Continue watching tile's picture, once. A miss leaves the tile its neutral art. */
-    fun requestArt(record: ResumeRecord) {
-        val key = SettingsStore.progressKey(record.chatId, record.messageId)
+    fun requestArt(record: ResumeRecord) = requestArt(record.chatId, record.messageId)
+
+    /** The same for a Watch later tile, whose record keeps no picture either. */
+    fun requestArt(record: WatchLaterRecord) = requestArt(record.chatId, record.messageId)
+
+    private fun requestArt(chatId: Long, messageId: Long) {
+        val key = SettingsStore.progressKey(chatId, messageId)
         once("art:$key") {
-            val item = runCatching { source.mediaItem(record.chatId, record.messageId) }.getOrElse { failure ->
+            val item = runCatching { source.mediaItem(chatId, messageId) }.getOrElse { failure ->
                 if (failure is CancellationException) throw failure
                 null
             } ?: return@once
@@ -433,6 +439,7 @@ fun rememberHomeRows(
     chats: List<ChatSummary>,
     favourites: Set<Long>,
     continueWatching: List<ResumeRecord>,
+    watchLater: List<WatchLaterRecord> = emptyList(),
     watched: Collection<WatchedRecord> = emptyList(),
 ): List<HomeRow> {
     val loaded by model.loaded.collectAsState()
@@ -441,7 +448,7 @@ fun rememberHomeRows(
     val fresh by model.newEpisodes.collectAsState()
     LaunchedEffect(model, continueWatching, watched) { model.followShows(continueWatching, watched) }
     val starred = remember(chats, favourites) { HomeRows.favouriteChats(chats, favourites) }
-    return remember(continueWatching, starred, loaded, recent, partial, fresh) {
-        HomeRows.build(continueWatching, starred, loaded, recent, partial = partial, fresh = fresh)
+    return remember(continueWatching, watchLater, starred, loaded, recent, partial, fresh) {
+        HomeRows.build(continueWatching, starred, loaded, recent, partial = partial, watchLater = watchLater, fresh = fresh)
     }
 }

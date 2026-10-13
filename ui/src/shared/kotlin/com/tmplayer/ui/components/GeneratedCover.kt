@@ -1,0 +1,197 @@
+package com.tmplayer.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.tmplayer.data.MediaItem
+import com.tmplayer.data.MediaName
+import com.tmplayer.ui.theme.OnArt
+import com.tmplayer.ui.theme.Scrims
+import java.util.Locale
+
+/**
+ * What a [GeneratedCover] draws for one file, worked out once and remembered: the title to write,
+ * the number to set large, which of the [CoverArt.Pairs] to paint, and the chat's initial where
+ * the chat is not obvious from the screen.
+ */
+@Immutable
+data class Cover(
+    val title: String,
+    val number: Int?,
+    val pair: Int,
+    val chatInitial: String? = null,
+)
+
+/**
+ * The art for a file that has none: a lecture, a screen recording, a course part posted with no
+ * thumbnail. A grey square with one letter on it reads as broken, and a chat of forty of them as a
+ * chat that failed to load, so a file with no picture gets a cover that looks intended instead.
+ *
+ * A diagonal gradient in one of eight dark pairs, chosen by the chat and the title so a file
+ * keeps its colour and every part of one course shares it; the title at the bottom start, white,
+ * over [Scrims.tileFoot]; and where the name carries an episode, a part, a lecture or a chapter
+ * number, that number set large and faint at the top end, so a course reads as a numbered set.
+ *
+ * Gradient and text only, with no bitmap, so a grid of them costs no more to draw than the grey
+ * squares did. The colours are the same in both themes: the cover is a picture, and pictures are
+ * dark.
+ *
+ * [compact] is for a tile under about 160 dp wide (the phone's grid), where the title takes a
+ * smaller style and two lines. [showTitle] off leaves the colour and the number, for a slot
+ * whose title is written beside it anyway, or one too small to hold any text.
+ */
+@Composable
+fun GeneratedCover(
+    cover: Cover,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
+    showTitle: Boolean = true,
+) {
+    val (start, end) = CoverArt.Pairs[cover.pair]
+    val inset = if (compact) 8.dp else 12.dp
+    Box(modifier.background(Brush.linearGradient(listOf(start, end)))) {
+        cover.number?.let { number ->
+            Text(
+                number.toString(),
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
+                color = OnArt.copy(alpha = NUMERAL_ALPHA),
+                maxLines = 1,
+                modifier = Modifier.align(Alignment.TopEnd).padding(horizontal = inset, vertical = inset / 2),
+            )
+        }
+        cover.chatInitial?.let { initial ->
+            Box(
+                Modifier
+                    .align(Alignment.TopStart)
+                    .padding(inset)
+                    .size(if (compact) 20.dp else 24.dp)
+                    .clip(CircleShape)
+                    .background(OnArt.copy(alpha = INITIAL_FILL_ALPHA)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(initial, style = MaterialTheme.typography.labelSmall, color = OnArt, maxLines = 1)
+            }
+        }
+        if (showTitle && cover.title.isNotBlank()) {
+            Box(Modifier.fillMaxSize().background(Scrims.tileFoot))
+            Text(
+                cover.title,
+                style = (if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium)
+                    .copy(fontWeight = FontWeight.Bold),
+                color = OnArt,
+                maxLines = if (compact) 2 else 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.align(Alignment.BottomStart).padding(inset),
+            )
+        }
+    }
+}
+
+/** [CoverArt.of] for [item], remembered for as long as the item is the same. */
+@Composable
+fun rememberCover(item: MediaItem, chatTitle: String? = null): Cover =
+    remember(item.chatId, item.messageId, item.title, item.caption, chatTitle) { CoverArt.of(item, chatTitle) }
+
+/** How a [Cover] is chosen: the pure half of [GeneratedCover], kept apart so it can be tested. */
+object CoverArt {
+
+    /**
+     * Eight hand-tuned dark pairs, the lighter stop first: indigo, teal, plum, rust, forest, sea
+     * blue, violet and olive. Every stop keeps white text at 6.9:1 or better, so the title is
+     * readable on the cover with no scrim at all, and the scrim only adds to it.
+     */
+    val Pairs: List<Pair<Color, Color>> = listOf(
+        Color(0xFF34397A) to Color(0xFF15173A),
+        Color(0xFF145A5A) to Color(0xFF082A2C),
+        Color(0xFF6A2A5E) to Color(0xFF2A1028),
+        Color(0xFF7A3524) to Color(0xFF30140D),
+        Color(0xFF245C34) to Color(0xFF0D2716),
+        Color(0xFF1F4A7E) to Color(0xFF0C1D38),
+        Color(0xFF4A3680) to Color(0xFF1C1438),
+        Color(0xFF6B5719) to Color(0xFF2B230A),
+    )
+
+    /** The cover for [item], with [chatTitle]'s initial where the screen does not say the chat. */
+    fun of(item: MediaItem, chatTitle: String? = null): Cover =
+        of(item.chatId, item.nameForParsing, item.caption, chatTitle, fallbackTitle = item.title)
+
+    /**
+     * The cover for the file called [name] in chat [chatId]. The title written on it is the name as
+     * [MediaName] reads it ("Harbour Notes" from "Harbour.Notes.S01E03.1080p.mkv"), or
+     * [fallbackTitle] when that comes out empty.
+     */
+    fun of(
+        chatId: Long,
+        name: String,
+        caption: String? = null,
+        chatTitle: String? = null,
+        fallbackTitle: String = name,
+    ): Cover {
+        val parsed = MediaName.parse(name, caption)
+        val title = parsed.title.ifBlank { fallbackTitle }
+        return Cover(
+            title = title,
+            number = parsed.episode ?: numeral(name) ?: caption?.let(::numeral),
+            pair = pairIndex(chatId, title),
+            chatInitial = chatTitle?.let(::initial),
+        )
+    }
+
+    /**
+     * Which of the [Pairs] a title in a chat wears. A hash of the two, so it is the same on every
+     * launch and every device, and every episode of a show (whose parsed titles match) shares it.
+     */
+    fun pairIndex(chatId: Long, title: String): Int {
+        val chat = (chatId xor (chatId ushr 32)).toInt()
+        val words = title.trim().lowercase(Locale.ROOT).hashCode()
+        return Math.floorMod(chat * 31 + words, Pairs.size)
+    }
+
+    /**
+     * The number a course or a set of parts puts in its names: "Lecture 07" gives 7, "Part 4" 4,
+     * "Chapter 12" 12. Episodes ("S01E03") are [MediaName]'s and are asked for there first; this is
+     * for the words it does not read. Null when the name carries no such number.
+     */
+    fun numeral(name: String): Int? =
+        NUMBERED.find(name.replace(SEPARATORS, " "))?.groupValues?.get(1)?.toIntOrNull()
+
+    private fun initial(chatTitle: String): String? {
+        val text = chatTitle.trim().takeIf { it.isNotEmpty() } ?: return null
+        val first = text.codePointAt(0)
+        return String(Character.toChars(first)).uppercase()
+    }
+
+    private val SEPARATORS = Regex("""[._]+""")
+
+    /**
+     * A counting word, then the number. Not inside another word ("Watch 3" is no chapter), and
+     * not more than three digits, so a year or a resolution is not mistaken for a part.
+     */
+    private val NUMBERED = Regex(
+        """(?<!\p{L})(?:lecture|lect|lec|part|pt|chapter|chap|ch|lesson|class|module|session|unit|day|week|episode|ep)""" +
+            """\s*[#:-]?\s*(\d{1,3})(?!\d)""",
+        RegexOption.IGNORE_CASE,
+    )
+}
+
+/** How faint the big number is: a mark on the colour, never competing with the title. */
+private const val NUMERAL_ALPHA = 0.22f
+
+/** The chat's initial sits on a disc of white at this alpha. */
+private const val INITIAL_FILL_ALPHA = 0.18f

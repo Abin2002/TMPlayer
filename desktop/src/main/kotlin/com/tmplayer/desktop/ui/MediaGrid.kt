@@ -109,6 +109,7 @@ import com.tmplayer.data.Td
 import com.tmplayer.data.valueOrNull
 import com.tmplayer.data.WatchPoint
 import com.tmplayer.desktop.WatchedWords
+import com.tmplayer.desktop.setWatchLater
 import com.tmplayer.desktop.setWatched
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.player.StreamStats
@@ -125,6 +126,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import com.tmplayer.desktop.os.OpenExternal
 import com.tmplayer.desktop.DownloadIndex
+import com.tmplayer.ui.browse.CourseHeader
 import com.tmplayer.ui.nav.BackHandler
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -210,6 +212,10 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             val cells = remember(arranged) {
                 arranged.map { if (it is com.tmplayer.data.ShelfEntry.Show) it.series.cover else (it as com.tmplayer.data.ShelfEntry.File).item }
             }
+            // A chat or a topic that is one course of lessons says how far through it the viewer
+            // is, over the posters; not while searching, when the listing is what was searched for.
+            val watch = rememberSeriesWatch(state)
+            val course = remember(content.items, watch, grouping) { if (grouping) watch.course(content.items) else null }
             val shows = remember(arranged) {
                 arranged.filterIsInstance<com.tmplayer.data.ShelfEntry.Show>().associate { it.series.cover.id to it.series }
             }
@@ -221,7 +227,14 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 chatTitle = chat.title,
                 grid = grid,
                 onNav = { gridNav = it },
-                header = ad?.let { { SponsoredCard(it, model) } },
+                header = if (ad == null && course == null) null else {
+                    {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            course?.let { CourseHeader(it, topicBar?.let { bar -> bar.nameOf(bar.selected) } ?: chat.title, onPlay = { item -> state.openPlayer(item, startFromBeginning = false) }) }
+                            ad?.let { SponsoredCard(it, model) }
+                        }
+                    }
+                },
                 loadingMore = content.loadingMore,
             )
         }
@@ -709,6 +722,8 @@ internal fun TileMenu(
     val record = LocalDownloadIndex.current[item.id]
     val row = downloads[item.fileId]
     val title = chatTitle.ifBlank { state.chatTitleOf(item.chatId) }
+    val laterKeys by state.watched.watchLater.keys.collectAsState(initial = emptySet())
+    val later = SettingsStore.progressKey(item.chatId, item.messageId) in laterKeys
     // Measured each time the menu opens, off the UI thread, for the "x GB free" on the download line.
     val free by produceState(0L, expanded) {
         if (expanded) value = withContext(Dispatchers.IO) { DiskInfo.of(DesktopPaths.downloadsDir).freeBytes }
@@ -753,6 +768,14 @@ internal fun TileMenu(
                 }
             })
         }
+        // Nothing is copied, so this stays for a chat that restricts saving.
+        DropdownMenuItem(text = { Text(if (later) s.detailWatchLaterRemove else s.detailWatchLaterAdd) }, onClick = {
+            onDismiss()
+            scope.launch {
+                runCatching { setWatchLater(state.watched, item, title, add = !later) }
+                toast(if (later) s.detailWatchLaterRemoved(item.title) else s.detailWatchLaterAdded(item.title))
+            }
+        })
         when {
             record != null -> {
                 DropdownMenuItem(text = { Text(s.downloadsInDownloads) }, onClick = { onDismiss(); state.go(Destination.Downloads) })

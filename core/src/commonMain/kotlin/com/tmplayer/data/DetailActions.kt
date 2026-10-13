@@ -17,6 +17,10 @@ enum class DetailAction {
     MarkWatched,
     MarkUnwatched,
 
+    /** Puts this one video on Watch later, without starring its chat. See [WatchLaterStore]. */
+    AddWatchLater,
+    RemoveWatchLater,
+
     /** Fetch the file into Downloads. */
     Download,
 
@@ -48,6 +52,8 @@ data class DetailContext(
     val resumeMs: Long = 0,
     /** On the Watched list. */
     val finished: Boolean = false,
+    /** On Watch later; null where the panel does not offer that list at all. */
+    val watchLater: Boolean? = null,
     /** In the Downloads folder. */
     val inDownloads: Boolean = false,
     /** Whole in the watch cache. */
@@ -75,6 +81,8 @@ object DetailActions {
             add(DetailAction.Play)
         }
         add(if (context.finished) DetailAction.MarkUnwatched else DetailAction.MarkWatched)
+        // Nothing is copied, only remembered, so a chat that restricts saving keeps this too.
+        context.watchLater?.let { add(if (it) DetailAction.RemoveWatchLater else DetailAction.AddWatchLater) }
         when {
             // On the queue already: the one thing left to offer is taking it off again.
             context.downloading -> add(DetailAction.CancelDownload)

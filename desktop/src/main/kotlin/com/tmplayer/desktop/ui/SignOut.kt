@@ -71,6 +71,9 @@ internal suspend fun signOut(settings: SettingsStore, deleteDownloads: Boolean, 
     runCatching { Td.clearMediaCache() }
     runCatching { settings.clearEverything(keepDownloads = !deleteDownloads) }
     // What this account watched is its own as much as the preferences are, and it lives in a
-    // file of its own, so it is cleared on its own.
-    watched?.let { runCatching { it.clear() } }
+    // file of its own, so it is cleared on its own, and so is Watch later, which shares it.
+    watched?.let {
+        runCatching { it.clear() }
+        runCatching { it.watchLater.clear() }
+    }
 }

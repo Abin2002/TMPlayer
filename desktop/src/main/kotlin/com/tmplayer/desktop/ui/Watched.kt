@@ -35,6 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.MediaMapper
+import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedWhen
 import com.tmplayer.desktop.WatchedWords
@@ -48,8 +50,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * History: Continue watching and Previously watched as two tabs of one page, since both are lists
- * of videos already played. The tab is [ShellState.historyTab], the same choice the phone and the
+ * History: Continue watching, Watch later and Previously watched as tabs of one page, since all
+ * three are lists of single videos kept on this device. The tab is [ShellState.historyTab], the same choice the phone and the
  * TV remember.
  */
 @Composable
@@ -63,6 +65,7 @@ fun HistoryPage(state: ShellState) {
     }
     when (state.historyTab) {
         HistoryTab.Continue -> ContinuePage(state, tabs)
+        HistoryTab.WatchLater -> WatchLaterPage(state, tabs)
         HistoryTab.Watched -> WatchedPage(state, tabs)
     }
 }
@@ -179,6 +182,97 @@ private fun WatchedTile(
             DropdownMenuItem(text = { Text(WatchedWords.markLabel(onList = true)) }, onClick = {
                 close()
                 onUnwatch()
+            })
+        },
+    )
+}
+
+/**
+ * History's Watch later tab: single videos put aside without starring their chats, most recently
+ * added first. Finishing one, or marking it watched, takes it off (see [WatchedStore.markWatched]).
+ */
+@Composable
+fun WatchLaterPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
+    val s = LocalStrings.current
+    val records by state.watched.watchLater.items.collectAsState(initial = null)
+    val progress by state.settings.watchProgress.collectAsState(initial = emptyMap())
+    // The page's, not a tile's: removing takes the tile away, and with it any scope of its own.
+    val scope = rememberCoroutineScope()
+    val toast = rememberToast()
+    Column(Modifier.fillMaxSize()) {
+        PageHeader(BrowseTab.History.heading, HistoryTab.WatchLater.blurb, actions = { PosterSizeStep(state) })
+        tabs()
+        val list = records
+        when {
+            list == null -> Centred { CircularProgressIndicator() }
+            list.isEmpty() -> Centred { Text(s.browseEmptyWatchLater, color = Tone.muted) }
+            else -> {
+                val grid = rememberLazyGridState()
+                val current by rememberUpdatedState(list)
+                val nav = rememberKeyboardNav(remember(grid) { GridSurface(grid, { 0 }, { current.size }) })
+                Box(Modifier.fillMaxSize()) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(state.posterWidth),
+                        state = grid,
+                        contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
+                        modifier = Modifier.fillMaxSize().navKeys(nav) { current.size },
+                    ) {
+                        itemsIndexed(list, key = { _, it -> it.key }) { index, record ->
+                            LaunchedEffect(record) { state.noteChatTitle(record.chatId, record.chatTitle) }
+                            WatchLaterTile(state, record, progress[record.key]?.fraction, nav, index) {
+                                toast(s.detailWatchLaterRemoved(record.title))
+                                scope.launch { runCatching { state.watched.watchLater.remove(record.chatId, record.messageId) } }
+                            }
+                        }
+                    }
+                    VerticalScrollbar(rememberScrollbarAdapter(grid), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WatchLaterTile(
+    state: ShellState,
+    record: WatchLaterRecord,
+    fraction: Float?,
+    nav: KeyboardNav?,
+    index: Int,
+    onRemove: () -> Unit,
+) {
+    val s = LocalStrings.current
+    val item = remember(record) { record.toMediaItem() }
+    Poster(
+        state = state,
+        nav = nav,
+        index = index,
+        item = item,
+        chatTitle = record.chatTitle,
+        progress = fraction,
+        art = {
+            Box(Modifier.fillMaxSize().background(Tone.surfaceHigh), contentAlignment = Alignment.Center) {
+                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(40.dp))
+            }
+        },
+        subtitle = listOfNotNull(
+            record.chatTitle.ifBlank { null },
+            record.durationSec.takeIf { it > 0 }?.let(MediaMapper::formatDuration),
+            record.sizeBytes.takeIf { it > 0 }?.let(MediaMapper::formatSize),
+        ).joinToString("  ·  "),
+        markToggle = false,
+        // The record does not know whether its chat restricts saving, so no download line is offered.
+        fileMenu = false,
+        extraMenu = { close ->
+            DropdownMenuItem(text = { Text(s.playerPlay) }, onClick = {
+                close()
+                state.openPlayer(item, startFromBeginning = false)
+            })
+            DropdownMenuItem(text = { Text(s.detailWatchLaterRemove) }, onClick = {
+                close()
+                onRemove()
             })
         },
     )

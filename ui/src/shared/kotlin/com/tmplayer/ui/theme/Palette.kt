@@ -131,8 +131,10 @@ object TmSchemes {
      *
      * Every role Material components read is set, so no card, chip or sheet falls back to
      * Compose's lavender defaults. The hue is Telegram's, because that is what the app is: a
-     * Telegram client. Tone and chroma are Material's, so a Material component drawn with it looks
-     * like one.
+     * Telegram client, and it stays in the accent roles. The neutrals (the background, the
+     * surface steps, the outline and the text) have most of their chroma taken out, so the ground
+     * is a deep, nearly hueless dark and the artwork on it supplies the colour, the way a cinema
+     * app's does. Muted text is 9.3:1 on the background and 8.6:1 on [Tone.surface].
      */
     val Dark: ColorScheme = darkColorScheme(
         primary = Color(0xFF79D0F5),
@@ -152,21 +154,21 @@ object TmSchemes {
         onError = Color(0xFF690005),
         errorContainer = Color(0xFF93000A),
         onErrorContainer = Color(0xFFFFDAD6),
-        background = Color(0xFF0F1417),
-        onBackground = Color(0xFFDEE3E7),
-        surface = Color(0xFF0F1417),
-        onSurface = Color(0xFFDEE3E7),
+        background = Color(0xFF0C0E10),
+        onBackground = Color(0xFFF2F4F5),
+        surface = Color(0xFF0C0E10),
+        onSurface = Color(0xFFF2F4F5),
         surfaceVariant = Color(0xFF40484C),
-        onSurfaceVariant = Color(0xFFC0C8CD),
-        surfaceContainerLowest = Color(0xFF0A0F12),
-        surfaceContainerLow = Color(0xFF171C1F),
-        surfaceContainer = Color(0xFF1B2124),
-        surfaceContainerHigh = Color(0xFF262B2E),
-        surfaceContainerHighest = Color(0xFF313539),
-        surfaceBright = Color(0xFF353A3D),
-        surfaceDim = Color(0xFF0F1417),
+        onSurfaceVariant = Color(0xFFAEB5BB),
+        surfaceContainerLowest = Color(0xFF08090A),
+        surfaceContainerLow = Color(0xFF15181B),
+        surfaceContainer = Color(0xFF1A1D20),
+        surfaceContainerHigh = Color(0xFF23272A),
+        surfaceContainerHighest = Color(0xFF2D3134),
+        surfaceBright = Color(0xFF33373A),
+        surfaceDim = Color(0xFF0C0E10),
         outline = Color(0xFF8A9297),
-        outlineVariant = Color(0xFF40484C),
+        outlineVariant = Color(0xFF2E3337),
         inverseSurface = Color(0xFFDEE3E7),
         inverseOnSurface = Color(0xFF2B3134),
         scrim = Color(0xFF000000),
@@ -230,8 +232,12 @@ val TmShapes = Shapes(
  *
  * The television's tv-material theme in :app carries the same figures in its own `Typography`
  * class, since neither theme system will take the other's. Keep the two in step.
+ *
+ * [Typography.displaySmall] is the one style above the headlines: the title of a hero or a page,
+ * bold and set a little tight, the only big type on a screen.
  */
 val TmTouchTypography = Typography(
+    displaySmall = TextStyle(fontSize = 32.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
     headlineLarge = TextStyle(fontSize = 32.sp, lineHeight = 40.sp),
     headlineMedium = TextStyle(fontSize = 28.sp, lineHeight = 36.sp),
     headlineSmall = TextStyle(fontSize = 24.sp, lineHeight = 32.sp),

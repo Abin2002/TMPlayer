@@ -2,6 +2,7 @@ package com.tmplayer.desktop.player
 
 import androidx.compose.ui.input.key.Key
 import com.tmplayer.i18n.L
+import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.TmMaterialTheme
 import com.tmplayer.desktop.os.MediaKeyEcho
@@ -67,10 +68,13 @@ import com.tmplayer.data.DownloadRunner
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.player.PlaybackSpeed
 import com.tmplayer.player.SleepTimer
+import com.tmplayer.player.SpeedMemory
 import com.tmplayer.player.StillWatching
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.SyncDelays
 import com.tmplayer.player.TouchPrefs
+import com.tmplayer.player.TrackPreferences
+import com.tmplayer.player.TrackRules
 import com.tmplayer.player.VideoScale
 import com.tmplayer.platform.Logger
 import kotlinx.coroutines.CoroutineScope
@@ -268,6 +272,8 @@ fun PlayerScreen(
     val focus = remember { FocusRequester() }
     val item = current.item
     val seriesKey = remember(item) { seriesKeyOf(item) }
+    // Where a speed picked for this video is remembered, and read back from. See [SpeedMemory].
+    val speedScopes = remember(item, seriesKey) { SpeedMemory.scopesOf(item, seriesKey) }
     val progressMap by remember(settings) { settings.watchProgress }.collectAsState(initial = emptyMap())
 
     fun showFlash(kind: Flash.Kind, text: String = "") {
@@ -330,12 +336,20 @@ fun PlayerScreen(
         } else {
             SyncDelays()
         }
+        // The file's saved tracks, then the series, then Settings, then the file's own defaults.
+        val trackPlan = TrackRules.plan(
+            resumed,
+            trackChoice,
+            runCatching { settings.trackPreferencesNow() }.getOrDefault(TrackPreferences()),
+            Translator.messages.tag,
+        )
         val prefs = OpenPrefs(
-            audioLanguage = trackChoice.audioLanguage,
-            subtitleLanguage = trackChoice.textLanguage,
-            subtitlesOn = if (trackChoice.empty) null else trackChoice.subtitlesOn,
-            speed = resumed?.speed?.coerceIn(SeekMath.MIN_SPEED, SeekMath.MAX_SPEED)
-                ?: runCatching { settings.playbackSpeedNow() }.getOrDefault(PlaybackSpeed.DEFAULT),
+            audioLanguage = trackPlan.audioLanguage,
+            subtitles = trackPlan.subtitles,
+            // Its own speed, else the series' or course's, else the chat's or topic's: [SpeedMemory].
+            speed = runCatching { settings.openingSpeed(resumed?.speed, speedScopes) }
+                .getOrDefault(resumed?.speed ?: PlaybackSpeed.DEFAULT)
+                .coerceIn(SeekMath.MIN_SPEED, SeekMath.MAX_SPEED),
             scale = runCatching { VideoScale.from(settings.videoScaleNow()) }.getOrDefault(VideoScale.Fit),
             downmix = prefs.now.downmix,
             volume = prefs.now.volume,
@@ -709,7 +723,9 @@ fun PlayerScreen(
     fun setSpeed(value: Float) {
         engine.setSpeed(value)
         showFlash(Flash.Kind.Text, SeekMath.speedLabel(value))
-        playerScope.launch { runCatching { settings.setPlaybackSpeed(value) } }
+        // For the series, the course, the chat or the topic, not only this file: 1x forgets it.
+        val scopes = speedScopes
+        playerScope.launch { runCatching { settings.rememberSpeed(scopes, value) } }
     }
 
     fun setScale(scale: VideoScale) {

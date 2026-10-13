@@ -114,6 +114,7 @@ import com.tmplayer.ui.components.StateScaffold
 import com.tmplayer.data.ResumeRecord
 import com.tmplayer.data.HomeRow
 import com.tmplayer.data.MediaItem
+import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedWhen
 import com.tmplayer.data.AllChatsSearch
@@ -233,6 +234,11 @@ fun BrowseScreen(
     onMarkUnwatched: (WatchedRecord) -> Unit = {},
     /** Empties Previously watched in one go, behind a confirmation. */
     onClearWatched: () -> Unit = {},
+    /** Watch later, newest first: single videos saved without starring their chats. */
+    watchLater: List<WatchLaterRecord> = emptyList(),
+    /** Plays a Watch later video, as a Continue watching one is played. */
+    onOpenWatchLater: (WatchLaterRecord) -> Unit = {},
+    onRemoveWatchLater: (WatchLaterRecord) -> Unit = {},
     /** Unstars every chat in one go, the counterpart to the star in each chat's menu. */
     onClearFavorites: () -> Unit = {},
     /** The chat that reopens on launch, marked on its row so the jump is never unexplained. */
@@ -258,6 +264,7 @@ fun BrowseScreen(
     /** A row came on screen without its videos: fetch them. */
     onHomeRowShown: (HomeRow) -> Unit = {},
     onHomeArtWanted: (ResumeRecord) -> Unit = {},
+    onHomeLaterArtWanted: (WatchLaterRecord) -> Unit = {},
     /** Plays a video from one of Home's rows; the second argument is its chat's name. */
     onPlayMedia: (MediaItem, String) -> Unit = { _, _ -> },
     onRefreshHome: () -> Unit = {},
@@ -306,6 +313,7 @@ fun BrowseScreen(
     var chatMenu by remember { mutableStateOf<ChatSummary?>(null) }
     var mediaMenu by remember { mutableStateOf<ResumeRecord?>(null) }
     var watchedMenu by remember { mutableStateOf<WatchedRecord?>(null) }
+    var laterMenu by remember { mutableStateOf<WatchLaterRecord?>(null) }
     var confirmClearHistory by remember { mutableStateOf(false) }
     var confirmClearWatched by remember { mutableStateOf(false) }
     var confirmClearFavorites by remember { mutableStateOf(false) }
@@ -337,6 +345,8 @@ fun BrowseScreen(
     val openMedia: (MediaItem, String) -> Unit = if (detailFirst) showDetail else onPlayMedia
     val openResume: (ResumeRecord) -> Unit =
         if (detailFirst) ({ record -> showDetail(record.toMediaItem(), record.chatTitle) }) else onResumeMedia
+    val openLater: (WatchLaterRecord) -> Unit =
+        if (detailFirst) ({ record -> showDetail(record.toMediaItem(), record.chatTitle) }) else onOpenWatchLater
 
     // The chips over Chats and History, remembered across launches like the card layout.
     val browseSettings = remember(panelContext) { SettingsStore(panelContext) }
@@ -351,6 +361,7 @@ fun BrowseScreen(
     val pickHistory: (HistoryTab) -> Unit = { panelScope.launch { browseSettings.setHistoryTab(it.name) } }
     val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
     val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
+    val showsWatchLater = tab.listsVideos && historyTab == HistoryTab.WatchLater
 
     // One question decides the whole shape of this screen: a permanent rail beside the listing on
     // a television, a drawer behind a hamburger on a phone. Everything below the chrome is the
@@ -437,6 +448,18 @@ fun BrowseScreen(
                             noFavourites = favorites.isEmpty(),
                             firstStep = remember(defaultsHidden, folders) { DefaultGroups.firstStep(defaultsHidden, folders) },
                             onOpenSection = { onPickTab(it); query = "" },
+                            onOpenWatchLater = openLater,
+                            onLaterArtWanted = onHomeLaterArtWanted,
+                            onSeeWatchLater = {
+                                pickHistory(HistoryTab.WatchLater)
+                                onPickTab(BrowseSection.of(BrowseTab.History))
+                                query = ""
+                            },
+                            onDownloadSeason = { request ->
+                                panelScope.launch {
+                                    queueSeason(panelContext, SettingsStore(panelContext), request) { titles[it.chatId].orEmpty() }?.let(onMessage)
+                                }
+                            },
                         )
                     } else if (tab.listsVideos) {
                         // One branch for both tabs, so the chip row stays the same composition when
@@ -444,7 +467,11 @@ fun BrowseScreen(
                         // On a phone the heading, the count and the actions live in the app bar, so
                         // the content area starts with the content.
                         if (!touch) {
-                            val shown = if (showsContinue) continueWatching.size else watchedHistory.size
+                            val shown = when {
+                                showsContinue -> continueWatching.size
+                                showsWatchLater -> watchLater.size
+                                else -> watchedHistory.size
+                            }
                             TabHeading(tab, shown, insets, headerAccount, blurb = historyTab.blurb) {
                                 LayoutAction(layout, onToggleLayout)
                                 // No Refresh here: History is read off this device and cannot be
@@ -480,6 +507,22 @@ fun BrowseScreen(
                                     text = { it.cardText() },
                                     onResume = openResume,
                                     onHold = { mediaMenu = it },
+                                )
+                            }
+                        } else if (showsWatchLater) {
+                            if (watchLater.isEmpty()) {
+                                EmptyTab(tab, query = "", history = HistoryTab.WatchLater)
+                            } else {
+                                ContinueSection(
+                                    records = watchLater,
+                                    text = { it.cardText() },
+                                    layout = layout,
+                                    insets = insets,
+                                    tiles = tiles,
+                                    autoFocus = !touch,
+                                    mayTakeFocus = listMayTakeFocus,
+                                    onResume = openLater,
+                                    onHold = { laterMenu = it },
                                 )
                             }
                         } else {
@@ -651,6 +694,8 @@ fun BrowseScreen(
             continueWatching.size
         } else if (showsWatched) {
             watchedHistory.size
+        } else if (showsWatchLater) {
+            watchLater.size
         } else {
             remember(chats, tab, favorites, query, chatFilter, chatSort) {
                 chats?.let { filterChats(it, tab, favorites, query, chatFilter, chatSort).size } ?: 0
@@ -902,6 +947,28 @@ fun BrowseScreen(
         )
     }
 
+    laterMenu?.let { record ->
+        TvMenu(
+            title = record.title,
+            subtitle = record.chatTitle.ifBlank { null },
+            onDismiss = { laterMenu = null },
+            actions = listOf(
+                MenuAction(s.commonPlay, Icons.Filled.PlayArrow) {
+                    laterMenu = null
+                    onOpenWatchLater(record)
+                },
+                MenuAction(
+                    label = s.detailWatchLaterRemove,
+                    icon = Icons.Filled.Close,
+                    destructive = true,
+                ) {
+                    laterMenu = null
+                    onRemoveWatchLater(record)
+                },
+            ),
+        )
+    }
+
     mediaMenu?.let { record ->
         TvMenu(
             title = record.title,
@@ -1004,6 +1071,18 @@ private fun WatchedRecord.cardText(now: Long) = VideoCardText(
     detail = WatchedWhen.phrase(watchedAt, now),
     chatTitle = chatTitle,
     fraction = 1f,
+)
+
+/** A video saved for later: how long it is and how big, and no bar until it is started. */
+private fun WatchLaterRecord.cardText() = VideoCardText(
+    key = key,
+    title = title,
+    detail = listOfNotNull(
+        durationSec.takeIf { it > 0 }?.let { L.messages.formatter.duration(it.toLong()) },
+        sizeBytes.takeIf { it > 0 }?.let { L.messages.formatter.size(it) },
+    ).joinToString("  ·  "),
+    chatTitle = chatTitle,
+    fraction = 0f,
 )
 
 @Composable
@@ -2624,6 +2703,8 @@ private fun EmptyTab(tab: BrowseSection, query: String, filter: ChatFilter = Cha
             s.browseEmptyContinue
         history == HistoryTab.Watched ->
             s.browseEmptyWatched
+        history == HistoryTab.WatchLater ->
+            s.browseEmptyWatchLater
         tab == BrowseSection.of(BrowseTab.Favorites) ->
             s.browseEmptyFavourites
         tab.isChats && filter == ChatFilter.Unread -> s.browseEmptyUnread
