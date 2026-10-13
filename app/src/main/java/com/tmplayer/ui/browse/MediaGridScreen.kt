@@ -784,8 +784,20 @@ fun MediaGridScreen(
                     }
                 }
 
+                // Pages are fetched well ahead of the last row, and in a chat that posts each film
+                // ten times a page folds into a tile or two, so the fetching goes on page after page
+                // while the viewer is still near the top. The chip is for the viewer who has reached
+                // the end and is waiting, not a flash for every quiet fetch ahead of them.
+                val atEnd by remember(layout) {
+                    derivedStateOf {
+                        when (layout) {
+                            CardLayout.Grid -> !gridState.canScrollForward
+                            CardLayout.List -> !listState.canScrollForward
+                        }
+                    }
+                }
                 // Floated over the grid; a reserved band cost a whole row on a 540dp panel.
-                if (list.loadingMore) {
+                if (list.loadingMore && atEnd) {
                     Surface(
                         shape = CircleShape,
                         color = Tone.surfaceHigh,
