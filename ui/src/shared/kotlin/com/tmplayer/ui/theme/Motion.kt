@@ -40,10 +40,10 @@ object Motion {
     const val PressScale = 0.97f
 
     /** How long a hero holds one item before it moves on to the next. */
-    const val HeroAdvanceMs = 10_000L
+    const val HeroAdvanceMs = 8_000L
 
     /** The first advance waits longer, so a viewer who has just arrived can read the first item. */
-    const val HeroFirstAdvanceMs = 20_000L
+    const val HeroFirstAdvanceMs = 12_000L
 
     /** A tween of [durationMillis] on [Standard]. */
     fun <T> standard(durationMillis: Int = Normal): TweenSpec<T> = tween(durationMillis, easing = Standard)

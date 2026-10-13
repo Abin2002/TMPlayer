@@ -691,10 +691,15 @@
     "row_continue": "Continue watching",
     "row_new_episodes": "New episodes",
     "row_recent": "Recently added in starred chats",
+    "row_scroll_back": "Scroll back",
+    "row_scroll_on": "Scroll on",
     "row_watch_later": "Watch later",
     "see_all": "See all",
     "see_all_count": "{count, plural, one {# video} other {# videos}}",
-    "see_all_count_at_least": "{count, plural, one {#+ video} other {#+ videos}}"
+    "see_all_count_at_least": "{count, plural, one {#+ video} other {#+ videos}}",
+    "spotlight_next": "Next",
+    "spotlight_position": "{index} of {count}",
+    "spotlight_previous": "Previous"
   },
   "install": {
     "appimage": "AppImage",

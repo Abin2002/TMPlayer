@@ -463,6 +463,8 @@ private fun PromoChatsScreen(
             }
         }.orEmpty(),
         homeArt = homeData?.art.orEmpty(),
+        // The carousel over the starred demo chats, once their rows have answered.
+        homeFeatured = homeData?.takeIf { it.loaded.isNotEmpty() }?.let { remember(it) { PromoMeta.library.featured(chats) } }.orEmpty(),
         homeWatch = PROMO_WATCH,
         onRetry = {},
         onRefresh = {},
