@@ -139,9 +139,9 @@ internal fun rememberBackupActions(
 /**
  * The shared Download folder, for a device with no document picker. Through MediaStore from
  * Android 10, which needs no permission; before that, the app's own folder under Android/data,
- * which a file manager or a USB cable can still reach.
+ * which a file manager or a USB cable can still reach. "Save logs" (CP59) writes there too.
  */
-private object SharedDownloads {
+internal object SharedDownloads {
 
     fun place(context: Context): String =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -151,11 +151,11 @@ private object SharedDownloads {
         }
 
     /** Writes [text] as [name] and returns where it went, in words for the toast. */
-    fun write(context: Context, name: String, text: String): String {
+    fun write(context: Context, name: String, text: String, mime: String = MIME): String {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-                put(MediaStore.MediaColumns.MIME_TYPE, MIME)
+                put(MediaStore.MediaColumns.MIME_TYPE, mime)
                 put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
             }
             val resolver = context.contentResolver

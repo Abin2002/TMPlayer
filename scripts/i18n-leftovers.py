@@ -30,6 +30,7 @@ SKIP_FILES = {
     "LinuxKeepAwake.kt": "D-Bus names",
     "OpenExternal.kt": "log lines and Windows handler names",
     "Feedback.kt": "the bug report fields and the email for the maintainer, who reads reports in English",
+    "LogExport.kt": "the saved log's header and placeholders, for the maintainer, who reads reports in English",
 }
 LITERAL = re.compile(r'"((?:[^"\\]|\\.)*)"')
 SKIP_LINE = re.compile(

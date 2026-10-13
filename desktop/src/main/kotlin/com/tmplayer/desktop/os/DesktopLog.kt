@@ -52,6 +52,21 @@ object DesktopLog {
         }
     }
 
+    /**
+     * The last [max] lines written, for "Save logs" (CP59): the run before this one first, since a
+     * report often follows a crash and a restart, then this run's. Empty when there is no log.
+     */
+    fun recentLines(max: Int): List<String> {
+        val current = file ?: return emptyList()
+        runCatching { System.err.flush() }
+        val previous = File(current.parentFile, PREVIOUS)
+        val lines = buildList {
+            if (previous.isFile) runCatching { addAll(previous.readLines(Charsets.UTF_8)) }
+            if (current.isFile) runCatching { addAll(current.readLines(Charsets.UTF_8)) }
+        }
+        return lines.takeLast(max)
+    }
+
     private class Tee(private val a: OutputStream, private val b: OutputStream) : OutputStream() {
         override fun write(b0: Int) {
             runCatching { a.write(b0) }

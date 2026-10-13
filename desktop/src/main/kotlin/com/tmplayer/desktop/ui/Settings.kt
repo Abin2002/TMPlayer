@@ -67,6 +67,8 @@ import androidx.compose.runtime.produceState
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.SupportReminder
 import com.tmplayer.data.ThemeChoice
+import com.tmplayer.data.UiScale
+import com.tmplayer.data.LogExport
 import com.tmplayer.data.UpdateState
 import com.tmplayer.data.UpdateWords
 import com.tmplayer.data.Updates
@@ -74,6 +76,8 @@ import com.tmplayer.data.WhatsNew
 import com.tmplayer.data.release
 import com.tmplayer.desktop.DesktopSettings
 import com.tmplayer.desktop.os.FilePicker
+import com.tmplayer.desktop.os.DesktopLog
+import com.tmplayer.ui.theme.rememberUiScale
 import com.tmplayer.desktop.os.OpenExternal
 import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.player.SubtitlePosition
@@ -151,6 +155,7 @@ fun SettingsPage(
     var stylingSubtitles by remember { mutableStateOf(false) }
     var whatsNew by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
+    val uiScale by rememberUiScale(settings)
     // A backup file picked, with what restoring it would change, while the prompt is up.
     var restorePlan by remember { mutableStateOf<RestorePlan?>(null) }
     val backups = remember(settings, state.watched, version) {
@@ -180,6 +185,17 @@ fun SettingsPage(
 
                 Setting(s.settingsLanguage, s.languageRowDetail(language)) {
                     OutlinedButton(onClick = { pickingLanguage = true }) { Text(s.commonChange) }
+                }
+                Setting(s.interfaceSize, s.interfaceSizeDetail) {
+                    SingleChoiceSegmentedButtonRow {
+                        UiScale.entries.forEachIndexed { index, choice ->
+                            SegmentedButton(
+                                selected = uiScale == choice,
+                                onClick = { scope.launch { settings.setUiScale(choice) } },
+                                shape = SegmentedButtonDefaults.itemShape(index, UiScale.entries.size),
+                            ) { Text(choice.label) }
+                        }
+                    }
                 }
 
                 Group(s.settingsPlayback)
@@ -485,6 +501,26 @@ fun SettingsPage(
                 }
                 Setting(s.settingsReportProblem, s.settingsReportProblemDetail) {
                     OutlinedButton(onClick = { reporting = true }) { Text(s.commonOpen) }
+                }
+                // The logs to attach to that report (CP59), scrubbed of names and ids before they are written.
+                Setting(s.logsSave, s.logsSaveDetail) {
+                    OutlinedButton(onClick = {
+                        scope.launch {
+                            val lines = withContext(Dispatchers.IO) { DesktopLog.recentLines(LogExport.MAX_LINES) }
+                            if (lines.isEmpty()) {
+                                toast(s.logsEmpty)
+                                return@launch
+                            }
+                            val file = FilePicker.save(s.logsSaveTitle, LogExport.fileName(), "txt") ?: return@launch
+                            val saved = withContext(Dispatchers.IO) {
+                                runCatching {
+                                    val known = LogExport.knownNames(settings, state.watched)
+                                    file.writeText(LogExport.report(desktopFeedbackFacts(), lines, known))
+                                }.isSuccess
+                            }
+                            toast(if (saved) s.logsSavedTo(file.absolutePath) else s.logsFailed)
+                        }
+                    }) { Text(s.logsSave) }
                 }
                 Setting(s.settingsPrivacy, s.settingsPrivacyComputer) {
                     OutlinedButton(onClick = { OpenExternal.browse(About.PRIVACY) }) { Text(s.commonOpen) }

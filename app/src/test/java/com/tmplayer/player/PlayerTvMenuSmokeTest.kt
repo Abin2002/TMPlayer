@@ -76,7 +76,7 @@ class PlayerTvMenuSmokeTest {
         val sheets = PlayerSheets(activity, root, onClosed = {})
         shadowOf(Looper.getMainLooper()).idle()
         assertFalse(sheets.isOpen)
-        sheets.showSpeed(1.5f) {}
+        sheets.showSpeed(1.5f, onPick = {})
         shadowOf(Looper.getMainLooper()).idle()
         assertTrue(sheets.isOpen)
         sheets.showShape(VideoScale.Crop) {}

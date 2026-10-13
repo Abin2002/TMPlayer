@@ -698,6 +698,14 @@
     "windows_installer": "Windows installer",
     "windows_installer_msi": "Windows installer (the .msi)"
   },
+  "interface": {
+    "size": "Interface size",
+    "size_default": "Default",
+    "size_detail": "How large text, buttons and panels are drawn. The video always fills the screen.",
+    "size_larger": "Larger",
+    "size_largest": "Largest",
+    "size_smaller": "Smaller"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -848,6 +856,15 @@
     "start_over": "Start over",
     "use_phone": "Use my phone number",
     "use_qr": "Scan a QR code instead"
+  },
+  "logs": {
+    "empty": "There are no logs to save yet.",
+    "failed": "The logs could not be saved.",
+    "save": "Save logs",
+    "save_detail": "Recent app logs in a text file to attach to a bug report. Names, numbers and file names are taken out first.",
+    "save_title": "Save TMPlayer logs",
+    "saved": "Logs saved",
+    "saved_to": "Logs saved to {place}"
   },
   "main": {
     "archived": "{title} archived",

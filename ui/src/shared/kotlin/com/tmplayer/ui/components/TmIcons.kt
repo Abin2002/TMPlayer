@@ -548,6 +548,20 @@ object TmIcons {
         )
     }
 
+    /** A large T beside a small one: the interface size (CP59). */
+    val TextSize: ImageVector by lazy {
+        icon("TextSize", "M9,4V7H14V19H17V7H22V4H9M3,12H6V19H9V12H12V9H3V12Z")
+    }
+
+    /** A page with lines on it: "Save logs" (CP59). */
+    val Logs: ImageVector by lazy {
+        icon(
+            "Logs",
+            "M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20" +
+                "M8,12H16V14H8V12M8,16H13V18H8V16Z",
+        )
+    }
+
     /** A beetle: "Report a problem". */
     val Bug: ImageVector by lazy {
         icon(

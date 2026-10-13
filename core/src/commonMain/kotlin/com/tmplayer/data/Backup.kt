@@ -149,6 +149,7 @@ object Backups {
         "subtitle_size" to Kind.TEXT,
         "theme_choice" to Kind.TEXT,
         "trickplay" to Kind.BOOL,
+        "ui_scale" to Kind.TEXT,
         "update_notify" to Kind.BOOL,
         "video_scale" to Kind.TEXT,
         "volume_boost" to Kind.BOOL,

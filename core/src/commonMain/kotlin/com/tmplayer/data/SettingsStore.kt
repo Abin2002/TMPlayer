@@ -76,6 +76,9 @@ private val LANGUAGE_ANNOUNCED = stringPreferencesKey("language_announced")
 /** The version whose "What's new" has been dealt with. See [WhatsNew]. */
 private val LAST_SEEN_VERSION = stringPreferencesKey("last_seen_version")
 private val DYNAMIC_COLOUR = booleanPreferencesKey("dynamic_colour")
+
+/** The interface size (CP59), a [UiScale] by name. About the screen, so it outlives a sign out. */
+private val UI_SCALE = stringPreferencesKey("ui_scale")
 private val VIDEO_SCALE = stringPreferencesKey("video_scale")
 
 /** The last few searches inside a chat, one per line, newest first. See [RecentSearches]. */
@@ -273,6 +276,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         prefs.edit { prefs ->
             val theme = prefs[THEME_CHOICE]
             val dynamic = prefs[DYNAMIC_COLOUR]
+            val uiScale = prefs[UI_SCALE]
             val migrated = prefs[DOWNLOADS_MIGRATED]
             val support = SUPPORT_KEYS.mapNotNull { key -> prefs[key]?.let { Pair(key, it) } }
             val supportNever = prefs[SUPPORT_NEVER]
@@ -293,6 +297,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             prefs.clear()
             theme?.let { prefs[THEME_CHOICE] = it }
             dynamic?.let { prefs[DYNAMIC_COLOUR] = it }
+            uiScale?.let { prefs[UI_SCALE] = it }
             for ((key, value) in support) prefs[key] = value
             supportNever?.let { prefs[SUPPORT_NEVER] = it }
             supporter?.let { prefs[SUPPORT_SUPPORTER] = it }
@@ -1258,6 +1263,13 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     suspend fun setThemeChoice(value: ThemeChoice) {
         prefs.edit { it[THEME_CHOICE] = value.name }
+    }
+
+    /** How large the interface is drawn, on every device; see [UiScale]. */
+    val uiScale: Flow<UiScale> = read { UiScale.from(it[UI_SCALE]) }
+
+    suspend fun setUiScale(value: UiScale) {
+        prefs.edit { if (value == UiScale.Default) it.remove(UI_SCALE) else it[UI_SCALE] = value.name }
     }
 
     /**

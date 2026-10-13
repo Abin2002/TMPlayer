@@ -149,6 +149,7 @@ import com.tmplayer.data.SupportReminder
 import com.tmplayer.data.Td
 import com.tmplayer.ui.browse.DefaultGroups
 import com.tmplayer.data.ThemeChoice
+import com.tmplayer.data.UiScale
 import com.tmplayer.data.UpdateWords
 import com.tmplayer.data.Updates
 import com.tmplayer.data.WatchCache
@@ -182,6 +183,7 @@ import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.Tv
 import com.tmplayer.ui.theme.focusRing
+import com.tmplayer.ui.theme.rememberUiScale
 import com.tmplayer.ui.update.LinkQrDialog
 import com.tmplayer.ui.update.UpdateDialog
 import com.tmplayer.ui.update.openLink
@@ -326,6 +328,7 @@ fun SettingsScreen(
         initialValue = ThemeChoice.Default,
     )
     val dynamicColour by settings.dynamicColour.collectAsStateWithLifecycle(initialValue = false)
+    val uiScale by rememberUiScale(settings)
     val crashReports by settings.crashReports.collectAsStateWithLifecycle(initialValue = false)
     // The app lock and the kids lock (CP57), and the television's screensaver.
     val appLock by settings.appLock.collectAsStateWithLifecycle(initialValue = AppLockSettings())
@@ -364,6 +367,7 @@ fun SettingsScreen(
     var busy by remember { mutableStateOf<String?>(null) }
     var prompt by remember { mutableStateOf<Prompt?>(null) }
     val backup = rememberBackupActions(onPlan = { prompt = Prompt.Restore(it) }, say = { toast(it) })
+    val saveLogs = rememberSaveLogs(say = { toast(it) })
     // The sign out dialog's tick box. Off every time the dialog opens: downloads are the viewer's
     // files, and losing them has to be asked for each time rather than remembered.
     var alsoDeleteDownloads by remember { mutableStateOf(false) }
@@ -574,6 +578,21 @@ fun SettingsScreen(
                         icon = TmIcons.Language,
                         modifier = Modifier.focusRequester(landing),
                         onClick = { pickingLanguage = true },
+                    )
+                }
+
+                // The interface size (CP59), the same stepper on both devices: four sizes are too
+                // many words for segments across a phone, and Left and Right already mean "change
+                // this" on a TV. The whole screen, this row included, grows or shrinks as it moves.
+                item {
+                    StepperRow(
+                        title = s.interfaceSize,
+                        subtitle = s.interfaceSizeDetail,
+                        value = uiScale.label,
+                        icon = TmIcons.TextSize,
+                        canDecrease = uiScale.ordinal > 0,
+                        canIncrease = uiScale.ordinal < UiScale.entries.lastIndex,
+                        onStep = { direction -> scope.launch { settings.setUiScale(uiScale.step(direction)) } },
                     )
                 }
 
@@ -1299,6 +1318,15 @@ fun SettingsScreen(
                         subtitle = s.settingsReportProblemDetail,
                         icon = TmIcons.Bug,
                         onClick = { reporting = true },
+                    )
+                }
+                // The logs to attach to that report (CP59), scrubbed of names and ids before they are written.
+                item {
+                    ActionRow(
+                        title = s.logsSave,
+                        subtitle = s.logsSaveDetail,
+                        icon = TmIcons.Logs,
+                        onClick = saveLogs,
                     )
                 }
                 item {
