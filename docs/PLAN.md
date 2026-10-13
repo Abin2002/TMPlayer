@@ -135,9 +135,9 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [x] CP53 Backup and restore settings, lists and progress to a file (batch 2; format and merge in core `Backups`, unit tested in BackupTest; settings, CP49 track preferences, favourites, watched, watch later, resume points, `speed_` and track memory, topics, recent searches; not yet seen on a device)
 - [x] CP54 Updates feed: new episodes of shows being watched, badges on tiles (unit tested in core and ui; not yet seen on a device)
 - [ ] CP55 Timestamped bookmarks with notes (batch 2)
-- [ ] CP56 Android chapters, A-B loop and frame step (desktop has them since CP08) (batch 2)
+- [x] CP56 Android chapters, A-B loop and frame step (desktop has them since CP08) (batch 2) (A-B repeat in the phone overflow and the TV More menu, marks on the bar and "A-B" by the time; frame steps there while paused, menu only on TV since the arrows seek; `AbLoop` moved to core. Chapters skipped: Media3 1.10.1's Matroska and MP4 extractors expose none, only MP3's ID3 chapter frames. Not yet tried on a device) Chapters on Android left out: Media3 1.10.1 exposes no MKV or MP4 chapter marks.
 - [x] CP57 TV screensaver, PIN lock for settings and a kids lock (batch 2) (PIN as a salted PBKDF2 hash with a stored back-off, asked for Settings and optionally on open, on phone, TV and desktop; kids lock "Allowed chats only" filtered once through ChatGate and KidsLock in core for the chat list, Home, search, Continue watching, Watched and Watch later; TV screensaver Off, 2, 5 or 10 min with clock and drifting Continue watching art. Unit tested in AppLockTest. Not yet checked on a device)
-- [ ] CP58 Skip silence, rewind a few seconds on resume (batch 2)
+- [x] CP58 Skip silence, rewind a few seconds on resume (batch 2) (skip silence under the speeds on phone and TV, kept as a setting; Android only, mpv's silenceremove drifts sound from picture. "Rewind when resuming" Off/3/5/10 s, default 3 s, on phone, TV and desktop via `ResumeRewind`, unit tested. Not yet tried on a device)
 - [ ] CP59 UI scale, log export for bug reports (batch 2)
 - [ ] CP60 Episode thumbnails in the series list (batch 2)
 - [ ] CP61 (later, user 2026-10-13: no new outside services for now) Absolute anime episode numbers to season and episode via ani.zip or the Fribb list (batch 2)

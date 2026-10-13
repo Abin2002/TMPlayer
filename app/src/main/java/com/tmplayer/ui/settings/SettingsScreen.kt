@@ -141,6 +141,7 @@ import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.LocalDownloads
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.RestorePlan
+import com.tmplayer.data.ResumeRewind
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.StorageSplit
@@ -294,6 +295,7 @@ fun SettingsScreen(
     val cached by settings.cachedVideos.collectAsStateWithLifecycle(initialValue = emptyList())
     val downloadFirst by settings.downloadBeforePlaying.collectAsStateWithLifecycle(initialValue = false)
     val autoplayNext by settings.autoplayNext.collectAsStateWithLifecycle(initialValue = true)
+    val resumeRewindMs by settings.resumeRewindMs.collectAsStateWithLifecycle(initialValue = ResumeRewind.DEFAULT_MS)
     val detailFirst by settings.detailFirst.collectAsStateWithLifecycle(initialValue = true)
     val wifiOnly by settings.wifiOnlyDownloads.collectAsStateWithLifecycle(initialValue = false)
     val trickplayOn by settings.trickplay.collectAsStateWithLifecycle(initialValue = true)
@@ -738,6 +740,23 @@ fun SettingsScreen(
                                 settings.updateTouchPrefs {
                                     it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, direction))
                                 }
+                            }
+                        },
+                    )
+                }
+                // Off, 3, 5 or 10 seconds, stepped like the timeout above so the remote needs no sheet.
+                item {
+                    val choices = ResumeRewind.CHOICES_MS
+                    StepperRow(
+                        title = s.settingsResumeRewind,
+                        subtitle = s.settingsResumeRewindDetail,
+                        value = ResumeRewind.label(resumeRewindMs),
+                        icon = TmIcons.History,
+                        canDecrease = resumeRewindMs != choices.first(),
+                        canIncrease = resumeRewindMs != choices.last(),
+                        onStep = { direction ->
+                            scope.launch {
+                                settings.setResumeRewindMs(TouchPrefs.step(choices, resumeRewindMs, direction))
                             }
                         },
                     )

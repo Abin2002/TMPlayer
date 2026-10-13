@@ -55,31 +55,10 @@ object Chapters {
 }
 
 /**
- * A-B repeat: one key marks the start, the second the end and starts the loop, the third clears it.
- *
- * Only a whole loop goes to mpv. mpv given a start alone loops from the end of the file back to it,
- * which is not what a viewer who has marked one point is waiting for.
+ * A-B repeat, shared with the Android player since its menu gained the same lines. See
+ * [com.tmplayer.player.AbLoop]; the name stays here so the desktop's player code reads as before.
  */
-data class AbLoop(val startMs: Long, val endMs: Long? = null) {
-
-    val complete: Boolean get() = endMs != null
-
-    companion object {
-        /** Shorter than this is a stutter, not a loop; the second press is waited out instead. */
-        const val MIN_LENGTH_MS = 500L
-
-        /**
-         * What the repeat key makes of [current] at [positionMs]. The two marks go in time order,
-         * whichever was pressed first, and a second press too close to the first changes nothing.
-         */
-        fun press(current: AbLoop?, positionMs: Long): AbLoop? = when {
-            current == null -> AbLoop(positionMs)
-            current.endMs != null -> null
-            kotlin.math.abs(positionMs - current.startMs) < MIN_LENGTH_MS -> current
-            else -> AbLoop(minOf(current.startMs, positionMs), maxOf(current.startMs, positionMs))
-        }
-    }
-}
+typealias AbLoop = com.tmplayer.player.AbLoop
 
 /** Where a screenshot goes and what it is called. */
 object ScreenshotFiles {

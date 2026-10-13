@@ -55,6 +55,7 @@ import com.tmplayer.data.BackupWords
 import com.tmplayer.data.RestorePlan
 import com.tmplayer.data.AppLockSession
 import com.tmplayer.data.AppLockSettings
+import com.tmplayer.data.ResumeRewind
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.ui.lock.AppLockWords
 import com.tmplayer.ui.lock.PinPad
@@ -124,6 +125,7 @@ fun SettingsPage(
     }
     val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
     val autoplay by settings.autoplayNext.collectAsState(initial = true)
+    val resumeRewindMs by settings.resumeRewindMs.collectAsState(initial = ResumeRewind.DEFAULT_MS)
     val downloadFirst by settings.downloadBeforePlaying.collectAsState(initial = false)
     val openLast by settings.openLastChat.collectAsState(initial = false)
     val minSize by settings.minSizeBytes.collectAsState(initial = SizeFilter.DEFAULT_MIN)
@@ -196,6 +198,18 @@ fun SettingsPage(
                         onLess = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, -1)) } } },
                         onMore = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, 1)) } } },
                     )
+                }
+                // Four short choices, so all of them at once, as the theme row has them.
+                Setting(s.settingsResumeRewind, s.settingsResumeRewindDetail) {
+                    SingleChoiceSegmentedButtonRow {
+                        ResumeRewind.CHOICES_MS.forEachIndexed { index, choice ->
+                            SegmentedButton(
+                                selected = resumeRewindMs == choice,
+                                onClick = { scope.launch { settings.setResumeRewindMs(choice) } },
+                                shape = SegmentedButtonDefaults.itemShape(index, ResumeRewind.CHOICES_MS.size),
+                            ) { Text(ResumeRewind.label(choice)) }
+                        }
+                    }
                 }
 
                 Toggle(

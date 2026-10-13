@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,7 +57,12 @@ class PlayerSheets(
     private val onClosed: () -> Unit,
 ) {
     private sealed interface Sheet {
-        class Speed(val current: Float, val onPick: (Float) -> Unit) : Sheet
+        class Speed(
+            val current: Float,
+            val onPick: (Float) -> Unit,
+            val skipSilence: Boolean,
+            val onSkipSilence: (Boolean) -> Unit,
+        ) : Sheet
         class Shape(val current: VideoScale, val onPick: (VideoScale) -> Unit) : Sheet
         class Sleep(val running: String?, val chosen: Int?, val onPick: (Int?) -> Unit) : Sheet
         class Details(val title: String, val lines: List<String>) : Sheet
@@ -73,8 +80,14 @@ class PlayerSheets(
         root.addView(view, ViewGroup.LayoutParams(0, 0))
     }
 
-    fun showSpeed(current: Float, onPick: (Float) -> Unit) {
-        sheet.value = Sheet.Speed(current, onPick)
+    /** The speeds, and the skip silence switch under them; the switch flips without closing the sheet. */
+    fun showSpeed(
+        current: Float,
+        onPick: (Float) -> Unit,
+        skipSilence: Boolean = false,
+        onSkipSilence: (Boolean) -> Unit = {},
+    ) {
+        sheet.value = Sheet.Speed(current, onPick, skipSilence, onSkipSilence)
     }
 
     fun showShape(current: VideoScale, onPick: (VideoScale) -> Unit) {
@@ -100,12 +113,20 @@ class PlayerSheets(
     private fun SheetContent() {
         when (val shown = sheet.value) {
             null -> Unit
-            is Sheet.Speed -> SpeedSheet(
-                current = shown.current,
-                onPick = { close(); shown.onPick(it) },
-                onDismiss = ::close,
-                onClose = ::close,
-            )
+            is Sheet.Speed -> {
+                var skipping by remember(shown) { mutableStateOf(shown.skipSilence) }
+                SpeedSheet(
+                    current = shown.current,
+                    onPick = { close(); shown.onPick(it) },
+                    onDismiss = ::close,
+                    onClose = ::close,
+                    skipSilence = skipping,
+                    onSkipSilence = { on ->
+                        skipping = on
+                        shown.onSkipSilence(on)
+                    },
+                )
+            }
             is Sheet.Shape -> ShapeSheet(
                 current = shown.current,
                 onPick = { close(); shown.onPick(it) },
@@ -130,9 +151,19 @@ class PlayerSheets(
  *
  * Full screen on a phone they are a grid of tiles instead of a list, all seven in one row on a
  * landscape phone and four to a row upright, so every speed is one tap with nothing to scroll.
+ *
+ * Skip silence sits under the speeds, a switch rather than a speed: [skipSilence] is whether it
+ * is on, and choosing the line flips it through [onSkipSilence] with the sheet left open.
  */
 @Composable
-internal fun SpeedSheet(current: Float, onPick: (Float) -> Unit, onDismiss: () -> Unit, onClose: () -> Unit) {
+internal fun SpeedSheet(
+    current: Float,
+    onPick: (Float) -> Unit,
+    onDismiss: () -> Unit,
+    onClose: () -> Unit,
+    skipSilence: Boolean = false,
+    onSkipSilence: (Boolean) -> Unit = {},
+) {
     val s = LocalStrings.current
     val touch = isTouch()
     val focus = remember { FocusRequester() }
@@ -140,6 +171,7 @@ internal fun SpeedSheet(current: Float, onPick: (Float) -> Unit, onDismiss: () -
     ChoiceSheet(title = s.playerPlaybackSpeed, onDismiss = onDismiss, onClose = onClose, ignoreRelease = !touch, fullScreen = true) {
         if (LocalChoiceFullScreen.current) {
             SpeedTiles(current, onPick)
+            SkipSilenceLine(skipSilence, onSkipSilence)
             return@ChoiceSheet
         }
         ChoiceList {
@@ -152,9 +184,24 @@ internal fun SpeedSheet(current: Float, onPick: (Float) -> Unit, onDismiss: () -
                     modifier = if (choice == focusOn) Modifier.focusRequester(focus) else Modifier,
                 ) { onPick(choice) }
             }
+            SkipSilenceLine(skipSilence, onSkipSilence)
         }
         FocusOnOpen(focus)
     }
+}
+
+/**
+ * The skip silence switch, ticked while it is on, in the tick's column so it lines up with the
+ * speeds above it.
+ */
+@Composable
+private fun SkipSilenceLine(on: Boolean, onToggle: (Boolean) -> Unit) {
+    val s = LocalStrings.current
+    ChoiceLine(
+        title = s.playerSkipSilence,
+        detail = s.playerSkipSilenceDetail,
+        selected = on,
+    ) { onToggle(!on) }
 }
 
 /**

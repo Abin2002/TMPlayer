@@ -16,6 +16,7 @@ class PlayerMenuTest {
                 PlayerMenuEntry.StartOver,
                 PlayerMenuEntry.VolumeBoost,
                 PlayerMenuEntry.SleepTimer,
+                PlayerMenuEntry.AbLoop,
                 PlayerMenuEntry.SaveToDownloads,
                 PlayerMenuEntry.MarkWatched,
                 PlayerMenuEntry.PictureShape,
@@ -29,6 +30,26 @@ class PlayerMenuTest {
                 markWatched = true,
             ),
         )
+    }
+
+    @Test
+    fun `the frame steps are offered only while paused, after the repeat line`() {
+        val paused = PlayerMenu.tvEntries(pictureInPicture = true, paused = true)
+        val at = paused.indexOf(PlayerMenuEntry.AbLoop)
+        assertEquals(
+            listOf(PlayerMenuEntry.NextFrame, PlayerMenuEntry.PreviousFrame),
+            paused.subList(at + 1, at + 3),
+        )
+        assertFalse(PlayerMenuEntry.NextFrame in PlayerMenu.tvEntries(pictureInPicture = true))
+        assertFalse(PhoneMenuEntry.NextFrame in PlayerMenu.phoneEntries(true, true, true, true))
+        assertTrue(PhoneMenuEntry.PreviousFrame in PlayerMenu.phoneEntries(true, true, true, true, paused = true))
+    }
+
+    @Test
+    fun `the repeat line says what choosing it does next`() {
+        assertEquals("Repeat: set the start (A)", PlayerMenu.loopLabel(null))
+        assertEquals("Repeat: set the end (B)", PlayerMenu.loopLabel(AbLoop(10_000)))
+        assertEquals("Stop repeating", PlayerMenu.loopLabel(AbLoop(10_000, 20_000)))
     }
 
     @Test
@@ -64,6 +85,7 @@ class PlayerMenuTest {
             pictureInPicture = false,
             saveToDownloads = true,
             markWatched = true,
+            paused = true,
         )
         assertFalse(PlayerMenuEntry.PictureInPicture in entries)
         assertEquals(PlayerMenuEntry.entries.size - 1, entries.size)
@@ -77,6 +99,7 @@ class PlayerMenuTest {
                 pictureInPicture = true,
                 saveToDownloads = true,
                 markWatched = true,
+                paused = true,
             ).toSet(),
         )
     }
@@ -89,6 +112,9 @@ class PlayerMenuTest {
                 PhoneMenuEntry.PictureInPicture,
                 PhoneMenuEntry.VolumeBoost,
                 PhoneMenuEntry.SleepTimer,
+                PhoneMenuEntry.AbLoop,
+                PhoneMenuEntry.NextFrame,
+                PhoneMenuEntry.PreviousFrame,
                 PhoneMenuEntry.OpenInAnotherApp,
                 PhoneMenuEntry.LoadSubtitleFile,
                 PhoneMenuEntry.SaveToDownloads,
@@ -100,9 +126,10 @@ class PlayerMenuTest {
                 openInAnotherApp = true,
                 saveToDownloads = true,
                 markWatched = true,
+                paused = true,
             ),
         )
-        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true).toSet())
+        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true, true).toSet())
     }
 
     @Test
@@ -118,6 +145,7 @@ class PlayerMenuTest {
                 PhoneMenuEntry.LockScreen,
                 PhoneMenuEntry.VolumeBoost,
                 PhoneMenuEntry.SleepTimer,
+                PhoneMenuEntry.AbLoop,
                 PhoneMenuEntry.LoadSubtitleFile,
                 PhoneMenuEntry.PlaybackDetails,
             ),
