@@ -1435,6 +1435,24 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         return removed
     }
 
+    // ---- backup -----------------------------------------------------------------------------
+
+    /** Every stored value under its stored name, for [Backups.collect] and [Backups.plan]. */
+    suspend fun rawEntries(): Map<String, Any> = prefs.data.first().asMap().mapKeys { it.key.name }
+
+    /**
+     * Writes what [writes] returns for the store as it is at that moment, in one edit, so nothing
+     * written between reading the file and confirming the restore is overwritten by a stale merge.
+     * The history cap is applied after, as after any other resume point.
+     */
+    suspend fun restoreEntries(writes: (Map<String, Any>) -> Map<String, Any>) {
+        prefs.edit { prefs ->
+            val now = prefs.asMap().mapKeys { it.key.name }
+            for ((name, value) in writes(now)) prefs.putRaw(name, value)
+            evictOldestHistory(prefs)
+        }
+    }
+
     suspend fun clearResumePosition(chatId: Long, messageId: Long) {
         prefs.edit {
             it.remove(resumeKey(chatId, messageId))
