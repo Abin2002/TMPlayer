@@ -1,7 +1,6 @@
 package com.tmplayer.ui.browse
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -10,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import com.tmplayer.ui.components.TmIcons
@@ -34,7 +33,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -47,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import com.tmplayer.data.ForumTopicSummary
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
-import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.focusRing
 
@@ -112,17 +109,13 @@ private fun TopicTab(
     val s = LocalStrings.current
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(Corner.Medium)
-    val fill = when {
-        focused -> Tone.focusFill
-        chosen -> Tone.accent.copy(alpha = 0.18f)
-        else -> Tone.surfaceHigh
-    }
-    val ink = when {
-        focused -> Tone.onFocusFill
-        chosen -> Tone.accent
-        else -> Tone.text
-    }
+    // Quiet pills: the plain surface at rest, and the focus fill for the chosen topic and for the
+    // one under the remote. The two are told apart by the ring, which only focus draws, and by the
+    // chosen one's weight.
+    val shape = CircleShape
+    val lit = focused || chosen
+    val fill = if (lit) Tone.focusFill else Tone.surface
+    val ink = if (lit) Tone.onFocusFill else Tone.text
     val name = topic?.name ?: s.gridTopicsAll
     val described = buildList {
         add(name)
@@ -132,9 +125,9 @@ private fun TopicTab(
     }.joinToString(", ")
     Row(
         modifier
+            .heightIn(min = if (tv) TV_HEIGHT else TOUCH_HEIGHT)
             .clip(shape)
             .background(fill)
-            .border(if (chosen && !focused) 1.5.dp else 0.dp, if (chosen && !focused) Tone.accent else Color.Transparent, shape)
             .focusRing(focused, shape)
             .semantics(mergeDescendants = true) {
                 role = Role.Tab
@@ -142,7 +135,7 @@ private fun TopicTab(
                 contentDescription = described
             }
             .clickable(interactionSource = interactions, indication = null, onClick = onClick)
-            .padding(horizontal = if (tv) 18.dp else 14.dp, vertical = if (tv) 10.dp else 8.dp),
+            .padding(horizontal = if (tv) 18.dp else 14.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -168,7 +161,7 @@ private fun TopicTab(
             Box(
                 Modifier
                     .clip(CircleShape)
-                    .background(if (focused) Tone.onFocusFill.copy(alpha = 0.2f) else Tone.accent.copy(alpha = 0.22f))
+                    .background(if (lit) Tone.onFocusFill.copy(alpha = 0.2f) else Tone.accent.copy(alpha = 0.22f))
                     .padding(horizontal = 7.dp, vertical = 1.dp),
             ) {
                 Text(
@@ -181,3 +174,7 @@ private fun TopicTab(
         }
     }
 }
+
+/** A topic pill's height: a touch target's on a phone, and the size of the TV's other pills. */
+private val TOUCH_HEIGHT = 36.dp
+private val TV_HEIGHT = 44.dp

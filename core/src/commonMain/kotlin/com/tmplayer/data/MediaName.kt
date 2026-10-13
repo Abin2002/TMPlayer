@@ -115,6 +115,34 @@ object MediaName {
         return name.takeIf { it.count(Char::isLetter) >= 2 }
     }
 
+    /**
+     * The name a tile shows for a file called [fileName]: "Gladiator II (2024)" for
+     * "Gladiator.II.2024.1080p.WEB-DL.x265.mkv", "Harbour Notes S01E03" for an episode, and for a
+     * name that is no release name at all, the name with its extension and its dots and
+     * underscores taken out ("Lecture 07 - Limits" from "Lecture_07_-_Limits.mp4").
+     *
+     * The title is only cut short where the name proves it is a release, with a year, an episode or
+     * a resolution or codec marker. Without one, a language or a source word inside an ordinary
+     * name ("Learn Tamil Fast") would be taken for the start of the technical block and cut the
+     * title to one word, which is worse than leaving the name whole. Null when nothing readable is
+     * left, so the caller keeps whatever it had.
+     */
+    fun tileTitle(fileName: String, caption: String? = null, maxYear: Int = thisYear() + 1): String? {
+        if (fileName.isBlank()) return null
+        val tidy = clean(stripDecoration(stripExtension(fileName)).replace(SEPARATORS, " ").replace(WHITESPACE, " "))
+        val parsed = parse(fileName, caption, maxYear)
+        val release = parsed.year != null || parsed.isEpisode || EpisodeCopies.markers(fileName).isNotEmpty()
+        // A name that is nothing but its marker ("Episode 1") reads back as the whole name, which
+        // says it already; adding the code to it would say it twice.
+        val title = parsed.title.takeIf { release && it.isNotBlank() && !it.equals(tidy, ignoreCase = true) }
+            ?: return tidy.ifEmpty { null }
+        return when {
+            parsed.isEpisode -> "$title ${parsed.episodeCode}"
+            parsed.year != null -> "$title (${parsed.year})"
+            else -> title
+        }
+    }
+
     /** What [read] found, with the title left empty when nothing came before the first marker. */
     private class Read(val parsed: ParsedName, val whole: String)
 

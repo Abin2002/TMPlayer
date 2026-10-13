@@ -114,6 +114,7 @@ import com.tmplayer.ui.components.StateScaffold
 import com.tmplayer.data.ResumeRecord
 import com.tmplayer.data.HomeRow
 import com.tmplayer.data.MediaItem
+import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedWhen
@@ -1052,7 +1053,8 @@ private class VideoCardText(
 
 private fun ResumeRecord.cardText() = VideoCardText(
     key = "${chatId}_$messageId",
-    title = title,
+    // The release name cleaned, as on every other tile; the stored record is left as it is.
+    title = SeriesShelf.tileTitle(toMediaItem()),
     detail = buildString {
         append(L.messages.formatter.clock(positionMs))
         if (remainingMs > 0) {
@@ -1067,7 +1069,7 @@ private fun ResumeRecord.cardText() = VideoCardText(
 /** A finished video: when it was finished, and a full bar, which is what "watched" looks like. */
 private fun WatchedRecord.cardText(now: Long) = VideoCardText(
     key = key,
-    title = title,
+    title = SeriesShelf.tileTitle(toMediaItem()),
     detail = WatchedWhen.phrase(watchedAt, now),
     chatTitle = chatTitle,
     fraction = 1f,
@@ -1076,7 +1078,7 @@ private fun WatchedRecord.cardText(now: Long) = VideoCardText(
 /** A video saved for later: how long it is and how big, and no bar until it is started. */
 private fun WatchLaterRecord.cardText() = VideoCardText(
     key = key,
-    title = title,
+    title = SeriesShelf.tileTitle(toMediaItem()),
     detail = listOfNotNull(
         durationSec.takeIf { it > 0 }?.let { L.messages.formatter.duration(it.toLong()) },
         sizeBytes.takeIf { it > 0 }?.let { L.messages.formatter.size(it) },

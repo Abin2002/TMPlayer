@@ -67,7 +67,6 @@ import com.tmplayer.ui.components.TmDropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -135,6 +134,20 @@ import androidx.compose.ui.input.pointer.isShiftPressed
 import java.io.File
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.text.font.FontWeight
+import com.tmplayer.data.MediaName
+import com.tmplayer.data.SeriesShelf
+import com.tmplayer.ui.components.GeneratedCover
+import com.tmplayer.ui.components.ProgressLine
+import com.tmplayer.ui.components.ProgressLineInset
+import com.tmplayer.ui.components.TileBadge
+import com.tmplayer.ui.components.TileBadgeInset
+import com.tmplayer.ui.components.rememberCover
+import com.tmplayer.ui.theme.Motion
+import com.tmplayer.ui.theme.Scrims
+import com.tmplayer.ui.theme.rememberReducedMotion
+import com.tmplayer.ui.components.PosterArt
 
 /**
  * One chat's videos as a grid of posters: the shared [MediaListViewModel] (paging, search, size
@@ -209,8 +222,19 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                     com.tmplayer.data.SeriesShelf.foldFilmCopies(content.items).map { com.tmplayer.data.ShelfEntry.File(it) }
                 }
             }
-            val cells = remember(arranged) {
-                arranged.map { if (it is com.tmplayer.data.ShelfEntry.Show) it.series.cover else (it as com.tmplayer.data.ShelfEntry.File).item }
+            // Films and shows first as one block of 2:3 posters, then every other video, each in
+            // the chat's own order, so tall and short cards meet in one row at most.
+            val posters = remember(arranged) {
+                arranged.filter(SeriesShelf::isPoster).mapTo(HashSet()) { it.key }
+            }
+            val cells = remember(arranged, posters) {
+                (arranged.filter { it.key in posters } + arranged.filter { it.key !in posters })
+                    .map { if (it is com.tmplayer.data.ShelfEntry.Show) it.series.cover else (it as com.tmplayer.data.ShelfEntry.File).item }
+            }
+            val posterIds = remember(arranged, posters) {
+                arranged.filter { it.key in posters }.mapTo(HashSet()) {
+                    if (it is com.tmplayer.data.ShelfEntry.Show) it.series.cover.id else (it as com.tmplayer.data.ShelfEntry.File).item.id
+                }
             }
             // A chat or a topic that is one course of lessons says how far through it the viewer
             // is, over the posters; not while searching, when the listing is what was searched for.
@@ -224,6 +248,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 items = cells,
                 series = shows,
                 onOpenSeries = { openSeries = it },
+                posters = posterIds,
                 chatTitle = chat.title,
                 grid = grid,
                 onNav = { gridNav = it },
@@ -258,6 +283,14 @@ internal fun VideoGrid(
     /** Shows by the id of their cover, the item standing in for each in [items]. */
     series: Map<String, com.tmplayer.data.Series> = emptyMap(),
     onOpenSeries: (com.tmplayer.data.Series) -> Unit = {},
+    /** A video's own mark for its poster's top end corner, a "New" say, or null for none. */
+    badge: (MediaItem) -> (@Composable () -> Unit)? = { null },
+    /**
+     * The ids of the cells drawn as 2:3 posters, films and shows. With any, every cell takes a
+     * poster's width (about three quarters of [ShellState.posterWidth]), so the arrow keys still
+     * move one column at a time; the videos after the posters are then smaller 16:9 cards.
+     */
+    posters: Set<String> = emptySet(),
 ) {
     val watch = if (series.isEmpty()) null else rememberSeriesWatch(state)
     // Every file on its own, episodes included: a chat lists what was posted, one by one.
@@ -272,7 +305,7 @@ internal fun VideoGrid(
     Box(Modifier.fillMaxSize()) {
       CompositionLocalProvider(LocalGridSelection provides selection, LocalDownloadIndex provides index) {
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(state.posterWidth),
+            columns = GridCells.Adaptive(if (posters.isEmpty()) state.posterWidth else state.posterWidth * POSTER_SHARE),
             state = grid,
             contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -285,9 +318,9 @@ internal fun VideoGrid(
             itemsIndexed(items, key = { _, it -> "media-${it.id}" }) { index, item ->
                 val show = series[item.id]
                 if (show != null && watch != null) {
-                    SeriesPoster(show, watch, onOpen = { onOpenSeries(show) }, nav = nav, index = index)
+                    SeriesPoster(show, watch, onOpen = { onOpenSeries(show) }, nav = nav, index = index, poster = item.id in posters)
                 } else {
-                    MediaTile(state, item, chatTitle, nav, index)
+                    MediaTile(state, item, chatTitle, nav, index, badge = badge(item), poster = item.id in posters)
                 }
             }
             if (loadingMore) {
@@ -375,7 +408,8 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                 val nav = rememberKeyboardNav(remember(grid) { GridSurface(grid, { 0 }, { records.size }) })
                 Box(Modifier.fillMaxSize()) {
                     LazyVerticalGrid(
-                        columns = GridCells.Adaptive(state.posterWidth),
+                        // A quarter wider than a poster: the card carries its title on the art.
+                        columns = GridCells.Adaptive(state.posterWidth * CONTINUE_WIDTH),
                         state = grid,
                         contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -406,6 +440,12 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
     }
 }
 
+/**
+ * A video part way through, as a card a quarter wider than a poster: the art with the episode
+ * ("S1 E3") and the title written on it over the tile's foot scrim, how long is left under it, and
+ * the progress line at its foot. The records keep no picture, so the art is the video's
+ * [GeneratedCover] unless a thumbnail turns up.
+ */
 @Composable
 private fun ContinueTile(
     state: ShellState,
@@ -424,11 +464,8 @@ private fun ContinueTile(
         item = item,
         chatTitle = record.chatTitle,
         progress = record.fraction,
-        art = {
-            Box(Modifier.fillMaxSize().background(Tone.surfaceHigh), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(40.dp))
-            }
-        },
+        art = { ContinueArt(item) },
+        titleBelow = false,
         subtitle = s.continueLeft(record.chatTitle, MediaMapper.formatDuration((record.remainingMs / 1000).toInt())),
         extraMenu = { close ->
             // Marking also forgets the position, so the card leaves this page with it.
@@ -442,6 +479,54 @@ private fun ContinueTile(
     )
 }
 
+/** A continue card's art: the picture or the cover, and the episode and the title written on it. */
+@Composable
+private fun ContinueArt(item: MediaItem) {
+    val s = LocalStrings.current
+    val cover = rememberCover(item)
+    val parsed = remember(item) { MediaName.parse(item.nameForParsing, item.caption) }
+    val title = remember(item) { SeriesShelf.tileTitle(item) }
+    // An episode is named by its show, with the episode above it; anything else by its own name.
+    val episode = parsed.episode?.let { number -> parsed.season?.let { s.seriesEpisodeShort(it, number) } ?: s.seriesEpisode(number) }
+    val name = if (episode != null) parsed.title.ifBlank { title } else title
+    Box(Modifier.fillMaxSize()) {
+        MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize()) {
+            GeneratedCover(cover, Modifier.fillMaxSize(), showTitle = false)
+        }
+        Box(Modifier.fillMaxSize().background(Scrims.tileFoot))
+        Column(
+            Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp + ProgressLineInset),
+        ) {
+            if (episode != null) {
+                Text(
+                    episode,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = Tone.onArt,
+                    maxLines = 1,
+                )
+            }
+            Text(
+                name,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = Tone.onArt,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/**
+ * The art of a saved record's poster (Watched, Watch later): the thumbnail when the item carries
+ * one, else the video's [GeneratedCover], rather than a play mark on a grey square.
+ */
+@Composable
+internal fun RecordArt(item: MediaItem) {
+    MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize(), cover = rememberCover(item))
+}
+
 /** A video in a chat's grid. */
 @Composable
 internal fun MediaTile(
@@ -452,6 +537,10 @@ internal fun MediaTile(
     index: Int = 0,
     /** On Home or in the search across chats, where the pane offers to go to the chat. */
     outsideChat: Boolean = false,
+    /** The caller's own mark for the art's top end corner, a "New" say. */
+    badge: (@Composable () -> Unit)? = null,
+    /** A film's 2:3 poster card ([SeriesShelf.isFilm]); the caller says, as only it knows the grid. */
+    poster: Boolean = false,
 ) {
     val s = LocalStrings.current
     // The grid's selection, when there is one, so the pane can start one with this poster.
@@ -467,8 +556,11 @@ internal fun MediaTile(
         index = index,
         item = item,
         chatTitle = chatTitle,
-        progress = WatchedWords.posterProgress(point?.fraction, finished),
+        // Only a saved place draws the line; a finished video says so with its tick.
+        progress = point?.fraction,
         finished = finished,
+        badge = badge,
+        poster = poster,
         onDetails = { refocus ->
             state.openDetail(
                 DetailRequest(
@@ -481,26 +573,36 @@ internal fun MediaTile(
             )
         },
         art = {
-            // On Home, the show's or the film's own picture over the frame once a match arrives.
-            com.tmplayer.ui.online.OnlineArt(item, Modifier.fillMaxSize()) {
-                MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize()) {
-                    Text(item.title.take(1).uppercase(), style = MaterialTheme.typography.headlineSmall, color = Tone.muted)
+            if (poster) {
+                val meta = com.tmplayer.ui.online.rememberMeta(item, showOnly = true)
+                PosterArt(item.miniThumbnail, item.thumbnailFileId, rememberCover(item), meta?.posterUrl, Modifier.fillMaxSize())
+            } else {
+                // On Home, the show's or the film's own picture over the frame once a match arrives.
+                com.tmplayer.ui.online.OnlineArt(item, Modifier.fillMaxSize()) {
+                    MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize(), cover = rememberCover(item))
                 }
             }
         },
         subtitle = buildString {
-            if (item.durationSec > 0) append(MediaMapper.formatDuration(item.durationSec)).append("  ·  ")
+            // A poster leads with the film's year and leaves the quality to the chip on its art.
+            if (poster) MediaName.parse(item.nameForParsing, item.caption).year?.let { append(it).append("  ·  ") }
+            if (!poster && item.durationSec > 0) append(MediaMapper.formatDuration(item.durationSec)).append("  ·  ")
             append(if (item.versions.size > 1) s.detailVersions(item.versions.size) else MediaMapper.formatSize(item.sizeBytes))
-            item.qualityTags.firstOrNull()?.let { append("  ·  ").append(it) }
+            if (!poster) item.qualityTags.firstOrNull()?.let { append("  ·  ").append(it) }
             if (WatchedWords.showsWatched(point?.fraction, finished)) append("  ·  ").append(s.watchedBadge)
         },
     )
 }
 
 /**
- * The poster every grid draws: art at 16:9, a progress line, a title under it. Hovering for a
- * moment lifts it and shows Play and the overflow; a right click (Ctrl+click on macOS) opens the
- * same overflow where the pointer is.
+ * The poster every grid draws: art at 16:9 with no panel round it, a progress line on its foot, a
+ * line of name and a line of facts under it. Hovering for a moment lifts it by [Motion.FocusScale]
+ * and shows Play and the overflow; a right click (Ctrl+click on macOS) opens the same overflow
+ * where the pointer is. The line of facts goes from muted to the full text colour while lifted.
+ *
+ * One badge in the art's top start corner at most: selected, else the download (kept, coming, or
+ * cached), else the watched tick. [badge] is the caller's own for the top end corner, which the
+ * overflow button takes over while the poster is lifted.
  *
  * From the keyboard ([nav], B2.1): focus draws a ring and lifts it like a hover, the arrows move
  * between posters, Enter, Space or P plays, and the context menu key or Shift+F10 opens the
@@ -518,8 +620,13 @@ internal fun Poster(
     art: @Composable () -> Unit,
     subtitle: String,
     extraMenu: (@Composable (close: () -> Unit) -> Unit)? = null,
-    /** On the Watched list: a tick in the bottom corner of the art. */
+    /** On the Watched list, or marked watched: the tick, when no other badge has the corner. */
     finished: Boolean = false,
+    /** False for a card that writes its title on the art itself, and keeps only [subtitle] under it. */
+    titleBelow: Boolean = true,
+    badge: (@Composable () -> Unit)? = null,
+    /** A film's 2:3 poster card rather than a video's 16:9 one, named without its year. */
+    poster: Boolean = false,
     /** Whether the menu offers "Mark as watched" or "Mark as unwatched" by [finished]. */
     markToggle: Boolean = true,
     /** The menu's play, download and link lines; off for a page whose [extraMenu] is the menu. */
@@ -545,7 +652,14 @@ internal fun Poster(
         }
     }
     var focused by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (lifted || focused) 1.05f else 1f)
+    val scale by animateFloatAsState(
+        targetValue = if ((lifted || focused) && !rememberReducedMotion()) Motion.FocusScale else 1f,
+        animationSpec = Motion.standard(Motion.Fast),
+    )
+    val ink by animateColorAsState(
+        targetValue = if (lifted || focused) Tone.text else Tone.muted,
+        animationSpec = Motion.standard(Motion.Fast),
+    )
     var menu by remember { mutableStateOf(false) }
     val requester = remember { FocusRequester() }
     // A video its chat will not let anyone keep cannot be picked for Download selected.
@@ -618,37 +732,40 @@ internal fun Poster(
                     else -> false
                 }
             }
-            .clickable(onClick = play),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+            // No hover or press plate: the lift and the ring on the art are the feedback.
+            .clickable(interactionSource = interaction, indication = null, onClick = play),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Box(
             Modifier
+                .padding(bottom = 4.dp)
                 .fillMaxWidth()
-                .aspectRatio(16f / 9f)
+                .aspectRatio(if (poster) 2f / 3f else 16f / 9f)
                 .graphicsLayer { scaleX = scale; scaleY = scale }
                 .clip(MaterialTheme.shapes.medium)
-                .then(if (focused || selected) Modifier.border(Focus.Edge, Tone.accent, MaterialTheme.shapes.medium) else Modifier),
+                .then(if (focused || selected) Modifier.border(Focus.Ring, Tone.accent, MaterialTheme.shapes.medium) else Modifier),
         ) {
             art()
             if (progress != null && progress > 0f) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(3.dp),
-                    color = Tone.accent,
-                    trackColor = Color.Black.copy(alpha = 0.4f),
-                )
+                ProgressLine(progress, Modifier.align(Alignment.BottomCenter))
             }
-            if (finished) {
-                // The one corner no other badge uses, clear of the bar along the bottom edge.
-                WatchedBadge(Modifier.align(Alignment.BottomStart).padding(start = 8.dp, bottom = 9.dp), size = 24.dp)
-            }
+            val corner = Modifier.align(Alignment.TopStart).padding(TileBadgeInset)
             when {
-                selected -> Badge(Icons.Filled.CheckCircle, s.browseBadgeSelected, Modifier.align(Alignment.TopStart))
-                record != null -> Badge(Icons.Filled.CheckCircle, s.downloadsDownloaded, Modifier.align(Alignment.TopStart))
-                download != null && download.busy -> Badge(TmIcons.Download, s.downloadsDownloading, Modifier.align(Alignment.TopStart))
-                item.onDevice -> Badge(TmIcons.Download, s.browseBadgeCached, Modifier.align(Alignment.TopStart))
+                selected -> TileBadge(s.browseBadgeSelected, corner, icon = Icons.Filled.CheckCircle)
+                record != null -> TileBadge(s.downloadsDownloaded, corner, icon = Icons.Filled.CheckCircle)
+                download != null && download.busy -> TileBadge(s.downloadsDownloading, corner, icon = TmIcons.Download)
+                item.onDevice -> TileBadge(s.browseBadgeCached, corner, icon = TmIcons.Download)
+                finished -> WatchedBadge(corner)
             }
-            if (lifted || menu || focused) {
+            val showing = lifted || menu || focused
+            // The top end corner: the caller's mark, else on a poster the quality its name states.
+            val quality = item.qualityTags.firstOrNull()
+            if (!showing) when {
+                badge != null -> Box(Modifier.align(Alignment.TopEnd).padding(TileBadgeInset)) { badge() }
+                // Only on its own: two chips across a narrow poster would meet in the middle.
+                poster && quality != null && !selected && record == null && download?.busy != true && !item.onDevice && !finished -> TileBadge(quality, Modifier.align(Alignment.TopEnd).padding(TileBadgeInset))
+            }
+            if (showing) {
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)))
                 Surface(
                     shape = CircleShape,
@@ -672,25 +789,23 @@ internal fun Poster(
                 }, extra = extraMenu, watchedToggle = if (markToggle) finished else null, fileMenu = fileMenu)
             }
         }
-        // Two lines, always: a short name reserves the second so the subtitles across a row stay level.
-        // A poster for several copies of one film is named for the film, not for its newest file.
-        val title = if (item.versions.size > 1) remember(item.id) { com.tmplayer.data.SeriesShelf.filmTitle(item) } else item.title
-        Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 2, minLines = 2, overflow = TextOverflow.Ellipsis)
-        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Tone.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
-}
-
-/** A word on the poster's corner: Downloaded, Cached, Downloading or Selected. */
-@Composable
-private fun Badge(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, modifier: Modifier) {
-    Row(
-        modifier.padding(6.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.6f))
-            .padding(start = 4.dp, end = 8.dp, top = 3.dp, bottom = 3.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-        Text(label, style = MaterialTheme.typography.labelSmall, color = Color.White)
+        // The name cleaned of its release tags, a film of several copies by the film's own name
+        // (see SeriesShelf.tileTitle); the detail pane keeps the whole file name.
+        if (titleBelow) {
+            val title = remember(item, poster) { if (poster) SeriesShelf.posterTitle(item) else SeriesShelf.tileTitle(item) }
+            if (poster) {
+                Text(title, style = MaterialTheme.typography.bodyMedium, maxLines = 2, minLines = 2, overflow = TextOverflow.Ellipsis)
+            } else {
+                Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        Text(
+            subtitle,
+            style = if (poster) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+            color = ink,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -923,6 +1038,12 @@ private val IS_MAC = System.getProperty("os.name").orEmpty().lowercase().contain
 private const val HOVER_INTENT_MS = 300L
 private const val SEARCH_SETTLE_MS = 300L
 private const val LOAD_AHEAD = 8
+
+/** A film or show poster's width, as a share of the toolbar's poster size step. */
+private const val POSTER_SHARE = 0.75f
+
+/** How much wider a Continue watching card is than a poster. */
+private const val CONTINUE_WIDTH = 1.25f
 
 /** A sponsored message's picture: 16:9 like every other, about the height its three lines take. */
 private val SPONSORED_ART = 112.dp

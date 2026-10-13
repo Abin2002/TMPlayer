@@ -34,7 +34,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawOutline
@@ -251,27 +250,25 @@ fun MediaGridSkeleton(modifier: Modifier = Modifier, layout: CardLayout = CardLa
         // Carried in for the same reason: the nested lambdas cannot see the box's own scope.
         val inner = maxWidth - edge * 2
         val height = maxHeight
+        val landscape = maxWidth > maxHeight
 
-        // The phone's grid is compact: small tiles a hairline apart, with two lines of the name
-        // under each. The placeholder must match, or the shimmer resolves into a listing that has
-        // moved.
+        // The grid takes the listing's own figures from [TileGrid], so the shimmer resolves into
+        // the tiles it stood for rather than a listing that has moved.
         val dense = touch && layout == CardLayout.Grid
-        val gridGap = if (dense) DENSE_GAP else 16.dp
-        val gridEdge = if (dense) DENSE_GAP else edge
-        val gridInner = if (dense) maxWidth - DENSE_GAP * 2 else inner
+        val gridGap = if (touch) TileGrid.TouchGap else TileGrid.TvGap
 
         Column(
-            Modifier.padding(horizontal = gridEdge),
+            Modifier.padding(horizontal = edge),
             verticalArrangement = Arrangement.spacedBy(
                 if (layout == CardLayout.Grid) gridGap else 12.dp,
             ),
         ) {
             when (layout) {
                 CardLayout.Grid -> {
-                    val columns = tileColumns(gridInner, GRID_COLUMNS, touch)
+                    val columns = TileGrid.wideColumns(inner, touch, landscape)
                     // The art is 16:9 of whatever a column came out as, and the caption beneath it
                     // is a fixed block, so the tile's height is only known once the width is.
-                    val tile = (gridInner - gridGap * (columns - 1)) / columns * 9f / 16f +
+                    val tile = (inner - gridGap * (columns - 1)) / columns * 9f / 16f +
                         (if (dense) DENSE_CAPTION_HEIGHT else CAPTION_HEIGHT)
                     repeat(rowsToFill(height, tile + gridGap)) {
                         Row(
@@ -330,44 +327,90 @@ fun MediaGridSkeleton(modifier: Modifier = Modifier, layout: CardLayout = CardLa
     }
 }
 
-/** The phone's compact tile: art, then the two lines of name it always reserves room for. */
+/** The phone's tile: art, the two lines of name it always reserves room for, and its facts. */
 @Composable
 private fun DenseTileSkeleton(shimmer: Shimmer, modifier: Modifier = Modifier) {
-    Column(modifier.padding(DENSE_GAP)) {
+    Column(modifier) {
         SkeletonBox(
             shimmer,
             Modifier.fillMaxWidth().aspectRatio(16f / 9f),
-            RoundedCornerShape(Corner.Small),
+            RoundedCornerShape(Corner.Medium),
         )
+        Spacer(Modifier.height(8.dp))
+        SkeletonBox(shimmer, Modifier.fillMaxWidth().height(12.dp))
         Spacer(Modifier.height(6.dp))
-        SkeletonBox(shimmer, Modifier.fillMaxWidth().height(10.dp))
-        Spacer(Modifier.height(4.dp))
-        SkeletonBox(shimmer, Modifier.fillMaxWidth(0.6f).height(10.dp))
-        Spacer(Modifier.height(6.dp))
-        SkeletonBox(shimmer, Modifier.fillMaxWidth(0.45f).height(8.dp))
+        SkeletonBox(shimmer, Modifier.fillMaxWidth(0.6f).height(12.dp))
+        Spacer(Modifier.height(8.dp))
+        SkeletonBox(shimmer, Modifier.fillMaxWidth(0.45f).height(10.dp))
     }
 }
 
+/** A television's tile: art with no panel round it, a line of name and a line of facts. */
 @Composable
 private fun MediaTileSkeleton(shimmer: Shimmer, modifier: Modifier = Modifier) {
-    Column(
-        modifier
-            .clip(RoundedCornerShape(Corner.Medium))
-            .background(Tone.surface),
-    ) {
-        // Rectangular, not rounded: the card's own clip is what gives the art its top corners,
-        // exactly as it does for the real media preview.
+    Column(modifier) {
         SkeletonBox(
             shimmer,
             Modifier.fillMaxWidth().aspectRatio(16f / 9f),
-            RectangleShape,
+            RoundedCornerShape(Corner.Medium),
         )
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-            SkeletonBox(shimmer, Modifier.fillMaxWidth(0.86f).height(14.dp))
-            Spacer(Modifier.height(8.dp))
-            SkeletonBox(shimmer, Modifier.fillMaxWidth(0.5f).height(11.dp))
-        }
+        Spacer(Modifier.height(10.dp))
+        SkeletonBox(shimmer, Modifier.fillMaxWidth(0.86f).height(16.dp))
+        Spacer(Modifier.height(8.dp))
+        SkeletonBox(shimmer, Modifier.fillMaxWidth(0.5f).height(12.dp))
     }
+}
+
+/**
+ * The video grid's figures, read by the listing on the phone and the television and by the
+ * placeholder above, so the two always agree on how many tiles go across and how far apart.
+ */
+object TileGrid {
+
+    /** Between a phone's tiles, both ways. */
+    val TouchGap: Dp = 10.dp
+
+    /** Between a television's tiles, both ways. */
+    val TvGap: Dp = 12.dp
+
+    /**
+     * How many 2:3 posters (films and shows) go across [width], the room inside the side margins:
+     * three on a phone held upright and six on its side, a poster of about 126 dp; on a tablet as
+     * many as keep one under [POSTER_TOUCH_MAX]; on a television about seven.
+     */
+    fun posterColumns(width: Dp, touch: Boolean, landscape: Boolean): Int =
+        if (touch) {
+            maxOf(if (landscape) 6 else 3, across(width, POSTER_TOUCH_MAX, TouchGap))
+        } else {
+            across(width, POSTER_TV_MIN, TvGap)
+        }
+
+    /**
+     * How many 16:9 cards (clips, lectures, episodes) go across [width]: two on a phone held
+     * upright and four on its side, so a lecture's name has room to be read, and about four on a
+     * television.
+     */
+    fun wideColumns(width: Dp, touch: Boolean, landscape: Boolean): Int =
+        if (touch) {
+            maxOf(if (landscape) 4 else 2, across(width, WIDE_TOUCH_MAX, TouchGap))
+        } else {
+            across(width, WIDE_TV_MIN, TvGap)
+        }
+
+    /**
+     * The grid's own column count when posters and wide cards share it: a count both divide, so a
+     * poster spans [columns] / posters of them and a wide card [columns] / wide.
+     */
+    fun columns(posters: Int, wide: Int): Int = posters / gcd(posters, wide) * wide
+
+    private fun across(width: Dp, tile: Dp, gap: Dp): Int = ((width + gap) / (tile + gap)).toInt().coerceAtLeast(1)
+
+    private tailrec fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
+
+    private val POSTER_TOUCH_MAX: Dp = 160.dp
+    private val POSTER_TV_MIN: Dp = 108.dp
+    private val WIDE_TOUCH_MAX: Dp = 280.dp
+    private val WIDE_TV_MIN: Dp = 196.dp
 }
 
 /**
@@ -382,10 +425,10 @@ private fun rowsToFill(height: Dp, step: Dp): Int {
 }
 
 /**
- * How many tiles fit across [width], counting the 16dp between them.
+ * How many chat tiles fit across [width], counting the 16dp between them.
  *
  * A television is a known size and keeps its [tv] count. A phone is not, and turns over while it is
- * being held, so it is asked the same question the real grids ask: how many tiles of the minimum
+ * being held, so it is asked the same question the real grid asks: how many tiles of the minimum
  * width will go in.
  */
 private fun tileColumns(width: Dp, tv: Int, touch: Boolean): Int {
@@ -395,26 +438,22 @@ private fun tileColumns(width: Dp, tv: Int, touch: Boolean): Int {
 
 private const val SWEEP_MS = 1_400
 private const val CHAT_TILE_COLUMNS = 3
-private const val GRID_COLUMNS = 4
 
 /** A ceiling on the row count, so a very tall window cannot ask for a hundred placeholders. */
 private const val MAX_ROWS = 12
 
-/** The smallest tile the phone grids accept, matching `TOUCH_TILE_MIN` on both browse screens. */
+/** The smallest chat tile the phone's chat grid accepts. */
 private val TOUCH_TILE_MIN = 120.dp
-
-/** Barely a hairline between tiles. Mirrors the listing's own figure. */
-private val DENSE_GAP = 4.dp
-
-/** Two small lines of caption under a dense tile, matching the two the real tile reserves. */
-private val DENSE_CAPTION_HEIGHT = 44.dp
 
 /** The phone insets, matching `TouchInsets` on the browse screen and `TOUCH_EDGE` on the grid. */
 private val TOUCH_INSET = 16.dp
 private val TOUCH_TOP = 8.dp
 
-/** Two lines of caption and its padding, under the art of a tile. */
-private val CAPTION_HEIGHT = 53.dp
+/** Two lines of name and a line of facts under a phone's tile, as the real tile reserves. */
+private val DENSE_CAPTION_HEIGHT = 68.dp
+
+/** A line of name and a line of facts under the art of a television's tile. */
+private val CAPTION_HEIGHT = 54.dp
 
 /** The art beside a list row, matching `ROW_ART_WIDTH` and `TOUCH_ART_SHARE` on the media screen. */
 private val ROW_ART_WIDTH = 176.dp
