@@ -140,9 +140,10 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [ ] CP58 Skip silence, rewind a few seconds on resume (batch 2)
 - [ ] CP59 UI scale, log export for bug reports (batch 2)
 - [ ] CP60 Episode thumbnails in the series list (batch 2)
-- [ ] CP61 (optional) Absolute anime episode numbers to season and episode via ani.zip or the Fribb list (batch 2)
+- [ ] CP61 (later, user 2026-10-13: no new outside services for now) Absolute anime episode numbers to season and episode via ani.zip or the Fribb list (batch 2)
 - [ ] U30 Register AniList and Simkl API clients, give Claude the client ids
-- [ ] CP62 AniList and Simkl progress sync (needs U30)
+- [ ] CP62 AniList and Simkl progress sync (later, user 2026-10-13: anything needing keys or accounts waits; needs U30)
+- [ ] CP63 UI refresh in the style of Nuvio: home hero, poster rows, detail and series pages, player chrome, on phone, TV and desktop (spec: docs/design/2026-10-13-nuvio-style-ui.md)
 
 ## Standing rules
 
@@ -1001,6 +1002,11 @@ top of its list, from `WatchedStore` and resume records. Continue opens the firs
 - **CP60 Episode thumbnails:** TDLib video thumbnails in the series episode list, lazy, no extra downloads.
 - **CP61 (optional) Anime mapping:** ani.zip or the Fribb anime list to turn absolute numbers (One Piece 1080)
   into season and episode for metadata and skip times. Privacy page if a new service is called.
+
+### CP63 UI refresh in the style of Nuvio
+The user asked on 2026-10-13 for every screen to look as good as Nuvio's. A research agent writes the spec
+(`docs/design/2026-10-13-nuvio-style-ui.md`) with work packages split by file; they run after batch 1 merges
+and before batch 2, since batch 2 builds on the same screens. Patterns only, none of Nuvio's name or assets.
 
 ### CP62 AniList and Simkl sync
 Needs U30. OAuth on each platform (TV through a QR or device code), push watched episodes and progress, pull
