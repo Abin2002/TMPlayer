@@ -157,6 +157,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var mediaFileName = ""
     private var mediaCaption = ""
 
+    /** The forum topic the post is in, or 0, for the speed remembered per topic. */
+    private var mediaTopicId = 0
+
     private var chatId = 0L
     private var messageId = 0L
 
@@ -387,6 +390,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private val seriesKey: String
         get() = MediaName.parse(mediaTitle).title.ifBlank { mediaTitle }
 
+    /** Where a speed picked for this video is remembered, and read back from. See [SpeedMemory]. */
+    private val speedScopes: SpeedMemory.Scopes
+        get() = SpeedMemory.scopesOf(currentItem(), seriesKey)
+
     /** The picture's own shape, once the decoder has reported it. Zero until then. */
     private var videoWidth = 0
     private var videoHeight = 0
@@ -507,6 +514,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         mediaSubtitle = intent.getStringExtra(EXTRA_SUBTITLE).orEmpty()
         mediaFileName = intent.getStringExtra(EXTRA_FILE_NAME).orEmpty()
         mediaCaption = intent.getStringExtra(EXTRA_CAPTION).orEmpty()
+        mediaTopicId = intent.getIntExtra(EXTRA_TOPIC_ID, 0)
         chatTitle = intent.getStringExtra(EXTRA_CHAT_TITLE).orEmpty()
         fileSizeBytes = intent.getLongExtra(EXTRA_SIZE, 0)
         durationSec = intent.getIntExtra(EXTRA_DURATION, 0)
@@ -717,16 +725,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     .getOrDefault(false)
                 if (downloadFirst && !fetchWholeFilm()) return@launch
             }
-            playbackSpeed = runCatching { settings.playbackSpeedNow() }
-                .getOrDefault(PlaybackSpeed.DEFAULT)
             // A video with a saved position goes back to the speed and the tracks it was playing
-            // with there, over the general speed and the series' languages. See [ResumeState].
+            // with there, over the series' speed and languages. See [ResumeState].
             val resumed = if (hasMessage()) {
                 runCatching { settings.resumeRecord(chatId, messageId)?.state }.getOrNull()
             } else {
                 null
             }
-            resumed?.speed?.let { playbackSpeed = PlaybackSpeed.sanitise(it) }
+            // Its own speed, else the series' or course's, else the chat's or topic's: [SpeedMemory].
+            playbackSpeed = runCatching { settings.openingSpeed(resumed?.speed, speedScopes) }
+                .getOrDefault(resumed?.speed?.let(PlaybackSpeed::sanitise) ?: PlaybackSpeed.DEFAULT)
             resumeTracks = resumed
             videoScale = runCatching { VideoScale.from(settings.videoScaleNow()) }
                 .getOrDefault(VideoScale.Fit)
@@ -1071,6 +1079,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         date = 0,
         fileName = mediaFileName,
         caption = mediaCaption,
+        topicId = mediaTopicId,
     )
 
     /**
@@ -3040,7 +3049,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         playbackSpeed = value
         player?.setPlaybackSpeed(value)
         showGestureFeedback(PlaybackSpeed.label(value))
-        lifecycleScope.launch { runCatching { settings.setPlaybackSpeed(value) } }
+        // For the series, the course, the chat or the topic, not only this file: 1x forgets it.
+        val scopes = speedScopes
+        val store = settings
+        App.backgroundScope.launch { runCatching { store.rememberSpeed(scopes, value) } }
     }
 
     /**
@@ -4271,6 +4283,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         private const val EXTRA_SUBTITLE = "subtitle"
         private const val EXTRA_FILE_NAME = "file_name"
         private const val EXTRA_CAPTION = "caption"
+        private const val EXTRA_TOPIC_ID = "topic_id"
         private const val EXTRA_SIZE = "size"
         private const val EXTRA_DURATION = "duration"
         private const val EXTRA_CHAT_TITLE = "chat_title"
@@ -4474,6 +4487,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 putExtra(EXTRA_TITLE, item.title)
                 putExtra(EXTRA_FILE_NAME, item.fileName)
                 putExtra(EXTRA_CAPTION, item.caption)
+                putExtra(EXTRA_TOPIC_ID, item.topicId)
                 putExtra(EXTRA_CHAT_TITLE, chatTitle)
                 // The picture the grid was already showing, carried across rather than fetched
                 // again: it is the one thing that can be on screen in the first frame, before

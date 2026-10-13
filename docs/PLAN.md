@@ -127,7 +127,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [x] CP45 Forum topics as tabs, captions in titles and search, lecture next-up, paid media, edited and scheduled messages (7cb7d6d and 032259d; topic tabs checked on the POCO in STRIVER TUF)
 - [x] CP46 A show is one tile, copies of a film or episode one tile with versions, anime numbering kept (3e765ce; checked on the POCO in Cinema_paradasio)
 - [x] CP47 Skip intro, recap and credits from TheIntroDB, IntroDB.app and AniSkip, next-up counted from the credits (eb8661b; unit tested, privacy page updated; the skip pill is not yet seen on a device, the promo app has online metadata off)
-- [ ] CP48 Speed remembered per series, per chat and per forum topic, presets 0.75 to 2 (batch 1)
+- [x] CP48 Speed remembered per series, per chat and per forum topic, presets 0.75 to 2 (see commit; `SpeedMemory` in core: a show under the track choice's series key, a lecture under its course, else the chat or chat plus topic; opens at the file's own, the series', the chat's or topic's, then 1x, and 1x forgets it; the old app-wide last speed is gone. Pickers already offered 0.5 to 2. Unit tested; not yet seen on a device)
 - [ ] CP49 Preferred audio and subtitle language, subtitle mode (batch 1)
 - [ ] CP50 Watch later: single videos without starring the chat, Home row, History tab (batch 1)
 - [ ] CP51 Download a season, or only its unwatched episodes, from the series page (batch 1)

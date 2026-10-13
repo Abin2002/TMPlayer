@@ -6,7 +6,8 @@ import com.tmplayer.i18n.L
  * The speeds the transport row offers, and the arithmetic for stepping between them.
  *
  * The Android player's speed button opens every stop to pick from at once; the desktop's speed
- * pill still steps through them with [next]. The choice is remembered for the next video either way.
+ * pill still steps through them with [next]. The choice is remembered for the show, the course, the
+ * chat or the topic either way: see [SpeedMemory].
  *
  * Pure, so the stepping is tested rather than discovered on a sofa.
  */
