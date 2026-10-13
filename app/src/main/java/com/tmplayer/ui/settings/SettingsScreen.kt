@@ -49,6 +49,7 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
@@ -107,6 +108,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
@@ -124,7 +126,13 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.R
 import com.tmplayer.data.BackupWords
+import com.tmplayer.data.AppLockSession
+import com.tmplayer.data.AppLockSettings
 import com.tmplayer.data.CacheShelf
+import com.tmplayer.data.Screensaver
+import com.tmplayer.ui.lock.AppLockWords
+import com.tmplayer.ui.lock.PinPad
+import com.tmplayer.ui.lock.PinPurpose
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.CrashReports
 import com.tmplayer.data.DeviceQuirks
@@ -133,6 +141,7 @@ import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.LocalDownloads
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.RestorePlan
+import com.tmplayer.data.ResumeRewind
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.StorageSplit
@@ -186,7 +195,7 @@ import kotlinx.coroutines.withContext
  * rather than by index, so a caller can open one directly and get back to it after About or the
  * cached videos. [Gestures] is a phone's alone; a television never shows its row.
  */
-enum class SettingsPage { Appearance, Playback, Subtitles, Gestures, Library, Storage, About }
+enum class SettingsPage { Appearance, Playback, Subtitles, Gestures, Library, Storage, Lock, About }
 
 /**
  * Focus for a row in a lazy list, which exists only once the list has been measured: a frame
@@ -218,6 +227,25 @@ private sealed interface Prompt {
 
     /** A backup file picked, with what restoring it would change. */
     data class Restore(val plan: RestorePlan) : Prompt
+}
+
+/**
+ * A PIN being set, changed or removed from App lock (CP57), drawn as the full-screen pad in place
+ * of the page. Changing and removing ask for the current PIN first.
+ */
+private enum class PinFlow {
+    /** A first PIN. */
+    Set,
+
+    /** A first PIN asked for by "Allowed chats only", which goes on once the PIN is set. */
+    SetForKids,
+
+    /** The current PIN, then [ChangeChoose]. */
+    ChangeCheck,
+    ChangeChoose,
+
+    /** The current PIN, then the PIN goes. */
+    Remove,
 }
 
 /**
@@ -267,6 +295,7 @@ fun SettingsScreen(
     val cached by settings.cachedVideos.collectAsStateWithLifecycle(initialValue = emptyList())
     val downloadFirst by settings.downloadBeforePlaying.collectAsStateWithLifecycle(initialValue = false)
     val autoplayNext by settings.autoplayNext.collectAsStateWithLifecycle(initialValue = true)
+    val resumeRewindMs by settings.resumeRewindMs.collectAsStateWithLifecycle(initialValue = ResumeRewind.DEFAULT_MS)
     val detailFirst by settings.detailFirst.collectAsStateWithLifecycle(initialValue = true)
     val wifiOnly by settings.wifiOnlyDownloads.collectAsStateWithLifecycle(initialValue = false)
     val trickplayOn by settings.trickplay.collectAsStateWithLifecycle(initialValue = true)
@@ -298,6 +327,13 @@ fun SettingsScreen(
     )
     val dynamicColour by settings.dynamicColour.collectAsStateWithLifecycle(initialValue = false)
     val crashReports by settings.crashReports.collectAsStateWithLifecycle(initialValue = false)
+    // The app lock and the kids lock (CP57), and the television's screensaver.
+    val appLock by settings.appLock.collectAsStateWithLifecycle(initialValue = AppLockSettings())
+    val screensaverMinutes by settings.screensaverMinutes.collectAsStateWithLifecycle(
+        initialValue = Screensaver.DEFAULT_MINUTES,
+    )
+    var pinFlow by remember { mutableStateOf<PinFlow?>(null) }
+    var pickingKidsChats by remember { mutableStateOf(false) }
 
     val toast = rememberToast()
     val updateState by Updates.state.collectAsStateWithLifecycle()
@@ -366,6 +402,7 @@ fun SettingsScreen(
         SettingsPage.Gestures -> s.settingsPageGestures
         SettingsPage.Library -> s.settingsLibrary
         SettingsPage.Storage -> s.settingsPageStorage
+        SettingsPage.Lock -> s.lockTitle
         SettingsPage.About -> s.settingsPageAbout
     }
 
@@ -540,6 +577,26 @@ fun SettingsScreen(
                     )
                 }
 
+                // A television's alone: a phone has its own screen timeout, and the player is
+                // never covered (CP57).
+                if (!touch) {
+                    item {
+                        StepperRow(
+                            title = s.screensaverTitle,
+                            subtitle = AppLockWords.screensaverDetail(screensaverMinutes),
+                            value = AppLockWords.screensaverValue(screensaverMinutes),
+                            icon = TmIcons.Clock,
+                            canDecrease = screensaverMinutes > Screensaver.CHOICES.first(),
+                            canIncrease = screensaverMinutes < Screensaver.CHOICES.last(),
+                            onStep = { direction ->
+                                scope.launch {
+                                    settings.setScreensaverMinutes(Screensaver.step(screensaverMinutes, direction))
+                                }
+                            },
+                        )
+                    }
+                }
+
                 if (touch) {
                     // Android 11 and earlier has no wallpaper palette to read, so the row would be a
                     // switch that changes nothing.
@@ -683,6 +740,23 @@ fun SettingsScreen(
                                 settings.updateTouchPrefs {
                                     it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, direction))
                                 }
+                            }
+                        },
+                    )
+                }
+                // Off, 3, 5 or 10 seconds, stepped like the timeout above so the remote needs no sheet.
+                item {
+                    val choices = ResumeRewind.CHOICES_MS
+                    StepperRow(
+                        title = s.settingsResumeRewind,
+                        subtitle = s.settingsResumeRewindDetail,
+                        value = ResumeRewind.label(resumeRewindMs),
+                        icon = TmIcons.History,
+                        canDecrease = resumeRewindMs != choices.first(),
+                        canIncrease = resumeRewindMs != choices.last(),
+                        onStep = { direction ->
+                            scope.launch {
+                                settings.setResumeRewindMs(TouchPrefs.step(choices, resumeRewindMs, direction))
                             }
                         },
                     )
@@ -1060,6 +1134,93 @@ fun SettingsScreen(
                 }
             }
 
+            SettingsPage.Lock -> {
+                if (!appLock.pinSet) {
+                    item {
+                        ActionRow(
+                            title = s.lockSetPin,
+                            subtitle = s.lockSetPinDetail,
+                            icon = Icons.Filled.Lock,
+                            modifier = Modifier.focusRequester(landing),
+                            onClick = { pinFlow = PinFlow.Set },
+                        )
+                    }
+                } else {
+                    item {
+                        ActionRow(
+                            title = s.lockChangePin,
+                            subtitle = s.lockChangePinDetail,
+                            icon = Icons.Filled.Lock,
+                            modifier = Modifier.focusRequester(landing),
+                            onClick = { pinFlow = PinFlow.ChangeCheck },
+                        )
+                    }
+                    item {
+                        ToggleRow(
+                            title = s.lockOnOpen,
+                            subtitle = s.lockOnOpenDetail,
+                            icon = TmIcons.Remote,
+                            checked = appLock.onOpen,
+                            onToggle = {
+                                val on = !appLock.onOpen
+                                // Whoever switches it on has just given the PIN to reach this page.
+                                if (on) AppLockSession.unlock()
+                                scope.launch { settings.setLockOnOpen(on) }
+                            },
+                        )
+                    }
+                }
+                item {
+                    ToggleRow(
+                        title = s.lockKids,
+                        subtitle = AppLockWords.kidsDetail(appLock),
+                        icon = TmIcons.Group,
+                        checked = appLock.kids,
+                        onToggle = {
+                            when {
+                                // The lock is only as good as the PIN that guards its switch.
+                                !appLock.pinSet -> pinFlow = PinFlow.SetForKids
+                                appLock.kids -> scope.launch { settings.setKidsLock(false) }
+                                else -> {
+                                    scope.launch { settings.setKidsLock(true) }
+                                    if (appLock.kidsChats.isEmpty()) pickingKidsChats = true
+                                }
+                            }
+                        },
+                    )
+                }
+                item {
+                    ActionRow(
+                        title = s.lockAllowedChats,
+                        subtitle = s.lockAllowedChatsDetail(count = appLock.kidsChats.size),
+                        icon = Icons.AutoMirrored.Filled.List,
+                        onClick = { pickingKidsChats = true },
+                    )
+                }
+                if (appLock.pinSet) {
+                    item {
+                        ActionRow(
+                            title = s.lockRemovePin,
+                            subtitle = s.lockRemovePinDetail,
+                            icon = Icons.Filled.Close,
+                            onClick = { pinFlow = PinFlow.Remove },
+                        )
+                    }
+                }
+                item {
+                    Text(
+                        s.lockForgot,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Tone.muted,
+                        modifier = Modifier.padding(
+                            top = 12.dp,
+                            start = if (touch) 16.dp else 0.dp,
+                            end = if (touch) 16.dp else 0.dp,
+                        ),
+                    )
+                }
+            }
+
             SettingsPage.About -> {
                 // ---- version -------------------------------------------------------------------------
 
@@ -1297,6 +1458,15 @@ fun SettingsScreen(
                     )
                 }
                 item {
+                    ActionRow(
+                        title = titleOf(SettingsPage.Lock),
+                        subtitle = AppLockWords.summary(appLock),
+                        icon = Icons.Filled.Lock,
+                        modifier = Modifier.focusRequester(categoryFocus.getValue(SettingsPage.Lock)),
+                        onClick = { showPage(SettingsPage.Lock) },
+                    )
+                }
+                item {
                     // An update waiting is said here as well as inside, in the same colour, so it
                     // is not hidden one level down.
                     val offered = updateState.release
@@ -1335,6 +1505,49 @@ fun SettingsScreen(
             }
         }
     }
+    }
+
+    val flow = pinFlow
+    if (flow != null) {
+        val close = { pinFlow = null }
+        PinPad(
+            settings = settings,
+            purpose = when (flow) {
+                PinFlow.ChangeCheck, PinFlow.Remove -> PinPurpose.Check
+                PinFlow.Set, PinFlow.SetForKids, PinFlow.ChangeChoose -> PinPurpose.Choose
+            },
+            title = when (flow) {
+                PinFlow.ChangeCheck, PinFlow.Remove -> s.lockEnterCurrent
+                PinFlow.Set, PinFlow.SetForKids, PinFlow.ChangeChoose -> s.lockNewPin
+            },
+            onDone = { pin ->
+                when (flow) {
+                    PinFlow.ChangeCheck -> pinFlow = PinFlow.ChangeChoose
+                    PinFlow.Remove -> {
+                        close()
+                        scope.launch {
+                            settings.removePin()
+                            toast(s.lockPinRemovedToast)
+                        }
+                    }
+                    PinFlow.Set, PinFlow.ChangeChoose, PinFlow.SetForKids -> {
+                        close()
+                        scope.launch {
+                            settings.setPin(pin)
+                            if (flow == PinFlow.SetForKids) {
+                                settings.setKidsLock(true)
+                                if (appLock.kidsChats.isEmpty()) pickingKidsChats = true
+                            }
+                            toast(s.lockPinSetToast)
+                        }
+                    }
+                }
+            },
+            onCancel = close,
+            // A forgotten PIN has its way back explained on the page itself.
+            showForgot = false,
+        )
+        return
     }
 
     if (touch) {
@@ -1423,6 +1636,18 @@ fun SettingsScreen(
     if (reporting) FeedbackDialog(onClose = { reporting = false })
     onlineDialog?.let { OnlineSubtitlesDialog(it, onClose = { onlineDialog = null }) }
     if (editingTmdbKey) MetadataKeyDialog(onClose = { editingTmdbKey = false })
+
+    if (pickingKidsChats) {
+        KidsChatsSheet(
+            chats = chats,
+            chosen = appLock.kidsChats,
+            onToggle = { id ->
+                val next = if (id in appLock.kidsChats) appLock.kidsChats - id else appLock.kidsChats + id
+                scope.launch { settings.setKidsChats(next) }
+            },
+            onClose = { pickingKidsChats = false },
+        )
+    }
 
     when (prompt) {
         Prompt.ClearCache -> TvConfirm(
@@ -1631,6 +1856,49 @@ fun SettingsScreen(
 
     if (showUpdate) {
         UpdateDialog(onDismiss = { showUpdate = false; Updates.dismiss() })
+    }
+}
+
+/**
+ * The kids lock's chats (CP57): every chat the account has, in the chat list's order, ticked when
+ * allowed. The language picker's sheet, with a tick per line rather than one choice in force, and
+ * each press saved as it is made.
+ *
+ * [chats] is the list as the browse screen has it, which the kids lock itself filters, so the
+ * whole list is read here from the store's snapshot when the lock is on and hiding the rest.
+ */
+@Composable
+private fun KidsChatsSheet(
+    chats: List<ChatSummary>,
+    chosen: Set<Long>,
+    onToggle: (Long) -> Unit,
+    onClose: () -> Unit,
+) {
+    val s = LocalStrings.current
+    val context = LocalContext.current
+    val touch = isTouch()
+    // The browse list leaves out what the lock hides, so the choice is made from everything the
+    // account had at the last sync, with anything newer from the live list added.
+    val every by produceState(initialValue = chats, chats) {
+        val remembered = runCatching { SettingsStore(context).cachedChatSnapshot() }.getOrNull().orEmpty()
+        value = (chats + remembered).distinctBy { it.id }
+    }
+    val first = remember { FocusRequester() }
+    ChoiceSheet(title = s.lockAllowedChats, note = s.lockAllowedChatsNote, onDismiss = onClose, onClose = onClose) {
+        ChoiceList {
+            every.forEachIndexed { index, chat ->
+                val ticked = chat.id in chosen
+                ChoiceLine(
+                    title = chat.title,
+                    // A tick on a remote, as the language picker's; a phone's radio would read as
+                    // "one of these", so a check stands in its place there.
+                    selected = if (touch) null else ticked,
+                    icon = if (ticked) Icons.Filled.Check else null,
+                    modifier = if (index == 0) Modifier.focusRequester(first) else Modifier,
+                ) { onToggle(chat.id) }
+            }
+        }
+        FocusOnOpen(first)
     }
 }
 

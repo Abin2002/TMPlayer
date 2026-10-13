@@ -134,6 +134,12 @@ class ShellState(
      */
     var hideDefaultGroups by mutableStateOf(false)
 
+    /**
+     * Whether the app lock's PIN (CP57) has been given for this visit to Settings. Leaving for any
+     * other page forgets it, so Settings asks again next time.
+     */
+    var settingsUnlocked by mutableStateOf(false)
+
     var chatFilter by mutableStateOf(ChatFilter.All)
     var chatSort by mutableStateOf(ChatSort.Recent)
     var historyTab by mutableStateOf(HistoryTab.Continue)
@@ -220,6 +226,7 @@ class ShellState(
     fun go(to: Destination) {
         openChat = null
         detail = null
+        if (to != Destination.Settings) settingsUnlocked = false
         destination = to
     }
 

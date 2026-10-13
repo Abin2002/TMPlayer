@@ -102,6 +102,38 @@ class BookmarkStore(private val store: DataStore<Preferences>) {
         }
     }
 
+    /** Every video's bookmarks, for a backup. */
+    suspend fun all(): List<Bookmark> = buildList {
+        for ((key, value) in store.data.first().asMap()) {
+            val ids = key.name.takeIf { it.startsWith(PREFIX) }?.removePrefix(PREFIX)?.split('_') ?: continue
+            if (ids.size != 2) continue
+            val chatId = ids[0].toLongOrNull() ?: continue
+            val messageId = ids[1].toLongOrNull() ?: continue
+            addAll(decode(chatId, messageId, value as? String))
+        }
+    }
+
+    /**
+     * Writes the bookmarks a restore chose ([Backups.bookmarksToAdd]) in one edit, each keeping its
+     * note and, unless one here already has it, its id. A video past [MAX_PER_VIDEO] loses its oldest.
+     */
+    suspend fun restore(marks: List<Bookmark>) {
+        if (marks.isEmpty()) return
+        store.edit { prefs ->
+            for ((video, adds) in marks.groupBy { it.chatId to it.messageId }) {
+                val (chatId, messageId) = video
+                val list = decode(chatId, messageId, prefs[keyOf(chatId, messageId)]).toMutableList()
+                for (mark in adds) {
+                    val taken = list.any { it.id == mark.id }
+                    val id = if (taken) (list.maxOf { it.id } + 1) else mark.id
+                    list += mark.copy(id = id, note = cleanNote(mark.note))
+                }
+                while (list.size > MAX_PER_VIDEO) list.remove(list.minBy { it.id })
+                write(prefs, chatId, messageId, list)
+            }
+        }
+    }
+
     /** Empties the file, for sign out. Keys are collected first: the map cannot be walked while it is written. */
     suspend fun clear() {
         store.edit { prefs ->

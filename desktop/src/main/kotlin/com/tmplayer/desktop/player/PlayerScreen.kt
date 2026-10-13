@@ -332,9 +332,11 @@ fun PlayerScreen(
         launch { tdlibVersion = current.tdlibVersion() }
         autoplayNext = runCatching { settings.autoplayNextNow() }.getOrDefault(true)
         showRemaining = runCatching { settings.touchPrefsNow().showRemaining }.getOrDefault(false)
-        // A bookmark chosen on the detail page opens the video at its moment, once.
+        // A saved position opens a few seconds early, as Settings has it ([ResumeRewind]); Keep
+        // watching reopens exactly where the file stopped, and a bookmark chosen on the detail
+        // page opens the video at its moment, once.
         val start = reopenAt ?: BookmarkJump.take(item.chatId, item.messageId) ?: if (ignoreSavedPosition) 0L else runCatching {
-            settings.resumePosition(item.chatId, item.messageId)
+            settings.resumeStart(item.chatId, item.messageId)
         }.getOrDefault(0L)
         val reopening = reopenAt != null
         reopenAt = null

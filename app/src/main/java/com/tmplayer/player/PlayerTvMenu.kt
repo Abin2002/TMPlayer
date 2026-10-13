@@ -20,6 +20,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
@@ -45,6 +47,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.R
+import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.components.FloatingWindow
 import com.tmplayer.ui.components.MenuAction
 import com.tmplayer.ui.components.SheetCloseButton
@@ -96,6 +99,10 @@ class PlayerTvMenu(
     private val onSleepTimer: (Int?) -> Unit = {},
     /** The length the running sleep timer was started with, for its tick. */
     private val sleepChoice: () -> Int? = { null },
+    /** The A-B repeat marked so far, for the repeat line's text and detail. */
+    private val loop: () -> AbLoop? = { null },
+    /** Whether the video is paused, which is when the frame steps are offered. */
+    private val paused: () -> Boolean = { false },
     private val onEntry: (PlayerMenuEntry) -> Unit,
     private val onShape: (VideoScale) -> Unit = {},
     private val onClosed: () -> Unit,
@@ -139,6 +146,7 @@ class PlayerTvMenu(
                     saveToDownloads(),
                     markWatched(),
                     openInAnotherApp(),
+                    paused(),
                     bookmarks(),
                 ).map { action(it) },
                 onDismiss = ::close,
@@ -190,6 +198,19 @@ class PlayerTvMenu(
                 icon = TmIcons.Clock,
                 detail = sleepTimer() ?: s.commonOff,
             ) { page.value = Page.Sleep }
+            PlayerMenuEntry.AbLoop -> MenuAction(
+                label = PlayerMenu.loopLabel(loop()),
+                icon = TmIcons.Repeat,
+                detail = loop()?.let { marked ->
+                    val clock = Translator.messages.formatter::clock
+                    marked.endMs?.let { s.playerRepeating(clock(marked.startMs), clock(it)) }
+                        ?: s.playerLoopFromDetail(clock(marked.startMs))
+                },
+            ) { choose(entry) }
+            PlayerMenuEntry.NextFrame ->
+                MenuAction(s.playerFrameNext, Icons.AutoMirrored.Filled.KeyboardArrowRight) { choose(entry) }
+            PlayerMenuEntry.PreviousFrame ->
+                MenuAction(s.playerFramePrevious, Icons.AutoMirrored.Filled.KeyboardArrowLeft) { choose(entry) }
             PlayerMenuEntry.SaveToDownloads -> MenuAction(
                 label = s.playerSaveToDownloads,
                 icon = TmIcons.Download,

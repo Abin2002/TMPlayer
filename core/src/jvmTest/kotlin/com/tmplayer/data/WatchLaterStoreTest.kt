@@ -42,6 +42,19 @@ class WatchLaterStoreTest {
     }
 
     @Test
+    fun `the kids lock keeps the chats it leaves out off the list`() = runBlocking {
+        later.add(record(1, at = 10))
+        try {
+            ChatGate.set(setOf(42L))
+            assertTrue(later.items.first().isEmpty())
+            ChatGate.set(setOf(-100L))
+            assertEquals(listOf(1L), later.items.first().map { it.messageId })
+        } finally {
+            ChatGate.set(null)
+        }
+    }
+
+    @Test
     fun `adding again moves it to the top rather than listing it twice`() = runBlocking {
         later.add(record(1, at = 10))
         later.add(record(2, at = 20))

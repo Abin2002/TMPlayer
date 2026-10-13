@@ -646,6 +646,16 @@ object TmIcons {
         )
     }
 
+    /** A key with a cross in it, pointing back: the PIN pad's delete. */
+    val Backspace: ImageVector by lazy {
+        icon(
+            "Backspace",
+            "M22,3H7c-0.69,0 -1.23,0.35 -1.59,0.88L0,12l5.41,8.11c0.36,0.53 0.9,0.89 1.59,0.89h15" +
+                "c1.1,0 2,-0.9 2,-2V5c0,-1.1 -0.9,-2 -2,-2zM19,15.59L17.59,17 14,13.41 10.41,17 9,15.59" +
+                " 12.59,12 9,8.41 10.41,7 14,10.59 17.59,7 19,8.41 15.41,12 19,15.59z",
+        )
+    }
+
     /** A question mark in a circle: the walkthrough, "how does this work". */
     val Help: ImageVector by lazy {
         icon(
@@ -685,6 +695,11 @@ object TmIcons {
                 "M12,0C8.96,0 6.21,1.23 4.22,3.22l1.41,1.41C7.26,3.01 9.51,2 12,2s4.74,1.01 6.36,2.64" +
                 "l1.41,-1.41C17.79,1.23 15.04,0 12,0z",
         )
+    }
+
+    /** Two arrows chasing each other round a loop: Material's "repeat", for the A-B repeat. */
+    val Repeat: ImageVector by lazy {
+        icon("Repeat", "M7,7H17V10L21,6L17,2V5H5V11H7V7M17,17H7V14L3,18L7,22V19H19V13H17V17Z")
     }
 
     /**

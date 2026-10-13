@@ -21,7 +21,8 @@ class BackupTest {
         val settings = SettingsStore(SettingsStore.openDataStore(dir.resolve(SettingsStore.FILE_NAME)))
         val watched = WatchedStore(WatchedStore.openDataStore(dir.resolve(WatchedStore.FILE_NAME)))
         val metadata = MetadataStore(dir.resolve("metadata.properties"))
-        fun service(at: Long = NOW) = BackupService(settings, watched, metadata, "1.23.0", now = { at })
+        val bookmarks = BookmarkStore(BookmarkStore.openDataStore(dir.resolve(BookmarkStore.FILE_NAME)))
+        fun service(at: Long = NOW) = BackupService(settings, watched, metadata, "1.23.0", now = { at }, bookmarks = bookmarks)
     }
 
     private fun watchedRecord(messageId: Long, at: Long, manual: Boolean = false) = WatchedRecord(
@@ -211,6 +212,31 @@ class BackupTest {
         assertTrue(writes.containsKey("l_${laterRecord(2, at = 5).key}"))
         val newer = Backups.watchedWrites(device, backup().copy(watchLater = listOf(laterRecord(1, at = 90))))
         assertEquals(90L, WatchLaterRecord.decode(mine.key, newer["l_${mine.key}"] as String)!!.addedAt)
+    }
+
+    @Test
+    fun `bookmarks travel, joined by video and moment, and a note here stays`() = runBlocking {
+        val old = Device("bm-old")
+        old.bookmarks.add(-100L, 1L, positionMs = 60_000, note = "Lemma", now = 10)
+        old.bookmarks.add(-100L, 1L, positionMs = 120_000, note = "Proof", now = 20)
+        old.bookmarks.add(-200L, 5L, positionMs = 5_000, now = 30)
+        val text = old.service().export()
+
+        val fresh = Device("bm-new")
+        fresh.bookmarks.add(-100L, 1L, positionMs = 60_400, note = "Mine", now = 40)
+        val backup = (fresh.service().read(text) as BackupRead.Ok).backup
+        assertEquals(3, backup.bookmarks.size)
+        val plan = fresh.service().plan(backup)
+        assertEquals(2, plan.bookmarksAdded)
+        assertTrue(BackupWords.restoreMessage(plan).contains(com.tmplayer.i18n.L.backupRestoreBookmarks(2)))
+
+        fresh.service().restore(backup)
+        assertEquals(listOf("Mine", "Proof"), fresh.bookmarks.bookmarksNow(-100L, 1L).map { it.note })
+        assertEquals(1, fresh.bookmarks.bookmarksNow(-200L, 5L).size)
+        // Restoring the same file again adds nothing.
+        assertEquals(0, fresh.service().plan(backup).bookmarksAdded)
+        fresh.service().restore(backup)
+        assertEquals(2, fresh.bookmarks.bookmarksNow(-100L, 1L).size)
     }
 
     @Test
