@@ -1089,7 +1089,7 @@ private fun metaNoticeShown(state: ShellState): Boolean {
  * answer it, and it is never asked again.
  */
 @Composable
-private fun MetaInviteDialog(state: ShellState) {
+internal fun MetaInviteDialog(state: ShellState) {
     val online = OnlineMetadata.current ?: return
     val meta by online.settings.collectAsState()
     // Seen until the stores answer, so it never flashes up for somebody who already answered.
@@ -1121,7 +1121,7 @@ private fun MetaInviteDialog(state: ShellState) {
  * and says where to turn them back on.
  */
 @Composable
-private fun MetaNoticeCard(state: ShellState) {
+internal fun MetaNoticeCard(state: ShellState) {
     val s = LocalStrings.current
     val toast = rememberToast()
     val scope = rememberCoroutineScope()
