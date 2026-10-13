@@ -147,6 +147,7 @@
   --device-shell: #202429;
   --device-edge: rgba(15, 23, 42, 0.24);
   --device-inner: rgba(255, 255, 255, 0.16);
+  --device-key: #202429;
   /* The app's own window colour, sampled from the screenshots themselves. It is
      what sits behind the picture in a device frame, so the seam the browser
      leaves at a rounded corner is the same colour as the picture it borders. */
@@ -201,9 +202,10 @@
     --shadow-3: 0 12px 40px rgba(0, 0, 0, 0.6);
     --shadow-accent: 0 8px 26px rgba(157, 196, 255, 0.18);
 
-    --device-shell: #2c3138;
-    --device-edge: #596069;
-    --device-inner: rgba(255, 255, 255, 0.14);
+    --device-shell: #3a4049;
+    --device-edge: #737b86;
+    --device-inner: rgba(255, 255, 255, 0.2);
+    --device-key: #8a929d;
     --screen-fill: #0f1317;
 
     --doodle-a: rgba(157, 196, 255, 0.14);
@@ -256,9 +258,10 @@
   --shadow-3: 0 12px 40px rgba(0, 0, 0, 0.6);
   --shadow-accent: 0 8px 26px rgba(157, 196, 255, 0.18);
 
-  --device-shell: #2c3138;
-  --device-edge: #596069;
-  --device-inner: rgba(255, 255, 255, 0.14);
+  --device-shell: #3a4049;
+  --device-edge: #737b86;
+  --device-inner: rgba(255, 255, 255, 0.2);
+  --device-key: #8a929d;
   --screen-fill: #0f1317;
 
   --doodle-a: rgba(157, 196, 255, 0.14);
@@ -1296,21 +1299,39 @@ kbd {
   border-radius: var(--screen-radius);
 }
 
+.device-tv { position: relative; }
 .device-tv .screen {
   aspect-ratio: 16 / 9;
-  /* A hint of a device, not a picture frame. The bezel was 12px, which at the
-     size these sit on the page was thicker than the panel's own black border
-     and turned every screenshot into a mounted print. */
-  --bezel: 6px;
-  --screen-radius: 10px;
+  /* An LED set, not a picture frame: a thin bezel on three sides and a deeper
+     chin along the bottom, with corners that are barely rounded. The panel
+     radius is the outer one less the bezel, so the curves stay parallel. */
+  --bezel: 5px;
+  --chin: calc(var(--bezel) * 2.6);
+  --screen-radius: 2px;
   border: var(--bezel) solid var(--device-shell);
-  /* Concentric with the panel: outer radius is the inner one plus the bezel it
-     sits behind, which is the only pair of numbers that keeps the two curves
-     parallel all the way round. */
+  border-bottom-width: var(--chin);
   border-radius: calc(var(--screen-radius) + var(--bezel));
   box-shadow: 0 0 0 1px var(--device-edge), var(--shadow-3);
 }
-.device-tv .stand {
+/* One splayed stand under the middle of the set, drawn as an upside down V.
+   The markup still carries a stand and a foot, from when they were a neck and
+   a base; the TV only needs the stand, and a computer's monitor keeps the
+   pair (below). */
+/* The stand reaches up behind the chin by a few pixels, so the V grows out of
+   the frame instead of floating under it. */
+.device-tv:not(.device-desktop) { --stand-h: clamp(12px, 2.6vw, 32px); padding-bottom: var(--stand-h); }
+.device-tv:not(.device-desktop) .stand {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 11%;
+  height: calc(var(--stand-h) + 6px);
+  transform: translateX(-50%);
+  background: var(--device-shell);
+  clip-path: polygon(0 100%, 40% 0, 60% 0, 100% 100%, 82% 100%, 50% 30%, 18% 100%);
+}
+.device-tv:not(.device-desktop) .foot { display: none; }
+.device-desktop .stand {
   width: 13%;
   height: 9px;
   margin: 0 auto;
@@ -1318,7 +1339,7 @@ kbd {
   box-shadow: 0 0 0 1px var(--device-edge);
   border-radius: 0 0 var(--shape-xs) var(--shape-xs);
 }
-.device-tv .foot {
+.device-desktop .foot {
   width: 24%;
   height: 7px;
   margin: 0 auto;
@@ -1326,6 +1347,8 @@ kbd {
   box-shadow: 0 0 0 1px var(--device-edge);
   border-radius: var(--shape-full);
 }
+/* A monitor keeps an even bezel all round. */
+.device-desktop .screen { --chin: var(--bezel); --screen-radius: 6px; }
 
 .device-phone {
   position: relative;
@@ -1337,16 +1360,28 @@ kbd {
 /* Same concentric pair as the television, with the 6px of padding standing in
    for the bezel: a 34px shell around a 28px panel. */
 .device-phone .screen { aspect-ratio: 9 / 20; --screen-radius: 28px; border-radius: var(--screen-radius); }
+/* The side keys: two volume keys on the left and the power key on the right,
+   each a short bar standing proud of the shell. Both volume keys are one
+   pseudo element, with a gap painted through the middle of it. */
+.device-phone::before,
 .device-phone::after {
   content: "";
   position: absolute;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 7px;
-  height: 7px;
-  border-radius: var(--shape-full);
-  background: rgba(255, 255, 255, 0.28);
+  width: 5px;
+  background: var(--device-key);
+}
+.device-phone::before {
+  left: -5px;
+  top: 15%;
+  height: 20%;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(var(--device-key) 0 44%, transparent 44% 56%, var(--device-key) 56%);
+}
+.device-phone::after {
+  right: -5px;
+  top: 17%;
+  height: 11%;
+  border-radius: 0 3px 3px 0;
 }
 
 /* The showcase pairing: the television carries the picture and the phone leans
@@ -1373,9 +1408,9 @@ kbd {
   }
   .device-phone { padding: 4px; border-radius: 22px; }
   .device-phone .screen { --screen-radius: 18px; }
-  /* The camera dot is drawn at a fixed size, which at this scale is a blob
-     across the top of the screen rather than a detail on the bezel. */
-  .device-phone::after { display: none; }
+  .device-phone::before, .device-phone::after { width: 4px; }
+  .device-phone::before { left: -4px; }
+  .device-phone::after { right: -4px; }
 }
 
 .shot .device-phone { max-width: 280px; width: 100%; margin: 0 auto; }
@@ -1984,7 +2019,7 @@ a.card:active,
   .frame { padding: 6px; border-radius: var(--shape-l); }
   .shot .device-phone { padding: 5px; border-radius: 30px; }
   .shot .device-phone .screen { --screen-radius: 25px; }
-  .device-tv .screen { --bezel: 5px; --screen-radius: 8px; }
+  .device-tv .screen { --bezel: 4px; }
   .abi { padding: 18px; }
   .abi-get { width: 100%; justify-content: space-between; }
   .faq > div { padding: 22px; }
