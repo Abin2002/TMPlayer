@@ -1824,6 +1824,8 @@ internal fun VideoTile(
     onFocused: () -> Unit = {},
     selected: Boolean? = null,
     meta: (@Composable (ink: Color) -> Unit)? = null,
+    /** False for a card that writes its name on the art (Home's Continue watching), keeping only [meta] under it. */
+    showTitle: Boolean = true,
     art: @Composable BoxScope.() -> Unit,
 ) {
     val touch = isTouch()
@@ -1889,7 +1891,9 @@ internal fun VideoTile(
         // Two lines, and always two where a row of tiles sits under this one, so the pictures
         // beneath a short name stay in a straight line with the rest.
         val lines = if (poster || dense) 2 else 1
-        if (touch) {
+        if (!showTitle) {
+            // The name is on the art; the facts under it are the whole caption.
+        } else if (touch) {
             M3Text(
                 title,
                 style = if (poster) M3MaterialTheme.typography.bodyMedium else M3MaterialTheme.typography.titleSmall,

@@ -194,6 +194,9 @@ fun TMPlayerTheme(content: @Composable () -> Unit) {
     val systemDark = isSystemInDarkTheme()
     val choice by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
     val dynamic by settings.dynamicColour.collectAsState(initial = false)
+    // The interface size (CP59), for every composition that draws in this theme: the app, and the
+    // player's panels and menus. The video surface is a View sized by the player, so it is not.
+    val scale by rememberUiScale(settings)
 
     // A television has no system light mode to follow, so "System" there means dark. Light and
     // Dark are the viewer's own answer, on either device: a television in a bright room is real.
@@ -235,7 +238,7 @@ fun TMPlayerTheme(content: @Composable () -> Unit) {
                 LocalContentColor provides scheme.onSurface,
                 LocalDarkTheme provides dark,
             ) {
-                ProvideStrings(content)
+                UiScaled(scale) { ProvideStrings(content) }
             }
         }
     }

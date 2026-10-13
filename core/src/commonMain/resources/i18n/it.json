@@ -594,7 +594,7 @@
     "meta_notice": "Locandine e trame arrivano da TMDB, TVmaze e AniList, cercate in base al titolo ripulito di ogni video. Non viene inviato nient'altro.",
     "meta_notice_keep": "Mantieni",
     "meta_notice_turn_off": "Disattiva",
-    "meta_notice_turned_off": "Le locandine sono disattivate. Riattivale in Impostazioni, Metadati online.",
+    "meta_notice_turned_off": "Le locandine sono disattivate. Riattivale in Impostazioni, Locandine e dettagli.",
     "no_app_opens": "Niente su questo telefono lo apre.",
     "no_room": "Non c'è più spazio su questo dispositivo.",
     "no_wifi_detail": "Riprende con il Wi-Fi",

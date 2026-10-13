@@ -594,7 +594,7 @@
     "meta_notice": "Los pósteres y las sinopsis vienen de TMDB, TVmaze y AniList, y se buscan con el título depurado de cada video. No se envía nada más.",
     "meta_notice_keep": "Mantener",
     "meta_notice_turn_off": "Desactivar",
-    "meta_notice_turned_off": "Los pósteres están desactivados. Vuelve a activarlos en Configuración, Metadatos en línea.",
+    "meta_notice_turned_off": "Los pósteres están desactivados. Vuelve a activarlos en Configuración, Pósteres y detalles.",
     "no_app_opens": "Nada en este teléfono puede abrir eso.",
     "no_room": "Ya no hay espacio en este dispositivo.",
     "no_wifi_detail": "Se reanuda con Wi-Fi",

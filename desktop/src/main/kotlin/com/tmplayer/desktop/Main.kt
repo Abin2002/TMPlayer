@@ -41,6 +41,8 @@ import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.platform.Background
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.theme.TmMaterialTheme
+import com.tmplayer.ui.theme.UiScaled
+import com.tmplayer.ui.theme.rememberUiScale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -214,7 +216,7 @@ fun main(args: Array<String>) {
 /**
  * The theme the Settings choice asks for. "System" follows the OS where it says (Windows, macOS);
  * where it does not (most Linux desktops, until Phase 3 reads the portal), dark, which is the
- * right default for a window that plays video.
+ * right default for a window that plays video. Drawn at the viewer's interface size.
  */
 @Composable
 fun DesktopTheme(settings: SettingsStore, content: @Composable () -> Unit) {
@@ -224,7 +226,10 @@ fun DesktopTheme(settings: SettingsStore, content: @Composable () -> Unit) {
         ThemeChoice.Dark -> true
         ThemeChoice.System -> currentSystemTheme != SystemTheme.LIGHT
     }
-    TmMaterialTheme(dark = dark, content = content)
+    // The interface size (CP59) for the whole window, the player's controls included; the video
+    // fills whatever space it is given, so it is the same at every size.
+    val scale by rememberUiScale(settings)
+    TmMaterialTheme(dark = dark) { UiScaled(scale, content) }
 }
 
 /**

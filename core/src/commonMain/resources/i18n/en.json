@@ -594,7 +594,7 @@
     "meta_notice": "Posters and overviews come from TMDB, TVmaze and AniList, looked up by each video's cleaned-up title. Nothing else is sent.",
     "meta_notice_keep": "Keep",
     "meta_notice_turn_off": "Turn off",
-    "meta_notice_turned_off": "Posters are off. Turn them back on in Settings, Online metadata.",
+    "meta_notice_turned_off": "Posters are off. Turn them back on in Settings, Posters and details.",
     "no_app_opens": "Nothing on this phone opens that.",
     "no_room": "There is no more room on this device.",
     "no_wifi_detail": "Resumes on Wi-Fi",
@@ -705,6 +705,14 @@
     "rpm_package": "rpm package",
     "windows_installer": "Windows installer",
     "windows_installer_msi": "Windows installer (the .msi)"
+  },
+  "interface": {
+    "size": "Interface size",
+    "size_default": "Default",
+    "size_detail": "How large text, buttons and panels are drawn. The video always fills the screen.",
+    "size_larger": "Larger",
+    "size_largest": "Largest",
+    "size_smaller": "Smaller"
   },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
@@ -857,6 +865,15 @@
     "start_over": "Start over",
     "use_phone": "Use my phone number",
     "use_qr": "Scan a QR code instead"
+  },
+  "logs": {
+    "empty": "There are no logs to save yet.",
+    "failed": "The logs could not be saved.",
+    "save": "Save logs",
+    "save_detail": "Recent app logs in a text file to attach to a bug report. Names, numbers and file names are taken out first.",
+    "save_title": "Save TMPlayer logs",
+    "saved": "Logs saved",
+    "saved_to": "Logs saved to {place}"
   },
   "main": {
     "archived": "{title} archived",
