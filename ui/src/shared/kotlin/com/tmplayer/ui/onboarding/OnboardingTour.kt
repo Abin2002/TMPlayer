@@ -27,13 +27,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -68,10 +61,10 @@ import com.tmplayer.i18n.Languages
 import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.components.ChoiceRow
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.deviceForm
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.i18n.languageRowDetail
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.LocalDarkTheme
@@ -241,7 +234,7 @@ private fun PrimaryButton(last: Boolean, modifier: Modifier, onClick: () -> Unit
         Text(if (last) s.onboardingStart else s.onboardingNext)
         if (!last) {
             Spacer(Modifier.width(8.dp))
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(20.dp))
+            Icon(TmIcons.ArrowForward, contentDescription = null, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -357,12 +350,12 @@ private fun PointRow(point: OnboardingPoint, desktop: Boolean) {
 
 /** The icon beside a tour point, the same on every device. */
 fun OnboardingPoint.Kind.icon(): ImageVector = when (this) {
-    OnboardingPoint.Kind.Unofficial -> Icons.Filled.Info
-    OnboardingPoint.Kind.NoServer -> Icons.Filled.Lock
-    OnboardingPoint.Kind.NoData -> Icons.Filled.CheckCircle
-    OnboardingPoint.Kind.FirstVideo -> Icons.AutoMirrored.Filled.Send
+    OnboardingPoint.Kind.Unofficial -> TmIcons.Info
+    OnboardingPoint.Kind.NoServer -> TmIcons.Lock
+    OnboardingPoint.Kind.NoData -> TmIcons.CheckCircle
+    OnboardingPoint.Kind.FirstVideo -> TmIcons.Send
     OnboardingPoint.Kind.Folders -> TmIcons.Folder
-    OnboardingPoint.Kind.SignIn -> Icons.Filled.Phone
+    OnboardingPoint.Kind.SignIn -> TmIcons.Phone
 }
 
 /**

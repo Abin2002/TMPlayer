@@ -175,12 +175,22 @@ packaged in any build.
 - The player mark was adapted and recoloured from a player icon on SVG Repo
   (<https://www.svgrepo.com>), used under the licence that icon is published with there. SVG Repo
   is credited in the website footer and the README.
-- Solar Icons by 480 Design, CC BY 4.0 (<https://creativecommons.org/licenses/by/4.0/>), modified:
-  the in-player play and pause glyphs (`ic_player_play.xml`, `ic_player_pause.xml`), obtained via
-  SVG Repo. The seek, previous, next, back, overflow, lock, picture in picture, brightness and
-  volume glyphs are Material Symbols paths: Apache License 2.0:
-  <https://github.com/google/material-design-icons>. The phone's morphing play and pause glyph
-  (`PlayPauseIcon.kt`) is drawn in code by TMPlayer.
+- Hugeicons free icons (`@hugeicons/core-free-icons`, Stroke Rounded), MIT License, Copyright (c)
+  2025 Hugeicons (<https://hugeicons.com>, <https://www.npmjs.com/package/@hugeicons/core-free-icons>):
+  every icon in the app (`TmIcons.kt` and the player and notification `ic_*.xml` drawables),
+  converted to Compose and Android vectors. Permission is hereby granted, free of charge, to any
+  person obtaining a copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation the rights to use,
+  copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+  permit persons to whom the Software is furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in all copies or
+  substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+  KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+  OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE. The phone's morphing play and pause glyph (`PlayPauseIcon.kt`) is drawn in code
+  by TMPlayer.
 - The TMDB logo in About is TMDB's own (<https://www.themoviedb.org/about/logos-attribution>),
   shown with the notice their terms ask for: this product uses the TMDB API but is not endorsed or
   certified by TMDB.

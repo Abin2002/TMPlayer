@@ -24,10 +24,10 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.ui.components.TmButton
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.LocalOnFloating
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingSurface

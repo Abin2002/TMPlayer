@@ -43,6 +43,7 @@ import com.tmplayer.online.SubtitleHit
 import com.tmplayer.online.SubtitleNotice
 import com.tmplayer.online.SubtitleTarget
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -86,7 +87,7 @@ internal fun BoxScope.OnlineSubtitlesPanel(
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(s.onlineResultsTitle, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                OverlayButton(PlayerIcons.Close, s.commonClose, onClose, size = 32)
+                OverlayButton(TmIcons.Close, s.commonClose, onClose, size = 32)
             }
             Spacer(Modifier.height(8.dp))
             val shown = result

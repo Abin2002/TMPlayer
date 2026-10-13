@@ -17,9 +17,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import com.tmplayer.ui.components.TmIcons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.tmplayer.data.ForumTopicSummary
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.focusRing
 
@@ -154,7 +152,7 @@ private fun TopicTab(
             modifier = Modifier.widthIn(max = if (tv) 260.dp else 200.dp),
         )
         if (topic?.isClosed == true) {
-            Icon(Icons.Filled.Lock, contentDescription = null, tint = ink.copy(alpha = 0.7f), modifier = Modifier.size(glyph))
+            Icon(TmIcons.Lock, contentDescription = null, tint = ink.copy(alpha = 0.7f), modifier = Modifier.size(glyph))
         }
         val unread = topic?.unreadCount ?: 0
         if (unread > 0) {

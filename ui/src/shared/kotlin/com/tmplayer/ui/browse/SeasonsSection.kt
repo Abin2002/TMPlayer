@@ -32,10 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.tmplayer.ui.components.TmIcons
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -60,6 +57,7 @@ import com.tmplayer.ui.components.MediaArt
 import com.tmplayer.ui.components.ProgressLine
 import com.tmplayer.ui.components.TileBadgeInset
 import com.tmplayer.ui.components.rememberCover
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Scrims
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.ui.components.isTouch
@@ -147,7 +145,7 @@ fun SeasonsSection(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Icon(Icons.Filled.Info, contentDescription = null, tint = Tone.caution, modifier = Modifier.size(20.dp))
+                Icon(TmIcons.Info, contentDescription = null, tint = Tone.caution, modifier = Modifier.size(20.dp))
                 Text(s.detailMissingCount(missing), style = MaterialTheme.typography.bodyMedium, color = Tone.text)
             }
         } else if (seasons.any { it.state != EpisodeGuide.State.InChat }) {

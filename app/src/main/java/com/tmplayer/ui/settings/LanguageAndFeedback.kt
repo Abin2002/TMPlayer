@@ -24,9 +24,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -63,6 +60,7 @@ import com.tmplayer.ui.components.TmButton
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.onboarding.LanguageList
 import com.tmplayer.ui.onboarding.TvLanguages
 import com.tmplayer.ui.theme.Corner
@@ -113,7 +111,7 @@ fun LanguageNoticeCard(language: String, onKeep: () -> Unit, onChange: () -> Uni
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(Icons.Filled.Info, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(24.dp))
+            Icon(TmIcons.Info, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(24.dp))
             Text(s.languageNowIn(LanguageNotice.name(language)), style = MaterialTheme.typography.titleMedium, color = Tone.text)
         }
         Text(s.languageNowInBody, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
@@ -156,7 +154,7 @@ fun WhatsNewDialog(onClose: () -> Unit, onChangelog: () -> Unit) {
             Text(s.whatsnewSubtitle, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
             for (line in WhatsNew.highlights) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-                    Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(22.dp))
+                    Icon(TmIcons.CheckCircle, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(22.dp))
                     Text(line, style = MaterialTheme.typography.bodyLarge, color = Tone.text)
                 }
             }

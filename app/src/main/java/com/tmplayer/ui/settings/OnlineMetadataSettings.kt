@@ -3,9 +3,6 @@ package com.tmplayer.ui.settings
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -23,10 +20,10 @@ import com.tmplayer.online.MetaWords
 import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.online.TmdbState
 import com.tmplayer.ui.auth.PaneField
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -89,7 +86,7 @@ private fun MetadataKeyRow(onEditKey: () -> Unit) {
     ActionRow(
         title = s.metadataKey,
         subtitle = MetaWords.key(state),
-        icon = Icons.Filled.Lock,
+        icon = TmIcons.Lock,
         tint = if (trouble) Tone.caution else Color.Unspecified,
         onClick = onEditKey,
     )
@@ -114,7 +111,7 @@ private fun MetadataCacheRow() {
     ActionRow(
         title = s.metadataClearCache,
         subtitle = if (bytes > 0) s.metadataCacheDetail(Translator.messages.formatter.size(bytes)) else s.metadataCacheEmpty,
-        icon = Icons.Filled.Delete,
+        icon = TmIcons.Delete,
         onClick = { if (bytes > 0) asking = true else clear() },
     )
     if (asking) {
@@ -143,7 +140,7 @@ fun MetadataKeyDialog(onClose: () -> Unit) {
         detail = MetaWords.key(online.tmdbState()),
         confirmLabel = s.commonOk,
         destructive = false,
-        icon = Icons.Filled.Lock,
+        icon = TmIcons.Lock,
         onDismiss = onClose,
         onConfirm = {
             online.setOwnKey(key)

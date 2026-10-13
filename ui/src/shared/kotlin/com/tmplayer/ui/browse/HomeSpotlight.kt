@@ -27,9 +27,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -81,6 +78,7 @@ import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.rememberCover
 import com.tmplayer.ui.components.rememberLowMemory
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.online.OnlineArt
 import com.tmplayer.ui.theme.Focus
 import com.tmplayer.ui.theme.LocalDarkTheme
@@ -404,7 +402,7 @@ fun HeroPill(
     modifier: Modifier = Modifier,
     stretch: Boolean = false,
     focus: FocusRequester? = null,
-    icon: androidx.compose.ui.graphics.vector.ImageVector? = Icons.Filled.PlayArrow,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = TmIcons.Play,
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -476,7 +474,7 @@ private fun RoundAction(label: String, onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            Icons.Outlined.Info,
+            TmIcons.Info,
             contentDescription = label,
             tint = if (focused) Tone.onFocusFill else Tone.text,
             modifier = Modifier.size(24.dp),

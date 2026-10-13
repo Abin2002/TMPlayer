@@ -1,6 +1,7 @@
 package com.tmplayer.ui.auth
 
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -10,10 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -80,7 +77,7 @@ fun CountryPicker(
                 navigationIcon = {
                     IconButton(onClick = onDismiss) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            TmIcons.ArrowBack,
                             contentDescription = s.loginCloseCountryList,
                         )
                     }
@@ -95,13 +92,13 @@ fun CountryPicker(
                 onValueChange = { query = it },
                 singleLine = true,
                 label = { Text(s.loginCountrySearch) },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                leadingIcon = { Icon(TmIcons.Search, contentDescription = null) },
                 trailingIcon = {
                     // Two hundred rows filtered to none is a dead end, and clearing a field by
                     // holding backspace is a chore nobody should be set on a sign-in screen.
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { query = "" }) {
-                            Icon(Icons.Filled.Close, contentDescription = s.loginClearSearch)
+                            Icon(TmIcons.Close, contentDescription = s.loginClearSearch)
                         }
                     }
                 },

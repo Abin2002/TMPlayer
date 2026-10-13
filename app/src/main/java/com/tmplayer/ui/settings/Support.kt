@@ -19,8 +19,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +49,7 @@ import com.tmplayer.ui.components.TmButton
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.LocalOnFloating
 import com.tmplayer.ui.theme.Tone
@@ -192,7 +191,7 @@ fun SupportCard(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(Icons.Filled.Favorite, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(24.dp))
+            Icon(TmIcons.Favorite, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(24.dp))
             Text(About.reminderTitle(rung), style = MaterialTheme.typography.titleMedium, color = Tone.text)
         }
         Text(About.reminderText(rung, counters), style = MaterialTheme.typography.bodyMedium, color = Tone.muted)

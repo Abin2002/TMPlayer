@@ -19,10 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +41,7 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingSurface
 import kotlinx.coroutines.delay
@@ -197,7 +194,7 @@ fun SlowAnswerNotice(
                 color = Tone.text,
             )
             TmButton(onClick = onRetry, modifier = Modifier.focusRequester(focus)) {
-                Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
+                Icon(TmIcons.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(SlowAnswer.RETRY)
             }
@@ -297,7 +294,7 @@ private const val MIN_SWEEP = 12f
 @Composable
 fun BigEmpty(
     message: String,
-    icon: ImageVector = Icons.Filled.Search,
+    icon: ImageVector = TmIcons.Search,
     /** The one button worth offering, such as "Show them" when the size limits emptied a chat. */
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
@@ -365,7 +362,7 @@ fun BigError(message: String, onRetry: (() -> Unit)?) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Icon(
-                Icons.Filled.Warning,
+                TmIcons.Warning,
                 contentDescription = null,
                 tint = danger,
                 modifier = Modifier.size(if (touch) 44.dp else 56.dp),
@@ -397,7 +394,7 @@ fun BigError(message: String, onRetry: (() -> Unit)?) {
                     modifier = Modifier.focusRequester(focus),
                 ) {
                     Icon(
-                        Icons.Filled.Refresh,
+                        TmIcons.Refresh,
                         contentDescription = null,
                         modifier = Modifier.size(22.dp),
                     )

@@ -24,7 +24,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,19 +32,17 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.contentDescription
@@ -69,6 +66,7 @@ import com.tmplayer.ui.auth.QrCode
 import com.tmplayer.ui.components.MediaArt
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Focus
 import com.tmplayer.ui.theme.Tone
@@ -216,16 +214,8 @@ fun TrailerQr(trailer: MetaTrailer, modifier: Modifier = Modifier) {
     }
 }
 
-/** A film reel, Material's "movie" glyph, for the trailer's button. Not in Material's core icon set. */
-val TrailerIcon: ImageVector by lazy {
-    ImageVector.Builder(name = "Movie", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f)
-        .addPath(
-            pathData = PathParser().parsePathString(
-                "M18,4l2,4h-3l-2,-4h-2l2,4h-3l-2,-4H8l2,4H7L5,4H4c-1.1,0 -1.99,0.9 -1.99,2L2,18c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2V4h-4z",
-            ).toNodes(),
-            fill = SolidColor(Color.Black),
-        ).build()
-}
+/** The trailer's button glyph. */
+val TrailerIcon: ImageVector get() = TmIcons.Trailer
 
 /** "Watch trailer" as an outlined pill, for the series page's row beside the play button. */
 @Composable
@@ -385,7 +375,7 @@ private fun PersonEnlarged(person: MetaPerson, onClose: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    androidx.compose.material.icons.Icons.Filled.Close,
+                    TmIcons.Close,
                     contentDescription = LocalStrings.current.commonClose,
                     tint = if (focused) Tone.onFocusFill else Color.White,
                     modifier = Modifier.size(24.dp),

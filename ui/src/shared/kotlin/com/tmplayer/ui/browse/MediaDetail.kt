@@ -24,14 +24,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -61,8 +53,8 @@ import com.tmplayer.i18n.Messages
 import com.tmplayer.ui.components.ArtBackdrop
 import com.tmplayer.ui.components.BackdropSource
 import com.tmplayer.ui.components.rememberCover
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Scrims
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
@@ -124,30 +116,30 @@ fun detailRow(
         DetailAction.Resume -> DetailRow(
             action,
             s.detailResumeAt(s.formatter.clock(watched?.positionMs ?: 0L)),
-            Icons.Filled.PlayArrow,
+            TmIcons.Play,
             s.detailResumeAtDetail,
             onSelect = onSelect,
         )
-        DetailAction.Play -> DetailRow(action, s.commonPlay, Icons.Filled.PlayArrow, onSelect = onSelect)
-        DetailAction.StartOver -> DetailRow(action, s.detailStartOver, Icons.Filled.Refresh, s.detailStartOverDetail, onSelect = onSelect)
-        DetailAction.MarkWatched -> DetailRow(action, s.gridMarkWatched, Icons.Filled.Check, s.gridMarkWatchedDetail, onSelect = onSelect)
-        DetailAction.MarkUnwatched -> DetailRow(action, s.gridMarkUnwatched, Icons.Filled.Close, s.gridMarkUnwatchedDetail, onSelect = onSelect)
+        DetailAction.Play -> DetailRow(action, s.commonPlay, TmIcons.Play, onSelect = onSelect)
+        DetailAction.StartOver -> DetailRow(action, s.detailStartOver, TmIcons.Refresh, s.detailStartOverDetail, onSelect = onSelect)
+        DetailAction.MarkWatched -> DetailRow(action, s.gridMarkWatched, TmIcons.Check, s.gridMarkWatchedDetail, onSelect = onSelect)
+        DetailAction.MarkUnwatched -> DetailRow(action, s.gridMarkUnwatched, TmIcons.Close, s.gridMarkUnwatchedDetail, onSelect = onSelect)
         DetailAction.AddWatchLater -> DetailRow(action, s.detailWatchLaterAdd, TmIcons.Clock, s.detailWatchLaterAddDetail, onSelect = onSelect)
-        DetailAction.RemoveWatchLater -> DetailRow(action, s.detailWatchLaterRemove, Icons.Filled.Close, onSelect = onSelect)
+        DetailAction.RemoveWatchLater -> DetailRow(action, s.detailWatchLaterRemove, TmIcons.Close, onSelect = onSelect)
         DetailAction.Download -> DetailRow(action, s.gridDownload, TmIcons.Download, withFree(s.gridDownloadDetail), onSelect = onSelect)
         DetailAction.SaveToDownloads ->
             DetailRow(action, s.gridSaveToDownloads, TmIcons.Download, withFree(s.gridSaveToDownloadsDetail), onSelect = onSelect)
         DetailAction.InDownloads -> DetailRow(action, s.gridInDownloads, TmIcons.Download, s.gridInDownloadsDetail, onSelect = onSelect)
-        DetailAction.RemoveDownload -> DetailRow(action, s.gridRemoveDownload, Icons.Filled.Close, destructive = true, onSelect = onSelect)
-        DetailAction.CancelDownload -> DetailRow(action, s.gridCancelRunning, Icons.Filled.Close, onSelect = onSelect)
+        DetailAction.RemoveDownload -> DetailRow(action, s.gridRemoveDownload, TmIcons.Close, destructive = true, onSelect = onSelect)
+        DetailAction.CancelDownload -> DetailRow(action, s.gridCancelRunning, TmIcons.Close, onSelect = onSelect)
         DetailAction.SelectVideos -> DetailRow(action, s.gridSelectVideos, TmIcons.Checklist, s.gridSelectVideosDetail, onSelect = onSelect)
         DetailAction.Share -> DetailRow(action, s.commonShare, TmIcons.Share, onSelect = onSelect)
-        DetailAction.OpenElsewhere -> DetailRow(action, s.gridOpenInOtherPlayer, Icons.AutoMirrored.Filled.ExitToApp, onSelect = onSelect)
+        DetailAction.OpenElsewhere -> DetailRow(action, s.gridOpenInOtherPlayer, TmIcons.OpenExternal, onSelect = onSelect)
         DetailAction.CopyLink -> DetailRow(action, s.gridCopyLink, TmIcons.Share, s.gridCopyLinkDetail, onSelect = onSelect)
         DetailAction.OpenChat -> DetailRow(
             action,
             s.detailOpenChat(chatTitle),
-            Icons.AutoMirrored.Filled.ArrowForward,
+            TmIcons.ArrowForward,
             s.detailOpenChatDetail,
             onSelect = onSelect,
         )
@@ -308,7 +300,7 @@ fun MediaDetailPanel(
             extras?.trailer?.let { trailer -> add(DetailRow(DetailAction.Play, s.metadataTrailer, TrailerIcon, onSelect = { trailers.open(trailer) })) }
             // Posters and overviews are off: one button to turn them on from here, as Settings can.
             if (metadataOff) {
-                add(DetailRow(DetailAction.Play, s.metadataTurnOn, Icons.Filled.Info, s.metadataTurnOnDetail, onSelect = { online?.setEnabled(true) }))
+                add(DetailRow(DetailAction.Play, s.metadataTurnOn, TmIcons.Info, s.metadataTurnOnDetail, onSelect = { online?.setEnabled(true) }))
             }
         }
         if (others.isNotEmpty()) {

@@ -1,19 +1,12 @@
 package com.tmplayer.ui.browse
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tmplayer.data.ChatFolderSummary
 import com.tmplayer.data.ChatKind
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.Fuzzy
 import com.tmplayer.i18n.L
-import com.tmplayer.ui.components.TmIcons
+import com.tmplayer.ui.icons.TmIcons
 
 // The browser's sections and the chat filter behind them, shared by the phone, the television and
 // the desktop.
@@ -29,12 +22,12 @@ import com.tmplayer.ui.components.TmIcons
  */
 enum class BrowseTab(val icon: ImageVector) {
     /** The landing page: rows of videos rather than a list of chats. See [com.tmplayer.data.HomeRows]. */
-    Home(Icons.Filled.Home),
+    Home(TmIcons.Home),
     /** Continue watching and Previously watched, as two tabs: both are videos already played. */
     History(TmIcons.History),
-    Favorites(Icons.Filled.Star),
+    Favorites(TmIcons.StarOutline),
     /** Every chat, narrowed by the [ChatFilter] chips. */
-    Chats(Icons.AutoMirrored.Filled.List),
+    Chats(TmIcons.List),
     /** Saved Messages, apart from Chats because it is the video library most people keep. */
     Saved(TmIcons.Bookmark),
     ;
@@ -84,11 +77,11 @@ enum class BrowseTab(val icon: ImageVector) {
  * because it is the one that shows what every other chip leaves out.
  */
 enum class ChatFilter(val icon: ImageVector) {
-    All(Icons.AutoMirrored.Filled.List),
-    Unread(TmIcons.Dot),
+    All(TmIcons.List),
+    Unread(TmIcons.Unread),
     Channels(TmIcons.Channel),
     Groups(TmIcons.Group),
-    People(Icons.Filled.Person),
+    People(TmIcons.Person),
     Archived(TmIcons.Archive),
     ;
 
@@ -132,11 +125,11 @@ enum class ChatSort(val icon: ImageVector) {
 /** The tabs of History. */
 enum class HistoryTab(val icon: ImageVector) {
     /** Videos part way through, kept on this device. */
-    Continue(Icons.Filled.PlayArrow),
+    Continue(TmIcons.Play),
     /** Single videos put aside for later, without starring their chats. */
     WatchLater(TmIcons.Clock),
     /** Videos played to the end or marked by hand. */
-    Watched(Icons.Filled.Check),
+    Watched(TmIcons.Check),
     ;
 
     val label: String get() = when (this) {

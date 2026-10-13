@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,6 +34,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 
 // The Material 3 half of the folding sidebar, shared by the phone's drawer and the desktop's side
 // bar. The television draws its own, in tv-material, from the same NavGroups model.
@@ -87,7 +86,7 @@ fun NavGroupHeading(
         )
         if (toggleable) {
             Icon(
-                Icons.Filled.KeyboardArrowDown,
+                TmIcons.ChevronDown,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp).rotate(turn),

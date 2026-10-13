@@ -13,9 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.floatingSurface
 import com.tmplayer.ui.components.TmAlertDialog
@@ -62,7 +61,7 @@ fun SupportPopup(from: String, onClose: () -> Unit) {
     val link = remember(from) { About.supportLinks(from).first() }
     TmAlertDialog(
         onDismissRequest = onClose,
-        icon = { Icon(Icons.Filled.Favorite, contentDescription = null, tint = Tone.accent) },
+        icon = { Icon(TmIcons.Favorite, contentDescription = null, tint = Tone.accent) },
         title = { Text(About.SUPPORT_TITLE) },
         text = {
             Column(Modifier.widthIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -130,7 +129,7 @@ fun SupportCard(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Icon(Icons.Filled.Favorite, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(22.dp))
+            Icon(TmIcons.Favorite, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(22.dp))
             Text(About.reminderTitle(rung), style = MaterialTheme.typography.titleMedium)
         }
         Text(About.reminderText(rung, counters), style = MaterialTheme.typography.bodyMedium, color = Tone.muted)

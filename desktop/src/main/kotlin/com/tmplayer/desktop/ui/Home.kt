@@ -21,9 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -72,6 +69,7 @@ import com.tmplayer.ui.browse.rememberHomeRows
 import com.tmplayer.ui.browse.rememberSpotlight
 import com.tmplayer.ui.components.UiState
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.online.LocalOnlineArt
 import com.tmplayer.ui.online.OnlineArt
 import com.tmplayer.ui.theme.Tone
@@ -169,7 +167,7 @@ internal fun HomeRowsView(
             modifier = modifier,
             onArt = onArt,
             actions = {
-                IconButton(onClick = onRefresh) { Icon(Icons.Filled.Refresh, contentDescription = s.commonRefresh) }
+                IconButton(onClick = onRefresh) { Icon(TmIcons.Refresh, contentDescription = s.commonRefresh) }
                 PosterSizeStep(state)
             },
         )
@@ -264,7 +262,7 @@ internal fun HomeRowsView(
                                             "  ·  " + if (row.totalAtLeast) s.homeSeeAllCountAtLeast(row.total) else s.homeSeeAllCount(row.total),
                                             color = Tone.muted,
                                         )
-                                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Icon(TmIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(18.dp))
                                     }
                                 }
                             }

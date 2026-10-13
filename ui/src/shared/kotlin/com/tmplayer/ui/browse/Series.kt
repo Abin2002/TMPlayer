@@ -24,6 +24,7 @@ import com.tmplayer.ui.components.BackdropSource
 import com.tmplayer.ui.components.CoverArt
 import com.tmplayer.ui.components.TileBadgeInset
 import com.tmplayer.ui.components.rememberCover
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.online.TrailerIcon
 import com.tmplayer.ui.theme.Focus
 import com.tmplayer.ui.theme.Scrims
@@ -46,8 +47,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -110,7 +109,6 @@ import com.tmplayer.ui.online.rememberMetaExtras
 import com.tmplayer.ui.online.rememberTrailerLauncher
 import com.tmplayer.ui.online.MetaPicture
 import com.tmplayer.ui.online.rememberMeta
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
@@ -514,7 +512,7 @@ private fun EpisodeLine(
             }
             if (upNext && !finished) {
                 Icon(
-                    Icons.Filled.PlayArrow,
+                    TmIcons.Play,
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier
@@ -776,7 +774,7 @@ fun SeriesPanel(
                         progress.watched > 0 -> s.seriesContinue(target.code)
                         else -> s.seriesPlay(target.code)
                     },
-                    icon = Icons.Filled.PlayArrow,
+                    icon = TmIcons.Play,
                     onClick = { onPlay(next?.item ?: watch.pick(target, progress)) },
                     modifier = m.then(downToUpNext),
                     focusRequester = playFocus,
@@ -977,7 +975,7 @@ internal fun PlayButton(label: String, onClick: () -> Unit, modifier: Modifier =
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         val ink = Tone.onAccent
-        Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = ink, modifier = Modifier.size(22.dp))
+        Icon(TmIcons.Play, contentDescription = null, tint = ink, modifier = Modifier.size(22.dp))
         Text(label, style = MaterialTheme.typography.labelLarge, color = ink, maxLines = 1)
     }
 }

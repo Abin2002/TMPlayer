@@ -196,7 +196,7 @@ dependencies {
 configurations.named("runtimeClasspath") {
     attributes.attribute(jarsStored, true)
     // The extended icon set (38 MB) only arrives through mediamp, which never touches it. The app
-    // draws from material-icons-core and TmIcons.
+    // draws its own icons, TmIcons.
     exclude(group = "org.jetbrains.compose.material", module = "material-icons-extended")
     exclude(group = "org.jetbrains.compose.material", module = "material-icons-extended-desktop")
     exclude(group = "androidx.compose.material", module = "material-icons-extended")
@@ -221,7 +221,6 @@ dependencies {
     implementation(project(":ui"))
     implementation(compose.desktop.currentOs)
     implementation(libs.cmp.material3)
-    implementation(libs.cmp.material.icons)
     implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.appdirs)
     implementation(libs.zxing.core)

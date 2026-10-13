@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import com.tmplayer.ui.components.TmAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -51,11 +48,11 @@ import androidx.compose.ui.unit.dp
 import com.tmplayer.ui.components.MediaArt
 import com.tmplayer.ui.components.SlowAnswer
 import com.tmplayer.ui.components.StateAction
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.UiState
 import androidx.compose.material3.SuggestionChip
 import kotlinx.coroutines.delay
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Tone
 
@@ -170,11 +167,11 @@ fun SearchField(
         onValueChange = onQuery,
         singleLine = true,
         placeholder = { Text(placeholder) },
-        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+        leadingIcon = { Icon(TmIcons.Search, contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQuery("") }) {
-                    Icon(Icons.Filled.Close, contentDescription = s.browseClearSearch)
+                    Icon(TmIcons.Close, contentDescription = s.browseClearSearch)
                 }
             }
         },

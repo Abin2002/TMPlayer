@@ -17,8 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,12 +39,12 @@ import com.tmplayer.data.DeviceForm
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.components.TmButton
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.TvChoiceRow
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.i18n.languageRowDetail
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
@@ -136,7 +134,7 @@ private fun TvTour(settings: SettingsStore, tour: TourState, onDone: () -> Unit)
                     if (!tour.isLast) {
                         Spacer(Modifier.width(8.dp))
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowForward,
+                            TmIcons.ArrowForward,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
                         )

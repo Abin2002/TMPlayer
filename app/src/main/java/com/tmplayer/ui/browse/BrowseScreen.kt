@@ -40,26 +40,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Focus
 import com.tmplayer.data.SettingsStore
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import com.tmplayer.ui.components.TmDropdownMenu
@@ -157,7 +146,6 @@ import com.tmplayer.ui.components.AppMark
 import com.tmplayer.ui.i18n.LocalStrings
 import kotlinx.coroutines.delay
 import com.tmplayer.ui.components.isTouch
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.TvMenu
 import com.tmplayer.ui.components.TvSearchField
@@ -518,14 +506,14 @@ fun BrowseScreen(
                                 if (showsContinue && continuing.isNotEmpty()) {
                                     HeaderAction(
                                         label = s.browseClearHistory,
-                                        icon = Icons.Filled.Close,
+                                        icon = TmIcons.Close,
                                         onClick = { confirmClearHistory = true },
                                     )
                                 }
                                 if (showsWatched && watchedHistory.isNotEmpty()) {
                                     HeaderAction(
                                         label = s.browseClearWatched,
-                                        icon = Icons.Filled.Close,
+                                        icon = TmIcons.Close,
                                         onClick = { confirmClearWatched = true },
                                     )
                                 }
@@ -595,7 +583,7 @@ fun BrowseScreen(
                                 if (tab == BrowseSection.of(BrowseTab.Favorites) && favorites.isNotEmpty()) {
                                     HeaderAction(
                                         label = s.browseClearFavourites,
-                                        icon = Icons.Filled.Close,
+                                        icon = TmIcons.Close,
                                         onClick = { confirmClearFavorites = true },
                                     )
                                 }
@@ -762,20 +750,20 @@ fun BrowseScreen(
             actions = actions@{
                 // Home is rows of tiles whatever the arrangement, so it only offers a refresh.
                 if (tab.isHome) {
-                    BarIcon(s.commonRefresh, Icons.Filled.Refresh, onRefreshHome)
+                    BarIcon(s.commonRefresh, TmIcons.Refresh, onRefreshHome)
                     return@actions
                 }
                 BarIcon(
                     label = if (layout == CardLayout.Grid) s.browseShowAsRows else s.browseShowAsTiles,
                     icon = if (layout == CardLayout.Grid) {
-                        Icons.AutoMirrored.Filled.List
+                        TmIcons.List
                     } else {
                         TmIcons.Grid
                     },
                     onClick = onToggleLayout,
                 )
                 if (!tab.listsVideos) {
-                    BarIcon(s.commonRefresh, Icons.Filled.Refresh, onRefresh)
+                    BarIcon(s.commonRefresh, TmIcons.Refresh, onRefresh)
                 }
                 // Everything destructive goes behind the overflow. A "Clear history" button
                 // sitting in the bar beside Refresh is one mis-tap from emptying the tab.
@@ -843,7 +831,7 @@ fun BrowseScreen(
             onDismiss = { chatMenu = null },
             actions = buildList {
                 add(
-                    MenuAction(s.navOpen, Icons.Filled.PlayArrow) {
+                    MenuAction(s.navOpen, TmIcons.Play) {
                         chatMenu = null
                         onOpenChat(chat)
                     },
@@ -851,7 +839,7 @@ fun BrowseScreen(
                 add(
                     MenuAction(
                         label = if (favorite) s.browseRemoveFavourite else s.browseAddFavourite,
-                        icon = if (favorite) Icons.Filled.Star else TmIcons.StarOutline,
+                        icon = if (favorite) TmIcons.Star else TmIcons.StarOutline,
                         detail = if (favorite) {
                             s.browseRemoveFavouriteDetail
                         } else {
@@ -893,7 +881,7 @@ fun BrowseScreen(
                     add(
                         MenuAction(
                             label = s.browseMarkRead,
-                            icon = Icons.Filled.Check,
+                            icon = TmIcons.Check,
                             detail = s.browseMarkReadDetail,
                         ) {
                             chatMenu = null
@@ -970,13 +958,13 @@ fun BrowseScreen(
             ).filter { it.isNotBlank() }.joinToString("  ·  "),
             onDismiss = { watchedMenu = null },
             actions = listOf(
-                MenuAction(s.browsePlayAgain, Icons.Filled.PlayArrow, detail = s.browseFromTheStart) {
+                MenuAction(s.browsePlayAgain, TmIcons.Play, detail = s.browseFromTheStart) {
                     watchedMenu = null
                     onOpenWatched(record)
                 },
                 MenuAction(
                     label = s.gridMarkUnwatched,
-                    icon = Icons.Filled.Close,
+                    icon = TmIcons.Close,
                     detail = s.browseMarkUnwatchedDetail,
                     destructive = true,
                 ) {
@@ -993,13 +981,13 @@ fun BrowseScreen(
             subtitle = record.chatTitle.ifBlank { null },
             onDismiss = { laterMenu = null },
             actions = listOf(
-                MenuAction(s.commonPlay, Icons.Filled.PlayArrow) {
+                MenuAction(s.commonPlay, TmIcons.Play) {
                     laterMenu = null
                     onOpenWatchLater(record)
                 },
                 MenuAction(
                     label = s.detailWatchLaterRemove,
-                    icon = Icons.Filled.Close,
+                    icon = TmIcons.Close,
                     destructive = true,
                 ) {
                     laterMenu = null
@@ -1015,17 +1003,17 @@ fun BrowseScreen(
             subtitle = s.browseWatchedUpTo(s.formatter.clock(record.positionMs)),
             onDismiss = { mediaMenu = null },
             actions = listOf(
-                MenuAction(s.commonResume, Icons.Filled.PlayArrow, detail = s.browseResumeDetail) {
+                MenuAction(s.commonResume, TmIcons.Play, detail = s.browseResumeDetail) {
                     mediaMenu = null
                     onResumeMedia(record)
                 },
-                MenuAction(s.gridPlayFromStart, Icons.Filled.Refresh) {
+                MenuAction(s.gridPlayFromStart, TmIcons.Refresh) {
                     mediaMenu = null
                     onRestartMedia(record)
                 },
                 MenuAction(
                     label = s.gridMarkWatched,
-                    icon = Icons.Filled.Check,
+                    icon = TmIcons.Check,
                     detail = s.browseMarkWatchedDetail,
                 ) {
                     mediaMenu = null
@@ -1033,7 +1021,7 @@ fun BrowseScreen(
                 },
                 MenuAction(
                     label = s.browseForgetResume,
-                    icon = Icons.Filled.Close,
+                    icon = TmIcons.Close,
                     detail = s.browseForgetResumeDetail,
                     destructive = true,
                 ) {
@@ -1063,7 +1051,7 @@ internal fun RowScope.BarOverflow(items: List<Pair<String, () -> Unit>>) {
     val s = LocalStrings.current
     var open by remember { mutableStateOf(false) }
     IconButton(onClick = { open = true }) {
-        M3Icon(Icons.Filled.MoreVert, contentDescription = s.commonMoreOptions)
+        M3Icon(TmIcons.MoreVert, contentDescription = s.commonMoreOptions)
     }
     TmDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
         items.forEach { (label, action) ->
@@ -1416,7 +1404,7 @@ private fun ContinueArt(text: VideoCardText, modifier: Modifier = Modifier, badg
             }
         }
         Icon(
-            imageVector = Icons.Filled.PlayArrow,
+            imageVector = TmIcons.PlaySolid,
             contentDescription = null,
             tint = Tone.onArt,
             modifier = Modifier.size(badge * 0.88f),
@@ -1577,7 +1565,7 @@ private fun NavRail(
             RailItem(
                 reveal = reveal,
                 label = s.navUpdate,
-                icon = Icons.Filled.Refresh,
+                icon = TmIcons.Refresh,
                 badge = updateVersion,
                 selected = false,
                 onClick = onUpdate,
@@ -1589,7 +1577,7 @@ private fun NavRail(
         RailItem(
             reveal = reveal,
             label = s.navSettings,
-            icon = Icons.Filled.Settings,
+            icon = TmIcons.Settings,
             badge = null,
             selected = false,
             onClick = onOpenSettings,
@@ -1706,7 +1694,7 @@ private fun RailGroupHeading(
                     )
                     if (toggleable) {
                         Icon(
-                            Icons.Filled.KeyboardArrowDown,
+                            TmIcons.ChevronDown,
                             contentDescription = null,
                             tint = foreground,
                             modifier = Modifier.size(22.dp).rotate(turn),
@@ -1860,7 +1848,7 @@ private fun LayoutAction(layout: CardLayout, onToggle: () -> Unit) {
         // A grid of squares and a stack of lines are the two pictures every phone and television
         // uses for this, so the icon alone carries it.
         label = if (layout == CardLayout.Grid) s.browseAsRows else s.browseAsTiles,
-        icon = if (layout == CardLayout.Grid) Icons.AutoMirrored.Filled.List else TmIcons.Grid,
+        icon = if (layout == CardLayout.Grid) TmIcons.List else TmIcons.Grid,
         showLabel = false,
         onClick = onToggle,
     )
@@ -1880,7 +1868,7 @@ private fun RefreshAction(onRefresh: () -> Unit) {
         // Icon-only, here as everywhere: a heading whose chips are two pictures and one
         // picture-with-a-word reads as three unrelated controls. The name still reaches a screen
         // reader through [label].
-        icon = Icons.Filled.Refresh,
+        icon = TmIcons.Refresh,
         showLabel = false,
         onClick = onRefresh,
     )
@@ -2081,7 +2069,7 @@ private fun SearchRow(
             // Clearing the query removes this pill, and a control that deletes itself while
             // focused takes the focus with it, leaving the D-pad nowhere to go. Move focus to the
             // search field first, which is where the viewer wants to be next anyway.
-            PillButton(s.commonClear, Icons.Filled.Close) {
+            PillButton(s.commonClear, TmIcons.Close) {
                 runCatching { searchField.requestFocus() }
                 onQuery("")
             }
@@ -2461,7 +2449,7 @@ private fun ChatTile(
             if (favorite) {
                 Spacer(Modifier.width(6.dp))
                 Icon(
-                    Icons.Filled.Star,
+                    TmIcons.Star,
                     contentDescription = s.browseFavourite,
                     tint = Tone.accent,
                     modifier = Modifier.size(24.dp),
@@ -2631,7 +2619,7 @@ private fun ChatRow(
             ChatMarkers(chat, size = 20.dp)
             if (favorite) {
                 Icon(
-                    Icons.Filled.Star,
+                    TmIcons.Star,
                     contentDescription = s.browseFavourite,
                     tint = Tone.accent,
                     modifier = Modifier.size(28.dp),
@@ -2775,7 +2763,7 @@ private fun TouchChatRow(
                     ChatMarkers(chat, size = 16.dp)
                     if (favorite) {
                         M3Icon(
-                            Icons.Filled.Star,
+                            TmIcons.Star,
                             contentDescription = s.browseFavourite,
                             tint = Tone.accent,
                             modifier = Modifier.size(20.dp),
@@ -2817,7 +2805,7 @@ private fun EmptyTab(tab: BrowseSection, query: String, filter: ChatFilter = Cha
     // A search that came back empty is a different situation from a tab with nothing in it yet, so
     // the glyph follows whichever one the viewer is looking at.
     val icon = when {
-        query.isNotBlank() -> Icons.Filled.Search
+        query.isNotBlank() -> TmIcons.Search
         history != null -> history.icon
         tab.isChats -> filter.icon
         else -> tab.icon

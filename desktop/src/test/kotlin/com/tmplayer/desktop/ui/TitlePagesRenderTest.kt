@@ -1,10 +1,6 @@
 package com.tmplayer.desktop.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -26,7 +22,7 @@ import com.tmplayer.ui.browse.LocalSeriesWatch
 import com.tmplayer.ui.browse.MediaDetailScreen
 import com.tmplayer.ui.browse.SeriesPanel
 import com.tmplayer.ui.browse.SeriesWatch
-import com.tmplayer.ui.components.TmIcons
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.TmMaterialTheme
 import com.tmplayer.ui.theme.Tone
 import org.jetbrains.skia.Color
@@ -58,9 +54,9 @@ class TitlePagesRenderTest {
     private val lecture = item(700, 9, "Lecture_07_-_Compilers_and_parsers.mp4", 0xFFF5A524.toInt(), mini = false)
 
     private fun rows(resume: Boolean): List<DetailRow> = listOfNotNull(
-        if (resume) DetailRow(DetailAction.Resume, "Resume 12:04", Icons.Filled.PlayArrow, onSelect = {}) else DetailRow(DetailAction.Play, "Play", Icons.Filled.PlayArrow, onSelect = {}),
-        DetailRow(DetailAction.StartOver, "Start over", Icons.Filled.Refresh, onSelect = {}).takeIf { resume },
-        DetailRow(DetailAction.MarkWatched, "Mark as watched", Icons.Filled.Check, onSelect = {}),
+        if (resume) DetailRow(DetailAction.Resume, "Resume 12:04", TmIcons.Play, onSelect = {}) else DetailRow(DetailAction.Play, "Play", TmIcons.Play, onSelect = {}),
+        DetailRow(DetailAction.StartOver, "Start over", TmIcons.Refresh, onSelect = {}).takeIf { resume },
+        DetailRow(DetailAction.MarkWatched, "Mark as watched", TmIcons.Check, onSelect = {}),
         DetailRow(DetailAction.AddWatchLater, "Add to Watch later", TmIcons.Clock, onSelect = {}),
         DetailRow(DetailAction.Download, "Download", TmIcons.Download, onSelect = {}),
     )

@@ -5,11 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,10 +28,10 @@ import com.tmplayer.online.OnlineStatus
 import com.tmplayer.online.OnlineSubtitles
 import com.tmplayer.online.OnlineWords
 import com.tmplayer.ui.auth.PaneField
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Danger
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.Dispatchers
@@ -71,20 +66,20 @@ private fun AccountRow(onDialog: (OnlineDialog) -> Unit) {
         OnlineStatus.NotInBuild, OnlineStatus.Unavailable -> ActionRow(
             title = s.onlineTitle,
             subtitle = OnlineWords.status(status),
-            icon = Icons.Filled.Warning,
+            icon = TmIcons.Warning,
             tint = Tone.muted,
             onClick = { toast(OnlineWords.status(status)) },
         )
         OnlineStatus.SignedOut, is OnlineStatus.Expired, is OnlineStatus.FreeQuotaUsed -> ActionRow(
             title = s.onlineSignIn,
             subtitle = OnlineWords.status(status),
-            icon = Icons.Filled.AccountCircle,
+            icon = TmIcons.Account,
             onClick = { onDialog(OnlineDialog.SignIn) },
         )
         is OnlineStatus.SignedIn, is OnlineStatus.QuotaUsed -> ActionRow(
             title = s.onlineSignOut,
             subtitle = OnlineWords.status(status),
-            icon = Icons.Filled.AccountCircle,
+            icon = TmIcons.Account,
             onClick = { onDialog(OnlineDialog.SignOut) },
         )
     }
@@ -117,7 +112,7 @@ private fun SubdlRow(onDialog: (OnlineDialog) -> Unit) {
             account.subdlRefused -> s.onlineSubdlRefused
             else -> s.onlineSubdlSet
         },
-        icon = Icons.Filled.Lock,
+        icon = TmIcons.Lock,
         tint = if (account.subdlRefused) Tone.muted else androidx.compose.ui.graphics.Color.Unspecified,
         onClick = { onDialog(OnlineDialog.SubdlKey) },
     )
@@ -142,7 +137,7 @@ private fun CacheRow() {
     ActionRow(
         title = s.onlineClearCache,
         subtitle = if (bytes > 0) s.onlineCacheDetail(Translator.messages.formatter.size(bytes)) else s.onlineCacheEmpty,
-        icon = Icons.Filled.Delete,
+        icon = TmIcons.Delete,
         // Asked first: a subtitle fetched again is another download against the daily quota.
         onClick = { if (bytes > 0) asking = true else clear() },
     )
@@ -178,7 +173,7 @@ fun OnlineSubtitlesDialog(dialog: OnlineDialog, onClose: () -> Unit) {
                 message = s.onlineSignInMessage,
                 confirmLabel = s.onlineSignInButton,
                 destructive = false,
-                icon = Icons.Filled.AccountCircle,
+                icon = TmIcons.Account,
                 onDismiss = onClose,
                 onConfirm = {
                     if (busy || username.isBlank() || password.isEmpty()) return@TvConfirm
@@ -238,7 +233,7 @@ fun OnlineSubtitlesDialog(dialog: OnlineDialog, onClose: () -> Unit) {
                 message = s.onlineSubdlMessage,
                 confirmLabel = s.commonOk,
                 destructive = false,
-                icon = Icons.Filled.Lock,
+                icon = TmIcons.Lock,
                 onDismiss = onClose,
                 onConfirm = {
                     online.setSubdlKey(key)

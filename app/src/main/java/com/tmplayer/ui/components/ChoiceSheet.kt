@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon as M3Icon
 import androidx.compose.material3.IconButton
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.FloatingTone
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -28,8 +28,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text as M3Text
 import androidx.compose.material3.TextButton
@@ -182,7 +180,7 @@ private fun FullScreenChoiceSheet(
                 if (note != null) Text(note, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
             }
             IconButton(onClick = onClose) {
-                M3Icon(Icons.Filled.Close, contentDescription = close, tint = Tone.text)
+                M3Icon(TmIcons.Close, contentDescription = close, tint = Tone.text)
             }
         }
         HorizontalDivider(color = Tone.outline)
@@ -312,7 +310,7 @@ fun TvChoiceRow(
         val ink = if (focused) Tone.onFocusFill else Tone.text
         val faint = Modifier.alpha(if (enabled) 1f else DISABLED_ALPHA)
         val mark = when {
-            selected == true -> Icons.Filled.Check
+            selected == true -> TmIcons.Check
             selected == null -> icon
             else -> null
         }

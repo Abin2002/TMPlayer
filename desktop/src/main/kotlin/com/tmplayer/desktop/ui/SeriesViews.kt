@@ -15,9 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -58,6 +55,7 @@ import com.tmplayer.ui.browse.seriesProgressLine
 import com.tmplayer.ui.browse.seriesSummary
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.launch
@@ -199,7 +197,7 @@ internal fun SeriesPage(
         )
         // Over the backdrop, on a dark disc so it reads on any picture.
         PageDiscButton(
-            Icons.AutoMirrored.Filled.ArrowBack,
+            TmIcons.ArrowBack,
             s.seriesBack,
             onClose,
             Modifier.align(Alignment.TopStart).padding(16.dp),
@@ -224,7 +222,7 @@ internal fun SeasonDropdown(
                 s.seriesSeason(current.number) + "  ·  " + s.seriesEpisodesCount(current.episodes.size),
                 style = MaterialTheme.typography.labelLarge,
             )
-            Icon(Icons.Filled.ArrowDropDown, contentDescription = s.seriesSeasonPicker, modifier = Modifier.size(20.dp))
+            Icon(TmIcons.ChevronDown, contentDescription = s.seriesSeasonPicker, modifier = Modifier.size(20.dp))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             seasons.forEach { season ->

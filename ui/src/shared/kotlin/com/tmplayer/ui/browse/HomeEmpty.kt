@@ -24,8 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.isTouch
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 

@@ -1,6 +1,7 @@
 package com.tmplayer.ui.browse
 
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,13 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -83,7 +77,6 @@ import com.tmplayer.data.Account
 import com.tmplayer.data.Updates
 import com.tmplayer.ui.components.AppMark
 import com.tmplayer.ui.components.MediaPreview
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.theme.Avatar
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.launch
@@ -252,7 +245,7 @@ internal fun TouchBrowseShell(
                                 label = s.navUpdate,
                                 selected = false,
                                 badge = updateVersion,
-                                icon = { Icon(Icons.Filled.Refresh, contentDescription = null) },
+                                icon = { Icon(TmIcons.Refresh, contentDescription = null) },
                                 onClick = { close(); onUpdate() },
                                 colors = NavigationDrawerItemDefaults.colors(
                                     unselectedIconColor = Tone.caution,
@@ -265,7 +258,7 @@ internal fun TouchBrowseShell(
                             label = s.navSettings,
                             selected = false,
                             badge = null,
-                            icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
+                            icon = { Icon(TmIcons.Settings, contentDescription = null) },
                             onClick = { close(); onOpenSettings() },
                         )
                         DrawerFooter(account)
@@ -351,11 +344,11 @@ internal fun TouchBrowseShell(
                             IconButton(
                                 onClick = { searching = false; onSearchQueryChange("") },
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = s.browseCloseSearch)
+                                Icon(TmIcons.ArrowBack, contentDescription = s.browseCloseSearch)
                             }
                         } else {
                             IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                Icon(Icons.Filled.Menu, contentDescription = s.browseOpenNavigation)
+                                Icon(TmIcons.Menu, contentDescription = s.browseOpenNavigation)
                             }
                         }
                     },
@@ -365,7 +358,7 @@ internal fun TouchBrowseShell(
                         if (searching) return@TopAppBar
                         if (searchQuery != null) {
                             IconButton(onClick = { searching = true }) {
-                                Icon(Icons.Filled.Search, contentDescription = s.commonSearch)
+                                Icon(TmIcons.Search, contentDescription = s.commonSearch)
                             }
                         }
                         actions()
@@ -462,7 +455,7 @@ private fun AppBarSearchField(
         // separate labelled button in the row below.
         if (query.isNotEmpty()) {
             IconButton(onClick = { onQueryChange("") }) {
-                Icon(Icons.Filled.Close, contentDescription = s.browseClearSearch)
+                Icon(TmIcons.Close, contentDescription = s.browseClearSearch)
             }
         } else if (onVoiceSearch != null) {
             IconButton(onClick = onVoiceSearch) {

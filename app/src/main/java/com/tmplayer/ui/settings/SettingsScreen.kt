@@ -43,25 +43,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
@@ -130,6 +111,7 @@ import com.tmplayer.data.AppLockSession
 import com.tmplayer.data.AppLockSettings
 import com.tmplayer.data.CacheShelf
 import com.tmplayer.data.Screensaver
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.lock.AppLockWords
 import com.tmplayer.ui.lock.PinPad
 import com.tmplayer.ui.lock.PinPurpose
@@ -175,7 +157,6 @@ import com.tmplayer.ui.components.PhonePad
 import com.tmplayer.ui.components.SettingIconChip
 import com.tmplayer.ui.components.SettingsSectionLabel
 import com.tmplayer.ui.components.Spinner
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.rememberToast
@@ -650,7 +631,7 @@ fun SettingsScreen(
                         } else {
                             s.settingsAutoplayOff
                         },
-                        icon = Icons.Filled.PlayArrow,
+                        icon = TmIcons.Play,
                         checked = autoplayNext,
                         onToggle = { scope.launch { settings.setAutoplayNext(!autoplayNext) } },
                     )
@@ -659,7 +640,7 @@ fun SettingsScreen(
                     ToggleRow(
                         title = s.settingsDetailFirst,
                         subtitle = if (detailFirst) s.settingsDetailFirstOn else s.settingsDetailFirstOff,
-                        icon = Icons.Filled.Info,
+                        icon = TmIcons.Info,
                         checked = detailFirst,
                         onToggle = { scope.launch { settings.setDetailFirst(!detailFirst) } },
                     )
@@ -732,7 +713,7 @@ fun SettingsScreen(
                         ToggleRow(
                             title = s.settingsWatchNext,
                             subtitle = if (watchNextOn) s.settingsWatchNextOn else s.settingsWatchNextOff,
-                            icon = Icons.Filled.Home,
+                            icon = TmIcons.Home,
                             checked = watchNextOn,
                             onToggle = {
                                 val turningOff = watchNextOn
@@ -878,7 +859,7 @@ fun SettingsScreen(
                         ToggleRow(
                             title = s.settingsSeekGesture,
                             subtitle = s.settingsSeekGestureDetail,
-                            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            icon = TmIcons.ChevronRight,
                             checked = touchPrefs.seekGesture,
                             onToggle = { update { it.copy(seekGesture = !it.seekGesture) } },
                         )
@@ -922,7 +903,7 @@ fun SettingsScreen(
                         title = s.settingsSizeLimits,
                         modifier = Modifier.focusRequester(landing),
                         subtitle = s.formatter.sizeRange(minSize, maxSize),
-                        icon = Icons.AutoMirrored.Filled.List,
+                        icon = TmIcons.List,
                         onClick = { editingSizes = true },
                     )
                 }
@@ -969,7 +950,7 @@ fun SettingsScreen(
                         ActionRow(
                             title = s.settingsForgetLastChat,
                             subtitle = s.settingsForgetLastChatDetail,
-                            icon = Icons.Filled.Close,
+                            icon = TmIcons.Close,
                             // This row deletes itself on success, so it needs a toast: otherwise the
                             // press reads as having been lost.
                             onClick = {
@@ -994,7 +975,7 @@ fun SettingsScreen(
                         ActionRow(
                             title = s.settingsClearFavourites,
                             subtitle = s.settingsClearFavouritesDetail(favorites.size),
-                            icon = Icons.Filled.Close,
+                            icon = TmIcons.Close,
                             onClick = { prompt = Prompt.ClearFavorites },
                         )
                     }
@@ -1004,7 +985,7 @@ fun SettingsScreen(
                         ActionRow(
                             title = s.settingsClearHistory,
                             subtitle = s.settingsClearHistoryDetail(history.size),
-                            icon = Icons.Filled.Close,
+                            icon = TmIcons.Close,
                             onClick = { prompt = Prompt.ClearHistory },
                         )
                     }
@@ -1014,7 +995,7 @@ fun SettingsScreen(
                         ActionRow(
                             title = s.settingsClearWatched,
                             subtitle = s.settingsClearWatchedDetail(watchedList.size),
-                            icon = Icons.Filled.Close,
+                            icon = TmIcons.Close,
                             onClick = { prompt = Prompt.ClearWatched },
                         )
                     }
@@ -1037,7 +1018,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = s.backupRestore,
                         subtitle = s.backupRestoreDetail,
-                        icon = Icons.Filled.Refresh,
+                        icon = TmIcons.Refresh,
                         onClick = backup.restore,
                     )
                 }
@@ -1080,7 +1061,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = s.settingsClearCache,
                         subtitle = s.settingsClearCacheDetail,
-                        icon = Icons.Filled.Delete,
+                        icon = TmIcons.Delete,
                         onClick = {
                             // Nothing to delete is not a dialog. The row stays focusable and in the same
                             // place every time, and says so instead.
@@ -1105,7 +1086,7 @@ fun SettingsScreen(
                         } else {
                             s.settingsClearPicturesDetail(s.formatter.bytes(split.otherBytes))
                         },
-                        icon = Icons.Filled.Delete,
+                        icon = TmIcons.Delete,
                         onClick = {
                             if (split.otherBytes <= 0) {
                                 toast(s.settingsNothingToClear)
@@ -1126,7 +1107,7 @@ fun SettingsScreen(
                         } else {
                             s.settingsClearAllDetail(s.formatter.bytes(split.cachedBytes + split.otherBytes))
                         },
-                        icon = Icons.Filled.Delete,
+                        icon = TmIcons.Delete,
                         onClick = {
                             if (split.cachedBytes + split.otherBytes <= 0) {
                                 toast(s.settingsNothingToClear)
@@ -1162,7 +1143,7 @@ fun SettingsScreen(
                         ActionRow(
                             title = s.lockSetPin,
                             subtitle = s.lockSetPinDetail,
-                            icon = Icons.Filled.Lock,
+                            icon = TmIcons.Lock,
                             modifier = Modifier.focusRequester(landing),
                             onClick = { pinFlow = PinFlow.Set },
                         )
@@ -1172,7 +1153,7 @@ fun SettingsScreen(
                         ActionRow(
                             title = s.lockChangePin,
                             subtitle = s.lockChangePinDetail,
-                            icon = Icons.Filled.Lock,
+                            icon = TmIcons.Lock,
                             modifier = Modifier.focusRequester(landing),
                             onClick = { pinFlow = PinFlow.ChangeCheck },
                         )
@@ -1215,7 +1196,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = s.lockAllowedChats,
                         subtitle = s.lockAllowedChatsDetail(count = appLock.kidsChats.size),
-                        icon = Icons.AutoMirrored.Filled.List,
+                        icon = TmIcons.List,
                         onClick = { pickingKidsChats = true },
                     )
                 }
@@ -1224,7 +1205,7 @@ fun SettingsScreen(
                         ActionRow(
                             title = s.lockRemovePin,
                             subtitle = s.lockRemovePinDetail,
-                            icon = Icons.Filled.Close,
+                            icon = TmIcons.Close,
                             onClick = { pinFlow = PinFlow.Remove },
                         )
                     }
@@ -1257,7 +1238,7 @@ fun SettingsScreen(
                                 title = UpdateWords.settingsRow(offered),
                                 modifier = Modifier.focusRequester(landing),
                                 subtitle = s.settingsUpdateDetail(s.formatter.bytes(Updates.apkFor(offered)?.size ?: 0L)),
-                                icon = Icons.Filled.Refresh,
+                                icon = TmIcons.Refresh,
                                 tint = Tone.caution,
                                 onClick = { showUpdate = true },
                             )
@@ -1268,7 +1249,7 @@ fun SettingsScreen(
                             title = s.settingsCheckUpdates,
                             modifier = if (updateState.release == null) Modifier.focusRequester(landing) else Modifier,
                             subtitle = s.settingsCheckUpdatesDetail(Updates.installedVersion, Updates.RELEASES_PAGE),
-                            icon = Icons.Filled.Refresh,
+                            icon = TmIcons.Refresh,
                             onClick = {
                                 showUpdate = true
                                 // Past the six hour wait and the skipped version: the viewer asked.
@@ -1303,7 +1284,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = s.settingsWhatsNew,
                         subtitle = s.settingsWhatsNewDetail(WhatsNew.VERSION),
-                        icon = Icons.Filled.Star,
+                        icon = TmIcons.StarOutline,
                         onClick = { whatsNew = true },
                     )
                 }
@@ -1311,7 +1292,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = s.settingsChangelog,
                         subtitle = s.settingsChangelogDetail,
-                        icon = Icons.AutoMirrored.Filled.List,
+                        icon = TmIcons.List,
                         onClick = { openPage(WhatsNew.CHANGELOG, s.settingsQrChangelogPage) },
                     )
                 }
@@ -1336,7 +1317,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = s.aboutPrivacy,
                         subtitle = s.settingsPrivacyDetail(device),
-                        icon = Icons.Filled.Lock,
+                        icon = TmIcons.Lock,
                         onClick = { openPage(About.PRIVACY, s.settingsQrPrivacyPage) },
                     )
                 }
@@ -1352,7 +1333,7 @@ fun SettingsScreen(
                             } else {
                                 s.settingsCrashReportsOff
                             },
-                            icon = Icons.Filled.Warning,
+                            icon = TmIcons.Warning,
                             checked = crashReports,
                             onToggle = {
                                 val next = !crashReports
@@ -1376,7 +1357,7 @@ fun SettingsScreen(
                         ActionRow(
                             title = if (supportCounters.supporter) About.SUPPORT_THANKS_TITLE else About.SUPPORT_TITLE,
                             subtitle = s.settingsSupportDetail,
-                            icon = Icons.Filled.Favorite,
+                            icon = TmIcons.Favorite,
                             onClick = { supporting = true },
                         )
                     }
@@ -1386,7 +1367,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = s.settingsAbout,
                         subtitle = s.settingsAboutDetail(Updates.installedVersion),
-                        icon = Icons.Filled.Info,
+                        icon = TmIcons.Info,
                         onClick = onOpenAbout,
                     )
                 }
@@ -1428,7 +1409,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = titleOf(SettingsPage.Playback),
                         subtitle = s.settingsPagePlaybackSummary,
-                        icon = Icons.Filled.PlayArrow,
+                        icon = TmIcons.Play,
                         modifier = Modifier.focusRequester(categoryFocus.getValue(SettingsPage.Playback)),
                         onClick = { showPage(SettingsPage.Playback) },
                     )
@@ -1492,7 +1473,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = titleOf(SettingsPage.Lock),
                         subtitle = AppLockWords.summary(appLock),
-                        icon = Icons.Filled.Lock,
+                        icon = TmIcons.Lock,
                         modifier = Modifier.focusRequester(categoryFocus.getValue(SettingsPage.Lock)),
                         onClick = { showPage(SettingsPage.Lock) },
                     )
@@ -1508,7 +1489,7 @@ fun SettingsScreen(
                         } else {
                             s.settingsPageAboutSummary(Updates.installedVersion)
                         },
-                        icon = Icons.Filled.Info,
+                        icon = TmIcons.Info,
                         tint = if (offered != null) Tone.caution else Color.Unspecified,
                         modifier = Modifier
                             .focusRequester(categoryFocus.getValue(SettingsPage.About))
@@ -1529,7 +1510,7 @@ fun SettingsScreen(
                     ActionRow(
                         title = s.settingsSignOut,
                         subtitle = s.settingsSignOutDetail(device),
-                        icon = Icons.AutoMirrored.Filled.ExitToApp,
+                        icon = TmIcons.SignOut,
                         onClick = { prompt = Prompt.SignOut },
                     )
                 }
@@ -1592,7 +1573,7 @@ fun SettingsScreen(
                     navigationIcon = {
                         IconButton(onClick = { if (page != null) closePage() else onBack() }) {
                             M3Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
+                                TmIcons.ArrowBack,
                                 contentDescription = if (page != null) {
                                     s.aboutBackToSettings
                                 } else {
@@ -1924,7 +1905,7 @@ private fun KidsChatsSheet(
                     // A tick on a remote, as the language picker's; a phone's radio would read as
                     // "one of these", so a check stands in its place there.
                     selected = if (touch) null else ticked,
-                    icon = if (ticked) Icons.Filled.Check else null,
+                    icon = if (ticked) TmIcons.Check else null,
                     modifier = if (index == 0) Modifier.focusRequester(first) else Modifier,
                 ) { onToggle(chat.id) }
             }
@@ -2018,13 +1999,13 @@ private fun RangeRow(
                     // glyph for those, and tofu boxes would be the whole explanation of the
                     // control.
                     Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        TmIcons.ChevronLeft,
                         contentDescription = null,
                         tint = Tone.onFocusFill,
                         modifier = Modifier.size(18.dp),
                     )
                     Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        TmIcons.ChevronRight,
                         contentDescription = null,
                         tint = Tone.onFocusFill,
                         modifier = Modifier.size(18.dp),
@@ -2230,7 +2211,7 @@ private fun ResetChip(enabled: Boolean, onClick: () -> Unit) {
             label = { M3Text(s.commonReset, maxLines = 1) },
             leadingIcon = {
                 M3Icon(
-                    Icons.Filled.Refresh,
+                    TmIcons.Refresh,
                     contentDescription = null,
                     modifier = Modifier.size(AssistChipDefaults.IconSize),
                 )
@@ -2263,7 +2244,7 @@ private fun ResetChip(enabled: Boolean, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            Icons.Filled.Refresh,
+            TmIcons.Refresh,
             contentDescription = null,
             tint = when {
                 !enabled -> Tone.muted
@@ -2563,10 +2544,10 @@ private fun StepperRow(
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { onStep(-1) }, enabled = canDecrease) {
-                        M3Icon(Icons.Filled.KeyboardArrowDown, contentDescription = s.settingsStepDown)
+                        M3Icon(TmIcons.ChevronDown, contentDescription = s.settingsStepDown)
                     }
                     IconButton(onClick = { onStep(1) }, enabled = canIncrease) {
-                        M3Icon(Icons.Filled.KeyboardArrowUp, contentDescription = s.settingsStepUp)
+                        M3Icon(TmIcons.ChevronUp, contentDescription = s.settingsStepUp)
                     }
                 }
             },
@@ -2628,14 +2609,14 @@ private fun StepperRow(
             )
         }
         Icon(
-            Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+            TmIcons.ChevronLeft,
             contentDescription = null,
             tint = if (canDecrease) onSurface else dim,
             modifier = Modifier.size(26.dp),
         )
         Spacer(Modifier.size(12.dp))
         Icon(
-            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            TmIcons.ChevronRight,
             contentDescription = null,
             tint = if (canIncrease) onSurface else dim,
             modifier = Modifier.size(26.dp),

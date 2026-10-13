@@ -37,6 +37,7 @@ import com.tmplayer.data.Bookmark
 import com.tmplayer.data.BookmarkStore
 import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 
 /**
  * What the note dialog is for: a new bookmark at [positionMs], or a new note for [editing], which
@@ -102,10 +103,10 @@ internal fun BookmarkLine(mark: Bookmark, onJump: () -> Unit, onEdit: () -> Unit
             }
         }
         IconButton(onClick = onEdit) {
-            Icon(PlayerIcons.Edit, contentDescription = if (mark.note.isBlank()) s.playerBookmarkAddNote else s.playerBookmarkEditNote, modifier = Modifier.size(18.dp))
+            Icon(TmIcons.Edit, contentDescription = if (mark.note.isBlank()) s.playerBookmarkAddNote else s.playerBookmarkEditNote, modifier = Modifier.size(18.dp))
         }
         IconButton(onClick = onDelete) {
-            Icon(PlayerIcons.Close, contentDescription = s.playerBookmarkDelete, modifier = Modifier.size(18.dp))
+            Icon(TmIcons.Close, contentDescription = s.playerBookmarkDelete, modifier = Modifier.size(18.dp))
         }
     }
 }

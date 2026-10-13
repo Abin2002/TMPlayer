@@ -10,12 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,9 +42,9 @@ import com.tmplayer.ui.components.ChoiceLine
 import com.tmplayer.ui.components.ChoiceList
 import com.tmplayer.ui.components.ChoiceSheet
 import com.tmplayer.ui.components.FocusOnOpen
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.flow.StateFlow
@@ -103,7 +97,7 @@ internal fun BookmarksSheet(
         ChoiceList {
             ChoiceLine(
                 title = s.playerAddBookmark,
-                icon = Icons.Filled.Add,
+                icon = TmIcons.Add,
                 modifier = if (bookmarks.isEmpty()) Modifier.focusRequester(focus) else Modifier,
             ) { onAdd() }
             bookmarks.forEachIndexed { index, mark ->
@@ -141,12 +135,12 @@ internal fun BookmarkActionsSheet(
         fullScreen = true,
     ) {
         ChoiceList {
-            ChoiceLine(s.playerBookmarkPlay, icon = Icons.Filled.PlayArrow, modifier = Modifier.focusRequester(focus)) { onPlay() }
+            ChoiceLine(s.playerBookmarkPlay, icon = TmIcons.Play, modifier = Modifier.focusRequester(focus)) { onPlay() }
             ChoiceLine(
                 if (mark.note.isBlank()) s.playerBookmarkAddNote else s.playerBookmarkEditNote,
-                icon = Icons.Filled.Edit,
+                icon = TmIcons.Edit,
             ) { onNote() }
-            ChoiceLine(s.playerBookmarkDelete, icon = Icons.Filled.Delete) { onDelete() }
+            ChoiceLine(s.playerBookmarkDelete, icon = TmIcons.Delete) { onDelete() }
         }
         FocusOnOpen(focus)
     }
@@ -221,7 +215,7 @@ internal fun BookmarkNoteSheet(
             )
         }
         ChoiceList {
-            ChoiceLine(saveLabel, icon = Icons.Filled.Check) {
+            ChoiceLine(saveLabel, icon = TmIcons.Check) {
                 keyboard?.hide()
                 onSave(note)
             }

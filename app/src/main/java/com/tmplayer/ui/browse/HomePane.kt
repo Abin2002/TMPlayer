@@ -24,8 +24,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -73,6 +71,7 @@ import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.online.LocalOnlineArt
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
@@ -576,7 +575,7 @@ private fun RowHeading(
                 // The label's own colour, softened, so it reads on the focused fill as well as off it.
                 Text("  ·  $count", color = androidx.tv.material3.LocalContentColor.current.copy(alpha = 0.72f))
                 Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    TmIcons.ChevronRight,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
                 )
@@ -597,7 +596,7 @@ private fun RowHeading(
             ) {
                 M3Text(s.homeSeeAll, style = M3MaterialTheme.typography.labelLarge, color = Tone.text)
                 androidx.compose.material3.Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    TmIcons.ChevronRight,
                     contentDescription = null,
                     tint = Tone.muted,
                     modifier = Modifier.size(20.dp),

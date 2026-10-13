@@ -19,12 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -87,11 +81,11 @@ import com.tmplayer.ui.browse.NavGroupHeading
 import com.tmplayer.ui.browse.browseSections
 import com.tmplayer.ui.browse.navGroups
 import com.tmplayer.ui.browse.DefaultGroups
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.onboarding.FirstSignIn
 import com.tmplayer.ui.browse.rememberNavGroups
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.components.LocalToastHost
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.nav.BackHandler
@@ -420,12 +414,12 @@ private const val HOUSEKEEPING_DELAY_MS = 20_000L
 private const val FOLDERS_SETTLE_MS = 3_000L
 
 private fun Destination.icon(): ImageVector = when (this) {
-    Destination.Home -> Icons.Filled.Home
+    Destination.Home -> TmIcons.Home
     Destination.Chats -> BrowseTab.Chats.icon
-    Destination.Favourites -> Icons.Filled.Star
+    Destination.Favourites -> TmIcons.StarOutline
     Destination.History -> BrowseTab.History.icon
     Destination.Downloads -> TmIcons.Download
-    Destination.Settings -> Icons.Filled.Settings
+    Destination.Settings -> TmIcons.Settings
 }
 
 /**
@@ -488,7 +482,7 @@ internal fun Sidebar(
         if (update != null) {
             SidebarItem(
                 label = update.label,
-                icon = Icons.Filled.Refresh,
+                icon = TmIcons.Refresh,
                 badge = update.version,
                 selected = false,
                 onClick = { state.updatePopup = true },
@@ -627,7 +621,7 @@ private fun Rail(state: ShellState, update: NavUpdate?) {
                             Text(update.version)
                         }
                     }) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "${update.label} ${update.version}")
+                        Icon(TmIcons.Refresh, contentDescription = "${update.label} ${update.version}")
                     }
                 },
                 label = { Text(update.label.substringBefore(' ')) },

@@ -43,6 +43,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import com.tmplayer.i18n.L
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Floating
 import com.tmplayer.ui.theme.FloatingTone
 import com.tmplayer.ui.theme.Motion
@@ -335,7 +336,7 @@ internal fun BoxScope.PlayerOverlay(
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                OverlayButton(PlayerIcons.ArrowBack, s.playerBackHint, onBack)
+                OverlayButton(TmIcons.ArrowBack, s.playerBackHint, onBack)
                 Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f)) {
                     Text(title, color = Color.White, fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -344,7 +345,7 @@ internal fun BoxScope.PlayerOverlay(
                     }
                 }
                 Box {
-                    OverlayButton(PlayerIcons.MoreVert, s.commonMore, onClick = { onOpenMenu(MenuAt(MenuPage.Main, MenuAt.Anchor.Overflow)) })
+                    OverlayButton(TmIcons.MoreVert, s.commonMore, onClick = { onOpenMenu(MenuAt(MenuPage.Main, MenuAt.Anchor.Overflow)) })
                     if (menu?.anchor == MenuAt.Anchor.Overflow) {
                         PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
                     }
@@ -369,7 +370,7 @@ internal fun BoxScope.PlayerOverlay(
                 val previous = episodes.previous
                 val next = episodes.next
                 if (previous != null) {
-                    OverlayButton(PlayerIcons.SkipPrevious, s.playerPreviousEpisodeHint(s.playerPreviousUp(episodes.labelFor(previous))), { onEpisode(previous) }, size = 56, tonal = true)
+                    OverlayButton(TmIcons.SkipPrevious, s.playerPreviousEpisodeHint(s.playerPreviousUp(episodes.labelFor(previous))), { onEpisode(previous) }, size = 56, tonal = true)
                 }
                 Box(
                     Modifier.size(72.dp).clip(CircleShape).background(PlayerTonalButton).clickable(onClick = onTogglePlay),
@@ -378,11 +379,11 @@ internal fun BoxScope.PlayerOverlay(
                     if (status.buffering) {
                         CircularProgressIndicator(Modifier.size(40.dp), color = Color.White, strokeWidth = 3.dp)
                     } else {
-                        Icon(if (status.playing) PlayerIcons.Pause else PlayerIcons.Play, if (status.playing) s.playerPause else s.playerPlay, tint = Color.White, modifier = Modifier.size(40.dp))
+                        Icon(if (status.playing) TmIcons.PauseSolid else TmIcons.PlaySolid, if (status.playing) s.playerPause else s.playerPlay, tint = Color.White, modifier = Modifier.size(40.dp))
                     }
                 }
                 if (next != null) {
-                    OverlayButton(PlayerIcons.SkipNext, s.playerNextEpisodeHint(s.playerNextUp(episodes.labelFor(next))), { onEpisode(next) }, size = 56, tonal = true)
+                    OverlayButton(TmIcons.SkipNext, s.playerNextEpisodeHint(s.playerNextUp(episodes.labelFor(next))), { onEpisode(next) }, size = 56, tonal = true)
                 }
             }
 
@@ -424,13 +425,13 @@ internal fun BoxScope.PlayerOverlay(
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     ControlsPill {
                         Box {
-                            OverlayButton(PlayerIcons.Subtitles, s.playerSubtitlesHint, onClick = { onOpenMenu(MenuAt(MenuPage.Subtitles, MenuAt.Anchor.Subtitles)) })
+                            OverlayButton(TmIcons.Subtitles, s.playerSubtitlesHint, onClick = { onOpenMenu(MenuAt(MenuPage.Subtitles, MenuAt.Anchor.Subtitles)) })
                             if (menu?.anchor == MenuAt.Anchor.Subtitles) {
                                 PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
                             }
                         }
                         Box {
-                            OverlayButton(PlayerIcons.Audio, s.playerAudioHint, onClick = { onOpenMenu(MenuAt(MenuPage.Audio, MenuAt.Anchor.Audio)) })
+                            OverlayButton(TmIcons.Audio, s.playerAudioHint, onClick = { onOpenMenu(MenuAt(MenuPage.Audio, MenuAt.Anchor.Audio)) })
                             if (menu?.anchor == MenuAt.Anchor.Audio) {
                                 PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
                             }
@@ -451,9 +452,9 @@ internal fun BoxScope.PlayerOverlay(
                     Spacer(Modifier.weight(1f))
                     ControlsPill {
                         VolumeControl(status.volume, status.muted, onVolume, onToggleMute)
-                        OverlayButton(PlayerIcons.PictureInPicture, s.playerMiniHint, onMiniPlayer)
+                        OverlayButton(TmIcons.PictureInPicture, s.playerMiniHint, onMiniPlayer)
                         OverlayButton(
-                            if (fullscreen) PlayerIcons.FullscreenExit else PlayerIcons.Fullscreen,
+                            if (fullscreen) TmIcons.FullscreenExit else TmIcons.Fullscreen,
                             if (fullscreen) s.playerExitFullscreenHint else s.playerFullscreenHint,
                             onToggleFullscreen,
                         )
@@ -554,9 +555,9 @@ private fun VolumeControl(volume: Int, muted: Boolean, onVolume: (Int) -> Unit, 
             )
         }
         val icon = when {
-            muted || volume == 0 -> PlayerIcons.VolumeOff
-            volume < 50 -> PlayerIcons.VolumeDown
-            else -> PlayerIcons.VolumeUp
+            muted || volume == 0 -> TmIcons.VolumeOff
+            volume < 50 -> TmIcons.VolumeDown
+            else -> TmIcons.VolumeUp
         }
         OverlayButton(icon, if (muted) s.playerUnmuteHint else s.playerMuteHint, onToggleMute)
     }
@@ -696,7 +697,7 @@ internal fun PlayerMenu(
             // Malayalam or German line outgrows, and shrinking the type would go under the floor.
             text = { Text(text, maxLines = 2, overflow = TextOverflow.Ellipsis) },
             onClick = onClick,
-            leadingIcon = { Box(Modifier.size(18.dp)) { if (checked) Icon(PlayerIcons.Check, null, Modifier.size(18.dp)) } },
+            leadingIcon = { Box(Modifier.size(18.dp)) { if (checked) Icon(TmIcons.Check, null, Modifier.size(18.dp)) } },
             trailingIcon = trailing?.let { { Text(it, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp) } },
         )
     }
@@ -865,7 +866,7 @@ internal fun BoxScope.FeedbackLayer(flash: Flash?, spinner: Boolean, chip: Strin
             layer.align(Alignment.Center).size(72.dp).clip(CircleShape).background(PlayerTonalButton),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(if (f.kind == Flash.Kind.Play) PlayerIcons.Play else PlayerIcons.Pause, null, tint = Color.White, modifier = Modifier.size(40.dp))
+            Icon(if (f.kind == Flash.Kind.Play) TmIcons.PlaySolid else TmIcons.PauseSolid, null, tint = Color.White, modifier = Modifier.size(40.dp))
         }
         Flash.Kind.SeekBack, Flash.Kind.SeekForward -> {
             val back = f.kind == Flash.Kind.SeekBack
@@ -896,7 +897,7 @@ internal fun BoxScope.FeedbackLayer(flash: Flash?, spinner: Boolean, chip: Strin
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(if (f.text == s.playerMuted || f.text == s.messages.formatter.percent(0.0)) PlayerIcons.VolumeOff else PlayerIcons.VolumeUp, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                Icon(if (f.text == s.playerMuted || f.text == s.messages.formatter.percent(0.0)) TmIcons.VolumeOff else TmIcons.VolumeUp, null, tint = Color.White, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(f.text, color = Color.White, fontSize = 15.sp)
             }
@@ -1000,7 +1001,7 @@ internal fun BoxScope.SkipPill(kind: SkipKind, lifted: Boolean, onSkip: () -> Un
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(label, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                Icon(PlayerIcons.SkipNext, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                Icon(TmIcons.SkipNext, null, tint = Color.White, modifier = Modifier.size(20.dp))
             }
         }
     }
@@ -1023,7 +1024,7 @@ private fun EpisodesButton(onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(com.tmplayer.ui.components.TmIcons.Episodes, null, tint = Color.White, modifier = Modifier.size(22.dp))
+        Icon(TmIcons.Episodes, null, tint = Color.White, modifier = Modifier.size(22.dp))
         Text(s.episodesTitle, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1)
     }
 }
@@ -1075,7 +1076,7 @@ internal fun BoxScope.EpisodesSheet(
                 actions = actions,
                 modifier = Modifier.padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
                 focusCurrent = true,
-                trailing = { OverlayButton(PlayerIcons.Close, s.commonClose, onClose, size = 36) },
+                trailing = { OverlayButton(TmIcons.Close, s.commonClose, onClose, size = 36) },
             )
         }
     }
@@ -1101,7 +1102,7 @@ internal fun BoxScope.DetailsPanel(rows: () -> List<Pair<String, String>>, onClo
         Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(s.playerDetails, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                OverlayButton(PlayerIcons.Close, s.playerCloseDetailsHint, onClose, size = 32)
+                OverlayButton(TmIcons.Close, s.playerCloseDetailsHint, onClose, size = 32)
             }
             Spacer(Modifier.height(8.dp))
             lines.forEach { (label, value) ->
@@ -1213,7 +1214,7 @@ internal fun BoxScope.ShortcutSheet(onClose: () -> Unit, mac: Boolean = false, w
             Column(Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(s.playerShortcuts, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    OverlayButton(PlayerIcons.Close, s.commonClose, onClose, size = 32)
+                    OverlayButton(TmIcons.Close, s.commonClose, onClose, size = 32)
                 }
                 Spacer(Modifier.height(12.dp))
                 @Composable

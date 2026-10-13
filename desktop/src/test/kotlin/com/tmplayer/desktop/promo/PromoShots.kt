@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -64,6 +61,7 @@ import com.tmplayer.desktop.ui.rememberKeyboardNav
 import com.tmplayer.desktop.ui.ListSurface
 import com.tmplayer.i18n.Languages
 import com.tmplayer.i18n.Translator
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.onboarding.OnboardingPage
 import com.tmplayer.ui.onboarding.OnboardingTour
 import com.tmplayer.ui.onboarding.TourState
@@ -174,7 +172,7 @@ class PromoShots {
                     subtitle = section.blurb,
                     actions = {
                         SearchField("", {}, "Search chats", shell.searchFocus, Modifier.width(320.dp))
-                        IconButton(onClick = {}) { Icon(Icons.Filled.Refresh, contentDescription = "Refresh") }
+                        IconButton(onClick = {}) { Icon(TmIcons.Refresh, contentDescription = "Refresh") }
                     },
                 )
                 ChatList(chats, favourites = library.favourites, listState = list, nav = nav, onOpen = {}, onStar = {})
@@ -197,13 +195,13 @@ class PromoShots {
                             title = cinema.title,
                             subtitle = "${library.cinema.size} videos",
                             leading = {
-                                IconButton(onClick = {}) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to chats") }
+                                IconButton(onClick = {}) { Icon(TmIcons.ArrowBack, contentDescription = "Back to chats") }
                                 ChatAvatar(cinema.miniThumbnail, 0, cinema.title, 40.dp)
                             },
                             actions = {
                                 SearchField("", {}, "Search this chat", shell.searchFocus, Modifier.width(300.dp))
                                 PosterSizeStep(shell)
-                                IconButton(onClick = {}) { Icon(Icons.Filled.Refresh, contentDescription = "Refresh") }
+                                IconButton(onClick = {}) { Icon(TmIcons.Refresh, contentDescription = "Refresh") }
                             },
                         )
                         val arranged = remember { SeriesShelf.arrange(library.cinema) }
@@ -247,13 +245,13 @@ class PromoShots {
                     title = cinema.title,
                     subtitle = subtitle,
                     leading = {
-                        IconButton(onClick = {}) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to chats") }
+                        IconButton(onClick = {}) { Icon(TmIcons.ArrowBack, contentDescription = "Back to chats") }
                         ChatAvatar(cinema.miniThumbnail, 0, cinema.title, 40.dp)
                     },
                     actions = {
                         SearchField("", {}, "Search this chat", shell.searchFocus, Modifier.width(300.dp))
                         PosterSizeStep(shell)
-                        IconButton(onClick = {}) { Icon(Icons.Filled.Refresh, contentDescription = "Refresh") }
+                        IconButton(onClick = {}) { Icon(TmIcons.Refresh, contentDescription = "Refresh") }
                     },
                 )
                 body()

@@ -22,8 +22,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -58,9 +56,9 @@ import com.tmplayer.data.PinCheck
 import com.tmplayer.data.PinHash
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.i18n.L
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.deviceForm
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
@@ -240,7 +238,7 @@ fun PinPad(
         val key = if (tv) 64.dp else 72.dp
         val enabled = !busy && !waiting
         val header: @Composable () -> Unit = {
-            Icon(Icons.Filled.Lock, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(32.dp))
+            Icon(TmIcons.Lock, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(32.dp))
             Spacer(Modifier.height(12.dp))
             Text(
                 heading,

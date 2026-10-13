@@ -17,9 +17,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,9 +46,9 @@ import com.tmplayer.ui.components.BottomCardInset
 import com.tmplayer.ui.components.PhonePad
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.TvConfirm
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingSurface
@@ -126,7 +123,7 @@ internal fun FirstVideoTip(nothingPlayed: Boolean, start: Dp, end: Dp, defaultsH
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            Icons.AutoMirrored.Filled.Send,
+            TmIcons.Send,
             contentDescription = null,
             tint = Tone.accent,
             modifier = Modifier.size(if (touch) 20.dp else 24.dp),
@@ -140,7 +137,7 @@ internal fun FirstVideoTip(nothingPlayed: Boolean, start: Dp, end: Dp, defaultsH
         )
         if (touch) {
             IconButton(onClick = { scope.launch { runCatching { settings.setFirstVideoTipDismissed() } } }) {
-                Icon(Icons.Filled.Close, contentDescription = s.commonDismiss, tint = Tone.muted)
+                Icon(TmIcons.Close, contentDescription = s.commonDismiss, tint = Tone.muted)
             }
         }
     }

@@ -27,13 +27,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -72,6 +65,7 @@ import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.components.PhonePad
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.Tv
@@ -154,7 +148,7 @@ fun AboutScreen(onBack: () -> Unit) {
                         ActionRow(
                             title = s.aboutNotices,
                             subtitle = s.aboutNoticesDetail,
-                            icon = Icons.AutoMirrored.Filled.List,
+                            icon = TmIcons.List,
                             modifier = Modifier.focusRequester(first),
                             onClick = { reading = true },
                         )
@@ -166,7 +160,7 @@ fun AboutScreen(onBack: () -> Unit) {
                         ActionRow(
                             title = s.aboutSupportQr,
                             subtitle = s.aboutSupportQrDetail,
-                            icon = Icons.Filled.Favorite,
+                            icon = TmIcons.Favorite,
                             onClick = { supporting = true },
                         )
                     }
@@ -190,7 +184,7 @@ fun AboutScreen(onBack: () -> Unit) {
                     title = { M3Text(s.aboutTitle) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            M3Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = s.aboutBackToSettings)
+                            M3Icon(TmIcons.ArrowBack, contentDescription = s.aboutBackToSettings)
                         }
                     },
                 )
@@ -262,10 +256,10 @@ private fun Masthead() {
 }
 
 private fun iconFor(group: String): ImageVector = when (group) {
-    L.aboutContact -> Icons.Filled.Email
-    About.SUPPORT_TITLE, About.SUPPORT_THANKS_TITLE -> Icons.Filled.Favorite
-    L.aboutDataAndLaw -> Icons.Filled.Lock
-    else -> Icons.Filled.Info
+    L.aboutContact -> TmIcons.Email
+    About.SUPPORT_TITLE, About.SUPPORT_THANKS_TITLE -> TmIcons.Favorite
+    L.aboutDataAndLaw -> TmIcons.Lock
+    else -> TmIcons.Info
 }
 
 /**
@@ -337,7 +331,7 @@ private fun NoticesScreen(onBack: () -> Unit) {
                     title = { M3Text(s.aboutNotices) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            M3Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = s.aboutBackToAbout)
+                            M3Icon(TmIcons.ArrowBack, contentDescription = s.aboutBackToAbout)
                         }
                     },
                 )

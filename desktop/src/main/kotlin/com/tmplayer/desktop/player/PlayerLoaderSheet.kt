@@ -27,6 +27,7 @@ import com.tmplayer.data.Thumbnails
 import com.tmplayer.player.SpeedMeter
 import com.tmplayer.player.StreamStats
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.player.PlayerLoader
 import com.tmplayer.ui.player.rememberLoaderContent
 import kotlinx.coroutines.delay
@@ -106,7 +107,7 @@ internal fun BoxScope.LoaderSheet(
             )
             PlayerLoader(content = content, progress = progress, status = status, note = note)
             Box(Modifier.align(Alignment.TopStart).padding(12.dp)) {
-                OverlayButton(PlayerIcons.ArrowBack, s.playerBackHint, onBack)
+                OverlayButton(TmIcons.ArrowBack, s.playerBackHint, onBack)
             }
         }
     }

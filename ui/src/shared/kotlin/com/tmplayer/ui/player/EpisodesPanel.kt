@@ -50,12 +50,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.runtime.snapshotFlow
+import com.tmplayer.data.SeriesEpisode
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
@@ -70,13 +69,13 @@ import androidx.compose.ui.unit.dp
 import com.tmplayer.data.DeviceForm
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.Series
-import com.tmplayer.data.SeriesEpisode
 import com.tmplayer.ui.browse.EpisodeRow
 import com.tmplayer.ui.browse.SeasonTabs
 import com.tmplayer.ui.browse.SeriesWatch
 import com.tmplayer.ui.browse.seriesSummary
 import com.tmplayer.ui.components.deviceForm
 import com.tmplayer.ui.components.isTouch
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
@@ -339,12 +338,12 @@ private fun Steps(state: EpisodesState, actions: EpisodesActions, sideBySide: Bo
     @Composable
     fun PreviousButton(m: Modifier) = previous?.let {
         val short = state.previousCode?.takeIf { sideBySide }?.let { code -> s.playerPreviousUp(code) }
-        PanelButton(short ?: state.previousLabel ?: s.playerPreviousEpisode, onClick = { actions.onPlay(it) }, modifier = m, icon = SkipPrevious, lines = if (sideBySide) 1 else 2)
+        PanelButton(short ?: state.previousLabel ?: s.playerPreviousEpisode, onClick = { actions.onPlay(it) }, modifier = m, icon = TmIcons.SkipPrevious, lines = if (sideBySide) 1 else 2)
     }
     @Composable
     fun NextButton(m: Modifier) = next?.let {
         val short = state.nextCode?.takeIf { sideBySide }?.let { code -> s.playerNextUp(code) }
-        PanelButton(short ?: state.nextLabel ?: s.playerNextEpisode, onClick = { actions.onPlay(it) }, modifier = m, icon = SkipNext, lines = if (sideBySide) 1 else 2)
+        PanelButton(short ?: state.nextLabel ?: s.playerNextEpisode, onClick = { actions.onPlay(it) }, modifier = m, icon = TmIcons.SkipNext, lines = if (sideBySide) 1 else 2)
     }
     if (sideBySide) {
         Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -473,20 +472,6 @@ private fun Modifier.secondaryClick(onClick: () -> Unit): Modifier = pointerInpu
         }
     }
 }
-
-private fun glyph(name: String, pathData: String): ImageVector = ImageVector.Builder(
-    name = name,
-    defaultWidth = 24.dp,
-    defaultHeight = 24.dp,
-    viewportWidth = 24f,
-    viewportHeight = 24f,
-).addPath(
-    pathData = PathParser().parsePathString(pathData).toNodes(),
-    fill = SolidColor(Color.Black),
-).build()
-
-private val SkipNext: ImageVector by lazy { glyph("SkipNext", "M6 18L14.5 12L6 6z M16 6h2v12h-2z") }
-private val SkipPrevious: ImageVector by lazy { glyph("SkipPrevious", "M6 6h2v12H6z M9.5 12L18 18V6z") }
 
 /** From this width the choices take a column of their own beside the episodes. */
 private val WIDE_FROM: Dp = 640.dp

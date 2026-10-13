@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon as M3Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -64,6 +62,7 @@ import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.paneAction
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Caution
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingSurface
@@ -163,7 +162,7 @@ fun UpdateDialog(onDismiss: () -> Unit) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    Icons.Filled.Refresh,
+                    TmIcons.Refresh,
                     contentDescription = null,
                     tint = Caution,
                     modifier = Modifier.size(28.dp),
@@ -281,7 +280,7 @@ private fun TouchUpdateDialog(
         // outside it: the dialog is what is holding the download's own progress on screen.
         onDismissRequest = { if (downloading == null) onDismiss() },
         // Amber on a white card is barely a colour, so Tone hands the phone a darker one.
-        icon = { M3Icon(Icons.Filled.Refresh, contentDescription = null, tint = Tone.caution) },
+        icon = { M3Icon(TmIcons.Refresh, contentDescription = null, tint = Tone.caution) },
         title = { M3Text(title(state, offer)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

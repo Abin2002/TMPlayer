@@ -38,7 +38,6 @@ appdirs = "1.4.0"
 # Material3 for Compose Multiplatform 1.12 (maps to Jetpack Material3 1.5 alphas); icons stay on
 # the last published core set, the same handful :app uses.
 cmpMaterial3 = "1.12.0-alpha03"
-cmpMaterialIcons = "1.7.3"
 # Desktop OS services (com.tmplayer.desktop.os). dbus-java carries MPRIS and the Linux sleep
 # inhibit; its native unix socket transport needs nothing beyond JDK 16+. JNA is pinned to what
 # Compose, mediamp and FileKit already resolve to, so the classpath carries one copy.
@@ -65,7 +64,6 @@ androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 # Icons only. The "extended" set is thousands of vectors; core carries the handful used here.
-androidx-compose-material-icons = { group = "androidx.compose.material", name = "material-icons-core" }
 # The touch half of the app. tv-material's components are driven by focus and ignore a tap
 # outright, so a phone needs the ordinary Material 3 components behind the same screens.
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
@@ -96,7 +94,6 @@ mediamp-runtime-linux-x64 = { group = "org.openani.mediamp", name = "mediamp-mpv
 mediamp-runtime-windows-x64 = { group = "org.openani.mediamp", name = "mediamp-mpv-runtime-windows-x64", version.ref = "mediamp" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "coroutines" }
 cmp-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "cmpMaterial3" }
-cmp-material-icons = { group = "org.jetbrains.compose.material", name = "material-icons-core", version.ref = "cmpMaterialIcons" }
 # `:ui`'s jvm target compiles against these. Its android target takes the androidx artifacts from
 # the BOM instead, so that adding `:ui` does not move the Android app's Compose versions.
 cmp-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "composeMultiplatform" }

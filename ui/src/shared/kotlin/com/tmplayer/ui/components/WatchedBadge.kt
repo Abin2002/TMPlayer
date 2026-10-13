@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
 
 /**
@@ -51,7 +50,7 @@ fun WatchedBadge(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            Icons.Filled.Check,
+            TmIcons.Check,
             contentDescription = s.commonWatched,
             tint = Tone.onAccent,
             modifier = Modifier.size(size * 0.64f),

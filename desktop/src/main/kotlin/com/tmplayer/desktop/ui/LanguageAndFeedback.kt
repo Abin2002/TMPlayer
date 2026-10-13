@@ -16,9 +16,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +49,7 @@ import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.i18n.rememberLanguageNotice
 import com.tmplayer.ui.i18n.rememberWhatsNew
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.onboarding.LanguageList
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
@@ -95,7 +93,7 @@ fun WhatsNewPopup(onClose: () -> Unit) {
                 Text(s.whatsnewSubtitle, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
                 for (line in WhatsNew.highlights) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(20.dp))
+                        Icon(TmIcons.CheckCircle, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(20.dp))
                         Text(line, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
@@ -159,7 +157,7 @@ fun FeedbackPopup(onClose: () -> Unit) {
     }
     TmAlertDialog(
         onDismissRequest = onClose,
-        icon = { Icon(com.tmplayer.ui.components.TmIcons.Bug, contentDescription = null, tint = Tone.accent) },
+        icon = { Icon(TmIcons.Bug, contentDescription = null, tint = Tone.accent) },
         title = { Text(s.feedbackTitle) },
         text = {
             Row(Modifier.widthIn(max = 640.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -193,7 +191,7 @@ fun LanguageNoticeCard(language: String, onKeep: () -> Unit, onChange: () -> Uni
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Icon(Icons.Filled.Info, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(22.dp))
+            Icon(TmIcons.Info, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(22.dp))
             Text(s.languageNowIn(LanguageNotice.name(language)), style = MaterialTheme.typography.titleMedium)
         }
         Text(s.languageNowInBody, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
@@ -217,7 +215,7 @@ fun FirstSignInCard(onEverything: () -> Unit, onOnlyFolders: () -> Unit, modifie
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Icon(com.tmplayer.ui.components.TmIcons.Folder, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(22.dp))
+            Icon(TmIcons.Folder, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(22.dp))
             Text(s.groupsCardTitle, style = MaterialTheme.typography.titleMedium)
         }
         Text(s.groupsCardBody, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)

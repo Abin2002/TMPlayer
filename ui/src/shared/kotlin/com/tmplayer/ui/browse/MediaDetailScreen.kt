@@ -30,9 +30,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -71,11 +68,11 @@ import com.tmplayer.online.MetaInfo
 import com.tmplayer.online.MetaKind
 import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.ui.components.BackdropSource
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.rememberCover
 import com.tmplayer.ui.components.revealFromTop
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.online.MetaCastRow
 import com.tmplayer.ui.online.MetaCredit
 import com.tmplayer.ui.online.MetaFactsLines
@@ -382,7 +379,7 @@ private fun Actions(
         if (onEpisodes != null) add(0, DetailRow(DetailAction.Play, s.detailEpisodes, TmIcons.Episodes, onSelect = onEpisodes))
         if (trailer != null) add(DetailRow(DetailAction.Play, s.metadataTrailer, TrailerIcon, onSelect = { trailers.open(trailer) }))
         if (online != null && page.meta == null && metadataOff) {
-            add(DetailRow(DetailAction.Play, s.metadataTurnOn, Icons.Filled.Info, s.metadataTurnOnDetail, onSelect = { online.setEnabled(true) }))
+            add(DetailRow(DetailAction.Play, s.metadataTurnOn, TmIcons.Info, s.metadataTurnOnDetail, onSelect = { online.setEnabled(true) }))
         }
     }
     // The time left is on the line over the buttons (see ResumeLine), so the pill says only Resume.
@@ -456,7 +453,7 @@ private fun BelowTheFold(
 /** Close, at the top end, on a dark disc so it reads over any picture. */
 @Composable
 private fun CloseButton(onClose: () -> Unit, modifier: Modifier = Modifier) {
-    PageDiscButton(Icons.Filled.Close, LocalStrings.current.commonClose, onClose, modifier)
+    PageDiscButton(TmIcons.Close, LocalStrings.current.commonClose, onClose, modifier)
 }
 
 /**

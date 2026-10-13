@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.tmplayer.i18n.L
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Focus
 import com.tmplayer.data.DiskInfo
 import com.tmplayer.desktop.DesktopPaths
@@ -54,13 +55,6 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import com.tmplayer.ui.components.TmAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import com.tmplayer.ui.components.TmDropdownMenu
@@ -119,7 +113,6 @@ import com.tmplayer.ui.browse.MediaListViewModel
 import com.tmplayer.ui.browse.topicMemory
 import com.tmplayer.ui.components.MediaArt
 import com.tmplayer.ui.online.OnlineArt
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.UiState
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.theme.Corner
@@ -193,14 +186,14 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             subtitle = (ui as? UiState.Content)?.value?.items?.size?.let { s.browseVideosCount(it) },
             leading = {
                 IconButton(onClick = { state.closeChat() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = s.browseBackToChats)
+                    Icon(TmIcons.ArrowBack, contentDescription = s.browseBackToChats)
                 }
                 ChatAvatar(chat.miniThumbnail, chat.photoFileId, chat.title, 40.dp)
             },
             actions = {
                 SearchField(query, { query = it }, s.browseSearchChat, state.searchFocus, Modifier.width(300.dp), onDown = { gridNav?.focus(0) })
                 PosterSizeStep(state)
-                IconButton(onClick = { model.load() }) { Icon(Icons.Filled.Refresh, contentDescription = s.commonRefresh) }
+                IconButton(onClick = { model.load() }) { Icon(TmIcons.Refresh, contentDescription = s.commonRefresh) }
             },
         )
         val recent by state.settings.recentSearches.collectAsState(initial = emptyList())
@@ -374,7 +367,7 @@ fun PosterSizeStep(state: ShellState) {
             Icon(TmIcons.Grid, contentDescription = s.browseSmallerPosters)
         }
         IconButton(onClick = { state.stepPoster(1) }, enabled = state.posterWidth != POSTER_STEPS.last()) {
-            Icon(Icons.Filled.Add, contentDescription = s.browseLargerPosters)
+            Icon(TmIcons.Add, contentDescription = s.browseLargerPosters)
         }
     }
 }
@@ -786,8 +779,8 @@ internal fun Poster(
             }
             val corner = Modifier.align(Alignment.TopStart).padding(TileBadgeInset)
             when {
-                selected -> TileBadge(s.browseBadgeSelected, corner, icon = Icons.Filled.CheckCircle)
-                record != null -> TileBadge(s.downloadsDownloaded, corner, icon = Icons.Filled.CheckCircle)
+                selected -> TileBadge(s.browseBadgeSelected, corner, icon = TmIcons.CheckCircle)
+                record != null -> TileBadge(s.downloadsDownloaded, corner, icon = TmIcons.CheckCircle)
                 download != null && download.busy -> TileBadge(s.downloadsDownloading, corner, icon = TmIcons.Download)
                 item.onDevice -> TileBadge(s.browseBadgeCached, corner, icon = TmIcons.Download)
                 finished -> WatchedBadge(corner)
@@ -808,11 +801,11 @@ internal fun Poster(
                     modifier = Modifier.align(Alignment.Center).size(48.dp)
                         .clickable { state.openPlayer(item, startFromBeginning = false) },
                 ) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = s.playerPlay, tint = Tone.onAccent, modifier = Modifier.padding(10.dp))
+                    Icon(TmIcons.PlaySolid, contentDescription = s.playerPlay, tint = Tone.onAccent, modifier = Modifier.padding(10.dp))
                 }
                 Box(Modifier.align(Alignment.TopEnd)) {
                     IconButton(onClick = { openMenu() }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = s.commonMore, tint = Color.White)
+                        Icon(TmIcons.MoreVert, contentDescription = s.commonMore, tint = Color.White)
                     }
                 }
             }

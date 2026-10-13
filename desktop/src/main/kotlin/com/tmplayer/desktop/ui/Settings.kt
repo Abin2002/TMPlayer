@@ -19,8 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +49,7 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
 import com.tmplayer.ui.components.SettingsSectionLabel
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.LocalDarkTheme
 import androidx.compose.ui.graphics.Brush
@@ -98,7 +97,6 @@ import com.tmplayer.player.TouchPrefs
 import com.tmplayer.player.TrackPreferences
 import com.tmplayer.ui.about.About
 import com.tmplayer.ui.components.TmAlertDialog
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.i18n.languageRowDetail
@@ -911,7 +909,7 @@ internal fun Stepper(onLess: () -> Unit, onMore: () -> Unit) {
     val s = LocalStrings.current
     Row {
         IconButton(onClick = onLess) { Icon(TmIcons.Remove, contentDescription = s.commonLess) }
-        IconButton(onClick = onMore) { Icon(Icons.Filled.Add, contentDescription = s.commonMore) }
+        IconButton(onClick = onMore) { Icon(TmIcons.Add, contentDescription = s.commonMore) }
     }
 }
 

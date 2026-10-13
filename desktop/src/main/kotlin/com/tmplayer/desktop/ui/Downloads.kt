@@ -16,11 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -57,9 +52,9 @@ import com.tmplayer.desktop.DownloadIndex
 import com.tmplayer.desktop.os.OpenExternal
 import com.tmplayer.i18n.L
 import com.tmplayer.player.StreamStats
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.launch
@@ -412,13 +407,13 @@ private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
             }
             else -> IconButton(onClick = { OfflineDownloads.resume(state.downloads, row.fileId) }) {
                 Icon(
-                    if (row.stage == OfflineDownloads.Stage.Failed) Icons.Filled.Refresh else Icons.Filled.PlayArrow,
+                    if (row.stage == OfflineDownloads.Stage.Failed) TmIcons.Refresh else TmIcons.Play,
                     contentDescription = if (row.stage == OfflineDownloads.Stage.Failed) s.commonTryAgain else s.downloadsResume,
                 )
             }
         }
         IconButton(onClick = { OfflineDownloads.cancel(state.downloads, row.fileId) }) {
-            Icon(Icons.Filled.Close, contentDescription = s.commonCancel)
+            Icon(TmIcons.Close, contentDescription = s.commonCancel)
         }
     }
 }
@@ -466,7 +461,7 @@ private fun KeptRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Checkbox(checked = picked, onCheckedChange = onPick)
-        Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = if (playable) Tone.accent else Tone.muted)
+        Icon(TmIcons.Play, contentDescription = null, tint = if (playable) Tone.accent else Tone.muted)
         Column(Modifier.weight(1f)) {
             Text(record.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
@@ -485,7 +480,7 @@ private fun KeptRow(
                     TextButton(onClick = onOpenElsewhere) { Text(s.commonOpenElsewhere) }
                 }
                 IconButton(onClick = onShowInFolder) { Icon(TmIcons.Folder, contentDescription = s.downloadsShowInFolder) }
-                IconButton(onClick = onRemove) { Icon(Icons.Filled.Delete, contentDescription = s.downloadsDeleteDownload) }
+                IconButton(onClick = onRemove) { Icon(TmIcons.Delete, contentDescription = s.downloadsDeleteDownload) }
             }
         }
     }
@@ -532,7 +527,7 @@ private fun CachedRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Tone.accent)
+        Icon(TmIcons.Play, contentDescription = null, tint = Tone.accent)
         Column(Modifier.weight(1f)) {
             Text(record.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val size = bytes?.takeIf { it > 0 }?.let(MediaMapper::formatSize) ?: MediaMapper.formatSize(record.sizeBytes)
@@ -549,6 +544,6 @@ private fun CachedRow(
         } else {
             TextButton(onClick = onSave) { Text(s.downloadsSave) }
         }
-        IconButton(onClick = onDelete) { Icon(Icons.Filled.Delete, contentDescription = s.downloadsDeleteCached) }
+        IconButton(onClick = onDelete) { Icon(TmIcons.Delete, contentDescription = s.downloadsDeleteCached) }
     }
 }

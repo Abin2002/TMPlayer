@@ -54,17 +54,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -163,7 +152,6 @@ import com.tmplayer.ui.components.MediaGridSkeleton
 import com.tmplayer.ui.components.MediaPreview
 import com.tmplayer.ui.components.Spinner
 import com.tmplayer.ui.components.StateScaffold
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.TvSearchField
 import com.tmplayer.ui.components.WatchedBadge
@@ -172,6 +160,7 @@ import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.pressable
 import com.tmplayer.ui.components.rememberVoiceSearch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Caution
 import com.tmplayer.ui.theme.Corner
@@ -1085,7 +1074,7 @@ internal fun TouchMediaScaffold(
                         },
                     ) {
                         M3Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            TmIcons.ArrowBack,
                             contentDescription = if (searching) s.browseCloseSearch else s.gridBackToChats,
                         )
                     }
@@ -1093,11 +1082,11 @@ internal fun TouchMediaScaffold(
                 actions = {
                     if (searching) return@TopAppBar
                     IconButton(onClick = { searching = true }) {
-                        M3Icon(Icons.Filled.Search, contentDescription = s.gridSearchThisChat)
+                        M3Icon(TmIcons.Search, contentDescription = s.gridSearchThisChat)
                     }
                     IconButton(onClick = onToggleFavorite) {
                         M3Icon(
-                            if (isFavorite) Icons.Filled.Star else TmIcons.StarOutline,
+                            if (isFavorite) TmIcons.Star else TmIcons.StarOutline,
                             contentDescription = if (isFavorite) {
                                 s.browseRemoveFavourite
                             } else {
@@ -1197,7 +1186,7 @@ private fun MediaSearchField(
             )
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
-                    M3Icon(Icons.Filled.Close, contentDescription = s.browseClearSearch)
+                    M3Icon(TmIcons.Close, contentDescription = s.browseClearSearch)
                 }
             } else if (onVoiceSearch != null) {
                 IconButton(onClick = onVoiceSearch) {
@@ -1243,7 +1232,7 @@ internal fun Header(
         Row(verticalAlignment = Alignment.CenterVertically) {
             // The way out, drawn. The remote's Back key works, but Back is the key stick owners
             // are least sure of, so the screen says it as well.
-            Pill(s.gridBackToChats, Icons.AutoMirrored.Filled.ArrowBack, showLabel = false, onClick = onBack)
+            Pill(s.gridBackToChats, TmIcons.ArrowBack, showLabel = false, onClick = onBack)
             Spacer(Modifier.width(16.dp))
             MediaPreview(
                 miniThumbnail = chatMiniThumbnail,
@@ -1291,7 +1280,7 @@ internal fun Header(
                 Pill(label = s.browseVoiceSearch, icon = TmIcons.Mic, showLabel = false, onClick = startVoice)
             }
             if (query.isNotBlank()) {
-                Pill(s.commonClear, Icons.Filled.Close) {
+                Pill(s.commonClear, TmIcons.Close) {
                     // Focus has to leave before the state change, because clearing the query is
                     // what removes this pill from the layout. Letting it vanish while focused
                     // strands the remote: the next press goes nowhere or jumps to the rail.
@@ -1302,7 +1291,7 @@ internal fun Header(
             }
             Pill(
                 label = if (isFavorite) s.gridRemoveFavouriteShort else s.gridAddFavouriteShort,
-                icon = if (isFavorite) Icons.Filled.Star else TmIcons.StarOutline,
+                icon = if (isFavorite) TmIcons.Star else TmIcons.StarOutline,
                 tintWhenIdle = if (isFavorite) Tone.accent else Tone.text,
                 onClick = onToggleFavorite,
             )
@@ -1310,7 +1299,7 @@ internal fun Header(
             // rows for one that posts long file names. The choice is remembered per screen.
             Pill(
                 label = if (layout == CardLayout.Grid) s.browseAsRows else s.browseAsTiles,
-                icon = if (layout == CardLayout.Grid) Icons.AutoMirrored.Filled.List else TmIcons.Grid,
+                icon = if (layout == CardLayout.Grid) TmIcons.List else TmIcons.Grid,
                 // The two glyphs are the ones every app uses for this, so a label adds nothing.
                 showLabel = false,
                 onClick = onToggleLayout,
@@ -1318,7 +1307,7 @@ internal fun Header(
             // Telegram pushes new messages into TDLib's database, but this grid was built from a
             // search that ran when it opened, so a video posted since then needs a fresh search.
             // Icon only, like the refresh on the chat list: a label costs the search field 90dp.
-            Pill(s.commonRefresh, Icons.Filled.Refresh, showLabel = false, onClick = onRefresh)
+            Pill(s.commonRefresh, TmIcons.Refresh, showLabel = false, onClick = onRefresh)
         }
         if (query.isBlank() && recentSearches.isNotEmpty() && (headerFocused || alwaysShowRecent)) {
             Row(
@@ -1335,7 +1324,7 @@ internal fun Header(
                         onSubmit()
                     }
                 }
-                Pill(s.gridClearRecentSearches, Icons.Filled.Close, showLabel = false) {
+                Pill(s.gridClearRecentSearches, TmIcons.Close, showLabel = false) {
                     runCatching { searchField.requestFocus() }
                     onClearRecent()
                 }
@@ -1401,7 +1390,7 @@ private fun SelectionBar(
             title = { M3Text(label, style = M3MaterialTheme.typography.titleMedium) },
             navigationIcon = {
                 IconButton(onClick = onCancel) {
-                    M3Icon(Icons.Filled.Close, contentDescription = s.gridStopSelecting)
+                    M3Icon(TmIcons.Close, contentDescription = s.gridStopSelecting)
                 }
             },
             actions = {
@@ -1441,8 +1430,8 @@ private fun SelectionBar(
             modifier = Modifier.weight(1f),
         )
         if (onDownload != null) Pill(s.gridDownload, TmIcons.Download, onClick = onDownload)
-        Pill(s.gridSelectAll, Icons.Filled.Check, onClick = onSelectAll)
-        Pill(s.commonCancel, Icons.Filled.Close, onClick = onCancel)
+        Pill(s.gridSelectAll, TmIcons.Check, onClick = onSelectAll)
+        Pill(s.commonCancel, TmIcons.Close, onClick = onCancel)
     }
 }
 
@@ -2130,7 +2119,7 @@ private fun MediaArt(
             ) {
                 if (selected) {
                     M3Icon(
-                        Icons.Filled.Check,
+                        TmIcons.Check,
                         contentDescription = s.gridSelected,
                         tint = Tone.onAccent,
                         modifier = Modifier.size(ring * 0.6f),

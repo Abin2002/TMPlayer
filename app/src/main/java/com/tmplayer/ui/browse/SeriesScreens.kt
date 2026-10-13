@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.Alignment
 import com.tmplayer.ui.i18n.LocalStrings
 import androidx.compose.runtime.Composable
@@ -29,6 +27,7 @@ import com.tmplayer.data.MediaItem
 import com.tmplayer.data.Series
 import com.tmplayer.data.SeriesProgress
 import com.tmplayer.ui.components.isTouch
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.Tv
 
@@ -134,7 +133,7 @@ private fun SeriesPage(
             // A remote has Back on it; a finger needs something to press.
             if (touch) {
                 PageDiscButton(
-                    Icons.AutoMirrored.Filled.ArrowBack,
+                    TmIcons.ArrowBack,
                     s.seriesBack,
                     onDismiss,
                     Modifier

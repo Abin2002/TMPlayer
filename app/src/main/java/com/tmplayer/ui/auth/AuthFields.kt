@@ -20,8 +20,6 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme as M3
 import androidx.compose.material3.Text as M3Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +32,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 
@@ -135,7 +134,7 @@ fun PaneField(
 fun BackArrow(onBack: () -> Unit, description: String = LocalStrings.current.commonBack) {
     IconButton(onClick = onBack, modifier = Modifier.size(BACK_TARGET)) {
         Icon(
-            Icons.AutoMirrored.Filled.ArrowBack,
+            TmIcons.ArrowBack,
             contentDescription = description,
             tint = Tone.text,
         )

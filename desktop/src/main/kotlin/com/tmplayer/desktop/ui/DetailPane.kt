@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +61,7 @@ import com.tmplayer.ui.browse.MediaDetailPanel
 import com.tmplayer.ui.browse.detailRow
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.FloatingTone
@@ -258,7 +257,7 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.weight(1f).semantics { heading() },
             )
-            IconButton(onClick = { close() }) { Icon(Icons.Filled.Close, contentDescription = s.commonClose) }
+            IconButton(onClick = { close() }) { Icon(TmIcons.Close, contentDescription = s.commonClose) }
         }
         // Keyed by the video, so "More like this" opening another starts it at the top.
         androidx.compose.runtime.key(item.id) {

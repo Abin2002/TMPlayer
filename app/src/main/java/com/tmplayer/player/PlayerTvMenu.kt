@@ -17,15 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,9 +42,9 @@ import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.components.FloatingWindow
 import com.tmplayer.ui.components.MenuAction
 import com.tmplayer.ui.components.SheetCloseButton
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.TvMenu
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.FloatingTone
 import com.tmplayer.ui.theme.TMPlayerTheme
@@ -181,8 +172,8 @@ class PlayerTvMenu(
     private fun action(entry: PlayerMenuEntry): MenuAction {
         val s = LocalStrings.current
         return when (entry) {
-            PlayerMenuEntry.PlaybackDetails -> MenuAction(s.playerPlaybackDetails, Icons.Filled.Info) { choose(entry) }
-            PlayerMenuEntry.StartOver -> MenuAction(s.playerStartOver, Icons.Filled.Refresh) { choose(entry) }
+            PlayerMenuEntry.PlaybackDetails -> MenuAction(s.playerPlaybackDetails, TmIcons.Info) { choose(entry) }
+            PlayerMenuEntry.StartOver -> MenuAction(s.playerStartOver, TmIcons.Refresh) { choose(entry) }
             PlayerMenuEntry.PictureShape -> MenuAction(
                 label = s.playerPictureShape,
                 icon = ImageVector.vectorResource(R.drawable.ic_aspect),
@@ -208,9 +199,9 @@ class PlayerTvMenu(
                 },
             ) { choose(entry) }
             PlayerMenuEntry.NextFrame ->
-                MenuAction(s.playerFrameNext, Icons.AutoMirrored.Filled.KeyboardArrowRight) { choose(entry) }
+                MenuAction(s.playerFrameNext, TmIcons.ChevronRight) { choose(entry) }
             PlayerMenuEntry.PreviousFrame ->
-                MenuAction(s.playerFramePrevious, Icons.AutoMirrored.Filled.KeyboardArrowLeft) { choose(entry) }
+                MenuAction(s.playerFramePrevious, TmIcons.ChevronLeft) { choose(entry) }
             PlayerMenuEntry.SaveToDownloads -> MenuAction(
                 label = s.playerSaveToDownloads,
                 icon = TmIcons.Download,
@@ -219,18 +210,18 @@ class PlayerTvMenu(
             PlayerMenuEntry.MarkWatched -> if (watched()) {
                 MenuAction(
                     label = s.playerMarkUnwatched,
-                    icon = Icons.Filled.Close,
+                    icon = TmIcons.Close,
                     detail = s.playerMarkUnwatchedDetail,
                 ) { choose(entry) }
             } else {
                 MenuAction(
                     label = s.playerMarkWatched,
-                    icon = Icons.Filled.Check,
+                    icon = TmIcons.Check,
                     detail = s.playerMarkWatchedDetail,
                 ) { choose(entry) }
             }
             // Saved at once, without the keyboard: a note is for later, from Bookmarks.
-            PlayerMenuEntry.AddBookmark -> MenuAction(s.playerAddBookmark, Icons.Filled.Add) { choose(entry) }
+            PlayerMenuEntry.AddBookmark -> MenuAction(s.playerAddBookmark, TmIcons.Add) { choose(entry) }
             PlayerMenuEntry.Bookmarks -> MenuAction(
                 label = s.playerBookmarks,
                 icon = TmIcons.Bookmark,
@@ -239,7 +230,7 @@ class PlayerTvMenu(
             PlayerMenuEntry.PictureInPicture ->
                 MenuAction(s.playerPictureInPicture, ImageVector.vectorResource(R.drawable.ic_pip)) { choose(entry) }
             PlayerMenuEntry.OpenInAnotherApp ->
-                MenuAction(s.playerOpenInAnotherApp, Icons.AutoMirrored.Filled.ExitToApp) { choose(entry) }
+                MenuAction(s.playerOpenInAnotherApp, TmIcons.OpenExternal) { choose(entry) }
             PlayerMenuEntry.RemoteKeys ->
                 MenuAction(s.playerRemoteKeys, TmIcons.Remote, detail = s.playerRemoteKeysDetail) { page.value = Page.Keys }
         }

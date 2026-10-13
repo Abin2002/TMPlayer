@@ -17,8 +17,6 @@ import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +35,7 @@ import com.tmplayer.desktop.os.OpenExternal
 import com.tmplayer.ui.about.About
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
 
 /**
@@ -57,7 +56,7 @@ fun AboutPage(version: String, supporter: Boolean = false, onBack: () -> Unit) {
                 leading = {
                     IconButton(onClick = { if (reading) reading = false else onBack() }) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            TmIcons.ArrowBack,
                             contentDescription = if (reading) s.aboutBackToAbout else s.aboutBackToSettings,
                         )
                     }

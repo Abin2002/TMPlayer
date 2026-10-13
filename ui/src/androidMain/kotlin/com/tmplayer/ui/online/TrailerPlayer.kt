@@ -19,9 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,6 +38,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.tmplayer.online.MetaTrailer
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
 
 /**
@@ -100,8 +98,8 @@ internal fun TrailerPlayer(trailer: MetaTrailer, onClose: () -> Unit, onOpenElse
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                OverlayButton(Icons.AutoMirrored.Filled.ExitToApp, s.metadataTrailerOnYoutube, onOpenElsewhere)
-                OverlayButton(Icons.Filled.Close, s.commonClose, onClose)
+                OverlayButton(TmIcons.OpenExternal, s.metadataTrailerOnYoutube, onOpenElsewhere)
+                OverlayButton(TmIcons.Close, s.commonClose, onClose)
             }
         }
     }

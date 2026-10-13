@@ -17,11 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.selection.toggleable
@@ -82,6 +77,7 @@ import com.tmplayer.ui.components.ChoiceSheet
 import com.tmplayer.ui.components.FocusOnOpen
 import com.tmplayer.ui.components.LocalChoiceWide
 import com.tmplayer.ui.components.isTouch
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.TMPlayerTheme
 import com.tmplayer.ui.theme.Tone
@@ -245,7 +241,7 @@ class TrackPickerFragment : Fragment() {
     /** "Search online", in a build that carries the OpenSubtitles key. */
     private fun onlineLine(onOnline: () -> Unit): Line? {
         if (!OnlineSubtitles.available) return null
-        return Line("online", L.onlineSearchOnline, L.onlineSearchOnlineDetail, icon = Icons.Filled.Search, group = Group.Online, onClick = onOnline)
+        return Line("online", L.onlineSearchOnline, L.onlineSearchOnlineDetail, icon = TmIcons.Search, group = Group.Online, onClick = onOnline)
     }
 
     /** The offset now in force, under each timing line, so a press shows where it got to. */
@@ -259,14 +255,14 @@ class TrackPickerFragment : Fragment() {
             onInPlace()
         }
         return listOf(
-            Line("earlier", if (subtitles) L.tracksSubtitlesEarlier else L.tracksSoundEarlier, step, icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft, group = Group.Timing) { nudge(-1) },
-            Line("later", if (subtitles) L.tracksSubtitlesLater else L.tracksSoundLater, step, icon = Icons.AutoMirrored.Filled.KeyboardArrowRight, group = Group.Timing) { nudge(1) },
+            Line("earlier", if (subtitles) L.tracksSubtitlesEarlier else L.tracksSoundEarlier, step, icon = TmIcons.ChevronLeft, group = Group.Timing) { nudge(-1) },
+            Line("later", if (subtitles) L.tracksSubtitlesLater else L.tracksSoundLater, step, icon = TmIcons.ChevronRight, group = Group.Timing) { nudge(1) },
             // Greys itself out at zero, but keeps the remote: the row stays focusable.
             Line(
                 key = "reset",
                 title = L.tracksResetTiming,
                 detail = if (ms == 0L) L.tracksDelayNone else L.tracksDelayNow(SyncDelays.label(ms)),
-                icon = Icons.Filled.Refresh,
+                icon = TmIcons.Refresh,
                 enabled = ms != 0L,
                 group = Group.Timing,
             ) { nudge(0) },
@@ -383,7 +379,7 @@ class TrackPickerFragment : Fragment() {
                     )
                 }
                 if (notice == SubtitleNotice.Offline || notice == SubtitleNotice.Busy) {
-                    add(Line("retry", L.commonTryAgain, icon = Icons.Filled.Refresh, group = Group.Online) { attempt++ })
+                    add(Line("retry", L.commonTryAgain, icon = TmIcons.Refresh, group = Group.Online) { attempt++ })
                 }
             }
             val focusKey = lines.firstOrNull { it.enabled }?.key
@@ -465,7 +461,7 @@ class TrackPickerFragment : Fragment() {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 OutlinedButton(onClick = { nudge(-1) }, modifier = Modifier.weight(1f).height(48.dp)) {
-                    M3Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
+                    M3Icon(TmIcons.ChevronLeft, contentDescription = null)
                     Spacer(Modifier.width(4.dp))
                     M3Text(L.tracksEarlier, maxLines = 1)
                 }
@@ -482,7 +478,7 @@ class TrackPickerFragment : Fragment() {
                 OutlinedButton(onClick = { nudge(1) }, modifier = Modifier.weight(1f).height(48.dp)) {
                     M3Text(L.tracksLater, maxLines = 1)
                     Spacer(Modifier.width(4.dp))
-                    M3Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                    M3Icon(TmIcons.ChevronRight, contentDescription = null)
                 }
             }
         }

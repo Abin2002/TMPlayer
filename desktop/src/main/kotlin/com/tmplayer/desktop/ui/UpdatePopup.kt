@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import com.tmplayer.i18n.L
 import com.tmplayer.ui.components.TmAlertDialog
 import androidx.compose.material3.Button
@@ -35,6 +33,7 @@ import com.tmplayer.desktop.os.OpenExternal
 import com.tmplayer.platform.Background
 import com.tmplayer.player.StreamStats
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -149,7 +148,7 @@ fun UpdatePopup(
     val busy = progress is UpdateProgress.Downloading || progress == UpdateProgress.Verifying || progress == UpdateProgress.Installing
     TmAlertDialog(
         onDismissRequest = onClose,
-        icon = { Icon(Icons.Filled.Refresh, contentDescription = null, tint = Tone.caution) },
+        icon = { Icon(TmIcons.Refresh, contentDescription = null, tint = Tone.caution) },
         title = { Text(UpdateWords.title(release, skipped)) },
         text = {
             Column(Modifier.widthIn(max = 460.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

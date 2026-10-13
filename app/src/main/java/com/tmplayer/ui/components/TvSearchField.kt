@@ -33,10 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -46,9 +43,10 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.Canvas
+import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Focus
 import com.tmplayer.ui.theme.Floating
 import com.tmplayer.ui.theme.Tone
@@ -221,25 +219,8 @@ fun TvSearchField(
     }
 }
 
-/** Drawn rather than imported: two shapes are cheaper than another drawable and another import. */
+/** The search field's magnifier, the same glyph as every other search in the app. */
 @Composable
 private fun MagnifierGlyph(color: androidx.compose.ui.graphics.Color) {
-    Canvas(Modifier.size(22.dp)) {
-        val radius = size.minDimension * 0.32f
-        val stroke = Stroke(width = size.minDimension * 0.11f, cap = StrokeCap.Round)
-        drawCircle(
-            color = color,
-            radius = radius,
-            center = Offset(radius + stroke.width / 2, radius + stroke.width / 2),
-            style = stroke,
-        )
-        val diagonal = radius * 0.72f
-        drawLine(
-            color = color,
-            start = Offset(radius * 1.72f, radius * 1.72f),
-            end = Offset(radius * 1.72f + diagonal, radius * 1.72f + diagonal),
-            strokeWidth = stroke.width,
-            cap = StrokeCap.Round,
-        )
-    }
+    Icon(TmIcons.Search, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))
 }

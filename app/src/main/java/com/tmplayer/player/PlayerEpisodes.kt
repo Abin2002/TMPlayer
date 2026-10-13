@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -34,6 +32,7 @@ import com.tmplayer.ui.browse.SeriesWatch
 import com.tmplayer.ui.components.FloatingWindow
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.player.EpisodesActions
 import com.tmplayer.ui.player.EpisodesPanel
 import com.tmplayer.ui.player.EpisodesState
@@ -145,7 +144,7 @@ class PlayerEpisodes(
     @Composable
     private fun CloseButton() {
         IconButton(onClick = ::close) {
-            Icon(Icons.Filled.Close, contentDescription = LocalStrings.current.commonClose, tint = Tone.text)
+            Icon(TmIcons.Close, contentDescription = LocalStrings.current.commonClose, tint = Tone.text)
         }
     }
 

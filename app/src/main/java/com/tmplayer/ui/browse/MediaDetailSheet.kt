@@ -36,8 +36,6 @@ import com.tmplayer.data.WatchLaterStore
 import com.tmplayer.data.WatchPoint
 import com.tmplayer.data.cancel
 import com.tmplayer.i18n.Messages
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import com.tmplayer.data.MediaFacts
 import com.tmplayer.ui.components.MenuAction
 import com.tmplayer.ui.components.TvConfirm
@@ -45,6 +43,7 @@ import com.tmplayer.ui.components.TvMenu
 import com.tmplayer.ui.components.ignoreStrayRelease
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -245,7 +244,7 @@ private fun HoldMenu(
         chatTitle.ifBlank { null },
     ).joinToString("  ·  ").ifBlank { null }
     val details = onOpenDetails?.let { open ->
-        MenuAction(s.detailOpenDetails, Icons.Filled.Info, s.detailOpenDetailsDetail) { onDismiss(); open() }
+        MenuAction(s.detailOpenDetails, TmIcons.Info, s.detailOpenDetailsDetail) { onDismiss(); open() }
     }
     val actions = rows.map { MenuAction(it.label, it.icon, it.detail, it.destructive, it.onSelect) }
     TvMenu(

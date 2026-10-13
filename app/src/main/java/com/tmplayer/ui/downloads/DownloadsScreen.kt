@@ -27,12 +27,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -94,11 +88,11 @@ import com.tmplayer.data.start
 import com.tmplayer.i18n.L
 import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.components.BigEmpty
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Focus
@@ -493,7 +487,7 @@ fun DownloadsScreen(
                         modifier = Modifier.tvFocusRing(backFocus, CircleShape),
                     ) {
                         Icon(
-                            if (picking) Icons.Filled.Close else Icons.AutoMirrored.Filled.ArrowBack,
+                            if (picking) TmIcons.Close else TmIcons.ArrowBack,
                             contentDescription = if (picking) L.downloadsLeaveSelection else L.commonBack,
                         )
                     }
@@ -532,7 +526,7 @@ fun DownloadsScreen(
                     PrimaryAction(L.commonShare, TmIcons.Share) { share(chosen) }
                     SecondaryAction(
                         label = L.commonDelete,
-                        icon = Icons.Filled.Delete,
+                        icon = TmIcons.Delete,
                         onClick = { confirmingDeleteMany = true },
                         danger = true,
                     )
@@ -1187,21 +1181,21 @@ private fun DownloadCard(
             CardActions {
                 when {
                     // Something took the file. The record is all that is left to deal with.
-                    row.missing -> SecondaryAction(s.commonRemove, Icons.Filled.Delete, onDelete, danger = true)
+                    row.missing -> SecondaryAction(s.commonRemove, TmIcons.Delete, onDelete, danger = true)
                     row.cached -> {
-                        PrimaryAction(s.navWatch, Icons.Filled.PlayArrow, onPlay)
+                        PrimaryAction(s.navWatch, TmIcons.Play, onPlay)
                         // The share slot's place: what a cached video wants is keeping.
                         SecondaryAction(s.downloadsSaveToDownloads, TmIcons.Download, onShare)
-                        IconOnlyAction(s.commonDelete, Icons.Filled.Delete, onDelete, danger = true)
+                        IconOnlyAction(s.commonDelete, TmIcons.Delete, onDelete, danger = true)
                     }
                     row.partial -> {
-                        PrimaryAction(s.commonResume, Icons.Filled.Refresh, onPlay)
-                        IconOnlyAction(s.commonDelete, Icons.Filled.Delete, onDelete, danger = true)
+                        PrimaryAction(s.commonResume, TmIcons.Refresh, onPlay)
+                        IconOnlyAction(s.commonDelete, TmIcons.Delete, onDelete, danger = true)
                     }
                     else -> {
-                        PrimaryAction(s.navWatch, Icons.Filled.PlayArrow, onPlay)
+                        PrimaryAction(s.navWatch, TmIcons.Play, onPlay)
                         SecondaryAction(s.commonShare, TmIcons.Share, onShare)
-                        IconOnlyAction(s.commonDelete, Icons.Filled.Delete, onDelete, danger = true)
+                        IconOnlyAction(s.commonDelete, TmIcons.Delete, onDelete, danger = true)
                     }
                 }
             }
@@ -1313,12 +1307,12 @@ private fun ActiveDownloadCard(
                 OfflineDownloads.Stage.Running ->
                     PrimaryAction(s.commonPause, TmIcons.Pause, onPause)
                 OfflineDownloads.Stage.Paused ->
-                    PrimaryAction(s.commonResume, Icons.Filled.PlayArrow, onResume)
+                    PrimaryAction(s.commonResume, TmIcons.Play, onResume)
                 // Refused because the chat forbids keeping a copy: trying again is refused the
                 // same way, so the only offer left is Dismiss below.
                 OfflineDownloads.Stage.Failed ->
                     if (progress.failure != ContentProtection.NOT_SAVABLE) {
-                        PrimaryAction(s.commonTryAgain, Icons.Filled.Refresh, onResume)
+                        PrimaryAction(s.commonTryAgain, TmIcons.Refresh, onResume)
                     }
                 // It will start itself the moment the signal is back, so the useful offer is the
                 // other one: hold it, and do not.
@@ -1331,7 +1325,7 @@ private fun ActiveDownloadCard(
             }
             SecondaryAction(
                 label = if (failed) s.commonDismiss else s.commonCancel,
-                icon = Icons.Filled.Close,
+                icon = TmIcons.Close,
                 onClick = onCancel,
                 danger = true,
             )

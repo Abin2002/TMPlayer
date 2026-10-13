@@ -42,11 +42,8 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Star
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Focus
 import com.tmplayer.ui.components.TmDropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -84,7 +81,6 @@ import com.tmplayer.ui.browse.BrowseTab
 import com.tmplayer.ui.browse.ChatListViewModel
 import com.tmplayer.ui.browse.browseSections
 import com.tmplayer.ui.browse.filterChats
-import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.theme.Avatar
 import com.tmplayer.ui.theme.Tone
@@ -154,7 +150,7 @@ fun ChatsPage(
                     val waiting = model.refreshUnlessRateLimited()
                     if (waiting > 0) toast(s.chatsRefreshWait(waiting))
                 }) {
-                    Icon(Icons.Filled.Refresh, contentDescription = s.commonRefresh)
+                    Icon(TmIcons.Refresh, contentDescription = s.commonRefresh)
                 }
             },
         )
@@ -437,7 +433,7 @@ internal fun ChatRow(
         }
         IconButton(onClick = onStar) {
             Icon(
-                if (favourite) Icons.Filled.Star else TmIcons.StarOutline,
+                if (favourite) TmIcons.Star else TmIcons.StarOutline,
                 contentDescription = if (favourite) s.chatsUnfavourite else s.chatsFavourite,
                 tint = if (favourite) Tone.caution else Tone.muted,
             )
@@ -480,7 +476,7 @@ private fun ChatRowMenu(
         entry(
             if (favourite) s.chatsUnfavourite else s.chatsFavourite,
             "S",
-            if (favourite) Icons.Filled.Star else TmIcons.StarOutline,
+            if (favourite) TmIcons.Star else TmIcons.StarOutline,
             onStar,
         )
         HorizontalDivider()
@@ -491,7 +487,7 @@ private fun ChatRowMenu(
             if (chat.isMuted) TmIcons.Bell else TmIcons.BellOff,
         ) { actions.onToggleMuted(chat) }
         if (chat.unreadCount > 0) {
-            entry(s.chatsMarkRead, "R", Icons.Filled.Check) { actions.onMarkRead(chat) }
+            entry(s.chatsMarkRead, "R", TmIcons.Check) { actions.onMarkRead(chat) }
         }
         entry(
             if (chat.isArchived) s.chatsUnarchive else s.chatsArchive,

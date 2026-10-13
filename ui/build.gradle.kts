@@ -68,7 +68,6 @@ kotlin {
                 api(libs.androidx.compose.ui)
                 api(libs.androidx.compose.foundation)
                 api(libs.androidx.compose.material3)
-                api(libs.androidx.compose.material.icons)
                 implementation(libs.androidx.activity.compose)
             }
         }
@@ -79,7 +78,6 @@ kotlin {
                 api(libs.cmp.ui)
                 api(libs.cmp.foundation)
                 api(libs.cmp.material3)
-                api(libs.cmp.material.icons)
             }
         }
         jvmTest.dependencies {
