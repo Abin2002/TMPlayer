@@ -37,7 +37,12 @@ import com.tmplayer.ui.theme.floatingBorder
 @Composable
 fun PhoneSheet(
     onDismissRequest: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState(),
+    /**
+     * Fully open from the start. Material's default stops a tall sheet at half the screen, which
+     * left the long-press menus showing half their actions with the rest of the screen free.
+     * A sheet shorter than the screen still opens at its own height.
+     */
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     ModalBottomSheet(
