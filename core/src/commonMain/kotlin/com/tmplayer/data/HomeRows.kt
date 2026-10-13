@@ -243,6 +243,15 @@ object HomeRows {
         }
     }
 
+    /**
+     * [record] and every other copy of the same film or episode in [records]: what removing a
+     * card [foldCopies] made must remove, or the copy behind it takes its place at once.
+     */
+    fun copiesOf(record: ResumeRecord, records: List<ResumeRecord>): List<ResumeRecord> {
+        val key = copyKeyOf(record) ?: return listOf(record)
+        return (listOf(record) + records.filter { copyKeyOf(it) == key }).distinctBy { it.chatId to it.messageId }
+    }
+
     /** Which film or episode [record] is a copy of, within its chat; null for a video that names neither. */
     private fun copyKeyOf(record: ResumeRecord): String? =
         SeriesShelf.sameVideoKey(record.toMediaItem())?.let { "${record.chatId}|$it" }

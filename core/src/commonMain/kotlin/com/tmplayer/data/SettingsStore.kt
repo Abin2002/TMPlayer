@@ -1690,6 +1690,21 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         }
     }
 
+    /**
+     * "Remove from Continue watching" for a card that may stand for several copies of one video
+     * ([HomeRows.foldCopies]): every copy goes, in one edit, so none comes up in its place.
+     */
+    suspend fun clearResumeCopies(record: ResumeRecord) {
+        val copies = HomeRows.copiesOf(record, continueWatching.first())
+        prefs.edit {
+            for (copy in copies) {
+                it.remove(resumeKey(copy.chatId, copy.messageId))
+                it.remove(durationKey(copy.chatId, copy.messageId))
+                it.remove(metaKey(copy.chatId, copy.messageId))
+            }
+        }
+    }
+
     companion object {
         /**
          * The file name Android's `preferencesDataStore("tmplayer")` delegate has always used, in

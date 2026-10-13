@@ -1314,7 +1314,7 @@ private fun Root() {
                 onConfirm = {
                     forgetPrompt = null
                     scope.launch {
-                        settings.clearResumePosition(record.chatId, record.messageId)
+                        settings.clearResumeCopies(record)
                         toast(L.mainForgotResume(title = record.title))
                     }
                 },
