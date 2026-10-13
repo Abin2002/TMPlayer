@@ -514,6 +514,9 @@ fun MediaGridScreen(
                 }
             }
             LaunchedEffect(list.items) { listedItems = list.items }
+            // Online metadata is on by default, so the first grid says once where posters come
+            // from (see OnlineMetaNotice); not while searching or ticking, when the listing is a pick.
+            val metaNotice = grouping && metaNoticeShown()
             val gridState = rememberLazyGridState()
             val listState = rememberLazyListState()
             val firstItem = remember { FocusRequester() }
@@ -531,6 +534,15 @@ fun MediaGridScreen(
                         .map { (it as MediaFeedEntry.Media).item.key }
                         .toSet()
                 }
+            }
+            val metaNoticeCard: @Composable () -> Unit = {
+                OnlineMetaNotice(
+                    start = if (touch && layout == CardLayout.Grid) 4.dp else 0.dp,
+                    end = if (touch && layout == CardLayout.Grid) 4.dp else 0.dp,
+                    onTurnedOff = onOfflineAction,
+                    // The pressed button goes with the note, so a remote is handed back to a video.
+                    onDismissed = { if (!touch) runCatching { firstItem.requestFocus() } },
+                )
             }
             fun focusOf(entry: ShelfEntry): Modifier {
                 val first = if (entry.key == firstKey) Modifier.focusRequester(firstItem) else Modifier
@@ -589,6 +601,9 @@ fun MediaGridScreen(
                         horizontalArrangement = Arrangement.spacedBy(gap),
                         verticalArrangement = Arrangement.spacedBy(gap),
                     ) {
+                        if (metaNotice) {
+                            item(key = "meta-notice", span = { GridItemSpan(maxLineSpan) }) { metaNoticeCard() }
+                        }
                         if (course != null) {
                             item(key = "course", span = { GridItemSpan(maxLineSpan) }) { courseHeader() }
                         }
@@ -670,6 +685,7 @@ fun MediaGridScreen(
                         contentPadding = padding,
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        if (metaNotice) item(key = "meta-notice") { metaNoticeCard() }
                         if (course != null) item(key = "course") { courseHeader() }
                         items(
                             items = feed,

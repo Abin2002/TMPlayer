@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -43,9 +44,12 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.data.SettingsStore
+import com.tmplayer.online.MetaNotice
+import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.ui.components.BottomCardInset
 import com.tmplayer.ui.components.PhonePad
 import com.tmplayer.ui.components.TmButton
+import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
@@ -172,6 +176,108 @@ internal fun FirstVideoTip(nothingPlayed: Boolean, start: Dp, end: Dp, defaultsH
             IconButton(onClick = { scope.launch { runCatching { settings.setFirstVideoTipDismissed() } } }) {
                 Icon(Icons.Filled.Close, contentDescription = s.commonDismiss, tint = Tone.muted)
             }
+        }
+    }
+}
+
+/** The promo build's say over the online metadata note: null follows the stored state. */
+object MetaNoticeOverride {
+    @Volatile
+    var show: Boolean? = null
+}
+
+/** Whether the grid's note on online metadata is due: lookups on and the note not put away. */
+@Composable
+internal fun metaNoticeShown(): Boolean {
+    val online = OnlineMetadata.current ?: return false
+    val context = LocalContext.current
+    val settings = remember { SettingsStore(context.applicationContext) }
+    val meta by online.settings.collectAsState()
+    // True until the store answers, so the note never flashes up for somebody who put it away.
+    val dismissed by settings.onlineMetaNoticeDismissed.collectAsState(initial = true)
+    return MetaNoticeOverride.show ?: MetaNotice.shouldShow(meta.enabled, dismissed)
+}
+
+/**
+ * The chat grid's one-time note on online metadata: posters and overviews are looked up by each
+ * video's cleaned title, and nothing else is sent. Lookups are on by default, so this says so the
+ * first time a grid shows, styled like [FirstVideoTip]. Keep puts it away; Turn off switches the
+ * lookups off as Settings, Online metadata does, puts it away and hands [onTurnedOff] the line
+ * saying where to turn them back on. On a television both are buttons the D-pad reaches by going
+ * up from the first row; nothing here asks for focus, so the first video keeps it. [onDismissed]
+ * runs after either, for the grid to put focus back on a video. Drawn only while
+ * [metaNoticeShown] says so, which the grid asks first so a hidden note leaves no empty row.
+ */
+@Composable
+internal fun OnlineMetaNotice(
+    start: Dp,
+    end: Dp,
+    onTurnedOff: (String) -> Unit,
+    onDismissed: () -> Unit = {},
+) {
+    val online = OnlineMetadata.current ?: return
+    val context = LocalContext.current
+    val settings = remember { SettingsStore(context.applicationContext) }
+    val s = LocalStrings.current
+    val touch = isTouch()
+    val scope = rememberCoroutineScope()
+    fun dismiss() {
+        MetaNoticeOverride.show = null
+        scope.launch {
+            runCatching { settings.setOnlineMetaNoticeDismissed() }
+            onDismissed()
+        }
+    }
+    val keep = { dismiss() }
+    val turnOff = {
+        online.setEnabled(false)
+        dismiss()
+        onTurnedOff(s.gridMetaNoticeTurnedOff)
+    }
+    val text: @Composable (Modifier) -> Unit = { modifier ->
+        Text(
+            s.gridMetaNotice,
+            style = if (touch) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+            color = Tone.text,
+            modifier = modifier,
+        )
+    }
+    val icon: @Composable () -> Unit = {
+        Icon(
+            TmIcons.Image,
+            contentDescription = null,
+            tint = Tone.accent,
+            modifier = Modifier.size(if (touch) 20.dp else 24.dp),
+        )
+    }
+    val card = Modifier
+        .fillMaxWidth()
+        .padding(start = start, end = end, top = if (touch) 4.dp else 0.dp, bottom = if (touch) 8.dp else 12.dp)
+        .clip(RoundedCornerShape(Corner.Medium))
+        .background(Tone.surfaceHigh)
+    if (touch) {
+        // A phone's line wraps, so the two actions sit under it at the end, as a dialog's do.
+        Column(card.padding(start = 16.dp, end = 4.dp, top = 12.dp)) {
+            Row(Modifier.padding(end = 12.dp), verticalAlignment = Alignment.Top) {
+                icon()
+                Spacer(Modifier.size(12.dp))
+                text(Modifier.weight(1f))
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = turnOff) { Text(s.gridMetaNoticeTurnOff) }
+                TextButton(onClick = keep) { Text(s.gridMetaNoticeKeep) }
+            }
+        }
+    } else {
+        Row(
+            card.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            icon()
+            text(Modifier.weight(1f))
+            TmSecondaryButton(onClick = turnOff) { Text(s.gridMetaNoticeTurnOff) }
+            TmSecondaryButton(onClick = keep) { Text(s.gridMetaNoticeKeep) }
         }
     }
 }
