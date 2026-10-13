@@ -53,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -509,7 +510,7 @@ private fun SidebarItem(
     badge: String?,
     selected: Boolean,
     onClick: () -> Unit,
-    colors: androidx.compose.material3.NavigationDrawerItemColors = NavigationDrawerItemDefaults.colors(),
+    colors: androidx.compose.material3.NavigationDrawerItemColors = sidebarColors(),
 ) {
     NavigationDrawerItem(
         // Steps down to 12 sp rather than cut: with a download count beside it, Malayalam's
@@ -534,6 +535,23 @@ private fun SidebarItem(
 }
 
 private val SIDEBAR_ROW = 40.dp
+
+/**
+ * The selected page as a full pill one step above the ground, with its icon in the accent: the
+ * television rail's selected destination, so the three devices mark "you are here" the same way.
+ * The words stay in the text colour, which reads on that step in both themes.
+ */
+@Composable
+private fun sidebarColors(): androidx.compose.material3.NavigationDrawerItemColors =
+    NavigationDrawerItemDefaults.colors(
+        selectedContainerColor = Tone.surfaceHigh,
+        selectedIconColor = Tone.accent,
+        selectedTextColor = Tone.text,
+        selectedBadgeColor = Tone.text,
+        unselectedContainerColor = Color.Transparent,
+        unselectedIconColor = Tone.muted,
+        unselectedTextColor = Tone.text,
+    )
 
 @Composable
 private fun Rail(state: ShellState, update: NavUpdate?) {
@@ -566,6 +584,14 @@ private fun Rail(state: ShellState, update: NavUpdate?) {
                     }
                 },
                 label = { Text(label.substringBefore(' ')) },
+                // The side bar's pill, so the narrow window marks the page the same way.
+                colors = NavigationRailItemDefaults.colors(
+                    indicatorColor = Tone.surfaceHigh,
+                    selectedIconColor = Tone.accent,
+                    selectedTextColor = Tone.text,
+                    unselectedIconColor = Tone.muted,
+                    unselectedTextColor = Tone.muted,
+                ),
             )
         }
         // The rail cuts labels at the first space, so the version rides in a badge on the icon.

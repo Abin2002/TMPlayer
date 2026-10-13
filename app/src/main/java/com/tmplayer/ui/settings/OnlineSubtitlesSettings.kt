@@ -53,7 +53,7 @@ enum class OnlineDialog { SignIn, SignOut, SubdlKey }
  * row into the sentence saying the feature is unavailable, with the cache still clearable.
  */
 internal fun LazyListScope.onlineSubtitlesSection(onDialog: (OnlineDialog) -> Unit) {
-    item { SectionTitle(LocalStrings.current.onlineTitle) }
+    sectionTitle { LocalStrings.current.onlineTitle }
     item { AccountRow(onDialog) }
     item { MachineRow() }
     item { SubdlRow(onDialog) }

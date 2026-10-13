@@ -25,6 +25,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.border
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
@@ -262,7 +266,7 @@ internal class Choice(
 internal fun ChoiceChips(choices: List<Choice>) {
     LazyRow(
         Modifier.fillMaxWidth().padding(bottom = 4.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = pageMargin()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(choices, key = { it.key }) { choice ->
@@ -314,7 +318,14 @@ internal fun ChatList(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize().padding(end = 12.dp).navKeys(nav) { count },
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            // The row's own 12 dp inset plus this is the page margin, so the avatars line up with
+            // the heading and the chips above them. The rows sit 2 dp apart, so a hovered row and
+            // the focused one beside it never run into one block.
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                horizontal = pageMargin() - ChatRowInset,
+                vertical = 8.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             itemsIndexed(chats, key = { _, it -> it.id }) { index, chat ->
                 ChatRow(
@@ -347,11 +358,22 @@ internal fun ChatRow(
     val s = LocalStrings.current
     var focused by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
+    val hover = remember { MutableInteractionSource() }
+    val hovered by hover.collectIsHoveredAsState()
+    // No card at rest: the row is the avatar and the words on the page's ground. Under the pointer
+    // or the keyboard it lifts onto the step above, and the keyboard's row also takes the ring.
+    val fill = when {
+        focused -> Tone.surfaceHigh
+        hovered -> Tone.surface
+        else -> Color.Transparent
+    }
     Row(
         Modifier
             .fillMaxWidth()
             .widthIn(max = 960.dp)
             .clip(MaterialTheme.shapes.medium)
+            .background(fill)
+            .hoverable(hover)
             .then(if (focused) Modifier.border(Focus.Edge, Tone.accent, MaterialTheme.shapes.medium) else Modifier)
             .onPointerEvent(PointerEventType.Press) { event ->
                 val macContext = CHATS_ON_MAC && event.keyboardModifiers.isCtrlPressed && event.buttons.isPrimaryPressed
@@ -382,7 +404,7 @@ internal fun ChatRow(
                 true
             }
             .clickable(onClick = onOpen)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = ChatRowInset, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -479,4 +501,7 @@ private fun ChatRowMenu(
     }
 }
 
-private val CHATS_ON_MAC = System.getProperty("os.name").orEmpty().lowercase().contains("mac")
+/** How far a chat row's avatar sits in from the row's own edge. */
+private val ChatRowInset = 12.dp
+
+private val CHATS_ON_MAC =System.getProperty("os.name").orEmpty().lowercase().contains("mac")

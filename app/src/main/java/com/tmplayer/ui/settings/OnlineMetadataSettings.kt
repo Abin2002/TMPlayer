@@ -39,7 +39,7 @@ import kotlinx.coroutines.withContext
  */
 internal fun LazyListScope.onlineMetadataSection(onEditKey: () -> Unit) {
     if (OnlineMetadata.current == null) return
-    item { SectionTitle(LocalStrings.current.metadataTitle) }
+    sectionTitle { LocalStrings.current.metadataTitle }
     item { MetadataToggleRow() }
     item { SkipTimesToggleRow() }
     item { MetadataKeyRow(onEditKey) }

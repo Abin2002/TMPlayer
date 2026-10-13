@@ -67,7 +67,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon as M3Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
@@ -169,6 +168,16 @@ import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.focusRing
 import com.tmplayer.ui.theme.Tv
+import com.tmplayer.ui.theme.Motion
+import com.tmplayer.ui.theme.rememberReducedMotion
+import com.tmplayer.ui.components.ProgressLine
+import com.tmplayer.ui.components.GeneratedCover
+import com.tmplayer.ui.components.CoverArt
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.graphics.graphicsLayer
 
 /**
  * What the line under the app bar's title counts.
@@ -1048,6 +1057,8 @@ private class VideoCardText(
     /** The line under the title on a tile, and the start of it on a row. */
     val detail: String,
     val chatTitle: String,
+    /** The chat the video is in, which picks the colours of its generated cover. */
+    val chatId: Long,
     val fraction: Float,
 )
 
@@ -1063,6 +1074,7 @@ private fun ResumeRecord.cardText() = VideoCardText(
         }
     },
     chatTitle = chatTitle,
+    chatId = chatId,
     fraction = fraction,
 )
 
@@ -1072,6 +1084,7 @@ private fun WatchedRecord.cardText(now: Long) = VideoCardText(
     title = SeriesShelf.tileTitle(toMediaItem()),
     detail = WatchedWhen.phrase(watchedAt, now),
     chatTitle = chatTitle,
+    chatId = chatId,
     fraction = 1f,
 )
 
@@ -1084,6 +1097,7 @@ private fun WatchLaterRecord.cardText() = VideoCardText(
         sizeBytes.takeIf { it > 0 }?.let { L.messages.formatter.size(it) },
     ).joinToString("  ·  "),
     chatTitle = chatTitle,
+    chatId = chatId,
     fraction = 0f,
 )
 
@@ -1181,13 +1195,10 @@ private fun ContinueTile(
     // differs, so the tile is written once and handed to whichever container the device wants.
     val body: @Composable ColumnScope.() -> Unit = {
         Box {
-            ContinueArt(Modifier.fillMaxWidth().aspectRatio(16f / 9f), badge = 40.dp)
-            ResumeProgress(
-                fraction = text.fraction,
-                touch = touch,
-                modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth(),
-                overArt = true,
-            )
+            ContinueArt(text, Modifier.fillMaxWidth().aspectRatio(16f / 9f), badge = 40.dp)
+            if (text.fraction > 0f) {
+                ProgressLine(text.fraction, Modifier.align(Alignment.BottomCenter))
+            }
         }
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
@@ -1243,49 +1254,6 @@ private fun ContinueTile(
     }
 }
 
-/**
- * How far through a video is.
- *
- * A phone gets the platform's own indicator, so the bar picks up the scheme, the stop mark and the
- * rounded cap every other progress bar on the device has. A television gets two painted boxes, to
- * sit quietly under the focus border. [overArt] is the difference between a bar lying on a
- * thumbnail, which needs a dark track to stay visible, and one on a card, which does not.
- */
-@Composable
-private fun ResumeProgress(
-    fraction: Float,
-    touch: Boolean,
-    modifier: Modifier = Modifier,
-    overArt: Boolean,
-) {
-    val progress = fraction.coerceIn(0.01f, 1f)
-    if (touch) {
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = modifier,
-            color = Tone.accent,
-            trackColor = if (overArt) Color.Black.copy(alpha = 0.55f) else Tone.surfaceHigh,
-        )
-        return
-    }
-
-    Box(
-        modifier
-            .height(if (overArt) 6.dp else 4.dp)
-            .then(if (overArt) Modifier else Modifier.clip(CircleShape))
-            .background(
-                if (overArt) Color.Black.copy(alpha = 0.55f) else Tone.muted.copy(alpha = 0.25f),
-            ),
-    ) {
-        Box(
-            Modifier
-                .fillMaxWidth(progress)
-                .fillMaxHeight()
-                .background(Tone.accent),
-        )
-    }
-}
-
 @Composable
 private fun ContinueCard(
     text: VideoCardText,
@@ -1303,10 +1271,17 @@ private fun ContinueCard(
     )
 
     val body: @Composable RowScope.() -> Unit = {
-        ContinueArt(
-            Modifier.width(THUMBNAIL_WIDTH).height(THUMBNAIL_HEIGHT),
-            badge = 34.dp,
-        )
+        // The bar lies across the foot of the thumbnail, as it does on every video tile.
+        Box {
+            ContinueArt(
+                text,
+                Modifier.width(THUMBNAIL_WIDTH).height(THUMBNAIL_HEIGHT),
+                badge = 34.dp,
+            )
+            if (text.fraction > 0f) {
+                ProgressLine(text.fraction, Modifier.align(Alignment.BottomCenter), inset = 6.dp)
+            }
+        }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
                 text.title,
@@ -1336,14 +1311,6 @@ private fun ContinueCard(
                 color = Tone.muted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-            )
-            // The bar is the point of the row: it says at a glance that this is a video part way
-            // through rather than one not started.
-            ResumeProgress(
-                fraction = text.fraction,
-                touch = touch,
-                modifier = Modifier.fillMaxWidth(),
-                overArt = false,
             )
         }
     }
@@ -1388,29 +1355,27 @@ private fun ContinueCard(
 }
 
 /**
- * Neutral artwork for a Continue watching card.
+ * Artwork for a Continue watching card: the video's generated cover with a play mark on it.
  *
- * A resume record deliberately contains no remote artwork URL. The play mark therefore remains
- * useful offline, discloses no selected media to another service, and never blocks this screen.
+ * A resume record deliberately contains no remote artwork URL. The cover is drawn from the title
+ * and the chat alone, so it remains useful offline, discloses no selected media to another
+ * service, and never blocks this screen. It is dark in both themes, which is what lets the
+ * progress line lie on it the way it lies on every other video's art.
  *
  * [modifier] carries the size, because the row wants a thumbnail and the tile wants the whole
  * width of its column. [badge] follows it: a 34 dp disc that reads as a play button over a 96 dp
  * thumbnail is a speck over art three times that wide.
  */
 @Composable
-private fun ContinueArt(modifier: Modifier = Modifier, badge: Dp) {
-    Box(
-        modifier
-            .clip(RoundedCornerShape(Corner.Small))
-            .background(Tone.surfaceHigh),
-        contentAlignment = Alignment.Center,
-    ) {
+private fun ContinueArt(text: VideoCardText, modifier: Modifier = Modifier, badge: Dp) {
+    val cover = remember(text.chatId, text.title) { CoverArt.of(text.chatId, text.title) }
+    Box(modifier.clip(RoundedCornerShape(Corner.Small)), contentAlignment = Alignment.Center) {
+        // No title on the cover: the card prints it beside or under the art already.
+        GeneratedCover(cover, Modifier.fillMaxSize(), compact = true, showTitle = false)
         Icon(
             imageVector = Icons.Filled.PlayArrow,
             contentDescription = null,
-            // The mark is the app's colour on the raised surface it sits on, which is a pairing
-            // the scheme guarantees is readable whichever way round the phone's theme is.
-            tint = Tone.accent,
+            tint = Tone.onArt,
             modifier = Modifier.size(badge * 0.88f),
         )
     }
@@ -1456,10 +1421,23 @@ private fun NavRail(
     // Inset either side, the icon and its gap, a count badge, and the column's end padding.
     val itemRoom = with(LocalDensity.current) { widest.toDp() } + RAIL_INSET * 2 + 22.dp + 12.dp + 20.dp + 12.dp
     val railRoom = itemRoom.coerceIn(180.dp, RAIL_WIDE)
+    // Folded to its icons while the remote is in the content, which then has the width the labels
+    // took; open again the moment focus comes back to the rail. The selected destination keeps
+    // its tint either way, so where the viewer is never goes with the labels.
+    var railFocused by remember { mutableStateOf(false) }
+    val reducedMotion = rememberReducedMotion()
+    val width by animateDpAsState(
+        targetValue = if (railFocused) railRoom else RAIL_FOLDED,
+        animationSpec = if (reducedMotion) snap() else Motion.standard(Motion.Normal),
+        label = "railWidth",
+    )
+    // 0 folded, 1 open: how much of the labels to show while the width moves between the two.
+    val reveal = ((width - RAIL_FOLDED) / (railRoom - RAIL_FOLDED)).coerceIn(0f, 1f)
     Column(
         Modifier
-            .width(railRoom + Tv.SafeH - RAIL_INSET)
+            .width(width + Tv.SafeH - RAIL_INSET)
             .fillMaxHeight()
+            .onFocusChanged { railFocused = it.hasFocus }
             .keepsVerticalFocus()
             .background(Tone.surface)
             // The rail is the leftmost thing on the screen, so it alone decides whether the app
@@ -1472,7 +1450,7 @@ private fun NavRail(
                 bottom = Tv.SafeV,
             ),
     ) {
-        RailBrand()
+        RailBrand(reveal)
         Spacer(Modifier.height(14.dp))
 
         val groups = rememberNavGroups(current = navGroupOf(selected))
@@ -1497,6 +1475,7 @@ private fun NavRail(
             navGroups(sections, withDownloads = false).forEach { (group, entries) ->
                 val open = groups.isOpen(group)
                 if (group.headed) RailGroupHeading(
+                    reveal = reveal,
                     label = group.label,
                     open = open,
                     toggleable = groups.canToggle(group),
@@ -1511,6 +1490,7 @@ private fun NavRail(
                         entries.forEach { entry ->
                             when (entry) {
                                 NavEntry.Downloads -> RailItem(
+                                    reveal = reveal,
                                     label = s.navDownloads,
                                     icon = TmIcons.Download,
                                     // How many videos are coming down right now. A download outlives
@@ -1522,6 +1502,7 @@ private fun NavRail(
                                     onClick = onOpenDownloads,
                                 )
                                 is NavEntry.Section -> RailItem(
+                                    reveal = reveal,
                                     label = entry.section.label,
                                     icon = entry.section.icon,
                                     badge = navBadge(entry.section, favoriteCount, unreadCount),
@@ -1539,6 +1520,7 @@ private fun NavRail(
             color = Tone.outline.copy(alpha = 0.5f),
         )
         RailItem(
+            reveal = reveal,
             label = s.navDownloads,
             icon = TmIcons.Download,
             // How many videos are coming down right now. A download outlives the screen it was
@@ -1550,6 +1532,7 @@ private fun NavRail(
         )
         if (updateVersion != null) {
             RailItem(
+                reveal = reveal,
                 label = s.navUpdate,
                 icon = Icons.Filled.Refresh,
                 badge = updateVersion,
@@ -1561,6 +1544,7 @@ private fun NavRail(
         // The version no longer rides on Settings: it sits beside the name at the top, where a
         // long one has room and "Settings" keeps its whole word.
         RailItem(
+            reveal = reveal,
             label = s.navSettings,
             icon = Icons.Filled.Settings,
             badge = null,
@@ -1577,14 +1561,16 @@ private fun NavRail(
  * to stay at a readable 14 sp from across the room. Not focusable: it is a label, not a place.
  */
 @Composable
-private fun RailBrand() {
+private fun RailBrand(reveal: Float) {
     Row(
         Modifier.padding(start = RAIL_INSET),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // The mark stays on a folded rail, the app's own face at the top of its icons; the name
+        // and the version come and go with the labels.
         AppMark(RAIL_MARK)
         Spacer(Modifier.width(12.dp))
-        Column {
+        Column(Modifier.alpha(reveal)) {
             Text(
                 "TMPlayer",
                 style = MaterialTheme.typography.titleMedium,
@@ -1608,9 +1594,13 @@ private fun RailBrand() {
  * Quiet like the old unfocusable headings, muted text and a small chevron, until focus lands on it,
  * when it fills the way a rail item does. The group holding the current tab cannot fold, so its
  * heading is a plain label the remote passes straight over, exactly as every heading used to be.
+ *
+ * On a folded rail ([reveal] 0) the words give way to a short rule under the icons, so the
+ * groups still read as groups.
  */
 @Composable
 private fun RailGroupHeading(
+    reveal: Float,
     label: String,
     open: Boolean,
     toggleable: Boolean,
@@ -1650,22 +1640,37 @@ private fun RailGroupHeading(
             .padding(horizontal = RAIL_INSET),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = if (focused) FontWeight.SemiBold else FontWeight.Medium,
-            color = foreground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        if (toggleable) {
-            Icon(
-                Icons.Filled.KeyboardArrowDown,
-                contentDescription = null,
-                tint = foreground,
-                modifier = Modifier.size(22.dp).rotate(turn),
-            )
+        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+            if (reveal < 1f) {
+                Box(
+                    Modifier
+                        .size(width = RAIL_ICON, height = 1.dp)
+                        .alpha(1f - reveal)
+                        .background(Tone.outline),
+                )
+            }
+            if (reveal > 0f) {
+                Row(Modifier.fillMaxWidth().alpha(reveal), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (focused) FontWeight.SemiBold else FontWeight.Medium,
+                        color = foreground,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = if (reveal < 1f) TextOverflow.Clip else TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (toggleable) {
+                        Icon(
+                            Icons.Filled.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = foreground,
+                            modifier = Modifier.size(22.dp).rotate(turn),
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -1699,6 +1704,7 @@ private fun AccountPicture(account: Account?) {
  */
 @Composable
 private fun RailItem(
+    reveal: Float,
     label: String,
     icon: ImageVector,
     badge: String?,
@@ -1750,7 +1756,23 @@ private fun RailItem(
             .padding(horizontal = RAIL_INSET),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, contentDescription = null, tint = foreground, modifier = Modifier.size(22.dp))
+        Box {
+            Icon(icon, contentDescription = null, tint = foreground, modifier = Modifier.size(RAIL_ICON))
+            // A folded rail has no room for the count, so a dot on the icon says there is one: a
+            // download running, an update waiting.
+            if (badge != null && reveal < 1f) {
+                Box(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 3.dp, y = (-3).dp)
+                        .size(8.dp)
+                        .alpha(1f - reveal)
+                        .clip(CircleShape)
+                        .background(accent),
+                )
+            }
+        }
+        if (reveal <= 0f) return@Row
         Spacer(Modifier.width(12.dp))
         Text(
             label,
@@ -1758,8 +1780,11 @@ private fun RailItem(
             fontWeight = if (selected || focused) FontWeight.SemiBold else FontWeight.Normal,
             color = foreground,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
+            softWrap = false,
+            // Clipped rather than cut with an ellipsis while the rail is opening, or every label
+            // would flicker through "S..." on its way to "Settings".
+            overflow = if (reveal < 1f) TextOverflow.Clip else TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f).alpha(reveal),
         )
         if (badge != null) {
             // Clamped, because the badge measures before the label: an unusually long badge, such
@@ -1770,7 +1795,7 @@ private fun RailItem(
                 color = foreground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = RAIL_BADGE_MAX),
+                modifier = Modifier.widthIn(max = RAIL_BADGE_MAX).alpha(reveal),
             )
         }
     }
@@ -2117,6 +2142,8 @@ private fun TouchChip(chip: ChipSpec) {
         selected = chip.selected,
         onClick = chip.onClick,
         label = { M3Text(chip.label, maxLines = 1) },
+        // A pill, like the television's chips and every other chip in the app.
+        shape = CircleShape,
         leadingIcon = {
             M3Icon(chip.icon, contentDescription = null, modifier = Modifier.size(18.dp))
         },
@@ -2435,6 +2462,7 @@ private fun ChatTile(
         Column(
             modifier
                 .height(RECENT_TILE_HEIGHT)
+                .focusGrow(focused, Motion.FocusScale)
                 .clip(RoundedCornerShape(Corner.Large))
                 .background(if (focused) Tone.surfaceHigh else Tone.surface)
                 .border(
@@ -2448,6 +2476,28 @@ private fun ChatTile(
         )
     }
 }
+
+/**
+ * Grows a card to [scale] while the remote is on it, over [Motion.Fast]: with the ring and the
+ * raised fill, the third of the signals that say where focus is. Dropped when the system's
+ * animations are off; the ring and the fill still say it.
+ */
+@Composable
+private fun Modifier.focusGrow(focused: Boolean, scale: Float): Modifier {
+    val still = rememberReducedMotion()
+    val grown by animateFloatAsState(
+        targetValue = if (focused && !still) scale else 1f,
+        animationSpec = Motion.standard(Motion.Fast),
+        label = "focusGrow",
+    )
+    return graphicsLayer {
+        scaleX = grown
+        scaleY = grown
+    }
+}
+
+/** How much a chat row the width of the content grows under focus. */
+private const val ROW_FOCUS_SCALE = 1.02f
 
 /** Scrolls overflowing text, but only while [active]; a wall of moving labels is unreadable. */
 @OptIn(ExperimentalFoundationApi::class)
@@ -2483,6 +2533,9 @@ private fun ChatRow(
         modifier
             .fillMaxWidth()
             .height(84.dp)
+            // 1.02, not the tiles' 1.05: a row the width of the content grown by that much would
+            // reach past the safe area.
+            .focusGrow(focused, ROW_FOCUS_SCALE)
             .clip(RoundedCornerShape(Corner.Large))
             .background(if (focused) Tone.surfaceHigh else Tone.surface)
             .border(
@@ -2873,6 +2926,11 @@ private val RAIL_INSET = 16.dp
 
 /** The most the rail widens for a language whose labels are long single words. */
 private val RAIL_WIDE = 240.dp
+
+/** The size of a rail item's icon. */
+private val RAIL_ICON = 22.dp
+/** The rail folded to its icons: the item inset either side of the icon, and the column's end padding. */
+private val RAIL_FOLDED = RAIL_INSET * 2 + RAIL_ICON + 12.dp
 
 /** Enough for a version name, and never enough to eat the item's own label. */
 private val RAIL_BADGE_MAX = 64.dp
