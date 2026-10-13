@@ -105,6 +105,8 @@ class PlayerMenuTest {
                 PhoneMenuEntry.LoadSubtitleFile,
                 PhoneMenuEntry.SaveToDownloads,
                 PhoneMenuEntry.MarkWatched,
+                PhoneMenuEntry.AddBookmark,
+                PhoneMenuEntry.Bookmarks,
                 PhoneMenuEntry.PlaybackDetails,
             ),
             PlayerMenu.phoneEntries(
@@ -115,7 +117,7 @@ class PlayerMenuTest {
                 bookmarks = true,
             ),
         )
-        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true).toSet())
+        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true, true).toSet())
     }
 
     @Test
