@@ -31,6 +31,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.NavigationRail
@@ -432,19 +433,26 @@ internal fun Sidebar(
     val groups = rememberNavGroups(state.currentGroup)
     val sections = remember(folders, state.hideDefaultGroups) { browseSections(folders, state.hideDefaultGroups) }
     val inFlight = rememberDownloadsInFlight()
-    Column(Modifier.width(240.dp).fillMaxHeight().padding(12.dp)) {
-        NavBrand(BuildInfo.VERSION, Modifier.padding(horizontal = 12.dp, vertical = 10.dp))
-        Spacer(Modifier.height(4.dp))
+    // Wide enough for a German or Malayalam label beside a badge, with room to breathe: the side
+    // bar is the frame of every page, and a cramped frame makes the whole window feel cramped.
+    Column(Modifier.width(SIDEBAR_WIDTH).fillMaxHeight().padding(horizontal = 16.dp, vertical = 16.dp)) {
+        NavBrand(BuildInfo.VERSION, Modifier.padding(horizontal = 12.dp, vertical = 14.dp))
+        Spacer(Modifier.height(12.dp))
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             navGroups(sections).forEach { (group, entries) ->
                 val open = groups.isOpen(group)
-                if (group.headed) NavGroupHeading(
-                    group = group,
-                    open = open,
-                    toggleable = groups.canToggle(group),
-                    onToggle = { groups.toggle(group) },
-                    height = SIDEBAR_ROW,
-                )
+                if (group.headed) {
+                    // A step of air above each heading, so Telegram and Folders read as groups
+                    // rather than two more rows of the list above them.
+                    Spacer(Modifier.height(10.dp))
+                    NavGroupHeading(
+                        group = group,
+                        open = open,
+                        toggleable = groups.canToggle(group),
+                        onToggle = { groups.toggle(group) },
+                        height = SIDEBAR_ROW,
+                    )
+                }
                 NavGroupBody(open) {
                     entries.forEach { entry ->
                         val target = entry.destination()
@@ -465,7 +473,7 @@ internal fun Sidebar(
                 }
             }
         }
-        HorizontalDivider(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Tone.outline)
+        HorizontalDivider(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), color = Tone.outline)
         // Above Settings, as on the phone and the TV, rather than among the pages: it opens the popup.
         if (update != null) {
             SidebarItem(
@@ -502,7 +510,7 @@ private fun NavEntry.destination(): Destination? = when (this) {
     }
 }
 
-/** A side bar row, 40 dp rather than Material's 56: a pointer needs no thumb sized target. */
+/** A side bar row, 46 dp rather than Material's 56: a pointer needs no thumb sized target, but a row needs air. */
 @Composable
 private fun SidebarItem(
     label: String,
@@ -521,20 +529,24 @@ private fun SidebarItem(
                 label,
                 maxLines = 1,
                 overflow = TextOverflow.Clip,
-                autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = LocalTextStyle.current.fontSize),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = MaterialTheme.typography.bodyLarge.fontSize),
             )
         },
-        icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) },
+        icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp)) },
         badge = badge?.let { { Text(it) } },
         selected = selected,
         onClick = onClick,
         // The gap keeps a hovered or focused row from merging into the selected one beside it.
-        modifier = Modifier.padding(vertical = 2.dp).height(SIDEBAR_ROW),
+        modifier = Modifier.padding(vertical = 3.dp).height(SIDEBAR_ROW),
         colors = colors,
     )
 }
 
-private val SIDEBAR_ROW = 40.dp
+private val SIDEBAR_ROW = 46.dp
+
+private val SIDEBAR_WIDTH = 280.dp
 
 /**
  * The selected page as a full pill one step above the ground, with its icon in the accent: the
