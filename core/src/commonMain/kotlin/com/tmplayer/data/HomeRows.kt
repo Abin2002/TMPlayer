@@ -217,6 +217,36 @@ object HomeRows {
             .sortedWith(compareByDescending<MediaItem> { it.date }.thenByDescending { it.messageId })
     }
 
+    /** How many Continue watching records the spotlight looks through for one with art: see [spotlight]. */
+    const val SPOTLIGHT_CANDIDATES = 3
+
+    /**
+     * What Home's spotlight may lead with, best first, for the screen to take the first that has
+     * a picture worth showing large (an online backdrop, or a sharp enough Telegram thumbnail).
+     *
+     * Only what the viewer is part way through, newest first, and of that only a film or an
+     * episode of a show: a clip, a lecture or a screen recording is better met in its row than
+     * blown up across the top of the screen. Never a pick of TMPlayer's own, so a Home with nothing
+     * of the kind under way has no spotlight at all. A show is offered once, by its newest record,
+     * and at most [SPOTLIGHT_CANDIDATES] are, so the screen never decodes more than that many
+     * pictures to find one.
+     */
+    fun spotlight(continueWatching: List<ResumeRecord>): List<ResumeRecord> {
+        val shows = HashSet<String>()
+        return continueWatching
+            .distinctBy { keyOf(it.chatId, it.messageId) }
+            .sortedByDescending { it.updatedAt }
+            .filter { record ->
+                val item = record.toMediaItem()
+                val name = SeriesShelf.episodeOf(item)
+                when {
+                    name.isEpisode -> shows.add("${record.chatId}:${SeriesShelf.keyOf(name.title)}")
+                    else -> SeriesShelf.isFilm(item)
+                }
+            }
+            .take(SPOTLIGHT_CANDIDATES)
+    }
+
     /** The same key [SettingsStore.progressKey] writes, so a resume record and a video match. */
     private fun keyOf(chatId: Long, messageId: Long) = SettingsStore.progressKey(chatId, messageId)
 }
