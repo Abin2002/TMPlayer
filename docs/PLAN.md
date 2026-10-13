@@ -136,7 +136,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [ ] CP54 Updates feed: new episodes of shows being watched, badges on tiles (batch 2)
 - [ ] CP55 Timestamped bookmarks with notes (batch 2)
 - [ ] CP56 Android chapters, A-B loop and frame step (desktop has them since CP08) (batch 2)
-- [ ] CP57 TV screensaver, PIN lock for settings and a kids lock (batch 2)
+- [x] CP57 TV screensaver, PIN lock for settings and a kids lock (batch 2) (PIN as a salted PBKDF2 hash with a stored back-off, asked for Settings and optionally on open, on phone, TV and desktop; kids lock "Allowed chats only" filtered once through ChatGate and KidsLock in core for the chat list, Home, search, Continue watching, Watched and Watch later; TV screensaver Off, 2, 5 or 10 min with clock and drifting Continue watching art. Unit tested in AppLockTest. Not yet checked on a device)
 - [ ] CP58 Skip silence, rewind a few seconds on resume (batch 2)
 - [ ] CP59 UI scale, log export for bug reports (batch 2)
 - [ ] CP60 Episode thumbnails in the series list (batch 2)

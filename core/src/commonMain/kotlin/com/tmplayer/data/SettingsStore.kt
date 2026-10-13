@@ -47,6 +47,19 @@ private val CHAT_LAYOUT = stringPreferencesKey("chat_layout")
 private val CHAT_FILTER = stringPreferencesKey("chat_filter")
 private val CHAT_SORT = stringPreferencesKey("chat_sort")
 private val HIDE_DEFAULT_GROUPS = booleanPreferencesKey("hide_default_groups")
+
+// The app lock and the kids lock (CP57). See [PinHash], [PinAttempts] and [KidsLock]. All of them
+// belong to the account: signing out clears them with everything else, which is the only way
+// back from a forgotten PIN.
+private val APP_PIN = stringPreferencesKey("app_pin")
+private val PIN_FAILURES = longPreferencesKey("app_pin_failures")
+private val PIN_WAIT_UNTIL = longPreferencesKey("app_pin_wait_until")
+private val LOCK_ON_OPEN = booleanPreferencesKey("app_lock_on_open")
+private val KIDS_LOCK = booleanPreferencesKey("kids_lock")
+private val KIDS_CHATS = stringSetPreferencesKey("kids_chats")
+
+/** The TV screensaver's idle time in minutes, 0 for off. About the device, so it outlives a sign out. */
+private val SCREENSAVER_MINUTES = longPreferencesKey("screensaver_minutes")
 private val FIRST_SIGN_IN_CARD = stringPreferencesKey("first_sign_in_card")
 private val HISTORY_TAB = stringPreferencesKey("history_tab")
 private val MEDIA_LAYOUT = stringPreferencesKey("media_layout")
@@ -142,6 +155,16 @@ private fun seriesKey(series: String): String =
 private fun audioKey(series: String) = stringPreferencesKey("audio_$series")
 private fun textKey(series: String) = stringPreferencesKey("text_$series")
 private fun subtitlesKey(series: String) = booleanPreferencesKey("subs_$series")
+
+private fun kidsChatsOf(prefs: Preferences): Set<Long> =
+    prefs[KIDS_CHATS].orEmpty().mapNotNull { it.toLongOrNull() }.toSet()
+
+/** The kids lock's allowed chats as stored, or null while it is not in force. */
+private fun allowedChatsOf(prefs: Preferences): Set<Long>? =
+    if (KidsLock.inForce(prefs[KIDS_LOCK] == true, prefs[APP_PIN] != null)) kidsChatsOf(prefs) else null
+
+private fun attemptsOf(prefs: Preferences): PinAttempts =
+    PinAttempts((prefs[PIN_FAILURES] ?: 0L).toInt(), prefs[PIN_WAIT_UNTIL] ?: 0L)
 
 /** Where playback stopped, so the next launch can offer to continue. */
 private fun resumeKey(chatId: Long, messageId: Long) =
@@ -240,6 +263,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             val supportNever = prefs[SUPPORT_NEVER]
             val supporter = prefs[SUPPORT_SUPPORTER]
             val recent = prefs[SUPPORT_RECENT]
+            val screensaver = prefs[SCREENSAVER_MINUTES]
             // The first sign in card is asked once per install, not once per account.
             val card = prefs[FIRST_SIGN_IN_CARD]?.takeIf { it == CARD_DONE }
             val kept = if (keepDownloads) {
@@ -259,6 +283,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             supporter?.let { prefs[SUPPORT_SUPPORTER] = it }
             recent?.let { prefs[SUPPORT_RECENT] = it }
             card?.let { prefs[FIRST_SIGN_IN_CARD] = it }
+            screensaver?.let { prefs[SCREENSAVER_MINUTES] = it }
             if (keepDownloads) {
                 for ((key, value) in kept) prefs[key] = value
                 migrated?.let { prefs[DOWNLOADS_MIGRATED] = it }
@@ -973,6 +998,126 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         }
     }
 
+    // ---- the app lock and the kids lock (CP57) ------------------------------------------------
+
+    /** Everything the lock rows in Settings show, in one read. */
+    val appLock: Flow<AppLockSettings> = read { prefs ->
+        val pinSet = prefs[APP_PIN] != null
+        AppLockSettings(
+            pinSet = pinSet,
+            onOpen = pinSet && prefs[LOCK_ON_OPEN] == true,
+            kids = KidsLock.inForce(prefs[KIDS_LOCK] == true, pinSet),
+            kidsChats = kidsChatsOf(prefs),
+        )
+    }
+
+    /**
+     * The chats the kids lock allows, or null while it is off: what [ChatGate] follows and every
+     * list of chats is filtered by.
+     */
+    val kidsAllowedChats: Flow<Set<Long>?> = read(::allowedChatsOf)
+
+    /** Whether a PIN is set, now. */
+    suspend fun pinSetNow(): Boolean = prefs.data.first()[APP_PIN] != null
+
+    /** The wrong guesses so far and any wait they earned, now. */
+    suspend fun pinAttemptsNow(): PinAttempts = attemptsOf(prefs.data.first())
+
+    /** Sets (or changes) the PIN, and forgets any wrong guesses made against the old one. */
+    suspend fun setPin(pin: String) {
+        val line = PinHash.hash(pin)
+        prefs.edit {
+            it[APP_PIN] = line
+            it.remove(PIN_FAILURES)
+            it.remove(PIN_WAIT_UNTIL)
+        }
+    }
+
+    /**
+     * Removes the PIN, and with it everything the PIN guards: the lock on opening and the kids
+     * lock. The chosen chats are kept, so setting a PIN and the lock again starts from them.
+     */
+    suspend fun removePin() {
+        prefs.edit {
+            it.remove(APP_PIN)
+            it.remove(PIN_FAILURES)
+            it.remove(PIN_WAIT_UNTIL)
+            it.remove(LOCK_ON_OPEN)
+            it.remove(KIDS_LOCK)
+        }
+    }
+
+    /**
+     * Checks [pin] against the stored one at wall clock [now], counting a wrong one and refusing
+     * to look at all while an earlier run of wrong ones is still waiting out its [PinBackoff].
+     * The verdict and the count are written in one edit, so two pads cannot both get a free try.
+     */
+    suspend fun checkPin(pin: String, now: Long = System.currentTimeMillis()): PinCheck {
+        var verdict: PinCheck = PinCheck.NoPin
+        prefs.edit { prefs ->
+            val stored = prefs[APP_PIN] ?: return@edit
+            val attempts = attemptsOf(prefs)
+            val wait = attempts.waitMs(now)
+            verdict = when {
+                wait > 0 -> PinCheck.Waiting(wait)
+                PinHash.verify(pin, stored) -> {
+                    prefs.remove(PIN_FAILURES)
+                    prefs.remove(PIN_WAIT_UNTIL)
+                    PinCheck.Right
+                }
+                else -> {
+                    val next = attempts.failed(now)
+                    prefs[PIN_FAILURES] = next.failures.toLong()
+                    prefs[PIN_WAIT_UNTIL] = next.waitUntil
+                    PinCheck.Wrong(next)
+                }
+            }
+        }
+        return verdict
+    }
+
+    /** "Ask when the app opens". Ignored without a PIN. */
+    suspend fun setLockOnOpen(on: Boolean) {
+        prefs.edit { it[LOCK_ON_OPEN] = on }
+    }
+
+    /** The kids lock's switch. Ignored without a PIN ([KidsLock.inForce]). */
+    suspend fun setKidsLock(on: Boolean) {
+        prefs.edit { it[KIDS_LOCK] = on }
+    }
+
+    /** The chats the kids lock allows, replacing the last choice whole. */
+    suspend fun setKidsChats(chats: Set<Long>) {
+        prefs.edit { it[KIDS_CHATS] = chats.map(Long::toString).toSet() }
+    }
+
+    /**
+     * Forgets the PIN and both locks, chosen chats included. Called when a sign in screen is up:
+     * an account signed out from another device (Telegram's Devices list, the way back from a
+     * forgotten PIN) never passes through this app's own sign out, which clears them anyway.
+     */
+    suspend fun clearAppLock() {
+        prefs.edit {
+            it.remove(APP_PIN)
+            it.remove(PIN_FAILURES)
+            it.remove(PIN_WAIT_UNTIL)
+            it.remove(LOCK_ON_OPEN)
+            it.remove(KIDS_LOCK)
+            it.remove(KIDS_CHATS)
+        }
+    }
+
+    // ---- the TV screensaver ------------------------------------------------------------------
+
+    /** Minutes idle on a browse screen before the TV dims to its screensaver; 0 is off. */
+    val screensaverMinutes: Flow<Int> = read {
+        (it[SCREENSAVER_MINUTES] ?: Screensaver.DEFAULT_MINUTES.toLong()).toInt()
+    }
+
+    suspend fun setScreensaverMinutes(minutes: Int) {
+        prefs.edit { it[SCREENSAVER_MINUTES] = minutes.toLong() }
+    }
+
     /**
      * The one card after the first sign in (CP42), which asks "Show everything" or "Only my
      * folders". Armed when a sign in screen is shown and the card has never been dealt with, so a
@@ -1129,6 +1274,9 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
      * put on the card.
      */
     val continueWatching: Flow<List<ResumeRecord>> = read { prefs ->
+        // The kids lock reads its chats off the same map, so the row can never be drawn for a
+        // moment with the lock and the records out of step.
+        val allowed = allowedChatsOf(prefs)
         buildList {
             for ((key, value) in prefs.asMap()) {
                 val name = key.name
@@ -1141,7 +1289,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
                     positionMs = positionMs,
                     durationMs = prefs[longPreferencesKey("duration_$ids")] ?: 0L,
                 ) ?: continue
-                add(record)
+                if (KidsLock.allows(allowed, record.chatId)) add(record)
             }
         }.sortedByDescending { it.updatedAt }
     }

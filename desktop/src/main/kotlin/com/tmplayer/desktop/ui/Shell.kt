@@ -98,6 +98,8 @@ import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.onboarding.Entry
 import com.tmplayer.ui.onboarding.Onboarding
 import com.tmplayer.ui.onboarding.OnboardingTour
+import com.tmplayer.ui.lock.PinPad
+import com.tmplayer.ui.lock.PinPurpose
 
 /**
  * What the player draws for a [PlayRequest], given a way to close itself.
@@ -141,12 +143,35 @@ fun DesktopShell(
                     val signedIn = auth == AuthState.Ready
                     // A sign in screen arms the one card after the first sign in (FirstSignIn).
                     LaunchedEffect(auth) {
-                        if (FirstSignIn.isSignInStep(auth)) runCatching { state.settings.armFirstSignInCard() }
+                        if (FirstSignIn.isSignInStep(auth)) {
+                            runCatching { state.settings.armFirstSignInCard() }
+                            // The account is gone, however it went (signed out from Telegram's
+                            // Devices list is the way back from a forgotten PIN): so is its lock.
+                            runCatching { state.settings.clearAppLock() }
+                        }
                     }
+                    val appLock by state.settings.appLock.collectAsState(initial = null)
+                    val appUnlocked by com.tmplayer.data.AppLockSession.unlocked.collectAsState()
                     val done: () -> Unit = { scope.launch { state.settings.markOverviewSeen() } }
                     // Signed in, Browse stays composed under a tour Settings asked for, so the
                     // chat list is where it was when the tour ends.
-                    if (signedIn) Browse(state, player)
+                    // "Ask when the app opens" (CP57): the pad in place of the window's content
+                    // until the PIN is given. Closing the window is the way out.
+                    val askOnOpen = signedIn && appLock?.onOpen == true && !appUnlocked
+                    if (askOnOpen) {
+                        PinPad(
+                            settings = state.settings,
+                            purpose = PinPurpose.Check,
+                            title = LocalStrings.current.lockEnterForApp,
+                            onDone = {
+                                com.tmplayer.data.AppLockSession.unlock()
+                                state.settingsUnlocked = true
+                            },
+                            onCancel = null,
+                        )
+                    } else if (signedIn) {
+                        Browse(state, player)
+                    }
                     when (Onboarding.entry(signedIn, seen)) {
                         Entry.Tour -> Surface(Modifier.fillMaxSize(), color = Tone.background) {
                             OnboardingTour(state.settings, onDone = done, firstRun = !signedIn)
@@ -158,6 +183,28 @@ fun DesktopShell(
                 SnackbarHost(toasts, Modifier.align(Alignment.BottomCenter).padding(16.dp))
             }
         }
+    }
+}
+
+/**
+ * Settings behind the app lock's PIN (CP57), asked once per visit. With no PIN set there is
+ * nothing to ask, and a PIN set from inside Settings leaves the page open.
+ */
+@Composable
+private fun LockedSettings(state: ShellState, content: @Composable () -> Unit) {
+    val lock by state.settings.appLock.collectAsState(initial = null)
+    val known = lock ?: return
+    LaunchedEffect(known.pinSet) { if (!known.pinSet) state.settingsUnlocked = true }
+    if (known.pinSet && !state.settingsUnlocked) {
+        PinPad(
+            settings = state.settings,
+            purpose = PinPurpose.Check,
+            title = LocalStrings.current.lockEnterForSettings,
+            onDone = { state.settingsUnlocked = true },
+            onCancel = { state.go(Destination.Home) },
+        )
+    } else {
+        content()
     }
 }
 
@@ -284,11 +331,13 @@ private fun Browse(state: ShellState, player: PlayerContent) {
                             Destination.Favourites -> ChatsPage(state, chats, favouritesOnly = true)
                             Destination.History -> HistoryPage(state)
                             Destination.Downloads -> DownloadsPage(state)
-                            Destination.Settings -> SettingsPage(
-                                state,
-                                BuildInfo.VERSION,
-                                chatList = (chatsUi as? UiState.Content)?.value?.chats.orEmpty(),
-                            )
+                            Destination.Settings -> LockedSettings(state) {
+                                SettingsPage(
+                                    state,
+                                    BuildInfo.VERSION,
+                                    chatList = (chatsUi as? UiState.Content)?.value?.chats.orEmpty(),
+                                )
+                            }
                         }
                     }
                     // Over the page only, so the side bar stays reachable while a pane is open.

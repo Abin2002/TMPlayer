@@ -1,0 +1,237 @@
+package com.tmplayer.data
+
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.nio.file.Files
+
+/**
+ * The app lock (CP57): the PIN is only ever a salted hash, wrong guesses earn a growing wait that
+ * survives a restart, and the kids lock screens every list of chats the same way.
+ */
+class AppLockTest {
+
+    private val dir = Files.createTempDirectory("tm-lock").toFile()
+    private val settings = SettingsStore(SettingsStore.openDataStore(dir.resolve(SettingsStore.FILE_NAME)))
+
+    // ---- the hash --------------------------------------------------------------------------
+
+    @Test
+    fun `a PIN is four digits and nothing else`() {
+        assertTrue(PinHash.isValid("0420"))
+        assertFalse(PinHash.isValid("420"))
+        assertFalse(PinHash.isValid("04200"))
+        assertFalse(PinHash.isValid("04a0"))
+        assertFalse(PinHash.isValid("٠١٢٣"))
+    }
+
+    @Test
+    fun `the right PIN verifies and every other one does not`() {
+        val stored = PinHash.hash("2580")
+        assertTrue(PinHash.verify("2580", stored))
+        assertFalse(PinHash.verify("2581", stored))
+        assertFalse(PinHash.verify("0000", stored))
+        assertFalse(PinHash.verify("258", stored))
+    }
+
+    @Test
+    fun `the PIN itself is never in the stored line, and each line has its own salt`() {
+        val first = PinHash.hash("1234")
+        val second = PinHash.hash("1234")
+        assertFalse(first.contains("1234"))
+        assertNotEquals(first, second)
+        assertTrue(PinHash.verify("1234", first))
+        assertTrue(PinHash.verify("1234", second))
+    }
+
+    @Test
+    fun `the same salt gives the same line`() {
+        val salt = ByteArray(16) { it.toByte() }
+        assertEquals(PinHash.hash("9999", salt), PinHash.hash("9999", salt))
+    }
+
+    @Test
+    fun `a damaged line never opens`() {
+        assertFalse(PinHash.verify("1234", null))
+        assertFalse(PinHash.verify("1234", ""))
+        assertFalse(PinHash.verify("1234", "v1:abc:def:ghi"))
+        assertFalse(PinHash.verify("1234", "v2:20000:AAAA:AAAA"))
+        assertFalse(PinHash.verify("1234", "v1:20000:!!!:AAAA"))
+    }
+
+    // ---- the back-off ----------------------------------------------------------------------
+
+    @Test
+    fun `three misses are free, then the wait doubles up to a ceiling`() {
+        assertEquals(0L, PinBackoff.waitAfter(1))
+        assertEquals(0L, PinBackoff.waitAfter(2))
+        assertEquals(30_000L, PinBackoff.waitAfter(3))
+        assertEquals(60_000L, PinBackoff.waitAfter(4))
+        assertEquals(120_000L, PinBackoff.waitAfter(5))
+        assertEquals(PinBackoff.MAX_WAIT_MS, PinBackoff.waitAfter(9))
+        assertEquals(PinBackoff.MAX_WAIT_MS, PinBackoff.waitAfter(500))
+    }
+
+    @Test
+    fun `attempts count down the free tries and then wait`() {
+        var attempts = PinAttempts()
+        assertEquals(3, attempts.freeLeft)
+        attempts = attempts.failed(now = 1_000)
+        attempts = attempts.failed(now = 2_000)
+        assertEquals(1, attempts.freeLeft)
+        assertEquals(0L, attempts.waitMs(now = 2_000))
+        attempts = attempts.failed(now = 3_000)
+        assertEquals(0, attempts.freeLeft)
+        assertEquals(30_000L, attempts.waitMs(now = 3_000))
+        assertEquals(10_000L, attempts.waitMs(now = 23_000))
+        assertEquals(0L, attempts.waitMs(now = 40_000))
+    }
+
+    @Test
+    fun `the store counts misses, makes them wait, and forgets them on the right PIN`() = runBlocking {
+        assertEquals(PinCheck.NoPin, settings.checkPin("1234", now = 0))
+        settings.setPin("1234")
+        assertTrue(settings.pinSetNow())
+
+        assertTrue(settings.checkPin("1111", now = 0) is PinCheck.Wrong)
+        assertTrue(settings.checkPin("2222", now = 0) is PinCheck.Wrong)
+        val third = settings.checkPin("3333", now = 0) as PinCheck.Wrong
+        assertEquals(30_000L, third.attempts.waitMs(0))
+
+        // Inside the wait even the right PIN is not looked at.
+        assertEquals(PinCheck.Waiting(20_000L), settings.checkPin("1234", now = 10_000))
+        // Written down rather than held in memory, so a restart reads the same wait back.
+        assertEquals(PinAttempts(3, 30_000L), settings.pinAttemptsNow())
+
+        assertEquals(PinCheck.Right, settings.checkPin("1234", now = 30_000))
+        assertEquals(PinAttempts(), settings.pinAttemptsNow())
+    }
+
+    @Test
+    fun `changing the PIN forgets the misses against the old one`() = runBlocking {
+        settings.setPin("1234")
+        settings.checkPin("0000", now = 0)
+        settings.setPin("5678")
+        assertEquals(PinAttempts(), settings.pinAttemptsNow())
+        assertEquals(PinCheck.Right, settings.checkPin("5678", now = 0))
+        assertTrue(settings.checkPin("1234", now = 0) is PinCheck.Wrong)
+    }
+
+    @Test
+    fun `removing the PIN turns off what it guarded`() = runBlocking {
+        settings.setPin("1234")
+        settings.setLockOnOpen(true)
+        settings.setKidsChats(setOf(7L))
+        settings.setKidsLock(true)
+        assertEquals(AppLockSettings(true, true, true, setOf(7L)), settings.appLock.first())
+
+        settings.removePin()
+        assertEquals(AppLockSettings(false, false, false, setOf(7L)), settings.appLock.first())
+        assertNull(settings.kidsAllowedChats.first())
+    }
+
+    @Test
+    fun `signing out, here or from another device, clears the lock`() = runBlocking {
+        settings.setPin("1234")
+        settings.setKidsLock(true)
+        settings.setScreensaverMinutes(10)
+        settings.clearEverything()
+        assertFalse(settings.pinSetNow())
+        // The screensaver is the television's setting, not the account's.
+        assertEquals(10, settings.screensaverMinutes.first())
+
+        settings.setPin("1234")
+        settings.setKidsChats(setOf(1L))
+        settings.clearAppLock()
+        assertEquals(AppLockSettings(), settings.appLock.first())
+    }
+
+    // ---- the kids lock ---------------------------------------------------------------------
+
+    private fun chat(id: Long) = ChatSummary(id, "Chat $id", null, 0, ChatKind.Channel)
+
+    private fun video(chatId: Long, messageId: Long) = MediaItem(
+        chatId = chatId, messageId = messageId, fileId = 1, title = "V", sizeBytes = 1,
+        durationSec = 0, mimeType = "video/mp4", thumbnailFileId = 0, miniThumbnail = null, date = 0,
+    )
+
+    @Test
+    fun `off, the filter lets everything through`() {
+        val chats = listOf(chat(1), chat(2))
+        assertEquals(chats, KidsLock.chats(chats, allowed = null))
+        assertTrue(KidsLock.allows(null, 99))
+    }
+
+    @Test
+    fun `on, only the allowed chats are left, in their order`() {
+        val chats = listOf(chat(3), chat(1), chat(2))
+        assertEquals(listOf(chat(3), chat(2)), KidsLock.chats(chats, setOf(2L, 3L)))
+        val videos = listOf(video(1, 10), video(2, 11), video(1, 12))
+        assertEquals(listOf(video(2, 11)), KidsLock.media(videos, setOf(2L)))
+    }
+
+    @Test
+    fun `on with nothing chosen shows nothing, not everything`() {
+        assertTrue(KidsLock.chats(listOf(chat(1)), emptySet()).isEmpty())
+    }
+
+    @Test
+    fun `a lock without a PIN is not in force`() = runBlocking {
+        settings.setKidsChats(setOf(5L))
+        settings.setKidsLock(true)
+        assertNull(settings.kidsAllowedChats.first())
+        settings.setPin("1234")
+        assertEquals(setOf(5L), settings.kidsAllowedChats.first())
+    }
+
+    @Test
+    fun `continue watching only offers the allowed chats`() = runBlocking {
+        fun line(chat: String) = ResumeRecord.encode(3, "Film", chat, 1L, 2400, System.currentTimeMillis())
+        settings.saveResumePosition(5, 9, 600_000L, 40 * 60_000L, line("Allowed"))
+        settings.saveResumePosition(6, 9, 600_000L, 40 * 60_000L, line("Not allowed"))
+        assertEquals(2, settings.continueWatching.first().size)
+
+        settings.setPin("1234")
+        settings.setKidsChats(setOf(5L))
+        settings.setKidsLock(true)
+        assertEquals(listOf(5L), settings.continueWatching.first().map { it.chatId })
+
+        settings.setKidsLock(false)
+        assertEquals(2, settings.continueWatching.first().size)
+    }
+
+    @Test
+    fun `the gate follows what it is set to`() = runBlocking {
+        ChatGate.set(setOf(4L))
+        assertEquals(setOf(4L), ChatGate.awaitReady())
+        ChatGate.set(null)
+        assertNull(ChatGate.awaitReady())
+    }
+
+    // ---- the screensaver -------------------------------------------------------------------
+
+    @Test
+    fun `the screensaver steps through its choices and holds at the ends`() {
+        assertEquals(10, Screensaver.step(5, 1))
+        assertEquals(10, Screensaver.step(10, 1))
+        assertEquals(0, Screensaver.step(2, -1))
+        assertEquals(0, Screensaver.step(0, -1))
+        assertEquals(Screensaver.step(5, 1), Screensaver.step(7, 1))
+        assertNull(Screensaver.idleMs(0))
+        assertEquals(300_000L, Screensaver.idleMs(5))
+    }
+
+    @Test
+    fun `the clock never stays put from one move to the next`() {
+        for (slot in 0L until 30L) {
+            assertNotEquals(Screensaver.spot(slot), Screensaver.spot(slot + 1))
+            val (x, y) = Screensaver.spot(slot)
+            assertTrue(x in 0f..1f && y in 0f..1f)
+        }
+    }
+}

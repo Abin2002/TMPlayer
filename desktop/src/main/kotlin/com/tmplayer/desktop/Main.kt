@@ -70,6 +70,8 @@ fun main(args: Array<String>) {
         Td.start(DesktopPaths, desktopDeviceInfo(), desktopCredentials())
         OnlineSubtitles.current = desktopOnlineSubtitles()
         val settings = DesktopServices.settings
+        // The kids lock (CP57), read once here for every list of chats in the process.
+        com.tmplayer.data.ChatGate.follow(settings)
         OnlineMetadata.current = desktopOnlineMetadata()
         // What an earlier run was in the middle of comes back paused, once there is an account to
         // ask TDLib about.

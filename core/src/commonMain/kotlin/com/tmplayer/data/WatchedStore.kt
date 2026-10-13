@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import okio.Path.Companion.toPath
 import java.io.File
@@ -124,10 +125,14 @@ class WatchedStore(private val store: DataStore<Preferences>) {
         decodeAll(prefs).associateBy { it.key }
     }
 
-    /** The "Watched" list: most recently finished first. */
+    /**
+     * The "Watched" list: most recently finished first, without the chats the kids lock leaves
+     * out ([ChatGate]). The ticks in [watched] are not screened: a grid only ever shows a chat the
+     * lock already let through.
+     */
     val history: Flow<List<WatchedRecord>> = read { prefs ->
         decodeAll(prefs).sortedByDescending { it.watchedAt }
-    }
+    }.combine(ChatGate.allowed) { records, allowed -> KidsLock.filter(records, allowed) { it.chatId } }
 
     suspend fun isWatched(chatId: Long, messageId: Long): Boolean =
         store.data.first()[keyOf(chatId, messageId)] != null
