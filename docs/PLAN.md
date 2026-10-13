@@ -121,6 +121,29 @@ Tick `[x]` and add the commit or date. `U` items are yours, `CP` items are Claud
 - [x] CP42 Minimal onboarding: six tour pages down to two, one first-sign-in card, deferred hints (7ddddb5 and a280a35: two page tour, first-run Home and chat list tip, phone gesture hint, TV browse hint; the first sign in card is armed by a sign in screen, asks "Show everything" or "Only my folders" once the chat list is in and only with folders, skipped for good without, once per install, and the TV browse hint now waits for it. Card checked through the promo fixture on the phone emulator, portrait and landscape, English and Arabic, on the TV emulator with Show everything focused and Back answering, and in the desktop render test. Pending for CP44: a real first sign in on each platform, real phone gestures and the TV hint over a real first chat list)
 - [ ] CP44 Device pass for CP37 to CP43: install on the phone and the Mi TV stick, hunt wasted space and anything broken
 
+**Phase I. Telegram groups, watching habits and ideas from other players (planned 2026-10-13, from a look at Nuvio, Stremio, Kodi, Jellyfin, mpv frontends and Animetrix-style apps)**
+
+Batch 1 is the offline features, batch 2 the larger ones, sync last because it needs U30. Every CP covers phone, TV and desktop.
+- [x] CP45 Forum topics as tabs, captions in titles and search, lecture next-up, paid media, edited and scheduled messages (7cb7d6d and 032259d; topic tabs checked on the POCO in STRIVER TUF)
+- [x] CP46 A show is one tile, copies of a film or episode one tile with versions, anime numbering kept (3e765ce; checked on the POCO in Cinema_paradasio)
+- [x] CP47 Skip intro, recap and credits from TheIntroDB, IntroDB.app and AniSkip, next-up counted from the credits (eb8661b; unit tested, privacy page updated; the skip pill is not yet seen on a device, the promo app has online metadata off)
+- [ ] CP48 Speed remembered per series, per chat and per forum topic, presets 0.75 to 2 (batch 1)
+- [ ] CP49 Preferred audio and subtitle language, subtitle mode (batch 1)
+- [ ] CP50 Watch later: single videos without starring the chat, Home row, History tab (batch 1)
+- [ ] CP51 Download a season, or only its unwatched episodes, from the series page (batch 1)
+- [ ] CP52 Course progress: "12 of 40 watched" on lecture series and topics (batch 1)
+- [ ] CP53 Backup and restore settings, lists and progress to a file (batch 2)
+- [ ] CP54 Updates feed: new episodes of shows being watched, badges on tiles (batch 2)
+- [ ] CP55 Timestamped bookmarks with notes (batch 2)
+- [ ] CP56 Android chapters, A-B loop and frame step (desktop has them since CP08) (batch 2)
+- [ ] CP57 TV screensaver, PIN lock for settings and a kids lock (batch 2)
+- [ ] CP58 Skip silence, rewind a few seconds on resume (batch 2)
+- [ ] CP59 UI scale, log export for bug reports (batch 2)
+- [ ] CP60 Episode thumbnails in the series list (batch 2)
+- [ ] CP61 (optional) Absolute anime episode numbers to season and episode via ani.zip or the Fribb list (batch 2)
+- [ ] U30 Register AniList and Simkl API clients, give Claude the client ids
+- [ ] CP62 AniList and Simkl progress sync (needs U30)
+
 ## Standing rules
 
 - **Stop at every CP.** Commit, tick, push, report, wait for `/clear`.
@@ -916,6 +939,72 @@ which is ordinary D-pad scrolling. Not yet seen on a device.
 **Done when:** screenshots of each changed screen on both devices were viewed, findings fixed or listed, and
 the pending device checks of CP37 to CP43 are ticked or carried forward by name.
 **STOP**
+
+### Phase I notes (CP45 to CP62)
+**Why:** on 2026-10-13 the user joined a forum supergroup whose topics all showed mixed together, then asked
+for other Telegram edge cases, captions done in a readable way (study videos, not only films and series),
+Cinema_paradasio's repeated uploads grouped, skip intro, and finally features taken from Nuvio and other
+open-source players: "do all the ones."
+**How every CP in this phase runs:** one feature per worktree agent is fine (they are file-disjoint enough),
+merged in the main tree. English strings go into `core/src/commonMain/resources/i18n/en.json` only; after the
+batch the main session translates them into all 20 locales directly (no langsync) and checks `CatalogTest`
+(CLDR plurals: es-419, fr, it and pt-BR need `many`). Build and test with
+`JAVA_HOME=~/.jdks/jdk-21.0.12+8 ./gradlew -q :core:jvmTest :ui:jvmTest :desktop:test :app:assemblePromo`,
+install the promo APK on the POCO with `adb -s d3f7da23 install -r` (keeps the login), look at it, then commit
+and push. No release unless asked.
+**Test chats:** STRIVER TUF (forum topics, restricts saving), Cinema_paradasio (repeated films, Love Under
+Construction and Kerala Crime Files).
+
+### CP48 Speed per series, chat and topic
+Today speed lives per file in `ResumeRecord`. Remember the speed the viewer picks for the series (same key as
+`SettingsStore.trackChoice`), else for the chat, or chat plus topic when `MediaItem.topicId != 0`. Opening a
+video: the file's own speed, then the series, then the chat or topic, then 1.0. Choosing 1.0 clears it. Make
+sure the pickers offer 0.75, 1, 1.25, 1.5, 1.75 and 2 without redesigning them. Unit test the precedence.
+
+### CP49 Preferred audio and subtitle language
+Settings rows on every platform (TV through `ChoiceSheet`): preferred audio language (Automatic or a language),
+preferred subtitle language (Automatic, Off or a language), and subtitles mode: off unless chosen, always when
+available, or only when the audio is not in the viewer's language. Order: the file's saved tracks, the series
+memory, these defaults, the file's own defaults. Android via Media3 `TrackSelectionParameters`, desktop via
+mpv `alang`, `slang` or the existing track code. Normalise ISO 639-2 and 639-1 codes; names from
+`java.util.Locale` in the UI language. Unit test the order and the normalisation.
+
+### CP50 Watch later
+A `WatchLaterStore` modelled on `WatchedStore`, keyed `chatId:messageId`, holding what a tile needs (title, file
+name, size, duration, chat title, file id, date added). Add and remove in the hold menu and detail actions,
+a Home row after Continue watching (hidden when empty) and a History tab; tiles open like Continue watching
+does (`ChatRepository.mediaItem`). Finishing a video removes it. Sign out does what `WatchedStore` does.
+
+### CP51 Download a season
+"Download season" and "Download unwatched" beside Play on the series page (`Series.kt`, `SeriesScreens.kt`,
+desktop `SeriesViews.kt`). Each episode uses the copy the list would play (`EpisodeCopies.closest`), skipping
+ones already saved or queued and chats that restrict saving. Check free space first with the existing
+messages (`some_fit`, `none_fit`) and reuse the multi-download feedback. Unit test the episode and copy choice.
+
+### CP52 Course progress
+A lecture series (`LessonSteps`) or a forum topic shows "12 of 40 watched" and a thin bar on its tile and at the
+top of its list, from `WatchedStore` and resume records. Continue opens the first unfinished lesson.
+
+### CP53 to CP61 (batch 2)
+- **CP53 Backup and restore:** export settings, favourites, watched, watch later, bookmarks, resume points and
+  per-series memory to one JSON file; import merges. No Telegram session or keys in it.
+- **CP54 Updates feed:** for shows in progress, new episodes found in their chats since the last visit, a Home
+  row and a dot on the show tile.
+- **CP55 Bookmarks:** a position plus an optional note, listed in the player and on the detail page.
+- **CP56 Android player extras:** chapters from the container, A-B loop and frame step, matching desktop.
+- **CP57 TV locks:** a screensaver after idle on browse screens, a PIN for settings and sign out, a kids lock
+  that limits browsing to chosen chats.
+- **CP58 Skip silence and resume rewind:** Media3 silence skipping (desktop via an mpv filter if cheap), and
+  resume a few seconds before the saved point (setting, default 3 s).
+- **CP59 UI scale and log export:** a scale setting for phone, TV and desktop, and a "Save logs" action next to
+  bug reports, scrubbed of chat names.
+- **CP60 Episode thumbnails:** TDLib video thumbnails in the series episode list, lazy, no extra downloads.
+- **CP61 (optional) Anime mapping:** ani.zip or the Fribb anime list to turn absolute numbers (One Piece 1080)
+  into season and episode for metadata and skip times. Privacy page if a new service is called.
+
+### CP62 AniList and Simkl sync
+Needs U30. OAuth on each platform (TV through a QR or device code), push watched episodes and progress, pull
+the lists for a Home row. Privacy page, sitemap lastmod and `llms.txt` updated.
 
 ## Your tasks
 
