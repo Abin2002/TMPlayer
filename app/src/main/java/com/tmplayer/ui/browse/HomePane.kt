@@ -109,6 +109,8 @@ internal fun HomePane(
     firstStep: DefaultGroups.FirstStep = DefaultGroups.firstStep(hidden = false, folders = emptyList()),
     /** Opens the first-run state's target. */
     onOpenSection: (BrowseSection) -> Unit = {},
+    /** Download season and Download unwatched on a show's page; null leaves them out. */
+    onDownloadSeason: ((SeasonDownloadRequest) -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     if (rows.isEmpty()) {
@@ -244,6 +246,7 @@ internal fun HomePane(
             onPlay = { onPlay(it, chatTitle(it.chatId)) },
             onDismiss = { openSeries = null },
             onLongClick = { onHoldMedia(it, chatTitle(it.chatId)) },
+            onDownload = onDownloadSeason,
         )
     }
 }

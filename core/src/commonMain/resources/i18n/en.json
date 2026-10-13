@@ -1251,6 +1251,8 @@
     "all_watched": "All watched",
     "back": "Back to the chat",
     "copy": "Play the {label} copy",
+    "download_season": "Download season",
+    "download_unwatched": "Download unwatched",
     "episode": "Episode {number}",
     "episodes_count": "{count, plural, one {# episode} other {# episodes}}",
     "play": "Play {code}",

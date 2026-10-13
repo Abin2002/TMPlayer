@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -70,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import com.tmplayer.data.EpisodeCopies
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.MediaMapper
+import com.tmplayer.data.SeasonDownload
 import com.tmplayer.data.Series
 import com.tmplayer.data.SeriesEpisode
 import com.tmplayer.data.SeriesProgress
@@ -89,6 +91,7 @@ import com.tmplayer.ui.online.rememberMetaExtras
 import com.tmplayer.ui.online.rememberTrailerLauncher
 import com.tmplayer.ui.online.MetaPicture
 import com.tmplayer.ui.online.rememberMeta
+import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
@@ -121,9 +124,23 @@ class SeriesWatch(
     fun pick(episode: SeriesEpisode, progress: SeriesProgress): MediaItem =
         SeriesShelf.pick(episode, finished, { point(it)?.fraction ?: 0f }, progress.like)
 
+    /** "Download season" or "Download unwatched" for [season]: see [SeasonDownload.copies]. */
+    fun download(series: Series, season: SeriesSeason, which: SeasonDownload.Which) = SeasonDownloadRequest { held ->
+        SeasonDownload.copies(series, season, which, finished, { point(it)?.fraction ?: 0f }, held)
+    }
+
     companion object {
         val None = SeriesWatch({ null }, { false })
     }
+}
+
+/**
+ * A press of "Download season" or "Download unwatched", answered with the copies to queue once the
+ * platform has said which are downloaded already or on the queue: that answer is the platform's
+ * to read, and on a phone it is a walk of the download records off the drawing thread.
+ */
+fun interface SeasonDownloadRequest {
+    fun copies(held: (MediaItem) -> Boolean): List<MediaItem>
 }
 
 /**
@@ -635,6 +652,10 @@ private fun EpisodeLine(
  * [seasonPicker] is the platform's: tabs on a phone and a television ([SeasonTabs], the default),
  * a dropdown on the desktop. On a television the play button takes focus first, so OK straight
  * after opening a show carries on where the viewer left it.
+ *
+ * Beside the play button, Download queues the season shown. Once some of that season is watched
+ * and some is not, it opens a line of two choices under the buttons instead, the whole season or
+ * only what is left to watch: a line rather than a menu, so a remote reaches both with Down.
  */
 @Composable
 fun SeriesPanel(
@@ -651,6 +672,11 @@ fun SeriesPanel(
     trailing: @Composable () -> Unit = {},
     /** Opens a video's detail, for "More like this"; null leaves that row out. */
     onOpenItem: ((MediaItem) -> Unit)? = onLongClick,
+    /**
+     * Queues the season shown, or its unwatched episodes, through the platform's multi-download;
+     * null leaves the download button out.
+     */
+    onDownload: ((SeasonDownloadRequest) -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     val tv = !isTouch()
@@ -662,6 +688,10 @@ fun SeriesPanel(
     val shown = series.seasons.firstOrNull { it.number == season } ?: series.seasons.first()
     val playFocus = remember { FocusRequester() }
     LaunchedEffect(series.key) { if (tv) runCatching { playFocus.requestFocus() } }
+    // Download is for the season shown, so its two choices fold away when another is picked.
+    val downloads = onDownload != null && SeasonDownload.anySavable(shown)
+    val bothDownloads = downloads && SeasonDownload.unwatchedDiffers(shown, watch.finished)
+    var choosingDownload by remember(series.key, shown.number) { mutableStateOf(false) }
 
     val meta = rememberMeta(series.cover, showOnly = true)
     val extras = rememberMetaExtras(meta)
@@ -721,8 +751,13 @@ fun SeriesPanel(
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val stacked = maxWidth < SEASONS_BESIDE_MIN
             Column {
+                // Upright on a phone, Play, the trailer and Download can be wider than the screen;
+                // with the seasons on their own line the buttons scroll sideways rather than squeeze.
                 Row(
-                    Modifier.fillMaxWidth().padding(contentPadding.horizontalOnly()),
+                    Modifier
+                        .fillMaxWidth()
+                        .then(if (stacked) Modifier.horizontalScroll(rememberScrollState()) else Modifier)
+                        .padding(contentPadding.horizontalOnly()),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -734,7 +769,41 @@ fun SeriesPanel(
                         modifier = Modifier.focusRequester(playFocus),
                     )
                     extras?.trailer?.let { trailer -> TrailerPill(onClick = { trailers.open(trailer) }) }
+                    if (downloads) {
+                        OutlinePill(
+                            label = if (bothDownloads) s.gridDownload else s.seriesDownloadSeason,
+                            onClick = {
+                                if (bothDownloads) {
+                                    choosingDownload = !choosingDownload
+                                } else {
+                                    onDownload?.invoke(watch.download(series, shown, SeasonDownload.Which.Season))
+                                }
+                            },
+                        )
+                    }
                     if (!stacked) Box(Modifier.weight(1f)) { seasonPicker(shown.number) { season = it } }
+                }
+                if (choosingDownload && bothDownloads) {
+                    val first = remember { FocusRequester() }
+                    LaunchedEffect(Unit) { if (tv) runCatching { first.requestFocus() } }
+                    Row(
+                        Modifier.fillMaxWidth().padding(contentPadding.horizontalOnly()).padding(top = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        listOf(
+                            SeasonDownload.Which.Season to s.seriesDownloadSeason,
+                            SeasonDownload.Which.Unwatched to s.seriesDownloadUnwatched,
+                        ).forEachIndexed { at, (which, label) ->
+                            OutlinePill(
+                                label = label,
+                                onClick = {
+                                    choosingDownload = false
+                                    onDownload?.invoke(watch.download(series, shown, which))
+                                },
+                                modifier = if (at == 0) Modifier.focusRequester(first) else Modifier,
+                            )
+                        }
+                    }
                 }
                 if (stacked) {
                     Box(Modifier.fillMaxWidth().padding(contentPadding.horizontalOnly()).padding(top = 12.dp)) {
@@ -877,6 +946,29 @@ private fun PlayButton(label: String, onClick: () -> Unit, modifier: Modifier = 
     ) {
         val ink = Tone.onAccent
         Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = ink, modifier = Modifier.size(22.dp))
+        Text(label, style = MaterialTheme.typography.labelLarge, color = ink, maxLines = 1)
+    }
+}
+
+/** A button beside Play in the trailer's dress: an outline, the focus fill under the remote. */
+@Composable
+private fun OutlinePill(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val tv = !isTouch()
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    Row(
+        modifier
+            .height(if (tv) 48.dp else 40.dp)
+            .clip(CircleShape)
+            .background(if (focused) Tone.focusFill else Color.Transparent)
+            .border(1.dp, if (focused) Color.Transparent else Tone.muted.copy(alpha = 0.6f), CircleShape)
+            .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClick)
+            .padding(start = 14.dp, end = 18.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        val ink = if (focused) Tone.onFocusFill else Tone.text
+        Icon(TmIcons.Download, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
         Text(label, style = MaterialTheme.typography.labelLarge, color = ink, maxLines = 1)
     }
 }

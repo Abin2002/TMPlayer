@@ -665,6 +665,9 @@ fun MediaGridScreen(
                         onPlay = { onPlay(it) },
                         onDismiss = { openSeries = null },
                         onLongClick = { heldMenuOf = it },
+                        onDownload = { request ->
+                            scope.launch { queueSeason(context, settings, request) { chatTitle }?.let(onOfflineAction) }
+                        },
                     )
                 }
 

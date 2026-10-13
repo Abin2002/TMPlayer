@@ -130,7 +130,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [ ] CP48 Speed remembered per series, per chat and per forum topic, presets 0.75 to 2 (batch 1)
 - [ ] CP49 Preferred audio and subtitle language, subtitle mode (batch 1)
 - [ ] CP50 Watch later: single videos without starring the chat, Home row, History tab (batch 1)
-- [ ] CP51 Download a season, or only its unwatched episodes, from the series page (batch 1)
+- [x] CP51 Download a season, or only its unwatched episodes, from the series page (batch 1; a Download button beside Play on phone, TV and desktop, opening "Download season" and "Download unwatched" on a line under it once the season is partly watched; one copy per episode as the list would play it, episodes kept or queued in any copy skipped, restricted chats left out, then the grid's own multi-download for room and wording. Unit tested (SeasonDownloadTest); not yet seen on a device)
 - [ ] CP52 Course progress: "12 of 40 watched" on lecture series and topics (batch 1)
 - [ ] CP53 Backup and restore settings, lists and progress to a file (batch 2)
 - [ ] CP54 Updates feed: new episodes of shows being watched, badges on tiles (batch 2)
