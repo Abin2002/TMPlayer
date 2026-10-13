@@ -125,7 +125,7 @@ class BrowseKeyboardTest {
             waitForIdle()
             assertEquals("Video 2", shell.detail?.item?.title)
             onNodeWithText("Details").assertExists()
-            onNodeWithText("Copy Telegram link").assertExists()
+            onNodeWithText("Copy link").assertExists()
             // The first action takes focus, so Enter would play from the pane at once.
             onNode(isFocused()).assert(hasText("Play"))
             onNode(isFocused()).performKeyInput { pressKey(Key.Escape) }
@@ -167,8 +167,8 @@ class BrowseKeyboardTest {
         onNode(poster(0)).performMouseInput { rightClick() }
         waitForIdle()
         onNodeWithText("Play").assertExists()
-        onNodeWithText("Mark as watched").assertExists()
-        for (gone in listOf("Download", "Copy Telegram link", "Open in another player", "Select videos")) {
+        onNodeWithText("Watched").assertExists()
+        for (gone in listOf("Download", "Copy link", "Copy Telegram link", "Open with", "Open in another player", "Select videos")) {
             onNodeWithText(gone, substring = true).assertDoesNotExist()
         }
         shell.closeDetail()
