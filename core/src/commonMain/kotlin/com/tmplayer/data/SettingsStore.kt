@@ -30,6 +30,7 @@ private val PLAYER_HINT_SEEN = booleanPreferencesKey("player_hint_seen")
 private val FIRST_VIDEO_TIP_DISMISSED = booleanPreferencesKey("first_video_tip_dismissed")
 private val TV_BROWSE_HINT_SEEN = booleanPreferencesKey("tv_browse_hint_seen")
 private val ONLINE_META_NOTICE_DISMISSED = booleanPreferencesKey("online_meta_notice_dismissed")
+private val ONLINE_META_INVITE_SEEN = booleanPreferencesKey("online_meta_invite_seen")
 private val OPEN_LAST_CHAT = booleanPreferencesKey("open_last_chat")
 private val DOWNLOAD_FIRST = booleanPreferencesKey("download_before_playing")
 private val AUTOPLAY_NEXT = booleanPreferencesKey("autoplay_next")
@@ -756,6 +757,20 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     suspend fun setOnlineMetaNoticeDismissed(dismissed: Boolean = true) {
         prefs.edit { it[ONLINE_META_NOTICE_DISMISSED] = dismissed }
+    }
+
+    /**
+     * Whether the one-time invite to turn online metadata on was answered (see
+     * [com.tmplayer.online.MetaNotice.shouldInvite]). A hint for this device, out of backups.
+     */
+    val onlineMetaInviteSeen: Flow<Boolean> = read { it[ONLINE_META_INVITE_SEEN] ?: false }
+
+    /** Turn on or Not now: either way it is not asked again, and Turn on also retires the note. */
+    suspend fun markOnlineMetaInviteSeen(turnedOn: Boolean) {
+        prefs.edit {
+            it[ONLINE_META_INVITE_SEEN] = true
+            if (turnedOn) it[ONLINE_META_NOTICE_DISMISSED] = true
+        }
     }
 
     /**

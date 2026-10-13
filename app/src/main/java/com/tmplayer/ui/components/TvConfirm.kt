@@ -55,8 +55,11 @@ fun TvConfirm(
     icon: ImageVector = if (destructive) Icons.Default.Warning else Icons.Default.Info,
     /** Drawn under the message and detail, for a choice that belongs to the question, such as a tick box. */
     extra: (@Composable () -> Unit)? = null,
+    /** Focus starts on confirm instead, for an invitation where the confirm is the safe press. */
+    focusConfirm: Boolean = false,
 ) {
     val cancelFocus = remember { FocusRequester() }
+    val confirmFocus = remember { FocusRequester() }
     val touch = isTouch()
 
     // A phone gets Material's own dialog, which brings for nothing what the panel below cannot: a
@@ -159,13 +162,13 @@ fun TvConfirm(
                 ) {
                     Text(cancelLabel)
                 }
-                TmButton(onClick = onConfirm, destructive = destructive) {
+                TmButton(onClick = onConfirm, destructive = destructive, modifier = Modifier.focusRequester(confirmFocus)) {
                     Text(confirmLabel)
                 }
             }
         }
 
-        LaunchedEffect(Unit) { runCatching { cancelFocus.requestFocus() } }
+        LaunchedEffect(Unit) { runCatching { (if (focusConfirm) confirmFocus else cancelFocus).requestFocus() } }
     }
 }
 

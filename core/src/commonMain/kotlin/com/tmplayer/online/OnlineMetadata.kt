@@ -64,7 +64,7 @@ class OnlineMetadata(
     /** Whether this build carries a TMDB key of its own. */
     val buildHasKey: Boolean get() = buildKey.isNotBlank()
 
-    fun setEnabled(value: Boolean) = store.update { it.copy(enabled = value) }
+    fun setEnabled(value: Boolean) = store.update { it.copy(enabled = value, offByChoice = !value) }
 
     fun setSkipTimes(value: Boolean) = store.update { it.copy(skipTimes = value) }
 

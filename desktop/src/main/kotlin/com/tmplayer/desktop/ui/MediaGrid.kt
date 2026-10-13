@@ -246,6 +246,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 arranged.filterIsInstance<com.tmplayer.data.ShelfEntry.Show>().associate { it.series.cover.id to it.series }
             }
             val metaNotice = grouping && metaNoticeShown(state)
+            MetaInviteDialog(state)
             VideoGrid(
                 state = state,
                 items = cells,
@@ -1047,6 +1048,38 @@ private fun metaNoticeShown(state: ShellState): Boolean {
     // True until the store answers, so the note never flashes up for somebody who put it away.
     val dismissed by state.settings.onlineMetaNoticeDismissed.collectAsState(initial = true)
     return MetaNotice.shouldShow(meta.enabled, dismissed)
+}
+
+/**
+ * The one-time invite for a viewer whose online metadata is off from an older version, when off
+ * was the default (see [MetaNotice.shouldInvite]), the phone's and television's OnlineMetaInvite.
+ * Not over the tour Settings can open over this page. Not now, Escape or a click outside all
+ * answer it, and it is never asked again.
+ */
+@Composable
+private fun MetaInviteDialog(state: ShellState) {
+    val online = OnlineMetadata.current ?: return
+    val meta by online.settings.collectAsState()
+    // Seen until the stores answer, so it never flashes up for somebody who already answered.
+    val seen by state.settings.onlineMetaInviteSeen.collectAsState(initial = true)
+    val toured by state.settings.overviewSeen.collectAsState(initial = false)
+    var answered by remember { mutableStateOf(false) }
+    if (answered || !toured || !MetaNotice.shouldInvite(meta, seen)) return
+    val s = LocalStrings.current
+    val scope = rememberCoroutineScope()
+    fun answer(turnOn: Boolean) {
+        answered = true
+        if (turnOn) online.setEnabled(true)
+        scope.launch { runCatching { state.settings.markOnlineMetaInviteSeen(turnedOn = turnOn) } }
+    }
+    TmAlertDialog(
+        onDismissRequest = { answer(turnOn = false) },
+        icon = { Icon(TmIcons.Image, contentDescription = null, tint = Tone.accent) },
+        title = { Text(s.metadataInviteTitle) },
+        text = { Text(s.metadataInviteBody) },
+        confirmButton = { TextButton(onClick = { answer(turnOn = true) }) { Text(s.metadataInviteTurnOn) } },
+        dismissButton = { TextButton(onClick = { answer(turnOn = false) }) { Text(s.metadataInviteNotNow) } },
+    )
 }
 
 /**

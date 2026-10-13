@@ -544,6 +544,9 @@ fun MediaGridScreen(
                     onDismissed = { if (!touch) runCatching { firstItem.requestFocus() } },
                 )
             }
+            // An off left over from an older version is asked about once, here rather than over
+            // Home, where it would be the first thing on screen.
+            OnlineMetaInvite(onAnswered = { if (!touch) runCatching { firstItem.requestFocus() } })
             fun focusOf(entry: ShelfEntry): Modifier {
                 val first = if (entry.key == firstKey) Modifier.focusRequester(firstItem) else Modifier
                 if (entry.key !in firstRowKeys) return first
