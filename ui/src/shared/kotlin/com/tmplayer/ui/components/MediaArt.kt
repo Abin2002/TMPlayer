@@ -1,5 +1,6 @@
 package com.tmplayer.ui.components
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -22,6 +23,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import com.tmplayer.data.Td
 import com.tmplayer.data.Thumbnails
+import com.tmplayer.ui.theme.Motion
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -29,27 +31,39 @@ import kotlinx.coroutines.withContext
 
 /**
  * A media preview that never leaves a hole in the grid: the blurred inline preview paints
- * immediately, the real thumbnail replaces it when it arrives, and [fallback] (a letter tile, as a
- * rule) stands in when a message has no art at all.
+ * immediately, the real thumbnail replaces it when it arrives, and a stand-in fills the frame
+ * when a message has no art at all.
  *
- * The fallback is a slot because the television draws its letter with tv-material's text and the
- * phone and the desktop with Material 3's.
+ * Each step fades into the next over [Motion.Normal] rather than popping: the preview into the
+ * thumbnail, and the stand-in into a thumbnail that arrives late. The first picture is simply
+ * there, and a thumbnail already in the cache is there on the first frame, so a tile scrolled
+ * back into view does not fade in a second time.
+ *
+ * The stand-in is [fallback] where one is given, which is a slot because the television draws a
+ * chat's letter with tv-material's text and the phone and the desktop with Material 3's. Without
+ * one it is the [GeneratedCover] for [cover], and with neither the frame is left as the surface.
  */
 @Composable
 fun MediaArt(
     miniThumbnail: ByteArray?,
     thumbnailFileId: Int,
     modifier: Modifier = Modifier,
-    fallback: @Composable () -> Unit,
+    cover: Cover? = null,
+    compactCover: Boolean = false,
+    fallback: (@Composable () -> Unit)? = null,
 ) {
     // Decoded off the composition thread. One ~40 px JPEG is nothing, but a grid row scrolling into
     // view is a dozen of them in a single frame, plus a hash of each byte array to key the cache,
-    // which is a dropped frame on a stick every time the list moves.
-    val mini by produceState<ImageBitmap?>(initialValue = null, miniThumbnail) {
-        value = withContext(Dispatchers.Default) { Thumbnails.mini(miniThumbnail) }
+    // which is a dropped frame on a stick every time the list moves. Null while that is under way,
+    // so the stand-in is not flashed for a frame under a picture that is about to arrive.
+    val mini by produceState(
+        initialValue = if (miniThumbnail == null || miniThumbnail.isEmpty()) NoMini else null,
+        miniThumbnail,
+    ) {
+        value = Decoded(withContext(Dispatchers.Default) { Thumbnails.mini(miniThumbnail) })
     }
 
-    var full by remember(thumbnailFileId) { mutableStateOf<ImageBitmap?>(null) }
+    var full by remember(thumbnailFileId) { mutableStateOf(Thumbnails.peekFull(thumbnailFileId)) }
     // Retried when the connection comes back, but only a tile that still has no thumbnail collects
     // [Td.connected]: TDLib on a stick flaps often, and twenty collectors would mean the effect
     // restarting under every visible tile at once.
@@ -67,50 +81,77 @@ fun MediaArt(
     // The frame's own shape, measured rather than assumed: the same art fills 16:9 tiles, square
     // avatars and circles, and the rule below is about the picture against the frame it is in.
     var frame by remember { mutableStateOf(0f) }
+    val miniBitmap = mini?.bitmap
+    val shown: Any? = full ?: miniBitmap ?: if (mini == null) null else Missing
     Box(
         modifier
             .background(Tone.surface)
             .onSizeChanged { if (it.height > 0) frame = it.width.toFloat() / it.height },
         contentAlignment = Alignment.Center,
     ) {
-        val bitmap = full ?: mini
-        if (bitmap != null) {
-            if (letterboxes(bitmap.width, bitmap.height, frame)) {
-                // A phone held upright, or a square clip: cropped to a 16:9 tile it would be a band
-                // across somebody's middle. So it sits whole in the frame, over a soft, dimmed crop of
-                // itself. The inline preview is the backdrop where there is one, since a ~40 px image
-                // stretched that far is already a blur on every platform; blur() only adds to it
-                // where the platform can (Android 12 and up, the desktop).
-                Image(
-                    bitmap = mini ?: bitmap,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    filterQuality = FilterQuality.Low,
-                    modifier = Modifier.fillMaxSize().blur(LETTERBOX_BLUR),
-                )
-                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = LETTERBOX_DIM)))
-                Image(
-                    bitmap = bitmap,
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    filterQuality = FilterQuality.Low,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                Image(
-                    bitmap = bitmap,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    // The inline preview is a ~40 px blur; smoothing it beats showing the blocks.
-                    filterQuality = FilterQuality.Low,
-                    modifier = Modifier.fillMaxSize(),
-                )
+        // Nothing at all until the preview is decoded, and then no fade for the first picture: a
+        // cross-fade starts on whatever it is first given, so it only ever runs between two steps.
+        // A preview fading up from the surface under every tile of a scrolling grid is a flicker.
+        if (shown != null) Crossfade(targetState = shown, animationSpec = Motion.standard()) { step ->
+            when (step) {
+                is ImageBitmap -> Picture(step, miniBitmap, frame)
+                Missing -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    when {
+                        fallback != null -> fallback()
+                        cover != null -> GeneratedCover(cover, Modifier.fillMaxSize(), compact = compactCover)
+                    }
+                }
             }
-        } else {
-            fallback()
         }
     }
 }
+
+/** [bitmap] in a frame of shape [frame], cropped or letterboxed by [letterboxes]. */
+@Composable
+private fun Picture(bitmap: ImageBitmap, mini: ImageBitmap?, frame: Float) {
+    if (letterboxes(bitmap.width, bitmap.height, frame)) {
+        // A phone held upright, or a square clip: cropped to a 16:9 tile it would be a band
+        // across somebody's middle. So it sits whole in the frame, over a soft, dimmed crop of
+        // itself. The inline preview is the backdrop where there is one, since a ~40 px image
+        // stretched that far is already a blur on every platform; blur() only adds to it
+        // where the platform can (Android 12 and up, the desktop).
+        Box(Modifier.fillMaxSize()) {
+            Image(
+                bitmap = mini ?: bitmap,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                filterQuality = FilterQuality.Low,
+                modifier = Modifier.fillMaxSize().blur(LETTERBOX_BLUR),
+            )
+            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = LETTERBOX_DIM)))
+            Image(
+                bitmap = bitmap,
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                filterQuality = FilterQuality.Low,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+    } else {
+        Image(
+            bitmap = bitmap,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            // The inline preview is a ~40 px blur; smoothing it beats showing the blocks.
+            filterQuality = FilterQuality.Low,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+/** The inline preview once it has been decoded, [bitmap] null when it would not decode. */
+private class Decoded(val bitmap: ImageBitmap?)
+
+/** A message with no inline preview to decode: known at once, with nothing to wait for. */
+private val NoMini = Decoded(null)
+
+/** The step of the cross-fade where there is no picture at all and the stand-in shows. */
+private object Missing
 
 /**
  * The one rule for a picture whose shape is not its frame's: crop to fill, unless cropping would

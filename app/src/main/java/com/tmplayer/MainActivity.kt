@@ -362,6 +362,7 @@ private fun Root() {
     val continueWatching by settings.continueWatching.collectAsStateWithLifecycle(initialValue = emptyList())
     val watchedVideos by watchedStore.watched.collectAsStateWithLifecycle(initialValue = emptyMap())
     val watchedHistory by watchedStore.history.collectAsStateWithLifecycle(initialValue = emptyList())
+    val watchLater by watchedStore.watchLater.items.collectAsStateWithLifecycle(initialValue = emptyList())
     val lastChatId by settings.lastChatId.collectAsStateWithLifecycle(initialValue = 0L)
     val minSize by settings.minSizeBytes.collectAsStateWithLifecycle(initialValue = SizeFilter.DEFAULT_MIN)
     val maxSize by settings.maxSizeBytes.collectAsStateWithLifecycle(initialValue = SizeFilter.DEFAULT_MAX)
@@ -1118,23 +1119,32 @@ private fun Root() {
                             toast(L.mainWatchedCleared)
                         }
                     },
+                    watchLater = watchLater,
+                    onOpenWatchLater = { record -> openStored(record.toMediaItem(), record.chatTitle) },
+                    onRemoveWatchLater = { record ->
+                        App.backgroundScope.launch {
+                            runCatching { watchedStore.watchLater.remove(record.chatId, record.messageId) }
+                        }
+                        toast(L.detailWatchLaterRemoved(record.title))
+                    },
                     launchChatId = lastChatId,
                     picked = pickedTab,
                     onPickTab = { pickedTabKey = BrowseSection.encode(it) },
                     folders = folders,
                     onToggleLayout = { scope.launch { settings.setChatLayout(chatLayout.toggled()) } },
                     layout = chatLayout,
-                    homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching),
+                    homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater),
                     homeArt = homeViewModel.art.collectAsStateWithLifecycle().value,
                     homeWatch = homeWatch,
                     onHomeRowShown = { row ->
                         when (row) {
                             is HomeRow.Chat -> homeViewModel.request(row.chatId)
                             is HomeRow.Recent -> homeViewModel.requestRecent()
-                            is HomeRow.Continue -> Unit
+                            is HomeRow.Continue, is HomeRow.WatchLater -> Unit
                         }
                     },
                     onHomeArtWanted = homeViewModel::requestArt,
+                    onHomeLaterArtWanted = homeViewModel::requestArt,
                     onPlayMedia = { item, chatTitle -> play(item, chatTitle = chatTitle) },
                     onRefreshHome = {
                         homeViewModel.refresh()

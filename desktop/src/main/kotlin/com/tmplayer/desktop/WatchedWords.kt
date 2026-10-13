@@ -2,6 +2,7 @@ package com.tmplayer.desktop
 
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.SettingsStore
+import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedStore
 import com.tmplayer.i18n.L
@@ -47,5 +48,20 @@ suspend fun setWatched(
         settings.clearResumePosition(item.chatId, item.messageId)
     } else {
         store.markUnwatched(item.chatId, item.messageId)
+    }
+}
+
+/** Puts [item] on Watch later, or takes it off: the pane's line and the poster menu's alike. */
+suspend fun setWatchLater(
+    store: WatchedStore,
+    item: MediaItem,
+    chatTitle: String,
+    add: Boolean,
+    now: Long = System.currentTimeMillis(),
+) {
+    if (add) {
+        store.watchLater.add(WatchLaterRecord.of(item, chatTitle, now))
+    } else {
+        store.watchLater.remove(item.chatId, item.messageId)
     }
 }

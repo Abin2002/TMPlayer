@@ -178,7 +178,8 @@ object LessonSteps {
         return Lesson(course, match.groupValues[1].lowercase().let { WORDS[it] ?: it }, number, name)
     }
 
-    private fun key(course: String) = course.lowercase().replace(NOT_WORD, "")
+    /** The course as compared: case and punctuation do not part two runs. */
+    internal fun key(course: String) = course.lowercase().replace(NOT_WORD, "")
 
     private val SEPARATORS = Regex("""[._]+""")
     private val SPACES = Regex("""\s+""")

@@ -1,6 +1,7 @@
 package com.tmplayer.desktop.player
 
 import com.tmplayer.i18n.L
+import com.tmplayer.player.SubtitlePlan
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.SyncDelays
 import com.tmplayer.player.VideoScale
@@ -77,10 +78,10 @@ interface PlaybackEngine {
 
 /** What the next [PlaybackEngine.open] starts with, read from the settings beforehand. */
 data class OpenPrefs(
+    /** The soundtrack's language, from [com.tmplayer.player.TrackRules.plan]; null for the file's. */
     val audioLanguage: String? = null,
-    val subtitleLanguage: String? = null,
-    /** False turns subtitles off; true asks for them; null leaves the file's own defaults. */
-    val subtitlesOn: Boolean? = null,
+    /** What to do about subtitles, decided the same way. */
+    val subtitles: SubtitlePlan = SubtitlePlan.FileDefault,
     val speed: Float = 1f,
     val scale: VideoScale = VideoScale.Fit,
     val downmix: Boolean = false,
@@ -152,6 +153,8 @@ data class MediaTrack(
     val selected: Boolean,
     val isDefault: Boolean,
     val external: Boolean,
+    /** Flagged forced: the few lines a film subtitles on purpose, signs and foreign dialogue. */
+    val forced: Boolean = false,
 ) {
     /** "English (ac3 5.1)", "Signs", "Track 3". */
     val label: String

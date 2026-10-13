@@ -1,6 +1,10 @@
 package com.tmplayer.data
 
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.unit.IntSize
 import dev.g000sha256.tdl.TdlResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -72,6 +76,32 @@ object Thumbnails {
         }
     }
 
+    /** A thumbnail already decoded, for the first frame, so a tile scrolled back to does not fade in again. */
+    fun peekFull(fileId: Int): ImageBitmap? = if (fileId <= 0) null else cache.get("file:$fileId")
+
+    /**
+     * A soft colour field for behind a hero or a page: the full thumbnail (or, until there is
+     * one, the inline preview in [mini]) shrunk to [BACKDROP_WIDTH] pixels across, to be drawn
+     * stretched over the whole frame with bilinear filtering.
+     *
+     * That is the backdrop's blur, made by scaling down rather than by a shader: one tiny bitmap,
+     * no `blur()`, nothing a television stick on Android 9 cannot draw. Kept under
+     * `backdrop:<fileId>` once it comes from the full thumbnail; one made from the inline preview
+     * is kept under the preview's own key, so the full one still replaces it when it arrives.
+     */
+    suspend fun backdrop(fileId: Int, mini: ByteArray?): ImageBitmap? {
+        val key = "backdrop:$fileId"
+        if (fileId > 0) cache.get(key)?.let { return it }
+        full(fileId)?.let { source ->
+            return withContext(Dispatchers.Default) { shrink(source, BACKDROP_WIDTH) }.also { cache.put(key, it) }
+        }
+        if (mini == null || mini.isEmpty()) return null
+        val miniKey = "backdrop:mini:${mini.size}:${mini.contentHashCode()}"
+        cache.get(miniKey)?.let { return it }
+        return withContext(Dispatchers.Default) { mini(mini)?.let { shrink(it, BACKDROP_WIDTH) } }
+            ?.also { cache.put(miniKey, it) }
+    }
+
     /** A poster already decoded, for the first frame. See [online]. */
     fun peekOnline(url: String, maxWidth: Int): ImageBitmap? = cache.get("online:$maxWidth:$url")
 
@@ -130,10 +160,39 @@ object Thumbnails {
     private const val MIN_CACHE_BYTES = 4 * 1024 * 1024
     private const val MAX_CACHE_BYTES = 32 * 1024 * 1024
 
+    /**
+     * How wide [backdrop]'s field is. Narrow enough that stretched over a screen it is a wash of
+     * the picture's colours with no detail left to look blocky; wide enough to keep where they are.
+     */
+    const val BACKDROP_WIDTH = 32
+
     /** Card art is never larger than ~400 px wide; decoding full size would waste heap. */
     private const val MAX_THUMBNAIL_WIDTH = 400
     private const val THUMBNAIL_PRIORITY = 4
     private const val DOWNLOAD_TIMEOUT_MS = 20_000L
+}
+
+/**
+ * [source] scaled down to [width] pixels across, its shape kept, through Compose's own canvas so
+ * both platforms share it. Halved in steps, each a bilinear draw, rather than in one jump: a
+ * single bilinear draw from 400 pixels to 32 samples one pixel in twelve and keeps a speck
+ * rather than the colour around it.
+ */
+internal fun shrink(source: ImageBitmap, width: Int): ImageBitmap {
+    var current = source
+    while (current.width > width) {
+        val nextWidth = maxOf(width, current.width / 2)
+        val nextHeight = maxOf(1, (current.height.toLong() * nextWidth / current.width).toInt())
+        val next = ImageBitmap(nextWidth, nextHeight)
+        Canvas(next).drawImageRect(
+            image = current,
+            srcSize = IntSize(current.width, current.height),
+            dstSize = IntSize(nextWidth, nextHeight),
+            paint = Paint().apply { filterQuality = FilterQuality.Low },
+        )
+        current = next
+    }
+    return current
 }
 
 /**

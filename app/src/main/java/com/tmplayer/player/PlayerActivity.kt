@@ -107,6 +107,7 @@ import com.tmplayer.data.WatchedStore
 import com.tmplayer.data.errorMessage
 import com.tmplayer.data.valueOrNull
 import com.tmplayer.i18n.L
+import com.tmplayer.i18n.Languages
 import com.tmplayer.i18n.Translator
 import dev.g000sha256.tdl.TdlClient
 import dev.g000sha256.tdl.dto.File as TdFile
@@ -156,6 +157,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private var mediaFileName = ""
     private var mediaCaption = ""
+
+    /** The forum topic the post is in, or 0, for the speed remembered per topic. */
+    private var mediaTopicId = 0
 
     private var chatId = 0L
     private var messageId = 0L
@@ -383,9 +387,25 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private var tracks = TrackChoice()
 
+    /**
+     * How this video's soundtrack and subtitles are decided: its saved tracks, the series, the
+     * languages in Settings, the file's defaults. See [TrackRules].
+     */
+    private var trackPlan = TrackRules.plan(null, TrackChoice(), TrackPreferences(), Languages.ENGLISH)
+
+    /**
+     * Whether the subtitles Settings ask for still wait on the file's track list, which a pick by
+     * language and "only when the audio is foreign" both need. Cleared once applied.
+     */
+    private var settingsSubtitlesPending = false
+
     /** What the track choice is filed under: the series name, or this video's own. */
     private val seriesKey: String
         get() = MediaName.parse(mediaTitle).title.ifBlank { mediaTitle }
+
+    /** Where a speed picked for this video is remembered, and read back from. See [SpeedMemory]. */
+    private val speedScopes: SpeedMemory.Scopes
+        get() = SpeedMemory.scopesOf(currentItem(), seriesKey)
 
     /** The picture's own shape, once the decoder has reported it. Zero until then. */
     private var videoWidth = 0
@@ -507,6 +527,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         mediaSubtitle = intent.getStringExtra(EXTRA_SUBTITLE).orEmpty()
         mediaFileName = intent.getStringExtra(EXTRA_FILE_NAME).orEmpty()
         mediaCaption = intent.getStringExtra(EXTRA_CAPTION).orEmpty()
+        mediaTopicId = intent.getIntExtra(EXTRA_TOPIC_ID, 0)
         chatTitle = intent.getStringExtra(EXTRA_CHAT_TITLE).orEmpty()
         fileSizeBytes = intent.getLongExtra(EXTRA_SIZE, 0)
         durationSec = intent.getIntExtra(EXTRA_DURATION, 0)
@@ -717,16 +738,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     .getOrDefault(false)
                 if (downloadFirst && !fetchWholeFilm()) return@launch
             }
-            playbackSpeed = runCatching { settings.playbackSpeedNow() }
-                .getOrDefault(PlaybackSpeed.DEFAULT)
             // A video with a saved position goes back to the speed and the tracks it was playing
-            // with there, over the general speed and the series' languages. See [ResumeState].
+            // with there, over the series' speed and languages. See [ResumeState].
             val resumed = if (hasMessage()) {
                 runCatching { settings.resumeRecord(chatId, messageId)?.state }.getOrNull()
             } else {
                 null
             }
-            resumed?.speed?.let { playbackSpeed = PlaybackSpeed.sanitise(it) }
+            // Its own speed, else the series' or course's, else the chat's or topic's: [SpeedMemory].
+            playbackSpeed = runCatching { settings.openingSpeed(resumed?.speed, speedScopes) }
+                .getOrDefault(resumed?.speed?.let(PlaybackSpeed::sanitise) ?: PlaybackSpeed.DEFAULT)
             resumeTracks = resumed
             videoScale = runCatching { VideoScale.from(settings.videoScaleNow()) }
                 .getOrDefault(VideoScale.Fit)
@@ -735,6 +756,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             // the wrong language.
             tracks = runCatching { settings.trackChoice(seriesKey) }
                 .getOrDefault(TrackChoice())
+            val trackPrefs = runCatching { settings.trackPreferencesNow() }.getOrDefault(TrackPreferences())
+            trackPlan = TrackRules.plan(resumed, tracks, trackPrefs, Translator.messages.tag)
+            settingsSubtitlesPending = trackPlan.subtitleSource == TrackSource.Settings &&
+                (trackPlan.subtitles is SubtitlePlan.On || trackPlan.subtitles is SubtitlePlan.IfForeignAudio)
             downmixChoice = runCatching { settings.downmixChoiceNow() }.getOrNull()
             volumeBoostOn = runCatching { settings.volumeBoostNow() }.getOrDefault(false)
             subtitleStyle = runCatching { settings.subtitleStyleNow() }.getOrDefault(SubtitleStyle())
@@ -1071,6 +1096,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         date = 0,
         fileName = mediaFileName,
         caption = mediaCaption,
+        topicId = mediaTopicId,
     )
 
     /**
@@ -1492,19 +1518,29 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             .setBackBuffer(BACK_BUFFER_MS, /* retainBackBufferFromKeyframe = */ true)
             .build()
 
+        val plan = trackPlan
+        val subtitles = plan.subtitles
         val trackSelector = DefaultTrackSelector(this).apply {
             parameters = buildUponParameters()
-                // Not disabled outright: turning the whole text renderer off leaves a phone viewer
-                // no route to an embedded subtitle track, since the only picker in the app is
-                // leanback's. Selecting none by default keeps captions off until asked for while
-                // leaving the track there to be chosen, and off stays off, so a series watched
-                // without captions does not get them back on an episode that marks one default.
-                .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, !tracks.empty && !tracks.subtitlesOn)
+                // Off stays off, so a series watched without captions does not get them back on an
+                // episode that marks one default. Settings' "off unless chosen" is softer: the
+                // renderer stays on with the default flag ignored, which still lets a forced track
+                // (a sign, a line in another language) through and leaves every track there to be
+                // chosen from the picker. "Only when the audio is foreign" starts the same way and
+                // is decided once the soundtrack is known ([applySettingsSubtitles]).
+                .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, subtitles is SubtitlePlan.Off && !subtitles.allowForced)
+                .setIgnoredTextSelectionFlags(
+                    if (subtitles is SubtitlePlan.Off || subtitles is SubtitlePlan.IfForeignAudio) {
+                        C.SELECTION_FLAG_DEFAULT
+                    } else {
+                        0
+                    },
+                )
                 // What this series was last watched with, so episode two opens in the language and
-                // with the captions episode one ended in.
-                .setPreferredTextLanguage(tracks.textLanguage.takeIf { tracks.subtitlesOn })
+                // with the captions episode one ended in; else the language Settings ask for.
+                .setPreferredTextLanguage((subtitles as? SubtitlePlan.On)?.language)
                 .setSelectUndeterminedTextLanguage(false)
-                .setPreferredAudioLanguage(tracks.audioLanguage)
+                .setPreferredAudioLanguage(plan.audioLanguage)
                 .build()
         }
 
@@ -1604,6 +1640,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
          */
         override fun onTracksChanged(tracks: Tracks) {
             restoreResumeTracks(tracks)
+            applySettingsSubtitles(tracks)
             rememberTracks(tracks)
             subtitleFiles.onTracksChanged(tracks)
         }
@@ -1738,6 +1775,46 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             }
         }
         if (changed) exo.trackSelectionParameters = builder.build()
+    }
+
+    /**
+     * The subtitles Settings ask for, once the file's tracks and the soundtrack playing are known:
+     * "always" in a language the file lacks falls back to its default or first track, which
+     * Media3's own pick would leave off, and "only when the audio is foreign" cannot be decided
+     * any earlier. Once per video; a choice made in the picker afterwards is the viewer's.
+     */
+    private fun applySettingsSubtitles(current: Tracks) {
+        if (!settingsSubtitlesPending) return
+        val exo = player ?: return
+        if (current.groups.isEmpty()) return
+        settingsSubtitlesPending = false
+        val audio = tracksOfType(current, C.TRACK_TYPE_AUDIO)
+            .firstOrNull { (group, index) -> group.isTrackSelected(index) }
+            ?.let { (group, index) -> group.getTrackFormat(index).language }
+        val text = tracksOfType(current, C.TRACK_TYPE_TEXT)
+        val described = text.map { (group, index) ->
+            val flags = group.getTrackFormat(index).selectionFlags
+            SubtitleTrackInfo(
+                language = group.getTrackFormat(index).language,
+                isDefault = flags and C.SELECTION_FLAG_DEFAULT != 0,
+                forced = flags and C.SELECTION_FLAG_FORCED != 0,
+            )
+        }
+        val builder = exo.trackSelectionParameters.buildUpon()
+        when (val pick = TrackRules.pickSubtitle(trackPlan.subtitles, audio, described)) {
+            SubtitlePick.Leave -> return
+            SubtitlePick.None -> {
+                if (text.none { (group, index) -> group.isTrackSelected(index) }) return
+                builder.clearOverridesOfType(C.TRACK_TYPE_TEXT).setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+            }
+            is SubtitlePick.Track -> {
+                val (group, index) = text[pick.index]
+                if (group.isTrackSelected(index)) return
+                builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                    .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, index))
+            }
+        }
+        exo.trackSelectionParameters = builder.build()
     }
 
     private fun rememberTracks(current: Tracks) {
@@ -3040,7 +3117,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         playbackSpeed = value
         player?.setPlaybackSpeed(value)
         showGestureFeedback(PlaybackSpeed.label(value))
-        lifecycleScope.launch { runCatching { settings.setPlaybackSpeed(value) } }
+        // For the series, the course, the chat or the topic, not only this file: 1x forgets it.
+        val scopes = speedScopes
+        val store = settings
+        App.backgroundScope.launch { runCatching { store.rememberSpeed(scopes, value) } }
     }
 
     /**
@@ -4271,6 +4351,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         private const val EXTRA_SUBTITLE = "subtitle"
         private const val EXTRA_FILE_NAME = "file_name"
         private const val EXTRA_CAPTION = "caption"
+        private const val EXTRA_TOPIC_ID = "topic_id"
         private const val EXTRA_SIZE = "size"
         private const val EXTRA_DURATION = "duration"
         private const val EXTRA_CHAT_TITLE = "chat_title"
@@ -4474,6 +4555,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 putExtra(EXTRA_TITLE, item.title)
                 putExtra(EXTRA_FILE_NAME, item.fileName)
                 putExtra(EXTRA_CAPTION, item.caption)
+                putExtra(EXTRA_TOPIC_ID, item.topicId)
                 putExtra(EXTRA_CHAT_TITLE, chatTitle)
                 // The picture the grid was already showing, carried across rather than fetched
                 // again: it is the one thing that can be on screen in the first frame, before
