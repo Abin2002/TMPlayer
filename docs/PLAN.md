@@ -132,7 +132,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [ ] CP50 Watch later: single videos without starring the chat, Home row, History tab (batch 1)
 - [ ] CP51 Download a season, or only its unwatched episodes, from the series page (batch 1)
 - [ ] CP52 Course progress: "12 of 40 watched" on lecture series and topics (batch 1)
-- [ ] CP53 Backup and restore settings, lists and progress to a file (batch 2)
+- [x] CP53 Backup and restore settings, lists and progress to a file (batch 2; format and merge in core `Backups`, unit tested; watch later joins once CP50 lands, speed memory assumed under `speed_` for CP48)
 - [ ] CP54 Updates feed: new episodes of shows being watched, badges on tiles (batch 2)
 - [ ] CP55 Timestamped bookmarks with notes (batch 2)
 - [ ] CP56 Android chapters, A-B loop and frame step (desktop has them since CP08) (batch 2)

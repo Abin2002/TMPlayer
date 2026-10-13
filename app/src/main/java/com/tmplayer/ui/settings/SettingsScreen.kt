@@ -123,6 +123,7 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.R
+import com.tmplayer.data.BackupWords
 import com.tmplayer.data.CacheShelf
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.CrashReports
@@ -131,6 +132,7 @@ import com.tmplayer.data.DiskInfo
 import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.LocalDownloads
 import com.tmplayer.data.OfflineDownloads
+import com.tmplayer.data.RestorePlan
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.StorageSplit
@@ -212,6 +214,9 @@ private sealed interface Prompt {
 
     /** "Only my folders" going on, with the favourites it strands counted. Off needs no prompt. */
     data object HideDefaultGroups : Prompt
+
+    /** A backup file picked, with what restoring it would change. */
+    data class Restore(val plan: RestorePlan) : Prompt
 }
 
 /**
@@ -319,6 +324,7 @@ fun SettingsScreen(
     var disk by remember { mutableStateOf(DiskInfo.EMPTY) }
     var busy by remember { mutableStateOf<String?>(null) }
     var prompt by remember { mutableStateOf<Prompt?>(null) }
+    val backup = rememberBackupActions(onPlan = { prompt = Prompt.Restore(it) }, say = { toast(it) })
     // The sign out dialog's tick box. Off every time the dialog opens: downloads are the viewer's
     // files, and losing them has to be asked for each time rather than remembered.
     var alsoDeleteDownloads by remember { mutableStateOf(false) }
@@ -887,6 +893,28 @@ fun SettingsScreen(
                             onClick = { prompt = Prompt.ClearWatched },
                         )
                     }
+                }
+
+                // ---- backup -----------------------------------------------------------------------------
+
+                // To a file the viewer keeps, and back: settings, lists and resume points, never the
+                // Telegram sign in. See BackupActions for where the file goes on a box with no picker.
+                item { SectionTitle(s.backupSection) }
+                item {
+                    ActionRow(
+                        title = s.backupBackUp,
+                        subtitle = s.backupBackUpDetail,
+                        icon = TmIcons.Download,
+                        onClick = backup.backUp,
+                    )
+                }
+                item {
+                    ActionRow(
+                        title = s.backupRestore,
+                        subtitle = s.backupRestoreDetail,
+                        icon = Icons.Filled.Refresh,
+                        onClick = backup.restore,
+                    )
                 }
 
                 // ---- posters and details --------------------------------------------------------------
@@ -1540,6 +1568,22 @@ fun SettingsScreen(
                 alsoDeleteDownloads = false
             },
         )
+
+        is Prompt.Restore -> {
+            val plan = (prompt as Prompt.Restore).plan
+            TvConfirm(
+                title = s.backupRestoreTitle,
+                message = BackupWords.restoreMessage(plan),
+                detail = s.backupRestoreUntouched,
+                confirmLabel = s.backupRestoreConfirm,
+                destructive = false,
+                onConfirm = {
+                    prompt = null
+                    backup.apply(plan.backup)
+                },
+                onDismiss = { prompt = null },
+            )
+        }
 
         null -> Unit
     }

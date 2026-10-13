@@ -24,12 +24,17 @@ object FolderPicker {
     @Volatile
     private var initialised = false
 
-    /** The folder picked, or null when the viewer cancelled. */
-    suspend fun pick(title: String, startIn: File?): File? {
+    /** Starts FileKit once, for this picker and [FilePicker] alike. */
+    internal fun ensureFileKit() {
         if (!initialised) {
             runCatching { FileKit.init(APP_ID) }.onFailure { Logger.w(TAG, "FileKit would not start", it) }
             initialised = true
         }
+    }
+
+    /** The folder picked, or null when the viewer cancelled. */
+    suspend fun pick(title: String, startIn: File?): File? {
+        ensureFileKit()
         val viaFileKit = runCatching {
             val start = startIn?.takeIf { it.isDirectory }?.let { PlatformFile(it) }
             FileKit.openDirectoryPicker(directory = start, dialogSettings = FileKitDialogSettings(title = title))

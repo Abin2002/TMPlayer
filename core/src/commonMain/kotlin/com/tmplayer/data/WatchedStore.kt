@@ -161,6 +161,18 @@ class WatchedStore(private val store: DataStore<Preferences>) {
         }
     }
 
+    /** Every stored mark under its stored name, for [Backups]. */
+    suspend fun rawEntries(): Map<String, Any> = store.data.first().asMap().mapKeys { it.key.name }
+
+    /** As [SettingsStore.restoreEntries]: one edit over the list as it is then, capped after. */
+    suspend fun restoreEntries(writes: (Map<String, Any>) -> Map<String, Any>) {
+        store.edit { prefs ->
+            val now = prefs.asMap().mapKeys { it.key.name }
+            for ((name, value) in writes(now)) prefs.putRaw(name, value)
+            evictOldest(prefs)
+        }
+    }
+
     private fun decodeAll(prefs: Preferences): List<WatchedRecord> = buildList {
         for ((key, value) in prefs.asMap()) {
             val name = key.name
