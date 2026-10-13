@@ -1529,8 +1529,10 @@ fun SettingsScreen(
                     runCatching { CrashReports.stop() }
                     runCatching { settings.clearEverything(keepDownloads = !deleteDownloads) }
                     // What this account watched is its own as much as the preferences are, and it
-                    // lives in a file of its own, so it is cleared on its own.
+                    // lives in a file of its own, so it is cleared on its own, and so is Watch
+                    // later, which shares that file.
                     runCatching { watchedStore.clear() }
+                    runCatching { watchedStore.watchLater.clear() }
                     Td.logOut()
                     onLoggedOut()
                 }

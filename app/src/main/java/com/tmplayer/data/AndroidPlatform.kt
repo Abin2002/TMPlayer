@@ -110,3 +110,6 @@ private object WatchedFile {
 
 /** Every screen builds its own [WatchedStore] from a context; they all share [WatchedFile]. */
 fun WatchedStore(context: Context): WatchedStore = WatchedStore(WatchedFile.get(context))
+
+/** Watch later, which lives in [WatchedFile] beside the Watched list (see [WatchedStore.watchLater]). */
+fun WatchLaterStore(context: Context): WatchLaterStore = WatchedStore(context).watchLater
