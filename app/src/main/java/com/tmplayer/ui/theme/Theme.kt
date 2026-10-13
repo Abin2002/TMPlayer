@@ -39,11 +39,17 @@ import com.tmplayer.data.ThemeChoice
  * TV Material's scheme carries a subset of the roles, so this is the mapping between them. It is
  * built per composition rather than declared, because the phone's scheme is itself a choice:
  * light, dark, and on the television neither is a constant.
+ *
+ * The containers, the borders and the scrim are mapped too, though no screen here names them:
+ * tv-material's own components fall back to them (a focused card's border, a dialog's dim), and
+ * its defaults are a lavender that belongs to neither palette.
  */
 private fun tvColors(scheme: ColorScheme, dark: Boolean) = if (dark) {
     darkColorScheme(
         primary = scheme.primary,
         onPrimary = scheme.onPrimary,
+        primaryContainer = scheme.primaryContainer,
+        onPrimaryContainer = scheme.onPrimaryContainer,
         background = scheme.background,
         onBackground = scheme.onBackground,
         surface = scheme.surfaceContainerLow,
@@ -55,11 +61,16 @@ private fun tvColors(scheme: ColorScheme, dark: Boolean) = if (dark) {
         inverseSurface = scheme.inverseSurface,
         inverseOnSurface = scheme.inverseOnSurface,
         error = scheme.error,
+        border = scheme.outline,
+        borderVariant = scheme.outlineVariant,
+        scrim = scheme.scrim,
     )
 } else {
     tvLightColorScheme(
         primary = scheme.primary,
         onPrimary = scheme.onPrimary,
+        primaryContainer = scheme.primaryContainer,
+        onPrimaryContainer = scheme.onPrimaryContainer,
         background = scheme.background,
         onBackground = scheme.onBackground,
         surface = scheme.surfaceContainerLow,
@@ -69,9 +80,21 @@ private fun tvColors(scheme: ColorScheme, dark: Boolean) = if (dark) {
         inverseSurface = scheme.inverseSurface,
         inverseOnSurface = scheme.inverseOnSurface,
         error = scheme.error,
+        border = scheme.outline,
+        borderVariant = scheme.outlineVariant,
+        scrim = scheme.scrim,
     )
 }
 
+
+/**
+ * The television's hero and page title: the touch scale's [TmTouchTypography] display style, a
+ * step larger for the distance. Both theme systems on the television carry it, because the
+ * shared screens set their titles with Material 3's text and the television's own with
+ * tv-material's.
+ */
+private fun tvDisplaySmall() =
+    TextStyle(fontSize = 36.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp)
 
 /**
  * 10-foot UI, sized against the screen this actually runs on.
@@ -85,6 +108,7 @@ private fun tvColors(scheme: ColorScheme, dark: Boolean) = if (dark) {
  * wants muted text asks [Tone] for it at the call site.
  */
 private val typography = Typography(
+    displaySmall = tvDisplaySmall(),
     headlineLarge = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold),
     headlineMedium = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.SemiBold),
     titleLarge = TextStyle(fontSize = 21.sp, fontWeight = FontWeight.SemiBold),
@@ -124,6 +148,7 @@ fun tmButtonColors() = ButtonDefaults.colors(
  * the stock Material components read, are [TmTouchTypography] in `:ui`; keep the two in step.
  */
 private val phoneTypography = Typography(
+    displaySmall = TmTouchTypography.displaySmall,
     headlineLarge = TextStyle(fontSize = 32.sp, lineHeight = 40.sp),
     headlineMedium = TextStyle(fontSize = 28.sp, lineHeight = 36.sp),
     headlineSmall = TextStyle(fontSize = 24.sp, lineHeight = 32.sp),
@@ -194,7 +219,11 @@ fun TMPlayerTheme(content: @Composable () -> Unit) {
         shapes = TmShapes,
         // The phone scale, given to the theme the phone's own components read, so a screen mixing
         // the two theme systems draws all of its text at one scale.
-        typography = if (touch) TmTouchTypography else M3MaterialTheme.typography,
+        typography = if (touch) {
+            TmTouchTypography
+        } else {
+            M3MaterialTheme.typography.copy(displaySmall = tvDisplaySmall())
+        },
     ) {
         MaterialTheme(
             colorScheme = tvColors(scheme, dark),
