@@ -706,6 +706,14 @@
     "windows_installer": "Windows-Installer",
     "windows_installer_msi": "Windows-Installer (die .msi)"
   },
+  "interface": {
+    "size": "Größe der Oberfläche",
+    "size_default": "Standard",
+    "size_detail": "Wie groß Text, Tasten und Bereiche dargestellt werden. Das Video füllt immer den ganzen Bildschirm.",
+    "size_larger": "Größer",
+    "size_largest": "Am größten",
+    "size_smaller": "Kleiner"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "Meine Telefonnummer verwenden",
     "use_qr": "Stattdessen QR-Code scannen"
   },
+  "logs": {
+    "empty": "Es gibt noch keine Protokolle zum Speichern.",
+    "failed": "Die Protokolle konnten nicht gespeichert werden.",
+    "save": "Protokolle speichern",
+    "save_detail": "Aktuelle App-Protokolle als Textdatei, die du an einen Fehlerbericht anhängen kannst. Namen, Nummern und Dateinamen werden vorher entfernt.",
+    "save_title": "TMPlayer-Protokolle speichern",
+    "saved": "Protokolle gespeichert",
+    "saved_to": "Protokolle gespeichert unter {place}"
+  },
   "main": {
     "archived": "{title} archiviert",
     "back_again": "Drücke noch einmal Zurück, um zu beenden",
@@ -914,6 +931,10 @@
     "credit": "Von {provider}",
     "credit_tvmaze": "Von TVmaze, CC BY-SA 4.0",
     "directed_by": "Regie: {names}",
+    "invite_body": "TMPlayer kann jetzt Poster, Handlungen und Intro-überspringen-Tasten zeigen. Sie werden anhand des bereinigten Titels jedes Videos bei TMDB, TVmaze und AniList nachgeschlagen; sonst wird nichts gesendet. Du kannst das jederzeit unter Einstellungen, Poster und Details ändern.",
+    "invite_not_now": "Nicht jetzt",
+    "invite_title": "Poster und Handlungen anzeigen?",
+    "invite_turn_on": "Einschalten",
     "key": "TMDB-Schlüssel",
     "key_app": "Der Schlüssel von TMPlayer wird verwendet. Du kannst stattdessen deinen eigenen nutzen",
     "key_app_refused": "TMDB ist gerade nicht verfügbar. Füge deinen eigenen TMDB-Schlüssel hinzu. Serien kommen weiterhin von TVmaze und AniList",

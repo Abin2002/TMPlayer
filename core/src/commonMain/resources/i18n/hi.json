@@ -706,6 +706,14 @@
     "windows_installer": "Windows इंस्टॉलर",
     "windows_installer_msi": "Windows इंस्टॉलर (.msi)"
   },
+  "interface": {
+    "size": "इंटरफ़ेस का आकार",
+    "size_default": "डिफ़ॉल्ट",
+    "size_detail": "टेक्स्ट, बटन और पैनल कितने बड़े दिखते हैं। वीडियो हमेशा पूरी स्क्रीन भरता है।",
+    "size_larger": "बड़ा",
+    "size_largest": "सबसे बड़ा",
+    "size_smaller": "छोटा"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "मेरा फ़ोन नंबर इस्तेमाल करें",
     "use_qr": "इसके बजाय QR कोड स्कैन करें"
   },
+  "logs": {
+    "empty": "अभी सहेजने के लिए कोई लॉग नहीं है।",
+    "failed": "लॉग सहेजे नहीं जा सके।",
+    "save": "लॉग सहेजें",
+    "save_detail": "बग रिपोर्ट के साथ जोड़ने के लिए ऐप के हाल के लॉग एक टेक्स्ट फ़ाइल में। नाम, नंबर और फ़ाइल नाम पहले हटा दिए जाते हैं।",
+    "save_title": "TMPlayer के लॉग सहेजें",
+    "saved": "लॉग सहेजे गए",
+    "saved_to": "लॉग {place} में सहेजे गए"
+  },
   "main": {
     "archived": "{title} आर्काइव हो गई",
     "back_again": "बाहर निकलने के लिए वापस फिर दबाएँ",
@@ -914,6 +931,10 @@
     "credit": "{provider} से",
     "credit_tvmaze": "TVmaze से, CC BY-SA 4.0",
     "directed_by": "निर्देशक: {names}",
+    "invite_body": "TMPlayer अब पोस्टर, सारांश और इंट्रो छोड़ने के बटन दिखा सकता है। इन्हें हर वीडियो के साफ़ किए गए शीर्षक से TMDB, TVmaze और AniList पर खोजा जाता है; इसके अलावा कुछ नहीं भेजा जाता। इसे आप कभी भी सेटिंग, पोस्टर और विवरण में बदल सकते हैं।",
+    "invite_not_now": "अभी नहीं",
+    "invite_title": "पोस्टर और सारांश दिखाएँ?",
+    "invite_turn_on": "चालू करें",
     "key": "TMDB कुंजी",
     "key_app": "TMPlayer की कुंजी इस्तेमाल हो रही है। आप इसकी जगह अपनी इस्तेमाल कर सकते हैं",
     "key_app_refused": "TMDB अभी उपलब्ध नहीं है। अपनी TMDB कुंजी जोड़ें। शो फिर भी TVmaze और AniList से आते हैं",

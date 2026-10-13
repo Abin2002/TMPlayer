@@ -706,6 +706,14 @@
     "windows_installer": "مثبّت Windows",
     "windows_installer_msi": "مثبّت Windows (ملف ‎.msi)"
   },
+  "interface": {
+    "size": "حجم الواجهة",
+    "size_default": "الافتراضي",
+    "size_detail": "مدى كبر النصوص والأزرار واللوحات. يملأ الفيديو الشاشة دائمًا.",
+    "size_larger": "أكبر",
+    "size_largest": "الأكبر",
+    "size_smaller": "أصغر"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-، Ctrl+=",
     "audio_keys": "A، Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "استخدام رقم هاتفي",
     "use_qr": "مسح رمز QR بدلًا من ذلك"
   },
+  "logs": {
+    "empty": "لا توجد سجلات لحفظها بعد.",
+    "failed": "تعذّر حفظ السجلات.",
+    "save": "حفظ السجلات",
+    "save_detail": "سجلات التطبيق الأخيرة في ملف نصي لإرفاقها ببلاغ خطأ. تُحذف الأسماء والأرقام وأسماء الملفات أولًا.",
+    "save_title": "حفظ سجلات TMPlayer",
+    "saved": "تم حفظ السجلات",
+    "saved_to": "تم حفظ السجلات في {place}"
+  },
   "main": {
     "archived": "تمت أرشفة {title}",
     "back_again": "اضغط رجوع مرة أخرى للخروج",
@@ -914,6 +931,10 @@
     "credit": "من {provider}",
     "credit_tvmaze": "من TVmaze، CC BY-SA 4.0",
     "directed_by": "إخراج {names}",
+    "invite_body": "يمكن لـ TMPlayer الآن عرض الملصقات والملخصات وأزرار تخطي المقدمة. يُبحث عنها في TMDB وTVmaze وAniList بالعنوان المنقّح لكل فيديو؛ ولا يُرسل أي شيء آخر. يمكنك تغيير ذلك في أي وقت من الإعدادات، الملصقات والتفاصيل.",
+    "invite_not_now": "ليس الآن",
+    "invite_title": "عرض الملصقات والملخصات؟",
+    "invite_turn_on": "تشغيل",
     "key": "مفتاح TMDB",
     "key_app": "يُستخدم مفتاح TMPlayer. يمكنك استخدام مفتاحك الخاص بدلًا منه",
     "key_app_refused": "خدمة TMDB غير متاحة حاليًا. أضف مفتاح TMDB الخاص بك. المسلسلات لا تزال تأتي من TVmaze وAniList",

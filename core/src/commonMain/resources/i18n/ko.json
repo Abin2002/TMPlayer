@@ -706,6 +706,14 @@
     "windows_installer": "Windows 설치 프로그램",
     "windows_installer_msi": "Windows 설치 프로그램 (.msi)"
   },
+  "interface": {
+    "size": "인터페이스 크기",
+    "size_default": "기본",
+    "size_detail": "텍스트, 버튼, 패널이 표시되는 크기예요. 동영상은 항상 화면을 가득 채워요.",
+    "size_larger": "크게",
+    "size_largest": "가장 크게",
+    "size_smaller": "작게"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "전화번호 사용",
     "use_qr": "대신 QR 코드 스캔"
   },
+  "logs": {
+    "empty": "아직 저장할 로그가 없어요.",
+    "failed": "로그를 저장하지 못했어요.",
+    "save": "로그 저장",
+    "save_detail": "버그 제보에 첨부할 수 있도록 최근 앱 로그를 텍스트 파일로 저장해요. 이름, 번호, 파일 이름은 먼저 지워져요.",
+    "save_title": "TMPlayer 로그 저장",
+    "saved": "로그를 저장했어요",
+    "saved_to": "로그를 {place}에 저장했어요"
+  },
   "main": {
     "archived": "{title} 보관됨",
     "back_again": "나가려면 뒤로를 한 번 더 누르세요",
@@ -914,6 +931,10 @@
     "credit": "{provider} 제공",
     "credit_tvmaze": "TVmaze 제공, CC BY-SA 4.0",
     "directed_by": "감독: {names}",
+    "invite_body": "이제 TMPlayer에서 포스터, 줄거리, 인트로 건너뛰기 버튼을 보여 줄 수 있어요. 각 동영상의 정리된 제목으로 TMDB, TVmaze, AniList에서 찾아보며, 그 밖에는 아무것도 보내지 않아요. 설정의 포스터와 상세 정보에서 언제든 바꿀 수 있어요.",
+    "invite_not_now": "나중에",
+    "invite_title": "포스터와 줄거리를 표시할까요?",
+    "invite_turn_on": "켜기",
     "key": "TMDB 키",
     "key_app": "TMPlayer의 키를 사용 중이에요. 대신 내 키를 사용할 수도 있어요",
     "key_app_refused": "지금은 TMDB를 사용할 수 없어요. 내 TMDB 키를 추가하세요. TV 프로그램은 TVmaze와 AniList에서 계속 가져와요",

@@ -706,6 +706,14 @@
     "windows_installer": "penginstal Windows",
     "windows_installer_msi": "penginstal Windows (file .msi)"
   },
+  "interface": {
+    "size": "Ukuran antarmuka",
+    "size_default": "Bawaan",
+    "size_detail": "Seberapa besar teks, tombol, dan panel ditampilkan. Video selalu memenuhi layar.",
+    "size_larger": "Lebih besar",
+    "size_largest": "Terbesar",
+    "size_smaller": "Lebih kecil"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "Pakai nomor teleponku",
     "use_qr": "Pindai kode QR saja"
   },
+  "logs": {
+    "empty": "Belum ada log untuk disimpan.",
+    "failed": "Log tidak dapat disimpan.",
+    "save": "Simpan log",
+    "save_detail": "Log aplikasi terbaru dalam file teks untuk dilampirkan ke laporan bug. Nama, nomor, dan nama file dihapus terlebih dahulu.",
+    "save_title": "Simpan log TMPlayer",
+    "saved": "Log disimpan",
+    "saved_to": "Log disimpan ke {place}"
+  },
   "main": {
     "archived": "{title} diarsipkan",
     "back_again": "Tekan Kembali lagi untuk keluar",
@@ -914,6 +931,10 @@
     "credit": "Dari {provider}",
     "credit_tvmaze": "Dari TVmaze, CC BY-SA 4.0",
     "directed_by": "Disutradarai oleh {names}",
+    "invite_body": "TMPlayer kini bisa menampilkan poster, sinopsis, dan tombol lewati intro. Semuanya dicari di TMDB, TVmaze, dan AniList berdasarkan judul tiap video yang sudah dibersihkan; tidak ada hal lain yang dikirim. Kamu bisa mengubahnya kapan saja di Pengaturan, Poster dan detail.",
+    "invite_not_now": "Nanti saja",
+    "invite_title": "Tampilkan poster dan sinopsis?",
+    "invite_turn_on": "Nyalakan",
     "key": "Kunci TMDB",
     "key_app": "Memakai kunci TMPlayer. Kamu bisa memakai kuncimu sendiri",
     "key_app_refused": "TMDB sedang tidak tersedia. Tambahkan kunci TMDB-mu sendiri. Serial tetap berasal dari TVmaze dan AniList",

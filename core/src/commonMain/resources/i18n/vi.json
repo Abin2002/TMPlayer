@@ -706,6 +706,14 @@
     "windows_installer": "Trình cài đặt Windows",
     "windows_installer_msi": "Trình cài đặt Windows (tệp .msi)"
   },
+  "interface": {
+    "size": "Kích thước giao diện",
+    "size_default": "Mặc định",
+    "size_detail": "Chữ, nút và bảng được vẽ lớn đến đâu. Video luôn lấp đầy màn hình.",
+    "size_larger": "Lớn hơn",
+    "size_largest": "Lớn nhất",
+    "size_smaller": "Nhỏ hơn"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "Dùng số điện thoại của tôi",
     "use_qr": "Quét mã QR"
   },
+  "logs": {
+    "empty": "Chưa có nhật ký nào để lưu.",
+    "failed": "Không lưu được nhật ký.",
+    "save": "Lưu nhật ký",
+    "save_detail": "Nhật ký ứng dụng gần đây trong một tệp văn bản để đính kèm vào báo lỗi. Tên, số và tên tệp được lược bỏ trước.",
+    "save_title": "Lưu nhật ký TMPlayer",
+    "saved": "Đã lưu nhật ký",
+    "saved_to": "Đã lưu nhật ký vào {place}"
+  },
   "main": {
     "archived": "Đã lưu trữ {title}",
     "back_again": "Nhấn Quay lại lần nữa để thoát",
@@ -914,6 +931,10 @@
     "credit": "Từ {provider}",
     "credit_tvmaze": "Từ TVmaze, CC BY-SA 4.0",
     "directed_by": "Đạo diễn: {names}",
+    "invite_body": "TMPlayer giờ có thể hiện poster, tóm tắt và nút bỏ qua phần mở đầu. Chúng được tra trên TMDB, TVmaze và AniList theo tiêu đề đã làm gọn của từng video; không gửi gì khác. Bạn có thể đổi bất cứ lúc nào trong Cài đặt, Poster và chi tiết.",
+    "invite_not_now": "Để sau",
+    "invite_title": "Hiện poster và tóm tắt?",
+    "invite_turn_on": "Bật",
     "key": "Khóa TMDB",
     "key_app": "Đang dùng khóa của TMPlayer. Bạn có thể dùng khóa riêng",
     "key_app_refused": "TMDB hiện không khả dụng. Hãy thêm khóa TMDB riêng. Phim bộ vẫn lấy từ TVmaze và AniList",

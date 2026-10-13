@@ -706,6 +706,14 @@
     "windows_installer": "instalador do Windows",
     "windows_installer_msi": "instalador do Windows (o .msi)"
   },
+  "interface": {
+    "size": "Tamanho da interface",
+    "size_default": "Padrão",
+    "size_detail": "O tamanho do texto, dos botões e dos painéis. O vídeo sempre ocupa a tela inteira.",
+    "size_larger": "Maior",
+    "size_largest": "Máximo",
+    "size_smaller": "Menor"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "Usar meu número de telefone",
     "use_qr": "Escanear um QR code"
   },
+  "logs": {
+    "empty": "Ainda não há logs para salvar.",
+    "failed": "Não foi possível salvar os logs.",
+    "save": "Salvar logs",
+    "save_detail": "Logs recentes do app em um arquivo de texto para anexar a um relato de bug. Nomes, números e nomes de arquivo são removidos antes.",
+    "save_title": "Salvar logs do TMPlayer",
+    "saved": "Logs salvos",
+    "saved_to": "Logs salvos em {place}"
+  },
   "main": {
     "archived": "{title} arquivado",
     "back_again": "Toque em Voltar de novo para sair",
@@ -914,6 +931,10 @@
     "credit": "De {provider}",
     "credit_tvmaze": "Do TVmaze, CC BY-SA 4.0",
     "directed_by": "Direção de {names}",
+    "invite_body": "O TMPlayer agora pode mostrar pôsteres, sinopses e botões para pular a abertura. Eles são buscados no TMDB, TVmaze e AniList pelo título limpo de cada vídeo; nada mais é enviado. Você pode mudar isso quando quiser em Configurações, Pôsteres e detalhes.",
+    "invite_not_now": "Agora não",
+    "invite_title": "Mostrar pôsteres e sinopses?",
+    "invite_turn_on": "Ativar",
     "key": "Chave do TMDB",
     "key_app": "Usando a chave do TMPlayer. Você pode usar a sua",
     "key_app_refused": "O TMDB está indisponível no momento. Adicione sua própria chave do TMDB. As séries ainda vêm do TVmaze e do AniList",

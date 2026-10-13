@@ -706,6 +706,14 @@
     "windows_installer": "installer per Windows",
     "windows_installer_msi": "installer per Windows (il .msi)"
   },
+  "interface": {
+    "size": "Dimensione dell'interfaccia",
+    "size_default": "Predefinita",
+    "size_detail": "Quanto sono grandi testo, pulsanti e pannelli. Il video riempie sempre lo schermo.",
+    "size_larger": "Più grande",
+    "size_largest": "Massima",
+    "size_smaller": "Più piccola"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "Usa il mio numero di telefono",
     "use_qr": "Inquadra invece un codice QR"
   },
+  "logs": {
+    "empty": "Non ci sono ancora log da salvare.",
+    "failed": "Impossibile salvare i log.",
+    "save": "Salva log",
+    "save_detail": "I log recenti dell'app in un file di testo da allegare a una segnalazione di bug. Nomi, numeri e nomi dei file vengono rimossi prima.",
+    "save_title": "Salva i log di TMPlayer",
+    "saved": "Log salvati",
+    "saved_to": "Log salvati in {place}"
+  },
   "main": {
     "archived": "{title} archiviata",
     "back_again": "Premi di nuovo Indietro per uscire",
@@ -914,6 +931,10 @@
     "credit": "Da {provider}",
     "credit_tvmaze": "Da TVmaze, CC BY-SA 4.0",
     "directed_by": "Regia di {names}",
+    "invite_body": "TMPlayer ora può mostrare locandine, trame e pulsanti per saltare l'intro. Vengono cercati su TMDB, TVmaze e AniList in base al titolo ripulito di ogni video; nient'altro viene inviato. Puoi cambiarlo quando vuoi in Impostazioni, Locandine e dettagli.",
+    "invite_not_now": "Non ora",
+    "invite_title": "Mostrare locandine e trame?",
+    "invite_turn_on": "Attiva",
     "key": "Chiave TMDB",
     "key_app": "Usa la chiave di TMPlayer. Puoi usare la tua",
     "key_app_refused": "TMDB non è disponibile al momento. Aggiungi la tua chiave TMDB. Le serie arrivano comunque da TVmaze e AniList",

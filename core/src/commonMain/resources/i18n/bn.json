@@ -706,6 +706,14 @@
     "windows_installer": "Windows ইনস্টলার",
     "windows_installer_msi": "Windows ইনস্টলার (.msi)"
   },
+  "interface": {
+    "size": "ইন্টারফেসের আকার",
+    "size_default": "ডিফল্ট",
+    "size_detail": "লেখা, বোতাম আর প্যানেল কত বড় দেখাবে। ভিডিও সবসময় পুরো স্ক্রিন জুড়ে থাকে।",
+    "size_larger": "বড়",
+    "size_largest": "সবচেয়ে বড়",
+    "size_smaller": "ছোট"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "আমার ফোন নম্বর ব্যবহার করুন",
     "use_qr": "বদলে QR কোড স্ক্যান করুন"
   },
+  "logs": {
+    "empty": "সেভ করার মতো কোনো লগ এখনও নেই।",
+    "failed": "লগ সেভ করা যায়নি।",
+    "save": "লগ সেভ করুন",
+    "save_detail": "বাগ রিপোর্টের সঙ্গে জুড়ে দেওয়ার জন্য অ্যাপের সাম্প্রতিক লগ একটি টেক্সট ফাইলে। নাম, নম্বর আর ফাইলের নাম আগেই সরিয়ে ফেলা হয়।",
+    "save_title": "TMPlayer-এর লগ সেভ করুন",
+    "saved": "লগ সেভ হয়েছে",
+    "saved_to": "লগ {place}-এ সেভ হয়েছে"
+  },
   "main": {
     "archived": "{title} আর্কাইভ করা হয়েছে",
     "back_again": "বের হতে আবার Back চাপুন",
@@ -914,6 +931,10 @@
     "credit": "{provider} থেকে",
     "credit_tvmaze": "TVmaze থেকে, CC BY-SA 4.0",
     "directed_by": "পরিচালক {names}",
+    "invite_body": "TMPlayer এখন পোস্টার, ওভারভিউ আর ইন্ট্রো বাদ দেওয়ার বোতাম দেখাতে পারে। প্রতিটি ভিডিওর পরিষ্কার করা শিরোনাম দিয়ে এগুলো TMDB, TVmaze আর AniList-এ খোঁজা হয়; আর কিছুই পাঠানো হয় না। যেকোনো সময় সেটিংস, পোস্টার ও বিস্তারিত থেকে এটি বদলাতে পারেন।",
+    "invite_not_now": "এখন নয়",
+    "invite_title": "পোস্টার ও ওভারভিউ দেখাবেন?",
+    "invite_turn_on": "চালু করুন",
     "key": "TMDB কী",
     "key_app": "TMPlayer-এর কী ব্যবহার হচ্ছে। চাইলে নিজের কী ব্যবহার করতে পারেন",
     "key_app_refused": "TMDB এখন পাওয়া যাচ্ছে না। নিজের TMDB কী যোগ করুন। শো এখনও TVmaze ও AniList থেকে আসে",

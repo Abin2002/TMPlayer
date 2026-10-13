@@ -706,6 +706,14 @@
     "windows_installer": "Windows yükleyicisi",
     "windows_installer_msi": "Windows yükleyicisi (.msi)"
   },
+  "interface": {
+    "size": "Arayüz boyutu",
+    "size_default": "Varsayılan",
+    "size_detail": "Metin, düğme ve panellerin ne kadar büyük çizildiği. Video her zaman ekranı doldurur.",
+    "size_larger": "Daha büyük",
+    "size_largest": "En büyük",
+    "size_smaller": "Daha küçük"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "Telefon numaramı kullan",
     "use_qr": "Bunun yerine QR kodu tara"
   },
+  "logs": {
+    "empty": "Henüz kaydedilecek günlük yok.",
+    "failed": "Günlükler kaydedilemedi.",
+    "save": "Günlükleri kaydet",
+    "save_detail": "Bir hata bildirimine eklemek için son uygulama günlükleri bir metin dosyasında. Adlar, numaralar ve dosya adları önce çıkarılır.",
+    "save_title": "TMPlayer günlüklerini kaydet",
+    "saved": "Günlükler kaydedildi",
+    "saved_to": "Günlükler {place} konumuna kaydedildi"
+  },
   "main": {
     "archived": "{title} arşivlendi",
     "back_again": "Çıkmak için Geri'ye tekrar bas",
@@ -914,6 +931,10 @@
     "credit": "Kaynak: {provider}",
     "credit_tvmaze": "Kaynak: TVmaze, CC BY-SA 4.0",
     "directed_by": "Yönetmen: {names}",
+    "invite_body": "TMPlayer artık afişleri, özetleri ve girişi atlama düğmelerini gösterebilir. Bunlar her videonun temizlenmiş başlığıyla TMDB, TVmaze ve AniList'te aranır; başka hiçbir şey gönderilmez. Bunu istediğin zaman Ayarlar, Afişler ve ayrıntılar bölümünden değiştirebilirsin.",
+    "invite_not_now": "Şimdi değil",
+    "invite_title": "Afişler ve özetler gösterilsin mi?",
+    "invite_turn_on": "Aç",
     "key": "TMDB anahtarı",
     "key_app": "TMPlayer'ın anahtarı kullanılıyor. Bunun yerine kendininkini kullanabilirsin",
     "key_app_refused": "TMDB şu anda kullanılamıyor. Kendi TMDB anahtarını ekle. Diziler yine TVmaze ve AniList'ten gelir",

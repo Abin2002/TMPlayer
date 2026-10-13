@@ -706,6 +706,14 @@
     "windows_installer": "Windows 安装程序",
     "windows_installer_msi": "Windows 安装程序（.msi）"
   },
+  "interface": {
+    "size": "界面大小",
+    "size_default": "默认",
+    "size_detail": "文字、按钮和面板显示的大小。视频始终铺满屏幕。",
+    "size_larger": "较大",
+    "size_largest": "最大",
+    "size_smaller": "较小"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "使用我的手机号码",
     "use_qr": "改为扫描二维码"
   },
+  "logs": {
+    "empty": "暂时没有可保存的日志。",
+    "failed": "无法保存日志。",
+    "save": "保存日志",
+    "save_detail": "将最近的应用日志存为文本文件，可附在问题反馈中。名称、号码和文件名会先被去除。",
+    "save_title": "保存 TMPlayer 日志",
+    "saved": "日志已保存",
+    "saved_to": "日志已保存到 {place}"
+  },
   "main": {
     "archived": "{title} 已归档",
     "back_again": "再按一次返回键退出",
@@ -914,6 +931,10 @@
     "credit": "来自 {provider}",
     "credit_tvmaze": "来自 TVmaze，CC BY-SA 4.0",
     "directed_by": "导演：{names}",
+    "invite_body": "TMPlayer 现在可以显示海报、简介和跳过片头按钮。它们会按每个视频整理后的标题在 TMDB、TVmaze 和 AniList 上查找，不会发送其他任何内容。你随时可以在设置的海报和详情中更改。",
+    "invite_not_now": "以后再说",
+    "invite_title": "显示海报和简介？",
+    "invite_turn_on": "开启",
     "key": "TMDB 密钥",
     "key_app": "正在使用 TMPlayer 的密钥。你也可以改用自己的",
     "key_app_refused": "TMDB 暂时不可用。请添加你自己的 TMDB 密钥。剧集仍来自 TVmaze 和 AniList",

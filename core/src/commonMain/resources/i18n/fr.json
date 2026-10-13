@@ -706,6 +706,14 @@
     "windows_installer": "installateur Windows",
     "windows_installer_msi": "installateur Windows (le .msi)"
   },
+  "interface": {
+    "size": "Taille de l'interface",
+    "size_default": "Par défaut",
+    "size_detail": "La taille du texte, des boutons et des panneaux. La vidéo remplit toujours l'écran.",
+    "size_larger": "Plus grande",
+    "size_largest": "La plus grande",
+    "size_smaller": "Plus petite"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "Utiliser mon numéro de téléphone",
     "use_qr": "Scanner un QR code à la place"
   },
+  "logs": {
+    "empty": "Il n'y a pas encore de journaux à enregistrer.",
+    "failed": "Les journaux n'ont pas pu être enregistrés.",
+    "save": "Enregistrer les journaux",
+    "save_detail": "Les journaux récents de l'app dans un fichier texte, à joindre à un signalement de bug. Les noms, les numéros et les noms de fichiers sont retirés au préalable.",
+    "save_title": "Enregistrer les journaux de TMPlayer",
+    "saved": "Journaux enregistrés",
+    "saved_to": "Journaux enregistrés dans {place}"
+  },
   "main": {
     "archived": "{title} archivée",
     "back_again": "Appuyez de nouveau sur Retour pour quitter",
@@ -914,6 +931,10 @@
     "credit": "Source : {provider}",
     "credit_tvmaze": "Source : TVmaze, CC BY-SA 4.0",
     "directed_by": "Réalisé par {names}",
+    "invite_body": "TMPlayer peut désormais afficher des affiches, des résumés et des boutons pour passer l'intro. Ils sont recherchés sur TMDB, TVmaze et AniList à partir du titre nettoyé de chaque vidéo ; rien d'autre n'est envoyé. Vous pouvez changer cela à tout moment dans Réglages, Affiches et détails.",
+    "invite_not_now": "Pas maintenant",
+    "invite_title": "Afficher les affiches et les résumés ?",
+    "invite_turn_on": "Activer",
     "key": "Clé TMDB",
     "key_app": "Utilise la clé de TMPlayer. Vous pouvez utiliser la vôtre à la place",
     "key_app_refused": "TMDB est indisponible pour le moment. Ajoutez votre propre clé TMDB. Les séries viennent toujours de TVmaze et d'AniList",

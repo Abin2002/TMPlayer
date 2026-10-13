@@ -706,6 +706,14 @@
     "windows_installer": "Windowsインストーラー",
     "windows_installer_msi": "Windowsインストーラー(.msi)"
   },
+  "interface": {
+    "size": "画面の表示サイズ",
+    "size_default": "標準",
+    "size_detail": "文字、ボタン、パネルの表示の大きさです。動画は常に画面いっぱいに表示されます。",
+    "size_larger": "大きい",
+    "size_largest": "最大",
+    "size_smaller": "小さい"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "電話番号を使う",
     "use_qr": "代わりにQRコードを読み取る"
   },
+  "logs": {
+    "empty": "保存できるログはまだありません。",
+    "failed": "ログを保存できませんでした。",
+    "save": "ログを保存",
+    "save_detail": "最近のアプリのログをテキストファイルにまとめ、不具合の報告に添付できます。名前、番号、ファイル名は先に取り除かれます。",
+    "save_title": "TMPlayer のログを保存",
+    "saved": "ログを保存しました",
+    "saved_to": "ログを {place} に保存しました"
+  },
   "main": {
     "archived": "{title}をアーカイブしました",
     "back_again": "もう一度戻るを押すと終了します",
@@ -914,6 +931,10 @@
     "credit": "提供: {provider}",
     "credit_tvmaze": "提供: TVmaze、CC BY-SA 4.0",
     "directed_by": "監督: {names}",
+    "invite_body": "TMPlayer でポスター、あらすじ、イントロスキップボタンを表示できるようになりました。各動画の整えたタイトルで TMDB、TVmaze、AniList を検索します。それ以外は何も送信されません。設定のポスターと詳細からいつでも変更できます。",
+    "invite_not_now": "今はしない",
+    "invite_title": "ポスターとあらすじを表示しますか？",
+    "invite_turn_on": "オンにする",
     "key": "TMDBキー",
     "key_app": "TMPlayerのキーを使用中です。代わりに自分のキーも使えます",
     "key_app_refused": "現在TMDBを利用できません。自分のTMDBキーを追加してください。番組はTVmazeとAniListから取得されます",

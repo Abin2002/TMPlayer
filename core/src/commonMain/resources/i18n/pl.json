@@ -706,6 +706,14 @@
     "windows_installer": "instalator Windows",
     "windows_installer_msi": "instalator Windows (plik .msi)"
   },
+  "interface": {
+    "size": "Rozmiar interfejsu",
+    "size_default": "Domyślny",
+    "size_detail": "Jak duże są tekst, przyciski i panele. Wideo zawsze wypełnia cały ekran.",
+    "size_larger": "Większy",
+    "size_largest": "Największy",
+    "size_smaller": "Mniejszy"
+  },
   "keys": {
     "audio_delay_keys": "Ctrl+-, Ctrl+=",
     "audio_keys": "A, Shift+A",
@@ -858,6 +866,15 @@
     "use_phone": "Użyj numeru telefonu",
     "use_qr": "Zeskanuj kod QR"
   },
+  "logs": {
+    "empty": "Nie ma jeszcze logów do zapisania.",
+    "failed": "Nie udało się zapisać logów.",
+    "save": "Zapisz logi",
+    "save_detail": "Najnowsze logi aplikacji w pliku tekstowym do dołączenia do zgłoszenia błędu. Imiona, numery i nazwy plików są najpierw usuwane.",
+    "save_title": "Zapisz logi TMPlayer",
+    "saved": "Logi zapisane",
+    "saved_to": "Logi zapisane w {place}"
+  },
   "main": {
     "archived": "Zarchiwizowano: {title}",
     "back_again": "Naciśnij Wstecz ponownie, aby wyjść",
@@ -914,6 +931,10 @@
     "credit": "Z {provider}",
     "credit_tvmaze": "Z TVmaze, CC BY-SA 4.0",
     "directed_by": "Reżyseria: {names}",
+    "invite_body": "TMPlayer może teraz pokazywać plakaty, opisy i przyciski pomijania intro. Są wyszukiwane w TMDB, TVmaze i AniList według oczyszczonego tytułu każdego wideo; nic więcej nie jest wysyłane. Możesz to zmienić w każdej chwili w Ustawieniach, Plakaty i szczegóły.",
+    "invite_not_now": "Nie teraz",
+    "invite_title": "Pokazywać plakaty i opisy?",
+    "invite_turn_on": "Włącz",
     "key": "Klucz TMDB",
     "key_app": "Używany jest klucz TMPlayer. Możesz zamiast niego użyć własnego",
     "key_app_refused": "TMDB jest teraz niedostępny. Dodaj własny klucz TMDB. Seriale nadal pochodzą z TVmaze i AniList",
