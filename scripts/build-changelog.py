@@ -293,7 +293,7 @@ def head(title: str, desc: str, url: str, ld: list, og_type: str = "website", ex
 <meta property="og:title" content="{t}">
 <meta property="og:description" content="{d}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="{SITE}/og.png?v=2">
+<meta property="og:image" content="{SITE}/og.png?v=3">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -302,7 +302,7 @@ def head(title: str, desc: str, url: str, ld: list, og_type: str = "website", ex
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{t}">
 <meta name="twitter:description" content="{d}">
-<meta name="twitter:image" content="{SITE}/og.png?v=2">
+<meta name="twitter:image" content="{SITE}/og.png?v=3">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/icon-512.png" type="image/png" sizes="512x512">
@@ -486,7 +486,7 @@ def release_page(r: dict, newer, older, latest: bool, parts: dict) -> str:
         "datePublished": iso,
         "dateModified": iso,
         "inLanguage": "en",
-        "image": f"{SITE}/og.png?v=2",
+        "image": f"{SITE}/og.png?v=3",
         "author": {"@type": "Person", "name": "dracu-lah", "url": "https://github.com/dracu-lah"},
         "publisher": {"@type": "Organization", "name": "TMPlayer", "url": f"{SITE}/",
                       "logo": {"@type": "ImageObject", "url": f"{SITE}/icon-512.png"}},

@@ -15,15 +15,21 @@ root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 magick -background none -density 512 "$root/site/logo.svg" \
     -resize 512x512 -strip "$root/site/icon-512.png"
 
-# The social card is drawn in HTML from the site's own stylesheet, so the TV and phone are the same
-# CSS frames as the home page hero around the real screenshots. Chromium renders it at 1200 by 630,
-# and the PNG is forced to 8 bit RGB: ImageMagick wrote this card as 16 bit when it rasterised an SVG, and a 16 bit PNG
-# is a file some link preview crawlers refuse, so the link arrives with no picture.
+# The social card is drawn in HTML from the site's own stylesheet, so the type and the TV and phone
+# frames match the home page hero. It is served over a local web server because Chromium will not
+# load web fonts into a file:// page and quietly falls back to a system face. The PNG is forced to
+# 8 bit RGB: ImageMagick wrote this card as 16 bit when it rasterised an SVG, and a 16 bit PNG is a
+# file some link preview crawlers refuse, so the link arrives with no picture.
+port=8719
 tmp=$(mktemp -d)
-trap 'rm -rf "$tmp"' EXIT
+python3 -m http.server "$port" --bind 127.0.0.1 --directory "$root" >/dev/null 2>&1 &
+server=$!
+trap 'kill "$server" 2>/dev/null; rm -rf "$tmp"' EXIT
+sleep 1
 chromium-browser --headless=new --disable-gpu --no-sandbox --hide-scrollbars \
-    --allow-file-access-from-files --force-device-scale-factor=1 --window-size=1200,630 \
-    --virtual-time-budget=6000 --screenshot="$tmp/og.png" "file://$root/scripts/og-card.html" 2>/dev/null
+    --force-device-scale-factor=1 --force-prefers-reduced-motion --window-size=1200,630 \
+    --virtual-time-budget=6000 --screenshot="$tmp/og.png" \
+    "http://127.0.0.1:$port/scripts/og-card.html" 2>/dev/null
 magick "$tmp/og.png" -strip -depth 8 -define png:color-type=2 "$root/site/og.png"
 
 echo "wrote site/icon-512.png and site/og.png"
