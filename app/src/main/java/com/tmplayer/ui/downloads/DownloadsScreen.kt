@@ -173,7 +173,11 @@ fun DownloadsScreen(
     val scope = rememberCoroutineScope()
     val settings = remember { SettingsStore(context) }
     val toast = rememberToast()
-    val history by settings.downloadHistory.collectAsStateWithLifecycle(initialValue = emptyList())
+    // The kids lock (CP57) leaves out the chats it does not allow here too: a download from one
+    // of them would otherwise be a way round it.
+    val allowedChats by com.tmplayer.data.ChatGate.allowed.collectAsStateWithLifecycle()
+    val allHistory by settings.downloadHistory.collectAsStateWithLifecycle(initialValue = emptyList())
+    val history = remember(allHistory, allowedChats) { com.tmplayer.data.KidsLock.records(allHistory, allowedChats) }
     val removeAfterWatching by settings.removeAfterWatching.collectAsStateWithLifecycle(initialValue = false)
     // What is arriving and what is behind it, which the finished-downloads record knows nothing
     // about until the file has landed. In the order the videos were asked for, which is the order
@@ -191,7 +195,8 @@ fun DownloadsScreen(
 
     // What watching left behind. None of it is a download and none of it was asked for, but every
     // byte of it is on the disk, and anything taking up room belongs where room is managed.
-    val cached by settings.cachedVideos.collectAsStateWithLifecycle(initialValue = emptyList())
+    val allCached by settings.cachedVideos.collectAsStateWithLifecycle(initialValue = emptyList())
+    val cached = remember(allCached, allowedChats) { com.tmplayer.data.KidsLock.records(allCached, allowedChats) }
 
     var rows by remember { mutableStateOf<List<DownloadRow>>(emptyList()) }
     var cachedRows by remember { mutableStateOf<List<DownloadRow>>(emptyList()) }

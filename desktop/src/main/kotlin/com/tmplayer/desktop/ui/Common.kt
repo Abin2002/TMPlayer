@@ -42,6 +42,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
@@ -217,6 +219,9 @@ private val WIDE_WINDOW = 1440.dp
  *
  * [onArt] is for a header standing on a picture under [com.tmplayer.ui.theme.Scrims.headerTop]
  * (Home over its hero): the words and the action icons go to [Tone.onArt] in either theme.
+ *
+ * Where the app draws its own window buttons ([LocalWindowChrome]), they end the row, and the
+ * row's empty space moves the window (a double click maximizes it).
  */
 @Composable
 fun PageHeader(
@@ -228,9 +233,22 @@ fun PageHeader(
     actions: @Composable () -> Unit = {},
 ) {
     val ink = if (onArt) Tone.onArt else LocalContentColor.current
+    val chrome = LocalWindowChrome.current
+    // A header scrolled out of sight hands the window buttons back to the window (see
+    // WindowControlsFallback), so they never scroll away with it.
+    var inSight by remember { mutableStateOf(true) }
     CompositionLocalProvider(LocalContentColor provides ink) {
         Row(
-            modifier.padding(horizontal = pageMargin(), vertical = 16.dp),
+            modifier
+                .then(
+                    if (chrome == null) {
+                        Modifier
+                    } else {
+                        Modifier.onGloballyPositioned { inSight = it.boundsInWindow().height >= it.size.height / 2f }
+                    },
+                )
+                .windowDrag()
+                .padding(horizontal = pageMargin(), vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -247,6 +265,10 @@ fun PageHeader(
                 }
             }
             actions()
+            if (chrome != null) {
+                if (inSight) RegisterWindowControls()
+                WindowControls()
+            }
         }
     }
 }

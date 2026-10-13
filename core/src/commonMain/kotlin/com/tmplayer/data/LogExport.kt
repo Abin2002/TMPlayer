@@ -1,6 +1,6 @@
 package com.tmplayer.data
 
-import kotlinx.coroutines.flow.first
+import com.tmplayer.online.MetaSettings
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -53,20 +53,38 @@ object LogExport {
     }
 
     /**
-     * The titles this device has seen, from Continue watching, the watched list and Watch later:
-     * chat names and video names, which a log line may quote. Short ones are left out, since "TV"
-     * or "Up" taken out everywhere would leave the log unreadable.
+     * The titles this device has seen, from Continue watching, the watched list, Watch later,
+     * downloads and the cache: chat names, video names and file names, which a log line may quote.
+     * Read from the stores' raw entries rather than their lists, which the kids lock filters: a
+     * chat the lock hides is still a name to take out. Short ones are left out, since "TV" or "Up"
+     * taken out everywhere would leave the log unreadable.
      */
     suspend fun knownNames(settings: SettingsStore, watched: WatchedStore?): Set<String> {
         val names = HashSet<String>()
         runCatching {
-            for (r in settings.continueWatching.first()) {
+            val raw = Backups.collect(
+                settings = settings.rawEntries(),
+                watched = watched?.rawEntries().orEmpty(),
+                metadata = MetaSettings(),
+                createdAt = 0L,
+                appVersion = "",
+            )
+            for (r in raw.resume) {
                 names += r.title
                 names += r.chatTitle
             }
+            for (r in raw.watched) {
+                names += r.title
+                names += r.chatTitle
+            }
+            for (r in raw.watchLater) {
+                names += r.title
+                names += r.chatTitle
+                names += r.fileName
+            }
         }
         runCatching {
-            watched?.history?.first()?.forEach { r ->
+            for (r in settings.downloadsNow() + settings.cachedVideosNow()) {
                 names += r.title
                 names += r.chatTitle
             }

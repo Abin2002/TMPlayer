@@ -4286,6 +4286,23 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         }
     }
 
+    /**
+     * "Ask when the app opens" (CP57). Leaving the app locks the session, but only the main
+     * activity draws the pad, so a task brought back from Recents with the player on top would
+     * play on without it. The player steps aside instead, and the pad behind it asks.
+     */
+    override fun onStart() {
+        super.onStart()
+        if (com.tmplayer.data.AppLockSession.unlocked.value) return
+        lifecycleScope.launch {
+            val askOnOpen = runCatching { settings.appLock.first().onOpen }.getOrDefault(false)
+            if (askOnOpen && !com.tmplayer.data.AppLockSession.unlocked.value && !isFinishing) {
+                player?.pause()
+                finish()
+            }
+        }
+    }
+
     override fun onStop() {
         super.onStop()
         saveResumePosition(leaving = !inPictureInPicture)

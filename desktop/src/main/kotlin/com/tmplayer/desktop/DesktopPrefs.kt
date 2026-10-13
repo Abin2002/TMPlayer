@@ -34,6 +34,11 @@ data class DesktopSettings(
      * download moves and cleared after the last, so the next launch can finish what a crash left.
      */
     val storageRootPending: String = "",
+    /**
+     * Keep the window system's title bar where TMPlayer would draw its own window buttons
+     * (Windows, tiling Linux window managers). Read once at launch: a window cannot change it.
+     */
+    val systemTitleBar: Boolean = false,
 ) {
     companion object {
         /**
@@ -130,6 +135,7 @@ class DesktopPrefs(private val file: File) {
             setProperty("storage_root", s.storageRoot)
             setProperty("cache_limit_bytes", s.cacheLimitBytes.toString())
             setProperty("storage_root_pending", s.storageRootPending)
+            setProperty("system_title_bar", s.systemTitleBar.toString())
         }
         runCatching {
             file.parentFile?.mkdirs()
@@ -167,6 +173,7 @@ class DesktopPrefs(private val file: File) {
                 cacheLimitBytes = p.getProperty("cache_limit_bytes")?.toLongOrNull()?.takeIf { it > 0 }
                     ?: d.cacheLimitBytes,
                 storageRootPending = p.getProperty("storage_root_pending")?.trim() ?: d.storageRootPending,
+                systemTitleBar = bool("system_title_bar", d.systemTitleBar),
             )
         }
     }

@@ -215,7 +215,8 @@ class NativeFullscreen(private val window: Frame) {
             val maximize = saved.wasMaximized || pendingMaximize
             windowsSaved = null
             pendingMaximize = false
-            window.maximizedBounds = null
+            // An undecorated window (see UndecoratedFrame) keeps its own hold on the work area.
+            window.maximizedBounds = if (window.isUndecorated) UndecoratedFrame.workArea(window) else null
             // WS_MAXIMIZE stays off (a maximize during fullscreen may have set it): the placement
             // below has to find a window that is not maximized, or it is the same no op again.
             user32.SetWindowLong(

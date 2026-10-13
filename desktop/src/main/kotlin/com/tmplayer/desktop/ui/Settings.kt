@@ -135,7 +135,7 @@ fun SettingsPage(
     var pinFlow by remember { mutableStateOf<DesktopPinFlow?>(null) }
     var pickingKidsChats by remember { mutableStateOf(false) }
     pinFlow?.let { flow ->
-        PinFlowPad(flow, state, appLock, onNext = { pinFlow = it }, onKidsChats = { pickingKidsChats = true })
+        PinFlowPad(flow, state, appLock, scope, toast, onNext = { pinFlow = it }, onKidsChats = { pickingKidsChats = true })
         return
     }
     val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
@@ -207,6 +207,15 @@ fun SettingsPage(
                             ) { Text(choice.label) }
                         }
                     }
+                }
+                // Only where TMPlayer would draw window buttons of its own: Windows, and a tiling
+                // window manager. Read at launch, so the change waits for a restart.
+                if (remember { com.tmplayer.desktop.os.WindowChromeMode.current(systemTitleBar = false).inApp }) {
+                    Toggle(
+                        s.settingsSystemTitleBar,
+                        if (desktop.systemTitleBar) s.settingsSystemTitleBarOn else s.settingsSystemTitleBarOff,
+                        desktop.systemTitleBar,
+                    ) { on -> state.extras.prefs.update { it.copy(systemTitleBar = on) } }
                 }
 
                 Group(s.settingsPlayback)
@@ -673,18 +682,23 @@ private fun SubtitlePreview(style: SubtitleStyle, modifier: Modifier = Modifier)
 /** A PIN being set, changed or removed from the App lock group. See the phone's `PinFlow`. */
 private enum class DesktopPinFlow { Set, SetForKids, ChangeCheck, ChangeChoose, Remove }
 
-/** The pad for [flow], in the page's place: Cancel and Esc go back to the page. */
+/**
+ * The pad for [flow], in the page's place: Cancel and Esc go back to the page.
+ *
+ * [scope] and [toast] are the page's: a finished PIN takes the pad away at once, and work launched
+ * on the pad's own scope was cancelled with it, halfway through saving the PIN.
+ */
 @Composable
 private fun PinFlowPad(
     flow: DesktopPinFlow,
     state: ShellState,
     appLock: AppLockSettings,
+    scope: kotlinx.coroutines.CoroutineScope,
+    toast: (String) -> Unit,
     onNext: (DesktopPinFlow?) -> Unit,
     onKidsChats: () -> Unit,
 ) {
     val s = LocalStrings.current
-    val scope = rememberCoroutineScope()
-    val toast = rememberToast()
     val settings = state.settings
     val checking = flow == DesktopPinFlow.ChangeCheck || flow == DesktopPinFlow.Remove
     PinPad(
