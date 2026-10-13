@@ -594,7 +594,7 @@
     "meta_notice": "Les affiches et les résumés viennent de TMDB, TVmaze et AniList, recherchés d'après le titre nettoyé de chaque vidéo. Rien d'autre n'est envoyé.",
     "meta_notice_keep": "Garder",
     "meta_notice_turn_off": "Désactiver",
-    "meta_notice_turned_off": "Les affiches sont désactivées. Réactivez-les dans Réglages, Métadonnées en ligne.",
+    "meta_notice_turned_off": "Les affiches sont désactivées. Réactivez-les dans Réglages, Affiches et détails.",
     "no_app_opens": "Rien sur ce téléphone ne peut l'ouvrir.",
     "no_room": "Il n'y a plus de place sur cet appareil.",
     "no_wifi_detail": "Reprend avec le Wi-Fi",
