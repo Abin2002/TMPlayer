@@ -102,14 +102,15 @@ fun rememberMetaExtras(info: MetaInfo?): MetaExtras? {
 }
 
 /**
- * "Drama, Crime  ·  56 min  ·  5 seasons  ·  TV-MA", or null with nothing to say. No score: what
- * a title page says about a film is what it is, not how others rated it.
+ * "Drama, Crime  ·  56 min  ·  5 seasons  ·  TV-MA  ·  ★ 9.0", or null with nothing to say. The
+ * score is the provider's own vote average, shown only when it sent one; nothing is made up.
  */
 fun metaFactsLine(extras: MetaExtras, s: Messages): String? = listOfNotNull(
     extras.genres.take(3).joinToString(", ").ifBlank { null },
     extras.runtimeMin?.let { s.formatter.duration(it * 60L) },
     extras.seasons?.let { s.metadataSeasons(it) },
     extras.certification,
+    extras.rating?.let { "★ " + s.formatter.decimal(it, 1) },
 ).joinToString("  ·  ").ifBlank { null }
 
 /** "Directed by …" for a film, "Created by …" for a show, or null. */
@@ -135,6 +136,9 @@ fun MetaFactsLines(extras: MetaExtras?, modifier: Modifier = Modifier, maxLines:
                 color = Tone.muted,
                 maxLines = maxLines,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.semantics {
+                    contentDescription = it.replace("★ ", "") + (extras.rating?.let { r -> ". " + s.metadataRating(s.formatter.decimal(r, 1)) } ?: "")
+                },
             )
         }
         people?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, maxLines = maxLines, overflow = TextOverflow.Ellipsis) }

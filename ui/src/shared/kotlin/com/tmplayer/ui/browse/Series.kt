@@ -53,6 +53,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -667,11 +670,39 @@ fun SeriesPanel(
     val listed = ranges.getOrNull(rangeAt) ?: shown.episodes
     val list = rememberLazyListState()
     // Another season or range picked while the episodes fill the screen: back up to the picker,
-    // with the new list under it. Not on opening, which shows the show from the top.
+    // with the new list under it. Opening is its own case, below.
     var opened by remember(series.key) { mutableStateOf(false) }
+    // Where the up-next episode sits in the list shown, or -1 when it is in another season or range.
+    val upNextAt = if (next != null) listed.indexOfFirst { it.sameAs(next) } else -1
+    val upNextFocus = remember(series.key) { FocusRequester() }
+    val scope = rememberCoroutineScope()
     LaunchedEffect(shown.number, rangeAt) {
-        if (opened && list.firstVisibleItemIndex > SEASONS_ITEM) list.scrollToItem(SEASONS_ITEM)
-        opened = true
+        if (!opened) {
+            opened = true
+            // A long season (an anime's hundreds) opens on its up-next episode under a finger, one
+            // card of what came before above it, so nobody scrolls to the 57th by hand. A short one
+            // opens at the top, where the hero and Play are. A remote gets there with Down from Play.
+            if (!tv && upNextAt > 0 && listed.size > LONG_SEASON) list.scrollToItem(FIRST_EPISODE_ITEM + upNextAt - 1)
+            return@LaunchedEffect
+        }
+        if (list.firstVisibleItemIndex > SEASONS_ITEM) list.scrollToItem(SEASONS_ITEM)
+    }
+    // On a television Down from Play goes straight to the up-next card, scrolled into view first
+    // since a lazy list has not composed it yet; Up from the cards still reaches the seasons.
+    val downToUpNext = if (tv && upNextAt >= 0) {
+        Modifier.onPreviewKeyEvent { event ->
+            if (event.key != Key.DirectionDown) return@onPreviewKeyEvent false
+            if (event.type == KeyEventType.KeyDown) {
+                scope.launch {
+                    list.scrollToItem((FIRST_EPISODE_ITEM + upNextAt - 1).coerceAtLeast(SEASONS_ITEM))
+                    withFrameNanos { }
+                    runCatching { upNextFocus.requestFocus() }
+                }
+            }
+            true
+        }
+    } else {
+        Modifier
     }
 
     BoxWithConstraints(modifier) {
@@ -747,7 +778,7 @@ fun SeriesPanel(
                     },
                     icon = Icons.Filled.PlayArrow,
                     onClick = { onPlay(next?.item ?: watch.pick(target, progress)) },
-                    modifier = m,
+                    modifier = m.then(downToUpNext),
                     focusRequester = playFocus,
                 )
             }
@@ -840,6 +871,7 @@ fun SeriesPanel(
                     chosen = chosen,
                     onCopy = onPlay,
                     modifier = Modifier.padding(pad).widthIn(max = EPISODES_MAX),
+                    lineModifier = if (next != null && episode.sameAs(next)) Modifier.focusRequester(upNextFocus) else Modifier,
                 )
             }
             // The cast and "More like this" after the episodes: composed only once scrolled to.
@@ -971,6 +1003,12 @@ private val EPISODES_MAX: Dp = 960.dp
 
 /** The season picker's place in a show page's list, after the hero. */
 private const val SEASONS_ITEM = 1
+
+/** The first episode card's place in that list, after the hero and the season picker. */
+private const val FIRST_EPISODE_ITEM = 2
+
+/** A season longer than this opens on its up-next episode on a phone or a desktop. */
+private const val LONG_SEASON = 12
 private val EPISODE_ART_TOUCH: Dp = 128.dp
 private val EPISODE_ART_TV: Dp = 176.dp
 
