@@ -1826,6 +1826,8 @@ fun SettingsScreen(
                     // later, which shares that file.
                     runCatching { watchedStore.clear() }
                     runCatching { watchedStore.watchLater.clear() }
+                    // The bookmarks go with it, for the same reason.
+                    runCatching { com.tmplayer.data.BookmarkStore(context).clear() }
                     Td.logOut()
                     onLoggedOut()
                 }

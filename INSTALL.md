@@ -414,6 +414,7 @@ None of them fire while a search field has focus.
 | **, / .** | One frame back / forward, while paused |
 | **R** | Repeat from A to B: press once at the start, again at the end, a third time to stop |
 | **S / Shift+S** | Screenshot, with or without the subtitles, into Pictures/TMPlayer |
+| **B** | Bookmark this moment, with a short note if you like; the menu's Bookmarks lists them |
 | **0 - 9** | Jump to that tenth of the video; 5 is halfway. **Home** and **End** go to the start and the end |
 | **Up / Down** | Volume (also the mouse wheel) |
 | **M** | Mute |

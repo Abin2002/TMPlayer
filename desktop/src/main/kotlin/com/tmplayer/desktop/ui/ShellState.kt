@@ -24,6 +24,7 @@ import com.tmplayer.data.MediaItem
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.UpdateScheduler
 import com.tmplayer.data.WatchedStore
+import com.tmplayer.data.BookmarkStore
 import com.tmplayer.desktop.DesktopPrefs
 import com.tmplayer.desktop.DesktopServices
 import com.tmplayer.desktop.DesktopWatchCache
@@ -106,6 +107,8 @@ class ShellState(
     /** The Watched list: the ticks on the posters and the page of finished videos. */
     val watched: WatchedStore,
     services: () -> DesktopExtras = { DesktopExtras.live() },
+    /** The bookmarks the detail pane lists; null (the UI tests) leaves the list out. */
+    val bookmarks: BookmarkStore? = null,
 ) {
     /** The desktop's own settings, cache and update check; opened on first use, so tests that never touch them pay nothing. */
     val extras: DesktopExtras by lazy(services)

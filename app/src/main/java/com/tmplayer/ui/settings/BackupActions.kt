@@ -60,6 +60,7 @@ internal fun rememberBackupActions(
             watched = WatchedStore(context),
             metadata = OnlineMetadata.current?.store,
             appVersion = BuildConfig.VERSION_NAME,
+            bookmarks = com.tmplayer.data.BookmarkStore(context),
         )
     }
 

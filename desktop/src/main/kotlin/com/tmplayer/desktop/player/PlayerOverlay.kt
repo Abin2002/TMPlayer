@@ -95,6 +95,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tmplayer.data.Bookmark
 import com.tmplayer.data.MediaItem
 import com.tmplayer.online.SkipKind
 import com.tmplayer.data.EpisodeNeighbours
@@ -147,6 +148,12 @@ internal sealed interface MenuAction {
 
     /** The subtitle menu's "Search online", in a build with the OpenSubtitles key. */
     data object SearchOnline : MenuAction
+
+    /** The moment playing as a bookmark; the player asks for its note. */
+    data object AddBookmark : MenuAction
+    data class JumpTo(val bookmark: Bookmark) : MenuAction
+    data class EditBookmark(val bookmark: Bookmark) : MenuAction
+    data class DeleteBookmark(val bookmark: Bookmark) : MenuAction
 }
 
 /**
@@ -198,6 +205,9 @@ private val OnPlayerTonal = Color(0xF2FFFFFF)
 
 /** The A-B repeat on the timebar: amber, apart from the played blue and the buffered grey. */
 private val LoopColor = Color(0xFFFFC107)
+
+/** A bookmark's tick on the timebar: near white, so it reads over the played run and the rest alike. */
+private val BookmarkColor = Color(0xE6FFFFFF)
 
 /**
  * The picture itself as a click target (B2.3): a single click plays or pauses after 300 ms, so a
@@ -278,6 +288,8 @@ internal fun BoxScope.PlayerOverlay(
     sleepTimer: String? = null,
     /** The A-B repeat as marked so far, drawn on the timebar and named above it; null for none. */
     loop: AbLoop? = null,
+    /** This video's bookmarks for the menu and the timebar; null where the video can have none. */
+    bookmarks: List<Bookmark>? = null,
     onHoverControls: (Boolean) -> Unit,
     onBack: () -> Unit,
     onTogglePlay: () -> Unit,
@@ -299,7 +311,7 @@ internal fun BoxScope.PlayerOverlay(
     // The right click menu hangs at the cursor whether or not the controls are up.
     if (menu?.anchor == MenuAt.Anchor.Cursor) {
         Box(Modifier.offset { IntOffset(menu.at.x.roundToInt(), menu.at.y.roundToInt()) }.size(1.dp)) {
-            PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, onOpenMenu, onCloseMenu, onMenuAction)
+            PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
         }
     }
 
@@ -334,7 +346,7 @@ internal fun BoxScope.PlayerOverlay(
                 Box {
                     OverlayButton(PlayerIcons.MoreVert, s.commonMore, onClick = { onOpenMenu(MenuAt(MenuPage.Main, MenuAt.Anchor.Overflow)) })
                     if (menu?.anchor == MenuAt.Anchor.Overflow) {
-                        PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, onOpenMenu, onCloseMenu, onMenuAction)
+                        PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
                     }
                 }
             }
@@ -407,20 +419,20 @@ internal fun BoxScope.PlayerOverlay(
                         modifier = Modifier.clip(RoundedCornerShape(4.dp)).clickable(onClick = onToggleRemaining).padding(horizontal = 4.dp, vertical = 2.dp),
                     )
                 }
-                TimeBar(status.positionMs, status.durationMs, status.bufferedMs, onSeekTo, status.chapters, loop)
+                TimeBar(status.positionMs, status.durationMs, status.bufferedMs, onSeekTo, status.chapters, loop, bookmarks.orEmpty())
                 Spacer(Modifier.height(4.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     ControlsPill {
                         Box {
                             OverlayButton(PlayerIcons.Subtitles, s.playerSubtitlesHint, onClick = { onOpenMenu(MenuAt(MenuPage.Subtitles, MenuAt.Anchor.Subtitles)) })
                             if (menu?.anchor == MenuAt.Anchor.Subtitles) {
-                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, onOpenMenu, onCloseMenu, onMenuAction)
+                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
                             }
                         }
                         Box {
                             OverlayButton(PlayerIcons.Audio, s.playerAudioHint, onClick = { onOpenMenu(MenuAt(MenuPage.Audio, MenuAt.Anchor.Audio)) })
                             if (menu?.anchor == MenuAt.Anchor.Audio) {
-                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, onOpenMenu, onCloseMenu, onMenuAction)
+                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
                             }
                         }
                         Box {
@@ -432,7 +444,7 @@ internal fun BoxScope.PlayerOverlay(
                                 ) { Text(SeekMath.speedLabel(status.speed), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium) }
                             }
                             if (menu?.anchor == MenuAt.Anchor.Speed) {
-                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, onOpenMenu, onCloseMenu, onMenuAction)
+                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
                             }
                         }
                     }
@@ -564,6 +576,7 @@ private fun TimeBar(
     onSeekTo: (Long) -> Unit,
     chapters: List<Chapter> = emptyList(),
     loop: AbLoop? = null,
+    bookmarks: List<Bookmark> = emptyList(),
 ) {
     var width by remember { mutableFloatStateOf(0f) }
     var hoverX by remember { mutableStateOf<Float?>(null) }
@@ -624,6 +637,14 @@ private fun TimeBar(
                     drawRect(LoopColor, Offset(x - gap / 2, -reach), Size(gap, size.height + reach * 2))
                 }
             }
+            // Bookmarks: a small light tick above the bar at each, out of the way of the loop's.
+            if (duration > 0) {
+                val tick = 3.dp.toPx()
+                for (mark in bookmarks) {
+                    val x = size.width * SeekMath.fraction(mark.positionMs, duration)
+                    drawRect(BookmarkColor, Offset(x - gap / 2, -tick - 2.dp.toPx()), Size(gap, tick + 2.dp.toPx()))
+                }
+            }
             val thumb = if (thick) 8.dp.toPx() else 6.dp.toPx()
             drawCircle(primary, thumb, Offset(size.width * played, size.height / 2))
         }
@@ -655,6 +676,8 @@ internal fun PlayerMenu(
     savable: Boolean,
     watchedLabel: String?,
     sleepTimer: String?,
+    /** This video's bookmarks, or null where it can have none (and the menu has no line for them). */
+    bookmarks: List<Bookmark>? = null,
     onOpenMenu: (MenuAt) -> Unit,
     onClose: () -> Unit,
     onAction: (MenuAction) -> Unit,
@@ -717,6 +740,11 @@ internal fun PlayerMenu(
                     }
                 }
                 if (watchedLabel != null) Entry(watchedLabel) { pick(MenuAction.ToggleWatched) }
+                if (bookmarks != null) {
+                    HorizontalDivider()
+                    Entry(s.playerAddBookmark, trailing = "B") { pick(MenuAction.AddBookmark) }
+                    Entry(s.playerBookmarks, trailing = bookmarks.size.takeIf { it > 0 }?.toString()) { page(MenuPage.Bookmarks) }
+                }
                 HorizontalDivider()
                 Entry(s.playerHelp, trailing = "?") { pick(MenuAction.Shortcuts) }
             }
@@ -779,6 +807,27 @@ internal fun PlayerMenu(
             }
             MenuPage.Shape -> VideoScale.entries.forEach { shape ->
                 Entry(shape.label, checked = shape == status.scale) { pick(MenuAction.Shape(shape)) }
+            }
+            MenuPage.Bookmarks -> {
+                Entry(s.playerAddBookmark, trailing = "B") { pick(MenuAction.AddBookmark) }
+                HorizontalDivider()
+                val list = bookmarks.orEmpty()
+                if (list.isEmpty()) {
+                    Text(
+                        s.playerBookmarksEmpty,
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp).widthIn(max = 320.dp),
+                    )
+                }
+                list.forEach { mark ->
+                    BookmarkLine(
+                        mark,
+                        onJump = { pick(MenuAction.JumpTo(mark)) },
+                        onEdit = { pick(MenuAction.EditBookmark(mark)) },
+                        onDelete = { onAction(MenuAction.DeleteBookmark(mark)) },
+                    )
+                }
             }
         }
     }

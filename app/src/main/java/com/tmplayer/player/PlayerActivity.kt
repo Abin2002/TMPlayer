@@ -105,6 +105,9 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import com.tmplayer.data.WatchCache
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedStore
+import com.tmplayer.data.Bookmark
+import com.tmplayer.data.BookmarkJump
+import com.tmplayer.data.BookmarkStore
 import com.tmplayer.data.errorMessage
 import com.tmplayer.data.valueOrNull
 import com.tmplayer.i18n.L
@@ -167,6 +170,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     private lateinit var settings: SettingsStore
     private lateinit var watchedStore: WatchedStore
+    private lateinit var bookmarkStore: BookmarkStore
+
+    /** This video's bookmarks as the store has them, for the menus and the bookmark sheets. */
+    private val bookmarkList = MutableStateFlow<List<Bookmark>>(emptyList())
 
     /** Whether this video is on the Watched list, for which way the menus' mark line reads. */
     private var onWatchedList = false
@@ -544,6 +551,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         settings = SettingsStore(this)
         watchedStore = WatchedStore(this)
+        bookmarkStore = BookmarkStore(this)
         fileId = intent.getIntExtra(EXTRA_FILE_ID, 0)
         chatId = intent.getLongExtra(EXTRA_CHAT_ID, 0)
         messageId = intent.getLongExtra(EXTRA_MESSAGE_ID, 0)
@@ -633,6 +641,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 saveToDownloads = ::canSaveToDownloads,
                 markWatched = ::hasMessage,
                 watched = { onWatchedList },
+                bookmarks = ::hasMessage,
+                bookmarkCount = { bookmarkList.value.size },
                 openInAnotherApp = { savable == true },
                 volumeBoost = { volumeBoostOn },
                 sleepTimer = ::sleepTimerDetail,
@@ -677,6 +687,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             lifecycleScope.launch {
                 onWatchedList = runCatching { watchedStore.isWatched(chatId, messageId) }.getOrDefault(false)
             }
+            lifecycleScope.launch {
+                runCatching { bookmarkStore.bookmarks(chatId, messageId).collect { bookmarkList.value = it } }
+            }
         }
         // On a television too: the controls timeout and the remaining time readout apply there.
         lifecycleScope.launch {
@@ -720,7 +733,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // [startPlayback] applies the same position as well; whichever arrives second sets it again.
         // A few seconds before the saved point, as Settings has it ([ResumeRewind]).
         lifecycleScope.launch {
-            resumeMs = runCatching { settings.resumeStart(chatId, messageId) }.getOrDefault(0L)
+            // A bookmark chosen on the detail page opens the video at its moment, once.
+            resumeMs = BookmarkJump.take(chatId, messageId)
+                ?: runCatching { settings.resumeStart(chatId, messageId) }.getOrDefault(0L)
             if (resumeMs > 0) {
                 player?.seekTo(resumeMs)
                 resumeNotice = L.playerResumingFrom(Translator.messages.formatter.clock(resumeMs))
@@ -2920,11 +2935,17 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             saveToDownloads = canSaveToDownloads(),
             markWatched = hasMessage(),
             paused = isPaused(),
+            bookmarks = hasMessage(),
         )
         // Speed and the sleep timer open the pickers' sheet rather than a submenu, so a choice
         // of one of several looks the same here as the subtitle and audio pickers.
         entries.forEachIndexed { order, entry ->
-            val label = entry.label(sleepDetail = sleepTimerDetail(), watched = onWatchedList, loop = abLoop)
+            val label = entry.label(
+                sleepDetail = sleepTimerDetail(),
+                watched = onWatchedList,
+                loop = abLoop,
+                bookmarks = bookmarkList.value.size,
+            )
             val item = items.add(0, entry.ordinal, order, label)
             if (entry == PhoneMenuEntry.VolumeBoost) item.setCheckable(true).setChecked(volumeBoostOn)
         }
@@ -2941,6 +2962,11 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 PhoneMenuEntry.LoadSubtitleFile -> subtitleFiles.pick()
                 PhoneMenuEntry.SaveToDownloads -> saveToDownloads()
                 PhoneMenuEntry.MarkWatched -> toggleWatched()
+                PhoneMenuEntry.AddBookmark -> {
+                    val at = player?.currentPosition ?: 0L
+                    showSheet { it.showNewBookmark(at, bookmarkActions()) }
+                }
+                PhoneMenuEntry.Bookmarks -> showSheet { it.showBookmarks(bookmarkActions()) }
                 PhoneMenuEntry.PlaybackDetails -> showPlaybackDetails()
             }
             true
@@ -2962,6 +2988,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             PlayerMenuEntry.AbLoop -> pressLoop()
             PlayerMenuEntry.NextFrame -> frameStep(forward = true)
             PlayerMenuEntry.PreviousFrame -> frameStep(forward = false)
+            PlayerMenuEntry.AddBookmark -> addBookmark(player?.currentPosition ?: 0L, "")
+            PlayerMenuEntry.Bookmarks -> showSheet { it.showBookmarks(bookmarkActions()) }
             // Pages of the menu itself, opened there.
             PlayerMenuEntry.PictureShape, PlayerMenuEntry.SleepTimer, PlayerMenuEntry.RemoteKeys -> Unit
         }
@@ -3008,6 +3036,39 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         exo.setSeekParameters(SeekParameters.EXACT)
         exo.seekTo(FrameStep.target(exo.currentPosition, exo.duration.coerceAtLeast(0L), fps, forward))
     }
+    /**
+     * Saves a bookmark at [positionMs]. The television's menu calls this straight away, without
+     * the keyboard, and says where a note can be added; the phone calls it from the note sheet.
+     */
+    private fun addBookmark(positionMs: Long, note: String) {
+        if (!hasMessage()) return
+        val store = bookmarkStore
+        val chat = chatId
+        val message = messageId
+        App.backgroundScope.launch { runCatching { store.add(chat, message, positionMs, note) } }
+        val at = Translator.messages.formatter.clock(positionMs)
+        showGestureFeedback(if (tvMenu != null && note.isEmpty()) L.playerBookmarkSavedTv(at) else L.playerBookmarkSaved(at))
+    }
+
+    /** What the bookmark sheets do with a choice: all of it lands here, on this video. */
+    private fun bookmarkActions() = BookmarkSheetActions(
+        bookmarks = bookmarkList,
+        position = { player?.currentPosition ?: 0L },
+        add = ::addBookmark,
+        rename = { mark, note ->
+            val store = bookmarkStore
+            App.backgroundScope.launch { runCatching { store.rename(mark.chatId, mark.messageId, mark.id, note) } }
+        },
+        delete = { mark ->
+            val store = bookmarkStore
+            App.backgroundScope.launch { runCatching { store.delete(mark.chatId, mark.messageId, mark.id) } }
+            showGestureFeedback(L.playerBookmarkDeleted)
+        },
+        jump = { mark ->
+            player?.seekTo(mark.positionMs)
+            showGestureFeedback(Translator.messages.formatter.clock(mark.positionMs))
+        },
+    )
 
     /** The menu's Volume boost: switched on the sound already playing, and kept for every video. */
     private fun toggleVolumeBoost() {

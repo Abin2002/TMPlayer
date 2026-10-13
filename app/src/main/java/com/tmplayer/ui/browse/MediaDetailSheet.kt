@@ -17,6 +17,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tmplayer.data.AndroidPaths
+import com.tmplayer.data.Bookmark
+import com.tmplayer.data.BookmarkJump
+import com.tmplayer.data.BookmarkStore
 import com.tmplayer.data.DetailAction
 import com.tmplayer.data.DetailActions
 import com.tmplayer.data.DetailContext
@@ -207,7 +210,15 @@ internal fun MediaDetailOpened(
     if (asMenu) {
         HoldMenu(item, chatTitle, watched, rows, onDismiss, onOpenDetails)
     } else {
-        DetailScreen(item, chatTitle, watched, finished, rows, onDismiss, onOpenItem)
+        val bookmarkStore = remember(context) { BookmarkStore(context) }
+        val bookmarks by remember(item.chatId, item.messageId) { bookmarkStore.bookmarks(item.chatId, item.messageId) }
+            .collectAsStateWithLifecycle(initialValue = emptyList())
+        DetailScreen(item, chatTitle, watched, finished, rows, onDismiss, onOpenItem, bookmarks) { mark ->
+            // The player takes the position on opening this video, in place of its resume point.
+            BookmarkJump.request(item.chatId, item.messageId, mark.positionMs)
+            onDismiss()
+            onPlay()
+        }
     }
 }
 
@@ -282,6 +293,8 @@ private fun DetailScreen(
     rows: List<DetailRow>,
     onDismiss: () -> Unit,
     onOpenItem: ((MediaItem) -> Unit)?,
+    bookmarks: List<Bookmark>,
+    onOpenBookmark: (Bookmark) -> Unit,
 ) {
     val touch = isTouch()
     val first = remember { FocusRequester() }
@@ -301,6 +314,8 @@ private fun DetailScreen(
                 modifier = if (touch) Modifier else Modifier.ignoreStrayRelease(),
                 firstAction = if (touch) null else first,
                 onOpenItem = onOpenItem,
+                bookmarks = bookmarks,
+                onOpenBookmark = onOpenBookmark,
             )
         }
     }

@@ -23,6 +23,10 @@ enum class PlayerMenuEntry {
     /** Only while paused, and only here: the arrows already seek, so frame steps get no key. */
     NextFrame,
     PreviousFrame,
+    /** Saves the moment playing at once; a note can be added from Bookmarks, where typing is optional. */
+    AddBookmark,
+    /** This video's bookmarks: play from one, give it a note, delete it. */
+    Bookmarks,
     SaveToDownloads,
     /** "Mark as watched", or "Mark as unwatched" once it is on the list. */
     MarkWatched,
@@ -49,6 +53,9 @@ enum class PhoneMenuEntry {
     /** Only while paused: a step on a playing video would be lost in the next frame anyway. */
     NextFrame,
     PreviousFrame,
+    /** Asks for an optional note, then saves the moment the note was asked at. */
+    AddBookmark,
+    Bookmarks,
     OpenInAnotherApp,
     LoadSubtitleFile,
     SaveToDownloads,
@@ -59,9 +66,15 @@ enum class PhoneMenuEntry {
 
 /**
  * The line's text. [sleepDetail] is a running sleep timer's time left, which the line carries;
- * [watched] turns Mark as watched into Mark as unwatched; [loop] is the repeat marked so far.
+ * [watched] turns Mark as watched into Mark as unwatched; [loop] is the repeat marked so far;
+ * [bookmarks] is how many bookmarks the video has.
  */
-fun PhoneMenuEntry.label(sleepDetail: String? = null, watched: Boolean = false, loop: AbLoop? = null): String = when (this) {
+fun PhoneMenuEntry.label(
+    sleepDetail: String? = null,
+    watched: Boolean = false,
+    loop: AbLoop? = null,
+    bookmarks: Int = 0,
+): String = when (this) {
     PhoneMenuEntry.LockScreen -> L.playerLockScreen
     PhoneMenuEntry.PictureInPicture -> L.playerPictureInPicture
     PhoneMenuEntry.VolumeBoost -> L.playerVolumeBoost
@@ -73,6 +86,8 @@ fun PhoneMenuEntry.label(sleepDetail: String? = null, watched: Boolean = false, 
     PhoneMenuEntry.LoadSubtitleFile -> L.playerLoadSubtitleFile
     PhoneMenuEntry.SaveToDownloads -> L.playerSaveToDownloads
     PhoneMenuEntry.MarkWatched -> if (watched) L.playerMarkUnwatched else L.playerMarkWatched
+    PhoneMenuEntry.AddBookmark -> L.playerAddBookmark
+    PhoneMenuEntry.Bookmarks -> if (bookmarks > 0) L.commonWithDetail(L.playerBookmarks, bookmarks.toString()) else L.playerBookmarks
     PhoneMenuEntry.PlaybackDetails -> L.playerPlaybackDetails
 }
 
@@ -104,6 +119,10 @@ object PlayerMenu {
      *
      * [paused] adds the frame steps. They live only here on the television: Left and Right on the
      * bare picture jump, and on the bar they travel, so no arrow is free for a frame.
+     *
+     * [bookmarks] is whether the video can keep bookmarks: like the Watched list, they are keyed
+     * by its message. Their lines sit with the repeat and the frame steps, the other ways of
+     * working through one moment of a video.
      */
     fun tvEntries(
         pictureInPicture: Boolean,
@@ -111,6 +130,7 @@ object PlayerMenu {
         markWatched: Boolean = false,
         openInAnotherApp: Boolean = true,
         paused: Boolean = false,
+        bookmarks: Boolean = false,
     ): List<PlayerMenuEntry> = buildList {
         add(PlayerMenuEntry.PlaybackDetails)
         add(PlayerMenuEntry.StartOver)
@@ -120,6 +140,10 @@ object PlayerMenu {
         if (paused) {
             add(PlayerMenuEntry.NextFrame)
             add(PlayerMenuEntry.PreviousFrame)
+        }
+        if (bookmarks) {
+            add(PlayerMenuEntry.AddBookmark)
+            add(PlayerMenuEntry.Bookmarks)
         }
         if (saveToDownloads) add(PlayerMenuEntry.SaveToDownloads)
         if (markWatched) add(PlayerMenuEntry.MarkWatched)
@@ -132,8 +156,9 @@ object PlayerMenu {
     /**
      * The phone's overflow, in the order it draws. [pictureInPicture] is whether the device can do
      * it; [openInAnotherApp] false for a chat that restricts saving; [markWatched]
-     * needs a message to point at; [saveToDownloads] only while the video can still become one;
-     * [paused] adds the frame steps. Lines rather than buttons, so the row CP37 cleared stays clear.
+     * needs a message to point at, and so does [bookmarks]; [saveToDownloads] only while the video
+     * can still become one; [paused] adds the frame steps. Lines rather than buttons, so the row
+     * CP37 cleared stays clear.
      */
     fun phoneEntries(
         pictureInPicture: Boolean,
@@ -141,6 +166,7 @@ object PlayerMenu {
         saveToDownloads: Boolean,
         markWatched: Boolean,
         paused: Boolean = false,
+        bookmarks: Boolean = false,
     ): List<PhoneMenuEntry> = buildList {
         add(PhoneMenuEntry.LockScreen)
         if (pictureInPicture) add(PhoneMenuEntry.PictureInPicture)
@@ -150,6 +176,10 @@ object PlayerMenu {
         if (paused) {
             add(PhoneMenuEntry.NextFrame)
             add(PhoneMenuEntry.PreviousFrame)
+        }
+        if (bookmarks) {
+            add(PhoneMenuEntry.AddBookmark)
+            add(PhoneMenuEntry.Bookmarks)
         }
         if (openInAnotherApp) add(PhoneMenuEntry.OpenInAnotherApp)
         add(PhoneMenuEntry.LoadSubtitleFile)

@@ -45,6 +45,8 @@ data class Backup(
     val watched: List<WatchedRecord>,
     /** Watch later, which lives in the watched store's file under a prefix of its own. */
     val watchLater: List<WatchLaterRecord> = emptyList(),
+    /** Every video's bookmarks, from [BookmarkStore]. */
+    val bookmarks: List<Bookmark> = emptyList(),
     val version: Int = Backups.VERSION,
 )
 
@@ -74,13 +76,16 @@ data class RestorePlan(
     val watchedAdded: Int,
     /** Videos saved for later in the backup that this device's list lacks. */
     val watchLaterAdded: Int = 0,
+    /** Bookmarks in the backup at a moment this device has none at, in the same video. */
+    val bookmarksAdded: Int = 0,
     /** Resume points this device does not have, or has an older one of. */
     val resumeAdded: Int,
     val memoryAdded: Int,
     val searchesAdded: Int,
 ) {
     val nothing: Boolean
-        get() = settingsChanged + favouritesAdded + watchedAdded + watchLaterAdded + resumeAdded + memoryAdded + searchesAdded == 0
+        get() = settingsChanged + favouritesAdded + watchedAdded + watchLaterAdded + bookmarksAdded + resumeAdded + memoryAdded +
+            searchesAdded == 0
 }
 
 /**
@@ -191,6 +196,7 @@ object Backups {
         metadata: MetaSettings,
         createdAt: Long,
         appVersion: String,
+        bookmarks: List<Bookmark> = emptyList(),
     ): Backup = Backup(
         createdAt = createdAt,
         appVersion = appVersion,
@@ -202,6 +208,7 @@ object Backups {
         resume = resumeOf(settings),
         watched = watchedOf(watched),
         watchLater = watchLaterOf(watched),
+        bookmarks = bookmarks.sortedWith(compareBy({ it.chatId }, { it.messageId }, { it.positionMs })),
     )
 
     private fun favouritesOf(settings: Map<String, Any>): Set<Long> =
@@ -255,6 +262,7 @@ object Backups {
         root.put("resume", JSONArray(backup.resume.map(::resumeJson)))
         root.put("watched", JSONArray(backup.watched.map(::watchedJson)))
         root.put("watchLater", JSONArray(backup.watchLater.map(::watchLaterJson)))
+        root.put("bookmarks", JSONArray(backup.bookmarks.map(::bookmarkJson)))
         return root.toString(2)
     }
 
@@ -297,6 +305,14 @@ object Backups {
         put("durationSec", w.durationSec)
         put("mime", w.mimeType)
         put("addedAt", w.addedAt)
+    }
+
+    private fun bookmarkJson(b: Bookmark) = JSONObject().apply {
+        put("chat", b.chatId)
+        put("message", b.messageId)
+        put("id", b.id)
+        put("positionMs", b.positionMs)
+        put("note", b.note)
     }
 
     private fun watchedJson(w: WatchedRecord) = JSONObject().apply {
@@ -348,6 +364,7 @@ object Backups {
                 resume = objects(root.optJSONArray("resume")).mapNotNull(::resumeOf),
                 watched = objects(root.optJSONArray("watched")).mapNotNull(::watchedOf),
                 watchLater = objects(root.optJSONArray("watchLater")).mapNotNull(::watchLaterOf),
+                bookmarks = objects(root.optJSONArray("bookmarks")).mapNotNull(::bookmarkOf),
                 version = version,
             ),
         )
@@ -413,6 +430,14 @@ object Backups {
         addedAt = json.longOrNull("addedAt") ?: return null,
     )
 
+    private fun bookmarkOf(json: JSONObject): Bookmark? = Bookmark(
+        chatId = json.longOrNull("chat") ?: return null,
+        messageId = json.longOrNull("message") ?: return null,
+        id = json.longOrNull("id") ?: 0L,
+        positionMs = json.longOrNull("positionMs")?.takeIf { it >= 0 } ?: return null,
+        note = BookmarkStore.cleanNote(json.optString("note")),
+    )
+
     private fun watchedOf(json: JSONObject): WatchedRecord? = WatchedRecord(
         chatId = json.longOrNull("chat") ?: return null,
         messageId = json.longOrNull("message") ?: return null,
@@ -428,7 +453,13 @@ object Backups {
     // ---- merging ----------------------------------------------------------------------------
 
     /** What [settingsWrites], [watchedWrites] and [metadataAfter] would change, counted. */
-    fun plan(backup: Backup, settings: Map<String, Any>, watched: Map<String, Any>, metadata: MetaSettings): RestorePlan {
+    fun plan(
+        backup: Backup,
+        settings: Map<String, Any>,
+        watched: Map<String, Any>,
+        metadata: MetaSettings,
+        bookmarks: List<Bookmark> = emptyList(),
+    ): RestorePlan {
         val writes = settingsWrites(settings, backup)
         val favouritesBefore = favouritesOf(settings)
         val searchesBefore = RecentSearches.decode(settings[RECENT_SEARCHES] as? String)
@@ -443,6 +474,7 @@ object Backups {
             favouritesAdded = (backup.favourites - favouritesBefore).size,
             watchedAdded = backup.watched.count { "$WATCHED_PREFIX${it.key}" !in watched },
             watchLaterAdded = backup.watchLater.count { "$WATCH_LATER_PREFIX${it.key}" !in watched },
+            bookmarksAdded = bookmarksToAdd(bookmarks, backup).size,
             resumeAdded = writes.keys.count { it.startsWith("resume_") },
             memoryAdded = writes.keys.count { memoryKind(it) != null },
             searchesAdded = searchesAfter.count { found -> searchesBefore.none { it.equals(found, ignoreCase = true) } },
@@ -513,6 +545,25 @@ object Backups {
             val name = WATCH_LATER_PREFIX + record.key
             val mine = WatchLaterRecord.decode(record.key, device[name] as? String)
             if (mine == null || record.addedAt > mine.addedAt) put(name, record.encode())
+        }
+    }
+
+    /**
+     * The backup's bookmarks this device lacks: one per video and moment, a moment being what
+     * [BookmarkStore.add] calls one (within [BookmarkStore.SAME_MOMENT_MS]). A bookmark here at the
+     * same moment keeps its own note, as memories already here do.
+     */
+    fun bookmarksToAdd(device: List<Bookmark>, backup: Backup): List<Bookmark> {
+        val kept = device.toMutableList()
+        return buildList {
+            for (mark in backup.bookmarks) {
+                val near = kept.any {
+                    it.key == mark.key && kotlin.math.abs(it.positionMs - mark.positionMs) < BookmarkStore.SAME_MOMENT_MS
+                }
+                if (near) continue
+                add(mark)
+                kept += mark
+            }
         }
     }
 

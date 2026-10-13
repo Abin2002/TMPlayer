@@ -1,5 +1,6 @@
 package com.tmplayer.desktop
 
+import com.tmplayer.data.BookmarkStore
 import com.tmplayer.data.CacheRule
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.UpdateScheduler
@@ -23,6 +24,11 @@ object DesktopServices {
      */
     val watched: WatchedStore by lazy {
         WatchedStore(WatchedStore.openDataStore(File(DesktopPaths.settingsFile.parentFile, WatchedStore.FILE_NAME)))
+    }
+
+    /** The viewer's bookmarks, in a file of their own beside the Watched list, for the same reasons. */
+    val bookmarks: BookmarkStore by lazy {
+        BookmarkStore(BookmarkStore.openDataStore(File(DesktopPaths.settingsFile.parentFile, BookmarkStore.FILE_NAME)))
     }
 
     val downloads: DesktopDownloadRunner by lazy { DesktopDownloadRunner(settings, connectivity = DesktopConnectivity) }

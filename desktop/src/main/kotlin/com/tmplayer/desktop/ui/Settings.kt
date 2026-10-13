@@ -165,7 +165,7 @@ fun SettingsPage(
     // A backup file picked, with what restoring it would change, while the prompt is up.
     var restorePlan by remember { mutableStateOf<RestorePlan?>(null) }
     val backups = remember(settings, state.watched, version) {
-        BackupService(settings, state.watched, OnlineMetadata.current?.store, version)
+        BackupService(settings, state.watched, OnlineMetadata.current?.store, version, bookmarks = state.bookmarks)
     }
 
     val scroll = rememberScrollState()
