@@ -18,6 +18,11 @@ enum class PlayerMenuEntry {
     VolumeBoost,
     /** A page of lengths, and the time left on one that is running. */
     SleepTimer,
+    /** A-B repeat: set the start, then the end, then stop; the line says which comes next. */
+    AbLoop,
+    /** Only while paused, and only here: the arrows already seek, so frame steps get no key. */
+    NextFrame,
+    PreviousFrame,
     SaveToDownloads,
     /** "Mark as watched", or "Mark as unwatched" once it is on the list. */
     MarkWatched,
@@ -39,6 +44,11 @@ enum class PhoneMenuEntry {
     PictureInPicture,
     VolumeBoost,
     SleepTimer,
+    /** A-B repeat, as on the television: one line that says what the next press does. */
+    AbLoop,
+    /** Only while paused: a step on a playing video would be lost in the next frame anyway. */
+    NextFrame,
+    PreviousFrame,
     OpenInAnotherApp,
     LoadSubtitleFile,
     SaveToDownloads,
@@ -49,13 +59,16 @@ enum class PhoneMenuEntry {
 
 /**
  * The line's text. [sleepDetail] is a running sleep timer's time left, which the line carries;
- * [watched] turns Mark as watched into Mark as unwatched.
+ * [watched] turns Mark as watched into Mark as unwatched; [loop] is the repeat marked so far.
  */
-fun PhoneMenuEntry.label(sleepDetail: String? = null, watched: Boolean = false): String = when (this) {
+fun PhoneMenuEntry.label(sleepDetail: String? = null, watched: Boolean = false, loop: AbLoop? = null): String = when (this) {
     PhoneMenuEntry.LockScreen -> L.playerLockScreen
     PhoneMenuEntry.PictureInPicture -> L.playerPictureInPicture
     PhoneMenuEntry.VolumeBoost -> L.playerVolumeBoost
     PhoneMenuEntry.SleepTimer -> sleepDetail?.let { L.playerSleepTimerNow(it) } ?: L.playerSleepTimer
+    PhoneMenuEntry.AbLoop -> PlayerMenu.loopLabel(loop)
+    PhoneMenuEntry.NextFrame -> L.playerFrameNext
+    PhoneMenuEntry.PreviousFrame -> L.playerFramePrevious
     PhoneMenuEntry.OpenInAnotherApp -> L.playerOpenInAnotherApp
     PhoneMenuEntry.LoadSubtitleFile -> L.playerLoadSubtitleFile
     PhoneMenuEntry.SaveToDownloads -> L.playerSaveToDownloads
@@ -65,6 +78,13 @@ fun PhoneMenuEntry.label(sleepDetail: String? = null, watched: Boolean = false):
 
 /** Which lines the More menu offers on this device, in the order it draws them. */
 object PlayerMenu {
+
+    /** The repeat line's text: what choosing it does next, given the repeat marked so far. */
+    fun loopLabel(loop: AbLoop?): String = when {
+        loop == null -> L.playerLoopSetStart
+        loop.complete -> L.playerLoopClear
+        else -> L.playerLoopSetEnd
+    }
 
     /**
      * The television's More menu.
@@ -81,17 +101,26 @@ object PlayerMenu {
      *
      * [openInAnotherApp] is false for a video from a chat that restricts saving content, whose
      * file must not be handed to another app.
+     *
+     * [paused] adds the frame steps. They live only here on the television: Left and Right on the
+     * bare picture jump, and on the bar they travel, so no arrow is free for a frame.
      */
     fun tvEntries(
         pictureInPicture: Boolean,
         saveToDownloads: Boolean = false,
         markWatched: Boolean = false,
         openInAnotherApp: Boolean = true,
+        paused: Boolean = false,
     ): List<PlayerMenuEntry> = buildList {
         add(PlayerMenuEntry.PlaybackDetails)
         add(PlayerMenuEntry.StartOver)
         add(PlayerMenuEntry.VolumeBoost)
         add(PlayerMenuEntry.SleepTimer)
+        add(PlayerMenuEntry.AbLoop)
+        if (paused) {
+            add(PlayerMenuEntry.NextFrame)
+            add(PlayerMenuEntry.PreviousFrame)
+        }
         if (saveToDownloads) add(PlayerMenuEntry.SaveToDownloads)
         if (markWatched) add(PlayerMenuEntry.MarkWatched)
         add(PlayerMenuEntry.PictureShape)
@@ -103,18 +132,25 @@ object PlayerMenu {
     /**
      * The phone's overflow, in the order it draws. [pictureInPicture] is whether the device can do
      * it; [openInAnotherApp] false for a chat that restricts saving; [markWatched]
-     * needs a message to point at; [saveToDownloads] only while the video can still become one.
+     * needs a message to point at; [saveToDownloads] only while the video can still become one;
+     * [paused] adds the frame steps. Lines rather than buttons, so the row CP37 cleared stays clear.
      */
     fun phoneEntries(
         pictureInPicture: Boolean,
         openInAnotherApp: Boolean,
         saveToDownloads: Boolean,
         markWatched: Boolean,
+        paused: Boolean = false,
     ): List<PhoneMenuEntry> = buildList {
         add(PhoneMenuEntry.LockScreen)
         if (pictureInPicture) add(PhoneMenuEntry.PictureInPicture)
         add(PhoneMenuEntry.VolumeBoost)
         add(PhoneMenuEntry.SleepTimer)
+        add(PhoneMenuEntry.AbLoop)
+        if (paused) {
+            add(PhoneMenuEntry.NextFrame)
+            add(PhoneMenuEntry.PreviousFrame)
+        }
         if (openInAnotherApp) add(PhoneMenuEntry.OpenInAnotherApp)
         add(PhoneMenuEntry.LoadSubtitleFile)
         if (saveToDownloads) add(PhoneMenuEntry.SaveToDownloads)

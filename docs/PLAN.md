@@ -135,7 +135,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [ ] CP53 Backup and restore settings, lists and progress to a file (batch 2)
 - [ ] CP54 Updates feed: new episodes of shows being watched, badges on tiles (batch 2)
 - [ ] CP55 Timestamped bookmarks with notes (batch 2)
-- [ ] CP56 Android chapters, A-B loop and frame step (desktop has them since CP08) (batch 2)
+- [x] CP56 Android chapters, A-B loop and frame step (desktop has them since CP08) (batch 2) (A-B repeat in the phone overflow and the TV More menu, marks on the bar and "A-B" by the time; frame steps there while paused, menu only on TV since the arrows seek; `AbLoop` moved to core. Chapters skipped: Media3 1.10.1's Matroska and MP4 extractors expose none, only MP3's ID3 chapter frames. Not yet tried on a device)
 - [ ] CP57 TV screensaver, PIN lock for settings and a kids lock (batch 2)
 - [ ] CP58 Skip silence, rewind a few seconds on resume (batch 2)
 - [ ] CP59 UI scale, log export for bug reports (batch 2)

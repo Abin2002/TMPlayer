@@ -107,6 +107,20 @@ class PlayerControls(
             if (visible) renderProgress()
         }
 
+    /**
+     * The A-B repeat marked so far, or null. It shows twice, both small: its marks on the bar, as
+     * the desktop draws them, and "A-B" (or "A" while only the start is set) after the elapsed
+     * time. Nothing on the button rows, which CP37 cleared on purpose.
+     */
+    var loop: AbLoop? = null
+        set(value) {
+            if (field == value) return
+            field = value
+            val marks = listOfNotNull(value?.startMs, value?.endMs).toLongArray()
+            timeBar.setAdGroupTimesMs(marks, BooleanArray(marks.size), marks.size)
+            if (visible) renderProgress()
+        }
+
     /** How long the row stays up while playing; zero keeps it up until tapped away. */
     var timeoutMs = TIMEOUT_MS
 
@@ -662,16 +676,22 @@ class PlayerControls(
             } else {
                 Translator.messages.formatter.clock(duration)
             }
-            time.text = "${Translator.messages.formatter.clock(position)} / $end"
+            time.text = "${Translator.messages.formatter.clock(position)} / $end" + loopBadge()
             return
         }
-        timesPosition.text = Translator.messages.formatter.clock(position)
+        timesPosition.text = Translator.messages.formatter.clock(position) + loopBadge()
         timesDuration.text = if (showRemaining && duration > 0) {
             "-" + Translator.messages.formatter.clock((duration - position).coerceAtLeast(0))
         } else {
             Translator.messages.formatter.clock(duration)
         }
         describe(timesDuration, if (showRemaining) L.playerShowTotalLength else L.playerShowTimeRemaining)
+    }
+
+    /** The repeat's mark after the time, with the separator the player's other readouts use. */
+    private fun loopBadge(): String {
+        val marked = loop ?: return ""
+        return "  ·  " + if (marked.complete) L.playerLoopBadge else L.playerLoopBadgeStart
     }
 
     /**
