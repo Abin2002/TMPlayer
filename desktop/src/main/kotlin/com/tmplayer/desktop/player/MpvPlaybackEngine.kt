@@ -4,8 +4,13 @@ import com.tmplayer.data.ResumeState
 import com.tmplayer.desktop.DesktopPaths
 import com.tmplayer.i18n.L
 import com.tmplayer.platform.Logger
+import com.tmplayer.player.SubtitlePick
+import com.tmplayer.player.SubtitlePlan
 import com.tmplayer.player.SubtitleStyle
+import com.tmplayer.player.SubtitleTrackInfo
 import com.tmplayer.player.SyncDelays
+import com.tmplayer.player.TrackLanguages
+import com.tmplayer.player.TrackRules
 import com.tmplayer.player.VideoScale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -215,6 +220,7 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
                 selected = h.bool("track-list/$i/selected") == true,
                 isDefault = h.bool("track-list/$i/default") == true,
                 external = h.bool("track-list/$i/external") == true,
+                forced = h.bool("track-list/$i/forced") == true,
             )
         }
     }
@@ -237,9 +243,17 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
         _tracks.value = emptyList()
         val h = handle
         runCatching {
-            h.setPropertyString("alang", prefs.audioLanguage.orEmpty())
-            h.setPropertyString("slang", prefs.subtitleLanguage.orEmpty())
-            h.setPropertyString("sid", if (prefs.subtitlesOn == false) "no" else "auto")
+            // mpv compares these as written, so every spelling a file might use: `ja,jpn`.
+            h.setPropertyString("alang", TrackLanguages.spellings(prefs.audioLanguage).joinToString(","))
+            val subtitles = prefs.subtitles
+            h.setPropertyString(
+                "slang",
+                TrackLanguages.spellings((subtitles as? SubtitlePlan.On)?.language).joinToString(","),
+            )
+            // Off and "only when the audio is foreign" start with none; [pickSubtitles] puts a
+            // forced track or the foreign audio's subtitles on once the tracks are listed.
+            val startOff = subtitles is SubtitlePlan.Off || subtitles is SubtitlePlan.IfForeignAudio
+            h.setPropertyString("sid", if (startOff) "no" else "auto")
             h.setPropertyString("aid", "auto")
             h.setPropertyDouble("speed", prefs.speed.toDouble())
             h.setPropertyBoolean("mute", prefs.muted)
@@ -260,13 +274,7 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
             withContext(Dispatchers.IO) {
                 player.setMediaData(data, playWhenReady = true, startPositionMillis = startAtMs)
             }
-            // A subtitle language asked for by name: mpv's own pick ignores slang for a track that
-            // is not flagged default, so pick it here when the file has one.
-            if (prefs.subtitlesOn == true) {
-                val wanted = readTracks(h).filter { it.type == TrackType.Subtitle }
-                val pick = wanted.firstOrNull { it.language == prefs.subtitleLanguage } ?: wanted.firstOrNull()
-                if (pick != null && wanted.none { it.selected }) runCatching { h.setPropertyString("sid", pick.id.toString()) }
-            }
+            pickSubtitles(h, prefs.subtitles)
             prefs.resume?.let { restoreTracks(h, it) }
             // The leveller goes in once there is sound to put it on; see [addLeveller].
             if (prefs.volumeBoost) addLeveller()
@@ -277,6 +285,33 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
         } catch (e: Throwable) {
             Logger.w(TAG, "Open failed", e)
             _state.update { it.copy(error = e.message ?: L.playerOpenFailed, buffering = false) }
+        }
+    }
+
+    /**
+     * The subtitles [plan] wants, once the file's tracks and the soundtrack mpv chose are known.
+     * mpv's own pick ignores `slang` for a track that is not flagged default, and cannot know
+     * whether the audio is foreign, so both are settled here ([TrackRules.pickSubtitle]). A
+     * language the series remembers but this file lacks still gets its first track, as before.
+     */
+    private fun pickSubtitles(h: MPVHandle, plan: SubtitlePlan) {
+        val all = readTracks(h)
+        val subs = all.filter { it.type == TrackType.Subtitle }
+        val audio = all.firstOrNull { it.type == TrackType.Audio && it.selected }?.language
+        val described = subs.map { SubtitleTrackInfo(it.language, isDefault = it.isDefault, forced = it.forced) }
+        val pick = when (val picked = TrackRules.pickSubtitle(plan, audio, described)) {
+            SubtitlePick.Leave -> if (plan is SubtitlePlan.On && subs.none { it.selected } && subs.isNotEmpty()) {
+                SubtitlePick.Track(0)
+            } else {
+                picked
+            }
+            else -> picked
+        }
+        when (pick) {
+            SubtitlePick.Leave -> Unit
+            SubtitlePick.None -> if (subs.any { it.selected }) runCatching { h.setPropertyString("sid", "no") }
+            is SubtitlePick.Track -> subs[pick.index].takeIf { !it.selected }
+                ?.let { runCatching { h.setPropertyString("sid", it.id.toString()) } }
         }
     }
 
