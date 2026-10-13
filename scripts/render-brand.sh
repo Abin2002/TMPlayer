@@ -15,10 +15,15 @@ root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 magick -background none -density 512 "$root/site/logo.svg" \
     -resize 512x512 -strip "$root/site/icon-512.png"
 
-# The social card is already 1200 by 630 in source units, so it only needs the text rendered at a
-# higher density and scaled back down to keep the wordmark's edges clean.
-magick -background none -density 288 "$root/site/og-source.svg" \
-    -resize 1200x630 -background "#0e0e12" -alpha remove -alpha off \
-    -strip "$root/site/og.png"
+# The social card is drawn in HTML from the site's own stylesheet, so the TV and phone are the same
+# CSS frames as the home page hero around the real screenshots. Chromium renders it at 1200 by 630,
+# and the PNG is forced to 8 bit RGB: ImageMagick wrote this card as 16 bit when it rasterised an SVG, and a 16 bit PNG
+# is a file some link preview crawlers refuse, so the link arrives with no picture.
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+chromium-browser --headless=new --disable-gpu --no-sandbox --hide-scrollbars \
+    --allow-file-access-from-files --force-device-scale-factor=1 --window-size=1200,630 \
+    --virtual-time-budget=6000 --screenshot="$tmp/og.png" "file://$root/scripts/og-card.html" 2>/dev/null
+magick "$tmp/og.png" -strip -depth 8 -define png:color-type=2 "$root/site/og.png"
 
 echo "wrote site/icon-512.png and site/og.png"
