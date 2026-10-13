@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "TV'nde yansıtmadan Telegram",
     "watch_telegram_videos_on_3a48": "Telegram videolarını telefonunu yansıtmadan ya da aynalamadan televizyonda izle: TV'nin kendisindeki bir oynatıcı hesabınla giriş yapar ve sohbetlerindeki videoları akıtır.",
     "finds_subtitles_online_through_a322": "OpenSubtitles üzerinden internette altyazı bulma, altyazıyı ya da sesi eşleşecek şekilde kaydırma",
-    "groups_series_by_season_709a": "Dizileri kendi sayfasında sezonlara göre gruplama, isteğe bağlı afiş ve özetlerle",
+    "groups_series_by_season_709a": "Dizileri kendi sayfasında sezonlara göre gruplama, kapatabileceğin afiş ve özetlerle",
     "changelog_164b": "Değişiklik günlüğü"
   },
   "features": {
@@ -327,7 +327,7 @@
     "home_and_series_pages": "{strong1} Ana sayfa, sıradaki izlenecekleri tüm sohbetlerden toplar ve her dizinin bölümleri sezonlara göre gruplanmış kendi sayfası olur.",
     "home_and_series_pages__strong1": "Dizileri düzene sokar.",
     "posters_and_overviews": "{strong1} TMDB, TVmaze ve AniList'te yalnızca videonun temizlenmiş başlığıyla aranır, başka hiçbir şeyle değil.",
-    "posters_and_overviews__strong1": "İstersen afiş ve özet ekler.",
+    "posters_and_overviews__strong1": "Afiş ve özet ekler, sen kapatmadıkça.",
     "a_closer_look": "Yakından bakış",
     "four_screens_with_their_parts": "Bölümleri işaretlenmiş dört ekran, yanlarındaki notlarla eşleşecek şekilde numaralandırılmış.",
     "the_player_watching_while_it": "Oynatıcı: inerken izle",

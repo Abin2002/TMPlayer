@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "无需投屏的电视版 Telegram",
     "watch_telegram_videos_on_3a48": "无需投屏或镜像手机，就能在电视上观看 Telegram 视频：电视上的播放器直接登录你的账号，串流你聊天中的视频。",
     "finds_subtitles_online_through_a322": "通过 OpenSubtitles 在线查找字幕，并调整字幕或音频的时间使其同步",
-    "groups_series_by_season_709a": "剧集按季分组并拥有独立页面，可选显示海报和简介",
+    "groups_series_by_season_709a": "剧集按季分组并拥有独立页面，附带海报和简介，可随时关闭",
     "changelog_164b": "更新日志"
   },
   "features": {
@@ -327,7 +327,7 @@
     "home_and_series_pages": "{strong1} 首页汇集所有聊天中接下来要看的内容，每部剧集都有自己的页面，剧集按季分组。",
     "home_and_series_pages__strong1": "把剧集整理有序。",
     "posters_and_overviews": "{strong1} 仅凭视频整理后的标题在 TMDB、TVmaze 和 AniList 上查询，不涉及其他任何信息。",
-    "posters_and_overviews__strong1": "添加海报和简介，按需开启。",
+    "posters_and_overviews__strong1": "添加海报和简介，可随时关闭。",
     "a_closer_look": "细看",
     "four_screens_with_their_parts": "四个界面，各部分都已标记，编号与旁边的说明一一对应。",
     "the_player_watching_while_it": "播放器：边下载边观看",
