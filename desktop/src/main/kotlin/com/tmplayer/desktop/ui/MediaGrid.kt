@@ -101,6 +101,8 @@ import com.tmplayer.data.MediaMapper
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.ResumeRecord
 import com.tmplayer.data.SettingsStore
+import com.tmplayer.online.MetaNotice
+import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.data.SponsoredItem
 import com.tmplayer.data.SponsoredReportOption
 import com.tmplayer.data.SponsoredReportOutcome
@@ -243,6 +245,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             val shows = remember(arranged) {
                 arranged.filterIsInstance<com.tmplayer.data.ShelfEntry.Show>().associate { it.series.cover.id to it.series }
             }
+            val metaNotice = grouping && metaNoticeShown(state)
             VideoGrid(
                 state = state,
                 items = cells,
@@ -252,9 +255,12 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 chatTitle = chat.title,
                 grid = grid,
                 onNav = { gridNav = it },
-                header = if (ad == null && course == null) null else {
+                // Online metadata is on by default, so the first grid says once where posters come
+                // from; not while searching, when the listing is what was searched for.
+                header = if (ad == null && course == null && !metaNotice) null else {
                     {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            if (metaNotice) MetaNoticeCard(state)
                             course?.let { CourseHeader(it, topicBar?.let { bar -> bar.nameOf(bar.selected) } ?: chat.title, onPlay = { item -> state.openPlayer(item, startFromBeginning = false) }) }
                             ad?.let { SponsoredCard(it, model) }
                         }
@@ -1030,6 +1036,48 @@ private fun SponsoredCard(ad: SponsoredItem, model: MediaListViewModel) {
             confirmButton = {},
             dismissButton = { TextButton(onClick = { reportOptions = null }) { Text(s.commonCancel) } },
         )
+    }
+}
+
+/** Whether the grid's note on online metadata is due: lookups on and the note not put away. */
+@Composable
+private fun metaNoticeShown(state: ShellState): Boolean {
+    val online = OnlineMetadata.current ?: return false
+    val meta by online.settings.collectAsState()
+    // True until the store answers, so the note never flashes up for somebody who put it away.
+    val dismissed by state.settings.onlineMetaNoticeDismissed.collectAsState(initial = true)
+    return MetaNotice.shouldShow(meta.enabled, dismissed)
+}
+
+/**
+ * The grid's one-time note on online metadata, the phone's and television's OnlineMetaNotice:
+ * posters and overviews are looked up by each video's cleaned title, and nothing else is sent.
+ * Keep puts it away; Turn off switches lookups off as Settings, Online metadata does, puts it away
+ * and says where to turn them back on.
+ */
+@Composable
+private fun MetaNoticeCard(state: ShellState) {
+    val s = LocalStrings.current
+    val toast = rememberToast()
+    val scope = rememberCoroutineScope()
+    fun dismiss() {
+        scope.launch { runCatching { state.settings.setOnlineMetaNoticeDismissed() } }
+    }
+    Surface(shape = MaterialTheme.shapes.large, color = Tone.surface, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(TmIcons.Image, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(20.dp))
+            Text(s.gridMetaNotice, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            TextButton(onClick = {
+                OnlineMetadata.current?.setEnabled(false)
+                dismiss()
+                toast(s.gridMetaNoticeTurnedOff)
+            }) { Text(s.gridMetaNoticeTurnOff) }
+            TextButton(onClick = { dismiss() }) { Text(s.gridMetaNoticeKeep) }
+        }
     }
 }
 

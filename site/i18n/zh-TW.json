@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "不用投放，直接在電視上看 Telegram",
     "watch_telegram_videos_on_3a48": "不用投放或鏡像手機，就能在電視上觀看 Telegram 影片：電視上的播放器會登入你的帳號，並串流播放你聊天中的影片。",
     "finds_subtitles_online_through_a322": "透過 OpenSubtitles 在線上尋找字幕，並調整字幕或音訊的時間以對上畫面",
-    "groups_series_by_season_709a": "影集依季分組，各有獨立頁面，可選擇顯示海報與簡介",
+    "groups_series_by_season_709a": "影集依季分組，各有獨立頁面，附上海報與簡介，可隨時關閉",
     "changelog_164b": "更新日誌"
   },
   "features": {
@@ -327,7 +327,7 @@
     "home_and_series_pages": "{strong1} 首頁彙整所有聊天中接下來要看的內容，每部影集都有自己的頁面，各集依季分組。",
     "home_and_series_pages__strong1": "把影集整理得井然有序。",
     "posters_and_overviews": "{strong1} 只用影片整理過的標題在 TMDB、TVmaze 與 AniList 上查詢，不使用其他任何資訊。",
-    "posters_and_overviews__strong1": "加上海報與簡介，看你需要。",
+    "posters_and_overviews__strong1": "加上海報與簡介，可隨時關閉。",
     "a_closer_look": "深入了解",
     "four_screens_with_their_parts": "四個畫面，各部分都已標示，編號與旁邊的說明一一對應。",
     "the_player_watching_while_it": "播放器：邊下載邊觀看",

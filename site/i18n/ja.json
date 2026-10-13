@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "キャストなしで、テレビでTelegram",
     "watch_telegram_videos_on_3a48": "スマートフォンのキャストやミラーリングなしで、テレビでTelegramの動画を見られます。テレビ上のプレーヤーがあなたのアカウントにサインインし、チャットの動画をストリーミング再生します。",
     "finds_subtitles_online_through_a322": "OpenSubtitlesでオンラインの字幕を検索し、字幕や音声のタイミングを調整",
-    "groups_series_by_season_709a": "シリーズを専用ページでシーズン別に整理、ポスターとあらすじは任意",
+    "groups_series_by_season_709a": "シリーズを専用ページでシーズン別に整理、ポスターとあらすじはオフにもできます",
     "changelog_164b": "更新履歴"
   },
   "features": {
@@ -327,7 +327,7 @@
     "home_and_series_pages": "{strong1}ホームにはすべてのチャットから次に見るものが集まり、シリーズごとに専用のページがあり、エピソードはシーズン別にまとめられます。",
     "home_and_series_pages__strong1": "番組を整理します。",
     "posters_and_overviews": "{strong1}動画のタイトルを整えたものだけを使って、TMDB、TVmaze、AniListで検索します。",
-    "posters_and_overviews__strong1": "必要なら、ポスターとあらすじを追加します。",
+    "posters_and_overviews__strong1": "ポスターとあらすじを追加します。オフにもできます。",
     "a_closer_look": "詳しく見る",
     "four_screens_with_their_parts": "4つの画面の各部分に番号を付け、横の説明と対応させています。",
     "the_player_watching_while_it": "プレーヤー: ダウンロードしながら視聴",
