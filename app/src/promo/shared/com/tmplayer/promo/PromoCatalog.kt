@@ -318,8 +318,11 @@ object PromoCatalog {
         val byChat: Map<Long, List<MediaItem>> = mapOf(CINEMA to cinema, ANIME to anime, STUDY to study, NATURE to nature, CLIPS to clips)
         val all: List<MediaItem> get() = byChat.values.flatten()
 
-        /** The chats starred in this demo, which Home gives a row each. */
-        val favourites = setOf(CINEMA, ANIME, STUDY)
+        /**
+         * The chats starred in this demo, which Home gives a row each and draws its carousel
+         * from: films, a show, an anime and a nature series, each with its own backdrop.
+         */
+        val favourites = setOf(CINEMA, ANIME, STUDY, NATURE)
 
         private fun named(part: String) = all.first { part in it.fileName }
 
@@ -374,6 +377,18 @@ object PromoCatalog {
             com.tmplayer.data.NewEpisode(sky4, skybound.title, "E04"),
             com.tmplayer.data.NewEpisode(sky3, skybound.title, "E03"),
         )
+
+        /**
+         * Home's carousel candidates over the starred chats ([com.tmplayer.data.HomeFeatured]), as
+         * the app works them out from the rows it has loaded, given the chats in Home's order.
+         */
+        fun featured(order: List<com.tmplayer.data.ChatSummary>): List<com.tmplayer.data.FeaturedPick> =
+            com.tmplayer.data.HomeFeatured.pick(
+                com.tmplayer.data.HomeRows.favouriteChats(order, favourites),
+                byChat.filterKeys { it in favourites },
+                continueWatching,
+                all.filter { it.id in finished }.mapTo(HashSet()) { com.tmplayer.data.SettingsStore.progressKey(it.chatId, it.messageId) },
+            )
 
         /** Each Continue and Watch later record's video, for the tiles' pictures. */
         val art: Map<String, MediaItem> = (stopped.map { it.first } + watchLater.mapNotNull { r -> all.firstOrNull { it.chatId == r.chatId && it.messageId == r.messageId } })

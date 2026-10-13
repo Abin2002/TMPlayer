@@ -208,6 +208,15 @@ fun SettingsPage(
                         }
                     }
                 }
+                // Only where TMPlayer would draw window buttons of its own: Windows, and a tiling
+                // window manager. Read at launch, so the change waits for a restart.
+                if (remember { com.tmplayer.desktop.os.WindowChromeMode.current(systemTitleBar = false).inApp }) {
+                    Toggle(
+                        s.settingsSystemTitleBar,
+                        if (desktop.systemTitleBar) s.settingsSystemTitleBarOn else s.settingsSystemTitleBarOff,
+                        desktop.systemTitleBar,
+                    ) { on -> state.extras.prefs.update { it.copy(systemTitleBar = on) } }
+                }
 
                 Group(s.settingsPlayback)
                 Toggle(

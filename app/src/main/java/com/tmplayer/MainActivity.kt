@@ -96,6 +96,7 @@ import com.tmplayer.ui.lock.PinPad
 import com.tmplayer.ui.lock.PinPurpose
 import com.tmplayer.ui.browse.SeriesWatch
 import com.tmplayer.ui.browse.rememberHomeRows
+import com.tmplayer.ui.browse.rememberFeatured
 import com.tmplayer.data.HomeRow
 import com.tmplayer.ui.browse.ChatListViewModel
 import com.tmplayer.ui.browse.MediaGridScreen
@@ -1150,6 +1151,19 @@ private fun Root() {
                     layout = chatLayout,
                     homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater, watchedVideos.values),
                     homeArt = homeViewModel.art.collectAsStateWithLifecycle().value,
+                    homeFeatured = rememberFeatured(homeViewModel, chats, favorites, continueWatching, watchedVideos.values),
+                    onSetWatchLater = { item, chatTitle, add ->
+                        App.backgroundScope.launch {
+                            runCatching {
+                                if (add) {
+                                    watchedStore.watchLater.add(com.tmplayer.data.WatchLaterRecord.of(item, chatTitle, System.currentTimeMillis()))
+                                } else {
+                                    watchedStore.watchLater.remove(item.chatId, item.messageId)
+                                }
+                            }
+                        }
+                        toast(if (add) L.detailWatchLaterAdded(item.title) else L.detailWatchLaterRemoved(item.title))
+                    },
                     homeWatch = homeWatch,
                     onHomeRowShown = { row ->
                         when (row) {

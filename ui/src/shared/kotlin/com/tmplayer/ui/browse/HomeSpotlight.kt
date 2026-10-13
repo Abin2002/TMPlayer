@@ -1,17 +1,24 @@
 package com.tmplayer.ui.browse
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,14 +27,29 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
@@ -52,14 +74,22 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.FeaturedPick
+import com.tmplayer.data.HomeFeatured
 import com.tmplayer.data.LessonSteps
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.ResumeRecord
@@ -77,6 +107,7 @@ import com.tmplayer.ui.components.GeneratedCover
 import com.tmplayer.ui.components.MediaArt
 import com.tmplayer.ui.components.TileBadge
 import com.tmplayer.ui.components.TileBadgeInset
+import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.rememberCover
 import com.tmplayer.ui.components.rememberLowMemory
@@ -93,21 +124,26 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 /**
- * The video Home leads with, and what it has to show for it.
+ * One card Home's carousel leads with, and what it has to show for it.
  *
- * [wideUrl] is the online backdrop when that is the picture that earned the spot, else null and
+ * [record] is the viewer's saved place in [item], when there is one, so the card offers Resume.
+ * [wideUrl] is the online backdrop when that is the picture that earned the card, else null and
  * the Telegram thumbnail is. [info] is what the providers know about it, for its proper name and
  * its overview, or null.
  */
 @Immutable
 class Spotlight(
-    val record: ResumeRecord,
     val item: MediaItem,
+    val chatTitle: String,
+    val record: ResumeRecord?,
     val info: MetaInfo?,
     val wideUrl: String?,
-)
+) {
+    /** The card's key, the video's progress key, stable while the carousel refills. */
+    val key: String get() = SettingsStore.progressKey(item.chatId, item.messageId)
+}
 
-/** Where working out the spotlight stands. */
+/** Where working out the carousel stands. */
 sealed interface SpotlightState {
     /** Still finding out whether any candidate has a picture: a television holds its first focus. */
     data object Pending : SpotlightState
@@ -115,34 +151,44 @@ sealed interface SpotlightState {
     /** Nothing worth leading with: Home starts with its rows. */
     data object None : SpotlightState
 
-    data class Ready(val spotlight: Spotlight) : SpotlightState
+    /** One card or more, best first, at most [HomeFeatured.LIMIT]. */
+    data class Ready(val spotlights: List<Spotlight>) : SpotlightState
 }
 
 /**
- * Home's spotlight, from [HomeRows.spotlight]'s candidates: the first whose picture is worth
- * showing large, which is an online backdrop at least [SHARP_ONLINE] pixels across (with posters
- * and overviews on), or a Telegram thumbnail at least [SHARP_THUMBNAIL] across. An inline preview
- * alone never is, and neither is a generated cover: Home would rather open on its rows than on a
- * smear or a colour field passed off as a feature.
+ * Home's featured cards: [featured] (the starred chats' films and shows, see [HomeFeatured]) that
+ * have a picture worth showing large, at most [HomeFeatured.LIMIT] of them; when none has, the
+ * first of [fallback] (the films and shows in progress, see [com.tmplayer.data.HomeRows.spotlight])
+ * that does, as one card; else none.
+ *
+ * A picture worth showing large is an online backdrop at least [SHARP_ONLINE] pixels across (with
+ * posters and overviews on), or a Telegram thumbnail at least [SHARP_THUMBNAIL] across. An inline
+ * preview alone never is, and neither is a generated cover: Home would rather open on its rows
+ * than on a smear or a colour field passed off as a feature.
  *
  * [art] is the Continue watching videos as Telegram describes them, which is where a record's
- * thumbnail comes from; each candidate's is asked for through [onArtWanted]. Until they answer,
- * or [ART_WAIT_MS] passes, the answer is [SpotlightState.Pending] rather than None, so a television
+ * thumbnail comes from; each fallback's is asked for through [onArtWanted]. Until they answer, or
+ * [ART_WAIT_MS] passes, the answer is [SpotlightState.Pending] rather than None, so a television
  * does not settle its first focus on a row a moment before the hero arrives above it.
  *
- * On a device short of memory only the thumbnail counts, and it is drawn as its soft field: no
- * 1280 pixel decode on a 1 GB stick.
+ * The candidates are looked at one at a time, and the first card is shown as soon as it is found
+ * while the rest are still being looked at. On a device short of memory only the thumbnail counts,
+ * and it is drawn as its soft field: no 1280 pixel decode on a 1 GB stick.
  */
 @Composable
-fun rememberSpotlight(
-    candidates: List<ResumeRecord>,
+fun rememberSpotlights(
+    featured: List<FeaturedPick>,
+    fallback: List<ResumeRecord>,
     art: Map<String, MediaItem>,
     onArtWanted: (ResumeRecord) -> Unit,
+    chatTitle: (Long) -> String = { "" },
 ): SpotlightState {
-    LaunchedEffect(candidates) { candidates.forEach(onArtWanted) }
-    val keys = remember(candidates) { candidates.map { SettingsStore.progressKey(it.chatId, it.messageId) } }
-    val items = remember(candidates, art) {
-        candidates.mapIndexed { index, record -> art[keys[index]] ?: record.toMediaItem() }
+    LaunchedEffect(fallback) { fallback.forEach(onArtWanted) }
+    val keys = remember(fallback) { fallback.map { SettingsStore.progressKey(it.chatId, it.messageId) } }
+    val backups = remember(fallback, art) {
+        fallback.mapIndexed { index, record ->
+            FeaturedPick(art[keys[index]] ?: record.toMediaItem(), record.chatTitle.ifEmpty { chatTitle(record.chatId) }, record)
+        }
     }
     var waited by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -155,19 +201,26 @@ fun rememberSpotlight(
     val lowMemory = rememberLowMemory()
     // Keyed on what decides the answer, not on the whole art map: another tile's picture
     // arriving must not start the search over.
-    val inputs = items.map { it.id to it.thumbnailFileId }
+    val inputs = featured.map { it.item.id to it.item.thumbnailFileId } + backups.map { it.item.id to it.item.thumbnailFileId }
     val state by produceState<SpotlightState>(SpotlightState.Pending, inputs, answered, metaOn, lowMemory) {
-        if (candidates.isEmpty()) {
-            value = SpotlightState.None
+        val provider = if (metaOn) online else null
+        val firstAnswer = value !is SpotlightState.Ready
+        val found = ArrayList<Spotlight>()
+        for (pick in featured) {
+            if (found.size >= HomeFeatured.LIMIT) break
+            val (info, url) = findArt(pick.item, provider, lowMemory) ?: continue
+            found += Spotlight(pick.item, pick.chatTitle, pick.record, info, url)
+            // The first card goes up at once; a carousel already showing waits for the whole answer.
+            if (firstAnswer) value = SpotlightState.Ready(found.toList())
+        }
+        if (found.isNotEmpty()) {
+            value = SpotlightState.Ready(found)
             return@produceState
         }
-        candidates.forEachIndexed { index, record ->
-            val item = items[index]
-            val found = findArt(item, if (metaOn) online else null, lowMemory)
-            if (found != null) {
-                value = SpotlightState.Ready(Spotlight(record, item, found.first, found.second))
-                return@produceState
-            }
+        for (pick in backups) {
+            val (info, url) = findArt(pick.item, provider, lowMemory) ?: continue
+            value = SpotlightState.Ready(listOf(Spotlight(pick.item, pick.chatTitle, pick.record, info, url)))
+            return@produceState
         }
         value = if (answered) SpotlightState.None else SpotlightState.Pending
     }
@@ -196,20 +249,51 @@ private suspend fun findArt(item: MediaItem, online: OnlineMetadata?, lowMemory:
     return if (thumbnail != null && thumbnail.width >= SHARP_THUMBNAIL) info to null else null
 }
 
+/** Puts [spotlight]'s large picture in the cache ahead of its turn, so the cross fade has it ready. */
+private suspend fun prefetch(spotlight: Spotlight, online: OnlineMetadata?) {
+    val url = spotlight.wideUrl
+    if (url != null && online != null) {
+        if (Thumbnails.peekOnline(url, ONLINE_WIDTH) == null) Thumbnails.online(url, ONLINE_WIDTH) { online.image(url) }
+    } else if (spotlight.item.thumbnailFileId > 0 && Thumbnails.peekFull(spotlight.item.thumbnailFileId) == null) {
+        Thumbnails.full(spotlight.item.thumbnailFileId)
+    }
+}
+
+/** How the carousel is driven, which decides how it pages. */
+enum class CarouselInput {
+    /** A finger: the cards swipe in a pager, and a swipe stops the auto advance for the visit. */
+    Touch,
+
+    /**
+     * A remote: Left from the pill goes to the card before and Right from the last button to the
+     * card after; Down goes into the rows. The buttons stay put while the card changes, so focus
+     * stays where it was.
+     */
+    Remote,
+
+    /** A mouse and a keyboard: arrow buttons on hover, and Left and Right page while focus is in it. */
+    Pointer,
+}
+
 /**
- * Home's hero: the video the viewer was last part way through, when it is a film or a show and
- * has a picture to show for it (see [rememberSpotlight]).
+ * Home's hero: a carousel of the films and shows in the starred chats (see [rememberSpotlights]),
+ * one card at a time, full bleed under the page header.
  *
  * Two arrangements. [wide] (a television, the desktop, a phone on its side) puts the picture on
- * the end [SPOTLIGHT_BACKDROP_SHARE] of the width under a start fade and a foot fade, with the words in a
- * column on the start side. Otherwise (a phone upright) the picture fills the width and the
- * words sit centred at its foot, under the long fade. Either way the words are TMPlayer's: the
- * chat it came from in the accent, the name (the providers' when they know it), and a line of
- * facts with the episode, the time left, the quality and the size. Then one pill, Resume, and a
- * round Details button. No rating, no "featured": it is there because the viewer started it.
+ * the end [SPOTLIGHT_BACKDROP_SHARE] of the width under a start fade and a foot fade, with the
+ * words in a column on the start side. Otherwise (a phone upright) the picture fills the width and
+ * the words sit centred at its foot, under the long fade. Either way the words are TMPlayer's: the
+ * name (the providers' when they know it), a line of facts with the episode or the year, the chat
+ * it came from in the accent, the quality and the size, and the providers' overview when there is
+ * one. Then one pill, Play or Resume, a round Details button and a round Watch later toggle. No
+ * rating, no "featured": every card is from a chat the viewer starred.
  *
- * [resumeFocus] is the pill's, for a television to open Home on it. One picture at a time, and on
- * a device short of memory only the thumbnail's soft field.
+ * The cards change by a cross fade of the backdrop, which is never more than the one picture plus
+ * the next one fetched ahead; the dots under the words say where in the carousel it is. It moves
+ * on by itself every [Motion.HeroAdvanceMs], except under a pointer, with focus in it, after a
+ * swipe, with motion turned off, or on a device short of memory. See [CarouselInput] for paging.
+ *
+ * [resumeFocus] is the pill's, for a television to open Home on it.
  *
  * [under] is how far the picture reaches up behind a page header drawn over the top of it (the
  * page's title and buttons, or a phone's app bar): the hero is that much taller, the picture runs
@@ -217,112 +301,365 @@ private suspend fun findArt(item: MediaItem, online: OnlineMetadata?, lowMemory:
  * [Scrims.headerTop] meanwhile (see [overHero]). Zero leaves the hero under its header as before.
  */
 @Composable
-fun HomeSpotlight(
-    spotlight: Spotlight,
-    chatTitle: String,
+fun HomeCarousel(
+    spotlights: List<Spotlight>,
     wide: Boolean,
     height: Dp,
     start: Dp,
     end: Dp,
-    onResume: () -> Unit,
-    onDetails: () -> Unit,
+    input: CarouselInput,
+    onPlay: (Spotlight) -> Unit,
+    onDetails: (Spotlight) -> Unit,
     modifier: Modifier = Modifier,
+    inWatchLater: (Spotlight) -> Boolean = { false },
+    onToggleWatchLater: ((Spotlight) -> Unit)? = null,
     resumeFocus: FocusRequester? = null,
     under: Dp = 0.dp,
 ) {
+    if (spotlights.isEmpty()) return
     val s = LocalStrings.current
-    val item = spotlight.item
-    val record = spotlight.record
+    val count = spotlights.size
     val lowMemory = rememberLowMemory()
-    val cover = rememberCover(item, chatTitle)
+    val still = rememberReducedMotion()
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val online = OnlineMetadata.current
+
+    // Which card is up, by key, so a carousel that refills keeps the card the viewer is on.
+    var currentKey by remember { mutableStateOf(spotlights.first().key) }
+    val index = spotlights.indexOfFirst { it.key == currentKey }.takeIf { it >= 0 } ?: 0
+    val pager = if (input == CarouselInput.Touch) rememberPagerState(initialPage = index) { count } else null
+    var advanced by remember { mutableStateOf(false) }
+    var stopped by remember { mutableStateOf(false) }
+    val hover = remember { MutableInteractionSource() }
+    val hovered by hover.collectIsHoveredAsState()
+    var focusedInside by remember { mutableStateOf(false) }
+
+    if (pager != null) {
+        LaunchedEffect(pager, spotlights) {
+            snapshotFlow { pager.currentPage }.collect { page -> spotlights.getOrNull(page)?.let { currentKey = it.key } }
+        }
+        LaunchedEffect(spotlights) {
+            val wanted = spotlights.indexOfFirst { it.key == currentKey }
+            if (wanted >= 0 && wanted != pager.currentPage) pager.scrollToPage(wanted)
+        }
+        LaunchedEffect(pager) {
+            pager.interactionSource.interactions.collect { if (it is DragInteraction.Start || it is PressInteraction.Press) stopped = true }
+        }
+    }
+    val go: (Int) -> Unit = { to ->
+        val target = ((to % count) + count) % count
+        currentKey = spotlights[target].key
+    }
+    LaunchedEffect(pager, index) {
+        if (pager != null && pager.currentPage != index && !pager.isScrollInProgress) {
+            if (still) pager.scrollToPage(index) else pager.animateScrollToPage(index)
+        }
+    }
+
+    // On by itself, slowly, and only while nobody is looking at it closely.
+    LaunchedEffect(index, count, hovered, focusedInside, stopped, still, lowMemory) {
+        if (count < 2 || hovered || focusedInside || stopped || still || lowMemory) return@LaunchedEffect
+        delay(if (advanced) Motion.HeroAdvanceMs else Motion.HeroFirstAdvanceMs)
+        advanced = true
+        go(index + 1)
+    }
+    // The next card's picture, fetched while this one is up; never on a device short of memory.
+    val next = spotlights[(index + 1) % count]
+    LaunchedEffect(next.key, lowMemory) {
+        if (count < 2 || lowMemory) return@LaunchedEffect
+        delay(PREFETCH_DELAY_MS)
+        runCatching { prefetch(next, online) }
+    }
+
+    val current = spotlights[index]
+    val forward = if (rtl) Key.DirectionLeft else Key.DirectionRight
+    val back = if (rtl) Key.DirectionRight else Key.DirectionLeft
+    val pointerKeys = if (input == CarouselInput.Pointer && count > 1) {
+        Modifier.onPreviewKeyEvent { event ->
+            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+            when (event.key) {
+                forward -> { go(index + 1); true }
+                back -> { go(index - 1); true }
+                else -> false
+            }
+        }
+    } else {
+        Modifier
+    }
+    // On a remote the buttons keep Left and Right among themselves, and only past the ends page.
+    val pillKeys = if (input == CarouselInput.Remote && count > 1) {
+        Modifier.onPreviewKeyEvent { event ->
+            if (event.type != KeyEventType.KeyDown || event.key != back || index == 0) return@onPreviewKeyEvent false
+            go(index - 1)
+            true
+        }
+    } else {
+        Modifier
+    }
+    val lastKeys = if (input == CarouselInput.Remote && count > 1) {
+        Modifier.onPreviewKeyEvent { event ->
+            if (event.type != KeyEventType.KeyDown || event.key != forward) return@onPreviewKeyEvent false
+            go(index + 1)
+            true
+        }
+    } else {
+        Modifier
+    }
+
+    Box(
+        modifier
+            .fillMaxWidth()
+            .heightIn(min = height + under)
+            .hoverable(hover)
+            .onFocusChanged { focusedInside = it.hasFocus }
+            .then(pointerKeys),
+    ) {
+        Box(Modifier.matchParentSize()) {
+            Crossfade(
+                targetState = current,
+                animationSpec = if (still) snap() else Motion.standard(Motion.Slow),
+                label = "carouselBackdrop",
+            ) { card ->
+                SpotlightBackdrop(card, wide, under, lowMemory)
+            }
+        }
+        val dotsRoom = if (count > 1) DOTS_ROOM else 0.dp
+        if (pager != null) {
+            HorizontalPager(
+                state = pager,
+                modifier = Modifier.fillMaxWidth().heightIn(min = height + under),
+                key = { spotlights.getOrNull(it)?.key ?: it },
+                beyondViewportPageCount = 0,
+            ) { page ->
+                val card = spotlights[page]
+                Box(Modifier.fillMaxWidth().heightIn(min = height + under)) {
+                    CardColumn(wide, start, end, dotsRoom) {
+                        SpotlightText(card, wide)
+                        SpotlightActions(card, wide, onPlay, onDetails, inWatchLater, onToggleWatchLater, null, Modifier, Modifier)
+                    }
+                }
+            }
+        } else {
+            CardColumn(wide, start, end, dotsRoom) {
+                Crossfade(
+                    targetState = current,
+                    animationSpec = if (still) snap() else Motion.standard(Motion.Normal),
+                    label = "carouselWords",
+                ) { card ->
+                    Column(
+                        horizontalAlignment = if (wide) Alignment.Start else Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) { SpotlightText(card, wide) }
+                }
+                // The buttons stay the same composables from card to card, so focus stays on them.
+                SpotlightActions(current, wide, onPlay, onDetails, inWatchLater, onToggleWatchLater, resumeFocus, pillKeys, lastKeys)
+            }
+        }
+        if (count > 1) {
+            CarouselDots(
+                count = count,
+                current = index,
+                label = s.homeSpotlightPosition(index + 1, count),
+                modifier = Modifier
+                    .align(if (wide) Alignment.BottomStart else Alignment.BottomCenter)
+                    .padding(start = if (wide) start else 0.dp, bottom = if (wide) 14.dp else 4.dp),
+            )
+        }
+        if (input == CarouselInput.Pointer && count > 1) {
+            val shown by animateFloatAsState(if (hovered) 1f else 0f, Motion.standard(Motion.Fast), label = "carouselArrows")
+            if (shown > 0f) {
+                Row(
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = end, bottom = 20.dp)
+                        .graphicsLayer { alpha = shown },
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    ArrowButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, s.homeSpotlightPrevious) { go(index - 1) }
+                    ArrowButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, s.homeSpotlightNext) { go(index + 1) }
+                }
+            }
+        }
+    }
+}
+
+/** One card's picture, under its fades: see [HomeCarousel] for the two arrangements. */
+@Composable
+private fun SpotlightBackdrop(spotlight: Spotlight, wide: Boolean, under: Dp, lowMemory: Boolean) {
+    val item = spotlight.item
+    val cover = rememberCover(item, spotlight.chatTitle)
     val source = remember(item, spotlight.wideUrl, cover) {
         BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, spotlight.wideUrl)
     }
-    val words = remember(item, spotlight.info, record, s) { SpotlightWords.of(item, spotlight.info, record, s) }
-    Box(modifier.fillMaxWidth().heightIn(min = height + under)) {
-        Box(Modifier.matchParentSize()) {
-            if (wide) {
-                Box(Modifier.align(Alignment.TopEnd).fillMaxWidth(SPOTLIGHT_BACKDROP_SHARE).fillMaxHeight()) {
-                    ArtBackdrop(source, Modifier.fillMaxSize(), fieldOnly = lowMemory)
-                    Box(Modifier.fillMaxSize().background(Scrims.startLong()))
-                    // A short fade at the top too, so the picture does not start on a hard line under
-                    // the header; none where the picture runs on up behind the header instead.
-                    if (under == 0.dp) {
-                        Box(
-                            Modifier.fillMaxWidth().height(TOP_FADE)
-                                .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Tone.scrim, Tone.scrim.copy(alpha = 0f)))),
-                        )
-                    }
-                    Box(Modifier.fillMaxSize().background(Scrims.bottomLong(WIDE_FOOT_FADE)))
-                }
-            } else {
+    Box(Modifier.fillMaxSize()) {
+        if (wide) {
+            Box(Modifier.align(Alignment.TopEnd).fillMaxWidth(SPOTLIGHT_BACKDROP_SHARE).fillMaxHeight()) {
                 ArtBackdrop(source, Modifier.fillMaxSize(), fieldOnly = lowMemory)
-                Box(Modifier.fillMaxSize().background(Scrims.bottomLong(TALL_FOOT_FADE)))
+                Box(Modifier.fillMaxSize().background(Scrims.startLong()))
+                // A short fade at the top too, so the picture does not start on a hard line under
+                // the header; none where the picture runs on up behind the header instead.
+                if (under == 0.dp) {
+                    Box(
+                        Modifier.fillMaxWidth().height(TOP_FADE)
+                            .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Tone.scrim, Tone.scrim.copy(alpha = 0f)))),
+                    )
+                }
+                Box(Modifier.fillMaxSize().background(Scrims.bottomLong(WIDE_FOOT_FADE)))
+            }
+        } else {
+            ArtBackdrop(source, Modifier.fillMaxSize(), fieldOnly = lowMemory)
+            Box(Modifier.fillMaxSize().background(Scrims.bottomLong(TALL_FOOT_FADE)))
+        }
+    }
+}
+
+/** Where a card's words and buttons stand: the start column of a wide hero, the foot of a tall one. */
+@Composable
+private fun androidx.compose.foundation.layout.BoxScope.CardColumn(
+    wide: Boolean,
+    start: Dp,
+    end: Dp,
+    dotsRoom: Dp,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        Modifier
+            .align(if (wide) Alignment.BottomStart else Alignment.BottomCenter)
+            .then(if (wide) Modifier.fillMaxWidth(TEXT_SHARE).widthIn(max = TEXT_MAX) else Modifier.fillMaxWidth())
+            .padding(start = start, end = if (wide) 0.dp else end, top = 24.dp, bottom = (if (wide) 20.dp else 8.dp) + dotsRoom),
+        horizontalAlignment = if (wide) Alignment.Start else Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        content = content,
+    )
+}
+
+/** A card's name, its line of facts and, when the providers have one, its overview. */
+@Composable
+private fun SpotlightText(spotlight: Spotlight, wide: Boolean) {
+    val s = LocalStrings.current
+    val words = remember(spotlight, s) { SpotlightWords.of(spotlight.item, spotlight.info, spotlight.record, s) }
+    val textAlign = if (wide) TextAlign.Start else TextAlign.Center
+    val accent = Tone.accent
+    Text(
+        words.title,
+        style = MaterialTheme.typography.displaySmall,
+        color = Tone.text,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+        textAlign = textAlign,
+    )
+    val chat = spotlight.chatTitle.takeIf { it.isNotBlank() }
+    val facts = remember(words, chat, accent) {
+        buildAnnotatedString {
+            val parts = listOfNotNull(words.lead.takeIf { it.isNotBlank() }, chat, words.file.takeIf { it.isNotBlank() })
+            parts.forEachIndexed { i, part ->
+                if (i > 0) append(SEPARATOR)
+                // The chat it came from in the accent: what TMPlayer always says first about a video.
+                if (part === chat) withStyle(SpanStyle(color = accent, fontWeight = FontWeight.SemiBold)) { append(part) } else append(part)
             }
         }
-        val align = if (wide) Alignment.Start else Alignment.CenterHorizontally
-        val textAlign = if (wide) TextAlign.Start else TextAlign.Center
-        Column(
-            Modifier
-                .align(if (wide) Alignment.BottomStart else Alignment.BottomCenter)
-                .then(if (wide) Modifier.fillMaxWidth(TEXT_SHARE).widthIn(max = TEXT_MAX) else Modifier.fillMaxWidth())
-                .padding(start = start, end = if (wide) 0.dp else end, top = 24.dp, bottom = if (wide) 20.dp else 8.dp),
-            horizontalAlignment = align,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            if (chatTitle.isNotBlank()) {
-                Text(
-                    chatTitle,
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = Tone.accent,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = textAlign,
-                )
-            }
-            Text(
-                words.title,
-                style = MaterialTheme.typography.displaySmall,
-                color = Tone.text,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = textAlign,
+    }
+    if (facts.isNotEmpty()) {
+        Text(
+            facts,
+            style = MaterialTheme.typography.labelLarge,
+            color = Tone.muted,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = textAlign,
+        )
+    }
+    val overview = spotlight.info?.overview.orEmpty()
+    if (overview.isNotBlank()) {
+        Text(
+            overview,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Tone.muted,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = textAlign,
+        )
+    }
+}
+
+/** Play or Resume as the pill, then Details and the Watch later toggle as round buttons. */
+@Composable
+private fun SpotlightActions(
+    spotlight: Spotlight,
+    wide: Boolean,
+    onPlay: (Spotlight) -> Unit,
+    onDetails: (Spotlight) -> Unit,
+    inWatchLater: (Spotlight) -> Boolean,
+    onToggleWatchLater: ((Spotlight) -> Unit)?,
+    pillFocus: FocusRequester?,
+    pillKeys: Modifier,
+    lastKeys: Modifier,
+) {
+    val s = LocalStrings.current
+    Row(
+        Modifier.padding(top = 10.dp).then(if (wide) Modifier else Modifier.fillMaxWidth()),
+        horizontalArrangement = Arrangement.spacedBy(12.dp, if (wide) Alignment.Start else Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val resume = (spotlight.record?.positionMs ?: 0L) > 0L
+        HeroPill(
+            label = if (resume) s.commonResume else s.commonPlay,
+            onClick = { onPlay(spotlight) },
+            stretch = !wide,
+            focus = pillFocus,
+            modifier = pillKeys.then(if (wide) Modifier else Modifier.weight(1f, fill = false)),
+        )
+        HeroRound(Icons.Outlined.Info, s.detailOpenDetails, { onDetails(spotlight) }, if (onToggleWatchLater == null) lastKeys else Modifier)
+        if (onToggleWatchLater != null) {
+            val saved = inWatchLater(spotlight)
+            HeroRound(
+                if (saved) Icons.Filled.Check else TmIcons.Clock,
+                if (saved) s.detailWatchLaterRemove else s.detailWatchLaterAdd,
+                { onToggleWatchLater(spotlight) },
+                lastKeys,
             )
-            if (words.facts.isNotBlank()) {
-                Text(
-                    words.facts,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Tone.muted,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = textAlign,
-                )
-            }
-            val overview = spotlight.info?.overview.orEmpty()
-            if (wide && overview.isNotBlank()) {
-                Text(
-                    overview,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Tone.muted,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Row(
-                Modifier.padding(top = 10.dp).then(if (wide) Modifier else Modifier.fillMaxWidth()),
-                horizontalArrangement = Arrangement.spacedBy(12.dp, if (wide) Alignment.Start else Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                HeroPill(
-                    label = if (record.positionMs > 0) s.commonResume else s.commonPlay,
-                    onClick = onResume,
-                    stretch = !wide,
-                    focus = resumeFocus,
-                    modifier = if (wide) Modifier else Modifier.weight(1f, fill = false),
-                )
-                RoundAction(s.detailOpenDetails, onDetails)
-            }
         }
+    }
+}
+
+/** Where in the carousel it is: a dot per card, the current one drawn long. */
+@Composable
+private fun CarouselDots(count: Int, current: Int, label: String, modifier: Modifier = Modifier) {
+    val still = rememberReducedMotion()
+    Row(modifier.semantics { contentDescription = label }, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        repeat(count) { i ->
+            val width by animateDpAsState(
+                if (i == current) DOT_ACTIVE else DOT,
+                if (still) snap() else Motion.standard(Motion.Normal),
+                label = "carouselDot",
+            )
+            Box(
+                Modifier
+                    .size(width, DOT)
+                    .clip(CircleShape)
+                    .background(if (i == current) Tone.text else Tone.text.copy(alpha = 0.35f)),
+            )
+        }
+    }
+}
+
+/** A round arrow on a hovered desktop carousel. Pointer only: the keyboard has Left and Right. */
+@Composable
+private fun ArrowButton(icon: ImageVector, label: String, onClick: () -> Unit) {
+    val interactions = remember { MutableInteractionSource() }
+    val hovered by interactions.collectIsHoveredAsState()
+    Box(
+        Modifier
+            .size(ARROW)
+            .focusProperties { canFocus = false }
+            .clip(CircleShape)
+            .background(if (hovered) Tone.surfaceHigh else Tone.surfaceHigh.copy(alpha = 0.72f))
+            .border(1.dp, Tone.outline, CircleShape)
+            .hoverable(interactions)
+            .clickable(interactionSource = interactions, indication = null, role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = label, tint = Tone.text, modifier = Modifier.size(24.dp))
     }
 }
 
@@ -352,7 +689,7 @@ fun rememberHeroUnderHeader(list: LazyListState, header: Dp, hero: Boolean): Sta
 }
 
 /**
- * The ground of a page header drawn over Home's hero ([HomeSpotlight]'s `under`). Over the
+ * The ground of a page header drawn over Home's hero ([HomeCarousel]'s `under`). Over the
  * picture it is [Scrims.headerTop], reaching [Scrims.HEADER_REACH] times the header's height
  * down, and the header's words and icons are to be [Tone.onArt] in either theme; otherwise it is
  * [solid], the page's own background by default, so the rows scrolling up under the header do not
@@ -368,28 +705,39 @@ fun Modifier.overHero(overArt: Boolean, solid: Color = Tone.background): Modifie
     }
 }
 
-/** The words a spotlight writes, worked out once per video. */
-internal class SpotlightWords(val title: String, val facts: String) {
+
+/**
+ * The words a carousel card writes, worked out once per video: its [title], the [lead] of its
+ * facts (the episode or the year, and the time left when it has a saved place) and the [file]
+ * facts that close them (its quality and its size). The chat's name goes between the two.
+ */
+internal class SpotlightWords(val title: String, val lead: String, val file: String) {
     companion object {
-        fun of(item: MediaItem, info: MetaInfo?, record: ResumeRecord, s: Messages): SpotlightWords {
+        fun of(item: MediaItem, info: MetaInfo?, record: ResumeRecord?, s: Messages): SpotlightWords {
             val parsed = SeriesShelf.episodeOf(item)
             val episode = parsed.episode?.let { number ->
                 parsed.season?.let { s.seriesEpisodeShort(it, number) } ?: s.seriesEpisode(number)
             }
             val title = info?.title?.takeIf { it.isNotBlank() }
                 ?: if (episode != null) parsed.title.ifBlank { SeriesShelf.tileTitle(item) } else SeriesShelf.posterTitle(item)
-            val left = record.remainingMs.takeIf { it > 0 }?.let { s.browseTimeLeft(s.formatter.duration(it / 1000)) }
-            val facts = listOfNotNull(
+            val left = record?.remainingMs?.takeIf { it > 0 && record.positionMs > 0 }?.let { s.browseTimeLeft(s.formatter.duration(it / 1000)) }
+            val lead = listOfNotNull(
                 episode,
                 parsed.year?.takeIf { episode == null }?.toString(),
                 left,
+            ).joinToString(SEPARATOR)
+            val file = listOfNotNull(
                 item.qualityTags.firstOrNull(),
                 item.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
-            ).joinToString("  ·  ")
-            return SpotlightWords(title, facts)
+            ).joinToString(SEPARATOR)
+            return SpotlightWords(title, lead, file)
         }
     }
 }
+
+/** Between the facts on a card. */
+private const val SEPARATOR = "  ·  "
+
 
 /**
  * The spotlight's one bright action: a pill in [Tone.hero], near white on dark and near black on
@@ -451,9 +799,10 @@ fun HeroPill(
     }
 }
 
-/** The quiet round button beside the pill: an outline at rest, the focus fill and ring under focus. */
+
+/** The quiet round buttons beside the pill: an outline at rest, the focus fill and ring under focus. */
 @Composable
-private fun RoundAction(label: String, onClick: () -> Unit) {
+private fun HeroRound(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val still = rememberReducedMotion()
@@ -463,7 +812,7 @@ private fun RoundAction(label: String, onClick: () -> Unit) {
         label = "roundActionScale",
     )
     Box(
-        Modifier
+        modifier
             .size(HERO_PILL_HEIGHT)
             .graphicsLayer {
                 scaleX = scale
@@ -476,13 +825,27 @@ private fun RoundAction(label: String, onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            Icons.Outlined.Info,
+            icon,
             contentDescription = label,
             tint = if (focused) Tone.onFocusFill else Tone.text,
             modifier = Modifier.size(24.dp),
         )
     }
 }
+
+/** The carousel's dots: [DOT] round, the current one [DOT_ACTIVE] long. */
+private val DOT = 6.dp
+private val DOT_ACTIVE = 24.dp
+
+/** Room kept under a card's buttons for the dots. */
+private val DOTS_ROOM = 18.dp
+
+/** The desktop's arrow buttons. */
+private val ARROW = 40.dp
+
+/** How long a card is up before the next one's picture is fetched: a fast swipe through fetches nothing. */
+private const val PREFETCH_DELAY_MS = 1_200L
+
 
 /**
  * A Continue watching card's art: the picture (or the generated cover), the tile's foot fade,
@@ -629,7 +992,7 @@ private const val SHARP_THUMBNAIL = 280
 /** How long a hero waits for its candidates' thumbnails to be looked up before giving up on them. */
 private const val ART_WAIT_MS = 1_500L
 
-/** The height a spotlight takes on a screen [screenHeight] tall: see [HomeSpotlight]. */
+/** The height a spotlight takes on a screen [screenHeight] tall: see [HomeCarousel]. */
 fun spotlightHeight(screenHeight: Dp, wide: Boolean, touch: Boolean): Dp = when {
     !wide -> (screenHeight * 0.56f).coerceIn(320.dp, 520.dp)
     touch -> (screenHeight * 0.7f).coerceIn(220.dp, 400.dp)

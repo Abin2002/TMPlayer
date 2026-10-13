@@ -691,10 +691,15 @@
     "row_continue": "Continue watching",
     "row_new_episodes": "New episodes",
     "row_recent": "Recently added in starred chats",
+    "row_scroll_back": "Scroll back",
+    "row_scroll_on": "Scroll on",
     "row_watch_later": "Watch later",
     "see_all": "See all",
     "see_all_count": "{count, plural, one {# video} other {# videos}}",
-    "see_all_count_at_least": "{count, plural, one {#+ video} other {#+ videos}}"
+    "see_all_count_at_least": "{count, plural, one {#+ video} other {#+ videos}}",
+    "spotlight_next": "Next",
+    "spotlight_position": "{index} of {count}",
+    "spotlight_previous": "Previous"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1633,9 @@
     "subtitle_style_no_box": "No box",
     "subtitles": "Subtitles",
     "support_detail": "Sponsor, buy a coffee, star or share, with a QR code",
+    "system_title_bar": "Use the system title bar",
+    "system_title_bar_off": "TMPlayer draws its own window buttons. Takes effect after a restart",
+    "system_title_bar_on": "The window system draws the title bar. Takes effect after a restart",
     "tap_plays": "Tap the picture to play or pause",
     "tap_plays_off": "Off: a tap shows the controls, and the big button pauses",
     "tap_plays_on": "A tap pauses and shows the controls; another tap plays",
@@ -2001,5 +2009,11 @@
     "highlight_series": "Series view: episodes grouped by season, with tabs for each one",
     "subtitle": "The highlights of this version",
     "title": "What's new in {version}"
+  },
+  "window": {
+    "close": "Close",
+    "maximize": "Maximize",
+    "minimize": "Minimize",
+    "restore": "Restore"
   }
 }

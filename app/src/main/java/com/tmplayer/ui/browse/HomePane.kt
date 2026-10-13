@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.tmplayer.data.FeaturedPick
 import com.tmplayer.data.HomeRow
 import com.tmplayer.data.HomeRows
 import com.tmplayer.data.MediaItem
@@ -87,9 +88,9 @@ import androidx.compose.material3.Text as M3Text
  * are watching, a row per starred chat, and the newest videos across the starred chats (the rows
  * are built by [com.tmplayer.data.HomeRows]).
  *
- * The spotlight ([HomeSpotlight]) is the newest film or show the viewer is part way through, and
- * only when it has a picture worth showing large; otherwise Home opens on its rows and nothing
- * stands in for it.
+ * The spotlight ([HomeCarousel]) is a carousel of up to five films and shows from the starred
+ * chats, each with a picture worth showing large; with none, the newest film or show the viewer
+ * is part way through when it has one; otherwise Home opens on its rows and nothing stands in.
  *
  * Continue watching is wide cards with the name written on the art and the time left in a chip.
  * In a starred chat's row and in Recently added, films and shows are 2:3 posters and everything
@@ -101,7 +102,7 @@ import androidx.compose.material3.Text as M3Text
  * which is what lets a 1 GB television scroll this without measuring anything twice.
  *
  * On a television the D-pad moves along a row and between rows, each row remembering the tile it
- * was left on. Home opens on the spotlight's Resume where there is one, else on the first tile;
+ * was left on. Home opens on the carousel's pill where there is one, else on the first tile;
  * Down from Resume goes into the rows and Up from the first row comes back. A row that leaves
  * videos out offers "See all" on its heading.
  */
@@ -145,6 +146,12 @@ internal fun HomePane(
     under: Dp = 0.dp,
     /** Told whether there is a hero and whether it is under that header, for the header's look. */
     hero: HeroUnderHeader? = null,
+    /** The carousel's candidates from the starred chats (see [rememberFeatured]). */
+    featured: List<FeaturedPick> = emptyList(),
+    /** Whether a video is on Watch later, for the carousel's toggle. */
+    inWatchLater: (MediaItem) -> Boolean = { false },
+    /** Puts a carousel card's video on Watch later or takes it off; null leaves the toggle out. */
+    onToggleWatchLater: ((MediaItem, String) -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     if (hero != null) {
@@ -169,7 +176,8 @@ internal fun HomePane(
     val candidates = remember(rows) {
         rows.filterIsInstance<HomeRow.Continue>().firstOrNull()?.let { HomeRows.spotlight(it.records + it.more) }.orEmpty()
     }
-    val spotlight = (rememberSpotlight(candidates, art, onArtWanted) as? SpotlightState.Ready)?.spotlight
+    val spotlights = (rememberSpotlights(featured, candidates, art, onArtWanted, chatTitle) as? SpotlightState.Ready)?.spotlights
+    val spotlight = spotlights?.firstOrNull()
     val heroUnder by rememberHeroUnderHeader(listState, under, spotlight != null)
     if (hero != null) SideEffect { hero.update(present = spotlight != null, underHeader = heroUnder) }
 
@@ -200,19 +208,22 @@ internal fun HomePane(
                 ),
                 verticalArrangement = Arrangement.spacedBy(if (touch) ROW_GAP_TOUCH else ROW_GAP_TV),
             ) {
-                if (spotlight != null) {
+                if (spotlights != null) {
                     item(key = SPOTLIGHT_KEY, contentType = "spotlight") {
-                        val record = spotlight.record
-                        val chat = record.chatTitle.ifEmpty { chatTitle(record.chatId) }
-                        HomeSpotlight(
-                            spotlight = spotlight,
-                            chatTitle = chat,
+                        HomeCarousel(
+                            spotlights = spotlights,
                             wide = wide,
                             height = heroHeight,
                             start = start,
                             end = end,
-                            onResume = { onResume(record) },
-                            onDetails = { onHoldMedia(spotlight.item, chat) },
+                            input = if (touch) CarouselInput.Touch else CarouselInput.Remote,
+                            onPlay = { card ->
+                                val record = card.record
+                                if (record != null) onResume(record) else onPlay(card.item, card.chatTitle)
+                            },
+                            onDetails = { card -> onHoldMedia(card.item, card.chatTitle) },
+                            inWatchLater = { card -> inWatchLater(card.item) },
+                            onToggleWatchLater = onToggleWatchLater?.let { toggle -> { card -> toggle(card.item, card.chatTitle) } },
                             resumeFocus = heroFocus,
                             under = under,
                         )
@@ -369,7 +380,7 @@ internal fun HomePane(
     }
     // The spotlight's Resume, once it is known there is one: the first thing on Home, so the
     // first thing the remote stands on, unless the viewer has already moved off somewhere.
-    val heroKey = spotlight?.record?.let { SettingsStore.progressKey(it.chatId, it.messageId) }
+    val heroKey = spotlight?.let { "hero" }
     LaunchedEffect(heroKey) {
         if (heroKey == null || moved) return@LaunchedEffect
         withFrameNanos {}

@@ -32,6 +32,21 @@ import com.tmplayer.desktop.os.SingleInstance
 import com.tmplayer.desktop.os.StartupFailure
 import com.tmplayer.desktop.os.WindowMemory
 import com.tmplayer.desktop.os.WindowsTitleBar
+import com.tmplayer.desktop.os.UndecoratedFrame
+import com.tmplayer.desktop.os.WindowChromeMode
+import com.tmplayer.desktop.ui.LocalWindowChrome
+import com.tmplayer.desktop.ui.ResizeEdges
+import com.tmplayer.desktop.ui.WindowChrome
+import com.tmplayer.desktop.ui.WindowControlsFallback
+import com.tmplayer.ui.theme.Tone
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import com.tmplayer.desktop.ui.DesktopShell
 import com.tmplayer.desktop.ui.ShellState
 import com.tmplayer.i18n.Translator
@@ -105,6 +120,12 @@ fun main(args: Array<String>) {
         Background.scope.launch { runCatching { DesktopUpdates.migrate(DesktopServices.prefs, settings) } }
         // Compose would end the process itself once the last window closes, with System.exit, which on
         // Linux can hang for good (see AppExit). It returns here instead, and AppExit ends it.
+        // Who draws minimize, maximize and close: Windows gets an undecorated window with the app's
+        // own buttons, a tiling Linux window manager gets the app's close and fullscreen buttons
+        // over its plain window, everything else keeps the system's title bar (WindowChromeMode).
+        val chromeMode = WindowChromeMode.current(DesktopServices.prefs.now.systemTitleBar)
+        com.tmplayer.platform.Logger.i("Main", "window buttons: $chromeMode")
+        val undecorated = chromeMode == WindowChromeMode.Custom
         application(exitProcessOnExit = false) {
             val windowState = remember { WindowMemory.load() }
             LaunchedEffect(windowState) { WindowMemory.follow(windowState) }
@@ -124,11 +145,59 @@ fun main(args: Array<String>) {
                 onCloseRequest = quit,
                 state = windowState,
                 title = "TMPlayer",
+                undecorated = undecorated,
                 icon = rememberVectorPainter(AppLogo.Mark),
                 onPreviewKeyEvent = shell::onPreviewKey,
                 onKeyEvent = shell::onKey,
             ) {
                 window.minimumSize = java.awt.Dimension(960, 600)
+                // Before the window is first shown, so one that opens maximized stops at the taskbar.
+                if (undecorated) UndecoratedFrame.holdToWorkArea(window)
+                DisposableEffect(window) {
+                    val follow = object : java.awt.event.ComponentAdapter() {
+                        override fun componentMoved(e: java.awt.event.ComponentEvent) = UndecoratedFrame.holdToWorkArea(window)
+                    }
+                    if (undecorated) window.addComponentListener(follow)
+                    onDispose { window.removeComponentListener(follow) }
+                }
+                LaunchedEffect(Unit) {
+                    if (!undecorated) return@LaunchedEffect
+                    repeat(100) { if (!window.isDisplayable) delay(50) }
+                    UndecoratedFrame.restoreCaptionStyles(window)
+                    UndecoratedFrame.holdToWorkArea(window)
+                }
+                val chrome = remember(window) {
+                    if (!chromeMode.inApp) {
+                        null
+                    } else if (undecorated) {
+                        WindowChrome(
+                            mode = chromeMode,
+                            window = window,
+                            onMinimize = { windowState.isMinimized = true },
+                            onToggleMaximize = {
+                                UndecoratedFrame.holdToWorkArea(window)
+                                windowState.placement = if (windowState.placement == WindowPlacement.Maximized) {
+                                    WindowPlacement.Floating
+                                } else {
+                                    WindowPlacement.Maximized
+                                }
+                            },
+                            onClose = quit,
+                            maximized = { windowState.placement == WindowPlacement.Maximized },
+                        )
+                    } else {
+                        // A tiling window manager sizes the window itself: the middle button is
+                        // fullscreen, and there is nowhere to minimize to.
+                        WindowChrome(
+                            mode = chromeMode,
+                            window = window,
+                            onMinimize = null,
+                            onToggleMaximize = { shell.fullscreen = !shell.fullscreen },
+                            onClose = quit,
+                            maximized = { shell.fullscreen },
+                        )
+                    }
+                }
                 DesktopServices.selfUpdate.quit = quit
                 shell.quit = quit
                 // Transfers show outside the window too, once there is a window for the taskbar bar.
@@ -179,6 +248,7 @@ fun main(args: Array<String>) {
                 DesktopTheme(settings) {
                     val colors = MaterialTheme.colorScheme
                     LaunchedEffect(colors.background, colors.onBackground) {
+                        if (undecorated) return@LaunchedEffect
                         // The handle exists once the window is shown, which is just after the first frame.
                         repeat(100) { if (!window.isDisplayable) delay(50) }
                         WindowsTitleBar.apply(
@@ -188,20 +258,34 @@ fun main(args: Array<String>) {
                             text = colors.onBackground.toArgb() and 0xFFFFFF,
                         )
                     }
-                    DesktopShell(shell) { request, close ->
-                        PlayerHost(
-                            request = request,
-                            onClose = {
-                                shell.fullscreen = false
-                                close()
-                            },
-                            settings = settings,
-                            fullscreen = shell.fullscreen,
-                            onToggleFullscreen = { shell.fullscreen = !shell.fullscreen },
-                            onToggleAlwaysOnTop = { window.isAlwaysOnTop = !window.isAlwaysOnTop },
-                            onQuit = quit,
-                            onRaise = raise,
-                        )
+                    CompositionLocalProvider(LocalWindowChrome provides chrome) {
+                        Box(Modifier.fillMaxSize()) {
+                            DesktopShell(shell) { request, close ->
+                                PlayerHost(
+                                    request = request,
+                                    onClose = {
+                                        shell.fullscreen = false
+                                        close()
+                                    },
+                                    settings = settings,
+                                    fullscreen = shell.fullscreen,
+                                    onToggleFullscreen = { shell.fullscreen = !shell.fullscreen },
+                                    onToggleAlwaysOnTop = { window.isAlwaysOnTop = !window.isAlwaysOnTop },
+                                    onQuit = quit,
+                                    onRaise = raise,
+                                )
+                            }
+                            // Nothing on screen with a page header (sign in, the PIN pad): the
+                            // buttons on their own, top right. The player has its own in its bar.
+                            if (shell.nowPlaying == null) WindowControlsFallback(Modifier.align(Alignment.TopEnd))
+                            // Undecorated and floating: a hairline for the edge the system no
+                            // longer draws, and the edges to resize by.
+                            if (undecorated && windowState.placement == WindowPlacement.Floating && !shell.fullscreen) {
+                                val hairline = with(LocalDensity.current) { 1.toDp() }
+                                Box(Modifier.fillMaxSize().border(hairline, Tone.outline))
+                                ResizeEdges(window)
+                            }
+                        }
                     }
                 }
             }
