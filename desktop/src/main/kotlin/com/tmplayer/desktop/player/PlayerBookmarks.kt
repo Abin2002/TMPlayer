@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,7 +81,13 @@ internal fun BookmarkNoteDialog(prompt: NotePrompt, onSave: (String) -> Unit, on
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(s.commonCancel) } },
     )
-    LaunchedEffect(Unit) { runCatching { field.requestFocus() } }
+    // After the dialog's first frame: its window is not attached when the effect first runs.
+    LaunchedEffect(Unit) {
+        repeat(5) {
+            withFrameNanos { }
+            if (runCatching { field.requestFocus() }.isSuccess) return@LaunchedEffect
+        }
+    }
 }
 
 /**

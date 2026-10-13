@@ -106,7 +106,7 @@ class AppLockTest {
         // Inside the wait even the right PIN is not looked at.
         assertEquals(PinCheck.Waiting(20_000L), settings.checkPin("1234", now = 10_000))
         // Written down rather than held in memory, so a restart reads the same wait back.
-        assertEquals(PinAttempts(3, 30_000L), settings.pinAttemptsNow())
+        assertEquals(PinAttempts(3, 30_000L), settings.pinAttemptsNow(now = 10_000))
 
         assertEquals(PinCheck.Right, settings.checkPin("1234", now = 30_000))
         assertEquals(PinAttempts(), settings.pinAttemptsNow())
@@ -203,6 +203,17 @@ class AppLockTest {
 
         settings.setKidsLock(false)
         assertEquals(2, settings.continueWatching.first().size)
+    }
+
+    @Test
+    fun `a wait is timed on the steady clock and survives it starting again`() {
+        // Written at 100 s with 30 s left; 10 s later, 20 s are left.
+        assertEquals(20_000L, PinAttempts.restored(3, 30_000L, 100_000L, now = 110_000L).waitMs(110_000L))
+        // The clock started again (a reboot): none of the wait was served.
+        assertEquals(30_000L, PinAttempts.restored(3, 30_000L, 100_000L, now = 5_000L).waitMs(5_000L))
+        // A stored figure past the ceiling is held to it.
+        assertEquals(PinBackoff.MAX_WAIT_MS, PinAttempts.restored(9, Long.MAX_VALUE, 0L, now = 0L).waitMs(0L))
+        assertEquals(0L, PinAttempts.restored(3, 30_000L, 100_000L, now = 200_000L).waitMs(200_000L))
     }
 
     @Test
