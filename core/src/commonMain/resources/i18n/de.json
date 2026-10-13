@@ -384,7 +384,7 @@
     "already_downloading": "Wird bereits heruntergeladen",
     "already_here": "{percent} schon da",
     "already_in": "Schon in den Downloads",
-    "cached": "Bei der Wiedergabe zwischengespeichert",
+    "cached": "Im Cache",
     "cached_detail": "Kürzlich abgespielt. Die am längsten nicht abgespielten gehen zuerst, sobald der Zwischenspeicher {size} überschreitet.",
     "cached_note": "Kürzlich abgespielt. Das nächste Video, das du abspielst, ersetzt es.",
     "cached_video": "Zwischengespeichertes Video",
