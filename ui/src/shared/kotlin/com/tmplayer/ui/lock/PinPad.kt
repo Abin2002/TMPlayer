@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -236,13 +237,9 @@ fun PinPad(
             },
         contentAlignment = Alignment.Center,
     ) {
-        Column(
-            Modifier
-                .widthIn(max = 420.dp)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = if (tv) 32.dp else 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        val key = if (tv) 64.dp else 72.dp
+        val enabled = !busy && !waiting
+        val header: @Composable () -> Unit = {
             Icon(Icons.Filled.Lock, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(32.dp))
             Spacer(Modifier.height(12.dp))
             Text(
@@ -261,8 +258,8 @@ fun PinPad(
                 minLines = 2,
                 modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),
             )
-            val key = if (tv) 64.dp else 72.dp
-            val enabled = !busy && !waiting
+        }
+        val keys: @Composable () -> Unit = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 listOf("123", "456", "789").forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -293,6 +290,8 @@ fun PinPad(
                     )
                 }
             }
+        }
+        val forgot: @Composable () -> Unit = {
             if (showForgot) {
                 Text(
                     s.lockForgot,
@@ -301,6 +300,41 @@ fun PinPad(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 24.dp),
                 )
+            }
+        }
+        // Four rows of keys under the heading need about 560 dp. A phone on its side has nearer 360,
+        // which pushed the bottom row and its 0 off the screen, so a short, wide screen puts the
+        // heading beside the keys instead.
+        BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            if (maxHeight < 560.dp && maxWidth > maxHeight) {
+                Row(
+                    Modifier
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(48.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(
+                        Modifier.widthIn(max = 360.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        header()
+                        forgot()
+                    }
+                    keys()
+                }
+            } else {
+                Column(
+                    Modifier
+                        .widthIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp, vertical = if (tv) 32.dp else 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    header()
+                    keys()
+                    forgot()
+                }
             }
         }
     }

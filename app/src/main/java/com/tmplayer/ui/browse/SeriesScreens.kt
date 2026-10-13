@@ -1,35 +1,17 @@
 package com.tmplayer.ui.browse
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme as M3MaterialTheme
-import androidx.compose.material3.Text as M3Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -42,14 +24,13 @@ import com.tmplayer.data.SeriesProgress
 import com.tmplayer.ui.components.PhoneSheet
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.keepScrollInSheet
-import com.tmplayer.ui.components.pressable
-import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.Tv
 
 /**
- * A show's tile in a chat's grid, in the same three dresses a video's tile wears: the phone's dense
- * cell, the phone's card, and the television's panel with its focus border and scale.
+ * A show's tile in a chat's grid or a row on Home: the frame a video's tile has ([VideoTile]), with
+ * the show's art and "2 seasons · 18 eps" under its name, as a 2:3 [poster] card or a 16:9 one.
+ * [badge] goes in the art's top end corner.
  */
 @Composable
 internal fun SeriesCard(
@@ -59,79 +40,31 @@ internal fun SeriesCard(
     modifier: Modifier = Modifier,
     dense: Boolean = false,
     onFocused: () -> Unit = {},
+    badge: (@Composable () -> Unit)? = null,
+    /** A 2:3 poster card, in a grid of films and shows; a 16:9 card in a row of videos. */
+    poster: Boolean = false,
     /** Episodes posted since the viewer last watched the show: a "New" badge on the picture. */
     fresh: Boolean = false,
 ) {
-    val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
-    val border by animateColorAsState(
-        targetValue = if (focused) Tone.accent else Color.Transparent,
-        animationSpec = tween(140),
-        label = "seriesBorder",
-    )
-    LaunchedEffect(focused) { if (focused) onFocused() }
     val summary = listOfNotNull(seriesSummary(series), seriesProgressLine(progress)).joinToString("  ·  ")
-
-    if (dense) {
-        Column(
-            modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(Corner.Small))
-                .clickable(onClick = onClick)
-                .padding(4.dp),
-        ) {
-            SeriesArt(series, progress, Modifier.fillMaxWidth(), compact = true, fresh = fresh)
-            Spacer(Modifier.height(6.dp))
-            M3Text(
-                series.title,
-                style = M3MaterialTheme.typography.bodySmall,
-                color = Tone.text,
-                maxLines = 2,
-                minLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(2.dp))
-            // A third of a phone has room for the counts only; the bar on the picture says how far.
-            M3Text(
-                seriesSummary(series),
-                style = M3MaterialTheme.typography.labelSmall,
-                color = if (progress.watched > 0) Tone.accent else Tone.muted,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        return
-    }
-
-    val touch = isTouch()
-    Column(
-        modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(Corner.Medium))
-            .background(if (focused) Tone.surfaceHigh else Tone.surface)
-            .border(1.dp, Tone.outline, RoundedCornerShape(Corner.Medium))
-            .border(3.dp, border, RoundedCornerShape(Corner.Medium))
-            .pressable(interactions, onClick),
-    ) {
-        SeriesArt(series, progress, Modifier.fillMaxWidth(), fresh = fresh)
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Text(
-                series.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = Tone.text,
-                maxLines = 2,
-                minLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(6.dp))
+    VideoTile(
+        title = series.title,
+        onClick = onClick,
+        onFocused = onFocused,
+        dense = dense,
+        poster = poster,
+        modifier = modifier,
+        meta = { ink ->
             Text(
                 summary,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (progress.watched > 0) Tone.accent else Tone.muted,
+                style = if (poster) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+                color = if (progress.watched > 0) Tone.accent else ink,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-        }
+        },
+    ) {
+        SeriesArt(series, progress, Modifier.fillMaxSize(), compact = dense, badge = badge, poster = poster, fresh = fresh)
     }
 }
 

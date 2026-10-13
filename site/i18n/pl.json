@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram na telewizorze bez przesyłania obrazu",
     "watch_telegram_videos_on_3a48": "Oglądaj wideo z Telegrama na telewizorze bez przesyłania ani duplikowania ekranu telefonu: odtwarzacz na samym telewizorze loguje się na twoje konto i odtwarza wideo z twoich czatów.",
     "finds_subtitles_online_through_a322": "Wyszukuje napisy w sieci przez OpenSubtitles i przesuwa napisy lub dźwięk, by pasowały",
-    "groups_series_by_season_709a": "Grupuje seriale według sezonów na osobnej stronie, z opcjonalnymi plakatami i opisami",
+    "groups_series_by_season_709a": "Grupuje seriale według sezonów na osobnej stronie, z plakatami i opisami, które możesz wyłączyć",
     "changelog_164b": "Lista zmian"
   },
   "features": {
@@ -327,7 +327,7 @@
     "home_and_series_pages": "{strong1} Ekran główny zbiera to, co obejrzeć dalej, ze wszystkich czatów, a każdy serial ma własną stronę z odcinkami pogrupowanymi według sezonów.",
     "home_and_series_pages__strong1": "Porządkuje seriale.",
     "posters_and_overviews": "{strong1} Wyszukiwane w TMDB, TVmaze i AniList tylko po oczyszczonym tytule wideo, niczym więcej.",
-    "posters_and_overviews__strong1": "Dodaje plakaty i opisy, jeśli chcesz.",
+    "posters_and_overviews__strong1": "Dodaje plakaty i opisy, chyba że je wyłączysz.",
     "a_closer_look": "Z bliska",
     "four_screens_with_their_parts": "Cztery ekrany z zaznaczonymi elementami, ponumerowanymi tak jak opisy obok.",
     "the_player_watching_while_it": "Odtwarzacz: oglądanie w trakcie pobierania",

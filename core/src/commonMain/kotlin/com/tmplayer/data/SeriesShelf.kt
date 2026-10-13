@@ -214,6 +214,48 @@ object SeriesShelf {
     }
 
     /**
+     * The name a video's tile goes by, wherever a tile is drawn: a chat's grid, Home, Continue
+     * watching, Watched and Watch later. The film's name for a tile of several copies ([filmTitle]),
+     * the cleaned file name for a release ([MediaName.tileTitle]), and the title as it is for a
+     * video named by its caption, since a person wrote that and nothing in it is a release tag.
+     *
+     * Works on an item rebuilt from a saved record as well (`ResumeRecord.toMediaItem()` and the
+     * like), whose file name is the title that was stored, so a record written before this existed
+     * reads as cleanly as a fresh one and nothing stored changes.
+     */
+    fun tileTitle(item: MediaItem): String = when {
+        item.versions.size > 1 -> filmTitle(item)
+        item.fileName.isBlank() || MediaMapper.isGenericName(item.fileName) -> item.title
+        else -> MediaName.tileTitle(item.fileName, item.caption) ?: item.title
+    }
+
+    /**
+     * Whether [item] is a film, which a grid draws as a 2:3 poster card: several copies of one
+     * film, or a release name that states a year and no episode. Everything else, a clip, a
+     * lecture, a screen recording or a file named by its caption, is a video and stays a wide
+     * card that shows what the file is.
+     */
+    fun isFilm(item: MediaItem): Boolean {
+        if (item.versions.size > 1) return true
+        if (item.fileName.isBlank() || MediaMapper.isGenericName(item.fileName)) return false
+        val name = MediaName.parse(item.fileName, item.caption)
+        return !name.isSeries && name.year != null && name.title.isNotBlank()
+    }
+
+    /** Whether [entry] is drawn as a poster: a show, or a film ([isFilm]). */
+    fun isPoster(entry: ShelfEntry): Boolean = when (entry) {
+        is ShelfEntry.Show -> true
+        is ShelfEntry.File -> isFilm(entry.item)
+    }
+
+    /**
+     * A film poster's name, without the year ("Gladiator II"), which its line of facts carries
+     * instead; [tileTitle] where the name reads as nothing.
+     */
+    fun posterTitle(item: MediaItem): String =
+        MediaName.parse(item.nameForParsing, item.caption).title.ifBlank { tileTitle(item) }
+
+    /**
      * What makes two files the same film: the title read off the name, and the year. A file names
      * a film only when it carries a year or a quality marker (1080p, x265), so two clips that share
      * a plain name ("Lecture", "Video") are never taken for copies of one another.

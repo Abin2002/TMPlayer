@@ -39,7 +39,9 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -192,7 +194,25 @@ fun SearchField(
 
 private fun FocusManager.release() = clearFocus(force = true)
 
-/** A page title with an optional line under it and actions to the right. */
+/**
+ * How far a page's content sits in from the sides of the window: 24 dp, and 32 dp once the window
+ * is wider than 1440 dp, where 24 starts to look like the page forgot its margins. The heading,
+ * the chips under it and the list or grid below all read it, so they start on one line.
+ */
+@Composable
+fun pageMargin(): Dp {
+    val window = LocalWindowInfo.current.containerSize
+    val wide = with(LocalDensity.current) { window.width.toDp() } > WIDE_WINDOW
+    return if (wide) 32.dp else 24.dp
+}
+
+/** The window width past which [pageMargin] widens. */
+private val WIDE_WINDOW = 1440.dp
+
+/**
+ * A page title with an optional line under it and actions to the right. The title is the type
+ * scale's display size, the one step above the headlines kept for a hero and a page's own name.
+ */
 @Composable
 fun PageHeader(
     title: String,
@@ -202,7 +222,7 @@ fun PageHeader(
     actions: @Composable () -> Unit = {},
 ) {
     Row(
-        modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+        modifier.padding(horizontal = pageMargin(), vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -210,7 +230,7 @@ fun PageHeader(
         Column(Modifier.weight(1f)) {
             Text(
                 title,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.displaySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

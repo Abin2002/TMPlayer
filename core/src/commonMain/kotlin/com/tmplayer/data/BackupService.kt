@@ -9,7 +9,7 @@ import com.tmplayer.online.MetadataStore
  * the file comes from and goes to is each platform's business; this takes and gives text.
  *
  * [metadata] is null where posters were never set up, in which case their switches are neither
- * saved nor restored.
+ * saved nor restored; [bookmarks] null (an older caller, a test) leaves bookmarks out the same way.
  */
 class BackupService(
     private val settings: SettingsStore,
@@ -17,6 +17,7 @@ class BackupService(
     private val metadata: MetadataStore?,
     private val appVersion: String,
     private val now: () -> Long = System::currentTimeMillis,
+    private val bookmarks: BookmarkStore? = null,
 ) {
     /** The file to suggest saving as, for today. */
     fun fileName(): String = Backups.fileName(now())
@@ -29,6 +30,7 @@ class BackupService(
             metadata = metadata?.now ?: MetaSettings(),
             createdAt = now(),
             appVersion = appVersion,
+            bookmarks = bookmarks?.all().orEmpty(),
         ).let { if (metadata == null) it.copy(metadata = emptyMap()) else it },
     )
 
@@ -40,6 +42,7 @@ class BackupService(
         settings = settings.rawEntries(),
         watched = watched.rawEntries(),
         metadata = metadata?.now ?: MetaSettings(),
+        bookmarks = bookmarks?.all().orEmpty(),
     )
 
     /** Merges [backup] in. Each store is written in one edit; nothing is removed from either. */
@@ -47,6 +50,7 @@ class BackupService(
         settings.restoreEntries { device -> Backups.settingsWrites(device, backup) }
         watched.restoreEntries { device -> Backups.watchedWrites(device, backup) }
         metadata?.update { Backups.metadataAfter(it, backup) }
+        bookmarks?.let { store -> store.restore(Backups.bookmarksToAdd(store.all(), backup)) }
     }
 }
 
@@ -61,6 +65,7 @@ object BackupWords {
             if (plan.favouritesAdded > 0) add(L.backupRestoreFavourites(plan.favouritesAdded))
             if (plan.watchedAdded > 0) add(L.backupRestoreWatched(plan.watchedAdded))
             if (plan.watchLaterAdded > 0) add(L.backupRestoreWatchLater(plan.watchLaterAdded))
+            if (plan.bookmarksAdded > 0) add(L.backupRestoreBookmarks(plan.bookmarksAdded))
             if (plan.resumeAdded > 0) add(L.backupRestoreResume(plan.resumeAdded))
             if (plan.memoryAdded > 0) add(L.backupRestoreMemory(plan.memoryAdded))
             if (plan.searchesAdded > 0) add(L.backupRestoreSearches(plan.searchesAdded))

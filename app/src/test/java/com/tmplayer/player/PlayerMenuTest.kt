@@ -17,6 +17,8 @@ class PlayerMenuTest {
                 PlayerMenuEntry.VolumeBoost,
                 PlayerMenuEntry.SleepTimer,
                 PlayerMenuEntry.AbLoop,
+                PlayerMenuEntry.AddBookmark,
+                PlayerMenuEntry.Bookmarks,
                 PlayerMenuEntry.SaveToDownloads,
                 PlayerMenuEntry.MarkWatched,
                 PlayerMenuEntry.PictureShape,
@@ -28,6 +30,7 @@ class PlayerMenuTest {
                 pictureInPicture = true,
                 saveToDownloads = true,
                 markWatched = true,
+                bookmarks = true,
             ),
         )
     }
@@ -65,6 +68,13 @@ class PlayerMenuTest {
     }
 
     @Test
+    fun `bookmarks are only offered for a video that came from a message`() {
+        assertFalse(PlayerMenuEntry.AddBookmark in PlayerMenu.tvEntries(pictureInPicture = true, markWatched = true))
+        assertTrue(PlayerMenuEntry.Bookmarks in PlayerMenu.tvEntries(pictureInPicture = true, bookmarks = true))
+        assertFalse(PhoneMenuEntry.AddBookmark in PlayerMenu.phoneEntries(true, true, true, true))
+    }
+
+    @Test
     fun `save to downloads is only offered for a video that is not a download already`() {
         assertFalse(PlayerMenuEntry.SaveToDownloads in PlayerMenu.tvEntries(pictureInPicture = true))
         assertTrue(PlayerMenuEntry.SaveToDownloads in PlayerMenu.tvEntries(pictureInPicture = true, saveToDownloads = true))
@@ -86,6 +96,7 @@ class PlayerMenuTest {
             saveToDownloads = true,
             markWatched = true,
             paused = true,
+            bookmarks = true,
         )
         assertFalse(PlayerMenuEntry.PictureInPicture in entries)
         assertEquals(PlayerMenuEntry.entries.size - 1, entries.size)
@@ -100,6 +111,7 @@ class PlayerMenuTest {
                 saveToDownloads = true,
                 markWatched = true,
                 paused = true,
+                bookmarks = true,
             ).toSet(),
         )
     }
@@ -115,6 +127,8 @@ class PlayerMenuTest {
                 PhoneMenuEntry.AbLoop,
                 PhoneMenuEntry.NextFrame,
                 PhoneMenuEntry.PreviousFrame,
+                PhoneMenuEntry.AddBookmark,
+                PhoneMenuEntry.Bookmarks,
                 PhoneMenuEntry.OpenInAnotherApp,
                 PhoneMenuEntry.LoadSubtitleFile,
                 PhoneMenuEntry.SaveToDownloads,
@@ -127,9 +141,10 @@ class PlayerMenuTest {
                 saveToDownloads = true,
                 markWatched = true,
                 paused = true,
+                bookmarks = true,
             ),
         )
-        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true, true).toSet())
+        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true, paused = true, bookmarks = true).toSet())
     }
 
     @Test

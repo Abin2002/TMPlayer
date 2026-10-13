@@ -172,6 +172,8 @@ import com.tmplayer.ui.components.ChoiceSection
 import com.tmplayer.ui.components.ChoiceSheet
 import com.tmplayer.ui.components.FocusOnOpen
 import com.tmplayer.ui.components.PhonePad
+import com.tmplayer.ui.components.SettingIconChip
+import com.tmplayer.ui.components.SettingsSectionLabel
 import com.tmplayer.ui.components.Spinner
 import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.TvConfirm
@@ -542,7 +544,8 @@ fun SettingsScreen(
 
         // Each page below holds what used to be one or more sections of a single long list. A
         // page that took in more than one keeps the old headings between them.
-        when (page) {
+        // Each run of rows between two headings is drawn as one card on a phone (settingsGroups).
+        settingsGroups { when (page) {
             SettingsPage.Appearance -> {
                 // First, on both devices: a stick often lives on a screen in a bright room, so the theme
                 // is worth offering there too.
@@ -947,7 +950,7 @@ fun SettingsScreen(
 
                 // ---- startup ------------------------------------------------------------------------
 
-                item { SectionTitle(s.settingsOnLaunch) }
+                sectionTitle { s.settingsOnLaunch }
                 item {
                     ToggleRow(
                         title = s.settingsOpenLastChat,
@@ -984,7 +987,7 @@ fun SettingsScreen(
                 // Every row below is conditional, so the heading only appears when it has something
                 // under it rather than standing over empty space.
                 if (favorites.isNotEmpty() || history.isNotEmpty() || watchedList.isNotEmpty()) {
-                    item { SectionTitle(s.settingsLists) }
+                    sectionTitle { s.settingsLists }
                 }
                 if (favorites.isNotEmpty()) {
                     item {
@@ -1021,7 +1024,7 @@ fun SettingsScreen(
 
                 // To a file the viewer keeps, and back: settings, lists and resume points, never the
                 // Telegram sign in. See BackupActions for where the file goes on a box with no picker.
-                item { SectionTitle(s.backupSection) }
+                sectionTitle { s.backupSection }
                 item {
                     ActionRow(
                         title = s.backupBackUp,
@@ -1044,7 +1047,7 @@ fun SettingsScreen(
             }
 
             SettingsPage.Storage -> {
-                item {
+                settingsNote {
                     StorageCard(
                         split = split,
                         freeBytes = disk.freeBytes,
@@ -1226,7 +1229,7 @@ fun SettingsScreen(
                         )
                     }
                 }
-                item {
+                settingsNote {
                     Text(
                         s.lockForgot,
                         style = MaterialTheme.typography.bodyMedium,
@@ -1247,7 +1250,7 @@ fun SettingsScreen(
                 // build): the store is what updates it, and the version is still on the About
                 // row and the About screen. The page then lands on the first help row instead.
                 if (Updates.enabled) {
-                    item { SectionTitle(s.settingsVersion) }
+                    sectionTitle { s.settingsVersion }
                     updateState.release?.let { offered ->
                         item {
                             ActionRow(
@@ -1286,7 +1289,7 @@ fun SettingsScreen(
 
                 // ---- help ----------------------------------------------------------------------------
 
-                item { SectionTitle(s.settingsHelp) }
+                sectionTitle { s.settingsHelp }
                 item {
                     ActionRow(
                         title = s.settingsWalkthrough,
@@ -1521,7 +1524,7 @@ fun SettingsScreen(
                 }
 
                 // A page of its own would hold this one row, so it stays on the list, last.
-                item { SectionTitle(s.settingsAccount) }
+                sectionTitle { s.settingsAccount }
                 item {
                     ActionRow(
                         title = s.settingsSignOut,
@@ -1531,7 +1534,7 @@ fun SettingsScreen(
                     )
                 }
             }
-        }
+        } }
     }
     }
 
@@ -1851,6 +1854,8 @@ fun SettingsScreen(
                     // later, which shares that file.
                     runCatching { watchedStore.clear() }
                     runCatching { watchedStore.watchLater.clear() }
+                    // The bookmarks go with it, for the same reason.
+                    runCatching { com.tmplayer.data.BookmarkStore(context).clear() }
                     Td.logOut()
                     onLoggedOut()
                 }
@@ -2281,38 +2286,25 @@ private fun ResetChip(enabled: Boolean, onClick: () -> Unit) {
     }
 }
 
+/**
+ * The heading over a group of rows: a small, bold, spaced out label in the muted colour, over
+ * the group's card. The card is what separates one group from the next, so the label no longer
+ * has to shout; a television's is a size up, for the distance.
+ */
 @Composable
 internal fun SectionTitle(text: String) {
     val touch = isTouch()
-    Text(
+    SettingsSectionLabel(
         text,
-        style = sectionStyle(),
-        // Accent on a phone, as every Android preference screen does: with the rows un-carded,
-        // the colour is what separates one group from the next.
-        color = if (touch) Tone.accent else Tone.text,
+        style = if (touch) M3Theme.typography.labelMedium else MaterialTheme.typography.labelLarge,
         modifier = if (touch) {
-            // The 16dp start is the same inset a ListItem gives its headline, so the heading and
-            // the rows under it begin on one line.
-            Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
+            // The 16dp start is the inset the rows inside the card keep, so the label sits over
+            // the row's own edge rather than the card's.
+            Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp)
         } else {
-            Modifier.padding(top = 16.dp, bottom = 4.dp)
+            Modifier.padding(start = 4.dp, top = 18.dp, bottom = 2.dp)
         },
     )
-}
-
-/**
- * The heading over a group of rows.
- *
- * Two steps down on a phone: at TV size a heading is nearly as loud as the screen's own, which in
- * a narrow column reads as a list of headings with the settings hidden between them. `titleSmall`
- * in the primary colour is the Material preference screen's own answer, where colour rather than
- * size marks a heading out.
- */
-@Composable
-private fun sectionStyle() = if (isTouch()) {
-    MaterialTheme.typography.titleSmall
-} else {
-    MaterialTheme.typography.titleLarge
 }
 
 /**
@@ -2567,9 +2559,7 @@ private fun StepperRow(
         ListItem(
             headlineContent = { M3Text(title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
             supportingContent = { M3Text(s.settingsValueAndDetail(value, subtitle), maxLines = 3) },
-            leadingContent = {
-                M3Icon(icon, contentDescription = null, tint = Tone.text, modifier = Modifier.size(24.dp))
-            },
+            leadingContent = { SettingIconChip(icon) },
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { onStep(-1) }, enabled = canDecrease) {
@@ -2581,7 +2571,7 @@ private fun StepperRow(
                 }
             },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-            modifier = modifier.fillMaxWidth().heightIn(min = 64.dp),
+            modifier = modifier.fillMaxWidth().heightIn(min = 56.dp),
         )
         return
     }
@@ -2601,7 +2591,7 @@ private fun StepperRow(
     Row(
         modifier
             .fillMaxWidth()
-            .heightIn(min = 66.dp)
+            .heightIn(min = 64.dp)
             .clip(RoundedCornerShape(Corner.Large))
             .background(background)
             .focusRing(focused, RoundedCornerShape(Corner.Large))
@@ -2619,8 +2609,8 @@ private fun StepperRow(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, contentDescription = null, tint = onSurface, modifier = Modifier.size(26.dp))
-        Spacer(Modifier.size(20.dp))
+        SettingIconChip(icon, inverted = focused)
+        Spacer(Modifier.size(16.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 title,
@@ -2700,7 +2690,7 @@ internal fun ActionRow(
     tint: Color = Color.Unspecified,
     onClick: () -> Unit,
 ) {
-    val iconTint = if (tint == Color.Unspecified) Tone.text else tint
+    val iconTint = if (tint == Color.Unspecified) Tone.accent else tint
     FocusRow(
         modifier = modifier,
         onClick = onClick,
@@ -2710,22 +2700,10 @@ internal fun ActionRow(
         supporting = {
             M3Text(subtitle, maxLines = SUPPORTING_LINES, overflow = TextOverflow.Ellipsis)
         },
-        leading = {
-            M3Icon(
-                icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(24.dp),
-            )
-        },
+        leading = { SettingIconChip(icon, tint = iconTint) },
     ) { focused ->
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = if (focused) Tone.onFocusFill else iconTint,
-            modifier = Modifier.size(26.dp),
-        )
-        Spacer(Modifier.size(20.dp))
+        SettingIconChip(icon, tint = iconTint, inverted = focused)
+        Spacer(Modifier.size(16.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 title,
@@ -2759,27 +2737,15 @@ internal fun ToggleRow(
         onClick = onToggle,
         headline = { M3Text(title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         supporting = { M3Text(subtitle, maxLines = SUPPORTING_LINES, overflow = TextOverflow.Ellipsis) },
-        leading = {
-            M3Icon(
-                icon,
-                contentDescription = null,
-                tint = Tone.text,
-                modifier = Modifier.size(24.dp),
-            )
-        },
+        leading = { SettingIconChip(icon) },
         // A real switch on a phone, not the drawn pill below: it can be dragged as well as
         // tapped, and TalkBack announces it as "switch, on" without being told.
         trailing = { M3Switch(checked = checked, onCheckedChange = { onToggle() }) },
     ) { focused ->
-        // An icon for the same reason ActionRow has one: the two kinds of row are stacked in one
+        // A chip for the same reason ActionRow has one: the two kinds of row are stacked in one
         // column, and without it their titles would start at two different x positions.
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = if (focused) Tone.onFocusFill else Tone.text,
-            modifier = Modifier.size(26.dp),
-        )
-        Spacer(Modifier.size(20.dp))
+        SettingIconChip(icon, inverted = focused)
+        Spacer(Modifier.size(16.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 title,
@@ -2887,7 +2853,7 @@ private fun FocusRow(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             modifier = modifier
                 .fillMaxWidth()
-                .heightIn(min = 64.dp)
+                .heightIn(min = 56.dp)
                 .clickable(
                     interactionSource = interactions,
                     indication = LocalIndication.current,
@@ -2905,7 +2871,7 @@ private fun FocusRow(
             // One line of subtitle at this height in English, which is most rows. A longer
             // translation takes a second line and the row grows to fit, rather than cutting the
             // sentence off at the ellipsis.
-            .heightIn(min = 66.dp)
+            .heightIn(min = 64.dp)
             // The filled card is how the focused row is found from a sofa.
             .clip(RoundedCornerShape(Corner.Large))
             .background(background)

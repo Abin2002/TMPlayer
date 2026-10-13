@@ -77,6 +77,8 @@ class PlayerKeysTest {
         assertEquals(PlayerAction.AudioNext, action(Key.A))
         assertEquals(PlayerAction.AudioPrevious, action(Key.A, shift = true))
         assertEquals(PlayerAction.AudioNext, action(Key.Three, shift = true))
+        // B was VLC's audio cycle as a silent alias; the bookmark key wins it.
+        assertEquals(PlayerAction.AddBookmark, action(Key.B))
         assertEquals(PlayerAction.SpeedUp, action(Key.RightBracket))
         assertEquals(PlayerAction.SpeedDown, action(Key.LeftBracket))
         assertEquals(PlayerAction.SpeedUp, action(Key.Period, shift = true))

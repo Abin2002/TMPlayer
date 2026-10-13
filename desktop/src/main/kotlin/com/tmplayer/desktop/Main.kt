@@ -108,7 +108,7 @@ fun main(args: Array<String>) {
         application(exitProcessOnExit = false) {
             val windowState = remember { WindowMemory.load() }
             LaunchedEffect(windowState) { WindowMemory.follow(windowState) }
-            val shell = remember { ShellState(settings, DesktopServices.downloads, DesktopServices.watched) }
+            val shell = remember { ShellState(settings, DesktopServices.downloads, DesktopServices.watched, bookmarks = DesktopServices.bookmarks) }
             val quit = {
                 // Saving is a courtesy; a failure there must never keep the app from closing.
                 runCatching { WindowMemory.save(windowState) }

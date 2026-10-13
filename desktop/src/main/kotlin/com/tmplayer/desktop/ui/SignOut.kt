@@ -16,6 +16,7 @@ import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.StorageRelocationPlan
 import com.tmplayer.data.Td
 import com.tmplayer.data.WatchedStore
+import com.tmplayer.data.BookmarkStore
 import com.tmplayer.desktop.DesktopPaths
 import com.tmplayer.desktop.DownloadIndex
 import com.tmplayer.ui.i18n.LocalStrings
@@ -47,7 +48,7 @@ internal fun SignOutDialog(state: ShellState, onDismiss: () -> Unit) {
             onDismiss()
             val deleteDownloads = alsoDownloads
             scope.launch {
-                signOut(settings, deleteDownloads, state.watched)
+                signOut(settings, deleteDownloads, state.watched, state.bookmarks)
                 state.showChats(com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats))
                 Td.logOut()
             }
@@ -65,7 +66,12 @@ internal fun SignOutDialog(state: ShellState, onDismiss: () -> Unit) {
  * Everything this app knows about the account that is leaving goes, except the downloads that
  * have a file of their own, which stay in the index unless [deleteDownloads].
  */
-internal suspend fun signOut(settings: SettingsStore, deleteDownloads: Boolean, watched: WatchedStore? = null) {
+internal suspend fun signOut(
+    settings: SettingsStore,
+    deleteDownloads: Boolean,
+    watched: WatchedStore? = null,
+    bookmarks: BookmarkStore? = null,
+) {
     val downloads = runCatching { settings.downloadsNow() }.getOrDefault(emptyList())
     if (deleteDownloads) downloads.forEach { runCatching { DownloadIndex.delete(settings, it) } }
     runCatching { Td.clearMediaCache() }
@@ -76,4 +82,6 @@ internal suspend fun signOut(settings: SettingsStore, deleteDownloads: Boolean, 
         runCatching { it.clear() }
         runCatching { it.watchLater.clear() }
     }
+    // The bookmarks go with it, for the same reason.
+    bookmarks?.let { runCatching { it.clear() } }
 }

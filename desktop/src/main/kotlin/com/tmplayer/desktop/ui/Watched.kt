@@ -2,7 +2,6 @@ package com.tmplayer.desktop.ui
 
 import com.tmplayer.ui.browse.HistoryTab
 import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,11 +14,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -163,11 +159,7 @@ private fun WatchedTile(
         item = item,
         chatTitle = record.chatTitle,
         progress = WatchedWords.posterProgress(fraction, finished = true),
-        art = {
-            Box(Modifier.fillMaxSize().background(Tone.surfaceHigh), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(40.dp))
-            }
-        },
+        art = { RecordArt(item) },
         subtitle = listOf(record.chatTitle, WatchedWhen.phrase(record.watchedAt, now))
             .filter { it.isNotBlank() }
             .joinToString("  ·  "),
@@ -252,11 +244,7 @@ private fun WatchLaterTile(
         item = item,
         chatTitle = record.chatTitle,
         progress = fraction,
-        art = {
-            Box(Modifier.fillMaxSize().background(Tone.surfaceHigh), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(40.dp))
-            }
-        },
+        art = { RecordArt(item) },
         subtitle = listOfNotNull(
             record.chatTitle.ifBlank { null },
             record.durationSec.takeIf { it > 0 }?.let(MediaMapper::formatDuration),

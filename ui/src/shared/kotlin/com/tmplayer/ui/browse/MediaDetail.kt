@@ -49,6 +49,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.Bookmark
 import com.tmplayer.data.DetailAction
 import com.tmplayer.data.MediaFacts
 import com.tmplayer.data.MediaItem
@@ -176,6 +177,9 @@ fun MediaDetailPanel(
      * lists videos the viewer has in their chats.
      */
     onOpenItem: ((MediaItem) -> Unit)? = null,
+    /** This video's bookmarks, listed under the actions; see [DetailBookmarks]. */
+    bookmarks: List<Bookmark> = emptyList(),
+    onOpenBookmark: ((Bookmark) -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     val parsed = remember(item) { MediaName.parse(item.nameForParsing, item.caption) }
@@ -348,12 +352,44 @@ fun MediaDetailPanel(
         // A film the chat posted several times over: every copy by quality and size, one click away.
         Versions(item, onOpenItem)
 
+        DetailBookmarks(bookmarks, onOpenBookmark)
+
         DetailFacts(item, facts, s, overview ?: metaOverview, meta.takeIf { overview == null && metaOverview != null })
 
         if (meta != null && extras != null) {
             MetaCastRow(extras.cast)
             MoreLikeThisRow(meta, extras, onOpenItem)
             if (metaOverview == null && (extras.cast.isNotEmpty() || extras.genres.isNotEmpty())) MetaCredit(meta)
+        }
+    }
+}
+
+/**
+ * The video's bookmarks, under a heading, each a line that opens the player at its moment: "Play
+ * from 12:34" with the note under it. Nothing at all while there are none, or where the platform
+ * has no way to open the player at a time ([onOpen] null).
+ */
+@Composable
+internal fun DetailBookmarks(bookmarks: List<Bookmark>, onOpen: ((Bookmark) -> Unit)?) {
+    if (bookmarks.isEmpty() || onOpen == null) return
+    val s = LocalStrings.current
+    Column(verticalArrangement = Arrangement.spacedBy(if (isTouch()) 0.dp else 8.dp)) {
+        Text(
+            s.playerBookmarks,
+            style = MaterialTheme.typography.labelLarge,
+            color = Tone.muted,
+            modifier = Modifier.padding(bottom = 4.dp),
+        )
+        bookmarks.forEach { mark ->
+            DetailActionRow(
+                DetailRow(
+                    action = DetailAction.Play,
+                    label = s.detailBookmarkAt(s.formatter.clock(mark.positionMs)),
+                    icon = TmIcons.Bookmark,
+                    detail = mark.note.ifBlank { null },
+                    onSelect = { onOpen(mark) },
+                ),
+            )
         }
     }
 }

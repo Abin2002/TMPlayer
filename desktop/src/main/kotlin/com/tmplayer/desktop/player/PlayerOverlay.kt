@@ -2,6 +2,7 @@ package com.tmplayer.desktop.player
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,6 +45,8 @@ import com.tmplayer.i18n.L
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.Floating
 import com.tmplayer.ui.theme.FloatingTone
+import com.tmplayer.ui.theme.Motion
+import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingBorder
 import com.tmplayer.ui.components.TmDropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -91,6 +95,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tmplayer.data.Bookmark
 import com.tmplayer.data.MediaItem
 import com.tmplayer.online.SkipKind
 import com.tmplayer.data.EpisodeNeighbours
@@ -143,15 +148,51 @@ internal sealed interface MenuAction {
 
     /** The subtitle menu's "Search online", in a build with the OpenSubtitles key. */
     data object SearchOnline : MenuAction
+
+    /** The moment playing as a bookmark; the player asks for its note. */
+    data object AddBookmark : MenuAction
+    data class JumpTo(val bookmark: Bookmark) : MenuAction
+    data class EditBookmark(val bookmark: Bookmark) : MenuAction
+    data class DeleteBookmark(val bookmark: Bookmark) : MenuAction
 }
 
 /**
- * The scrims behind the top bar and the bottom cluster. Three stops rather than a straight ramp,
- * so the band the text sits in (the title, the times) is still at least 60 per cent dark and white
- * text holds AA contrast on a white frame, and only then fades out.
+ * The scrims behind the top bar and the bottom cluster, the Android player's
+ * bg_controls_scrim_top and bg_controls_scrim_bottom: 160 dp from 70 per cent black at the top
+ * edge, 260 dp to 80 per cent at the bottom. Five stops on an eased curve rather than a straight
+ * ramp, so the fade has no line to see, and the band the text sits in (the title, the times) still
+ * holds 60 per cent or more, where white text keeps AA contrast on a white frame.
  */
-private val TopScrim = Brush.verticalGradient(0f to Color(0xD9000000), 0.6f to Color(0x8C000000), 1f to Color.Transparent)
-private val BottomScrim = Brush.verticalGradient(0f to Color.Transparent, 0.35f to Color(0x99000000), 1f to Color(0xE6000000))
+private val TopScrim = Brush.verticalGradient(
+    0f to Color.Black.copy(alpha = 0.70f),
+    0.25f to Color.Black.copy(alpha = 0.64f),
+    0.5f to Color.Black.copy(alpha = 0.45f),
+    0.75f to Color.Black.copy(alpha = 0.18f),
+    1f to Color.Transparent,
+)
+private val BottomScrim = Brush.verticalGradient(
+    0f to Color.Transparent,
+    0.25f to Color.Black.copy(alpha = 0.28f),
+    0.5f to Color.Black.copy(alpha = 0.60f),
+    0.75f to Color.Black.copy(alpha = 0.74f),
+    1f to Color.Black.copy(alpha = 0.80f),
+)
+private val TopScrimHeight = 160.dp
+private val BottomScrimHeight = 260.dp
+
+/**
+ * The seat the bar's buttons share: one pill in black at half strength with a faint white edge,
+ * so the row reads as one control over any frame instead of glyphs floating on the picture.
+ */
+private val ControlsPillFill = Color.Black.copy(alpha = 0.5f)
+private val ControlsPillEdge = Color.White.copy(alpha = 0.16f)
+
+/** The times and the line under the title: white at 72 per cent, as text on art is everywhere. */
+private val OnArtMuted = Color.White.copy(alpha = 0.72f)
+
+/** How the controls arrive and leave: in a touch slower than out, the way Nuvio's do. */
+private const val FADE_IN_MS = 250
+private const val FADE_OUT_MS = 200
 
 /**
  * The player's tonal surfaces, the Android player's player_tonal and player_tonal_button: a
@@ -164,6 +205,9 @@ private val OnPlayerTonal = Color(0xF2FFFFFF)
 
 /** The A-B repeat on the timebar: amber, apart from the played blue and the buffered grey. */
 private val LoopColor = Color(0xFFFFC107)
+
+/** A bookmark's tick on the timebar: near white, so it reads over the played run and the rest alike. */
+private val BookmarkColor = Color(0xE6FFFFFF)
 
 /**
  * The picture itself as a click target (B2.3): a single click plays or pauses after 300 ms, so a
@@ -244,6 +288,8 @@ internal fun BoxScope.PlayerOverlay(
     sleepTimer: String? = null,
     /** The A-B repeat as marked so far, drawn on the timebar and named above it; null for none. */
     loop: AbLoop? = null,
+    /** This video's bookmarks for the menu and the timebar; null where the video can have none. */
+    bookmarks: List<Bookmark>? = null,
     onHoverControls: (Boolean) -> Unit,
     onBack: () -> Unit,
     onTogglePlay: () -> Unit,
@@ -265,19 +311,26 @@ internal fun BoxScope.PlayerOverlay(
     // The right click menu hangs at the cursor whether or not the controls are up.
     if (menu?.anchor == MenuAt.Anchor.Cursor) {
         Box(Modifier.offset { IntOffset(menu.at.x.roundToInt(), menu.at.y.roundToInt()) }.size(1.dp)) {
-            PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, onOpenMenu, onCloseMenu, onMenuAction)
+            PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
         }
     }
 
-    AnimatedVisibility(visible, Modifier.matchParentSize(), enter = fadeIn(tween(150)), exit = fadeOut(tween(250))) {
+    AnimatedVisibility(
+        visible,
+        Modifier.matchParentSize(),
+        enter = fadeIn(tween(FADE_IN_MS, easing = Motion.Standard)),
+        exit = fadeOut(tween(FADE_OUT_MS, easing = Motion.Standard)),
+    ) {
         Box(Modifier.fillMaxSize()) {
             // The 30 % tint over the whole picture, so white glyphs read on a bright frame.
             Box(Modifier.matchParentSize().background(Color(0x4D000000)))
+            // The scrims, each a fixed reach from its edge whatever the bars hold.
+            Box(Modifier.align(Alignment.TopCenter).fillMaxWidth().height(TopScrimHeight).background(TopScrim))
+            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(BottomScrimHeight).background(BottomScrim))
 
             // Top bar.
             Row(
                 Modifier.align(Alignment.TopCenter).fillMaxWidth()
-                    .background(TopScrim)
                     .hoverReport(onHoverControls)
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -285,15 +338,15 @@ internal fun BoxScope.PlayerOverlay(
                 OverlayButton(PlayerIcons.ArrowBack, s.playerBackHint, onBack)
                 Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(title, color = Color.White, fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (subtitle.isNotBlank()) {
-                        Text(subtitle, color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(subtitle, color = OnArtMuted, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
                 Box {
                     OverlayButton(PlayerIcons.MoreVert, s.commonMore, onClick = { onOpenMenu(MenuAt(MenuPage.Main, MenuAt.Anchor.Overflow)) })
                     if (menu?.anchor == MenuAt.Anchor.Overflow) {
-                        PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, onOpenMenu, onCloseMenu, onMenuAction)
+                        PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
                     }
                 }
             }
@@ -336,18 +389,17 @@ internal fun BoxScope.PlayerOverlay(
             // Bottom: times, bar, button row.
             Column(
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                    .background(BottomScrim)
                     .hoverReport(onHoverControls)
-                    .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 8.dp),
+                    .padding(start = 24.dp, end = 24.dp, top = 32.dp, bottom = 16.dp),
             ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(SeekMath.clock(status.positionMs), color = Color.White, fontSize = 13.sp)
+                    Text(SeekMath.clock(status.positionMs), color = OnArtMuted, fontSize = 13.sp)
                     // The chapter playing, as YouTube names it beside the time.
                     val chapter = Chapters.at(status.chapters, status.positionMs)
                     if (chapter >= 0) {
                         Text(
                             "  ·  " + Chapters.label(status.chapters, chapter),
-                            color = Color.White.copy(alpha = 0.8f),
+                            color = OnArtMuted,
                             fontSize = 13.sp,
                             maxLines = 1,
                         )
@@ -362,51 +414,68 @@ internal fun BoxScope.PlayerOverlay(
                     }
                     Text(
                         if (showRemaining) SeekMath.remaining(status.positionMs, status.durationMs) else SeekMath.clock(status.durationMs),
-                        color = Color.White,
+                        color = OnArtMuted,
                         fontSize = 13.sp,
                         modifier = Modifier.clip(RoundedCornerShape(4.dp)).clickable(onClick = onToggleRemaining).padding(horizontal = 4.dp, vertical = 2.dp),
                     )
                 }
-                TimeBar(status.positionMs, status.durationMs, status.bufferedMs, onSeekTo, status.chapters, loop)
+                TimeBar(status.positionMs, status.durationMs, status.bufferedMs, onSeekTo, status.chapters, loop, bookmarks.orEmpty())
+                Spacer(Modifier.height(4.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Box {
-                        OverlayButton(PlayerIcons.Subtitles, s.playerSubtitlesHint, onClick = { onOpenMenu(MenuAt(MenuPage.Subtitles, MenuAt.Anchor.Subtitles)) })
-                        if (menu?.anchor == MenuAt.Anchor.Subtitles) {
-                            PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, onOpenMenu, onCloseMenu, onMenuAction)
+                    ControlsPill {
+                        Box {
+                            OverlayButton(PlayerIcons.Subtitles, s.playerSubtitlesHint, onClick = { onOpenMenu(MenuAt(MenuPage.Subtitles, MenuAt.Anchor.Subtitles)) })
+                            if (menu?.anchor == MenuAt.Anchor.Subtitles) {
+                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
+                            }
                         }
-                    }
-                    Box {
-                        OverlayButton(PlayerIcons.Audio, s.playerAudioHint, onClick = { onOpenMenu(MenuAt(MenuPage.Audio, MenuAt.Anchor.Audio)) })
-                        if (menu?.anchor == MenuAt.Anchor.Audio) {
-                            PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, onOpenMenu, onCloseMenu, onMenuAction)
+                        Box {
+                            OverlayButton(PlayerIcons.Audio, s.playerAudioHint, onClick = { onOpenMenu(MenuAt(MenuPage.Audio, MenuAt.Anchor.Audio)) })
+                            if (menu?.anchor == MenuAt.Anchor.Audio) {
+                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
+                            }
                         }
-                    }
-                    Box {
-                        Tip(s.playerSpeedHint) {
-                            Box(
-                                Modifier.height(36.dp).widthIn(min = 48.dp).clip(RoundedCornerShape(18.dp))
-                                    .clickable { onOpenMenu(MenuAt(MenuPage.Speed, MenuAt.Anchor.Speed)) }.padding(horizontal = 10.dp),
-                                contentAlignment = Alignment.Center,
-                            ) { Text(SeekMath.speedLabel(status.speed), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium) }
-                        }
-                        if (menu?.anchor == MenuAt.Anchor.Speed) {
-                            PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, onOpenMenu, onCloseMenu, onMenuAction)
+                        Box {
+                            Tip(s.playerSpeedHint) {
+                                Box(
+                                    Modifier.height(36.dp).widthIn(min = 48.dp).clip(RoundedCornerShape(18.dp))
+                                        .clickable { onOpenMenu(MenuAt(MenuPage.Speed, MenuAt.Anchor.Speed)) }.padding(horizontal = 10.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text(SeekMath.speedLabel(status.speed), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium) }
+                            }
+                            if (menu?.anchor == MenuAt.Anchor.Speed) {
+                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
+                            }
                         }
                     }
                     Spacer(Modifier.weight(1f))
-                    VolumeControl(status.volume, status.muted, onVolume, onToggleMute)
-                    OverlayButton(PlayerIcons.PictureInPicture, s.playerMiniHint, onMiniPlayer)
-                    OverlayButton(
-                        if (fullscreen) PlayerIcons.FullscreenExit else PlayerIcons.Fullscreen,
-                        if (fullscreen) s.playerExitFullscreenHint else s.playerFullscreenHint,
-                        onToggleFullscreen,
-                    )
+                    ControlsPill {
+                        VolumeControl(status.volume, status.muted, onVolume, onToggleMute)
+                        OverlayButton(PlayerIcons.PictureInPicture, s.playerMiniHint, onMiniPlayer)
+                        OverlayButton(
+                            if (fullscreen) PlayerIcons.FullscreenExit else PlayerIcons.Fullscreen,
+                            if (fullscreen) s.playerExitFullscreenHint else s.playerFullscreenHint,
+                            onToggleFullscreen,
+                        )
+                    }
                     // The bar's right end, where a streaming player keeps its episode list.
                     if (onEpisodes != null) EpisodesButton(onEpisodes)
                 }
             }
         }
     }
+}
+
+/** One pill holding a group of the bar's buttons, in [ControlsPillFill] with a [ControlsPillEdge]. */
+@Composable
+private fun ControlsPill(content: @Composable RowScope.() -> Unit) {
+    Row(
+        Modifier.height(44.dp).clip(CircleShape).background(ControlsPillFill)
+            .border(1.dp, ControlsPillEdge, CircleShape)
+            .padding(horizontal = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -507,6 +576,7 @@ private fun TimeBar(
     onSeekTo: (Long) -> Unit,
     chapters: List<Chapter> = emptyList(),
     loop: AbLoop? = null,
+    bookmarks: List<Bookmark> = emptyList(),
 ) {
     var width by remember { mutableFloatStateOf(0f) }
     var hoverX by remember { mutableStateOf<Float?>(null) }
@@ -542,10 +612,13 @@ private fun TimeBar(
         val ahead = SeekMath.fraction(buffered, duration)
         val thick = hoverX != null || dragX != null
         val primary = MaterialTheme.colorScheme.primary
-        Canvas(Modifier.fillMaxWidth().height(if (thick) 6.dp else 4.dp)) {
+        val track = Tone.track
+        // 4 dp at rest, 8 dp under the pointer or a drag, grown over the quick motion step.
+        val barHeight by animateDpAsState(if (thick) 8.dp else 4.dp, Motion.standard(Motion.Fast))
+        Canvas(Modifier.fillMaxWidth().height(barHeight)) {
             val r = CornerRadius(size.height / 2)
-            drawRoundRect(Color(0x40FFFFFF), cornerRadius = r)
-            if (ahead > played) drawRoundRect(Color(0x66FFFFFF), size = Size(size.width * ahead, size.height), cornerRadius = r)
+            drawRoundRect(track, cornerRadius = r)
+            if (ahead > played) drawRoundRect(primary.copy(alpha = 0.35f), size = Size(size.width * ahead, size.height), cornerRadius = r)
             drawRoundRect(primary, size = Size(size.width * played, size.height), cornerRadius = r)
             // Chapter marks as gaps in the bar, the way YouTube splits it.
             val gap = 2.dp.toPx()
@@ -562,6 +635,14 @@ private fun TimeBar(
                 val reach = 5.dp.toPx()
                 for (x in listOfNotNull(a, b)) {
                     drawRect(LoopColor, Offset(x - gap / 2, -reach), Size(gap, size.height + reach * 2))
+                }
+            }
+            // Bookmarks: a small light tick above the bar at each, out of the way of the loop's.
+            if (duration > 0) {
+                val tick = 3.dp.toPx()
+                for (mark in bookmarks) {
+                    val x = size.width * SeekMath.fraction(mark.positionMs, duration)
+                    drawRect(BookmarkColor, Offset(x - gap / 2, -tick - 2.dp.toPx()), Size(gap, tick + 2.dp.toPx()))
                 }
             }
             val thumb = if (thick) 8.dp.toPx() else 6.dp.toPx()
@@ -595,6 +676,8 @@ internal fun PlayerMenu(
     savable: Boolean,
     watchedLabel: String?,
     sleepTimer: String?,
+    /** This video's bookmarks, or null where it can have none (and the menu has no line for them). */
+    bookmarks: List<Bookmark>? = null,
     onOpenMenu: (MenuAt) -> Unit,
     onClose: () -> Unit,
     onAction: (MenuAction) -> Unit,
@@ -657,6 +740,11 @@ internal fun PlayerMenu(
                     }
                 }
                 if (watchedLabel != null) Entry(watchedLabel) { pick(MenuAction.ToggleWatched) }
+                if (bookmarks != null) {
+                    HorizontalDivider()
+                    Entry(s.playerAddBookmark, trailing = "B") { pick(MenuAction.AddBookmark) }
+                    Entry(s.playerBookmarks, trailing = bookmarks.size.takeIf { it > 0 }?.toString()) { page(MenuPage.Bookmarks) }
+                }
                 HorizontalDivider()
                 Entry(s.playerHelp, trailing = "?") { pick(MenuAction.Shortcuts) }
             }
@@ -719,6 +807,27 @@ internal fun PlayerMenu(
             }
             MenuPage.Shape -> VideoScale.entries.forEach { shape ->
                 Entry(shape.label, checked = shape == status.scale) { pick(MenuAction.Shape(shape)) }
+            }
+            MenuPage.Bookmarks -> {
+                Entry(s.playerAddBookmark, trailing = "B") { pick(MenuAction.AddBookmark) }
+                HorizontalDivider()
+                val list = bookmarks.orEmpty()
+                if (list.isEmpty()) {
+                    Text(
+                        s.playerBookmarksEmpty,
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp).widthIn(max = 320.dp),
+                    )
+                }
+                list.forEach { mark ->
+                    BookmarkLine(
+                        mark,
+                        onJump = { pick(MenuAction.JumpTo(mark)) },
+                        onEdit = { pick(MenuAction.EditBookmark(mark)) },
+                        onDelete = { onAction(MenuAction.DeleteBookmark(mark)) },
+                    )
+                }
             }
         }
     }
@@ -904,11 +1013,13 @@ private fun EpisodesButton(onClick: () -> Unit) {
     val hover = remember { MutableInteractionSource() }
     val hovered by hover.collectIsHoveredAsState()
     Row(
-        Modifier.padding(start = 4.dp).height(36.dp).clip(RoundedCornerShape(18.dp))
+        Modifier.padding(start = 8.dp).height(44.dp).clip(CircleShape)
+            .background(ControlsPillFill)
+            .border(1.dp, ControlsPillEdge, CircleShape)
             .background(if (hovered) Color(0x33FFFFFF) else Color.Transparent)
             .hoverable(hover)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp),
+            .padding(start = 12.dp, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

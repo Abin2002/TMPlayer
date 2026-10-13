@@ -48,6 +48,9 @@ sealed interface PlayerAction {
 
     /** The next chapter, or back to the start of this one (or the one before). See [Chapters]. */
     data class ChapterStep(val forward: Boolean) : PlayerAction
+
+    /** Saves the moment playing as a bookmark, asking for an optional note. See [com.tmplayer.data.BookmarkStore]. */
+    data object AddBookmark : PlayerAction
     data object Back : PlayerAction
     data object Quit : PlayerAction
     data object ShortcutSheet : PlayerAction
@@ -75,8 +78,9 @@ data class KeyContext(
  *
  * Where an alias in the table collides with a primary key, the primary wins: 9 and 0 jump to 90 %
  * and the start (not volume), J seeks (not subtitles), I opens the stats (not the mini player),
- * Alt+Left/Right seek 10 s (not back), S takes a screenshot (not the next subtitles) and
- * Ctrl+Left/Right step through chapters (not a minute). macOS swaps Ctrl for Cmd on the window
+ * Alt+Left/Right seek 10 s (not back), S takes a screenshot (not the next subtitles),
+ * Ctrl+Left/Right step through chapters (not a minute) and B adds a bookmark (not VLC's next
+ * audio track, which A and # still are). macOS swaps Ctrl for Cmd on the window
  * shortcuts and the chapter keys.
  */
 object PlayerKeys {
@@ -172,7 +176,7 @@ object PlayerKeys {
             Key.R -> PlayerAction.AbRepeat
             Key.C -> PlayerAction.SubtitleToggle
             Key.A -> if (shift) PlayerAction.AudioPrevious else PlayerAction.AudioNext
-            Key.B -> PlayerAction.AudioNext
+            Key.B -> if (shift) null else PlayerAction.AddBookmark
             Key.RightBracket -> PlayerAction.SpeedUp
             Key.LeftBracket -> PlayerAction.SpeedDown
             Key.Equals, Key.Plus, Key.NumPadAdd -> PlayerAction.SpeedUp
@@ -255,6 +259,7 @@ object PlayerKeys {
                 L.keysRowChapter to L.keysChapter(cmd),
                 L.keysRowFrameStep to L.keysCommaPeriod,
                 L.keysRowAbRepeat to "R",
+                L.keysRowBookmark to "B",
                 L.keysRowWheelSeek to if (wheelSeeks) L.keysWheel else L.keysShiftWheel,
                 L.keysRowDetails to "I",
             ),

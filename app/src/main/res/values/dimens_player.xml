@@ -40,5 +40,5 @@
       clears the status bar plus the 56dp top bar with its title and subtitle.
     -->
     <dimen name="player_scrim_top">160dp</dimen>
-    <dimen name="player_scrim_bottom">240dp</dimen>
+    <dimen name="player_scrim_bottom">260dp</dimen>
 </resources>

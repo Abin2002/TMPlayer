@@ -72,7 +72,7 @@ class PlayerTvMenuSmokeTest {
     }
 
     @Test
-    fun `the speed, shape, sleep timer and details sheets compose`() {
+    fun `the speed, shape, sleep timer, details and bookmark sheets compose`() {
         val sheets = PlayerSheets(activity, root, onClosed = {})
         shadowOf(Looper.getMainLooper()).idle()
         assertFalse(sheets.isOpen)
@@ -84,6 +84,15 @@ class PlayerTvMenuSmokeTest {
         sheets.showSleep(running = "23 minutes left", chosen = 30) {}
         shadowOf(Looper.getMainLooper()).idle()
         sheets.showDetails("Bethlehem Kudumba Unit", listOf("Picture 1920 x 1080", "File 1.4 GB"))
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(sheets.isOpen)
+        val marks = kotlinx.coroutines.flow.MutableStateFlow(
+            listOf(com.tmplayer.data.Bookmark(-100L, 1L, id = 1L, positionMs = 754_000L, note = "Lemma 2")),
+        )
+        val actions = BookmarkSheetActions(marks, position = { 0L }, add = { _, _ -> }, rename = { _, _ -> }, delete = {}, jump = {})
+        sheets.showBookmarks(actions)
+        shadowOf(Looper.getMainLooper()).idle()
+        sheets.showNewBookmark(60_000L, actions)
         shadowOf(Looper.getMainLooper()).idle()
         assertTrue(sheets.isOpen)
     }

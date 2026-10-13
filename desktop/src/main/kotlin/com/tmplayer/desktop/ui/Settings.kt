@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +41,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.LayoutDirection
+import com.tmplayer.ui.components.SettingsSectionLabel
+import com.tmplayer.ui.theme.Corner
+import com.tmplayer.ui.theme.LocalDarkTheme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -159,16 +170,15 @@ fun SettingsPage(
     // A backup file picked, with what restoring it would change, while the prompt is up.
     var restorePlan by remember { mutableStateOf<RestorePlan?>(null) }
     val backups = remember(settings, state.watched, version) {
-        BackupService(settings, state.watched, OnlineMetadata.current?.store, version)
+        BackupService(settings, state.watched, OnlineMetadata.current?.store, version, bookmarks = state.bookmarks)
     }
 
     val scroll = rememberScrollState()
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
             PageHeader(s.settingsTitle, if (version.isBlank()) null else s.settingsAppVersion(version))
-            Column(
-                Modifier.widthIn(max = 760.dp).padding(horizontal = 24.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            SettingsColumn(
+                Modifier.widthIn(max = 760.dp).padding(horizontal = pageMargin(), vertical = 8.dp),
             ) {
                 Group(s.settingsAppearance)
                 Setting(s.settingsTheme, if (theme == ThemeChoice.System) s.themeSystemDesktopDetail else theme.description) {
@@ -280,8 +290,8 @@ fun SettingsPage(
                         }) { Text(s.settingsForget) }
                     }
                 }
-                // A Column, not a Box: in a Box the two rows drew over each other.
-                Column {
+                // Straight in the settings column, not wrapped: the column stacks them (in a Box the
+                // two rows once drew over each other), and a wrapper would cut them off the card.
                 Setting(s.settingsSmallest, SizeFilter.label(minSize)) {
                     Stepper(
                         onLess = { scope.launch { settings.setMinSizeBytes(SizeFilter.clampMin(SizeFilter.step(minSize, -1), maxSize)) } },
@@ -293,7 +303,6 @@ fun SettingsPage(
                         onLess = { scope.launch { settings.setMaxSizeBytes(SizeFilter.clampMax(SizeFilter.step(maxSize, -1), minSize)) } },
                         onMore = { scope.launch { settings.setMaxSizeBytes(SizeFilter.clampMax(SizeFilter.step(maxSize, 1), minSize)) } },
                     )
-                }
                 }
                 // Reset means the defaults, as on the phone and TV: offering it at the defaults and
                 // then clearing both ends contradicted the 50 MB the filter was still applying.
@@ -452,7 +461,12 @@ fun SettingsPage(
                         OutlinedButton(onClick = { pinFlow = DesktopPinFlow.Remove }) { Text(s.commonRemove) }
                     }
                 }
-                Text(s.lockForgot, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+                Text(
+                    s.lockForgot,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Tone.muted,
+                    modifier = Modifier.padding(horizontal = SETTING_INSET),
+                )
 
                 state.extras.updates?.let { updates ->
                     Group(s.settingsUpdates)
@@ -545,7 +559,7 @@ fun SettingsPage(
                     s.settingsPrivacyNote,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Tone.muted,
-                    modifier = Modifier.padding(top = 20.dp, bottom = 24.dp),
+                    modifier = Modifier.padding(start = SETTING_INSET, end = SETTING_INSET, top = 12.dp, bottom = 24.dp),
                 )
             }
         }
@@ -746,18 +760,31 @@ private fun KidsChatsDialog(
 /** A clear waiting on its yes: what the prompt says, and what happens on Clear. */
 private class Confirm(val title: String, val message: String, val detail: String?, val action: () -> Unit)
 
+/**
+ * The label over a group of settings, in line with the words of the rows under it. Inside a
+ * [SettingsColumn] the rows that follow it, up to the next label or anything that is not a
+ * [Setting], are drawn as one card.
+ */
 @Composable
 internal fun Group(title: String) {
-    Column(Modifier.padding(top = 20.dp)) {
-        Text(title, style = MaterialTheme.typography.titleSmall, color = Tone.accent)
-        HorizontalDivider(Modifier.padding(top = 6.dp), color = Tone.outline)
-    }
+    SettingsSectionLabel(
+        title,
+        Modifier.layoutId(SettingsPart.Label).padding(start = SETTING_INSET, end = SETTING_INSET, top = 16.dp),
+    )
 }
 
+/**
+ * One setting: what it is and what it is set to, with its control at the end. Inside a
+ * [SettingsColumn] it is one row of its group's card; anywhere else it is the same row on the page.
+ */
 @Composable
 internal fun Setting(title: String, detail: String, titleColor: Color = Color.Unspecified, control: @Composable () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        Modifier
+            .layoutId(SettingsPart.Row)
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .padding(horizontal = SETTING_INSET, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -773,6 +800,105 @@ internal fun Setting(title: String, detail: String, titleColor: Color = Color.Un
 private fun Toggle(title: String, detail: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Setting(title, detail) { Switch(checked = checked, onCheckedChange = onChange) }
 }
+
+/** What a child of a [SettingsColumn] is, which decides the gap above it and whether it is carded. */
+internal enum class SettingsPart { Label, Row }
+
+/** How far a setting's words sit in from its card's edge, and the labels from the page's. */
+private val SETTING_INSET = 16.dp
+
+/**
+ * The settings page's column: the children stacked as a [Column] would, with each run of
+ * consecutive [Setting] rows drawn as one grouped card on [Tone.surface] (rounded to
+ * [Corner.Large], dividers between the rows inset to where their words start, and in daylight a
+ * hairline round the outside). A [Group] label gets room above it and sits 8 dp over its card;
+ * anything else (a note, the storage bar, a progress line) sits 8 dp from its neighbours and ends
+ * the card it follows.
+ *
+ * One layout rather than a card composable round each group, so the dozen groups (several of them
+ * in their own files and shared with the About page) need no wrapping at every call.
+ */
+@Composable
+internal fun SettingsColumn(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val cards = remember { mutableStateOf(emptyList<SettingsCard>()) }
+    val fill = Tone.surface
+    val line = Tone.outline
+    val hairline = !LocalDarkTheme.current
+    Layout(
+        content = content,
+        modifier = modifier.drawBehind {
+            val radius = CornerRadius(Corner.Large.toPx())
+            val stroke = 1.dp.toPx()
+            val inset = SETTING_INSET.toPx()
+            val rtl = layoutDirection == LayoutDirection.Rtl
+            cards.value.forEach { card ->
+                val topLeft = Offset(0f, card.top.toFloat())
+                val box = Size(size.width, (card.bottom - card.top).toFloat())
+                drawRoundRect(fill, topLeft, box, radius)
+                card.dividers.forEach { y ->
+                    if (rtl) {
+                        drawLine(line, Offset(0f, y.toFloat()), Offset(size.width - inset, y.toFloat()), stroke)
+                    } else {
+                        drawLine(line, Offset(inset, y.toFloat()), Offset(size.width, y.toFloat()), stroke)
+                    }
+                }
+                if (hairline) {
+                    drawRoundRect(
+                        line,
+                        topLeft + Offset(stroke / 2, stroke / 2),
+                        Size(box.width - stroke, box.height - stroke),
+                        radius,
+                        style = Stroke(stroke),
+                    )
+                }
+            }
+        },
+    ) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val placeables = measurables.map {
+            it.measure(Constraints(minWidth = 0, maxWidth = width, minHeight = 0))
+        }
+        val kinds = measurables.map { it.layoutId as? SettingsPart }
+        val gap = 8.dp.roundToPx()
+        val labelGap = 16.dp.roundToPx()
+        val ys = IntArray(placeables.size)
+        val runs = mutableListOf<SettingsCard>()
+        var y = 0
+        var runTop = -1
+        var dividers = mutableListOf<Int>()
+        fun closeRun(bottom: Int) {
+            if (runTop >= 0) runs += SettingsCard(runTop, bottom, dividers)
+            runTop = -1
+            dividers = mutableListOf()
+        }
+        placeables.forEachIndexed { index, placeable ->
+            val kind = kinds[index]
+            val previous = kinds.getOrNull(index - 1)
+            if (index > 0) {
+                y += when {
+                    kind == SettingsPart.Row && previous == SettingsPart.Row -> 0
+                    kind == SettingsPart.Label -> labelGap
+                    else -> gap
+                }
+            }
+            if (kind == SettingsPart.Row) {
+                if (runTop < 0) runTop = y else dividers += y
+            } else {
+                if (index > 0) closeRun(ys[index - 1] + placeables[index - 1].height)
+            }
+            ys[index] = y
+            y += placeable.height
+        }
+        closeRun(y)
+        if (cards.value != runs) cards.value = runs
+        layout(width, y) {
+            placeables.forEachIndexed { index, placeable -> placeable.placeRelative(0, ys[index]) }
+        }
+    }
+}
+
+/** One group's card in a [SettingsColumn], in pixels from the column's top. */
+internal data class SettingsCard(val top: Int, val bottom: Int, val dividers: List<Int>)
 
 @Composable
 internal fun Stepper(onLess: () -> Unit, onMore: () -> Unit) {

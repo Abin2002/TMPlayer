@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram sulla tua TV senza casting",
     "watch_telegram_videos_on_3a48": "Guarda i video Telegram su una televisione senza casting né mirroring del telefono: un lettore sulla TV stessa accede al tuo account e riproduce in streaming i video delle tue chat.",
     "finds_subtitles_online_through_a322": "Trova i sottotitoli online tramite OpenSubtitles e sposta sottotitoli o audio per sincronizzarli",
-    "groups_series_by_season_709a": "Raggruppa le serie per stagione in una pagina dedicata, con locandine e trame facoltative",
+    "groups_series_by_season_709a": "Raggruppa le serie per stagione in una pagina dedicata, con locandine e trame che puoi disattivare",
     "changelog_164b": "Novità"
   },
   "features": {
@@ -327,7 +327,7 @@
     "home_and_series_pages": "{strong1} La Home raccoglie cosa guardare dopo da tutte le chat, e ogni serie ha la sua pagina, con gli episodi raggruppati per stagione.",
     "home_and_series_pages__strong1": "Mette in ordine le serie.",
     "posters_and_overviews": "{strong1} Cercati su TMDB, TVmaze e AniList con il titolo ripulito del video, e nient'altro.",
-    "posters_and_overviews__strong1": "Aggiunge locandine e trame, se le vuoi.",
+    "posters_and_overviews__strong1": "Aggiunge locandine e trame, a meno che tu non le disattivi.",
     "a_closer_look": "Uno sguardo più da vicino",
     "four_screens_with_their_parts": "Quattro schermate con le parti segnate, numerate come le note accanto.",
     "the_player_watching_while_it": "Il lettore: guardare mentre scarica",

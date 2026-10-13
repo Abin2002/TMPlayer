@@ -29,6 +29,7 @@ private val OVERVIEW_SEEN = booleanPreferencesKey("overview_seen")
 private val PLAYER_HINT_SEEN = booleanPreferencesKey("player_hint_seen")
 private val FIRST_VIDEO_TIP_DISMISSED = booleanPreferencesKey("first_video_tip_dismissed")
 private val TV_BROWSE_HINT_SEEN = booleanPreferencesKey("tv_browse_hint_seen")
+private val ONLINE_META_NOTICE_DISMISSED = booleanPreferencesKey("online_meta_notice_dismissed")
 private val OPEN_LAST_CHAT = booleanPreferencesKey("open_last_chat")
 private val DOWNLOAD_FIRST = booleanPreferencesKey("download_before_playing")
 private val AUTOPLAY_NEXT = booleanPreferencesKey("autoplay_next")
@@ -749,6 +750,17 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     suspend fun setFirstVideoTipDismissed(dismissed: Boolean = true) {
         prefs.edit { it[FIRST_VIDEO_TIP_DISMISSED] = dismissed }
+    }
+
+    /**
+     * Whether the grid's one-time note on online metadata (posters and overviews are looked up by
+     * each video's cleaned title) was put away, by Keep or by Turn off. A hint for this device, so
+     * it is not in [Backups.SETTINGS] and a restore never brings it back.
+     */
+    val onlineMetaNoticeDismissed: Flow<Boolean> = read { it[ONLINE_META_NOTICE_DISMISSED] ?: false }
+
+    suspend fun setOnlineMetaNoticeDismissed(dismissed: Boolean = true) {
+        prefs.edit { it[ONLINE_META_NOTICE_DISMISSED] = dismissed }
     }
 
     /**

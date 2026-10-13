@@ -40,6 +40,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.BookmarkJump
 import com.tmplayer.data.ContentProtection
 import com.tmplayer.data.DetailAction
 import com.tmplayer.data.DetailActions
@@ -132,6 +133,9 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
         value = withContext(Dispatchers.IO) { DiskInfo.of(DesktopPaths.downloadsDir).freeBytes }
     }
     val first = remember(item.id) { FocusRequester() }
+    val bookmarks by remember(item.chatId, item.messageId) {
+        state.bookmarks?.bookmarks(item.chatId, item.messageId) ?: kotlinx.coroutines.flow.flowOf(emptyList())
+    }.collectAsState(initial = emptyList())
 
     val actions = DetailActions.of(
         DetailContext(
@@ -246,6 +250,13 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
                 contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp),
                 onOpenItem = { other ->
                     state.openDetail(DetailRequest(other, state.chatTitleOf(other.chatId), outsideChat = true, onClosed = request.onClosed))
+                },
+                bookmarks = bookmarks,
+                // The player takes the position on opening this video, in place of its resume point.
+                onOpenBookmark = { mark ->
+                    close()
+                    BookmarkJump.request(item.chatId, item.messageId, mark.positionMs)
+                    state.openPlayer(item, startFromBeginning = false)
                 },
             )
         }
