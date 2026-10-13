@@ -416,7 +416,9 @@ class PlayerMouseTest {
     fun `a resumed video opens with the tracks and speed it was left with`() = runComposeUiTest {
         val state = com.tmplayer.data.ResumeState(audioTrack = 1, audioLanguage = "eng", subtitleTrack = -1, speed = 1.5f)
         runBlocking {
-            settings.setPlaybackSpeed(1f)
+            // A wider memory underneath, which the file's own speed is read over.
+            val chat = com.tmplayer.player.SpeedMemory.chatScope(5, 0)
+            settings.rememberSpeed(com.tmplayer.player.SpeedMemory.Scopes(chat = chat), 1.25f)
             settings.saveResumePosition(
                 5, 9, 400_000L, 600_000L,
                 com.tmplayer.data.ResumeRecord.encode(3, "Night Train", "Film Club", 1L shl 30, 600, 1L, state = state),

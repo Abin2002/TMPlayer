@@ -1,6 +1,7 @@
 package com.tmplayer.ui.browse
 
 import android.widget.Toast
+import com.tmplayer.App
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +28,8 @@ import com.tmplayer.data.MessageLink
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.Td
+import com.tmplayer.data.WatchLaterRecord
+import com.tmplayer.data.WatchLaterStore
 import com.tmplayer.data.WatchPoint
 import com.tmplayer.data.cancel
 import com.tmplayer.i18n.Messages
@@ -89,6 +92,11 @@ internal fun MediaDetailOpened(
     val downloads by OfflineDownloads.active.collectAsStateWithLifecycle()
     val downloading = downloads[item.fileId]
     val settings = remember(context) { SettingsStore(context) }
+    // Watch later is this device's own list, read and written here so every place that opens a
+    // video's actions offers it without passing it down.
+    val laterStore = remember(context) { WatchLaterStore(context) }
+    val laterKeys by remember(laterStore) { laterStore.keys }.collectAsStateWithLifecycle(initialValue = emptySet())
+    val later = SettingsStore.progressKey(item.chatId, item.messageId) in laterKeys
 
     // Asked once the panel is up: which kind of copy is here decides half the actions. The
     // download index first, since TDLib let go of a download's file when it moved.
@@ -134,6 +142,7 @@ internal fun MediaDetailOpened(
             canBeSaved = item.canBeSaved,
             resumeMs = watched?.positionMs ?: 0L,
             finished = finished,
+            watchLater = later,
             inDownloads = inDownloads,
             cached = cachedHere,
             downloading = downloading != null,
@@ -159,6 +168,25 @@ internal fun MediaDetailOpened(
             } }
             DetailAction.MarkWatched -> { { onDismiss(); onSetWatched(true) } }
             DetailAction.MarkUnwatched -> { { onDismiss(); onSetWatched(false) } }
+            DetailAction.AddWatchLater, DetailAction.RemoveWatchLater -> { {
+                val add = action == DetailAction.AddWatchLater
+                // On the app's scope: the panel closes at once and takes its own scope with it.
+                App.backgroundScope.launch {
+                    runCatching {
+                        if (add) {
+                            laterStore.add(WatchLaterRecord.of(item, chatTitle, System.currentTimeMillis()))
+                        } else {
+                            laterStore.remove(item.chatId, item.messageId)
+                        }
+                    }
+                }
+                Toast.makeText(
+                    context,
+                    if (add) s.detailWatchLaterAdded(item.title) else s.detailWatchLaterRemoved(item.title),
+                    Toast.LENGTH_SHORT,
+                ).show()
+                onDismiss()
+            } }
             DetailAction.Download, DetailAction.SaveToDownloads -> { { onDownload(); onDismiss() } }
             DetailAction.InDownloads -> onDismiss
             DetailAction.RemoveDownload -> { { confirmingRemove = true } }

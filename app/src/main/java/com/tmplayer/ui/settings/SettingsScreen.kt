@@ -153,6 +153,7 @@ import com.tmplayer.player.SubtitlePosition
 import com.tmplayer.player.SubtitleSize
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.TouchPrefs
+import com.tmplayer.player.TrackPreferences
 import com.tmplayer.ui.about.About
 import com.tmplayer.ui.components.ChoiceLine
 import com.tmplayer.ui.components.ChoiceList
@@ -272,6 +273,7 @@ fun SettingsScreen(
     val touchPrefs by settings.touchPrefs.collectAsStateWithLifecycle(initialValue = TouchPrefs())
     val downmixChoice by settings.downmixChoice.collectAsStateWithLifecycle(initialValue = null)
     val subtitleStyle by settings.subtitleStyle.collectAsStateWithLifecycle(initialValue = SubtitleStyle())
+    val trackPrefs by settings.trackPreferences.collectAsStateWithLifecycle(initialValue = TrackPreferences())
     val history by settings.continueWatching.collectAsStateWithLifecycle(initialValue = emptyList())
     val watchedStore = remember { WatchedStore(context) }
     val watchedList by watchedStore.history.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -305,6 +307,7 @@ fun SettingsScreen(
     // The language picker, the "What's new" sheet and "Report a problem", each over the list.
     var pickingLanguage by remember { mutableStateOf(false) }
     var stylingSubtitles by remember { mutableStateOf(false) }
+    var trackPicker by remember { mutableStateOf<TrackLanguagePicker?>(null) }
     var editingSizes by remember { mutableStateOf(false) }
     var whatsNew by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
@@ -611,6 +614,15 @@ fun SettingsScreen(
                         onToggle = { scope.launch { settings.setDownmix(!downmix) } },
                     )
                 }
+                // The soundtrack a video opens in when neither the file nor its series has one saved.
+                item {
+                    ActionRow(
+                        title = s.settingsAudioLanguage,
+                        subtitle = trackPrefs.audioSummary,
+                        icon = ImageVector.vectorResource(R.drawable.ic_audio_language),
+                        onClick = { trackPicker = TrackLanguagePicker.Audio },
+                    )
+                }
                 // Thumbnails over the scrub bar, from what is already downloaded. Shown even where the
                 // memory rules them out, switched off and saying why, so a 1 GB stick's owner who read
                 // about the feature finds out it is not for this device rather than looking for it.
@@ -707,6 +719,23 @@ fun SettingsScreen(
                         ).joinToString("  ·  "),
                         icon = ImageVector.vectorResource(R.drawable.ic_subtitles),
                         onClick = { stylingSubtitles = true },
+                    )
+                }
+                // Which subtitles a video opens with, when neither the file nor its series says.
+                item {
+                    ActionRow(
+                        title = s.settingsSubtitleMode,
+                        subtitle = trackPrefs.mode.label,
+                        icon = ImageVector.vectorResource(R.drawable.ic_subtitles),
+                        onClick = { trackPicker = TrackLanguagePicker.Mode },
+                    )
+                }
+                item {
+                    ActionRow(
+                        title = s.settingsSubtitleLanguage,
+                        subtitle = trackPrefs.subtitleSummary,
+                        icon = TmIcons.Language,
+                        onClick = { trackPicker = TrackLanguagePicker.Subtitle },
                     )
                 }
 
@@ -1338,6 +1367,14 @@ fun SettingsScreen(
             onClose = { stylingSubtitles = false },
         )
     }
+    trackPicker?.let { picker ->
+        TrackLanguageSheet(
+            picker = picker,
+            prefs = trackPrefs,
+            onChange = { next -> scope.launch { settings.setTrackPreferences(next) } },
+            onClose = { trackPicker = null },
+        )
+    }
     if (editingSizes) {
         SizeLimitsDialog(
             minSize = minSize,
@@ -1548,8 +1585,10 @@ fun SettingsScreen(
                     runCatching { CrashReports.stop() }
                     runCatching { settings.clearEverything(keepDownloads = !deleteDownloads) }
                     // What this account watched is its own as much as the preferences are, and it
-                    // lives in a file of its own, so it is cleared on its own.
+                    // lives in a file of its own, so it is cleared on its own, and so is Watch
+                    // later, which shares that file.
                     runCatching { watchedStore.clear() }
+                    runCatching { watchedStore.watchLater.clear() }
                     Td.logOut()
                     onLoggedOut()
                 }

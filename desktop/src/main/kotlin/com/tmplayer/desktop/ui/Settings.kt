@@ -65,6 +65,7 @@ import com.tmplayer.player.SubtitlePosition
 import com.tmplayer.player.SubtitleSize
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.TouchPrefs
+import com.tmplayer.player.TrackPreferences
 import com.tmplayer.ui.about.About
 import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.components.TmIcons
@@ -112,6 +113,7 @@ fun SettingsPage(
     var confirm by remember { mutableStateOf<Confirm?>(null) }
     val touchPrefs by settings.touchPrefs.collectAsState(initial = TouchPrefs())
     val subtitleStyle by settings.subtitleStyle.collectAsState(initial = SubtitleStyle())
+    val trackPrefs by settings.trackPreferences.collectAsState(initial = TrackPreferences())
     val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
     val history by settings.continueWatching.collectAsState(initial = emptyList())
     val favourites by settings.favorites.collectAsState(initial = emptySet())
@@ -188,6 +190,7 @@ fun SettingsPage(
                 Toggle(s.playerDownmix, s.settingsDownmixDetail, desktop.downmix) { on ->
                     state.extras.prefs.update { it.copy(downmix = on) }
                 }
+                AudioLanguageSetting(settings, trackPrefs, scope)
                 Toggle(
                     s.settingsSoftwareDecoding,
                     if (DesktopSettings.defaultSoftwareDecoding()) {
@@ -211,6 +214,7 @@ fun SettingsPage(
                 ) {
                     OutlinedButton(onClick = { stylingSubtitles = true }) { Text(s.commonChange) }
                 }
+                SubtitleLanguageSettings(settings, trackPrefs, scope)
 
                 OnlineSubtitlesGroup()
                 OnlineMetadataGroup()

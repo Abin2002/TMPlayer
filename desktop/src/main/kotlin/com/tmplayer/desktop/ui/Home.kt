@@ -44,6 +44,7 @@ import com.tmplayer.data.ResumeRecord
 import com.tmplayer.data.Series
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ShelfEntry
+import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.ui.browse.BrowseSection
 import com.tmplayer.ui.browse.BrowseTab
 import com.tmplayer.ui.browse.HistoryTab
@@ -71,20 +72,22 @@ fun HomePage(state: ShellState, chats: ChatListViewModel) {
     val list = (chatState as? UiState.Content)?.value?.chats.orEmpty()
     val favourites by state.settings.favorites.collectAsState(initial = emptySet())
     val history by state.settings.continueWatching.collectAsState(initial = emptyList())
+    val later by state.watched.watchLater.items.collectAsState(initial = emptyList())
     val art by model.art.collectAsState()
     HomeRowsView(
         state = state,
-        rows = rememberHomeRows(model, list, favourites, history),
+        rows = rememberHomeRows(model, list, favourites, history, later),
         chats = list,
         art = art,
         onRowShown = { row ->
             when (row) {
                 is HomeRow.Chat -> model.request(row.chatId)
                 is HomeRow.Recent -> model.requestRecent()
-                is HomeRow.Continue -> Unit
+                is HomeRow.Continue, is HomeRow.WatchLater -> Unit
             }
         },
         onArtWanted = model::requestArt,
+        onLaterArtWanted = model::requestArt,
         onRefresh = model::refresh,
     )
 }
@@ -99,6 +102,7 @@ internal fun HomeRowsView(
     onRowShown: (HomeRow) -> Unit,
     onArtWanted: (ResumeRecord) -> Unit,
     onRefresh: () -> Unit,
+    onLaterArtWanted: (WatchLaterRecord) -> Unit = {},
 ) {
     val s = LocalStrings.current
     var openSeries by remember { mutableStateOf<Series?>(null) }
@@ -157,13 +161,14 @@ internal fun HomeRowsView(
         ) {
             items(rows, key = { it.key }, contentType = { it::class }) { row ->
                 val loaded = when (row) {
-                    is HomeRow.Continue -> true
+                    is HomeRow.Continue, is HomeRow.WatchLater -> true
                     is HomeRow.Chat -> row.loaded
                     is HomeRow.Recent -> row.loaded
                 }
                 LaunchedEffect(row.key, loaded) { if (!loaded) onRowShown(row) }
                 val heading: Pair<String, (() -> Unit)?> = when (row) {
                     is HomeRow.Continue -> s.homeRowContinue to { state.showHistory(HistoryTab.Continue) }
+                    is HomeRow.WatchLater -> s.homeRowWatchLater to { state.showHistory(HistoryTab.WatchLater) }
                     is HomeRow.Chat -> row.title to { chats.firstOrNull { it.id == row.chatId }?.let(state::openChat); Unit }
                     is HomeRow.Recent -> s.homeRowRecent to null
                 }
@@ -231,6 +236,15 @@ internal fun HomeRowsView(
                                             s.browseTimeLeft(MediaMapper.formatDuration((record.remainingMs / 1000).toInt())),
                                         ).filter { it.isNotBlank() }.joinToString("  ·  "),
                                     )
+                                }
+                            }
+                            // The poster a chat's grid draws, so the pane offers Remove from Watch later.
+                            is HomeRow.WatchLater -> items(row.records, key = { "l-${it.key}" }) { record ->
+                                LaunchedEffect(record.key) { onLaterArtWanted(record) }
+                                LaunchedEffect(record.key) { state.noteChatTitle(record.chatId, record.chatTitle) }
+                                val item = art[record.key] ?: remember(record) { record.toMediaItem() }
+                                Box(Modifier.width(state.posterWidth)) {
+                                    OnHome { MediaTile(state, item, record.chatTitle, outsideChat = true) }
                                 }
                             }
                             is HomeRow.Chat -> shelf(state, row.entries, { row.title }) { openSeries = it }

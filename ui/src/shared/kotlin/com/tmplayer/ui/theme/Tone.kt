@@ -73,6 +73,49 @@ object Tone {
                 M3.colorScheme.onPrimaryContainer
             }
 
+    /**
+     * The colour every long gradient fades into: the background itself, at full alpha, so a
+     * picture melts into the page in either theme. [Scrims] builds its brushes from it.
+     */
+    val scrim: Color
+        @Composable @ReadOnlyComposable get() =
+            M3.colorScheme.background
+
+    /**
+     * Text and icons that sit on a picture, under a scrim. White in both themes: a picture is
+     * dark under the scrims drawn here whether the page around it is light or dark.
+     */
+    val onArt: Color
+        @Composable @ReadOnlyComposable get() =
+            OnArt
+
+    /** Second-line text on a picture, under the same scrim as [onArt]. */
+    val onArtMuted: Color
+        @Composable @ReadOnlyComposable get() =
+            OnArtMuted
+
+    /** The unfilled part of a progress line drawn over a picture. */
+    val track: Color
+        @Composable @ReadOnlyComposable get() =
+            Track
+
+    /**
+     * The one primary action on a screen (Play, Resume): a near-white pill on the dark theme and a
+     * near-black one in daylight, at 15:1 or better against its label either way.
+     *
+     * The text colour and the background, swapped, rather than the scheme's inverse pair: the
+     * inverse surface in daylight is a softened black, only 11:1 against its label, and the point
+     * of this pill is that nothing else on the screen is as loud.
+     */
+    val hero: Color
+        @Composable @ReadOnlyComposable get() =
+            M3.colorScheme.onSurface
+
+    /** What to write on [hero]. */
+    val onHero: Color
+        @Composable @ReadOnlyComposable get() =
+            M3.colorScheme.background
+
     /** Hairlines and borders. */
     val outline: Color
         @Composable @ReadOnlyComposable get() =
@@ -104,3 +147,12 @@ object Tone {
         @Composable @ReadOnlyComposable get() =
             if (LocalDarkTheme.current) Caution else Color(0xFF8A5300)
 }
+
+/** [Tone.onArt], as a constant for code that draws outside composition. */
+internal val OnArt = Color.White
+
+/** [Tone.onArtMuted]: white at 72 per cent. */
+internal val OnArtMuted = Color.White.copy(alpha = 0.72f)
+
+/** [Tone.track]: white at 30 per cent. */
+internal val Track = Color.White.copy(alpha = 0.30f)
