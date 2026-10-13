@@ -132,7 +132,10 @@ object MediaName {
         val tidy = clean(stripDecoration(stripExtension(fileName)).replace(SEPARATORS, " ").replace(WHITESPACE, " "))
         val parsed = parse(fileName, caption, maxYear)
         val release = parsed.year != null || parsed.isEpisode || EpisodeCopies.markers(fileName).isNotEmpty()
-        val title = parsed.title.takeIf { release && it.isNotBlank() } ?: return tidy.ifEmpty { null }
+        // A name that is nothing but its marker ("Episode 1") reads back as the whole name, which
+        // says it already; adding the code to it would say it twice.
+        val title = parsed.title.takeIf { release && it.isNotBlank() && !it.equals(tidy, ignoreCase = true) }
+            ?: return tidy.ifEmpty { null }
         return when {
             parsed.isEpisode -> "$title ${parsed.episodeCode}"
             parsed.year != null -> "$title (${parsed.year})"

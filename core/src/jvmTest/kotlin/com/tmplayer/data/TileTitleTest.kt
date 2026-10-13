@@ -37,6 +37,11 @@ class TileTitleTest {
     }
 
     @Test
+    fun `a name that is only its episode is not said twice`() {
+        assertEquals("Episode 1", SeriesShelf.tileTitle(video("Episode 1.mkv")))
+    }
+
+    @Test
     fun `a plain name is only tidied, never cut`() {
         assertEquals("Lecture 07 - Limits", SeriesShelf.tileTitle(video("Lecture_07_-_Limits.mp4")))
         assertEquals("Learn Tamil Fast", SeriesShelf.tileTitle(video("Learn.Tamil.Fast.mp4")))
