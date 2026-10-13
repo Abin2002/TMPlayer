@@ -130,6 +130,7 @@ fun main(args: Array<String>) {
             ) {
                 window.minimumSize = java.awt.Dimension(960, 600)
                 DesktopServices.selfUpdate.quit = quit
+                shell.quit = quit
                 // Transfers show outside the window too, once there is a window for the taskbar bar.
                 LaunchedEffect(Unit) {
                     DesktopStorage.closePlayer = { shell.closePlayer() }
