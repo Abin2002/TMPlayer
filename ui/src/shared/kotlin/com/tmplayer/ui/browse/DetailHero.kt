@@ -37,10 +37,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -282,12 +284,15 @@ internal fun RoundAction(
         ) {
             Icon(icon, contentDescription = null, tint = if (focused) Tone.onFocusFill else ink, modifier = Modifier.size(22.dp))
         }
+        // Up to three lines, in type small enough for the longest word to fit the button's width:
+        // in Malayalam "Mark as watched" ran past two lines, and German and French broke
+        // "Herunterladen" and "Recommencer" in the middle of the word.
         Text(
             label,
-            style = MaterialTheme.typography.labelSmall,
+            style = fitLongestWord(label, MaterialTheme.typography.labelSmall, RoundActionWidth),
             color = ink,
             textAlign = TextAlign.Center,
-            maxLines = 2,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis,
         )
     }
@@ -402,6 +407,24 @@ internal val HeroPillMax = 420.dp
 
 /** A round action and its label under it. */
 internal val RoundActionWidth = 72.dp
+
+/**
+ * [style], made smaller (down to [MIN_WORD_SCALE] of its size) until the longest word of [text]
+ * fits [width] whole, so a narrow label wraps between words rather than inside one.
+ */
+@Composable
+private fun fitLongestWord(text: String, style: TextStyle, width: Dp): TextStyle {
+    val measurer = rememberTextMeasurer()
+    val room = with(LocalDensity.current) { width.toPx() }
+    return remember(text, style, room) {
+        val widest = text.split(' ').filter { it.isNotEmpty() }.maxOfOrNull { word ->
+            measurer.measure(word, style, maxLines = 1, softWrap = false).size.width
+        } ?: 0
+        if (widest <= room) style else style.copy(fontSize = style.fontSize * (room / widest).coerceAtLeast(MIN_WORD_SCALE))
+    }
+}
+
+private const val MIN_WORD_SCALE = 0.8f
 
 /** The long fade at the foot of a page's backdrop. */
 internal val BACKDROP_FADE = 320.dp

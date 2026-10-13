@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -46,12 +48,16 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tmplayer.data.DeviceForm
 import com.tmplayer.data.PinAttempts
 import com.tmplayer.data.PinCheck
@@ -259,7 +265,10 @@ fun PinPad(
                 modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),
             )
         }
+        // Always 1 2 3 from the left, as a phone's dialler and every number pad are, also in Arabic
+        // and Persian: a mirrored pad put 3 under the thumb where 1 is looked for.
         val keys: @Composable () -> Unit = {
+          CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 listOf("123", "456", "789").forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -290,6 +299,7 @@ fun PinPad(
                     )
                 }
             }
+          }
         }
         val forgot: @Composable () -> Unit = {
             if (showForgot) {
@@ -402,9 +412,21 @@ private fun PadKey(
     ) {
         when {
             icon != null -> Icon(icon, contentDescription = label, tint = ink, modifier = Modifier.size(26.dp))
+            // A word steps down to fit the round key ("Abbrechen" was cut to "Abbreche"). Clip,
+            // not Ellipsis, because an ellipsized line never reports an overflow and so never steps.
+            small -> Text(
+                label,
+                style = MaterialTheme.typography.labelLarge,
+                color = ink,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
+                autoSize = TextAutoSize.StepBased(minFontSize = 9.sp, maxFontSize = MaterialTheme.typography.labelLarge.fontSize),
+                modifier = Modifier.padding(horizontal = 6.dp),
+            )
             else -> Text(
                 label,
-                style = if (small) MaterialTheme.typography.labelLarge else MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineSmall,
                 color = ink,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
