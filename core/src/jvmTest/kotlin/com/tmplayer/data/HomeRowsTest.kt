@@ -44,6 +44,7 @@ class HomeRowsTest {
     private fun ids(row: HomeRow): List<Long> = when (row) {
         is HomeRow.Continue -> row.records.map { it.messageId }
         is HomeRow.Chat -> row.entries.flatMap(::idsOf)
+        is HomeRow.NewEpisodes -> row.episodes.map { it.item.messageId }
         is HomeRow.Recent -> row.entries.flatMap(::idsOf)
     }
 
@@ -91,6 +92,7 @@ class HomeRowsTest {
             val size = when (row) {
                 is HomeRow.Continue -> row.records.size
                 is HomeRow.Chat -> row.entries.size
+                is HomeRow.NewEpisodes -> row.episodes.size
                 is HomeRow.Recent -> row.entries.size
             }
             assertEquals(row.key, HomeRows.LIMIT, size)

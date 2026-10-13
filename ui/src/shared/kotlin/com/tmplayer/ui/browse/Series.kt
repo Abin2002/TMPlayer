@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import com.tmplayer.data.EpisodeCopies
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.MediaMapper
+import com.tmplayer.data.NewEpisodes
 import com.tmplayer.data.Series
 import com.tmplayer.data.SeriesEpisode
 import com.tmplayer.data.SeriesProgress
@@ -106,9 +107,18 @@ import com.tmplayer.ui.theme.focusRing
 class SeriesWatch(
     val point: (MediaItem) -> WatchPoint?,
     val finished: (MediaItem) -> Boolean,
+    /**
+     * When the viewer last watched a video, in milliseconds, or null when nothing says (see
+     * [NewEpisodes.touchTimes]). Only the "New" badge reads it; without it no show is new.
+     */
+    val touchedAt: (MediaItem) -> Long? = { null },
 ) {
     fun progress(series: Series): SeriesProgress =
         SeriesShelf.progress(series, finished) { point(it)?.fraction ?: 0f }
+
+    /** How many of [series]' episodes arrived since the viewer last watched it: see [NewEpisodes.inSeries]. */
+    fun newEpisodes(series: Series): Int =
+        NewEpisodes.inSeries(series, { finished(it) || (point(it)?.fraction ?: 0f) > 0f }, touchedAt)
 
     /** Watched when any copy of the episode is. */
     fun finishedEpisode(episode: SeriesEpisode): Boolean = episode.copies.any(finished)
@@ -213,6 +223,9 @@ fun seriesProgressLine(progress: SeriesProgress): String? {
  * share watched runs along the bottom, and the tick appears once every episode is watched. With
  * posters and overviews on, the show's own wide picture replaces the episode's (never its poster,
  * which would not fill a 16:9 tile).
+ *
+ * @param fresh whether the show has episodes posted since the viewer last watched it (see
+ *   [SeriesWatch.newEpisodes]), which puts a "New" badge in the free corner.
  */
 @Composable
 fun SeriesArt(
@@ -220,6 +233,7 @@ fun SeriesArt(
     progress: SeriesProgress,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
+    fresh: Boolean = false,
 ) {
     val s = LocalStrings.current
     val cover = series.cover
@@ -276,8 +290,30 @@ fun SeriesArt(
                         .padding(start = if (compact) 4.dp else 6.dp, bottom = if (compact) 10.dp else 12.dp),
                 )
             }
+            if (fresh) NewBadge(compact, Modifier.align(Alignment.TopStart))
         }
     }
+}
+
+/**
+ * "New", in the accent, on a tile with an episode posted since the viewer last watched its show:
+ * the badge on a show's tile and on each tile of Home's New episodes row. The accent rather than
+ * the black plate the facts wear, since it is the app telling the viewer something.
+ */
+@Composable
+fun NewBadge(compact: Boolean, modifier: Modifier = Modifier) {
+    Text(
+        LocalStrings.current.homeNewBadge,
+        style = if (compact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = Tone.onAccent,
+        maxLines = 1,
+        modifier = modifier
+            .padding(if (compact) 4.dp else 6.dp)
+            .clip(RoundedCornerShape(Corner.ExtraSmall))
+            .background(Tone.accent.copy(alpha = 0.92f))
+            .padding(horizontal = if (compact) 5.dp else 7.dp, vertical = if (compact) 1.dp else 2.dp),
+    )
 }
 
 @Composable

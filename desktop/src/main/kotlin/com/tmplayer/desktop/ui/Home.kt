@@ -49,6 +49,7 @@ import com.tmplayer.ui.browse.BrowseTab
 import com.tmplayer.ui.browse.HistoryTab
 import com.tmplayer.ui.browse.ChatListViewModel
 import com.tmplayer.ui.browse.HomeViewModel
+import com.tmplayer.ui.browse.NewBadge
 import com.tmplayer.ui.browse.rememberHomeRows
 import com.tmplayer.ui.components.MediaArt
 import com.tmplayer.ui.components.TmIcons
@@ -71,17 +72,18 @@ fun HomePage(state: ShellState, chats: ChatListViewModel) {
     val list = (chatState as? UiState.Content)?.value?.chats.orEmpty()
     val favourites by state.settings.favorites.collectAsState(initial = emptySet())
     val history by state.settings.continueWatching.collectAsState(initial = emptyList())
+    val watched by state.watched.watched.collectAsState(initial = emptyMap())
     val art by model.art.collectAsState()
     HomeRowsView(
         state = state,
-        rows = rememberHomeRows(model, list, favourites, history),
+        rows = rememberHomeRows(model, list, favourites, history, watched.values),
         chats = list,
         art = art,
         onRowShown = { row ->
             when (row) {
                 is HomeRow.Chat -> model.request(row.chatId)
                 is HomeRow.Recent -> model.requestRecent()
-                is HomeRow.Continue -> Unit
+                is HomeRow.Continue, is HomeRow.NewEpisodes -> Unit
             }
         },
         onArtWanted = model::requestArt,
@@ -157,7 +159,7 @@ internal fun HomeRowsView(
         ) {
             items(rows, key = { it.key }, contentType = { it::class }) { row ->
                 val loaded = when (row) {
-                    is HomeRow.Continue -> true
+                    is HomeRow.Continue, is HomeRow.NewEpisodes -> true
                     is HomeRow.Chat -> row.loaded
                     is HomeRow.Recent -> row.loaded
                 }
@@ -165,6 +167,7 @@ internal fun HomeRowsView(
                 val heading: Pair<String, (() -> Unit)?> = when (row) {
                     is HomeRow.Continue -> s.homeRowContinue to { state.showHistory(HistoryTab.Continue) }
                     is HomeRow.Chat -> row.title to { chats.firstOrNull { it.id == row.chatId }?.let(state::openChat); Unit }
+                    is HomeRow.NewEpisodes -> s.homeRowNewEpisodes to null
                     is HomeRow.Recent -> s.homeRowRecent to null
                 }
                 // Only a row that leaves something out offers the rest of it.
@@ -230,6 +233,38 @@ internal fun HomeRowsView(
                                             record.chatTitle,
                                             s.browseTimeLeft(MediaMapper.formatDuration((record.remainingMs / 1000).toInt())),
                                         ).filter { it.isNotBlank() }.joinToString("  ·  "),
+                                    )
+                                }
+                            }
+                            is HomeRow.NewEpisodes -> items(row.episodes, key = { "n-${it.item.id}" }) { episode ->
+                                val item = episode.item
+                                val chatTitle = titles[item.chatId].orEmpty()
+                                Box(Modifier.width(state.posterWidth)) {
+                                    Poster(
+                                        state = state,
+                                        nav = null,
+                                        index = 0,
+                                        item = item,
+                                        chatTitle = chatTitle,
+                                        progress = null,
+                                        art = {
+                                            Box(Modifier.fillMaxSize()) {
+                                                OnHome { com.tmplayer.ui.online.OnlineArt(item, Modifier.fillMaxSize()) {
+                                                    MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize()) {
+                                                        Text(item.title.take(1).uppercase(), style = MaterialTheme.typography.headlineSmall, color = Tone.muted)
+                                                    }
+                                                } }
+                                                NewBadge(compact = false, modifier = Modifier.align(Alignment.TopStart))
+                                            }
+                                        },
+                                        // Which episode and that it is new, then where it was posted.
+                                        subtitle = listOf(
+                                            if (episode.show.isBlank()) s.homeNewEpisode(episode.code) else "${episode.show} ${s.homeNewEpisode(episode.code)}",
+                                            chatTitle,
+                                        ).filter { it.isNotBlank() }.joinToString("  ·  "),
+                                        onDetails = { refocus ->
+                                            state.openDetail(DetailRequest(item = item, chatTitle = chatTitle, outsideChat = true, onClosed = refocus))
+                                        },
                                     )
                                 }
                             }

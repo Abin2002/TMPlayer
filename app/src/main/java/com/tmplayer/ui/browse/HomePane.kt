@@ -70,8 +70,9 @@ import com.tmplayer.ui.theme.Tv
 import kotlinx.coroutines.launch
 
 /**
- * Home: a row of what the viewer was part way through, a row per starred chat, and the newest
- * videos everywhere else (the rows are built by [com.tmplayer.data.HomeRows]).
+ * Home: a row of what the viewer was part way through, the new episodes of the shows they are
+ * watching, a row per starred chat, and the newest videos everywhere else (the rows are built by
+ * [com.tmplayer.data.HomeRows]).
  *
  * One vertical lazy list of horizontal lazy rows, so only the rows on screen exist and only the
  * tiles on screen in each of those. Every row and tile is keyed, and every tile is a fixed width,
@@ -132,7 +133,7 @@ internal fun HomePane(
         ) {
             items(rows, key = { it.key }, contentType = { it::class }) { row ->
                 val loaded = when (row) {
-                    is HomeRow.Continue -> true
+                    is HomeRow.Continue, is HomeRow.NewEpisodes -> true
                     is HomeRow.Chat -> row.loaded
                     is HomeRow.Recent -> row.loaded
                 }
@@ -141,6 +142,7 @@ internal fun HomePane(
                 val isFirst = row === rows.first()
                 val title = when (row) {
                     is HomeRow.Continue -> s.homeRowContinue
+                    is HomeRow.NewEpisodes -> s.homeRowNewEpisodes
                     is HomeRow.Chat -> row.title
                     is HomeRow.Recent -> s.homeRowRecent
                 }
@@ -148,7 +150,7 @@ internal fun HomePane(
                 val seeAll: (() -> Unit)? = when (row) {
                     is HomeRow.Continue -> onSeeContinue
                     is HomeRow.Chat -> { { onOpenChat(row.chatId) } }
-                    is HomeRow.Recent -> null
+                    is HomeRow.NewEpisodes, is HomeRow.Recent -> null
                 }?.takeIf { row.hasMore }
                 val countLabel = if (row.totalAtLeast) s.homeSeeAllCountAtLeast(row.total) else s.homeSeeAllCount(row.total)
                 // On a television "See all" sits on the heading, where it can be seen, but it only
@@ -207,6 +209,25 @@ internal fun HomePane(
                                         .then(if (isFirst && record === row.records.first()) Modifier.focusRequester(first) else Modifier),
                                 )
                             }
+                            is HomeRow.NewEpisodes -> items(row.episodes, key = { "n-${it.item.id}" }) { episode ->
+                                val item = episode.item
+                                val label = s.homeNewEpisode(episode.code)
+                                // The show's name, then which episode: the file name would say the
+                                // same less readably, and the "new" is the reason the row exists.
+                                Box(Modifier.width(tileWidth(touch))) {
+                                    MediaCard(
+                                        item = item,
+                                        watched = null,
+                                        onClick = { onPlay(item, chatTitle(item.chatId)) },
+                                        onLongClick = { onHoldMedia(item, chatTitle(item.chatId)) },
+                                        onFocused = {},
+                                        dense = touch,
+                                        title = if (episode.show.isBlank()) label else "${episode.show}  ·  $label",
+                                        modifier = if (isFirst && episode === row.episodes.first()) Modifier.focusRequester(first) else Modifier,
+                                    )
+                                    NewBadge(compact = touch, modifier = Modifier.align(Alignment.TopStart).padding(if (touch) 4.dp else 0.dp))
+                                }
+                            }
                             is HomeRow.Chat -> entries(row.entries, watch, touch, isFirst, first, { row.title }, onPlay, onHoldMedia) { openSeries = it }
                             is HomeRow.Recent -> entries(row.entries, watch, touch, isFirst, first, chatTitle, onPlay, onHoldMedia) { openSeries = it }
                         }
@@ -231,7 +252,7 @@ internal fun HomePane(
     val firstReady = when (val top = rows.first()) {
         is HomeRow.Chat -> top.loaded
         is HomeRow.Recent -> top.loaded
-        is HomeRow.Continue -> true
+        is HomeRow.Continue, is HomeRow.NewEpisodes -> true
     }
     LaunchedEffect(firstKey, firstReady) {
         if (!touch && firstReady) runCatching { first.requestFocus() }
@@ -276,6 +297,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.entries(
             is ShelfEntry.Show -> SeriesCard(
                 series = entry.series,
                 progress = remember(entry.series, watch) { watch.progress(entry.series) },
+                fresh = remember(entry.series, watch) { watch.newEpisodes(entry.series) > 0 },
                 onClick = { onOpenSeries(entry.series) },
                 dense = touch,
                 modifier = modifier,

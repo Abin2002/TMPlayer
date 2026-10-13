@@ -59,6 +59,8 @@ internal fun SeriesCard(
     modifier: Modifier = Modifier,
     dense: Boolean = false,
     onFocused: () -> Unit = {},
+    /** Episodes posted since the viewer last watched the show: a "New" badge on the picture. */
+    fresh: Boolean = false,
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -78,7 +80,7 @@ internal fun SeriesCard(
                 .clickable(onClick = onClick)
                 .padding(4.dp),
         ) {
-            SeriesArt(series, progress, Modifier.fillMaxWidth(), compact = true)
+            SeriesArt(series, progress, Modifier.fillMaxWidth(), compact = true, fresh = fresh)
             Spacer(Modifier.height(6.dp))
             M3Text(
                 series.title,
@@ -111,7 +113,7 @@ internal fun SeriesCard(
             .border(3.dp, border, RoundedCornerShape(Corner.Medium))
             .pressable(interactions, onClick),
     ) {
-        SeriesArt(series, progress, Modifier.fillMaxWidth())
+        SeriesArt(series, progress, Modifier.fillMaxWidth(), fresh = fresh)
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
                 series.title,

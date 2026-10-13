@@ -230,6 +230,11 @@ fun MediaGridScreen(
      * by default, which draws every tile as it was before the list existed.
      */
     watchedVideos: Map<String, WatchedRecord> = emptyMap(),
+    /**
+     * When each video was last watched, keyed like [watchProgress] (see
+     * [com.tmplayer.data.NewEpisodes.touchTimes]), for the "New" badge on a show's tile.
+     */
+    touchTimes: Map<String, Long> = emptyMap(),
     /** "Mark as watched" (true) or "Mark as unwatched" (false) from a tile's menu. */
     onSetWatched: (MediaItem, Boolean) -> Unit = { _, _ -> },
     onToggleFavorite: () -> Unit,
@@ -374,10 +379,11 @@ fun MediaGridScreen(
     val scope = rememberCoroutineScope()
     val settings = remember(context) { SettingsStore(context) }
     val detailFirst by settings.detailFirst.collectAsState(initial = true)
-    val watch = remember(watchProgress, watchedVideos) {
+    val watch = remember(watchProgress, watchedVideos, touchTimes) {
         SeriesWatch(
             point = { watchProgress[SettingsStore.progressKey(it.chatId, it.messageId)] },
             finished = { SettingsStore.progressKey(it.chatId, it.messageId) in watchedVideos },
+            touchedAt = { touchTimes[SettingsStore.progressKey(it.chatId, it.messageId)] },
         )
     }
 
@@ -562,6 +568,7 @@ fun MediaGridScreen(
                                         SeriesCard(
                                             series = shelved.series,
                                             progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
+                                            fresh = remember(shelved.series, watch) { watch.newEpisodes(shelved.series) > 0 },
                                             onClick = { openSeries = shelved.series },
                                             dense = dense,
                                             onFocused = { standingOn = shelved.series.cover },
@@ -621,6 +628,7 @@ fun MediaGridScreen(
                                         SeriesCard(
                                             series = shelved.series,
                                             progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
+                                            fresh = remember(shelved.series, watch) { watch.newEpisodes(shelved.series) > 0 },
                                             onClick = { openSeries = shelved.series },
                                             onFocused = { standingOn = shelved.series.cover },
                                             modifier = focusOf(shelved),
@@ -1656,6 +1664,8 @@ internal fun MediaCard(
      * that it can be ticked, and a tile outside one must not carry any such mark.
      */
     selected: Boolean? = null,
+    /** What the caption says in place of the file's own name: Home's New episodes row names the episode. */
+    title: String? = null,
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -1689,7 +1699,7 @@ internal fun MediaCard(
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                cardTitle(item),
+                title ?: cardTitle(item),
                 style = M3MaterialTheme.typography.bodySmall,
                 color = Tone.text,
                 // Two lines, and always two: a tile that reserves the height whether or not the
@@ -1718,7 +1728,7 @@ internal fun MediaCard(
             },
             modifier = modifier.fillMaxWidth().longPressable(onClick, onLongClick),
         ) {
-            MediaCardBody(item, watched, selected, finished)
+            MediaCardBody(item, watched, selected, finished, title)
         }
         return
     }
@@ -1736,7 +1746,7 @@ internal fun MediaCard(
             .border(Focus.Edge, border, RoundedCornerShape(Corner.Medium))
             .holdOrPress(interactions, onClick, onLongClick),
     ) {
-        MediaCardBody(item, watched, selected, finished)
+        MediaCardBody(item, watched, selected, finished, title)
     }
 }
 
@@ -1747,6 +1757,7 @@ private fun MediaCardBody(
     watched: WatchPoint?,
     selected: Boolean? = null,
     finished: Boolean = false,
+    title: String? = null,
 ) {
     MediaArt(
         item,
@@ -1757,7 +1768,7 @@ private fun MediaCardBody(
     )
     Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
         Text(
-            cardTitle(item),
+            title ?: cardTitle(item),
             style = MaterialTheme.typography.titleMedium,
             color = Tone.text,
             // Two lines, and always two: a release file name fills both, and reserving the height
