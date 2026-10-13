@@ -455,6 +455,11 @@ fun BrowseScreen(
                                 onPickTab(BrowseSection.of(BrowseTab.History))
                                 query = ""
                             },
+                            onDownloadSeason = { request ->
+                                panelScope.launch {
+                                    queueSeason(panelContext, SettingsStore(panelContext), request) { titles[it.chatId].orEmpty() }?.let(onMessage)
+                                }
+                            },
                         )
                     } else if (tab.listsVideos) {
                         // One branch for both tabs, so the chip row stays the same composition when

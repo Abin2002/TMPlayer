@@ -126,6 +126,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import com.tmplayer.desktop.os.OpenExternal
 import com.tmplayer.desktop.DownloadIndex
+import com.tmplayer.ui.browse.CourseHeader
 import com.tmplayer.ui.nav.BackHandler
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -211,6 +212,10 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             val cells = remember(arranged) {
                 arranged.map { if (it is com.tmplayer.data.ShelfEntry.Show) it.series.cover else (it as com.tmplayer.data.ShelfEntry.File).item }
             }
+            // A chat or a topic that is one course of lessons says how far through it the viewer
+            // is, over the posters; not while searching, when the listing is what was searched for.
+            val watch = rememberSeriesWatch(state)
+            val course = remember(content.items, watch, grouping) { if (grouping) watch.course(content.items) else null }
             val shows = remember(arranged) {
                 arranged.filterIsInstance<com.tmplayer.data.ShelfEntry.Show>().associate { it.series.cover.id to it.series }
             }
@@ -222,7 +227,14 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 chatTitle = chat.title,
                 grid = grid,
                 onNav = { gridNav = it },
-                header = ad?.let { { SponsoredCard(it, model) } },
+                header = if (ad == null && course == null) null else {
+                    {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            course?.let { CourseHeader(it, topicBar?.let { bar -> bar.nameOf(bar.selected) } ?: chat.title, onPlay = { item -> state.openPlayer(item, startFromBeginning = false) }) }
+                            ad?.let { SponsoredCard(it, model) }
+                        }
+                    }
+                },
                 loadingMore = content.loadingMore,
             )
         }

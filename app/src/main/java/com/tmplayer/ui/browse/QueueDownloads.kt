@@ -76,6 +76,27 @@ internal suspend fun queueDownloads(
 }
 
 /**
+ * "Download season" or "Download unwatched" from a show's page: one copy per episode, as
+ * [SeasonDownloadRequest] chooses them, skipping every episode already downloaded or on the queue
+ * in any of its copies, then [queueDownloads] for the room and the sentence, as a ticked selection
+ * gets. An episode list with nothing left to fetch says so in the selection's words too.
+ */
+internal suspend fun queueSeason(
+    context: Context,
+    settings: SettingsStore,
+    request: SeasonDownloadRequest,
+    chatTitle: (MediaItem) -> String,
+): String? {
+    val chosen = withContext(Dispatchers.Default) {
+        val inDownloads = LocalDownloads.presentIds(settings)
+        val coming = OfflineDownloads.active.value
+        request.copies { it.id in inDownloads || coming.containsKey(it.fileId) }
+    }
+    if (chosen.isEmpty()) return L.gridAlreadyDownloadedMany
+    return queueDownloads(context, settings, chosen, chatTitle)
+}
+
+/**
  * The videos that need fetching, planned against the disk: which fit, and what the watch cache
  * gives up to make room. Returns the ones to queue and what to tell the viewer.
  */
