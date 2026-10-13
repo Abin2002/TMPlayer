@@ -202,7 +202,8 @@
     "telegram_on_your_tv_bb50": "TV'nde yansıtmadan Telegram",
     "watch_telegram_videos_on_3a48": "Telegram videolarını telefonunu yansıtmadan ya da aynalamadan televizyonda izle: TV'nin kendisindeki bir oynatıcı hesabınla giriş yapar ve sohbetlerindeki videoları akıtır.",
     "finds_subtitles_online_through_a322": "OpenSubtitles üzerinden internette altyazı bulma, altyazıyı ya da sesi eşleşecek şekilde kaydırma",
-    "groups_series_by_season_709a": "Dizileri kendi sayfasında sezonlara göre gruplama, isteğe bağlı afiş ve özetlerle"
+    "groups_series_by_season_709a": "Dizileri kendi sayfasında sezonlara göre gruplama, isteğe bağlı afiş ve özetlerle",
+    "changelog_164b": "Değişiklik günlüğü"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer özellikleri: Telegram videolarını TV'de ve bilgisayarda akıt",
@@ -326,7 +327,32 @@
     "home_and_series_pages": "{strong1} Ana sayfa, sıradaki izlenecekleri tüm sohbetlerden toplar ve her dizinin bölümleri sezonlara göre gruplanmış kendi sayfası olur.",
     "home_and_series_pages__strong1": "Dizileri düzene sokar.",
     "posters_and_overviews": "{strong1} TMDB, TVmaze ve AniList'te yalnızca videonun temizlenmiş başlığıyla aranır, başka hiçbir şeyle değil.",
-    "posters_and_overviews__strong1": "İstersen afiş ve özet ekler."
+    "posters_and_overviews__strong1": "İstersen afiş ve özet ekler.",
+    "a_closer_look": "Yakından bakış",
+    "four_screens_with_their_parts": "Bölümleri işaretlenmiş dört ekran, yanlarındaki notlarla eşleşecek şekilde numaralandırılmış.",
+    "the_player_watching_while_it": "Oynatıcı: inerken izle",
+    "a_video_starts_while_it": "Video daha inerken başlar ve kontroller indirmenin ne kadar ilerlediğini gösterir.",
+    "the_lighter_part_of_the": "Zaman çubuğunun açık renkli kısmı şimdiye kadar inen bölümdür. Onun ötesine sararsan indirme yeni noktaya geçer.",
+    "subtitles_audio_track_speed_and": "Altyazı, ses izi, hız ve görüntü biçimi, her biri bir tık uzakta.",
+    "volume_the_mini_player_in": "Ses düzeyi, köşedeki mini oynatıcı ve tam ekran.",
+    "browsing_a_chat_on_windows": "Windows ve Linux'ta bir sohbette gezinmek",
+    "every_video_in_a_chat": "Sohbetteki her video bir afiş olarak, hesabının geri kalanı için de bir kenar çubuğu.",
+    "continue_watched_favourites_and_downloads": "Devam et, İzlenen, Favoriler ve İndirilenler: geri döndüğün videolar.",
+    "your_chats_split_the_way": "Sohbetlerin Telegram'daki gibi ayrılmış: son, okunmamış, kayıtlı, kanallar, gruplar ve kişiler.",
+    "each_poster_gives_the_running": "Her afiş, oynat'a basmadan önce süreyi, dosya boyutunu ve çözünürlüğü gösterir.",
+    "search_inside_the_chat_you": "İçinde bulunduğun sohbette ara.",
+    "made_for_a_remote_on": "Android TV'de kumanda için yapıldı",
+    "big_cards_you_can_read": "Odanın öbür ucundan okunan büyük kartlar ve odaktaki öğenin etrafında net bir çerçeve.",
+    "a_rail_down_the_left": "Solda Ana sayfa, Geçmiş, Favoriler, Sohbetler, Kayıtlı, İndirilenler ve Ayarlar için bir şerit.",
+    "sort_a_to_z_or": "A'dan Z'ye sırala ya da yalnızca okunmamış sohbetleri, kanalları, grupları veya kişileri göster.",
+    "search_by_voice_with_your": "Kumandanın mikrofonuyla sesli ara.",
+    "hold_ok_on_a_chat": "Seçenekleri için bir sohbette OK'a basılı tut, en sık açtıklarını yıldızla.",
+    "settings_a_few_short_pages": "Ayarlar, birkaç kısa sayfa",
+    "changes_save_as_you_make": "Değişiklikler yaptıkça kaydedilir ve her sayfa, kumandayla hızla geçilen kısa bir listedir.",
+    "autoplay_of_the_next_episode": "Sonraki bölümü otomatik oynatma, ses, sararken küçük resimler ve kontrollerin davranışı.",
+    "subtitle_size_a_box_behind": "Altyazı boyutu, arkalarında kutu olup olmayacağı ve nerede duracakları.",
+    "which_videos_show_such_as": "Hangi videoların görüneceği, örneğin seçtiğin boyutun altındaki klipleri gizlemek, ve ilk neyin açılacağı.",
+    "how_much_space_is_free": "Ne kadar boş alan olduğu ve indirilenlerin nerede tutulduğu."
   },
   "download": {
     "download_tmplayer_for_android_tv": "TMPlayer'ı Android TV, telefonlar, Windows ve Linux için indir",

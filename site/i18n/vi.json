@@ -202,7 +202,8 @@
     "telegram_on_your_tv_bb50": "Telegram trên TV của bạn mà không cần truyền màn hình",
     "watch_telegram_videos_on_3a48": "Xem video Telegram trên TV mà không cần truyền hay chiếu màn hình điện thoại: trình phát ngay trên TV đăng nhập vào tài khoản của bạn và phát các video trong cuộc trò chuyện.",
     "finds_subtitles_online_through_a322": "Tìm phụ đề trực tuyến qua OpenSubtitles, và chỉnh phụ đề hoặc âm thanh cho khớp",
-    "groups_series_by_season_709a": "Nhóm phim bộ theo mùa trên trang riêng, kèm poster và phần giới thiệu tùy chọn"
+    "groups_series_by_season_709a": "Nhóm phim bộ theo mùa trên trang riêng, kèm poster và phần giới thiệu tùy chọn",
+    "changelog_164b": "Nhật ký thay đổi"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "Tính năng TMPlayer: phát video Telegram trên TV và PC",
@@ -326,7 +327,32 @@
     "home_and_series_pages": "{strong1} Trang chủ gom những gì nên xem tiếp từ mọi cuộc trò chuyện, và mỗi bộ phim có trang riêng, với các tập được nhóm theo mùa.",
     "home_and_series_pages__strong1": "Sắp xếp phim bộ gọn gàng.",
     "posters_and_overviews": "{strong1} Được tra cứu trên TMDB, TVmaze và AniList chỉ bằng tiêu đề đã làm gọn của video, ngoài ra không gì khác.",
-    "posters_and_overviews__strong1": "Thêm poster và phần giới thiệu, nếu bạn muốn."
+    "posters_and_overviews__strong1": "Thêm poster và phần giới thiệu, nếu bạn muốn.",
+    "a_closer_look": "Xem kỹ hơn",
+    "four_screens_with_their_parts": "Bốn màn hình với các phần được đánh dấu, đánh số khớp với ghi chú bên cạnh.",
+    "the_player_watching_while_it": "Trình phát: xem trong khi tải",
+    "a_video_starts_while_it": "Video bắt đầu phát khi vẫn đang tải, và các nút điều khiển cho biết đã tải được bao nhiêu.",
+    "the_lighter_part_of_the": "Phần sáng hơn của thanh thời gian là phần đã tải xong. Tua qua đó và việc tải sẽ chuyển đến vị trí mới.",
+    "subtitles_audio_track_speed_and": "Phụ đề, rãnh âm thanh, tốc độ và tỉ lệ hình, mỗi thứ chỉ cách một cú nhấp.",
+    "volume_the_mini_player_in": "Âm lượng, trình phát mini ở góc màn hình và toàn màn hình.",
+    "browsing_a_chat_on_windows": "Duyệt một cuộc trò chuyện trên Windows và Linux",
+    "every_video_in_a_chat": "Mọi video trong cuộc trò chuyện hiển thị dạng poster, kèm thanh bên cho phần còn lại của tài khoản.",
+    "continue_watched_favourites_and_downloads": "Xem tiếp, Đã xem, Yêu thích và Tải xuống: những video bạn hay quay lại.",
+    "your_chats_split_the_way": "Các cuộc trò chuyện được chia giống như Telegram: gần đây, chưa đọc, đã lưu, kênh, nhóm và mọi người.",
+    "each_poster_gives_the_running": "Mỗi poster cho biết thời lượng, dung lượng tệp và độ phân giải trước khi bạn bấm phát.",
+    "search_inside_the_chat_you": "Tìm kiếm ngay trong cuộc trò chuyện đang mở.",
+    "made_for_a_remote_on": "Thiết kế cho điều khiển từ xa trên Android TV",
+    "big_cards_you_can_read": "Thẻ lớn đọc được từ xa khắp phòng, và viền rõ ràng quanh mục đang được chọn.",
+    "a_rail_down_the_left": "Thanh bên trái gồm Trang chủ, Lịch sử, Yêu thích, Cuộc trò chuyện, Đã lưu, Tải xuống và Cài đặt.",
+    "sort_a_to_z_or": "Sắp xếp từ A đến Z, hoặc chỉ hiện cuộc trò chuyện chưa đọc, kênh, nhóm hay mọi người.",
+    "search_by_voice_with_your": "Tìm kiếm bằng giọng nói qua micrô trên điều khiển từ xa.",
+    "hold_ok_on_a_chat": "Giữ OK trên một cuộc trò chuyện để xem tùy chọn, và gắn sao những mục bạn mở nhiều nhất.",
+    "settings_a_few_short_pages": "Cài đặt, vài trang ngắn",
+    "changes_save_as_you_make": "Thay đổi được lưu ngay khi bạn chỉnh, và mỗi trang là một danh sách ngắn mà điều khiển từ xa lướt qua nhanh chóng.",
+    "autoplay_of_the_next_episode": "Tự động phát tập tiếp theo, âm thanh, ảnh thu nhỏ khi tua và cách các nút điều khiển hoạt động.",
+    "subtitle_size_a_box_behind": "Cỡ phụ đề, có nền phía sau hay không, và vị trí hiển thị.",
+    "which_videos_show_such_as": "Video nào được hiển thị, chẳng hạn ẩn các đoạn nhỏ hơn kích thước bạn chọn, và màn hình nào mở trước.",
+    "how_much_space_is_free": "Còn trống bao nhiêu dung lượng, và tệp tải xuống được lưu ở đâu."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Tải TMPlayer cho Android TV, điện thoại, Windows và Linux",

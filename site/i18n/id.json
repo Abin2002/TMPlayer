@@ -202,7 +202,8 @@
     "telegram_on_your_tv_bb50": "Telegram di TV kamu tanpa casting",
     "watch_telegram_videos_on_3a48": "Tonton video Telegram di televisi tanpa casting atau mirroring HP: pemutar di TV itu sendiri masuk ke akun kamu dan memutar video di obrolan kamu secara streaming.",
     "finds_subtitles_online_through_a322": "Mencari subtitle online lewat OpenSubtitles, dan menggeser subtitle atau audio agar pas",
-    "groups_series_by_season_709a": "Mengelompokkan serial per musim di halaman sendiri, dengan poster dan sinopsis opsional"
+    "groups_series_by_season_709a": "Mengelompokkan serial per musim di halaman sendiri, dengan poster dan sinopsis opsional",
+    "changelog_164b": "Catatan perubahan"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "Fitur TMPlayer: streaming video Telegram di TV dan PC",
@@ -326,7 +327,32 @@
     "home_and_series_pages": "{strong1} Beranda mengumpulkan tontonan berikutnya dari semua obrolan, dan tiap serial punya halaman sendiri dengan episode dikelompokkan per musim.",
     "home_and_series_pages__strong1": "Merapikan serial.",
     "posters_and_overviews": "{strong1} Dicari di TMDB, TVmaze, dan AniList hanya dengan judul video yang sudah dibersihkan, tidak lebih.",
-    "posters_and_overviews__strong1": "Menambahkan poster dan sinopsis, kalau kamu mau."
+    "posters_and_overviews__strong1": "Menambahkan poster dan sinopsis, kalau kamu mau.",
+    "a_closer_look": "Lebih dekat",
+    "four_screens_with_their_parts": "Empat layar dengan bagian yang ditandai, diberi nomor sesuai catatan di sebelahnya.",
+    "the_player_watching_while_it": "Pemutar: tonton sambil mengunduh",
+    "a_video_starts_while_it": "Video mulai diputar saat masih diunduh, dan kontrol menunjukkan sejauh mana unduhan berjalan.",
+    "the_lighter_part_of_the": "Bagian bilah waktu yang lebih terang adalah yang sudah terunduh. Geser melewatinya dan unduhan pindah ke titik baru.",
+    "subtitles_audio_track_speed_and": "Subtitle, trek audio, kecepatan, dan bentuk gambar, masing-masing cukup sekali klik.",
+    "volume_the_mini_player_in": "Volume, pemutar mini di pojok, dan layar penuh.",
+    "browsing_a_chat_on_windows": "Menjelajah chat di Windows dan Linux",
+    "every_video_in_a_chat": "Setiap video di chat tampil sebagai poster, dengan bilah samping untuk bagian lain akunmu.",
+    "continue_watched_favourites_and_downloads": "Lanjutkan, Ditonton, Favorit, dan Unduhan: video yang sering kamu buka lagi.",
+    "your_chats_split_the_way": "Chat kamu dibagi seperti di Telegram: terbaru, belum dibaca, tersimpan, kanal, grup, dan orang.",
+    "each_poster_gives_the_running": "Setiap poster menampilkan durasi, ukuran file, dan resolusi sebelum kamu menekan putar.",
+    "search_inside_the_chat_you": "Cari di dalam chat yang sedang kamu buka.",
+    "made_for_a_remote_on": "Dibuat untuk remote di Android TV",
+    "big_cards_you_can_read": "Kartu besar yang terbaca dari seberang ruangan, dan garis tepi jelas di item yang sedang fokus.",
+    "a_rail_down_the_left": "Bilah di kiri untuk Beranda, Riwayat, Favorit, Chat, Tersimpan, Unduhan, dan Pengaturan.",
+    "sort_a_to_z_or": "Urutkan A ke Z, atau tampilkan hanya chat, kanal, grup, atau orang yang belum dibaca.",
+    "search_by_voice_with_your": "Cari dengan suara lewat mikrofon remote.",
+    "hold_ok_on_a_chat": "Tahan OK pada chat untuk membuka opsinya, dan beri bintang pada yang paling sering kamu buka.",
+    "settings_a_few_short_pages": "Pengaturan, beberapa halaman singkat",
+    "changes_save_as_you_make": "Perubahan tersimpan saat kamu membuatnya, dan setiap halaman berupa daftar pendek yang cepat dilalui dengan remote.",
+    "autoplay_of_the_next_episode": "Putar otomatis episode berikutnya, suara, thumbnail saat menggeser, dan perilaku kontrol.",
+    "subtitle_size_a_box_behind": "Ukuran subtitle, kotak di belakangnya atau tanpa kotak, dan posisinya.",
+    "which_videos_show_such_as": "Video mana yang ditampilkan, misalnya menyembunyikan klip di bawah ukuran yang kamu pilih, dan apa yang dibuka pertama kali.",
+    "how_much_space_is_free": "Berapa ruang yang masih kosong, dan di mana unduhan disimpan."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Unduh TMPlayer untuk Android TV, HP, Windows, dan Linux",

@@ -202,7 +202,8 @@
     "telegram_on_your_tv_bb50": "无需投屏的电视版 Telegram",
     "watch_telegram_videos_on_3a48": "无需投屏或镜像手机，就能在电视上观看 Telegram 视频：电视上的播放器直接登录你的账号，串流你聊天中的视频。",
     "finds_subtitles_online_through_a322": "通过 OpenSubtitles 在线查找字幕，并调整字幕或音频的时间使其同步",
-    "groups_series_by_season_709a": "剧集按季分组并拥有独立页面，可选显示海报和简介"
+    "groups_series_by_season_709a": "剧集按季分组并拥有独立页面，可选显示海报和简介",
+    "changelog_164b": "更新日志"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer 功能：在电视和电脑上串流 Telegram 视频",
@@ -326,7 +327,32 @@
     "home_and_series_pages": "{strong1} 首页汇集所有聊天中接下来要看的内容，每部剧集都有自己的页面，剧集按季分组。",
     "home_and_series_pages__strong1": "把剧集整理有序。",
     "posters_and_overviews": "{strong1} 仅凭视频整理后的标题在 TMDB、TVmaze 和 AniList 上查询，不涉及其他任何信息。",
-    "posters_and_overviews__strong1": "添加海报和简介，按需开启。"
+    "posters_and_overviews__strong1": "添加海报和简介，按需开启。",
+    "a_closer_look": "细看",
+    "four_screens_with_their_parts": "四个界面，各部分都已标记，编号与旁边的说明一一对应。",
+    "the_player_watching_while_it": "播放器：边下载边观看",
+    "a_video_starts_while_it": "视频在下载过程中就能开始播放，控制栏会显示下载到了哪里。",
+    "the_lighter_part_of_the": "进度条中颜色较浅的部分是已经下载的内容。拖动到它之后，下载会转到新的位置。",
+    "subtitles_audio_track_speed_and": "字幕、音轨、速度和画面比例，点一下就能调整。",
+    "volume_the_mini_player_in": "音量、角落的迷你播放器，以及全屏。",
+    "browsing_a_chat_on_windows": "在 Windows 和 Linux 上浏览聊天",
+    "every_video_in_a_chat": "聊天中的每个视频都以海报形式显示，侧边栏放着账号里的其他内容。",
+    "continue_watched_favourites_and_downloads": "“继续”“已观看”“收藏”和“下载”：你常会回来看的视频。",
+    "your_chats_split_the_way": "你的聊天按 Telegram 的方式分类：最近、未读、已保存、频道、群组和个人。",
+    "each_poster_gives_the_running": "每张海报在你按下播放前就显示时长、文件大小和分辨率。",
+    "search_inside_the_chat_you": "在当前聊天中搜索。",
+    "made_for_a_remote_on": "为 Android TV 遥控器而设计",
+    "big_cards_you_can_read": "大卡片隔着房间也看得清，当前焦点有清晰的轮廓。",
+    "a_rail_down_the_left": "左侧导航栏包含“主页”“历史记录”“收藏”“聊天”“已保存”“下载”和“设置”。",
+    "sort_a_to_z_or": "按名称排序，或只显示未读聊天、频道、群组或个人。",
+    "search_by_voice_with_your": "用遥控器上的麦克风语音搜索。",
+    "hold_ok_on_a_chat": "在聊天上长按 OK 键打开选项，并为最常打开的聊天加星标。",
+    "settings_a_few_short_pages": "设置，几个简短的页面",
+    "changes_save_as_you_make": "更改即时保存，每个页面都是简短的列表，用遥控器也能很快浏览完。",
+    "autoplay_of_the_next_episode": "自动播放下一集、声音、拖动时的缩略图，以及控制栏的行为。",
+    "subtitle_size_a_box_behind": "字幕大小、背景框的有无，以及字幕的位置。",
+    "which_videos_show_such_as": "显示哪些视频，例如隐藏小于你所选大小的片段，以及首先打开什么。",
+    "how_much_space_is_free": "剩余多少空间，以及下载内容保存在哪里。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "下载适用于 Android TV、手机、Windows 和 Linux 的 TMPlayer",

@@ -202,7 +202,8 @@
     "telegram_on_your_tv_bb50": "Telegram auf deinem TV ohne Casting",
     "watch_telegram_videos_on_3a48": "Schau Telegram-Videos auf dem Fernseher, ohne dein Smartphone zu casten oder zu spiegeln: Ein Player auf dem Fernseher selbst meldet sich in deinem Konto an und streamt die Videos in deinen Chats.",
     "finds_subtitles_online_through_a322": "Findet Untertitel online über OpenSubtitles und verschiebt Untertitel oder Ton passend",
-    "groups_series_by_season_709a": "Gruppiert Serien nach Staffeln auf einer eigenen Seite, optional mit Postern und Beschreibungen"
+    "groups_series_by_season_709a": "Gruppiert Serien nach Staffeln auf einer eigenen Seite, optional mit Postern und Beschreibungen",
+    "changelog_164b": "Änderungsprotokoll"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer-Funktionen: Telegram-Videos auf TV und PC streamen",
@@ -326,7 +327,32 @@
     "home_and_series_pages": "{strong1} Die Startseite sammelt aus allen Chats, was du als Nächstes schauen kannst, und jede Serie bekommt eine eigene Seite mit Folgen nach Staffeln gruppiert.",
     "home_and_series_pages__strong1": "Bringt Serien in Ordnung.",
     "posters_and_overviews": "{strong1} Abgefragt bei TMDB, TVmaze und AniList über den bereinigten Titel des Videos, und sonst nichts.",
-    "posters_and_overviews__strong1": "Ergänzt Poster und Beschreibungen, wenn du willst."
+    "posters_and_overviews__strong1": "Ergänzt Poster und Beschreibungen, wenn du willst.",
+    "a_closer_look": "Genauer hingeschaut",
+    "four_screens_with_their_parts": "Vier Bildschirme mit markierten Bereichen, nummeriert passend zu den Notizen daneben.",
+    "the_player_watching_while_it": "Der Player: schauen, während er lädt",
+    "a_video_starts_while_it": "Ein Video startet, während es noch herunterlädt, und die Steuerung zeigt, wie weit der Download ist.",
+    "the_lighter_part_of_the": "Der hellere Teil der Zeitleiste ist das, was schon geladen ist. Spulst du darüber hinaus, springt der Download an die neue Stelle.",
+    "subtitles_audio_track_speed_and": "Untertitel, Tonspur, Geschwindigkeit und Bildformat, jeweils nur einen Klick entfernt.",
+    "volume_the_mini_player_in": "Lautstärke, der Mini-Player in der Ecke und Vollbild.",
+    "browsing_a_chat_on_windows": "Einen Chat unter Windows und Linux durchstöbern",
+    "every_video_in_a_chat": "Jedes Video in einem Chat als Poster, mit einer Seitenleiste für den Rest deines Kontos.",
+    "continue_watched_favourites_and_downloads": "Weiter, Gesehen, Favoriten und Downloads: die Videos, zu denen du zurückkehrst.",
+    "your_chats_split_the_way": "Deine Chats, so aufgeteilt wie in Telegram: zuletzt, ungelesen, gespeichert, Kanäle, Gruppen und Personen.",
+    "each_poster_gives_the_running": "Jedes Poster zeigt Laufzeit, Dateigröße und Auflösung, bevor du auf Play drückst.",
+    "search_inside_the_chat_you": "Suche im Chat, in dem du gerade bist.",
+    "made_for_a_remote_on": "Gemacht für die Fernbedienung unter Android TV",
+    "big_cards_you_can_read": "Große Karten, die man quer durchs Zimmer lesen kann, und ein klarer Rahmen um das, was gerade den Fokus hat.",
+    "a_rail_down_the_left": "Eine Leiste links für Start, Verlauf, Favoriten, Chats, Gespeichert, Downloads und Einstellungen.",
+    "sort_a_to_z_or": "Sortiere von A bis Z, oder zeig nur ungelesene Chats, Kanäle, Gruppen oder Personen.",
+    "search_by_voice_with_your": "Suche per Sprache mit dem Mikrofon deiner Fernbedienung.",
+    "hold_ok_on_a_chat": "Halte OK auf einem Chat gedrückt für seine Optionen, und markiere die, die du am häufigsten öffnest, mit einem Stern.",
+    "settings_a_few_short_pages": "Einstellungen, ein paar kurze Seiten",
+    "changes_save_as_you_make": "Änderungen werden sofort gespeichert, und jede Seite ist eine kurze Liste, die eine Fernbedienung schnell durchläuft.",
+    "autoplay_of_the_next_episode": "Automatische Wiedergabe der nächsten Folge, Ton, Vorschaubilder beim Spulen und wie sich die Steuerung verhält.",
+    "subtitle_size_a_box_behind": "Untertitelgröße, mit oder ohne Kasten dahinter, und wo sie sitzen.",
+    "which_videos_show_such_as": "Welche Videos angezeigt werden, etwa Clips unter einer gewählten Größe ausblenden, und was zuerst geöffnet wird.",
+    "how_much_space_is_free": "Wie viel Platz frei ist und wo Downloads abgelegt werden."
   },
   "download": {
     "download_tmplayer_for_android_tv": "TMPlayer für Android TV, Smartphones, Windows und Linux herunterladen",

@@ -202,7 +202,8 @@
     "telegram_on_your_tv_bb50": "キャストなしで、テレビでTelegram",
     "watch_telegram_videos_on_3a48": "スマートフォンのキャストやミラーリングなしで、テレビでTelegramの動画を見られます。テレビ上のプレーヤーがあなたのアカウントにサインインし、チャットの動画をストリーミング再生します。",
     "finds_subtitles_online_through_a322": "OpenSubtitlesでオンラインの字幕を検索し、字幕や音声のタイミングを調整",
-    "groups_series_by_season_709a": "シリーズを専用ページでシーズン別に整理、ポスターとあらすじは任意"
+    "groups_series_by_season_709a": "シリーズを専用ページでシーズン別に整理、ポスターとあらすじは任意",
+    "changelog_164b": "更新履歴"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayerの機能: TVとPCでTelegram動画をストリーミング再生",
@@ -326,7 +327,32 @@
     "home_and_series_pages": "{strong1}ホームにはすべてのチャットから次に見るものが集まり、シリーズごとに専用のページがあり、エピソードはシーズン別にまとめられます。",
     "home_and_series_pages__strong1": "番組を整理します。",
     "posters_and_overviews": "{strong1}動画のタイトルを整えたものだけを使って、TMDB、TVmaze、AniListで検索します。",
-    "posters_and_overviews__strong1": "必要なら、ポスターとあらすじを追加します。"
+    "posters_and_overviews__strong1": "必要なら、ポスターとあらすじを追加します。",
+    "a_closer_look": "詳しく見る",
+    "four_screens_with_their_parts": "4つの画面の各部分に番号を付け、横の説明と対応させています。",
+    "the_player_watching_while_it": "プレーヤー: ダウンロードしながら視聴",
+    "a_video_starts_while_it": "動画はダウンロード中でも再生が始まり、コントロールにはダウンロードの進み具合が表示されます。",
+    "the_lighter_part_of_the": "タイムバーの明るい部分が、ダウンロード済みの範囲です。その先へシークすると、ダウンロード位置も新しい場所へ移ります。",
+    "subtitles_audio_track_speed_and": "字幕、音声トラック、速度、画面比率に、それぞれワンクリックでアクセスできます。",
+    "volume_the_mini_player_in": "音量、画面の隅に表示するミニプレーヤー、全画面。",
+    "browsing_a_chat_on_windows": "WindowsとLinuxでチャットをブラウズ",
+    "every_video_in_a_chat": "チャット内のすべての動画をポスターで表示し、サイドバーからアカウントのほかの部分にも移動できます。",
+    "continue_watched_favourites_and_downloads": "「視聴中」、「視聴済み」、「お気に入り」、「ダウンロード」: 何度も見返す動画のための場所です。",
+    "your_chats_split_the_way": "チャットはTelegramと同じ分け方で並びます: 最近、未読、保存済み、チャンネル、グループ、個人。",
+    "each_poster_gives_the_running": "各ポスターには再生時間、ファイルサイズ、解像度が表示されるので、再生する前に確認できます。",
+    "search_inside_the_chat_you": "開いているチャットの中を検索できます。",
+    "made_for_a_remote_on": "Android TVのリモコン向けに設計",
+    "big_cards_you_can_read": "部屋の向こうからでも読める大きなカードと、フォーカス中の項目を示すはっきりした枠線。",
+    "a_rail_down_the_left": "左側のレールから、「ホーム」、「履歴」、「お気に入り」、「チャット」、「保存済み」、「ダウンロード」、「設定」に移動できます。",
+    "sort_a_to_z_or": "名前順に並べ替えたり、未読のチャット、チャンネル、グループ、個人だけを表示したりできます。",
+    "search_by_voice_with_your": "リモコンのマイクで音声検索ができます。",
+    "hold_ok_on_a_chat": "チャットでOKを長押しするとオプションが開き、よく開くチャットにはスターを付けられます。",
+    "settings_a_few_short_pages": "設定: いくつかの短いページ",
+    "changes_save_as_you_make": "変更はその場で保存され、各ページはリモコンですばやく操作できる短いリストです。",
+    "autoplay_of_the_next_episode": "次のエピソードの自動再生、音声、シーク中のサムネイル、コントロールの動作。",
+    "subtitle_size_a_box_behind": "字幕のサイズ、背景のボックスの有無、表示位置。",
+    "which_videos_show_such_as": "指定したサイズ未満のクリップを隠すなど、表示する動画の選択と、最初に開く画面。",
+    "how_much_space_is_free": "空き容量と、ダウンロードの保存先。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV、スマートフォン、Windows、Linux向けTMPlayerをダウンロード",

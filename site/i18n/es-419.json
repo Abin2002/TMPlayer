@@ -202,7 +202,8 @@
     "telegram_on_your_tv_bb50": "Telegram en tu TV sin transmitir desde el teléfono",
     "watch_telegram_videos_on_3a48": "Mira videos de Telegram en una televisión sin transmitir ni duplicar la pantalla de tu teléfono: un reproductor en la propia TV inicia sesión en tu cuenta y reproduce en streaming los videos de tus chats.",
     "finds_subtitles_online_through_a322": "Busca subtítulos en internet con OpenSubtitles y ajusta los subtítulos o el audio para que coincidan",
-    "groups_series_by_season_709a": "Agrupa las series por temporada en su propia página, con pósters y sinopsis opcionales"
+    "groups_series_by_season_709a": "Agrupa las series por temporada en su propia página, con pósters y sinopsis opcionales",
+    "changelog_164b": "Novedades"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "Funciones de TMPlayer: mira videos de Telegram en streaming en la TV y la PC",
@@ -326,7 +327,32 @@
     "home_and_series_pages": "{strong1} Inicio reúne qué ver a continuación de todos tus chats, y cada serie tiene su propia página, con los episodios agrupados por temporada.",
     "home_and_series_pages__strong1": "Pone las series en orden.",
     "posters_and_overviews": "{strong1} Se buscan en TMDB, TVmaze y AniList solo con el título limpio del video, y nada más.",
-    "posters_and_overviews__strong1": "Agrega pósters y sinopsis, si los quieres."
+    "posters_and_overviews__strong1": "Agrega pósters y sinopsis, si los quieres.",
+    "a_closer_look": "Un vistazo más de cerca",
+    "four_screens_with_their_parts": "Cuatro pantallas con sus partes marcadas y numeradas según las notas de al lado.",
+    "the_player_watching_while_it": "El reproductor: mira mientras se descarga",
+    "a_video_starts_while_it": "Un video empieza mientras todavía se descarga, y los controles muestran cuánto avanzó la descarga.",
+    "the_lighter_part_of_the": "La parte más clara de la barra de tiempo es lo que ya se descargó. Si adelantas más allá, la descarga se mueve al nuevo punto.",
+    "subtitles_audio_track_speed_and": "Subtítulos, pista de audio, velocidad y forma de imagen, cada uno a un clic.",
+    "volume_the_mini_player_in": "Volumen, el minirreproductor en la esquina y pantalla completa.",
+    "browsing_a_chat_on_windows": "Explorar un chat en Windows y Linux",
+    "every_video_in_a_chat": "Cada video de un chat como un póster, con una barra lateral para el resto de tu cuenta.",
+    "continue_watched_favourites_and_downloads": "Seguir, Vistos, Favoritos y Descargas: los videos a los que vuelves.",
+    "your_chats_split_the_way": "Tus chats, divididos como los divide Telegram: recientes, no leídos, guardados, canales, grupos y personas.",
+    "each_poster_gives_the_running": "Cada póster muestra la duración, el tamaño del archivo y la resolución antes de darle play.",
+    "search_inside_the_chat_you": "Busca dentro del chat en el que estás.",
+    "made_for_a_remote_on": "Hecho para el control remoto en Android TV",
+    "big_cards_you_can_read": "Tarjetas grandes que se leen desde el otro lado de la sala, y un contorno claro en lo que tiene el foco.",
+    "a_rail_down_the_left": "Una barra a la izquierda con Inicio, Historial, Favoritos, Chats, Guardados, Descargas y Configuración.",
+    "sort_a_to_z_or": "Ordena de la A a la Z, o muestra solo chats no leídos, canales, grupos o personas.",
+    "search_by_voice_with_your": "Busca por voz con el micrófono del control remoto.",
+    "hold_ok_on_a_chat": "Mantén presionado OK en un chat para ver sus opciones, y marca con estrella los que más abres.",
+    "settings_a_few_short_pages": "Configuración, unas pocas páginas cortas",
+    "changes_save_as_you_make": "Los cambios se guardan al hacerlos, y cada página es una lista corta que se recorre rápido con el control remoto.",
+    "autoplay_of_the_next_episode": "Reproducción automática del siguiente episodio, sonido, miniaturas al adelantar y cómo se comportan los controles.",
+    "subtitle_size_a_box_behind": "Tamaño de los subtítulos, con un recuadro detrás o sin él, y dónde se ubican.",
+    "which_videos_show_such_as": "Qué videos se muestran, como ocultar clips por debajo del tamaño que elijas, y qué se abre primero.",
+    "how_much_space_is_free": "Cuánto espacio queda libre y dónde se guardan las descargas."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Descarga TMPlayer para Android TV, teléfonos, Windows y Linux",
