@@ -196,7 +196,7 @@ private suspend fun findArt(item: MediaItem, online: OnlineMetadata?, lowMemory:
  * has a picture to show for it (see [rememberSpotlight]).
  *
  * Two arrangements. [wide] (a television, the desktop, a phone on its side) puts the picture on
- * the end [BACKDROP_SHARE] of the width under a start fade and a foot fade, with the words in a
+ * the end [SPOTLIGHT_BACKDROP_SHARE] of the width under a start fade and a foot fade, with the words in a
  * column on the start side. Otherwise (a phone upright) the picture fills the width and the
  * words sit centred at its foot, under the long fade. Either way the words are TMPlayer's: the
  * chat it came from in the accent, the name (the providers' when they know it), and a line of
@@ -231,7 +231,7 @@ fun HomeSpotlight(
     Box(modifier.fillMaxWidth().heightIn(min = height)) {
         Box(Modifier.matchParentSize()) {
             if (wide) {
-                Box(Modifier.align(Alignment.TopEnd).fillMaxWidth(BACKDROP_SHARE).fillMaxHeight()) {
+                Box(Modifier.align(Alignment.TopEnd).fillMaxWidth(SPOTLIGHT_BACKDROP_SHARE).fillMaxHeight()) {
                     ArtBackdrop(source, Modifier.fillMaxSize(), fieldOnly = lowMemory)
                     Box(Modifier.fillMaxSize().background(Scrims.startLong()))
                     // A short fade at the top too, so the picture does not start on a hard line under the header.
@@ -532,7 +532,7 @@ val HERO_PILL_HEIGHT = 52.dp
 private val HERO_PILL_MAX = 420.dp
 
 /** How much of a wide hero's width the picture takes, from the end edge. */
-private const val BACKDROP_SHARE = 0.72f
+private const val SPOTLIGHT_BACKDROP_SHARE = 0.72f
 
 /** How much of a wide hero's width the words may take, from the start edge. */
 private const val TEXT_SHARE = 0.45f
