@@ -261,13 +261,12 @@ class PromoPlayerActivity : FragmentActivity(), TrackPickerHost {
         fun art(id: Int) = android.graphics.BitmapFactory.decodeResource(resources, id).asImageBitmap()
         val content = com.tmplayer.ui.player.LoaderContent(
             words = com.tmplayer.ui.player.LoaderWords(
-                title = "Big Buck Bunny",
-                line = "2008  ·  10m",
-                overview = "A large and lovable rabbit deals with three tiny bullies, led by a flying squirrel, " +
-                    "who are determined to squelch his happiness.",
+                title = "The Quiet Orbit",
+                line = "2024  ·  2h 6m",
+                overview = com.tmplayer.promo.PromoCatalog.film("quiet_orbit").overview,
             ),
-            backdrop = art(R.drawable.promo_bbb_backdrop),
-            poster = art(R.drawable.promo_bbb_poster),
+            backdrop = art(R.drawable.promo_quiet_orbit_backdrop),
+            poster = art(R.drawable.promo_quiet_orbit_poster),
         )
         findViewById<FrameLayout>(R.id.player_root).addView(
             androidx.compose.ui.platform.ComposeView(this).apply {

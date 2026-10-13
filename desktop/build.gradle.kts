@@ -71,6 +71,9 @@ val generateBuildInfo by tasks.registering {
 }
 kotlin.sourceSets.main { kotlin.srcDir(generateBuildInfo) }
 
+// The Android promo build's demo library (plain Kotlin over :core), for the desktop's promo shots.
+kotlin.sourceSets.test { kotlin.srcDir("../app/src/promo/shared") }
+
 val hostOs: String = System.getProperty("os.name").lowercase()
 val hostArm: Boolean = System.getProperty("os.arch").let { it == "aarch64" || it == "arm64" }
 val mpvRuntime = when {

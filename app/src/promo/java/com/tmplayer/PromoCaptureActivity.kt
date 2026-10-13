@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,12 +24,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.tmplayer.i18n.L
+import com.tmplayer.promo.PromoCatalog
 import kotlinx.coroutines.runBlocking
 import com.tmplayer.data.Account
 import com.tmplayer.data.AuthState
@@ -186,7 +185,7 @@ class PromoCaptureActivity : ComponentActivity() {
             if (intent.hasExtra("hide_groups")) store.setHideDefaultGroups(intent.getBooleanExtra("hide_groups", false))
             if (groupsDemo) {
                 store.clearFavorites()
-                listOf(102L, 104L, 105L).forEach { store.toggleFavorite(it) }
+                listOf(102L, 103L, 104L).forEach { store.toggleFavorite(it) }
             }
         }
         PromoGroups.demo = groupsDemo
@@ -339,7 +338,7 @@ class PromoCaptureActivity : ComponentActivity() {
                         // here are empty, which skips the question.
                         "forget" -> TvConfirm(
                             title = L.confirmForgetResumeTitle,
-                            message = L.confirmForgetResumeMessage(title = "Big Buck Bunny"),
+                            message = L.confirmForgetResumeMessage(title = "The Quiet Orbit"),
                             detail = L.browseForgetResumeDetail,
                             confirmLabel = L.commonRemove,
                             onConfirm = { overlay = null },
@@ -364,7 +363,7 @@ class PromoCaptureActivity : ComponentActivity() {
                         )
                         "hidegroups" -> {
                             val chats = promoChats()
-                            val unreachable = com.tmplayer.ui.browse.DefaultGroups.unreachableFavorites(setOf(102L, 104L, 105L), chats)
+                            val unreachable = com.tmplayer.ui.browse.DefaultGroups.unreachableFavorites(setOf(102L, 103L, 104L), chats)
                             val words = com.tmplayer.ui.browse.DefaultGroups.prompt(unreachable.size, PROMO_FOLDERS.size)
                             TvConfirm(
                                 title = words.title,
@@ -396,12 +395,6 @@ class PromoCaptureActivity : ComponentActivity() {
     }
 }
 
-@Composable
-private fun imageBytes(@DrawableRes drawable: Int): ByteArray {
-    val resources = LocalContext.current.resources
-    return remember(drawable) { resources.openRawResource(drawable).use { it.readBytes() } }
-}
-
 private val PROMO_FOLDERS = listOf(ChatFolderSummary(1, "Films"), ChatFolderSummary(2, "Family"))
 
 /** `--ez groups_demo true`: the demo chats placed in the demo folders (see [promoChats]). */
@@ -412,17 +405,22 @@ private object PromoGroups {
 
 @Composable
 private fun promoChats(): List<ChatSummary> {
-    // With the groups demo, Films holds 101 and 102 and Family 103 and 106; 104 and 105 are in
-    // no folder, so starring them gives the "Only my folders" prompt two favourites to count.
-    val inFolder: (Int) -> List<Int> = { folder -> if (PromoGroups.demo) listOf(folder) else emptyList() }
-    return listOf(
-        ChatSummary(101, "Weekend Clips", imageBytes(R.drawable.demo_coast), 0, ChatKind.Group, folderIds = inFolder(1)),
-        ChatSummary(102, "Home Projects", imageBytes(R.drawable.demo_workshop), 0, ChatKind.Channel, folderIds = inFolder(1)),
-        ChatSummary(103, "Recipe Notes", imageBytes(R.drawable.demo_kitchen), 0, ChatKind.Group, folderIds = inFolder(2)),
-        ChatSummary(104, "Travel Diary", imageBytes(R.drawable.demo_forest), 0, ChatKind.Channel),
-        ChatSummary(105, "Design Study", imageBytes(R.drawable.demo_tutorial), 0, ChatKind.Direct),
-        ChatSummary(106, "Family Archive", imageBytes(R.drawable.demo_birthday), 0, ChatKind.Group, folderIds = inFolder(2)),
-    )
+    // With the groups demo, Films holds Cinema Lounge and Anime Vault and Family the two personal
+    // groups; Study Hub and Nature Docs are in no folder, so starring them gives the "Only my
+    // folders" prompt two favourites to count.
+    val inFolder: (Long) -> List<Int> = { id ->
+        val folder = when (id) {
+            PromoCatalog.CINEMA, PromoCatalog.ANIME -> 1
+            PromoCatalog.CLIPS, PromoCatalog.FAMILY -> 2
+            else -> null
+        }
+        if (PromoGroups.demo && folder != null) listOf(folder) else emptyList()
+    }
+    return remember {
+        PromoCatalog.chats.map { chat ->
+            ChatSummary(chat.id, chat.title, chat.avatar?.let(PromoMeta.pictures::bytes), 0, chat.kind, folderIds = inFolder(chat.id))
+        }
+    }
 }
 
 @Composable
@@ -449,7 +447,7 @@ private fun PromoChatsScreen(
     val homeData = promoHome(home)
     BrowseScreen(
         state = state ?: UiState.Content(BrowseData(chats, account)),
-        favorites = homeData?.favourites ?: setOf(102, 104),
+        favorites = homeData?.favourites ?: PromoMeta.library.favourites,
         continueWatching = homeData?.continueWatching.orEmpty(),
         homeRows = homeData?.let {
             remember(it) {
@@ -458,6 +456,8 @@ private fun PromoChatsScreen(
                     HomeRows.favouriteChats(chats, it.favourites),
                     it.loaded,
                     it.recent,
+                    watchLater = it.watchLater,
+                    fresh = it.fresh,
                 )
             }
         }.orEmpty(),
@@ -486,14 +486,8 @@ private fun PromoChatsScreen(
  */
 @Composable
 private fun promoVideoSearch(): VideoSearchSource {
-    val media = promoMedia()
-    val shows = promoSeriesMedia()
-    return remember(media, shows) {
-        val chats = listOf(101L, 102L, 103L, 104L, 105L, 106L)
-        var id = 5_000L
-        val pool = (shows + media + media.reversed()).mapIndexed { index, item ->
-            item.copy(chatId = chats[index % chats.size], messageId = id++, date = 20_000 - index)
-        }
+    return remember {
+        val pool = PromoMeta.library.all
         VideoSearchSource { query, cursor ->
             delay(PROMO_SEARCH_WAIT_MS)
             val hits = Fuzzy.rank(pool, query) { it.searchText }
@@ -518,56 +512,30 @@ private class PromoHome(
     val loaded: Map<Long, List<MediaItem>>,
     val recent: List<MediaItem>?,
     val art: Map<String, MediaItem>,
+    val watchLater: List<com.tmplayer.data.WatchLaterRecord> = emptyList(),
+    val fresh: List<com.tmplayer.data.NewEpisode> = emptyList(),
 )
 
-@Composable
+/**
+ * Home over the demo library ([PromoCatalog.Library]): Continue watching with a film first (the
+ * spotlight's, with `--ez meta true`), Watch later, New episodes, a row for each starred chat and
+ * Recently added in them.
+ */
 private fun promoHome(variant: String?): PromoHome? {
     variant ?: return null
     if (variant == "empty") return PromoHome(emptySet(), emptyList(), emptyMap(), emptyList(), emptyMap())
-    val media = promoMedia()
-    val shows = promoSeriesMedia()
-    return remember(variant) {
-        var id = 1_000L
-        // The six demo clips again under other chats and later dates, so each row has its own.
-        fun from(chatId: Long, items: List<MediaItem>, newest: Int) =
-            items.mapIndexed { index, item -> item.copy(chatId = chatId, messageId = id++, date = newest - index) }
-        // With posters on, a real film leads the starred chat and Continue, so Home shows one.
-        val film = if (PromoMeta.on) listOf(PromoMeta.bunny) else emptyList()
-        // A lecture posted with no picture at all, so Home shows its generated cover.
-        val bare = media.first().copy(
-            title = "Workshop Lecture 07 - Joinery.mp4",
-            fileName = "Workshop Lecture 07 - Joinery.mp4",
-            miniThumbnail = null,
-            thumbnailFileId = 0,
-        )
-        val projects = from(102, film + media + listOf(bare) + media.reversed(), newest = 9_000)
-        val travel = from(104, shows.take(10), newest = 8_000) + from(104, media.take(2), newest = 7_000)
-        val elsewhere = from(101, media, newest = 6_500) + from(103, media.reversed(), newest = 6_400) +
-            from(106, media.take(3), newest = 6_300)
-        val started = projects.take(film.size) + listOf(projects[2 + film.size], elsewhere[1], travel[11])
-        val resume = started.mapIndexed { index, item ->
-            ResumeRecord(
-                chatId = item.chatId,
-                messageId = item.messageId,
-                fileId = item.fileId,
-                title = item.title,
-                chatTitle = "",
-                sizeBytes = item.sizeBytes,
-                durationSec = item.durationSec,
-                positionMs = item.durationSec * 1000L * (index + 1) / 4,
-                durationMs = item.durationSec * 1000L,
-                updatedAt = 100L - index,
-            )
-        }
-        val loading = variant == "loading"
-        PromoHome(
-            favourites = setOf(102, 104),
-            continueWatching = resume,
-            loaded = if (loading) mapOf(102L to projects) else mapOf(102L to projects, 104L to travel),
-            recent = if (loading) null else elsewhere,
-            art = started.associateBy { SettingsStore.progressKey(it.chatId, it.messageId) },
-        )
-    }
+    val library = PromoMeta.library
+    val loading = variant == "loading"
+    val starred = library.byChat.filterKeys { it in library.favourites }
+    return PromoHome(
+        favourites = library.favourites,
+        continueWatching = library.continueWatching,
+        loaded = if (loading) starred.filterKeys { it == PromoCatalog.CINEMA } else starred,
+        recent = if (loading) null else library.all,
+        art = library.art,
+        watchLater = library.watchLater,
+        fresh = library.newEpisodes,
+    )
 }
 
 /**
@@ -582,9 +550,9 @@ private fun PhoneMediaScreen(variant: String, onBack: () -> Unit = {}) {
     val series = promoSeries(variant)
     var held by remember { mutableStateOf(detailVariant(variant, media)) }
     TouchMediaScaffold(
-        chatTitle = "Weekend Clips",
+        chatTitle = PromoCatalog.chatTitle(PromoCatalog.CINEMA),
         chatPhotoFileId = 0,
-        chatMiniThumbnail = imageBytes(R.drawable.demo_coast),
+        chatMiniThumbnail = null,
         isFavorite = true,
         query = "",
         onQuery = {},
@@ -629,7 +597,7 @@ private fun PhoneMediaScreen(variant: String, onBack: () -> Unit = {}) {
                 items(tiles, key = { it.messageId }) { item ->
                     MediaCard(
                         item = item,
-                        watched = PROMO_RESUME[item.messageId],
+                        watched = PROMO_WATCH.point(item),
                         onClick = {},
                         onFocused = {},
                         dense = true,
@@ -650,14 +618,14 @@ private fun PhoneMediaScreen(variant: String, onBack: () -> Unit = {}) {
  */
 @Composable
 private fun PromoDetail(item: MediaItem, onDismiss: () -> Unit) {
-    PromoDetail(item, PROMO_WATCH.point(item) ?: PROMO_RESUME[item.messageId], PROMO_WATCH.finished(item), onDismiss)
+    PromoDetail(item, PROMO_WATCH.point(item), PROMO_WATCH.finished(item), onDismiss)
 }
 
 @Composable
 private fun PromoDetail(item: MediaItem, watched: WatchPoint?, finished: Boolean, onDismiss: () -> Unit) {
     MediaDetailOpened(
         item = item,
-        chatTitle = "Weekend Clips",
+        chatTitle = PromoCatalog.chatTitle(item.chatId),
         watched = watched,
         finished = finished,
         onPlay = {},
@@ -671,15 +639,12 @@ private fun PromoDetail(item: MediaItem, watched: WatchPoint?, finished: Boolean
 /** The variant's video for the panel: the first, stopped part way, or in a protected chat. */
 private fun detailVariant(variant: String, media: List<MediaItem>): MediaItem? = when (variant) {
     "menu" -> media.first()
-    // Big Buck Bunny, for its poster and overview with `--ez meta true`, or the line offering them without.
-    "meta" -> PromoMeta.bunny
-    "resume" -> media[2]
+    // The film part way through, for its poster and overview with `--ez meta true`, or the line offering them without.
+    "meta" -> PromoMeta.film
+    "resume" -> PromoMeta.film
     "protected" -> media[1].copy(canBeSaved = false)
     else -> null
 }
-
-/** "Resume 34:10" for the third demo video, the shelf it stopped part way through. */
-private val PROMO_RESUME = mapOf(3L to WatchPoint(positionMs = 34 * 60_000L + 10_000L, durationMs = 2_115_000L))
 
 @Composable
 private fun TvMediaScreen(variant: String) {
@@ -691,9 +656,9 @@ private fun TvMediaScreen(variant: String) {
     LaunchedEffect(Unit) { if (state == null) runCatching { first.requestFocus() } }
     Column(Modifier.fillMaxSize()) {
         Header(
-            chatTitle = "Weekend Clips",
+            chatTitle = PromoCatalog.chatTitle(PromoCatalog.CINEMA),
             chatPhotoFileId = 0,
-            chatMiniThumbnail = imageBytes(R.drawable.demo_coast),
+            chatMiniThumbnail = null,
             isFavorite = true,
             query = "",
             onQuery = {},
@@ -739,7 +704,7 @@ private fun TvMediaScreen(variant: String) {
                 items(media, key = { it.id }) { item ->
                     MediaCard(
                         item = item,
-                        watched = PROMO_RESUME[item.messageId],
+                        watched = PROMO_WATCH.point(item),
                         onClick = {},
                         onFocused = {},
                         onLongClick = { held = item },
@@ -757,38 +722,8 @@ private fun TvMediaScreen(variant: String) {
     held?.let { PromoDetail(it) { held = null } }
 }
 
-@Composable
-private fun promoMedia(): List<MediaItem> {
-    @Composable
-    fun item(
-        id: Long,
-        title: String,
-        drawable: Int,
-        sizeMb: Long,
-        duration: Int,
-        fileName: String,
-    ) = MediaItem(
-        chatId = 101,
-        messageId = id,
-        fileId = 0,
-        title = title,
-        sizeBytes = sizeMb * 1024 * 1024,
-        durationSec = duration,
-        mimeType = "video/mp4",
-        thumbnailFileId = 0,
-        miniThumbnail = imageBytes(drawable),
-        date = 0,
-        fileName = fileName,
-    )
-    return listOf(
-        item(1, "Coast walk, day 2", R.drawable.demo_coast, 428, 1_482, "coast-walk-day-2-1080p.mp4"),
-        item(2, "Chickpea salad recipe", R.drawable.demo_kitchen, 186, 724, "chickpea-salad-1080p.mp4"),
-        item(3, "Build a small shelf, part 1", R.drawable.demo_workshop, 612, 2_115, "small-shelf-part-1-1080p.mkv"),
-        item(4, "Birthday highlights", R.drawable.demo_birthday, 344, 1_104, "birthday-highlights-1080p.mp4"),
-        item(5, "Shape basics tutorial", R.drawable.demo_tutorial, 238, 968, "shape-basics-1080p.webm"),
-        item(6, "Forest trail morning", R.drawable.demo_forest, 391, 1_376, "forest-trail-1080p.mp4"),
-    )
-}
+/** The Cinema Lounge chat: the films, each copy on its own, then Harbour Lines' episodes. */
+private fun promoMedia(): List<MediaItem> = PromoMeta.library.cinema
 
 /**
  * `--es variant series-open`: the chat with the demo shows in it, every file on its own as the real
@@ -810,12 +745,12 @@ private class PromoSeries(
 @Composable
 private fun promoSeries(variant: String): PromoSeries? {
     if (variant != "series-open") return null
-    val media = promoSeriesMedia() + promoMedia()
+    val media = promoSeriesMedia()
     val arranged = remember(media) { SeriesShelf.arrange(media) }
     var open by remember { mutableStateOf(true) }
     return PromoSeries(
         files = media,
-        opened = arranged.firstNotNullOfOrNull { (it as? ShelfEntry.Show)?.series?.takeIf { s -> s.key == "harbour notes" } }
+        opened = arranged.firstNotNullOfOrNull { (it as? ShelfEntry.Show)?.series?.takeIf { s -> s.key == "harbour lines" } }
             ?.takeIf { open },
         close = { open = false },
     )
@@ -839,52 +774,21 @@ private fun PromoCard(item: MediaItem, modifier: Modifier = Modifier, dense: Boo
 }
 
 /**
- * Three made-up shows, named the ways real uploads are: a scene release, the fansub dash form, and
- * a file named after nothing with the episode in its caption.
+ * The demo's three shows together, named the ways real uploads are: a scene release (Harbour
+ * Lines), the fansub dash form (Skybound Academy) and a documentary posted in 4K (Wild Coasts),
+ * with the films after them.
  */
-@Composable
-private fun promoSeriesMedia(): List<MediaItem> {
-    val pictures = listOf(
-        R.drawable.demo_coast, R.drawable.demo_forest, R.drawable.demo_workshop,
-        R.drawable.demo_kitchen, R.drawable.demo_tutorial, R.drawable.demo_birthday,
-    ).map { imageBytes(it) }
-    var id = 200L
-    fun episode(fileName: String, sizeMb: Long, minutes: Int, caption: String = "") = MediaItem(
-        chatId = 101,
-        messageId = id++,
-        fileId = 0,
-        title = fileName,
-        sizeBytes = sizeMb * 1024 * 1024,
-        durationSec = minutes * 60,
-        mimeType = "video/x-matroska",
-        thumbnailFileId = 0,
-        miniThumbnail = pictures[(id % pictures.size).toInt()],
-        date = id.toInt(),
-        fileName = fileName,
-        caption = caption,
-    )
-    val harbour = (1..6).map { episode("Harbour.Notes.S01E%02d.1080p.WEB-DL.mkv".format(it), 820, 44) } +
-        (1..4).map { episode("Harbour.Notes.S02E%02d.1080p.WEB-DL.mkv".format(it), 860, 47) }
-    val garden = (1..5).map { episode("[Demo] Sky Garden - %02d (1080p).mkv".format(it), 340, 24) }
-    val kitchen = (1..3).map { episode("kitchen_journal_720p_part$it.mp4", 210, 18, caption = "Kitchen Journal Ep $it\nNew every Friday") }
-    return (harbour + garden + kitchen).reversed()
-}
+private fun promoSeriesMedia(): List<MediaItem> = PromoMeta.library.let { it.anime + it.nature + it.cinema }
 
-/** Season one of Harbour Notes watched up to E04, which is half way through; Sky Garden done. */
-private val PROMO_WATCH = SeriesWatch(
-    point = { item ->
-        if (item.fileName.contains("S01E04")) WatchPoint(positionMs = 19 * 60_000L, durationMs = 44 * 60_000L) else null
-    },
-    finished = { item ->
-        Regex("""S01E0[1-3]""").containsMatchIn(item.fileName) || item.fileName.contains("Sky Garden")
-    },
-)
+/** Where the demo viewer is: see [PromoCatalog.Library]. */
+private val PROMO_WATCH: SeriesWatch
+    get() = PromoMeta.library.let { library -> SeriesWatch(point = library::point, finished = library::isFinished) }
 
 /** Telegram's grid gap, matched to [com.tmplayer.ui.browse] so the shot is the real spacing. */
 private val DENSE_GAP = 2.dp
 
 /** What the fixture's recent-search chips say: the kind of thing somebody types into a chat. */
-private val PROMO_RECENT = listOf("coast walk", "shelf part 2", "birthday", "recipe")
+private val PROMO_RECENT = listOf("quiet orbit", "harbour lines", "lesson 03", "skybound")
 
 /**
  * The media screen's states, as the view model would publish them, for `--es variant`. Null for

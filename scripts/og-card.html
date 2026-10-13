@@ -2,8 +2,9 @@
 <!--
   Source of site/og.png, the 1200x630 social preview. It loads the site's own stylesheet in its
   light theme, so the type is Poppins and the TV and phone are the same CSS frames as the home page
-  hero, around the same light screenshots. Render it with scripts/render-brand.sh, which serves the
-  repository over a local web server: Chromium will not load the web fonts from a file:// page.
+  hero, around light screenshots: the desktop's poster grid in the big frame and the phone's chat
+  list. Render it with scripts/render-brand.sh, which serves the repository over a local web
+  server: Chromium will not load the web fonts from a file:// page.
 -->
 <html lang="en" data-theme="light">
 <head>
@@ -35,8 +36,8 @@
   <div class="foot-row"><span>Android TV</span><span>Android</span><span>Windows</span><span>Linux</span><div class="url">tmplayer.org</div></div>
 
   <figure class="showcase">
-    <div class="device device-tv">
-      <div class="screen"><img src="../site/screenshots/tv-grid-light.webp" alt=""></div>
+    <div class="device device-tv device-desktop">
+      <div class="screen"><img src="../site/screenshots/desktop-grid-light.webp" alt=""></div>
       <div class="stand"></div>
       <div class="foot"></div>
     </div>

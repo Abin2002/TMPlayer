@@ -15,7 +15,7 @@ import java.nio.file.Files
 /**
  * Posters and overviews for the desktop render tests, over a canned TMDB that never touches the
  * network: Big Buck Bunny (its poster and landscape are the promo build's, (c) Blender Foundation,
- * CC BY 3.0) and the made-up Harbour Lights, whose poster is the promo build's Harbour Notes one.
+ * CC BY 3.0) and the made-up Harbour Lights, whose poster is the promo build's Harbour Lines one.
  */
 internal object MetaFixture {
 
@@ -61,7 +61,7 @@ internal object MetaFixture {
     private val IMAGES = mapOf(
         "render-bbb.webp" to "promo_bbb_poster.webp",
         "render-bbb-wide.webp" to "promo_bbb_backdrop.webp",
-        "render-harbour.webp" to "promo_harbour_poster.webp",
+        "render-harbour.webp" to "promo_harbour_lines_poster.webp",
     )
 
     /** The detail page's extras (facts, cast, trailer) for the two titles, as TMDB appends them. Made up but for Bunny's facts. */

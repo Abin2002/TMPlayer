@@ -37,6 +37,7 @@ import com.tmplayer.data.WatchedStore
 import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.ShelfEntry
 import com.tmplayer.desktop.ui.SeriesPage
+import com.tmplayer.promo.PromoCatalog
 import com.tmplayer.desktop.ui.rememberSeriesWatch
 import com.tmplayer.desktop.DesktopPrefs
 import com.tmplayer.desktop.DesktopWatchCache
@@ -84,8 +85,9 @@ import java.nio.file.Files
 
 /**
  * The desktop's promo fixture, the counterpart of the Android `app/src/promo/`: the real sign in,
- * chat list, chat grid and player, drawn off screen over made-up chats and the same demo pictures
- * the phone and TV fixture ships, so nothing on screen belongs to anybody. Each is drawn light and
+ * chat list, chat grid and player, drawn off screen over the demo library both fixtures share
+ * ([PromoCatalog]: invented films, shows, a course and clips, with the promo build's own art), so
+ * nothing on screen belongs to anybody. Each is drawn light and
  * dark at 1280x800 dp and a density of 1.5, which is a 1920x1200 picture.
  *
  * As a test it only checks that every screen draws. With TMPLAYER_PROMO=<dir> it also writes the
@@ -121,35 +123,38 @@ class PromoShots {
         },
     )
 
-    private val chats = listOf(
-        ChatSummary(101, "Weekend Clips", demo("coast"), 0, ChatKind.Group, unreadCount = 4, isPinned = true),
-        ChatSummary(102, "Home Projects", demo("workshop"), 0, ChatKind.Channel, unreadCount = 12),
-        ChatSummary(103, "Recipe Notes", demo("kitchen"), 0, ChatKind.Group),
-        ChatSummary(104, "Travel Diary", demo("forest"), 0, ChatKind.Channel, unreadCount = 2),
-        ChatSummary(105, "Design Study", demo("tutorial"), 0, ChatKind.Direct),
-        ChatSummary(106, "Family Archive", demo("birthday"), 0, ChatKind.Group),
-        ChatSummary(107, "Garden Year", demo("forest"), 0, ChatKind.Channel),
-        ChatSummary(108, "Weeknight Dinners", demo("kitchen"), 0, ChatKind.Channel, unreadCount = 1),
-        ChatSummary(109, "Bike Repairs", demo("workshop"), 0, ChatKind.Group),
-        ChatSummary(110, "Sketchbook", demo("tutorial"), 0, ChatKind.Direct),
-    )
+    private val pictures = PromoCatalog.Pictures { name -> File(DEMO_DIR, "$name.webp").takeIf { it.exists() }?.readBytes() }
+    private val library = PromoCatalog.Library(pictures)
 
-    private val videos: List<MediaItem> = run {
-        fun item(id: Long, title: String, picture: String, sizeMb: Long, duration: Int, file: String) = MediaItem(
-            chatId = 101, messageId = id, fileId = 0, title = title, sizeBytes = sizeMb * 1024 * 1024,
-            durationSec = duration, mimeType = "video/mp4", thumbnailFileId = 0, miniThumbnail = demo(picture),
-            date = 0, fileName = file,
+    private val chats = PromoCatalog.chats.map { chat ->
+        ChatSummary(chat.id, chat.title, chat.avatar?.let(pictures::bytes), 0, chat.kind, unreadCount = UNREAD[chat.id] ?: 0, isPinned = chat.id == PromoCatalog.CINEMA)
+    }
+
+    private val cinema = chats.first { it.id == PromoCatalog.CINEMA }
+
+    /** The demo's posters and overviews, over the shared canned TMDB, warmed so a frame shows them rather than the wait. */
+    private fun installMeta(): com.tmplayer.online.OnlineMetadata {
+        val dir = Files.createTempDirectory("tm-promo-meta").toFile()
+        val store = com.tmplayer.online.MetadataStore(File(dir, "metadata.properties"))
+        store.update { it.copy(enabled = true) }
+        val online = com.tmplayer.online.OnlineMetadata(
+            buildKey = "promo-key",
+            store = store,
+            cache = com.tmplayer.online.MetadataCache(File(dir, "cache")),
+            appVersion = "promo",
+            http = PromoCatalog.Canned(pictures),
         )
-        val set = listOf(
-            item(1, "Coast walk, day 2", "coast", 428, 1_482, "coast-walk-day-2-1080p.mp4"),
-            item(2, "Chickpea salad recipe", "kitchen", 186, 724, "chickpea-salad-1080p.mp4"),
-            item(3, "Build a small shelf, part 1", "workshop", 612, 2_115, "small-shelf-part-1-1080p.mkv"),
-            item(4, "Birthday highlights", "birthday", 344, 1_104, "birthday-highlights-1080p.mp4"),
-            item(5, "Shape basics tutorial", "tutorial", 238, 968, "shape-basics-1080p.webm"),
-            item(6, "Forest trail morning", "forest", 391, 1_376, "forest-trail-1080p.mp4"),
-        )
-        // Twice through, so the grid runs past the bottom of the window as a real chat's does.
-        set + set.map { it.copy(messageId = it.messageId + set.size, title = it.title.replace("day 2", "day 3").replace("part 1", "part 2")) }
+        com.tmplayer.online.OnlineMetadata.current = online
+        runBlocking {
+            for (item in library.all) {
+                val query = com.tmplayer.online.MetaQuery.of(item.fileName) ?: continue
+                val found = online.lookup(query.showOnly())
+                (found as? com.tmplayer.online.MetaResult.Found)?.info?.let { info ->
+                    listOfNotNull(info.posterUrl, info.backdropUrl).forEach { url -> online.image(url) }
+                }
+            }
+        }
+        return online
     }
 
     @Test
@@ -172,63 +177,66 @@ class PromoShots {
                         IconButton(onClick = {}) { Icon(Icons.Filled.Refresh, contentDescription = "Refresh") }
                     },
                 )
-                ChatList(chats, favourites = setOf(102L, 104L), listState = list, nav = nav, onOpen = {}, onStar = {})
-            }
-        }
-    }
-
-    @Test
-    fun grid() = both("grid") {
-        withSidebar {
-            Column(Modifier.fillMaxSize()) {
-                PageHeader(
-                    title = "Weekend Clips",
-                    subtitle = "${videos.size} videos",
-                    leading = {
-                        IconButton(onClick = {}) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to chats") }
-                        ChatAvatar(chats.first().miniThumbnail, 0, "Weekend Clips", 40.dp)
-                    },
-                    actions = {
-                        SearchField("", {}, "Search this chat", shell.searchFocus, Modifier.width(300.dp))
-                        PosterSizeStep(shell)
-                        IconButton(onClick = {}) { Icon(Icons.Filled.Refresh, contentDescription = "Refresh") }
-                    },
-                )
-                VideoGrid(shell, videos, "Weekend Clips")
+                ChatList(chats, favourites = library.favourites, listState = list, nav = nav, onOpen = {}, onStar = {})
             }
         }
     }
 
     /**
-     * Three made-up shows named the ways real uploads are (a scene release, the fansub dash form,
-     * and a caption carrying the episode), ahead of the ordinary videos.
+     * Cinema Lounge as its page draws it: the films and the show first as one block of 2:3
+     * posters (copies of one film folded into one), each with its poster from the canned TMDB.
      */
-    private val seriesVideos: List<MediaItem> = run {
-        val pictures = listOf("coast", "forest", "workshop", "kitchen", "tutorial", "birthday")
-        var id = 200L
-        fun episode(file: String, sizeMb: Long, minutes: Int, caption: String = "") = MediaItem(
-            chatId = 101, messageId = id, fileId = 0, title = file, sizeBytes = sizeMb * 1024 * 1024,
-            durationSec = minutes * 60, mimeType = "video/x-matroska", thumbnailFileId = 0,
-            miniThumbnail = demo(pictures[(id++ % pictures.size).toInt()]), date = id.toInt(), fileName = file, caption = caption,
-        )
-        val harbour = (1..6).map { episode("Harbour.Notes.S01E%02d.1080p.WEB-DL.mkv".format(it), 820, 44) } +
-            (1..4).map { episode("Harbour.Notes.S02E%02d.1080p.WEB-DL.mkv".format(it), 860, 47) }
-        val garden = (1..5).map { episode("[Demo] Sky Garden - %02d (1080p).mkv".format(it), 340, 24) }
-        val kitchen = (1..3).map { episode("kitchen_journal_720p_part$it.mp4", 210, 18, caption = "Kitchen Journal Ep $it\nNew every Friday") }
-        (harbour + garden + kitchen).reversed() + videos.take(6)
+    @Test
+    fun grid() {
+        installMeta()
+        try {
+            both("grid", before = { seedWatching(); shell.showChats(shell.chatSection) }) {
+                withSidebar {
+                    Column(Modifier.fillMaxSize()) {
+                        PageHeader(
+                            title = cinema.title,
+                            subtitle = "${library.cinema.size} videos",
+                            leading = {
+                                IconButton(onClick = {}) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to chats") }
+                                ChatAvatar(cinema.miniThumbnail, 0, cinema.title, 40.dp)
+                            },
+                            actions = {
+                                SearchField("", {}, "Search this chat", shell.searchFocus, Modifier.width(300.dp))
+                                PosterSizeStep(shell)
+                                IconButton(onClick = {}) { Icon(Icons.Filled.Refresh, contentDescription = "Refresh") }
+                            },
+                        )
+                        val arranged = remember { SeriesShelf.arrange(library.cinema) }
+                        val posters = arranged.filter(SeriesShelf::isPoster)
+                        val cells = (posters + arranged.filterNot(SeriesShelf::isPoster)).map {
+                            if (it is ShelfEntry.Show) it.series.cover else (it as ShelfEntry.File).item
+                        }
+                        VideoGrid(
+                            shell,
+                            cells,
+                            cinema.title,
+                            series = arranged.filterIsInstance<ShelfEntry.Show>().associate { it.series.cover.id to it.series },
+                            posters = posters.mapTo(HashSet()) { if (it is ShelfEntry.Show) it.series.cover.id else (it as ShelfEntry.File).item.id },
+                        )
+                    }
+                }
+            }
+        } finally {
+            com.tmplayer.online.OnlineMetadata.current = null
+        }
     }
 
-    /** Season one of Harbour Notes watched to E03 and stopped in E04; Sky Garden finished. */
+    /** The demo's shows (and the films after them), every file on its own as a chat lists them. */
+    private val seriesVideos: List<MediaItem> = library.cinema + library.anime + library.nature
+
+    /** Where the demo viewer is in the library: see [PromoCatalog.Library]. */
     private fun seedWatching() = runBlocking {
-        seriesVideos.filter { Regex("""S01E0[1-3]""").containsMatchIn(it.fileName) || it.fileName.contains("Sky Garden") }
-            .forEach {
-                shell.watched.markWatched(
-                    WatchedRecord(it.chatId, it.messageId, 0, it.title, "Weekend Clips", it.sizeBytes, it.durationSec, 1L, manual = true),
-                )
-            }
-        seriesVideos.first { it.fileName.contains("S01E04") }.let {
-            settings.saveResumePosition(it.chatId, it.messageId, 19 * 60_000L, 44 * 60_000L)
+        library.all.filter(library::isFinished).forEach {
+            shell.watched.markWatched(
+                WatchedRecord(it.chatId, it.messageId, 0, it.title, PromoCatalog.chatTitle(it.chatId), it.sizeBytes, it.durationSec, 1L, manual = true),
+            )
         }
+        library.continueWatching.forEach { settings.saveResumePosition(it.chatId, it.messageId, it.positionMs, it.durationMs) }
     }
 
     @Composable
@@ -236,11 +244,11 @@ class PromoShots {
         withSidebar {
             Column(Modifier.fillMaxSize()) {
                 PageHeader(
-                    title = "Weekend Clips",
+                    title = cinema.title,
                     subtitle = subtitle,
                     leading = {
                         IconButton(onClick = {}) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to chats") }
-                        ChatAvatar(chats.first().miniThumbnail, 0, "Weekend Clips", 40.dp)
+                        ChatAvatar(cinema.miniThumbnail, 0, cinema.title, 40.dp)
                     },
                     actions = {
                         SearchField("", {}, "Search this chat", shell.searchFocus, Modifier.width(300.dp))
@@ -256,14 +264,14 @@ class PromoShots {
     /** A show opened: the season dropdown, the play button and the episode list. */
     @Test
     fun seriesOpen() = both("series-open", before = ::seedWatching) {
-        val show = (SeriesShelf.arrange(seriesVideos).first { it is ShelfEntry.Show && it.series.key == "harbour notes" } as ShelfEntry.Show).series
+        val show = (SeriesShelf.arrange(seriesVideos).first { it is ShelfEntry.Show && it.series.key == "harbour lines" } as ShelfEntry.Show).series
         chatPage("${seriesVideos.size} videos") { SeriesPage(shell, show, rememberSeriesWatch(shell), onClose = {}) }
     }
 
     /** The season dropdown open over the episodes. */
     @Test
     fun seriesDropdown() = both("series-dropdown", before = ::seedWatching, darkOnly = true) {
-        val show = (SeriesShelf.arrange(seriesVideos).first { it is ShelfEntry.Show && it.series.key == "harbour notes" } as ShelfEntry.Show).series
+        val show = (SeriesShelf.arrange(seriesVideos).first { it is ShelfEntry.Show && it.series.key == "harbour lines" } as ShelfEntry.Show).series
         chatPage("${seriesVideos.size} videos") { SeriesPage(shell, show, rememberSeriesWatch(shell), onClose = {}, startOpen = true) }
     }
 
@@ -272,13 +280,13 @@ class PromoShots {
         // Controls that never hide, so the shot has them up however long the frame takes.
         runBlocking { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = 0L) } }
     }) {
-        val frame = remember { SkImage.makeFromEncoded(demo("coast")).toComposeImageBitmap() }
+        val frame = remember { SkImage.makeFromEncoded(demo("promo_quiet_orbit_backdrop")).toComposeImageBitmap() }
         Box(Modifier.fillMaxSize()) {
             // libmpv draws the picture under the window's Compose layer; the fixture puts a still there.
             Image(frame, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             PlayerScreen(
                 // Named as a person would name the file, which is what the player's title shows.
-                media = PromoMedia(videos.first().copy(fileName = "Coast walk, day 2.mp4")),
+                media = PromoMedia(library.quietOrbit),
                 startFromBeginning = false,
                 onBack = {},
                 fullscreen = false,
@@ -302,11 +310,11 @@ class PromoShots {
         runBlocking { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = 0L) } }
         com.tmplayer.desktop.ui.OnlineFixture.install("signed_in")
     }) {
-        val frame = remember { SkImage.makeFromEncoded(demo("coast")).toComposeImageBitmap() }
+        val frame = remember { SkImage.makeFromEncoded(demo("promo_quiet_orbit_backdrop")).toComposeImageBitmap() }
         Box(Modifier.fillMaxSize()) {
             Image(frame, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             PlayerScreen(
-                media = PromoMedia(videos.first().copy(fileName = "Coast walk, day 2.mp4")),
+                media = PromoMedia(library.quietOrbit),
                 startFromBeginning = false,
                 onBack = {},
                 fullscreen = false,
@@ -333,48 +341,20 @@ class PromoShots {
     fun homeMeta() = homeShots("home-meta", meta = true)
 
     private fun homeShots(name: String, meta: Boolean) {
-        val online = if (meta) com.tmplayer.desktop.ui.MetaFixture.install("on") else null
+        if (meta) installMeta()
         try {
-            val bunny = MediaItem(
-                chatId = 102, messageId = 900, fileId = 0, title = "Big.Buck.Bunny.2008.1080p.BluRay.x264.mkv",
-                sizeBytes = 885L * 1024 * 1024, durationSec = 596, mimeType = "video/x-matroska", thumbnailFileId = 0,
-                miniThumbnail = demo("forest"), date = 9_100, fileName = "Big.Buck.Bunny.2008.1080p.BluRay.x264.mkv",
-                width = 1920, height = 1080,
-            )
-            if (online != null) runBlocking {
-                // Warm the answer and the backdrop, so the frame shows them rather than the wait.
-                val query = com.tmplayer.online.MetaQuery.of(bunny.fileName)!!
-                online.lookup(query)
-                online.lookup(query.showOnly())
-                val url = "https://image.tmdb.org/t/p/w780/render-bbb-wide.webp"
-                com.tmplayer.data.Thumbnails.online(url, 1280) { online.image(url) }
-            }
-            var id = 1_000L
-            fun from(chatId: Long, items: List<MediaItem>, newest: Int) =
-                items.mapIndexed { index, item -> item.copy(chatId = chatId, messageId = id++, date = newest - index) }
-            val projects = from(102, listOf(bunny) + videos.take(6), newest = 9_000)
-            val shows = from(104, seriesVideos.filter { "Harbour" in it.fileName || "Sky Garden" in it.fileName }, newest = 8_000)
-            val elsewhere = from(101, videos.take(6).reversed(), newest = 6_000)
-            val started = listOf(projects[0], shows[3], projects[3], elsewhere[1])
-            val resume = started.mapIndexed { index, item ->
-                com.tmplayer.data.ResumeRecord(
-                    chatId = item.chatId, messageId = item.messageId, fileId = 0, title = item.title,
-                    chatTitle = chats.first { it.id == item.chatId }.title, sizeBytes = item.sizeBytes,
-                    durationSec = item.durationSec, positionMs = item.durationSec * 1000L * (index + 1) / 5,
-                    durationMs = item.durationSec * 1000L, updatedAt = 100L - index,
-                )
-            }
             val rows = com.tmplayer.data.HomeRows.build(
-                continueWatching = resume,
-                favourites = com.tmplayer.data.HomeRows.favouriteChats(chats, setOf(102L, 104L)),
-                loaded = mapOf(102L to projects, 104L to shows),
-                recent = elsewhere,
+                continueWatching = library.continueWatching,
+                favourites = com.tmplayer.data.HomeRows.favouriteChats(chats, library.favourites),
+                loaded = library.byChat.filterKeys { it in library.favourites },
+                recent = library.all,
+                watchLater = library.watchLater,
+                fresh = library.newEpisodes,
             )
-            val art = started.associateBy { SettingsStore.progressKey(it.chatId, it.messageId) }
             for ((width, suffix) in listOf(WIDTH to "", WIDE to "-1920")) {
-                both("$name$suffix", width = width) {
+                both("$name$suffix", width = width, before = ::seedWatching) {
                     withSidebar {
-                        com.tmplayer.desktop.ui.HomeRowsView(shell, rows, chats, art, onRowShown = {}, onArtWanted = {}, onRefresh = {})
+                        com.tmplayer.desktop.ui.HomeRowsView(shell, rows, chats, library.art, onRowShown = {}, onArtWanted = {}, onRefresh = {})
                     }
                 }
             }
@@ -437,12 +417,16 @@ class PromoShots {
             // Thumbnails and the QR code are made off the composition thread; give them a moment.
             Thread.sleep(800)
             scene.render(500_000_000)
+            Thread.sleep(600)
+            scene.render(1_000_000_000)
+            // A second pass, so whatever answered during the first (the player's open, the
+            // posters) has its fade finished in the frame.
             Thread.sleep(200)
-            scene.render(1_000_000_000).encodeToData(EncodedImageFormat.PNG)!!.bytes
+            scene.render(1_600_000_000).encodeToData(EncodedImageFormat.PNG)!!.bytes
         }
 
-    /** A demo picture from the Android promo build, so both fixtures show the same made-up media. */
-    private fun demo(name: String): ByteArray = File(DEMO_DIR, "demo_$name.webp").readBytes()
+    /** A picture from the Android promo build, so both fixtures show the same made-up media. */
+    private fun demo(name: String): ByteArray = File(DEMO_DIR, "$name.webp").readBytes()
 
     /** Plays nothing: opens straight into a paused-free, mid-video state for the controls to show. */
     private class StillEngine : PlaybackEngine {
@@ -451,7 +435,7 @@ class PromoShots {
         override val tracks: StateFlow<List<MediaTrack>> = MutableStateFlow(emptyList())
         override suspend fun open(data: MediaData, startAtMs: Long, prefs: OpenPrefs) {
             status.value = PlaybackStatus(
-                opened = true, playing = true, durationMs = 1_482_000, positionMs = 568_000, bufferedMs = 760_000,
+                opened = true, playing = true, durationMs = 7_560_000, positionMs = 4_309_000, bufferedMs = 4_980_000,
                 videoWidth = 1920, videoHeight = 1080, volume = 80,
             )
         }
@@ -480,7 +464,7 @@ class PromoShots {
     }
 
     private class PromoMedia(override val item: MediaItem) : PlayerMedia {
-        override val chatTitle = "Weekend Clips"
+        override val chatTitle = PromoCatalog.chatTitle(item.chatId)
         override suspend fun open(): MediaData = UriMediaData("promo.mp4")
         override suspend fun episodes() = Episodes()
         override fun episode(other: MediaItem): PlayerMedia = PromoMedia(other)
@@ -492,6 +476,9 @@ class PromoShots {
 
     private companion object {
         const val WIDTH = 1920
+
+        /** Unread counts on the chat list, as a busy account has them. */
+        val UNREAD = mapOf(PromoCatalog.ANIME to 3, PromoCatalog.NATURE to 1, PromoCatalog.CLIPS to 12)
 
         /** 1920 dp across at the same density, for the pages that change with a wide window. */
         const val WIDE = 2880
