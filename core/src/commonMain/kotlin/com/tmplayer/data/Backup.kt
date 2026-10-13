@@ -15,7 +15,7 @@ import java.time.ZoneId
 
 /**
  * What a viewer would miss on a new device, in one file: the settings, the favourites, what has been
- * watched, where each half-watched video stopped, and the small memories the app keeps per series,
+ * watched and what is saved for later, where each half-watched video stopped, and the small memories the app keeps per series,
  * per file and per group.
  *
  * Never in it: the Telegram session (TDLib keeps that in its own database, which nothing here reads),
@@ -43,6 +43,8 @@ data class Backup(
     /** Resume points, without a download's path. */
     val resume: List<ResumeRecord>,
     val watched: List<WatchedRecord>,
+    /** Watch later, which lives in the watched store's file under a prefix of its own. */
+    val watchLater: List<WatchLaterRecord> = emptyList(),
     val version: Int = Backups.VERSION,
 )
 
@@ -70,13 +72,15 @@ data class RestorePlan(
     val settingsChanged: Int,
     val favouritesAdded: Int,
     val watchedAdded: Int,
+    /** Videos saved for later in the backup that this device's list lacks. */
+    val watchLaterAdded: Int = 0,
     /** Resume points this device does not have, or has an older one of. */
     val resumeAdded: Int,
     val memoryAdded: Int,
     val searchesAdded: Int,
 ) {
     val nothing: Boolean
-        get() = settingsChanged + favouritesAdded + watchedAdded + resumeAdded + memoryAdded + searchesAdded == 0
+        get() = settingsChanged + favouritesAdded + watchedAdded + watchLaterAdded + resumeAdded + memoryAdded + searchesAdded == 0
 }
 
 /**
@@ -86,7 +90,7 @@ data class RestorePlan(
  *
  * The merge never removes anything. Lists are joined. Of two resume points for one video the newer
  * is kept, and of two watched marks the newer time, with a mark made by hand staying one (as
- * [WatchedStore.markWatched] keeps it). Memories this device already has keep its own value, since a
+ * [WatchedStore.markWatched] keeps it); of two watch later entries, the later added. Memories this device already has keep its own value, since a
  * choice made here is the more recent in nearly every case. Settings are the one thing replaced,
  * which is why the restore asks first.
  */
@@ -132,13 +136,15 @@ object Backups {
         "media_layout" to Kind.TEXT,
         "min_size_bytes" to Kind.LONG,
         "open_last_chat" to Kind.BOOL,
-        "playback_speed" to Kind.FLOAT,
+        "preferred_audio_language" to Kind.TEXT,
+        "preferred_subtitle_language" to Kind.TEXT,
         "player_haptics" to Kind.BOOL,
         "player_tap_plays_pauses" to Kind.BOOL,
         "remove_after_watching" to Kind.BOOL,
         "screen_orientation" to Kind.TEXT,
         "show_remaining_time" to Kind.BOOL,
         "subtitle_box" to Kind.BOOL,
+        "subtitle_mode" to Kind.TEXT,
         "subtitle_position" to Kind.TEXT,
         "subtitle_size" to Kind.TEXT,
         "theme_choice" to Kind.TEXT,
@@ -167,6 +173,7 @@ object Backups {
     private const val FAVOURITES_KEY = "favorite_chats"
     private const val RECENT_SEARCHES = "recent_searches"
     private const val WATCHED_PREFIX = "w_"
+    private const val WATCH_LATER_PREFIX = "l_"
 
     /** "tmplayer-backup-2026-10-13.json", dated in the viewer's own time zone. */
     fun fileName(now: Long, zone: ZoneId = ZoneId.systemDefault()): String =
@@ -194,6 +201,7 @@ object Backups {
         memory = settings.filter { (name, value) -> memoryKind(name)?.let { fits(value, it) } == true },
         resume = resumeOf(settings),
         watched = watchedOf(watched),
+        watchLater = watchLaterOf(watched),
     )
 
     private fun favouritesOf(settings: Map<String, Any>): Set<Long> =
@@ -214,6 +222,11 @@ object Backups {
         if (!name.startsWith(WATCHED_PREFIX)) return@mapNotNull null
         WatchedRecord.decode(name.removePrefix(WATCHED_PREFIX), value as? String)
     }.sortedByDescending { it.watchedAt }
+
+    private fun watchLaterOf(watched: Map<String, Any>): List<WatchLaterRecord> = watched.mapNotNull { (name, value) ->
+        if (!name.startsWith(WATCH_LATER_PREFIX)) return@mapNotNull null
+        WatchLaterRecord.decode(name.removePrefix(WATCH_LATER_PREFIX), value as? String)
+    }.sortedByDescending { it.addedAt }
 
     private fun memoryKind(name: String): Kind? =
         MEMORY.entries.firstOrNull { (prefix, _) -> name.startsWith(prefix) && name.length > prefix.length }?.value
@@ -241,6 +254,7 @@ object Backups {
         root.put("memory", valuesJson(backup.memory))
         root.put("resume", JSONArray(backup.resume.map(::resumeJson)))
         root.put("watched", JSONArray(backup.watched.map(::watchedJson)))
+        root.put("watchLater", JSONArray(backup.watchLater.map(::watchLaterJson)))
         return root.toString(2)
     }
 
@@ -270,6 +284,19 @@ object Backups {
         put("durationMs", r.durationMs)
         put("updatedAt", r.updatedAt)
         r.state?.let { put("state", it.encode()) }
+    }
+
+    private fun watchLaterJson(w: WatchLaterRecord) = JSONObject().apply {
+        put("chat", w.chatId)
+        put("message", w.messageId)
+        put("file", w.fileId)
+        put("title", w.title)
+        put("fileName", w.fileName)
+        put("chatTitle", w.chatTitle)
+        put("size", w.sizeBytes)
+        put("durationSec", w.durationSec)
+        put("mime", w.mimeType)
+        put("addedAt", w.addedAt)
     }
 
     private fun watchedJson(w: WatchedRecord) = JSONObject().apply {
@@ -320,6 +347,7 @@ object Backups {
                 memory = valuesOf(root.optJSONObject("memory"), ::memoryKind),
                 resume = objects(root.optJSONArray("resume")).mapNotNull(::resumeOf),
                 watched = objects(root.optJSONArray("watched")).mapNotNull(::watchedOf),
+                watchLater = objects(root.optJSONArray("watchLater")).mapNotNull(::watchLaterOf),
                 version = version,
             ),
         )
@@ -372,6 +400,19 @@ object Backups {
         )
     }
 
+    private fun watchLaterOf(json: JSONObject): WatchLaterRecord? = WatchLaterRecord(
+        chatId = json.longOrNull("chat") ?: return null,
+        messageId = json.longOrNull("message") ?: return null,
+        fileId = json.longOrNull("file")?.toInt() ?: 0,
+        title = json.optString("title"),
+        fileName = json.optString("fileName"),
+        chatTitle = json.optString("chatTitle"),
+        sizeBytes = json.longOrNull("size") ?: 0L,
+        durationSec = json.longOrNull("durationSec")?.toInt() ?: 0,
+        mimeType = json.optString("mime"),
+        addedAt = json.longOrNull("addedAt") ?: return null,
+    )
+
     private fun watchedOf(json: JSONObject): WatchedRecord? = WatchedRecord(
         chatId = json.longOrNull("chat") ?: return null,
         messageId = json.longOrNull("message") ?: return null,
@@ -401,6 +442,7 @@ object Backups {
             settingsChanged = writes.keys.count { it in SETTINGS } + metaChanged,
             favouritesAdded = (backup.favourites - favouritesBefore).size,
             watchedAdded = backup.watched.count { "$WATCHED_PREFIX${it.key}" !in watched },
+            watchLaterAdded = backup.watchLater.count { "$WATCH_LATER_PREFIX${it.key}" !in watched },
             resumeAdded = writes.keys.count { it.startsWith("resume_") },
             memoryAdded = writes.keys.count { memoryKind(it) != null },
             searchesAdded = searchesAfter.count { found -> searchesBefore.none { it.equals(found, ignoreCase = true) } },
@@ -451,7 +493,10 @@ object Backups {
         }
     }
 
-    /** The values to write into the watched store: marks it lacks, and newer times for ones it has. */
+    /**
+     * The values to write into the watched store: marks it lacks, and newer times for ones it has;
+     * watch later entries it lacks, and later added ones for those it has.
+     */
     fun watchedWrites(device: Map<String, Any>, backup: Backup): Map<String, Any> = buildMap {
         for (record in backup.watched) {
             val name = WATCHED_PREFIX + record.key
@@ -463,6 +508,11 @@ object Backups {
                 else -> continue
             }
             put(name, kept.encode())
+        }
+        for (record in backup.watchLater) {
+            val name = WATCH_LATER_PREFIX + record.key
+            val mine = WatchLaterRecord.decode(record.key, device[name] as? String)
+            if (mine == null || record.addedAt > mine.addedAt) put(name, record.encode())
         }
     }
 

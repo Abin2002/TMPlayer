@@ -2,6 +2,8 @@ package com.tmplayer.data
 
 import com.tmplayer.online.MetaSettings
 import com.tmplayer.online.MetadataStore
+import com.tmplayer.player.SpeedMemory
+import com.tmplayer.player.TrackPreferences
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -27,6 +29,11 @@ class BackupTest {
         sizeBytes = 1_000, durationSec = 1_400, watchedAt = at, manual = manual,
     )
 
+    private fun laterRecord(messageId: Long, at: Long) = WatchLaterRecord(
+        chatId = -100L, messageId = messageId, fileId = 9, title = "Film $messageId", fileName = "film.mkv",
+        chatTitle = "Films", sizeBytes = 2_000, durationSec = 5_400, mimeType = "video/x-matroska", addedAt = at,
+    )
+
     private fun resumeLine(updatedAt: Long, title: String = "Film") = ResumeRecord.encode(
         fileId = 11, title = title, chatTitle = "Films", sizeBytes = 5_000, durationSec = 6_000,
         updatedAt = updatedAt, localPath = "/data/user/0/com.tmplayer/files/downloads/film.mkv",
@@ -49,7 +56,10 @@ class BackupTest {
     fun `a backup restores onto an empty device and leaves the private parts behind`() = runBlocking {
         val old = Device("old")
         old.settings.setAutoplayNext(false)
-        old.settings.setPlaybackSpeed(1.5f)
+        old.settings.rememberSpeed(SpeedMemory.Scopes(series = "keralacrimefiles"), 1.5f)
+        old.settings.rememberSpeed(SpeedMemory.Scopes(chat = "-1003:7"), 1.75f)
+        old.settings.setTrackPreferences(TrackPreferences.from("mal", "eng", null))
+        old.watched.watchLater.add(laterRecord(8, at = 30))
         old.settings.setThemeChoice(ThemeChoice.entries.last())
         old.settings.setCrashReports(true)
         old.settings.toggleFavorite(-1001L)
@@ -71,12 +81,16 @@ class BackupTest {
         val plan = fresh.service().plan(read.backup)
         assertEquals(2, plan.favouritesAdded)
         assertEquals(1, plan.watchedAdded)
+        assertEquals(1, plan.watchLaterAdded)
         assertEquals(1, plan.resumeAdded)
         assertEquals(1, plan.searchesAdded)
         fresh.service().restore(read.backup)
 
         assertFalse(fresh.settings.autoplayNextNow())
-        assertEquals(1.5f, fresh.settings.playbackSpeedNow())
+        assertEquals(1.5f, fresh.settings.openingSpeed(null, SpeedMemory.Scopes(series = "keralacrimefiles")))
+        assertEquals(1.75f, fresh.settings.openingSpeed(null, SpeedMemory.Scopes(chat = "-1003:7")))
+        assertEquals(old.settings.trackPreferencesNow(), fresh.settings.trackPreferencesNow())
+        assertEquals(listOf(8L), fresh.watched.watchLater.items.first().map { it.messageId })
         assertEquals(ThemeChoice.entries.last(), fresh.settings.themeChoice.first())
         assertFalse(fresh.settings.crashReportsNow())
         assertEquals(setOf(-1001L, -1002L), fresh.settings.favorites.first())
@@ -94,16 +108,19 @@ class BackupTest {
     @Test
     fun `the file reads back as it was written`() {
         val original = backup(
-            settings = mapOf("autoplay_next" to false, "playback_speed" to 1.75f, "language" to "ml", "min_size_bytes" to 5L),
+            settings = mapOf("autoplay_next" to false, "hold_speed" to 1.75f, "language" to "ml", "min_size_bytes" to 5L),
             favourites = setOf(-1001L),
-            memory = mapOf("audio_keralacrimefiles" to "mal", "subs_keralacrimefiles" to true, "topic_-1003" to 42L),
+            memory = mapOf(
+                "audio_keralacrimefiles" to "mal", "subs_keralacrimefiles" to true, "topic_-1003" to 42L,
+                "speed_keralacrimefiles" to 1.25f, "speed_-1003:7" to 1.5f,
+            ),
             resume = listOf(
                 ResumeRecord(-100, 5, 11, "Film \u001F one", "Films", 5_000, 6_000, 600_000, 3_600_000, 500,
                     state = ResumeState(subtitleTrack = ResumeState.SUBTITLES_OFF)),
             ),
             watched = listOf(watchedRecord(1, at = 10, manual = true)),
             searches = listOf("severance", "the bear"),
-        ).copy(metadata = mapOf("enabled" to true, "skip_times" to false))
+        ).copy(watchLater = listOf(laterRecord(8, at = 30)), metadata = mapOf("enabled" to true, "skip_times" to false))
         val read = Backups.decode(Backups.encode(original)) as BackupRead.Ok
         assertEquals(original.copy(resume = original.resume.map { it.copy(title = "Film   one") }), read.backup)
     }
@@ -183,6 +200,17 @@ class BackupTest {
         assertTrue(kept.manual)
         assertTrue(writes.containsKey("w_${watchedRecord(2, at = 5).key}"))
         assertTrue(Backups.watchedWrites(device, backup(watched = listOf(watchedRecord(1, at = 10)))).isEmpty())
+    }
+
+    @Test
+    fun `watch later is joined, keeping the later added`() {
+        val mine = laterRecord(1, at = 50)
+        val device = mapOf<String, Any>("l_${mine.key}" to mine.encode())
+        val writes = Backups.watchedWrites(device, backup().copy(watchLater = listOf(laterRecord(1, at = 20), laterRecord(2, at = 5))))
+        assertFalse("this device's was added later", writes.containsKey("l_${mine.key}"))
+        assertTrue(writes.containsKey("l_${laterRecord(2, at = 5).key}"))
+        val newer = Backups.watchedWrites(device, backup().copy(watchLater = listOf(laterRecord(1, at = 90))))
+        assertEquals(90L, WatchLaterRecord.decode(mine.key, newer["l_${mine.key}"] as String)!!.addedAt)
     }
 
     @Test

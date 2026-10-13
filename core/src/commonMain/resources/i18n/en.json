@@ -76,6 +76,7 @@
     "restore_settings": "{count, plural, one {# setting is replaced by the backup's.} other {# settings are replaced by the backup's.}}",
     "restore_title": "Restore this backup?",
     "restore_untouched": "Nothing is removed: lists are joined, and of two resume points for one video the newer is kept.",
+    "restore_watch_later": "{count, plural, one {# video is added to Watch later.} other {# videos are added to Watch later.}}",
     "restore_watched": "{count, plural, one {# video is marked as watched.} other {# videos are marked as watched.}}",
     "restored": "Backup restored",
     "save_title": "Save a TMPlayer backup",

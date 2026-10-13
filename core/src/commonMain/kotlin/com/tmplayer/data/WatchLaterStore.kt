@@ -167,7 +167,7 @@ class WatchLaterStore internal constructor(private val store: DataStore<Preferen
      * Keeps the list to [MAX_WATCH_LATER]. A list longer than that has stopped being a plan and
      * become an archive, and the whole file is read on every change.
      */
-    private fun evictOldest(prefs: MutablePreferences) {
+    internal fun evictOldest(prefs: MutablePreferences) {
         val all = decodeAll(prefs)
         if (all.size <= MAX_WATCH_LATER) return
         all.sortedBy { it.addedAt }
