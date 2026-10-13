@@ -187,6 +187,11 @@ packaged in any build.
 - The screenshot fixture's (promo build only, never released) Big Buck Bunny poster and landscape
   (`promo_bbb_*.webp`) are (c) Blender Foundation, peach.blender.org, CC BY 3.0
   (<https://creativecommons.org/licenses/by/3.0/>), via Wikimedia Commons, scaled down.
+- The screenshot fixture's demo artwork (promo build only, never released; `promo_*_poster`,
+  `_backdrop` and `_e1` to `_e4` WebPs) is cut from photos on Unsplash, used under the Unsplash
+  License (<https://unsplash.com/license>): Atul Vinayak, NASA, Fabio Sasso, Carolina Garcia
+  Tavizon, Athanasios Papazacharias and Jason Mavrommatis. Each photo's page and photographer are
+  listed in `docs/promo-art/CREDITS.md`.
 
 ## Licence texts
 

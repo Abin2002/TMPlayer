@@ -206,6 +206,10 @@ android {
 
     // The F-Droid build's manifest overlay, which removes the install permission. On the release
     // source set because a release is all F-Droid builds; debug and promo keep main's manifest.
+    // The promo fixture's demo library, plain Kotlin that the desktop's promo render test compiles
+    // too, so every platform's screenshots show the same chats and titles.
+    sourceSets.getByName("promo").java.srcDir("src/promo/shared")
+
     if (fdroidBuild) {
         sourceSets.getByName("release").manifest.srcFile("src/fdroid/AndroidManifest.xml")
     }

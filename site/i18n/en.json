@@ -230,6 +230,8 @@
     "from_github_on_android_windows__strong1": "Updates itself",
     "what_it_looks_like": "What it looks like",
     "four_screens_in_the_order": "Six screens on the phone, the TV and the computer, filled with demo content.",
+    "demo_artwork_photos_from_unsplash": "The demo films and shows are made up. Their artwork is cut from {a1}, credited by photographer.",
+    "demo_artwork_photos_from_unsplash__a1": "photos on Unsplash",
     "every_chat_and_channel_you": "{b1}Every chat and channel you are in, recent ones on top. Messages never appear.",
     "every_chat_and_channel_you__b1": "Step one: pick a chat",
     "tiles_with_running_time_and": "{b1}Tiles with running time and resolution. Press one and it starts in seconds.",
