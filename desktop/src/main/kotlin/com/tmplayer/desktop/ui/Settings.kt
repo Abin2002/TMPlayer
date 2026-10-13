@@ -49,6 +49,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.BackupRead
+import com.tmplayer.data.BackupService
+import com.tmplayer.data.BackupWords
+import com.tmplayer.data.RestorePlan
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.SupportReminder
@@ -59,11 +63,14 @@ import com.tmplayer.data.Updates
 import com.tmplayer.data.WhatsNew
 import com.tmplayer.data.release
 import com.tmplayer.desktop.DesktopSettings
+import com.tmplayer.desktop.os.FilePicker
 import com.tmplayer.desktop.os.OpenExternal
+import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.player.SubtitlePosition
 import com.tmplayer.player.SubtitleSize
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.TouchPrefs
+import com.tmplayer.player.TrackPreferences
 import com.tmplayer.ui.about.About
 import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.components.TmIcons
@@ -71,7 +78,9 @@ import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.i18n.languageRowDetail
 import com.tmplayer.ui.theme.Tone
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * The settings that mean something on a desktop: theme, playback, the chat to open on launch,
@@ -110,6 +119,7 @@ fun SettingsPage(
     var confirm by remember { mutableStateOf<Confirm?>(null) }
     val touchPrefs by settings.touchPrefs.collectAsState(initial = TouchPrefs())
     val subtitleStyle by settings.subtitleStyle.collectAsState(initial = SubtitleStyle())
+    val trackPrefs by settings.trackPreferences.collectAsState(initial = TrackPreferences())
     val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
     val history by settings.continueWatching.collectAsState(initial = emptyList())
     val favourites by settings.favorites.collectAsState(initial = emptySet())
@@ -122,6 +132,11 @@ fun SettingsPage(
     var stylingSubtitles by remember { mutableStateOf(false) }
     var whatsNew by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
+    // A backup file picked, with what restoring it would change, while the prompt is up.
+    var restorePlan by remember { mutableStateOf<RestorePlan?>(null) }
+    val backups = remember(settings, state.watched, version) {
+        BackupService(settings, state.watched, OnlineMetadata.current?.store, version)
+    }
 
     val scroll = rememberScrollState()
     Box(Modifier.fillMaxSize()) {
@@ -174,6 +189,7 @@ fun SettingsPage(
                 Toggle(s.playerDownmix, s.settingsDownmixDetail, desktop.downmix) { on ->
                     state.extras.prefs.update { it.copy(downmix = on) }
                 }
+                AudioLanguageSetting(settings, trackPrefs, scope)
                 Toggle(
                     s.settingsSoftwareDecoding,
                     if (DesktopSettings.defaultSoftwareDecoding()) {
@@ -197,6 +213,7 @@ fun SettingsPage(
                 ) {
                     OutlinedButton(onClick = { stylingSubtitles = true }) { Text(s.commonChange) }
                 }
+                SubtitleLanguageSettings(settings, trackPrefs, scope)
 
                 OnlineSubtitlesGroup()
                 OnlineMetadataGroup()
@@ -319,6 +336,42 @@ fun SettingsPage(
                     }) { Text(s.commonClear) }
                 }
 
+                // To a file and back: settings, lists and resume points, never the Telegram sign in.
+                Group(s.backupSection)
+                Setting(s.backupBackUp, s.backupBackUpDetail) {
+                    OutlinedButton(onClick = {
+                        scope.launch {
+                            val file = FilePicker.save(s.backupSaveTitle, backups.fileName(), "json") ?: return@launch
+                            val saved = withContext(Dispatchers.IO) {
+                                runCatching { file.writeText(backups.export()) }.isSuccess
+                            }
+                            toast(if (saved) s.backupSavedTo(file.absolutePath) else s.backupFailed)
+                        }
+                    }) { Text(s.backupBackUp) }
+                }
+                Setting(s.backupRestore, s.backupRestoreDetail) {
+                    OutlinedButton(onClick = {
+                        scope.launch {
+                            val file = FilePicker.open(s.backupPickTitle, "json") ?: return@launch
+                            val text = withContext(Dispatchers.IO) {
+                                // No backup comes near this; a film picked by mistake is not read whole.
+                                runCatching { file.takeIf { it.length() <= 32L * 1024 * 1024 }?.readText() }.getOrNull()
+                            }
+                            if (text == null) {
+                                toast(s.backupReadFailed)
+                                return@launch
+                            }
+                            when (val read = backups.read(text)) {
+                                is BackupRead.Ok -> {
+                                    val plan = backups.plan(read.backup)
+                                    if (plan.nothing) toast(s.backupRestoreNothing) else restorePlan = plan
+                                }
+                                else -> BackupWords.refusal(read)?.let { toast(it) }
+                            }
+                        }
+                    }) { Text(s.backupRestore) }
+                }
+
                 state.extras.updates?.let { updates ->
                     Group(s.settingsUpdates)
                     Toggle(
@@ -425,6 +478,24 @@ fun SettingsPage(
                 }
             },
             onDismiss = { confirmHideGroups = false },
+        )
+    }
+
+    restorePlan?.let { plan ->
+        ConfirmDialog(
+            title = s.backupRestoreTitle,
+            message = BackupWords.restoreMessage(plan),
+            detail = s.backupRestoreUntouched,
+            confirmLabel = s.backupRestoreConfirm,
+            destructive = false,
+            onConfirm = {
+                restorePlan = null
+                scope.launch {
+                    val done = runCatching { backups.restore(plan.backup) }.isSuccess
+                    toast(if (done) s.backupRestored else s.backupReadFailed)
+                }
+            },
+            onDismiss = { restorePlan = null },
         )
     }
 

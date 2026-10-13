@@ -45,7 +45,16 @@ object Floating {
     val MenuShape: Shape = RoundedCornerShape(Corner.ExtraSmall)
 }
 
-/** The edge that says "this is where the remote, or the keyboard, is". */
+/**
+ * The edge that says "this is where the remote, or the keyboard, is".
+ *
+ * Focus is never carried by colour alone. On a video tile it is three things at once, all over
+ * [Motion.Fast]: an [Edge] ring in [Tone.accent] round the art only (no panel round the caption),
+ * the art growing to [Motion.FocusScale] about its centre, and the caption going from
+ * [Tone.muted] to [Tone.text]. A row or a pill that fills under focus has its fill as the second
+ * signal instead of the scale. With reduced motion ([rememberReducedMotion]) the scale is dropped
+ * and the ring remains.
+ */
 object Focus {
     /** Round a tile, a card or a chat row: thick enough to find from a sofa. */
     val Edge = 3.dp

@@ -54,6 +54,7 @@ import com.tmplayer.data.valueOrNull
 import com.tmplayer.desktop.DesktopPaths
 import com.tmplayer.desktop.DownloadIndex
 import com.tmplayer.desktop.os.OpenExternal
+import com.tmplayer.desktop.setWatchLater
 import com.tmplayer.desktop.setWatched
 import com.tmplayer.ui.browse.DETAIL_PANE_WIDTH
 import com.tmplayer.ui.browse.DetailRow
@@ -118,6 +119,7 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
     val toast = rememberToast()
     val progress by state.settings.watchProgress.collectAsState(initial = emptyMap())
     val watchedList by state.watched.watched.collectAsState(initial = emptyMap())
+    val laterKeys by state.watched.watchLater.keys.collectAsState(initial = emptySet())
     val history by state.settings.downloadHistory.collectAsState(initial = emptyList())
     val downloads by OfflineDownloads.active.collectAsState()
     val key = SettingsStore.progressKey(item.chatId, item.messageId)
@@ -140,6 +142,7 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
             canBeSaved = item.canBeSaved,
             resumeMs = point?.positionMs ?: 0L,
             finished = finished,
+            watchLater = key in laterKeys,
             inDownloads = record != null,
             cached = item.onDevice,
             downloading = queued,
@@ -169,6 +172,13 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
                 scope.launch {
                     runCatching { setWatched(state.watched, state.settings, item, title, mark) }
                     toast(if (mark) s.watchedMarkedWatched(item.title) else s.watchedMarkedUnwatched(item.title))
+                }
+            }
+            DetailAction.AddWatchLater, DetailAction.RemoveWatchLater -> {
+                val add = action == DetailAction.AddWatchLater
+                scope.launch {
+                    runCatching { setWatchLater(state.watched, item, title, add) }
+                    toast(if (add) s.detailWatchLaterAdded(item.title) else s.detailWatchLaterRemoved(item.title))
                 }
             }
             DetailAction.Download -> {

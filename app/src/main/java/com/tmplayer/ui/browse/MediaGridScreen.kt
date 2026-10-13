@@ -466,6 +466,20 @@ fun MediaGridScreen(
             val feed = remember(shelf, list.sponsored) {
                 placeSponsored(shelf, list.sponsored)
             }
+            // A chat or a topic that is one course of lessons says how far through it the viewer
+            // is, over the listing; not while searching or ticking, when the listing is a pick.
+            val course = remember(list.items, watch, grouping) { if (grouping) watch.course(list.items) else null }
+            val courseTitle = topicBar?.let { bar -> bar.nameOf(bar.selected) } ?: chatTitle
+            val courseHeader: @Composable () -> Unit = {
+                course?.let {
+                    CourseHeader(
+                        progress = it,
+                        title = courseTitle,
+                        onPlay = onPlay,
+                        modifier = Modifier.padding(horizontal = if (touch && layout == CardLayout.Grid) 4.dp else 0.dp).padding(bottom = 4.dp),
+                    )
+                }
+            }
             LaunchedEffect(list.items) { listedItems = list.items }
             val gridState = rememberLazyGridState()
             val listState = rememberLazyListState()
@@ -542,6 +556,9 @@ fun MediaGridScreen(
                         horizontalArrangement = Arrangement.spacedBy(gap),
                         verticalArrangement = Arrangement.spacedBy(gap),
                     ) {
+                        if (course != null) {
+                            item(key = "course", span = { GridItemSpan(maxLineSpan) }) { courseHeader() }
+                        }
                         gridItems(
                             items = feed,
                             key = {
@@ -605,6 +622,7 @@ fun MediaGridScreen(
                         contentPadding = padding,
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        if (course != null) item(key = "course") { courseHeader() }
                         items(
                             items = feed,
                             key = {
@@ -665,6 +683,9 @@ fun MediaGridScreen(
                         onPlay = { onPlay(it) },
                         onDismiss = { openSeries = null },
                         onLongClick = { heldMenuOf = it },
+                        onDownload = { request ->
+                            scope.launch { queueSeason(context, settings, request) { chatTitle }?.let(onOfflineAction) }
+                        },
                     )
                 }
 

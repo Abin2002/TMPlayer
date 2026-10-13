@@ -114,6 +114,12 @@ data class WatchedRecord(
  */
 class WatchedStore(private val store: DataStore<Preferences>) {
 
+    /**
+     * Watch later, kept in this same file under a prefix of its own, so that [markWatched] crosses
+     * a video off it in the same write that ticks it. [clear] leaves it alone.
+     */
+    val watchLater: WatchLaterStore = WatchLaterStore(store)
+
     private fun <T> read(transform: (Preferences) -> T): Flow<T> = store.data
         .map(transform)
         .distinctUntilChanged()
@@ -135,6 +141,8 @@ class WatchedStore(private val store: DataStore<Preferences>) {
     /**
      * Records [record] as watched. A manual mark is never downgraded to an automatic one: if the
      * viewer said so first, the player finishing it later keeps their word and the new time.
+     *
+     * Either way the video is done with, so it leaves [watchLater] in the same edit.
      */
     suspend fun markWatched(record: WatchedRecord) {
         store.edit { prefs ->
@@ -142,6 +150,7 @@ class WatchedStore(private val store: DataStore<Preferences>) {
             val before = WatchedRecord.decode(record.key, prefs[key])
             val kept = if (before?.manual == true && !record.manual) record.copy(manual = true) else record
             prefs[key] = kept.encode()
+            prefs.remove(WatchLaterStore.keyOf(record.chatId, record.messageId))
             evictOldest(prefs)
         }
         // The player saw it through to the end: a good moment, and a finished watch for the
@@ -158,6 +167,22 @@ class WatchedStore(private val store: DataStore<Preferences>) {
         store.edit { prefs ->
             val doomed = prefs.asMap().keys.filter { it.name.startsWith(PREFIX) }
             for (key in doomed) prefs.remove(key)
+        }
+    }
+
+    /** Every stored mark under its stored name, for [Backups]. */
+    suspend fun rawEntries(): Map<String, Any> = store.data.first().asMap().mapKeys { it.key.name }
+
+    /**
+     * As [SettingsStore.restoreEntries]: one edit over the file as it is then, the watched list and
+     * [watchLater] alike, each capped after.
+     */
+    suspend fun restoreEntries(writes: (Map<String, Any>) -> Map<String, Any>) {
+        store.edit { prefs ->
+            val now = prefs.asMap().mapKeys { it.key.name }
+            for ((name, value) in writes(now)) prefs.putRaw(name, value)
+            evictOldest(prefs)
+            watchLater.evictOldest(prefs)
         }
     }
 

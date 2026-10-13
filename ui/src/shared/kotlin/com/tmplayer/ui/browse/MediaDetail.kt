@@ -127,6 +127,8 @@ fun detailRow(
         DetailAction.StartOver -> DetailRow(action, s.detailStartOver, Icons.Filled.Refresh, s.detailStartOverDetail, onSelect = onSelect)
         DetailAction.MarkWatched -> DetailRow(action, s.gridMarkWatched, Icons.Filled.Check, s.gridMarkWatchedDetail, onSelect = onSelect)
         DetailAction.MarkUnwatched -> DetailRow(action, s.gridMarkUnwatched, Icons.Filled.Close, s.gridMarkUnwatchedDetail, onSelect = onSelect)
+        DetailAction.AddWatchLater -> DetailRow(action, s.detailWatchLaterAdd, TmIcons.Clock, s.detailWatchLaterAddDetail, onSelect = onSelect)
+        DetailAction.RemoveWatchLater -> DetailRow(action, s.detailWatchLaterRemove, Icons.Filled.Close, onSelect = onSelect)
         DetailAction.Download -> DetailRow(action, s.gridDownload, TmIcons.Download, withFree(s.gridDownloadDetail), onSelect = onSelect)
         DetailAction.SaveToDownloads ->
             DetailRow(action, s.gridSaveToDownloads, TmIcons.Download, withFree(s.gridSaveToDownloadsDetail), onSelect = onSelect)

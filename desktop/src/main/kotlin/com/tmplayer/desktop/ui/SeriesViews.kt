@@ -30,6 +30,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -44,6 +45,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.Series
 import com.tmplayer.data.SeriesSeason
 import com.tmplayer.data.SettingsStore
@@ -52,9 +54,11 @@ import com.tmplayer.ui.browse.SeriesPanel
 import com.tmplayer.ui.browse.SeriesWatch
 import com.tmplayer.ui.browse.seriesProgressLine
 import com.tmplayer.ui.browse.seriesSummary
+import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Tone
+import kotlinx.coroutines.launch
 
 /** The Watched list and saved positions, read the way [MediaTile] reads them, for the series view. */
 @Composable
@@ -127,6 +131,9 @@ internal fun SeriesPoster(
  * A show opened on the desktop: the shared panel, with the seasons in a dropdown rather than tabs,
  * which suits a pointer and keeps a show of twelve seasons on one line. Back, Escape or the arrow
  * returns to the chat's grid.
+ *
+ * Download season and Download unwatched go through [downloadSelected], the grid's own batch, once
+ * every episode kept or coming down in any copy is left out; the toast is the batch's sentence.
  */
 @Composable
 internal fun SeriesPage(
@@ -138,6 +145,10 @@ internal fun SeriesPage(
 ) {
     val s = LocalStrings.current
     BackHandler(enabled = true) { onClose() }
+    val scope = rememberCoroutineScope()
+    val toast = rememberToast()
+    val history by state.settings.downloadHistory.collectAsState(initial = emptyList())
+    val index = remember(history) { history.associateBy { "${it.chatId}:${it.messageId}" } }
     Row(Modifier.fillMaxSize().padding(top = 8.dp)) {
         Box(Modifier.padding(start = 16.dp, top = 4.dp)) {
             IconButton(onClick = onClose) {
@@ -154,6 +165,19 @@ internal fun SeriesPage(
                 SeasonDropdown(series.seasons, selected, onSelect, startOpen)
             },
             onOpenItem = { state.openDetail(DetailRequest(it, state.chatTitleOf(it.chatId), outsideChat = true)) },
+            onDownload = { request ->
+                scope.launch {
+                    val active = OfflineDownloads.active.value
+                    val chosen = request.copies { it.id in index || active[it.fileId]?.busy == true }
+                    toast(
+                        if (chosen.isEmpty()) {
+                            s.browseAlreadyDownloaded
+                        } else {
+                            downloadSelected(state.downloads, state.settings, chosen, state.chatTitleOf(chosen.first().chatId), index)
+                        },
+                    )
+                }
+            },
         )
     }
 }

@@ -60,6 +60,7 @@ import com.tmplayer.data.ResumeRecord
 import com.tmplayer.data.Series
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ShelfEntry
+import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.data.WatchPoint
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.isTouch
@@ -70,8 +71,9 @@ import com.tmplayer.ui.theme.Tv
 import kotlinx.coroutines.launch
 
 /**
- * Home: a row of what the viewer was part way through, a row per starred chat, and the newest
- * videos everywhere else (the rows are built by [com.tmplayer.data.HomeRows]).
+ * Home: a row of what the viewer was part way through, a row of what they saved for later, a row
+ * per starred chat, and the newest videos everywhere else (the rows are built by
+ * [com.tmplayer.data.HomeRows]).
  *
  * One vertical lazy list of horizontal lazy rows, so only the rows on screen exist and only the
  * tiles on screen in each of those. Every row and tile is keyed, and every tile is a fixed width,
@@ -109,6 +111,12 @@ internal fun HomePane(
     firstStep: DefaultGroups.FirstStep = DefaultGroups.firstStep(hidden = false, folders = emptyList()),
     /** Opens the first-run state's target. */
     onOpenSection: (BrowseSection) -> Unit = {},
+    /** A Watch later tile: its detail or the player, as a Continue watching tile does. */
+    onOpenWatchLater: (WatchLaterRecord) -> Unit = {},
+    onLaterArtWanted: (WatchLaterRecord) -> Unit = {},
+    onSeeWatchLater: () -> Unit = {},
+    /** Download season and Download unwatched on a show's page; null leaves them out. */
+    onDownloadSeason: ((SeasonDownloadRequest) -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     if (rows.isEmpty()) {
@@ -132,7 +140,7 @@ internal fun HomePane(
         ) {
             items(rows, key = { it.key }, contentType = { it::class }) { row ->
                 val loaded = when (row) {
-                    is HomeRow.Continue -> true
+                    is HomeRow.Continue, is HomeRow.WatchLater -> true
                     is HomeRow.Chat -> row.loaded
                     is HomeRow.Recent -> row.loaded
                 }
@@ -141,12 +149,14 @@ internal fun HomePane(
                 val isFirst = row === rows.first()
                 val title = when (row) {
                     is HomeRow.Continue -> s.homeRowContinue
+                    is HomeRow.WatchLater -> s.homeRowWatchLater
                     is HomeRow.Chat -> row.title
                     is HomeRow.Recent -> s.homeRowRecent
                 }
                 // Only a row that leaves something out offers the rest of it.
                 val seeAll: (() -> Unit)? = when (row) {
                     is HomeRow.Continue -> onSeeContinue
+                    is HomeRow.WatchLater -> onSeeWatchLater
                     is HomeRow.Chat -> { { onOpenChat(row.chatId) } }
                     is HomeRow.Recent -> null
                 }?.takeIf { row.hasMore }
@@ -207,6 +217,21 @@ internal fun HomePane(
                                         .then(if (isFirst && record === row.records.first()) Modifier.focusRequester(first) else Modifier),
                                 )
                             }
+                            is HomeRow.WatchLater -> items(row.records, key = { "l-${it.key}" }) { record ->
+                                LaunchedEffect(record.key) { onLaterArtWanted(record) }
+                                val item = art[record.key] ?: remember(record) { record.toMediaItem() }
+                                MediaCard(
+                                    item = item,
+                                    watched = watch.point(item),
+                                    onClick = { onOpenWatchLater(record) },
+                                    onFocused = {},
+                                    // The detail panel, which offers Remove from Watch later.
+                                    onLongClick = { onHoldMedia(item, record.chatTitle.ifEmpty { chatTitle(record.chatId) }) },
+                                    dense = touch,
+                                    modifier = Modifier.width(tileWidth(touch) * if (row.records.size == 1 && !row.hasMore) 1.5f else 1f)
+                                        .then(if (isFirst && record === row.records.first()) Modifier.focusRequester(first) else Modifier),
+                                )
+                            }
                             is HomeRow.Chat -> entries(row.entries, watch, touch, isFirst, first, { row.title }, onPlay, onHoldMedia) { openSeries = it }
                             is HomeRow.Recent -> entries(row.entries, watch, touch, isFirst, first, chatTitle, onPlay, onHoldMedia) { openSeries = it }
                         }
@@ -231,7 +256,7 @@ internal fun HomePane(
     val firstReady = when (val top = rows.first()) {
         is HomeRow.Chat -> top.loaded
         is HomeRow.Recent -> top.loaded
-        is HomeRow.Continue -> true
+        is HomeRow.Continue, is HomeRow.WatchLater -> true
     }
     LaunchedEffect(firstKey, firstReady) {
         if (!touch && firstReady) runCatching { first.requestFocus() }
@@ -244,6 +269,7 @@ internal fun HomePane(
             onPlay = { onPlay(it, chatTitle(it.chatId)) },
             onDismiss = { openSeries = null },
             onLongClick = { onHoldMedia(it, chatTitle(it.chatId)) },
+            onDownload = onDownloadSeason,
         )
     }
 }

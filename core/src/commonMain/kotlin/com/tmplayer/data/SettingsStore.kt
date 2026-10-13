@@ -10,10 +10,11 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
-import com.tmplayer.player.PlaybackSpeed
+import com.tmplayer.player.SpeedMemory
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.SyncDelays
 import com.tmplayer.player.TouchPrefs
+import com.tmplayer.player.TrackPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +40,6 @@ private val REMOVE_AFTER_WATCHING = booleanPreferencesKey("remove_after_watching
 private val TRICKPLAY = booleanPreferencesKey("trickplay")
 private val WATCH_NEXT = booleanPreferencesKey("watch_next")
 private val CRASH_REPORTS = booleanPreferencesKey("crash_reports")
-private val PLAYBACK_SPEED = floatPreferencesKey("playback_speed")
 private val LAST_CHAT = longPreferencesKey("last_chat")
 private val MIN_SIZE = longPreferencesKey("min_size_bytes")
 private val MAX_SIZE = longPreferencesKey("max_size_bytes")
@@ -129,6 +129,11 @@ private val SUBTITLE_SIZE = stringPreferencesKey("subtitle_size")
 private val SUBTITLE_BOX = booleanPreferencesKey("subtitle_box")
 private val SUBTITLE_POSITION = stringPreferencesKey("subtitle_position")
 
+// The app-wide languages, under the series memory. See [TrackPreferences].
+private val PREFERRED_AUDIO = stringPreferencesKey("preferred_audio_language")
+private val PREFERRED_SUBTITLE = stringPreferencesKey("preferred_subtitle_language")
+private val SUBTITLE_MODE = stringPreferencesKey("subtitle_mode")
+
 /**
  * One series, as a key.
  *
@@ -142,6 +147,14 @@ private fun seriesKey(series: String): String =
 private fun audioKey(series: String) = stringPreferencesKey("audio_$series")
 private fun textKey(series: String) = stringPreferencesKey("text_$series")
 private fun subtitlesKey(series: String) = booleanPreferencesKey("subs_$series")
+
+/**
+ * A speed remembered for a show, a course, a chat or a topic: see [SpeedMemory]. The scope keeps its
+ * colons and a group's minus sign, so chat 12 topic 34 and chat 123 topic 4 never share a key.
+ */
+private fun speedKey(scope: String) = floatPreferencesKey(
+    "speed_" + scope.lowercase(java.util.Locale.ROOT).filter { it.isLetterOrDigit() || it == ':' || it == '-' }.take(80),
+)
 
 /** Where playback stopped, so the next launch can offer to continue. */
 private fun resumeKey(chatId: Long, messageId: Long) =
@@ -637,22 +650,9 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
     suspend fun crashReportsNow(): Boolean = prefs.data.first()[CRASH_REPORTS] ?: false
 
     /**
-     * The speed the last video was left at, applied to the next one.
-     *
-     * Somebody who watches everything at 1.25x should say so once rather than every episode, and
-     * on a television there is no gear menu to say it in twice.
-     */
-    suspend fun setPlaybackSpeed(value: Float) {
-        prefs.edit { it[PLAYBACK_SPEED] = PlaybackSpeed.sanitise(value) }
-    }
-
-    suspend fun playbackSpeedNow(): Float =
-        PlaybackSpeed.sanitise(prefs.data.first()[PLAYBACK_SPEED] ?: PlaybackSpeed.DEFAULT)
-
-    /**
      * How the picture was last fitted to the screen.
      *
-     * Remembered for the same reason the speed is: a viewer whose television overscans, or who
+     * Remembered for the same reason the speed is ([openingSpeed]): a viewer whose television overscans, or who
      * cannot stand black bars, should not have to choose Crop again every episode.
      */
     suspend fun videoScaleNow(): String? = prefs.data.first()[VIDEO_SCALE]
@@ -805,6 +805,57 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             prefs[subtitlesKey(key)] = choice.subtitlesOn
         }
     }
+
+    // ---- speed, per series, chat and topic ---------------------------------------------------
+
+    /**
+     * The speed a video opens at: [fileSpeed], its own from its resume point, else the one kept for
+     * its series or course, else for its chat or topic, else 1x. See [SpeedMemory].
+     */
+    suspend fun openingSpeed(fileSpeed: Float?, scopes: SpeedMemory.Scopes): Float {
+        val prefs = prefs.data.first()
+        return SpeedMemory.resolve(
+            file = fileSpeed,
+            series = scopes.series?.let { prefs[speedKey(it)] },
+            chat = scopes.chat?.let { prefs[speedKey(it)] },
+        )
+    }
+
+    /**
+     * Remembers [value] for the narrowest place the video belongs to. 1x forgets it there and in the
+     * chat or topic underneath, so the next video of the same kind opens at 1x as well.
+     */
+    suspend fun rememberSpeed(scopes: SpeedMemory.Scopes, value: Float) {
+        val keep = SpeedMemory.toKeep(value)
+        prefs.edit { prefs ->
+            if (keep == null) {
+                scopes.all.forEach { prefs.remove(speedKey(it)) }
+            } else {
+                scopes.target?.let { prefs[speedKey(it)] = keep }
+            }
+        }
+    }
+
+    // ---- tracks, app-wide -------------------------------------------------------------------
+
+    /**
+     * The languages a video opens with when neither its own saved tracks nor its series say
+     * otherwise. Read once when a video opens, so a change applies from the next one.
+     */
+    val trackPreferences: Flow<TrackPreferences> = read(::trackPreferencesOf)
+
+    suspend fun trackPreferencesNow(): TrackPreferences = trackPreferencesOf(prefs.data.first())
+
+    suspend fun setTrackPreferences(value: TrackPreferences) {
+        prefs.edit {
+            value.audioLanguage?.let { code -> it[PREFERRED_AUDIO] = code } ?: it.remove(PREFERRED_AUDIO)
+            value.subtitleKey.ifEmpty { null }?.let { key -> it[PREFERRED_SUBTITLE] = key } ?: it.remove(PREFERRED_SUBTITLE)
+            it[SUBTITLE_MODE] = value.mode.key
+        }
+    }
+
+    private fun trackPreferencesOf(prefs: Preferences) =
+        TrackPreferences.from(prefs[PREFERRED_AUDIO], prefs[PREFERRED_SUBTITLE], prefs[SUBTITLE_MODE])
 
     // ---- size filter ------------------------------------------------------------------------
 
@@ -1382,6 +1433,24 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             }
         }
         return removed
+    }
+
+    // ---- backup -----------------------------------------------------------------------------
+
+    /** Every stored value under its stored name, for [Backups.collect] and [Backups.plan]. */
+    suspend fun rawEntries(): Map<String, Any> = prefs.data.first().asMap().mapKeys { it.key.name }
+
+    /**
+     * Writes what [writes] returns for the store as it is at that moment, in one edit, so nothing
+     * written between reading the file and confirming the restore is overwritten by a stale merge.
+     * The history cap is applied after, as after any other resume point.
+     */
+    suspend fun restoreEntries(writes: (Map<String, Any>) -> Map<String, Any>) {
+        prefs.edit { prefs ->
+            val now = prefs.asMap().mapKeys { it.key.name }
+            for ((name, value) in writes(now)) prefs.putRaw(name, value)
+            evictOldestHistory(prefs)
+        }
     }
 
     suspend fun clearResumePosition(chatId: Long, messageId: Long) {

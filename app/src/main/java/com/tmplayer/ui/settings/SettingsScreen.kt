@@ -123,6 +123,7 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.R
+import com.tmplayer.data.BackupWords
 import com.tmplayer.data.CacheShelf
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.CrashReports
@@ -131,6 +132,7 @@ import com.tmplayer.data.DiskInfo
 import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.LocalDownloads
 import com.tmplayer.data.OfflineDownloads
+import com.tmplayer.data.RestorePlan
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.StorageSplit
@@ -152,6 +154,7 @@ import com.tmplayer.player.SubtitlePosition
 import com.tmplayer.player.SubtitleSize
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.TouchPrefs
+import com.tmplayer.player.TrackPreferences
 import com.tmplayer.ui.about.About
 import com.tmplayer.ui.components.ChoiceLine
 import com.tmplayer.ui.components.ChoiceList
@@ -212,6 +215,9 @@ private sealed interface Prompt {
 
     /** "Only my folders" going on, with the favourites it strands counted. Off needs no prompt. */
     data object HideDefaultGroups : Prompt
+
+    /** A backup file picked, with what restoring it would change. */
+    data class Restore(val plan: RestorePlan) : Prompt
 }
 
 /**
@@ -270,6 +276,7 @@ fun SettingsScreen(
     val touchPrefs by settings.touchPrefs.collectAsStateWithLifecycle(initialValue = TouchPrefs())
     val downmixChoice by settings.downmixChoice.collectAsStateWithLifecycle(initialValue = null)
     val subtitleStyle by settings.subtitleStyle.collectAsStateWithLifecycle(initialValue = SubtitleStyle())
+    val trackPrefs by settings.trackPreferences.collectAsStateWithLifecycle(initialValue = TrackPreferences())
     val history by settings.continueWatching.collectAsStateWithLifecycle(initialValue = emptyList())
     val watchedStore = remember { WatchedStore(context) }
     val watchedList by watchedStore.history.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -303,6 +310,7 @@ fun SettingsScreen(
     // The language picker, the "What's new" sheet and "Report a problem", each over the list.
     var pickingLanguage by remember { mutableStateOf(false) }
     var stylingSubtitles by remember { mutableStateOf(false) }
+    var trackPicker by remember { mutableStateOf<TrackLanguagePicker?>(null) }
     var editingSizes by remember { mutableStateOf(false) }
     var whatsNew by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
@@ -319,6 +327,7 @@ fun SettingsScreen(
     var disk by remember { mutableStateOf(DiskInfo.EMPTY) }
     var busy by remember { mutableStateOf<String?>(null) }
     var prompt by remember { mutableStateOf<Prompt?>(null) }
+    val backup = rememberBackupActions(onPlan = { prompt = Prompt.Restore(it) }, say = { toast(it) })
     // The sign out dialog's tick box. Off every time the dialog opens: downloads are the viewer's
     // files, and losing them has to be asked for each time rather than remembered.
     var alsoDeleteDownloads by remember { mutableStateOf(false) }
@@ -609,6 +618,15 @@ fun SettingsScreen(
                         onToggle = { scope.launch { settings.setDownmix(!downmix) } },
                     )
                 }
+                // The soundtrack a video opens in when neither the file nor its series has one saved.
+                item {
+                    ActionRow(
+                        title = s.settingsAudioLanguage,
+                        subtitle = trackPrefs.audioSummary,
+                        icon = ImageVector.vectorResource(R.drawable.ic_audio_language),
+                        onClick = { trackPicker = TrackLanguagePicker.Audio },
+                    )
+                }
                 // Thumbnails over the scrub bar, from what is already downloaded. Shown even where the
                 // memory rules them out, switched off and saying why, so a 1 GB stick's owner who read
                 // about the feature finds out it is not for this device rather than looking for it.
@@ -688,6 +706,23 @@ fun SettingsScreen(
                         ).joinToString("  ·  "),
                         icon = ImageVector.vectorResource(R.drawable.ic_subtitles),
                         onClick = { stylingSubtitles = true },
+                    )
+                }
+                // Which subtitles a video opens with, when neither the file nor its series says.
+                item {
+                    ActionRow(
+                        title = s.settingsSubtitleMode,
+                        subtitle = trackPrefs.mode.label,
+                        icon = ImageVector.vectorResource(R.drawable.ic_subtitles),
+                        onClick = { trackPicker = TrackLanguagePicker.Mode },
+                    )
+                }
+                item {
+                    ActionRow(
+                        title = s.settingsSubtitleLanguage,
+                        subtitle = trackPrefs.subtitleSummary,
+                        icon = TmIcons.Language,
+                        onClick = { trackPicker = TrackLanguagePicker.Subtitle },
                     )
                 }
 
@@ -887,6 +922,28 @@ fun SettingsScreen(
                             onClick = { prompt = Prompt.ClearWatched },
                         )
                     }
+                }
+
+                // ---- backup -----------------------------------------------------------------------------
+
+                // To a file the viewer keeps, and back: settings, lists and resume points, never the
+                // Telegram sign in. See BackupActions for where the file goes on a box with no picker.
+                item { SectionTitle(s.backupSection) }
+                item {
+                    ActionRow(
+                        title = s.backupBackUp,
+                        subtitle = s.backupBackUpDetail,
+                        icon = TmIcons.Download,
+                        onClick = backup.backUp,
+                    )
+                }
+                item {
+                    ActionRow(
+                        title = s.backupRestore,
+                        subtitle = s.backupRestoreDetail,
+                        icon = Icons.Filled.Refresh,
+                        onClick = backup.restore,
+                    )
                 }
 
                 // ---- posters and details --------------------------------------------------------------
@@ -1319,6 +1376,14 @@ fun SettingsScreen(
             onClose = { stylingSubtitles = false },
         )
     }
+    trackPicker?.let { picker ->
+        TrackLanguageSheet(
+            picker = picker,
+            prefs = trackPrefs,
+            onChange = { next -> scope.launch { settings.setTrackPreferences(next) } },
+            onClose = { trackPicker = null },
+        )
+    }
     if (editingSizes) {
         SizeLimitsDialog(
             minSize = minSize,
@@ -1529,8 +1594,10 @@ fun SettingsScreen(
                     runCatching { CrashReports.stop() }
                     runCatching { settings.clearEverything(keepDownloads = !deleteDownloads) }
                     // What this account watched is its own as much as the preferences are, and it
-                    // lives in a file of its own, so it is cleared on its own.
+                    // lives in a file of its own, so it is cleared on its own, and so is Watch
+                    // later, which shares that file.
                     runCatching { watchedStore.clear() }
+                    runCatching { watchedStore.watchLater.clear() }
                     // The bookmarks go with it, for the same reason.
                     runCatching { com.tmplayer.data.BookmarkStore(context).clear() }
                     Td.logOut()
@@ -1542,6 +1609,22 @@ fun SettingsScreen(
                 alsoDeleteDownloads = false
             },
         )
+
+        is Prompt.Restore -> {
+            val plan = (prompt as Prompt.Restore).plan
+            TvConfirm(
+                title = s.backupRestoreTitle,
+                message = BackupWords.restoreMessage(plan),
+                detail = s.backupRestoreUntouched,
+                confirmLabel = s.backupRestoreConfirm,
+                destructive = false,
+                onConfirm = {
+                    prompt = null
+                    backup.apply(plan.backup)
+                },
+                onDismiss = { prompt = null },
+            )
+        }
 
         null -> Unit
     }
