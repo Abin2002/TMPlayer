@@ -107,6 +107,7 @@ import com.tmplayer.data.WatchedStore
 import com.tmplayer.data.errorMessage
 import com.tmplayer.data.valueOrNull
 import com.tmplayer.i18n.L
+import com.tmplayer.i18n.Languages
 import com.tmplayer.i18n.Translator
 import dev.g000sha256.tdl.TdlClient
 import dev.g000sha256.tdl.dto.File as TdFile
@@ -382,6 +383,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * built and written back whenever the viewer changes either.
      */
     private var tracks = TrackChoice()
+
+    /**
+     * How this video's soundtrack and subtitles are decided: its saved tracks, the series, the
+     * languages in Settings, the file's defaults. See [TrackRules].
+     */
+    private var trackPlan = TrackRules.plan(null, TrackChoice(), TrackPreferences(), Languages.ENGLISH)
+
+    /**
+     * Whether the subtitles Settings ask for still wait on the file's track list, which a pick by
+     * language and "only when the audio is foreign" both need. Cleared once applied.
+     */
+    private var settingsSubtitlesPending = false
 
     /** What the track choice is filed under: the series name, or this video's own. */
     private val seriesKey: String
@@ -735,6 +748,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             // the wrong language.
             tracks = runCatching { settings.trackChoice(seriesKey) }
                 .getOrDefault(TrackChoice())
+            val trackPrefs = runCatching { settings.trackPreferencesNow() }.getOrDefault(TrackPreferences())
+            trackPlan = TrackRules.plan(resumed, tracks, trackPrefs, Translator.messages.tag)
+            settingsSubtitlesPending = trackPlan.subtitleSource == TrackSource.Settings &&
+                (trackPlan.subtitles is SubtitlePlan.On || trackPlan.subtitles is SubtitlePlan.IfForeignAudio)
             downmixChoice = runCatching { settings.downmixChoiceNow() }.getOrNull()
             volumeBoostOn = runCatching { settings.volumeBoostNow() }.getOrDefault(false)
             subtitleStyle = runCatching { settings.subtitleStyleNow() }.getOrDefault(SubtitleStyle())
@@ -1492,19 +1509,29 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             .setBackBuffer(BACK_BUFFER_MS, /* retainBackBufferFromKeyframe = */ true)
             .build()
 
+        val plan = trackPlan
+        val subtitles = plan.subtitles
         val trackSelector = DefaultTrackSelector(this).apply {
             parameters = buildUponParameters()
-                // Not disabled outright: turning the whole text renderer off leaves a phone viewer
-                // no route to an embedded subtitle track, since the only picker in the app is
-                // leanback's. Selecting none by default keeps captions off until asked for while
-                // leaving the track there to be chosen, and off stays off, so a series watched
-                // without captions does not get them back on an episode that marks one default.
-                .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, !tracks.empty && !tracks.subtitlesOn)
+                // Off stays off, so a series watched without captions does not get them back on an
+                // episode that marks one default. Settings' "off unless chosen" is softer: the
+                // renderer stays on with the default flag ignored, which still lets a forced track
+                // (a sign, a line in another language) through and leaves every track there to be
+                // chosen from the picker. "Only when the audio is foreign" starts the same way and
+                // is decided once the soundtrack is known ([applySettingsSubtitles]).
+                .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, subtitles is SubtitlePlan.Off && !subtitles.allowForced)
+                .setIgnoredTextSelectionFlags(
+                    if (subtitles is SubtitlePlan.Off || subtitles is SubtitlePlan.IfForeignAudio) {
+                        C.SELECTION_FLAG_DEFAULT
+                    } else {
+                        0
+                    },
+                )
                 // What this series was last watched with, so episode two opens in the language and
-                // with the captions episode one ended in.
-                .setPreferredTextLanguage(tracks.textLanguage.takeIf { tracks.subtitlesOn })
+                // with the captions episode one ended in; else the language Settings ask for.
+                .setPreferredTextLanguage((subtitles as? SubtitlePlan.On)?.language)
                 .setSelectUndeterminedTextLanguage(false)
-                .setPreferredAudioLanguage(tracks.audioLanguage)
+                .setPreferredAudioLanguage(plan.audioLanguage)
                 .build()
         }
 
@@ -1604,6 +1631,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
          */
         override fun onTracksChanged(tracks: Tracks) {
             restoreResumeTracks(tracks)
+            applySettingsSubtitles(tracks)
             rememberTracks(tracks)
             subtitleFiles.onTracksChanged(tracks)
         }
@@ -1738,6 +1766,46 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             }
         }
         if (changed) exo.trackSelectionParameters = builder.build()
+    }
+
+    /**
+     * The subtitles Settings ask for, once the file's tracks and the soundtrack playing are known:
+     * "always" in a language the file lacks falls back to its default or first track, which
+     * Media3's own pick would leave off, and "only when the audio is foreign" cannot be decided
+     * any earlier. Once per video; a choice made in the picker afterwards is the viewer's.
+     */
+    private fun applySettingsSubtitles(current: Tracks) {
+        if (!settingsSubtitlesPending) return
+        val exo = player ?: return
+        if (current.groups.isEmpty()) return
+        settingsSubtitlesPending = false
+        val audio = tracksOfType(current, C.TRACK_TYPE_AUDIO)
+            .firstOrNull { (group, index) -> group.isTrackSelected(index) }
+            ?.let { (group, index) -> group.getTrackFormat(index).language }
+        val text = tracksOfType(current, C.TRACK_TYPE_TEXT)
+        val described = text.map { (group, index) ->
+            val flags = group.getTrackFormat(index).selectionFlags
+            SubtitleTrackInfo(
+                language = group.getTrackFormat(index).language,
+                isDefault = flags and C.SELECTION_FLAG_DEFAULT != 0,
+                forced = flags and C.SELECTION_FLAG_FORCED != 0,
+            )
+        }
+        val builder = exo.trackSelectionParameters.buildUpon()
+        when (val pick = TrackRules.pickSubtitle(trackPlan.subtitles, audio, described)) {
+            SubtitlePick.Leave -> return
+            SubtitlePick.None -> {
+                if (text.none { (group, index) -> group.isTrackSelected(index) }) return
+                builder.clearOverridesOfType(C.TRACK_TYPE_TEXT).setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+            }
+            is SubtitlePick.Track -> {
+                val (group, index) = text[pick.index]
+                if (group.isTrackSelected(index)) return
+                builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                    .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, index))
+            }
+        }
+        exo.trackSelectionParameters = builder.build()
     }
 
     private fun rememberTracks(current: Tracks) {

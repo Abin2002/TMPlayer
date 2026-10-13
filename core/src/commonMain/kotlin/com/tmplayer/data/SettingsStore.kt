@@ -14,6 +14,7 @@ import com.tmplayer.player.PlaybackSpeed
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.SyncDelays
 import com.tmplayer.player.TouchPrefs
+import com.tmplayer.player.TrackPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
@@ -128,6 +129,11 @@ private val SHOW_REMAINING = booleanPreferencesKey("show_remaining_time")
 private val SUBTITLE_SIZE = stringPreferencesKey("subtitle_size")
 private val SUBTITLE_BOX = booleanPreferencesKey("subtitle_box")
 private val SUBTITLE_POSITION = stringPreferencesKey("subtitle_position")
+
+// The app-wide languages, under the series memory. See [TrackPreferences].
+private val PREFERRED_AUDIO = stringPreferencesKey("preferred_audio_language")
+private val PREFERRED_SUBTITLE = stringPreferencesKey("preferred_subtitle_language")
+private val SUBTITLE_MODE = stringPreferencesKey("subtitle_mode")
 
 /**
  * One series, as a key.
@@ -805,6 +811,27 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             prefs[subtitlesKey(key)] = choice.subtitlesOn
         }
     }
+
+    // ---- tracks, app-wide -------------------------------------------------------------------
+
+    /**
+     * The languages a video opens with when neither its own saved tracks nor its series say
+     * otherwise. Read once when a video opens, so a change applies from the next one.
+     */
+    val trackPreferences: Flow<TrackPreferences> = read(::trackPreferencesOf)
+
+    suspend fun trackPreferencesNow(): TrackPreferences = trackPreferencesOf(prefs.data.first())
+
+    suspend fun setTrackPreferences(value: TrackPreferences) {
+        prefs.edit {
+            value.audioLanguage?.let { code -> it[PREFERRED_AUDIO] = code } ?: it.remove(PREFERRED_AUDIO)
+            value.subtitleKey.ifEmpty { null }?.let { key -> it[PREFERRED_SUBTITLE] = key } ?: it.remove(PREFERRED_SUBTITLE)
+            it[SUBTITLE_MODE] = value.mode.key
+        }
+    }
+
+    private fun trackPreferencesOf(prefs: Preferences) =
+        TrackPreferences.from(prefs[PREFERRED_AUDIO], prefs[PREFERRED_SUBTITLE], prefs[SUBTITLE_MODE])
 
     // ---- size filter ------------------------------------------------------------------------
 

@@ -128,7 +128,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [x] CP46 A show is one tile, copies of a film or episode one tile with versions, anime numbering kept (3e765ce; checked on the POCO in Cinema_paradasio)
 - [x] CP47 Skip intro, recap and credits from TheIntroDB, IntroDB.app and AniSkip, next-up counted from the credits (eb8661b; unit tested, privacy page updated; the skip pill is not yet seen on a device, the promo app has online metadata off)
 - [ ] CP48 Speed remembered per series, per chat and per forum topic, presets 0.75 to 2 (batch 1)
-- [ ] CP49 Preferred audio and subtitle language, subtitle mode (batch 1)
+- [x] CP49 Preferred audio and subtitle language, subtitle mode (batch 1; Settings rows on phone, TV and desktop, order saved tracks, series, Settings, file defaults in TrackRules, ISO 639 codes normalised, unit tested in TrackPreferencesTest; not yet seen on a device, strings in en.json only)
 - [ ] CP50 Watch later: single videos without starring the chat, Home row, History tab (batch 1)
 - [ ] CP51 Download a season, or only its unwatched episodes, from the series page (batch 1)
 - [ ] CP52 Course progress: "12 of 40 watched" on lecture series and topics (batch 1)

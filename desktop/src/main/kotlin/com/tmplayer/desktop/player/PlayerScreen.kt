@@ -2,6 +2,7 @@ package com.tmplayer.desktop.player
 
 import androidx.compose.ui.input.key.Key
 import com.tmplayer.i18n.L
+import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.TmMaterialTheme
 import com.tmplayer.desktop.os.MediaKeyEcho
@@ -71,6 +72,8 @@ import com.tmplayer.player.StillWatching
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.SyncDelays
 import com.tmplayer.player.TouchPrefs
+import com.tmplayer.player.TrackPreferences
+import com.tmplayer.player.TrackRules
 import com.tmplayer.player.VideoScale
 import com.tmplayer.platform.Logger
 import kotlinx.coroutines.CoroutineScope
@@ -330,10 +333,16 @@ fun PlayerScreen(
         } else {
             SyncDelays()
         }
+        // The file's saved tracks, then the series, then Settings, then the file's own defaults.
+        val trackPlan = TrackRules.plan(
+            resumed,
+            trackChoice,
+            runCatching { settings.trackPreferencesNow() }.getOrDefault(TrackPreferences()),
+            Translator.messages.tag,
+        )
         val prefs = OpenPrefs(
-            audioLanguage = trackChoice.audioLanguage,
-            subtitleLanguage = trackChoice.textLanguage,
-            subtitlesOn = if (trackChoice.empty) null else trackChoice.subtitlesOn,
+            audioLanguage = trackPlan.audioLanguage,
+            subtitles = trackPlan.subtitles,
             speed = resumed?.speed?.coerceIn(SeekMath.MIN_SPEED, SeekMath.MAX_SPEED)
                 ?: runCatching { settings.playbackSpeedNow() }.getOrDefault(PlaybackSpeed.DEFAULT),
             scale = runCatching { VideoScale.from(settings.videoScaleNow()) }.getOrDefault(VideoScale.Fit),

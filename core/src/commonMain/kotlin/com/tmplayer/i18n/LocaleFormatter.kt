@@ -185,6 +185,10 @@ internal object TrackCodes {
         out
     }
 
+    /** The bibliographic code a two letter one also goes by (`de` to `ger`), or null for most. */
+    fun bibliographicOf(iso1: String): String? =
+        bibliographic.entries.firstOrNull { it.value == iso1 }?.key
+
     fun toIso1(code: String): String? = when (code.length) {
         2 -> code.let { if (it == "in") "id" else if (it == "iw") "he" else it }
         3 -> threeToTwo[code] ?: code
