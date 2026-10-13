@@ -11,7 +11,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -235,94 +234,6 @@ fun seriesProgressLine(progress: SeriesProgress): String? {
         progress.watched > 0 -> s.seriesProgress(progress.watched, progress.total)
         else -> null
     }
-}
-
-/**
- * A show's picture: the newest episode's thumbnail with a stack of edges behind it, so a tile that
- * opens onto many videos does not look like one video. The episode count sits in the corner, the
- * share watched runs along the bottom, and the tick appears once every episode is watched. With
- * posters and overviews on, the show's own wide picture replaces the episode's (never its poster,
- * which would not fill a 16:9 tile).
- */
-@Composable
-fun SeriesArt(
-    series: Series,
-    progress: SeriesProgress,
-    modifier: Modifier = Modifier,
-    compact: Boolean = false,
-) {
-    val s = LocalStrings.current
-    val cover = series.cover
-    val meta = rememberMeta(cover, showOnly = true)
-    val edge = if (compact) 3.dp else 4.dp
-    // The whole thing keeps a video tile's 16:9, edges included, so a show sits level with the
-    // videos beside it in a row.
-    Column(modifier.aspectRatio(16f / 9f)) {
-        // The stack: two shortening edges above the picture, read as more of the same behind it.
-        Box(
-            Modifier
-                .padding(horizontal = 12.dp)
-                .fillMaxWidth()
-                .height(edge)
-                .clip(RoundedCornerShape(topStart = Corner.ExtraSmall, topEnd = Corner.ExtraSmall))
-                .background(Tone.muted.copy(alpha = 0.35f)),
-        )
-        Box(
-            Modifier
-                .padding(horizontal = 6.dp)
-                .fillMaxWidth()
-                .height(edge)
-                .clip(RoundedCornerShape(topStart = Corner.ExtraSmall, topEnd = Corner.ExtraSmall))
-                .background(Tone.muted.copy(alpha = 0.6f)),
-        )
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .clip(RoundedCornerShape(Corner.Small)),
-        ) {
-            MediaArt(cover.miniThumbnail, cover.thumbnailFileId, Modifier.fillMaxSize()) {
-                Text(
-                    series.title.take(1).uppercase(),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Tone.muted,
-                )
-            }
-            // The backdrop only: the 2:3 poster is for the show's page, and cropped into this frame
-            // it would be a band across its middle. Without one, the newest episode's frame stays.
-            MetaPicture(meta?.backdropUrl, Modifier.fillMaxSize())
-            Plate(
-                s.seriesEpisodesCount(series.episodeCount),
-                compact,
-                Modifier.align(Alignment.TopEnd),
-            )
-            val fraction = if (progress.total == 0) 0f else progress.watched.toFloat() / progress.total
-            if (fraction > 0f) Bar(fraction, Modifier.align(Alignment.BottomStart))
-            if (progress.finished) {
-                WatchedBadge(
-                    size = if (compact) 18.dp else 26.dp,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(start = if (compact) 4.dp else 6.dp, bottom = if (compact) 10.dp else 12.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun Plate(text: String, compact: Boolean, modifier: Modifier) {
-    Text(
-        text,
-        style = if (compact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
-        color = Color.White,
-        maxLines = 1,
-        modifier = modifier
-            .padding(if (compact) 4.dp else 6.dp)
-            .clip(RoundedCornerShape(Corner.ExtraSmall))
-            .background(Color.Black.copy(alpha = 0.72f))
-            .padding(horizontal = if (compact) 4.dp else 6.dp, vertical = if (compact) 1.dp else 2.dp),
-    )
 }
 
 /** The progress line along the bottom of a picture, as on a video's own tile. */

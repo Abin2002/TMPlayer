@@ -85,6 +85,8 @@ internal fun SeriesPoster(
     onOpen: () -> Unit,
     nav: KeyboardNav? = null,
     index: Int = 0,
+    /** A 2:3 poster card, as in a chat's grid of films and shows. */
+    poster: Boolean = false,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
@@ -105,21 +107,26 @@ internal fun SeriesPoster(
                     false
                 }
             }
-            .clickable(onClick = onOpen),
+            .clickable(interactionSource = interaction, indication = null, onClick = onOpen),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Box(
             Modifier
                 .fillMaxWidth()
                 .graphicsLayer { scaleX = scale; scaleY = scale }
-                .then(if (focused) Modifier.border(3.dp, Tone.accent, MaterialTheme.shapes.medium) else Modifier),
+                .then(if (focused) Modifier.border(com.tmplayer.ui.theme.Focus.Ring, Tone.accent, MaterialTheme.shapes.medium) else Modifier),
         ) {
-            SeriesArt(series, progress, Modifier.fillMaxWidth())
+            SeriesArt(series, progress, Modifier.fillMaxWidth(), poster = poster)
         }
-        Text(series.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, minLines = 2, overflow = TextOverflow.Ellipsis)
+        // The poster's own lines (see Poster), so a show sits level with the videos beside it.
+        if (poster) {
+            Text(series.title, style = MaterialTheme.typography.bodyMedium, maxLines = 2, minLines = 2, overflow = TextOverflow.Ellipsis)
+        } else {
+            Text(series.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
         Text(
             listOfNotNull(seriesSummary(series), seriesProgressLine(progress)).joinToString("  ·  "),
-            style = MaterialTheme.typography.bodySmall,
+            style = if (poster) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
             color = if (progress.watched > 0) Tone.accent else Tone.muted,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -71,7 +70,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon as M3Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -189,6 +187,25 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
+import com.tmplayer.ui.components.ProgressLine
+import com.tmplayer.ui.components.ProgressLineInset
+import com.tmplayer.ui.components.TileBadge
+import com.tmplayer.ui.components.TileBadgeFill
+import com.tmplayer.ui.components.TileBadgeInset
+import com.tmplayer.ui.components.TileGrid
+import com.tmplayer.ui.components.rememberCover
+import com.tmplayer.ui.theme.Motion
+import com.tmplayer.ui.theme.rememberReducedMotion
+import com.tmplayer.ui.components.PosterArt
+import com.tmplayer.data.MediaName
+import androidx.compose.ui.text.font.FontWeight
 
 /** A store that lives exactly as long as one media screen, so its view models are released with it. */
 private class MediaScreenStore : ViewModelStoreOwner {
@@ -430,11 +447,12 @@ fun MediaGridScreen(
             // Everything that counts in columns, the paging lead included, reads it from here so
             // there is only ever one figure in play.
             BoxWithConstraints(Modifier.fillMaxSize()) {
-            val columns = if (touch) {
-                ((maxWidth - edge * 2) / TOUCH_TILE_MIN).toInt().coerceAtLeast(1)
-            } else {
-                COLUMNS
-            }
+            // Films and shows are 2:3 posters, every other video a 16:9 card, and the two counts
+            // across differ; the grid's own columns are a count both divide (see TileGrid).
+            val landscape = maxWidth > maxHeight
+            val posterColumns = TileGrid.posterColumns(maxWidth - edge * 2, touch, landscape)
+            val wideColumns = TileGrid.wideColumns(maxWidth - edge * 2, touch, landscape)
+            val columns = TileGrid.columns(posterColumns, wideColumns)
             // A show is one tile that opens its seasons and episodes, and a film posted several
             // times over (720p, 1080p, HEVC) is one tile led by the copy the viewer already
             // started, the rest a pick in its details. Not while searching or ticking videos:
@@ -444,7 +462,7 @@ fun MediaGridScreen(
             // parser, which on a page of a few hundred videos is a frame or two on a television
             // stick. The skeleton stays up until the first answer, so tiles never jump from one
             // file each into shows; later pages keep the previous listing up while they are read.
-            val arrangedShelf by produceState<Pair<List<ShelfEntry>, Set<String>>?>(null, list.items, watchProgress, grouping) {
+            val arrangedShelf by produceState<Shelved?>(null, list.items, watchProgress, grouping, layout) {
                 value = withContext(Dispatchers.Default) {
                     val arranged = if (grouping) {
                         SeriesShelf.arrange(list.items)
@@ -456,10 +474,19 @@ fun MediaGridScreen(
                         val started = film.versions.firstOrNull { SettingsStore.progressKey(it.chatId, it.messageId) in watchProgress }
                         if (started == null) entry else ShelfEntry.File(started.asVersion(film))
                     }
-                    led to MediaMapper.repeatedCaptionLines(list.items)
+                    // In the grid, the films and shows come first as one block of posters and every
+                    // other video after them, each block in the chat's own order. Mixed into one
+                    // order, tall and short cards would leave a ragged row wherever they met.
+                    val posters = led.filter(SeriesShelf::isPoster).mapTo(HashSet()) { it.key }
+                    val ordered = if (layout == CardLayout.Grid) {
+                        led.filter { it.key in posters } + led.filter { it.key !in posters }
+                    } else {
+                        led
+                    }
+                    Shelved(ordered, MediaMapper.repeatedCaptionLines(list.items), posters)
                 }
             }
-            val (shelf, repeatedCaptions) = arrangedShelf ?: run {
+            val (shelf, repeatedCaptions, posterKeys) = arrangedShelf ?: run {
                 MediaGridSkeleton(layout = layout)
                 return@BoxWithConstraints
             }
@@ -488,12 +515,13 @@ fun MediaGridScreen(
             // The first row of a television's listing, by key. Focus landing there asks to be
             // brought into view with the focus clearance above it, which scrolls the listing a
             // little way off the top. Back to the very top instead, once that scroll has settled.
-            val firstRowKeys = remember(feed, columns, layout) {
+            val firstRowKeys = remember(feed, posterColumns, wideColumns, layout) {
                 if (touch) {
                     emptySet()
                 } else {
+                    val across = if (firstKey in posterKeys) posterColumns else wideColumns
                     feed.takeWhile { it is MediaFeedEntry.Media }
-                        .take(if (layout == CardLayout.Grid) columns else 1)
+                        .take(if (layout == CardLayout.Grid) across else 1)
                         .map { (it as MediaFeedEntry.Media).item.key }
                         .toSet()
                 }
@@ -515,14 +543,13 @@ fun MediaGridScreen(
                 }
             }
 
-            // The phone's grid is compact but not captionless: smaller art than a television's
-            // card, two lines of the file name under it in small type, and a hairline of a gap.
-            // The name is often the only thing telling two releases apart.
+            // The phone's grid is compact but not captionless: two lines of the name under each
+            // card, since the name is often the only thing telling two releases apart.
             val dense = touch && layout == CardLayout.Grid
-            val gap = if (dense) DENSE_GAP else 16.dp
+            val gap = if (touch) TileGrid.TouchGap else TileGrid.TvGap
             val padding = PaddingValues(
-                start = if (dense) DENSE_GAP else edge,
-                end = if (dense) DENSE_GAP else edge,
+                start = edge,
+                end = edge,
                 // Room above the first row for a focused tile to grow into.
                 top = if (touch) 0.dp else Tv.FocusClearance,
                 // A television crops its outermost few percent, so the last row needs
@@ -559,59 +586,73 @@ fun MediaGridScreen(
                         if (course != null) {
                             item(key = "course", span = { GridItemSpan(maxLineSpan) }) { courseHeader() }
                         }
-                        gridItems(
-                            items = feed,
-                            key = {
-                                when (it) {
-                                    is MediaFeedEntry.Media -> it.item.key
-                                    is MediaFeedEntry.Sponsored -> "sponsor-${it.item.messageId}"
+                        // Headed only when the chat has both: a page of films needs no "Films".
+                        val sections = splitSections(feed, posterKeys)
+                        sections.forEach { (section, part) ->
+                            if (sections.size > 1) {
+                                item(key = "section-$section", span = { GridItemSpan(maxLineSpan) }) {
+                                    SectionHeading(if (section == Section.Posters) s.gridSectionFilms else s.gridSectionVideos)
                                 }
-                            },
-                            span = {
-                                if (it is MediaFeedEntry.Sponsored) GridItemSpan(maxLineSpan)
-                                else GridItemSpan(1)
-                            },
-                        ) { entry ->
-                            when (entry) {
-                                is MediaFeedEntry.Media -> {
-                                    val shelved = entry.item
-                                    if (shelved is ShelfEntry.Show) {
-                                        SeriesCard(
-                                            series = shelved.series,
-                                            progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
-                                            onClick = { openSeries = shelved.series },
+                            }
+                            gridItems(
+                                items = part,
+                                key = {
+                                    when (it) {
+                                        is MediaFeedEntry.Media -> it.item.key
+                                        is MediaFeedEntry.Sponsored -> "sponsor-${it.item.messageId}"
+                                    }
+                                },
+                                span = {
+                                    when {
+                                        it is MediaFeedEntry.Sponsored -> GridItemSpan(maxLineSpan)
+                                        (it as MediaFeedEntry.Media).item.key in posterKeys -> GridItemSpan(columns / posterColumns)
+                                        else -> GridItemSpan(columns / wideColumns)
+                                    }
+                                },
+                            ) { entry ->
+                                when (entry) {
+                                    is MediaFeedEntry.Media -> {
+                                        val shelved = entry.item
+                                        if (shelved is ShelfEntry.Show) {
+                                            SeriesCard(
+                                                series = shelved.series,
+                                                progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
+                                                onClick = { openSeries = shelved.series },
+                                                dense = dense,
+                                                poster = true,
+                                                onFocused = { standingOn = shelved.series.cover },
+                                                modifier = focusOf(shelved),
+                                            )
+                                        } else {
+                                        val item = (shelved as ShelfEntry.File).item
+                                        MediaCard(
+                                            item = item,
+                                            watched = watchProgress[
+                                                SettingsStore.progressKey(item.chatId, item.messageId),
+                                            ],
+                                            finished = SettingsStore.progressKey(item.chatId, item.messageId) in watchedVideos,
                                             dense = dense,
-                                            onFocused = { standingOn = shelved.series.cover },
+                                            poster = shelved.key in posterKeys,
+                                            selected = if (selecting) selected.containsKey(item.id) else null,
+                                            onClick = { if (selecting) toggle(item) else if (detailFirst) showingDetailsOf = item else onPlay(item) },
+                                            onLongClick = if (selecting) null else {
+                                                { heldMenuOf = item }
+                                            },
+                                            onFocused = { standingOn = item },
                                             modifier = focusOf(shelved),
                                         )
-                                    } else {
-                                    val item = (shelved as ShelfEntry.File).item
-                                    MediaCard(
-                                        item = item,
-                                        watched = watchProgress[
-                                            SettingsStore.progressKey(item.chatId, item.messageId),
-                                        ],
-                                        finished = SettingsStore.progressKey(item.chatId, item.messageId) in watchedVideos,
-                                        dense = dense,
-                                        selected = if (selecting) selected.containsKey(item.id) else null,
-                                        onClick = { if (selecting) toggle(item) else if (detailFirst) showingDetailsOf = item else onPlay(item) },
-                                        onLongClick = if (selecting) null else {
-                                            { heldMenuOf = item }
-                                        },
-                                        onFocused = { standingOn = item },
-                                        modifier = focusOf(shelved),
-                                    )
+                                        }
                                     }
+                                    is MediaFeedEntry.Sponsored -> SponsoredCard(
+                                        item = entry.item,
+                                        onFullyVisible = {
+                                            viewModel.markSponsoredViewed(entry.item.messageId)
+                                        },
+                                        onOpen = { openSponsored(entry.item, false) },
+                                        onOpenMedia = { openSponsored(entry.item, true) },
+                                        onReport = { handleReport(entry.item) },
+                                    )
                                 }
-                                is MediaFeedEntry.Sponsored -> SponsoredCard(
-                                    item = entry.item,
-                                    onFullyVisible = {
-                                        viewModel.markSponsoredViewed(entry.item.messageId)
-                                    },
-                                    onOpen = { openSponsored(entry.item, false) },
-                                    onOpenMedia = { openSponsored(entry.item, true) },
-                                    onReport = { handleReport(entry.item) },
-                                )
                             }
                         }
                     }
@@ -1652,10 +1693,15 @@ private fun FullName(name: String, modifier: Modifier = Modifier) {
 }
 
 /**
- * A media tile that marks focus with a border.
+ * A video's tile: the art first, with the name and the facts under it and no panel round any of it.
  *
- * TV Material's card grows by 10% when focused, and a card in the outermost grid column visibly
- * ran off the screen edge when it did; 5% stays inside the overscan margin.
+ * The same tile on the phone, in a chat's grid and on Home, and on the television; [dense] is the
+ * phone's, with two lines of name and the running time on the art in place of the line of facts.
+ * Focus and the press are drawn on the art alone (see [VideoTile]).
+ *
+ * [badge] is the caller's own mark for the art's top end corner, a "New" say, where the quality
+ * tags used to sit before they moved into the line of facts. The top start corner is this tile's:
+ * the download queue's state, else where the copy is, else the watched tick.
  */
 @Composable
 internal fun MediaCard(
@@ -1664,9 +1710,9 @@ internal fun MediaCard(
     onClick: () -> Unit,
     onFocused: () -> Unit,
     modifier: Modifier = Modifier,
-    /** On the Watched list: a tick on the art and a full bar under it. */
+    /** On the Watched list, or marked watched: the tick in the art's corner. */
     finished: Boolean = false,
-    /** The phone's grid: smaller art, small type, running time over the picture. */
+    /** The phone's tile: two lines of name, always, and the smaller badges. */
     dense: Boolean = false,
     /** A long press on a phone, or a hold of OK on a remote, which opens the tile's own menu. */
     onLongClick: (() -> Unit)? = null,
@@ -1677,118 +1723,153 @@ internal fun MediaCard(
      * that it can be ticked, and a tile outside one must not carry any such mark.
      */
     selected: Boolean? = null,
+    badge: (@Composable () -> Unit)? = null,
+    /**
+     * A film's 2:3 poster card ([SeriesShelf.isFilm]) rather than a video's 16:9 card. The caller
+     * says, since only it knows whether the row or grid around it has room for a tall card.
+     */
+    poster: Boolean = false,
 ) {
-    val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
-    val border by animateColorAsState(
-        targetValue = if (focused) Tone.accent else Color.Transparent,
-        animationSpec = tween(140),
-        label = "cardBorder",
-    )
-    LaunchedEffect(focused) { if (focused) onFocused() }
-
-    if (dense) {
-        Column(
-            modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(Corner.Small))
-                .selectionEdge(selected, RoundedCornerShape(Corner.Small))
-                .longPressable(onClick, onLongClick)
-                .padding(DENSE_GAP),
-        ) {
-            MediaArt(
-                item = item,
-                watched = watched,
-                finished = finished,
-                durationOverlay = true,
-                compact = true,
-                selected = selected,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(Corner.Small)),
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                cardTitle(item),
-                style = M3MaterialTheme.typography.bodySmall,
-                color = Tone.text,
-                // Two lines, and always two: a tile that reserves the height whether or not the
-                // name needs it keeps the row of pictures beneath it in a straight line.
-                maxLines = 2,
-                minLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(2.dp))
-            MetaLine(item, watched, compact = true, finished = finished)
-        }
-        return
-    }
-
-    // A phone has no focus to mark, so it takes the surface, elevation and ripple every other card
-    // in the system has instead of the hand-painted panel.
-    if (isTouch()) {
-        Card(
-            shape = RoundedCornerShape(Corner.Medium),
-            // The same hairline the television's panel carries: in daylight a card's fill is only a
-            // shade off the page it sits on.
-            border = if (selected == true) {
-                BorderStroke(SELECTED_EDGE, Tone.accent)
-            } else {
-                BorderStroke(1.dp, Tone.outline)
-            },
-            modifier = modifier.fillMaxWidth().longPressable(onClick, onLongClick),
-        ) {
-            MediaCardBody(item, watched, selected, finished)
-        }
-        return
-    }
-
-    Column(
-        modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(Corner.Medium))
-            .background(if (focused) Tone.surfaceHigh else Tone.surface)
-            .selectionEdge(selected, RoundedCornerShape(Corner.Medium))
-            // A hairline under the focus border, so a tile has an edge even when the remote is
-            // somewhere else. In daylight the fill alone is a near-white panel on a near-white
-            // page, and the edge is what says where one tile ends.
-            .border(1.dp, Tone.outline, RoundedCornerShape(Corner.Medium))
-            .border(Focus.Edge, border, RoundedCornerShape(Corner.Medium))
-            .holdOrPress(interactions, onClick, onLongClick),
+    VideoTile(
+        title = if (poster) remember(item) { SeriesShelf.posterTitle(item) } else tileTitle(item),
+        onClick = onClick,
+        onLongClick = onLongClick,
+        onFocused = onFocused,
+        dense = dense,
+        poster = poster,
+        selected = selected,
+        modifier = modifier,
+        meta = { ink -> MetaLine(item, watched, ink, finished = finished, poster = poster) },
     ) {
-        MediaCardBody(item, watched, selected, finished)
+        MediaArt(
+            item = item,
+            watched = watched,
+            finished = finished,
+            compact = dense,
+            selected = selected,
+            badge = badge,
+            poster = poster,
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }
 
-/** The picture and the caption under it, which both the phone's card and the TV's panel carry. */
+/**
+ * The frame every tile in a grid or a row shares, a video's ([MediaCard]) and a show's
+ * ([SeriesCard]): the art clipped to [Corner.Medium], 16:9 for a video and 2:3 for a [poster],
+ * then the name, then a line of facts.
+ *
+ * No fill and no hairline at rest, on any platform: the art's own edge is the tile's, and the art
+ * is never white (a picture, or a dark [com.tmplayer.ui.components.GeneratedCover]). Focus is three
+ * things at once, never colour alone: the art grows by [Motion.FocusScale] about its centre, a
+ * [Focus.Ring] in the accent goes round it, and the line of facts goes from muted to the full
+ * text colour, all over [Motion.Fast]. A finger presses the art down to [Motion.PressScale] and
+ * its ripple stays inside the art. With the system's animations off nothing scales; the ring and
+ * the colour still say where focus is.
+ *
+ * [meta] draws the line of facts in the colour it is handed. A video's name takes two lines on a
+ * phone ([dense]) and one on a television; a poster's always reserves two, in a smaller type.
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MediaCardBody(
-    item: MediaItem,
-    watched: WatchPoint?,
+internal fun VideoTile(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    dense: Boolean = false,
+    poster: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
+    onFocused: () -> Unit = {},
     selected: Boolean? = null,
-    finished: Boolean = false,
+    meta: (@Composable (ink: Color) -> Unit)? = null,
+    art: @Composable BoxScope.() -> Unit,
 ) {
-    MediaArt(
-        item,
-        watched,
-        Modifier.fillMaxWidth().aspectRatio(16f / 9f),
-        selected = selected,
-        finished = finished,
+    val touch = isTouch()
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val pressed by interactions.collectIsPressedAsState()
+    val still = rememberReducedMotion()
+    LaunchedEffect(focused) { if (focused) onFocused() }
+    val scale by animateFloatAsState(
+        targetValue = when {
+            still -> 1f
+            focused -> Motion.FocusScale
+            pressed && touch -> Motion.PressScale
+            else -> 1f
+        },
+        animationSpec = Motion.standard(if (touch) PRESS_MS else Motion.Fast),
+        label = "tileScale",
     )
-    Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-        Text(
-            cardTitle(item),
-            style = MaterialTheme.typography.titleMedium,
-            color = Tone.text,
-            // Two lines, and always two: a release file name fills both, and reserving the height
-            // whether or not the name needs it keeps the meta lines across a row level.
-            maxLines = 2,
-            minLines = 2,
-            overflow = TextOverflow.Ellipsis,
+    val ring by animateColorAsState(
+        targetValue = if (focused) Tone.accent else Color.Transparent,
+        animationSpec = Motion.standard(Motion.Fast),
+        label = "tileRing",
+    )
+    val ink by animateColorAsState(
+        targetValue = if (focused) Tone.text else Tone.muted,
+        animationSpec = Motion.standard(Motion.Fast),
+        label = "tileInk",
+    )
+    val shape = RoundedCornerShape(Corner.Medium)
+    Column(
+        modifier
+            .fillMaxWidth()
+            .then(
+                if (touch) {
+                    // The ripple is drawn on the art below rather than across the whole column.
+                    Modifier.combinedClickable(
+                        interactionSource = interactions,
+                        indication = null,
+                        role = Role.Button,
+                        onClick = onClick,
+                        onLongClick = onLongClick,
+                    )
+                } else {
+                    Modifier.holdOrPress(interactions, onClick, onLongClick)
+                },
+            ),
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(if (poster) 2f / 3f else 16f / 9f)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clip(shape)
+                .then(if (touch) Modifier.indication(interactions, LocalIndication.current) else Modifier)
+                .border(Focus.Ring, ring, shape)
+                .selectionEdge(selected, shape),
+            content = art,
         )
-        Spacer(Modifier.height(6.dp))
-        MetaLine(item, watched, finished = finished)
+        Spacer(Modifier.height(if (touch) 8.dp else 10.dp))
+        // Two lines, and always two where a row of tiles sits under this one, so the pictures
+        // beneath a short name stay in a straight line with the rest.
+        val lines = if (poster || dense) 2 else 1
+        if (touch) {
+            M3Text(
+                title,
+                style = if (poster) M3MaterialTheme.typography.bodyMedium else M3MaterialTheme.typography.titleSmall,
+                color = Tone.text,
+                maxLines = lines,
+                minLines = lines,
+                overflow = TextOverflow.Ellipsis,
+            )
+        } else {
+            Text(
+                title,
+                style = if (poster) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.titleMedium,
+                color = Tone.text,
+                maxLines = lines,
+                minLines = lines,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (meta != null) {
+            Spacer(Modifier.height(2.dp))
+            meta(ink)
+        }
     }
 }
 
@@ -1910,19 +1991,17 @@ private fun navigationBarPadding(): Dp = with(LocalDensity.current) {
     WindowInsets.navigationBars.getBottom(this).toDp()
 }
 
-/** A media preview with its quality tag and saved playback progress. */
+/**
+ * A video's art with what a tile says on it: one corner badge, the quality on a film's poster,
+ * where playback stopped, and the selection mark.
+ *
+ * A file with no picture gets its [com.tmplayer.ui.components.GeneratedCover] rather than a letter.
+ */
 @Composable
 private fun MediaArt(
     item: MediaItem,
     watched: WatchPoint?,
     modifier: Modifier = Modifier,
-    /**
-     * The running time over the bottom corner of the picture.
-     *
-     * Only the captionless phone grid asks for it. Everywhere else the meta line under the tile
-     * already carries the duration, and saying it twice a centimetre apart reads as a mistake.
-     */
-    durationOverlay: Boolean = false,
     /**
      * A tile a third of a phone wide, where the badges have to come down with it: at the
      * television's figures two of them would cover most of the artwork they annotate.
@@ -1934,32 +2013,35 @@ private fun MediaArt(
      * the only part big enough for a mark to be read from a sofa.
      */
     selected: Boolean? = null,
-    /**
-     * On the Watched list. The bar runs full width and a tick sits in the bottom corner, the one
-     * corner no other badge uses, so a finished video reads as finished at a glance.
-     */
+    /** On the Watched list, or marked watched: the tick, when no other badge has the corner. */
     finished: Boolean = false,
+    /** The caller's own mark for the top end corner; see [MediaCard]. */
+    badge: (@Composable () -> Unit)? = null,
+    /** A film's 2:3 poster: see [PosterArt]. */
+    poster: Boolean = false,
 ) {
     val s = LocalStrings.current
-    val tagStyle = if (compact) {
-        M3MaterialTheme.typography.labelSmall
-    } else {
-        MaterialTheme.typography.bodyMedium
-    }
-    val plateH = if (compact) 4.dp else 6.dp
-    val plateV = if (compact) 1.dp else 2.dp
-    val inset = if (compact) 4.dp else 6.dp
+    val named = rememberCover(item)
+    // The phone's small card writes the name under the art, and a name on the cover as well
+    // would be the same words twice a few dp apart, cut short in both places.
+    val cover = if (compact && !poster) remember(named) { named.copy(title = "") } else named
+    val inset = if (compact) 4.dp else TileBadgeInset
     Box(modifier) {
-        // On Home, the show's or the film's own picture over the frame once a match arrives.
-        com.tmplayer.ui.online.OnlineArt(item, Modifier.fillMaxSize()) {
-            MediaPreview(
-                miniThumbnail = item.miniThumbnail,
-                thumbnailFileId = item.thumbnailFileId,
-                fallbackLabel = item.title,
-                modifier = Modifier.fillMaxSize(),
-            )
+        if (poster) {
+            val meta = com.tmplayer.ui.online.rememberMeta(item, showOnly = true)
+            PosterArt(item.miniThumbnail, item.thumbnailFileId, cover, meta?.posterUrl, Modifier.fillMaxSize(), compactCover = compact)
+        } else {
+            // On Home, the show's or the film's own picture over the frame once a match arrives.
+            com.tmplayer.ui.online.OnlineArt(item, Modifier.fillMaxSize()) {
+                MediaPreview(
+                    miniThumbnail = item.miniThumbnail,
+                    thumbnailFileId = item.thumbnailFileId,
+                    fallbackLabel = item.title,
+                    modifier = Modifier.fillMaxSize(),
+                    cover = cover,
+                )
+            }
         }
-        val tags = item.qualityTags
 
         // What the download queue is doing with this video, if anything. Read through
         // [derivedStateOf] so a grid of forty tiles does not all recompose once a second because
@@ -1968,12 +2050,13 @@ private fun MediaArt(
         val coming by remember(item.fileId) {
             androidx.compose.runtime.derivedStateOf { queue.value[item.fileId] }
         }
+        // One badge in the corner at most, the most pressing first: a video being fetched, then
+        // where its copy is, then whether it has been watched. Two in one corner would overlap,
+        // and a badge in every corner turns the picture into a form.
+        val corner = Modifier.align(Alignment.TopStart).padding(inset)
         val waiting = coming
-        if (waiting != null) {
-            // Takes the Downloaded or Cached badge's corner, and takes precedence over it: a video being
-            // fetched is the more urgent fact, and both in one corner would overlap. Every ticked
-            // video says on its own tile where in the queue it is.
-            Text(
+        when {
+            waiting != null -> TileBadge(
                 when (waiting.stage) {
                     OfflineDownloads.Stage.Running ->
                         waiting.fraction?.let { s.formatter.percent(it.toDouble()) } ?: s.gridStageDownloading
@@ -1984,125 +2067,31 @@ private fun MediaArt(
                     OfflineDownloads.Stage.Moving -> s.gridStageMoving
                     OfflineDownloads.Stage.Failed -> s.gridStageFailed
                 },
-                style = tagStyle,
-                color = Tone.onAccent,
-                maxLines = 1,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(inset)
-                    .clip(RoundedCornerShape(Corner.ExtraSmall))
-                    .background(
-                        if (waiting.stage == OfflineDownloads.Stage.Failed) {
-                            Tone.danger.copy(alpha = 0.92f)
-                        } else {
-                            Tone.accent.copy(alpha = 0.92f)
-                        },
-                    )
-                    .padding(horizontal = plateH + 1.dp, vertical = plateV),
+                corner,
+                fill = if (waiting.stage == OfflineDownloads.Stage.Failed) Tone.danger.copy(alpha = 0.92f) else TileBadgeFill,
             )
-        } else if (item.onDevice) {
-            Text(
-                // Two words for two kinds of copy: one the viewer kept, and one playing left
-                // behind that the next play may take.
+            // Two words for two kinds of copy: one the viewer kept, and one playing left behind
+            // that the next play may take.
+            item.onDevice -> TileBadge(
                 if (item.locality == MediaItem.Locality.Downloaded) s.gridBadgeDownloaded else s.gridBadgeCached,
-                style = tagStyle,
-                // The one badge here that is the app speaking rather than a fact about the picture,
-                // so it takes the theme's own colour instead of the plain black plate the tags use.
-                color = Tone.onAccent,
-                maxLines = 1,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(inset)
-                    .clip(RoundedCornerShape(Corner.ExtraSmall))
-                    .background(Tone.accent.copy(alpha = 0.92f))
-                    .padding(horizontal = plateH + 1.dp, vertical = plateV),
+                corner,
             )
+            finished -> WatchedBadge(corner)
         }
-        if (tags.isNotEmpty()) {
-            Row(
-                Modifier.align(Alignment.TopEnd).padding(inset),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                tags.forEach { tag ->
-                    Text(
-                        tag,
-                        style = tagStyle,
-                        color = Color.White,
-                        maxLines = 1,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(Corner.ExtraSmall))
-                            .background(Color.Black.copy(alpha = 0.72f))
-                            .padding(horizontal = plateH, vertical = plateV),
-                    )
-                }
-            }
+        // The top end corner: the caller's own mark, else on a poster the quality the name
+        // states, which a film's card shows where a video's carries it in its line of facts.
+        val quality = item.qualityTags.firstOrNull()
+        when {
+            badge != null -> Box(Modifier.align(Alignment.TopEnd).padding(inset)) { badge() }
+            // Only on its own: two chips across a narrow poster would meet in the middle.
+            poster && quality != null && waiting == null && !item.onDevice && !finished -> TileBadge(quality, Modifier.align(Alignment.TopEnd).padding(inset))
         }
-        val duration = s.formatter.duration(item.durationSec.toLong())
-        if (durationOverlay && duration.isNotEmpty()) {
-            Text(
-                duration,
-                style = if (compact) M3MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
-                color = Color.White,
-                maxLines = 1,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(inset)
-                    .clip(RoundedCornerShape(Corner.ExtraSmall))
-                    .background(Color.Black.copy(alpha = 0.72f))
-                    .padding(horizontal = plateH, vertical = plateV),
-            )
-        }
-        // A finished video draws a full bar even with no saved position: finishing it is exactly
-        // what clears the position, and a video marked by hand may never have been opened here.
-        // One part way through a second viewing shows where that viewing is instead.
-        val fraction = when {
-            watched != null && watched.fraction > 0f -> watched.fraction
-            finished -> 1f
-            else -> 0f
-        }
+
+        // Where playback stopped, as a line laid on the foot of the picture. Only with a saved
+        // place: a finished video says so with its tick, and a full line would say it twice.
+        val fraction = watched?.takeIf { it.positionMs > 0 }?.fraction ?: 0f
         if (fraction > 0f) {
-            // A thin bar along the bottom of the art, where a viewer already looks to see whether
-            // they have started something. Material draws it on a phone, gap and rounded ends
-            // included, so it matches the bar under the video the tile opens. The television keeps
-            // two plain rectangles: read across a room, a gap in a 6dp line looks like a fault in
-            // the panel. The track stays black in both, since it lies over artwork rather than
-            // over any surface the theme knows about.
-            val track = Color.Black.copy(alpha = 0.55f)
-            if (isTouch()) {
-                LinearProgressIndicator(
-                    progress = { fraction },
-                    color = Tone.accent,
-                    trackColor = track,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .fillMaxWidth()
-                        .height(6.dp),
-                )
-            } else {
-                Box(
-                    Modifier
-                        .align(Alignment.BottomStart)
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .background(track),
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth(fraction)
-                            .fillMaxHeight()
-                            .background(Tone.accent),
-                    )
-                }
-            }
-        }
-        if (finished) {
-            WatchedBadge(
-                size = if (compact) 18.dp else 26.dp,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    // Clear of the 6 dp bar along the bottom edge.
-                    .padding(start = inset, bottom = inset + 6.dp),
-            )
+            ProgressLine(fraction, Modifier.align(Alignment.BottomCenter), inset = if (compact) 6.dp else ProgressLineInset)
         }
         if (selected != null) {
             val ring = if (compact) 30.dp else 44.dp
@@ -2140,6 +2129,13 @@ private fun MediaArt(
 }
 
 /**
+ * The name a tile goes by: see [SeriesShelf.tileTitle]. The release name with its tags stays in
+ * the detail panel, the list arrangement and the TV's name strip, which are for reading it whole.
+ */
+@Composable
+private fun tileTitle(item: MediaItem): String = remember(item) { SeriesShelf.tileTitle(item) }
+
+/**
  * Click, and on a phone long press, on whatever this is applied to.
  *
  * [combinedClickable] rather than `Card(onClick =)` because a card's own click has nowhere to hang
@@ -2147,11 +2143,6 @@ private fun MediaArt(
  * the same one either way.
  */
 @OptIn(ExperimentalFoundationApi::class)
-/** A film posted in several copies goes by its own name on its one tile; any other file by its title. */
-@Composable
-private fun cardTitle(item: MediaItem): String =
-    if (item.versions.size > 1) remember(item.id) { SeriesShelf.filmTitle(item) } else item.title
-
 private fun Modifier.longPressable(onClick: () -> Unit, onLongClick: (() -> Unit)?): Modifier =
     if (onLongClick == null) clickable(onClick = onClick)
     else combinedClickable(onClick = onClick, onLongClick = onLongClick)
@@ -2183,15 +2174,22 @@ private fun Modifier.holdOrPress(
 private fun Modifier.selectionEdge(selected: Boolean?, shape: Shape): Modifier =
     if (selected != true) this else border(SELECTED_EDGE, Tone.accent, shape)
 
-/** Running time, file size, and where playback stopped, on the one line both arrangements use. */
+/**
+ * Running time, file size or the number of copies, the quality the name states, and where playback
+ * stopped, on the one line under a tile and in a list row. [ink] is the tile's: muted at rest and
+ * the full text colour under focus.
+ */
 @Composable
 private fun MetaLine(
     item: MediaItem,
     watched: WatchPoint?,
-    compact: Boolean = false,
+    ink: Color = Tone.muted,
     finished: Boolean = false,
+    /** A film's poster: the year first, and no quality, which the poster wears on its art. */
+    poster: Boolean = false,
 ) {
     val s = LocalStrings.current
+    val year = if (poster) remember(item) { MediaName.parse(item.nameForParsing, item.caption).year } else null
     val duration = s.formatter.duration(item.durationSec.toLong())
     // A tile standing for several copies says how many rather than one copy's size.
     val size = if (item.versions.size > 1) s.detailVersions(item.versions.size) else s.formatter.size(item.sizeBytes)
@@ -2199,29 +2197,33 @@ private fun MetaLine(
         ?.takeIf { it.positionMs > 0 }
         ?.let { s.gridStoppedAt(s.formatter.clock(it.positionMs)) }
         ?: s.commonWatched.takeIf { finished }
-    Text(
-        listOfNotNull(duration.ifEmpty { null }, size.ifEmpty { null }, resume)
-            .joinToString("  ·  "),
-        style = if (compact) {
-            M3MaterialTheme.typography.labelSmall
-        } else {
-            MaterialTheme.typography.bodyMedium
-        },
-        color = if (resume != null) Tone.accent else Tone.muted,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
+    val text = listOfNotNull(
+        year?.toString(),
+        // A poster is narrow: the year and the size or the copies say most, and the detail the rest.
+        duration.ifEmpty { null }?.takeIf { !poster },
+        size.ifEmpty { null },
+        // On a video's card the quality is here rather than a second badge on the picture.
+        item.qualityTags.firstOrNull()?.takeIf { !poster },
+        resume,
+    ).joinToString("  ·  ")
+    if (isTouch()) {
+        M3Text(
+            text,
+            style = if (poster) M3MaterialTheme.typography.labelSmall else M3MaterialTheme.typography.labelMedium,
+            color = ink,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    } else {
+        Text(
+            text,
+            style = if (poster) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+            color = ink,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
-
-private const val COLUMNS = 4
-
-/**
- * The narrowest a video tile may be on a phone before the grid drops a column.
- *
- * The art only has to be recognisable, and this width is what leaves room for an extra column and
- * for the name underneath.
- */
-private val TOUCH_TILE_MIN = 120.dp
 
 /** No overscan to clear on a phone, so the margin is only what keeps art off the bezel. */
 private val TOUCH_EDGE = 16.dp
@@ -2241,8 +2243,8 @@ private const val TOUCH_ART_SHARE = 0.4f
 /** The chat's picture in the app bar, at Material's own app-bar avatar size. */
 private val BAR_AVATAR = 40.dp
 
-/** Barely a hairline between tiles, so the grid still reads as one sheet of pictures. */
-private val DENSE_GAP = 4.dp
+/** How long a finger takes to press a tile's art down to [Motion.PressScale]. */
+private const val PRESS_MS = 100
 
 /**
  * Thicker than the focus border it is drawn over, so the two never read as the same mark.
@@ -2261,3 +2263,51 @@ private const val REFRESH_TIMEOUT_MS = 20_000L
 
 /** How long a gap in focus has to last before the name strip counts it as having left. */
 private const val FOCUS_SETTLE_MS = 150L
+
+/** The grid's listing once arranged: the entries in order, the caption lines to skip, and which are posters. */
+private data class Shelved(
+    val shelf: List<ShelfEntry>,
+    val repeatedCaptions: Set<String>,
+    val posterKeys: Set<String>,
+)
+
+/** The two blocks of a chat's grid: films and shows as posters, then every other video. */
+private enum class Section { Posters, Videos }
+
+/**
+ * [feed] cut where the posters end, each part with the block it is. One part when the chat holds
+ * only one kind. A sponsored message stays in the part it was placed in.
+ */
+private fun splitSections(
+    feed: List<MediaFeedEntry<ShelfEntry>>,
+    posterKeys: Set<String>,
+): List<Pair<Section, List<MediaFeedEntry<ShelfEntry>>>> {
+    val firstVideo = feed.indexOfFirst { it is MediaFeedEntry.Media && it.item.key !in posterKeys }
+    return when {
+        posterKeys.isEmpty() || firstVideo == 0 -> listOf(Section.Videos to feed)
+        firstVideo < 0 -> listOf(Section.Posters to feed)
+        else -> listOf(Section.Posters to feed.subList(0, firstVideo), Section.Videos to feed.subList(firstVideo, feed.size))
+    }
+}
+
+/** A block's heading in a chat's grid, in the row headings' own type. */
+@Composable
+private fun SectionHeading(label: String) {
+    if (isTouch()) {
+        M3Text(
+            label,
+            style = M3MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = Tone.text,
+            modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
+        )
+    } else {
+        Text(
+            label,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = Tone.text,
+            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+        )
+    }
+}
