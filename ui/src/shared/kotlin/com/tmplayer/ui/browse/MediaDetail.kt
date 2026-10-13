@@ -8,6 +8,8 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -56,7 +58,10 @@ import com.tmplayer.data.MediaItem
 import com.tmplayer.data.MediaName
 import com.tmplayer.data.WatchPoint
 import com.tmplayer.i18n.Messages
-import com.tmplayer.ui.components.MediaArt
+import com.tmplayer.ui.components.ArtBackdrop
+import com.tmplayer.ui.components.BackdropSource
+import com.tmplayer.ui.components.rememberCover
+import com.tmplayer.ui.theme.Scrims
 import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.ui.components.isTouch
@@ -157,6 +162,7 @@ fun detailRow(
  * @param poster a picture to show instead of the video's own. Left null, the online match's is used.
  * @param overview words to show instead of the caption. Left null, the online match's are used.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MediaDetailPanel(
     item: MediaItem,
@@ -183,7 +189,6 @@ fun MediaDetailPanel(
 ) {
     val s = LocalStrings.current
     val parsed = remember(item) { MediaName.parse(item.nameForParsing, item.caption) }
-    val facts = remember(item) { MediaFacts.of(item) }
     val meta = rememberMeta(item)
     // "small-shelf-part-1" reads as a title once its joiners are spaces; a name with spaces in it
     // already chose its own punctuation and keeps it. A match's own title wins, in the UI language.
@@ -192,7 +197,6 @@ fun MediaDetailPanel(
     val episodeLine = listOfNotNull(
         parsed.episodeCode,
         meta?.episode?.name?.takeIf { it.isNotBlank() },
-        (parsed.year ?: meta?.year)?.toString(),
     ).joinToString("  ·  ")
     val metaOverview = meta?.let { it.episode?.overview?.takeIf { o -> o.isNotBlank() } ?: it.overview.takeIf { o -> o.isNotBlank() } }
     // The facts line, cast, trailer and "More like this": only for the panel's own online match,
@@ -200,11 +204,17 @@ fun MediaDetailPanel(
     val extras = rememberMetaExtras(meta.takeIf { poster == null && overview == null })
     val trailers = rememberTrailerLauncher()
 
+    val cover = rememberCover(item)
+    val source = remember(item.id, cover, meta?.wideUrl) { BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, meta?.wideUrl) }
+    val facts = remember(item) { MediaFacts.of(item) }
+    val online = OnlineMetadata.current
+    val metadataOff = online != null && poster == null && overview == null && !online.settings.collectAsState().value.enabled
+
     Column(
         modifier
             .verticalScroll(scroll)
             .padding(contentPadding),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Box(
             Modifier
@@ -218,11 +228,8 @@ fun MediaDetailPanel(
             if (poster != null) {
                 poster()
             } else {
-                MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize()) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(40.dp))
-                }
-                // The episode's still or the wide picture, over the frame once it has arrived.
-                MetaPicture(meta?.wideUrl, Modifier.fillMaxSize(), maxWidth = 800)
+                // The online picture, else the thumbnail as a soft field, else the generated cover.
+                ArtBackdrop(source, Modifier.fillMaxSize())
             }
             val fraction = when {
                 finished -> 1f
@@ -230,20 +237,13 @@ fun MediaDetailPanel(
                 else -> 0f
             }
             if (fraction > 0f) {
-                Box(
-                    Modifier
-                        .align(Alignment.BottomStart)
-                        .fillMaxWidth()
-                        .height(5.dp)
-                        .background(Color.Black.copy(alpha = 0.55f)),
-                ) {
-                    Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).fillMaxHeight().background(Tone.accent))
-                }
+                Box(Modifier.matchParentSize().background(Scrims.tileFoot))
+                com.tmplayer.ui.components.ProgressLine(fraction, Modifier.align(Alignment.BottomCenter))
             }
             if (finished) WatchedBadge(Modifier.align(Alignment.TopEnd).padding(8.dp))
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Bottom) {
             meta?.posterUrl?.let { url ->
                 Box(
                     Modifier
@@ -256,46 +256,36 @@ fun MediaDetailPanel(
                 }
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (episodeLine.isNotEmpty()) {
+                    Text(episodeLine, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = Tone.accent, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
                 Text(
                     heading,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
+                    // The page's display size, a step down beside a poster in a pane this narrow.
+                    style = if (meta?.posterUrl != null) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
                     color = Tone.text,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.semantics { heading() },
                 )
-                if (episodeLine.isNotEmpty()) {
-                    Text(episodeLine, style = MaterialTheme.typography.titleSmall, color = Tone.accent, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                }
-                if (chatTitle.isNotBlank()) {
-                    Text(
-                        s.detailInChat(chatTitle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Tone.muted,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                val quick = listOfNotNull(
-                    facts.resolution,
-                    item.durationSec.takeIf { it > 0 }?.let { s.formatter.duration(it.toLong()) },
-                    item.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
-                    s.detailWatchedLine.takeIf { finished },
-                )
-                if (quick.isNotEmpty()) {
-                    Text(
-                        quick.joinToString("  ·  "),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Tone.text,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
             }
         }
 
-        MetaFactsLines(extras)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            FactLine(
+                listOfNotNull(
+                    (parsed.year ?: meta?.year)?.let { Fact(it.toString()) },
+                    item.durationSec.takeIf { it > 0 }?.let { Fact(s.formatter.duration(it.toLong())) },
+                    facts.resolution?.let { Fact(it, chip = true) },
+                    item.sizeBytes.takeIf { it > 0 }?.let { Fact(s.formatter.size(it)) },
+                    chatTitle.takeIf { it.isNotBlank() }?.let { Fact(it) },
+                    Fact(s.detailWatchedLine, accent = true).takeIf { finished },
+                ),
+            )
+            MetaFactsLines(extras)
+            ResumeLine(watched, finished, item.durationSec)
+        }
 
         if (!item.canBeSaved) {
             Text(
@@ -309,45 +299,25 @@ fun MediaDetailPanel(
             )
         }
 
-        Column(
-            Modifier.semantics { },
-            verticalArrangement = Arrangement.spacedBy(if (isTouch()) 0.dp else 8.dp),
-        ) {
-            rows.forEachIndexed { index, row ->
-                DetailActionRow(
-                    row,
-                    if (index == 0 && firstAction != null) Modifier.focusRequester(firstAction) else Modifier,
-                )
-            }
-            extras?.trailer?.let { trailer ->
-                DetailActionRow(
-                    DetailRow(
-                        action = DetailAction.Play,
-                        label = s.metadataTrailer,
-                        icon = TrailerIcon,
-                        onSelect = { trailers.open(trailer) },
-                    ),
-                )
-                trailers.unopened?.takeIf { it == trailer }?.let { TrailerQr(it, Modifier.padding(vertical = 8.dp)) }
-                TrailerHost(trailers)
-            }
-            // Posters and overviews are off: one line to turn them on from here, as Settings can.
-            val online = OnlineMetadata.current
-            if (online != null && poster == null && overview == null) {
-                val settings by online.settings.collectAsState()
-                if (!settings.enabled) {
-                    DetailActionRow(
-                        DetailRow(
-                            action = DetailAction.Play,
-                            label = s.metadataTurnOn,
-                            icon = Icons.Filled.Info,
-                            detail = s.metadataTurnOnDetail,
-                            onSelect = { online.setEnabled(true) },
-                        ),
-                    )
-                }
+        // One bright pill for Play or Resume, then every other action as a round button.
+        rows.firstOrNull()?.let { primary ->
+            HeroPill(primary.label, primary.icon, primary.onSelect, Modifier.fillMaxWidth(), focusRequester = firstAction)
+        }
+        val others = buildList {
+            addAll(rows.drop(1))
+            extras?.trailer?.let { trailer -> add(DetailRow(DetailAction.Play, s.metadataTrailer, TrailerIcon, onSelect = { trailers.open(trailer) })) }
+            // Posters and overviews are off: one button to turn them on from here, as Settings can.
+            if (metadataOff) {
+                add(DetailRow(DetailAction.Play, s.metadataTurnOn, Icons.Filled.Info, s.metadataTurnOnDetail, onSelect = { online?.setEnabled(true) }))
             }
         }
+        if (others.isNotEmpty()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail) }
+            }
+        }
+        extras?.trailer?.let { trailer -> trailers.unopened?.takeIf { it == trailer }?.let { TrailerQr(it, Modifier.padding(vertical = 8.dp)) } }
+        TrailerHost(trailers)
 
         // A film the chat posted several times over: every copy by quality and size, one click away.
         Versions(item, onOpenItem)

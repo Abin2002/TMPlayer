@@ -57,6 +57,10 @@ import com.tmplayer.online.MetaInfo
 import com.tmplayer.online.MetaKind
 import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.ui.components.MediaArt
+import com.tmplayer.ui.components.ProgressLine
+import com.tmplayer.ui.components.TileBadgeInset
+import com.tmplayer.ui.components.rememberCover
+import com.tmplayer.ui.theme.Scrims
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
@@ -195,7 +199,7 @@ private fun SeasonChip(season: EpisodeGuide.Season, chosen: Boolean, tv: Boolean
     val usable = season.state == EpisodeGuide.State.InChat
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(Corner.Medium)
+    val shape = RoundedCornerShape(Corner.Small)
     val fill = when {
         focused -> Tone.focusFill
         chosen -> Tone.accent.copy(alpha = 0.18f)
@@ -259,6 +263,8 @@ private fun GuideRow(
     val inChat = episode.inChat
     val point = inChat?.let(watch::pointOf)
     val finished = inChat != null && watch.finishedEpisode(inChat)
+    // A card, as the show page's episodes are: the surface and a hairline at rest, the focus fill
+    // under the remote, the accent's tint for the episode this page is about.
     Row(
         Modifier
             .fillMaxWidth()
@@ -268,9 +274,10 @@ private fun GuideRow(
                 when {
                     focused -> Tone.focusFill
                     current -> Tone.accent.copy(alpha = 0.12f)
-                    else -> Color.Transparent
+                    else -> Tone.surface
                 },
             )
+            .border(1.dp, if (current && !focused) Tone.accent.copy(alpha = 0.5f) else if (focused) Color.Transparent else Tone.outline, shape)
             .focusRing(focused, shape)
             .then(
                 if (onOpen != null) {
@@ -283,7 +290,7 @@ private fun GuideRow(
                     Modifier
                 },
             )
-            .padding(if (tv) 8.dp else 6.dp),
+            .padding(if (tv) 10.dp else 8.dp),
         horizontalArrangement = Arrangement.spacedBy(if (tv) 16.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -297,16 +304,15 @@ private fun GuideRow(
             // The episode's own still from the show's season listing, else the episode file's own
             // match, which is the same show and episode. Never the show's backdrop: a column of one
             // picture tells the episodes apart less than Telegram's frames, which stay underneath.
-            if (inChat != null) MediaArt(inChat.item.miniThumbnail, inChat.item.thumbnailFileId, Modifier.fillMaxSize()) {}
+            if (inChat != null) MediaArt(inChat.item.miniThumbnail, inChat.item.thumbnailFileId, Modifier.fillMaxSize(), cover = rememberCover(inChat.item), compactCover = true)
             val own = inChat?.takeIf { episode.meta?.stillUrl == null }?.let { rememberMeta(it.item) }
             MetaPicture(episode.meta?.stillUrl ?: own?.episode?.stillUrl, Modifier.fillMaxSize(), maxWidth = 400)
             val fraction = if (finished) 1f else point?.fraction ?: 0f
             if (fraction > 0f) {
-                Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(4.dp).background(Color.Black.copy(alpha = 0.55f))) {
-                    Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).fillMaxHeight().background(Tone.accent))
-                }
+                Box(Modifier.matchParentSize().background(Scrims.tileFoot))
+                ProgressLine(fraction, Modifier.align(Alignment.BottomCenter), inset = 6.dp)
             }
-            if (finished) WatchedBadge(Modifier.align(Alignment.TopEnd).padding(6.dp))
+            if (finished) WatchedBadge(Modifier.align(Alignment.TopEnd).padding(TileBadgeInset))
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             val ink = if (focused) Tone.onFocusFill else Tone.text

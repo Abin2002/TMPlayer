@@ -139,7 +139,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [x] CP57 TV screensaver, PIN lock for settings and a kids lock (batch 2) (PIN as a salted PBKDF2 hash with a stored back-off, asked for Settings and optionally on open, on phone, TV and desktop; kids lock "Allowed chats only" filtered once through ChatGate and KidsLock in core for the chat list, Home, search, Continue watching, Watched and Watch later; TV screensaver Off, 2, 5 or 10 min with clock and drifting Continue watching art. Unit tested in AppLockTest. Not yet checked on a device)
 - [x] CP58 Skip silence, rewind a few seconds on resume (batch 2) (skip silence under the speeds on phone and TV, kept as a setting; Android only, mpv's silenceremove drifts sound from picture. "Rewind when resuming" Off/3/5/10 s, default 3 s, on phone, TV and desktop via `ResumeRewind`, unit tested. Not yet tried on a device)
 - [x] CP59 UI scale, log export for bug reports (batch 2)
-- [ ] CP60 Episode thumbnails in the series list (batch 2)
+- [x] CP60 Episode thumbnails in the series list (batch 2)
 - [ ] CP61 (later, user 2026-10-13: no new outside services for now) Absolute anime episode numbers to season and episode via ani.zip or the Fribb list (batch 2)
 - [ ] U30 Register AniList and Simkl API clients, give Claude the client ids
 - [ ] CP62 AniList and Simkl progress sync (later, user 2026-10-13: anything needing keys or accounts waits; needs U30)

@@ -7,8 +7,15 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.Alignment
+import com.tmplayer.ui.i18n.LocalStrings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -21,9 +28,7 @@ import androidx.tv.material3.Text
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.Series
 import com.tmplayer.data.SeriesProgress
-import com.tmplayer.ui.components.PhoneSheet
 import com.tmplayer.ui.components.isTouch
-import com.tmplayer.ui.components.keepScrollInSheet
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.Tv
 
@@ -69,8 +74,8 @@ internal fun SeriesCard(
 }
 
 /**
- * A show, opened: a bottom sheet on a phone and a page of its own on a television. Choosing an
- * episode plays it and closes this, so Back from the player lands on the chat, not on the sheet.
+ * A show, opened: a page of its own over everything, on a phone and a television alike. Choosing
+ * an episode plays it and closes this, so Back from the player lands on the chat, not on the page.
  */
 @Composable
 internal fun SeriesOpened(
@@ -81,55 +86,30 @@ internal fun SeriesOpened(
     onLongClick: ((MediaItem) -> Unit)? = null,
     /** Download season and Download unwatched; see [queueSeason]. Null leaves them out. */
     onDownload: ((SeasonDownloadRequest) -> Unit)? = null,
+    /** The chat the show is in, for the page's facts line. */
+    chatTitle: String? = null,
 ) {
-    if (isTouch()) {
-        SeriesSheet(series, watch, onPlay, onDismiss, onLongClick, onDownload)
-    } else {
-        TvSeriesPage(series, watch, onPlay, onDismiss, onDownload)
-    }
+    SeriesPage(series, watch, onPlay, onDismiss, onLongClick.takeIf { isTouch() }, onDownload, chatTitle)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The show's page: full screen, edge to edge, its backdrop under the status bar, in a window of
+ * its own like [com.tmplayer.ui.components.TvMenu], so Back (the key, the gesture or the round
+ * button at the top start) closes it and the grid behind keeps the focus it had. On a television
+ * it keeps inside the overscan, with the play button focused first.
+ */
 @Composable
-private fun SeriesSheet(
+private fun SeriesPage(
     series: Series,
     watch: SeriesWatch,
     onPlay: (MediaItem) -> Unit,
     onDismiss: () -> Unit,
     onLongClick: ((MediaItem) -> Unit)?,
     onDownload: ((SeasonDownloadRequest) -> Unit)?,
+    chatTitle: String?,
 ) {
-    // Opened all the way: half a sheet of episodes is two rows, and the list is the point.
-    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    // The detail sheet's fill, corner and hairline, so the two sheets a grid opens look alike. The
-    // episodes keep their scrolling to themselves, so reaching the top of the list does not drag
-    // the sheet; the header above them still pulls it down.
-    PhoneSheet(onDismissRequest = onDismiss, sheetState = state) {
-        SeriesPanel(
-            series = series,
-            watch = watch,
-            onPlay = { onDismiss(); onPlay(it) },
-            onLongClick = onLongClick,
-            onDownload = onDownload,
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.92f).keepScrollInSheet(),
-        )
-    }
-}
-
-/**
- * The television's page: full screen, inside the overscan, with the play button focused first.
- * A window of its own, like [com.tmplayer.ui.components.TvMenu], so Back closes it and the grid
- * behind keeps the focus it had.
- */
-@Composable
-private fun TvSeriesPage(
-    series: Series,
-    watch: SeriesWatch,
-    onPlay: (MediaItem) -> Unit,
-    onDismiss: () -> Unit,
-    onDownload: ((SeasonDownloadRequest) -> Unit)?,
-) {
+    val touch = isTouch()
+    val s = LocalStrings.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
@@ -139,10 +119,30 @@ private fun TvSeriesPage(
                 series = series,
                 watch = watch,
                 onPlay = { onDismiss(); onPlay(it) },
+                onLongClick = onLongClick,
                 onDownload = onDownload,
-                contentPadding = PaddingValues(start = Tv.SafeH, end = Tv.SafeH, top = 4.dp, bottom = Tv.SafeV),
-                modifier = Modifier.fillMaxSize().padding(top = Tv.SafeV + 8.dp),
+                chatTitle = chatTitle,
+                contentPadding = if (touch) {
+                    PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)
+                } else {
+                    PaddingValues(start = Tv.SafeH, end = Tv.SafeH, bottom = Tv.SafeV)
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
             )
+            // A remote has Back on it; a finger needs something to press.
+            if (touch) {
+                PageDiscButton(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    s.seriesBack,
+                    onDismiss,
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .padding(12.dp),
+                )
+            }
         }
     }
 }

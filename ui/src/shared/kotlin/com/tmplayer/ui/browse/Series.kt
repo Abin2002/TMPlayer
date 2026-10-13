@@ -13,6 +13,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.heading
+import com.tmplayer.ui.components.BackdropSource
+import com.tmplayer.ui.components.CoverArt
+import com.tmplayer.ui.components.TileBadgeInset
+import com.tmplayer.ui.components.rememberCover
+import com.tmplayer.ui.online.TrailerIcon
+import com.tmplayer.ui.theme.Focus
+import com.tmplayer.ui.theme.Scrims
+import com.tmplayer.ui.theme.rememberReducedMotion
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +53,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -86,7 +104,6 @@ import com.tmplayer.ui.online.MetaCastRow
 import com.tmplayer.ui.online.MetaCredit
 import com.tmplayer.ui.online.MetaFactsLines
 import com.tmplayer.ui.online.MoreLikeThisRow
-import com.tmplayer.ui.online.TrailerPill
 import com.tmplayer.ui.online.TrailerHost
 import com.tmplayer.ui.online.TrailerQr
 import com.tmplayer.ui.online.rememberMetaExtras
@@ -246,19 +263,6 @@ fun seriesProgressLine(progress: SeriesProgress): String? {
     }
 }
 
-/** The progress line along the bottom of a picture, as on a video's own tile. */
-@Composable
-private fun Bar(fraction: Float, modifier: Modifier) {
-    Box(
-        modifier
-            .fillMaxWidth()
-            .height(6.dp)
-            .background(Color.Black.copy(alpha = 0.55f)),
-    ) {
-        Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).fillMaxHeight().background(Tone.accent))
-    }
-}
-
 /**
  * The seasons as a row of tabs. On a television the season under the remote is the one shown, so
  * walking Left and Right along the row pages through the seasons and Down enters the episodes.
@@ -290,14 +294,14 @@ fun SeasonTabs(
             Column(
                 Modifier
                     .then(if (chosen && focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
-                    .clip(RoundedCornerShape(Corner.Medium))
+                    .clip(RoundedCornerShape(Corner.Small))
                     .background(fill)
                     .border(
                         if (chosen && !focused) 1.5.dp else 0.dp,
                         if (chosen && !focused) Tone.accent else Color.Transparent,
-                        RoundedCornerShape(Corner.Medium),
+                        RoundedCornerShape(Corner.Small),
                     )
-                    .focusRing(focused, RoundedCornerShape(Corner.Medium))
+                    .focusRing(focused, RoundedCornerShape(Corner.Small))
                     .semantics {
                         role = Role.Tab
                         this.selected = chosen
@@ -329,10 +333,16 @@ fun SeasonTabs(
 }
 
 /**
- * One episode: its picture with progress and tick, "Episode 2" and its code, the file's own name,
- * and the running time, size and where the viewer stopped.
+ * One episode as a card: its Telegram thumbnail with the progress line and the tick on it, the
+ * "S1 E3" label, "Episode 3", the file's own name, and the running time, size and where the
+ * viewer stopped.
  *
- * An episode the chat holds in several copies (350 MB, 600 MB, 1.8 GB) is still one row. The row
+ * The thumbnail is the one TDLib already has for the message (the inline preview first, then the
+ * small thumbnail file), loaded as the row scrolls into a lazy list; nothing of the video itself is
+ * fetched for it. An episode posted with no thumbnail gets its generated cover, with its number set
+ * large, so a long season of bare files still reads as a numbered set.
+ *
+ * An episode the chat holds in several copies (350 MB, 600 MB, 1.8 GB) is still one card. The row
  * plays [chosen], the copy most like the one the viewer watched last, and a line of chips under it
  * names every copy by its quality and size so another can be picked with [onCopy].
  */
@@ -359,23 +369,31 @@ fun EpisodeRow(
     lineModifier: Modifier = Modifier,
 ) {
     val tv = !isTouch()
+    val shape = RoundedCornerShape(Corner.Medium)
+    val card = modifier
+        .fillMaxWidth()
+        .clip(shape)
+        .background(if (current) Tone.accent.copy(alpha = 0.14f) else Tone.surface)
+        .border(1.dp, if (current) Tone.accent.copy(alpha = 0.5f) else Tone.outline, shape)
     if (episode.copies.size <= 1 || onCopy == null) {
-        EpisodeLine(episode, chosen, point, finished, upNext, onClick, modifier.then(lineModifier), onLongClick, current, holdOk)
+        EpisodeLine(episode, chosen, point, finished, upNext, onClick, card.then(lineModifier), onLongClick, current, holdOk)
         return
     }
     // DOWN from the row goes to the chip of the copy it plays, not to whichever chip sits nearest
     // the row's middle (which, on a wide television row, was the last one).
     val chips = remember(episode.copies.size) { List(episode.copies.size) { FocusRequester() } }
     val landing = chips[episode.copies.indexOfFirst { it.id == chosen.id }.coerceAtLeast(0)]
-    Column(modifier.fillMaxWidth()) {
+    Column(card) {
         EpisodeLine(episode, chosen, point, finished, upNext, onClick, lineModifier.focusProperties { down = landing }, onLongClick, current, holdOk)
         Row(
             Modifier
                 .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
                 .padding(
                     // Under the text, past the picture and the row's own padding and gap.
-                    start = if (tv) EPISODE_ART_TV + 12.dp + 16.dp else EPISODE_ART_TOUCH + 8.dp + 12.dp,
-                    bottom = 4.dp,
+                    start = if (tv) EPISODE_ART_TV + 10.dp + 16.dp else EPISODE_ART_TOUCH + 8.dp + 12.dp,
+                    end = 8.dp,
+                    bottom = 10.dp,
                 ),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -387,8 +405,8 @@ fun EpisodeRow(
 }
 
 /**
- * One copy of an episode, by its quality and size: "1080p · 1.8 GB". Under the remote it takes the
- * focus fill, the ring and the grow every other television control does.
+ * One copy of an episode or a film, by its quality and size: "1080p · 1.8 GB", in a round chip.
+ * Under the remote it takes the focus fill, as every other television control does.
  */
 @Composable
 internal fun CopyChip(copy: MediaItem, chosen: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -397,10 +415,11 @@ internal fun CopyChip(copy: MediaItem, chosen: Boolean, onClick: () -> Unit, mod
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val label = EpisodeCopies.label(copy)
-    val shape = RoundedCornerShape(Corner.ExtraSmall)
+    val shape = CircleShape
     Text(
         label,
         style = MaterialTheme.typography.labelMedium,
+        fontWeight = if (chosen) FontWeight.SemiBold else FontWeight.Normal,
         color = when {
             focused -> Tone.onFocusFill
             chosen -> Tone.accent
@@ -409,7 +428,13 @@ internal fun CopyChip(copy: MediaItem, chosen: Boolean, onClick: () -> Unit, mod
         maxLines = 1,
         modifier = modifier
             .clip(shape)
-            .background(if (focused) Tone.focusFill else Color.Transparent)
+            .background(
+                when {
+                    focused -> Tone.focusFill
+                    chosen -> Tone.accent.copy(alpha = 0.14f)
+                    else -> Color.Transparent
+                },
+            )
             .focusRing(focused, shape)
             .border(
                 1.dp,
@@ -422,7 +447,7 @@ internal fun CopyChip(copy: MediaItem, chosen: Boolean, onClick: () -> Unit, mod
             )
             .semantics { contentDescription = s.seriesCopy(label) }
             .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = if (tv) 4.dp else 2.dp),
+            .padding(horizontal = 10.dp, vertical = if (tv) 5.dp else 3.dp),
     )
 }
 
@@ -445,26 +470,13 @@ private fun EpisodeLine(
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val shape = RoundedCornerShape(Corner.Medium)
+    val cover = rememberCover(item)
     Row(
         modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(
-                when {
-                    focused -> Tone.surfaceHigh
-                    current -> Tone.accent.copy(alpha = 0.14f)
-                    else -> Color.Transparent
-                },
-            )
-            .border(
-                if (focused || current) (if (focused) 3.dp else 1.dp) else 0.dp,
-                when {
-                    focused -> Tone.accent
-                    current -> Tone.accent.copy(alpha = 0.5f)
-                    else -> Color.Transparent
-                },
-                shape,
-            )
+            .background(if (focused) Tone.surfaceHigh else Color.Transparent)
+            .border(if (focused) Focus.Edge else 0.dp, if (focused) Tone.accent else Color.Transparent, shape)
             .then(
                 if (onLongClick != null && tv && holdOk) {
                     Modifier.okHold(interactions, onClick, onLongClick)
@@ -474,7 +486,7 @@ private fun EpisodeLine(
                     Modifier.clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClick)
                 },
             )
-            .padding(horizontal = if (tv) 12.dp else 8.dp, vertical = 8.dp),
+            .padding(if (tv) 10.dp else 8.dp),
         horizontalArrangement = Arrangement.spacedBy(if (tv) 16.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -484,19 +496,20 @@ private fun EpisodeLine(
                 .aspectRatio(16f / 9f)
                 .clip(RoundedCornerShape(Corner.Small)),
         ) {
-            MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize()) {
-                Text("E${episode.episode}", style = MaterialTheme.typography.titleMedium, color = Tone.muted)
-            }
+            MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize(), cover = cover, compactCover = true)
             val fraction = when {
                 point != null && point.fraction > 0f -> point.fraction
                 finished -> 1f
                 else -> 0f
             }
-            if (fraction > 0f) Bar(fraction, Modifier.align(Alignment.BottomStart))
+            if (fraction > 0f) {
+                Box(Modifier.matchParentSize().background(Scrims.tileFoot))
+                com.tmplayer.ui.components.ProgressLine(fraction, Modifier.align(Alignment.BottomCenter), inset = 6.dp)
+            }
             if (finished) {
                 WatchedBadge(
                     size = if (tv) 24.dp else 20.dp,
-                    modifier = Modifier.align(Alignment.BottomStart).padding(start = 4.dp, bottom = 10.dp),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(TileBadgeInset),
                 )
             }
             if (upNext && !finished) {
@@ -516,42 +529,24 @@ private fun EpisodeLine(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    s.seriesEpisode(episode.episode),
-                    style = if (tv) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
-                    color = Tone.text,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                )
-                Text(
-                    episode.code,
+                    s.seriesEpisodeShort(episode.season, episode.episode),
                     style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
                     color = Tone.muted,
                     maxLines = 1,
                 )
-                if (current) {
-                    Text(
-                        s.episodesPlaying,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Tone.onAccent,
-                        maxLines = 1,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(Corner.ExtraSmall))
-                            .background(Tone.accent)
-                            .padding(horizontal = 6.dp, vertical = 1.dp),
-                    )
-                } else if (upNext && !finished) {
-                    Text(
-                        s.seriesUpNextBadge,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Tone.onAccent,
-                        maxLines = 1,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(Corner.ExtraSmall))
-                            .background(Tone.accent)
-                            .padding(horizontal = 6.dp, vertical = 1.dp),
-                    )
+                when {
+                    current -> EpisodeBadge(s.episodesPlaying)
+                    upNext && !finished -> EpisodeBadge(s.seriesUpNextBadge)
                 }
             }
+            Text(
+                s.seriesEpisode(episode.episode),
+                style = if (tv) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
+                color = Tone.text,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+            )
             Text(
                 item.title,
                 style = if (tv) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall,
@@ -579,18 +574,43 @@ private fun EpisodeLine(
     }
 }
 
+/** "Up next" or "Playing" beside an episode's label, in the accent. */
+@Composable
+private fun EpisodeBadge(label: String) {
+    Text(
+        label,
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = Tone.onAccent,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(Tone.accent)
+            .padding(horizontal = 8.dp, vertical = 1.dp),
+    )
+}
+
 /**
- * A show opened: its name, how far through it the viewer is, a button straight to the next
- * episode, the season picker and the episodes of the chosen season.
+ * A show opened, as a page: the backdrop (the show's own when posters and overviews have one,
+ * else the next episode's Telegram thumbnail as a soft field, else its generated cover) with the
+ * poster beside the title when online, the facts line ("2021 · 3 seasons · 24 eps · 12 of 24
+ * watched · the chat"), the overview, one bright pill straight to the next episode and the other
+ * actions round beside it, then the season picker and the episodes of the chosen season as cards.
+ * Everything scrolls as one, so the backdrop leaves the screen as the episodes come up.
  *
  * [seasonPicker] is the platform's: tabs on a phone and a television ([SeasonTabs], the default),
  * a dropdown on the desktop. On a television the play button takes focus first, so OK straight
- * after opening a show carries on where the viewer left it.
+ * after opening a show carries on where the viewer left it, and Down walks to the seasons and
+ * then the episodes.
  *
  * Beside the play button, Download queues the season shown. Once some of that season is watched
- * and some is not, it opens a line of two choices under the buttons instead, the whole season or
- * only what is left to watch: a line rather than a menu, so a remote reaches both with Down.
+ * and some is not, Download season and Download unwatched are two buttons side by side, so a
+ * remote reaches both along the same line.
+ *
+ * [contentPadding] is the page's margin for the words and the rows; the backdrop runs full bleed
+ * under it. [trailing] sits at the top end over the backdrop, for the platform's own close or back.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SeriesPanel(
     series: Series,
@@ -602,15 +622,17 @@ fun SeriesPanel(
     seasonPicker: @Composable (selected: Int, onSelect: (Int) -> Unit) -> Unit = { selected, onSelect ->
         SeasonTabs(series.seasons, selected, onSelect)
     },
-    /** Beside the heading, for the platform's own close or back control. */
+    /** At the top end over the backdrop, for the platform's own close or back control. */
     trailing: @Composable () -> Unit = {},
     /** Opens a video's detail, for "More like this"; null leaves that row out. */
     onOpenItem: ((MediaItem) -> Unit)? = onLongClick,
     /**
      * Queues the season shown, or its unwatched episodes, through the platform's multi-download;
-     * null leaves the download button out.
+     * null leaves the download buttons out.
      */
     onDownload: ((SeasonDownloadRequest) -> Unit)? = null,
+    /** The chat the show was posted in, for the facts line; null leaves it out. */
+    chatTitle: String? = null,
 ) {
     val s = LocalStrings.current
     val tv = !isTouch()
@@ -622,175 +644,221 @@ fun SeriesPanel(
     val shown = series.seasons.firstOrNull { it.number == season } ?: series.seasons.first()
     val playFocus = remember { FocusRequester() }
     LaunchedEffect(series.key) { if (tv) runCatching { playFocus.requestFocus() } }
-    // Download is for the season shown, so its two choices fold away when another is picked.
+    // Download is for the season shown, so its buttons follow the season picked.
     val downloads = onDownload != null && SeasonDownload.anySavable(shown)
     val bothDownloads = downloads && SeasonDownload.unwatchedDiffers(shown, watch.finished)
-    var choosingDownload by remember(series.key, shown.number) { mutableStateOf(false) }
 
     val meta = rememberMeta(series.cover, showOnly = true)
     val extras = rememberMetaExtras(meta)
     val trailers = rememberTrailerLauncher()
+    val target = next ?: series.episodes.first()
+    val art = next?.item ?: target.item
+    val cover = remember(art.chatId, art.messageId, series.title) { CoverArt.of(art).copy(title = series.title, number = null) }
+    val source = remember(art.id, cover, meta?.backdropUrl) { BackdropSource(art.miniThumbnail, art.thumbnailFileId, cover, meta?.backdropUrl) }
+    val reduced = rememberReducedMotion()
+    val pad = contentPadding.horizontalOnly()
 
-    Column(modifier) {
-        Row(
-            Modifier.fillMaxWidth().padding(contentPadding.horizontalOnly()),
-            verticalAlignment = if (meta?.posterUrl != null) Alignment.Top else Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
+    // An anime season runs to hundreds of episodes, and scrolling to the 850th is no way to find
+    // it. Past [EPISODE_RANGE] the season is cut into ranges, opened on the one holding the next
+    // episode to watch.
+    val ranges = remember(shown) {
+        if (shown.episodes.size > EPISODE_RANGE) shown.episodes.chunked(EPISODE_RANGE) else emptyList()
+    }
+    var rangeAt by remember(shown) {
+        mutableIntStateOf(ranges.indexOfFirst { range -> next != null && range.any { it.sameAs(next) } }.coerceAtLeast(0))
+    }
+    val listed = ranges.getOrNull(rangeAt) ?: shown.episodes
+    val list = rememberLazyListState()
+    // Another season or range picked while the episodes fill the screen: back up to the picker,
+    // with the new list under it. Opening is its own case, below.
+    var opened by remember(series.key) { mutableStateOf(false) }
+    // Where the up-next episode sits in the list shown, or -1 when it is in another season or range.
+    val upNextAt = if (next != null) listed.indexOfFirst { it.sameAs(next) } else -1
+    val upNextFocus = remember(series.key) { FocusRequester() }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(shown.number, rangeAt) {
+        if (!opened) {
+            opened = true
+            // A long season (an anime's hundreds) opens on its up-next episode under a finger, one
+            // card of what came before above it, so nobody scrolls to the 57th by hand. A short one
+            // opens at the top, where the hero and Play are. A remote gets there with Down from Play.
+            if (!tv && upNextAt > 0 && listed.size > LONG_SEASON) list.scrollToItem(FIRST_EPISODE_ITEM + upNextAt - 1)
+            return@LaunchedEffect
+        }
+        if (list.firstVisibleItemIndex > SEASONS_ITEM) list.scrollToItem(SEASONS_ITEM)
+    }
+    // On a television Down from Play goes straight to the up-next card, scrolled into view first
+    // since a lazy list has not composed it yet; Up from the cards still reaches the seasons.
+    val downToUpNext = if (tv && upNextAt >= 0) {
+        Modifier.onPreviewKeyEvent { event ->
+            if (event.key != Key.DirectionDown) return@onPreviewKeyEvent false
+            if (event.type == KeyEventType.KeyDown) {
+                scope.launch {
+                    list.scrollToItem((FIRST_EPISODE_ITEM + upNextAt - 1).coerceAtLeast(SEASONS_ITEM))
+                    withFrameNanos { }
+                    runCatching { upNextFocus.requestFocus() }
+                }
+            }
+            true
+        }
+    } else {
+        Modifier
+    }
+
+    BoxWithConstraints(modifier) {
+        val wide = maxWidth > maxHeight || maxWidth >= WIDE_PAGE
+        val heroHeight = if (wide) {
+            (maxHeight * 0.62f).coerceIn(280.dp, 560.dp)
+        } else {
+            tallBackdropHeight(maxWidth, maxHeight, online = meta?.backdropUrl != null)
+        }
+        val heading: @Composable () -> Unit = {
+            Text(
+                meta?.title?.takeIf { it.isNotBlank() } ?: series.title,
+                style = MaterialTheme.typography.displaySmall,
+                color = Tone.text,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.semantics { heading() },
+            )
+        }
+        val poster: @Composable () -> Unit = {
             meta?.posterUrl?.let { url ->
                 Box(
                     Modifier
-                        .width(if (tv) SERIES_POSTER_TV else SERIES_POSTER)
+                        .width(if (tv) SERIES_POSTER_TV else if (wide) SERIES_POSTER_WIDE else SERIES_POSTER)
                         .aspectRatio(2f / 3f)
-                        .clip(RoundedCornerShape(Corner.Small))
+                        .clip(RoundedCornerShape(Corner.Medium))
                         .background(Tone.surfaceHigh),
                 ) {
-                    MetaPicture(url, Modifier.fillMaxSize(), maxWidth = 240, contentDescription = s.metadataPoster)
+                    MetaPicture(url, Modifier.fillMaxSize(), maxWidth = 342, contentDescription = s.metadataPoster)
                 }
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    meta?.title?.takeIf { it.isNotBlank() } ?: series.title,
-                    style = if (tv) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
-                    color = Tone.text,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    listOfNotNull(meta?.year?.toString(), seriesSummary(series), seriesProgressLine(progress)).joinToString("  ·  "),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Tone.muted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                MetaFactsLines(extras, Modifier.padding(top = 2.dp), maxLines = 1)
-                meta?.overview?.takeIf { it.isNotBlank() }?.let { overview ->
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        overview,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Tone.text,
-                        maxLines = if (tv) 3 else 4,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    MetaCredit(meta, Modifier.padding(top = 2.dp))
-                }
-            }
-            trailing()
         }
-        Spacer(Modifier.height(12.dp))
-        // Beside the buttons there is room for the seasons on a television, a desktop window and a
-        // phone on its side. A phone held upright has room for the buttons alone, so the seasons
-        // take a line of their own under them, the full width, where every season can be reached.
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val stacked = maxWidth < SEASONS_BESIDE_MIN
-            Column {
-                // Upright on a phone, Play, the trailer and Download can be wider than the screen;
-                // with the seasons on their own line the buttons scroll sideways rather than squeeze.
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .then(if (stacked) Modifier.horizontalScroll(rememberScrollState()) else Modifier)
-                        .padding(contentPadding.horizontalOnly()),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    val target = next ?: series.episodes.first()
-                    val started = (watch.pointOf(target)?.positionMs ?: 0L) > 0
-                    PlayButton(
-                        label = when {
-                            started -> s.seriesResume(target.code)
-                            progress.watched > 0 -> s.seriesContinue(target.code)
-                            else -> s.seriesPlay(target.code)
-                        },
-                        onClick = { onPlay(next?.item ?: watch.pick(target, progress)) },
-                        modifier = Modifier.focusRequester(playFocus),
-                    )
-                    extras?.trailer?.let { trailer -> TrailerPill(onClick = { trailers.open(trailer) }) }
-                    if (downloads) {
-                        OutlinePill(
-                            label = if (bothDownloads) s.gridDownload else s.seriesDownloadSeason,
-                            onClick = {
-                                if (bothDownloads) {
-                                    choosingDownload = !choosingDownload
-                                } else {
-                                    onDownload?.invoke(watch.download(series, shown, SeasonDownload.Which.Season))
-                                }
-                            },
-                        )
-                    }
-                    if (!stacked) Box(Modifier.weight(1f)) { seasonPicker(shown.number) { season = it } }
+        val facts: @Composable () -> Unit = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                FactLine(
+                    listOfNotNull(
+                        meta?.year?.let { Fact(it.toString()) },
+                        Fact(seriesSummary(series)),
+                        seriesProgressLine(progress)?.let { Fact(it, accent = true) },
+                        chatTitle?.takeIf { it.isNotBlank() }?.let { Fact(it) },
+                    ),
+                )
+                MetaFactsLines(extras, maxLines = 1)
+                // How far through the whole show; the facts line says it in words.
+                if (progress.watched > 0) ProgressLine(progress.watched.toFloat() / progress.total, Modifier.widthIn(max = 240.dp))
+            }
+        }
+        val overview: @Composable () -> Unit = {
+            meta?.overview?.takeIf { it.isNotBlank() }?.let { text ->
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Synopsis(text, lines = if (wide) 3 else null)
+                    MetaCredit(meta)
                 }
-                if (choosingDownload && bothDownloads) {
-                    val first = remember { FocusRequester() }
-                    LaunchedEffect(Unit) { if (tv) runCatching { first.requestFocus() } }
-                    Row(
-                        Modifier.fillMaxWidth().padding(contentPadding.horizontalOnly()).padding(top = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        listOf(
-                            SeasonDownload.Which.Season to s.seriesDownloadSeason,
-                            SeasonDownload.Which.Unwatched to s.seriesDownloadUnwatched,
-                        ).forEachIndexed { at, (which, label) ->
-                            OutlinePill(
-                                label = label,
-                                onClick = {
-                                    choosingDownload = false
-                                    onDownload?.invoke(watch.download(series, shown, which))
-                                },
-                                modifier = if (at == 0) Modifier.focusRequester(first) else Modifier,
-                            )
+            }
+        }
+        val actions: @Composable () -> Unit = {
+            val started = (watch.pointOf(target)?.positionMs ?: 0L) > 0
+            val others = buildList {
+                extras?.trailer?.let { trailer -> add(Triple(s.metadataTrailer, TrailerIcon) { trailers.open(trailer) }) }
+                if (downloads) {
+                    add(Triple(s.seriesDownloadSeason, TmIcons.Download) { onDownload?.invoke(watch.download(series, shown, SeasonDownload.Which.Season)); Unit })
+                }
+                if (bothDownloads) {
+                    add(Triple(s.seriesDownloadUnwatched, TmIcons.Download) { onDownload?.invoke(watch.download(series, shown, SeasonDownload.Which.Unwatched)); Unit })
+                }
+            }
+            val hero: @Composable (Modifier) -> Unit = { m ->
+                HeroPill(
+                    label = when {
+                        started -> s.seriesResume(target.code)
+                        progress.watched > 0 -> s.seriesContinue(target.code)
+                        else -> s.seriesPlay(target.code)
+                    },
+                    icon = Icons.Filled.PlayArrow,
+                    onClick = { onPlay(next?.item ?: watch.pick(target, progress)) },
+                    modifier = m.then(downToUpNext),
+                    focusRequester = playFocus,
+                )
+            }
+            Column(Modifier.padding(pad), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (tv) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        hero(Modifier)
+                        others.forEach { (label, icon, run) -> RoundAction(label, icon, run) }
+                    }
+                } else {
+                    hero(if (wide) Modifier else Modifier.fillMaxWidth())
+                    if (others.isNotEmpty()) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            others.forEach { (label, icon, run) -> RoundAction(label, icon, run) }
                         }
                     }
                 }
-                if (stacked) {
-                    Box(Modifier.fillMaxWidth().padding(contentPadding.horizontalOnly()).padding(top = 12.dp)) {
-                        seasonPicker(shown.number) { season = it }
-                    }
-                }
+                trailers.unopened?.takeIf { it == extras?.trailer }?.let { TrailerQr(it) }
+                TrailerHost(trailers)
             }
         }
-        trailers.unopened?.takeIf { it == extras?.trailer }?.let {
-            TrailerQr(it, Modifier.padding(contentPadding.horizontalOnly()).padding(top = 12.dp))
-        }
-        TrailerHost(trailers)
-        Spacer(Modifier.height(12.dp))
-        // How far through the whole show, over its episodes; the line above says it in words.
-        if (progress.watched > 0) {
-            ProgressLine(
-                progress.watched.toFloat() / progress.total,
-                Modifier.padding(contentPadding.horizontalOnly()).padding(bottom = 12.dp),
-            )
-        }
-        // An anime season runs to hundreds of episodes, and scrolling to the 850th is no way to
-        // find it. Past [EPISODE_RANGE] the season is cut into ranges, opened on the one holding
-        // the next episode to watch, and the list opens on that episode rather than at the top.
-        val ranges = remember(shown) {
-            if (shown.episodes.size > EPISODE_RANGE) shown.episodes.chunked(EPISODE_RANGE) else emptyList()
-        }
-        var rangeAt by remember(shown) {
-            mutableIntStateOf(ranges.indexOfFirst { range -> next != null && range.any { it.sameAs(next) } }.coerceAtLeast(0))
-        }
-        val listed = ranges.getOrNull(rangeAt) ?: shown.episodes
-        if (ranges.isNotEmpty()) {
-            EpisodeRanges(
-                ranges = ranges,
-                selected = rangeAt,
-                onSelect = { rangeAt = it },
-                modifier = Modifier.padding(contentPadding.horizontalOnly()).padding(bottom = 8.dp),
-            )
-        }
-        val list = rememberLazyListState()
-        LaunchedEffect(shown.number, rangeAt) {
-            val at = if (next != null) listed.indexOfFirst { it.sameAs(next) } else -1
-            list.scrollToItem(at.coerceAtLeast(0))
-        }
+
         LazyColumn(
             state = list,
-            modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
-            contentPadding = contentPadding,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
+            verticalArrangement = Arrangement.spacedBy(if (tv) 8.dp else 6.dp),
         ) {
+            item(key = "hero") {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Box(Modifier.fillMaxWidth().heightIn(min = heroHeight).clipToBounds()) {
+                        Box(Modifier.matchParentSize()) {
+                            PageBackdrop(
+                                source,
+                                fromStart = wide,
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .fillMaxWidth(if (wide) BACKDROP_SHARE else 1f)
+                                    .fillMaxHeight()
+                                    .graphicsLayer {
+                                        // Half the list's speed while the hero is on screen; none with animations off.
+                                        if (!reduced && list.firstVisibleItemIndex == 0) translationY = list.firstVisibleItemScrollOffset * PARALLAX
+                                    },
+                            )
+                        }
+                        Row(
+                            Modifier
+                                .align(Alignment.BottomStart)
+                                .fillMaxWidth(if (wide) TEXT_SHARE else 1f)
+                                .padding(pad)
+                                .padding(top = heroHeight * 0.35f, bottom = if (wide) 8.dp else 0.dp),
+                            horizontalArrangement = Arrangement.spacedBy(if (tv) 24.dp else 16.dp),
+                            verticalAlignment = Alignment.Bottom,
+                        ) {
+                            poster()
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                heading()
+                                if (wide) {
+                                    facts()
+                                    overview()
+                                }
+                            }
+                        }
+                        Box(Modifier.align(Alignment.TopEnd)) { trailing() }
+                    }
+                    if (!wide) {
+                        Column(Modifier.padding(pad), verticalArrangement = Arrangement.spacedBy(12.dp)) { facts() }
+                    }
+                    actions()
+                    if (!wide) Box(Modifier.padding(pad)) { overview() }
+                    Spacer(Modifier.height(4.dp))
+                }
+            }
+            item(key = "seasons") {
+                Column(Modifier.fillMaxWidth().padding(pad), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    seasonPicker(shown.number) { season = it }
+                    if (ranges.isNotEmpty()) EpisodeRanges(ranges = ranges, selected = rangeAt, onSelect = { rangeAt = it })
+                    Spacer(Modifier.height(2.dp))
+                }
+            }
             items(listed, key = { it.item.id }) { episode ->
                 val chosen = if (next != null && episode.sameAs(next)) next.item else watch.pick(episode, progress)
                 EpisodeRow(
@@ -802,15 +870,17 @@ fun SeriesPanel(
                     onLongClick = onLongClick?.let { { it(chosen) } },
                     chosen = chosen,
                     onCopy = onPlay,
+                    modifier = Modifier.padding(pad).widthIn(max = EPISODES_MAX),
+                    lineModifier = if (next != null && episode.sameAs(next)) Modifier.focusRequester(upNextFocus) else Modifier,
                 )
             }
             // The cast and "More like this" after the episodes: composed only once scrolled to.
             if (meta != null && extras != null) {
                 if (extras.cast.isNotEmpty()) {
-                    item(key = "meta-cast") { MetaCastRow(extras.cast, Modifier.padding(top = 16.dp)) }
+                    item(key = "meta-cast") { MetaCastRow(extras.cast, Modifier.padding(pad).padding(top = 16.dp)) }
                 }
                 if (extras.similar.isNotEmpty() && onOpenItem != null) {
-                    item(key = "meta-more") { MoreLikeThisRow(meta, extras, onOpenItem, Modifier.padding(top = 16.dp)) }
+                    item(key = "meta-more") { MoreLikeThisRow(meta, extras, onOpenItem, Modifier.padding(pad).padding(top = 16.dp)) }
                 }
             }
         }
@@ -837,7 +907,7 @@ private fun EpisodeRanges(
             val interactions = remember { MutableInteractionSource() }
             val focused by interactions.collectIsFocusedAsState()
             val chosen = index == selected
-            val shape = RoundedCornerShape(Corner.Medium)
+            val shape = RoundedCornerShape(Corner.Small)
             Text(
                 "${range.first().episode}-${range.last().episode}",
                 style = if (tv) MaterialTheme.typography.titleSmall else MaterialTheme.typography.labelLarge,
@@ -912,29 +982,6 @@ internal fun PlayButton(label: String, onClick: () -> Unit, modifier: Modifier =
     }
 }
 
-/** A button beside Play in the trailer's dress: an outline, the focus fill under the remote. */
-@Composable
-private fun OutlinePill(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val tv = !isTouch()
-    val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
-    Row(
-        modifier
-            .height(if (tv) 48.dp else 40.dp)
-            .clip(CircleShape)
-            .background(if (focused) Tone.focusFill else Color.Transparent)
-            .border(1.dp, if (focused) Color.Transparent else Tone.muted.copy(alpha = 0.6f), CircleShape)
-            .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClick)
-            .padding(start = 14.dp, end = 18.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        val ink = if (focused) Tone.onFocusFill else Tone.text
-        Icon(TmIcons.Download, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
-        Text(label, style = MaterialTheme.typography.labelLarge, color = ink, maxLines = 1)
-    }
-}
-
 private fun PaddingValues.horizontalOnly(): PaddingValues =
     PaddingValues(
         start = calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
@@ -942,10 +989,26 @@ private fun PaddingValues.horizontalOnly(): PaddingValues =
     )
 
 private val SERIES_POSTER: Dp = 96.dp
+private val SERIES_POSTER_WIDE: Dp = 120.dp
+private val SERIES_POSTER_TV: Dp = 140.dp
 
-/** Narrower than this, the season picker goes under the play button rather than beside it. */
-private val SEASONS_BESIDE_MIN: Dp = 560.dp
-private val SERIES_POSTER_TV: Dp = 112.dp
+/** As wide as this, a show's page puts its backdrop at the end and its words over the start. */
+private val WIDE_PAGE: Dp = 720.dp
+
+/** How much of a wide page's width the title, facts and overview take, from the start. */
+private const val TEXT_SHARE = 0.6f
+
+/** The episode cards stop growing here, so a wide window does not stretch a line of text across it. */
+private val EPISODES_MAX: Dp = 960.dp
+
+/** The season picker's place in a show page's list, after the hero. */
+private const val SEASONS_ITEM = 1
+
+/** The first episode card's place in that list, after the hero and the season picker. */
+private const val FIRST_EPISODE_ITEM = 2
+
+/** A season longer than this opens on its up-next episode on a phone or a desktop. */
+private const val LONG_SEASON = 12
 private val EPISODE_ART_TOUCH: Dp = 128.dp
 private val EPISODE_ART_TV: Dp = 176.dp
 

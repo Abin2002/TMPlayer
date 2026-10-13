@@ -1,0 +1,409 @@
+package com.tmplayer.ui.browse
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.tmplayer.data.WatchPoint
+import com.tmplayer.ui.components.ArtBackdrop
+import com.tmplayer.ui.components.BackdropSource
+import com.tmplayer.ui.components.isTouch
+import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.theme.Corner
+import com.tmplayer.ui.theme.Danger
+import com.tmplayer.ui.theme.Motion
+import com.tmplayer.ui.theme.Scrims
+import com.tmplayer.ui.theme.Tone
+import com.tmplayer.ui.theme.focusRing
+import com.tmplayer.ui.theme.rememberReducedMotion
+
+/*
+ * The pieces a title page is built from, shared by a video's detail page and a show's page on
+ * every platform: the backdrop with its long fades, the facts line with dots between, the one
+ * bright Play pill, the round actions beside it, and a synopsis that opens on a press.
+ *
+ * Everything here stays TMPlayer's: the accent is the app's own, the facts are the file's
+ * (quality, size, the chat it came from), and nothing scores or ranks a title.
+ */
+
+/** One fact on a title page's facts line: plain text, or [chip] for the quality, outlined. */
+@Immutable
+internal data class Fact(val text: String, val chip: Boolean = false, val accent: Boolean = false)
+
+/**
+ * "2024 · 1h 52m · [1080p] · 1.8 GB · Film Club": the facts in labelLarge with a small dot between
+ * each, wrapping a whole fact at a time. A dot only ever sits between two facts on the same line,
+ * never at the start or the end of one. The quality sits in an outline, as the one fact that tells
+ * two copies of a film apart.
+ */
+@Composable
+internal fun FactLine(facts: List<Fact>, modifier: Modifier = Modifier) {
+    if (facts.isEmpty()) return
+    val style = MaterialTheme.typography.labelLarge
+    val dot = Tone.muted
+    Layout(
+        modifier = modifier,
+        content = {
+            facts.forEach { fact ->
+                Box(Modifier.size(4.dp).clip(CircleShape).background(dot))
+                if (fact.chip) {
+                    Text(
+                        fact.text,
+                        style = style,
+                        color = Tone.text,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .border(1.dp, Tone.muted.copy(alpha = 0.6f), RoundedCornerShape(Corner.ExtraSmall))
+                            .padding(horizontal = 6.dp, vertical = 1.dp),
+                    )
+                } else {
+                    Text(
+                        fact.text,
+                        style = style,
+                        color = if (fact.accent) Tone.accent else Tone.text,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        },
+    ) { measurables, constraints ->
+        val gap = 8.dp.roundToPx()
+        val lineGap = 6.dp.roundToPx()
+        val max = constraints.maxWidth
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val dots = measurables.filterIndexed { at, _ -> at % 2 == 0 }.map { it.measure(loose) }
+        val texts = measurables.filterIndexed { at, _ -> at % 2 == 1 }.map { it.measure(loose) }
+        // Each fact's line and x, and whether its dot shows (only after another fact on its line).
+        val lines = mutableListOf(mutableListOf<Int>())
+        val xs = IntArray(texts.size)
+        val dotted = BooleanArray(texts.size)
+        var x = 0
+        texts.forEachIndexed { at, text ->
+            val lead = gap + dots[at].width + gap
+            if (x > 0 && x + lead + text.width > max) {
+                lines.add(mutableListOf())
+                x = 0
+            }
+            dotted[at] = x > 0
+            xs[at] = if (dotted[at]) x + lead else 0
+            x = xs[at] + text.width
+            lines.last().add(at)
+        }
+        val heights = lines.map { line -> line.maxOf { texts[it].height } }
+        val width = lines.maxOf { line -> line.maxOf { xs[it] + texts[it].width } }.coerceAtMost(max)
+        val height = heights.sum() + lineGap * (lines.size - 1)
+        layout(width, height) {
+            var y = 0
+            lines.forEachIndexed { row, line ->
+                val h = heights[row]
+                line.forEach { at ->
+                    val text = texts[at]
+                    text.placeRelative(xs[at], y + (h - text.height) / 2)
+                    if (dotted[at]) {
+                        val d = dots[at]
+                        d.placeRelative(xs[at] - gap - d.width, y + (h - d.height) / 2)
+                    }
+                }
+                y += h + lineGap
+            }
+        }
+    }
+}
+
+/**
+ * The one bright action on a title page: Play, Resume, "Resume S2 E4". A near-white pill on the
+ * dark theme and a near-black one in daylight ([Tone.hero]), 52 dp tall (48 on a television), at
+ * most [HeroPillMax] wide. Under the remote it takes the focus fill and grows, so at rest and
+ * focused it differs in fill, size and (in daylight) ring.
+ */
+@Composable
+internal fun HeroPill(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    focusRequester: FocusRequester? = null,
+) {
+    val tv = !isTouch()
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val reduced = rememberReducedMotion()
+    // Grows only under a remote: a pointer's focus sits on a full-width pill with no room around it.
+    val scale by animateFloatAsState(
+        if (focused && tv && !reduced) Motion.FocusScale else 1f,
+        Motion.standard(Motion.Fast),
+        label = "heroPillScale",
+    )
+    val ink = if (focused) Tone.onFocusFill else Tone.onHero
+    Row(
+        modifier
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+            .widthIn(max = HeroPillMax)
+            .heightIn(min = if (tv) 48.dp else 52.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(CircleShape)
+            .background(if (focused) Tone.focusFill else Tone.hero)
+            .focusRing(focused, CircleShape)
+            .clickable(interactionSource = interactions, indication = if (tv) null else LocalIndication.current, onClick = onClick)
+            .padding(start = 20.dp, end = 24.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+    ) {
+        Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(24.dp))
+        // A long label in a long language wraps rather than losing its end.
+        Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = ink, maxLines = 2)
+    }
+}
+
+/**
+ * One of the actions beside [HeroPill]. Under a finger or a pointer a 48 dp round button with its
+ * label under it, the way a streaming app's secondary actions sit; on a television a quiet pill
+ * with the icon and the label, which reads from a sofa and takes the focus fill as every other
+ * control there does. [detail] is read out with the label, where the round button has no room
+ * for it.
+ */
+@Composable
+internal fun RoundAction(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    destructive: Boolean = false,
+    detail: String? = null,
+    focusRequester: FocusRequester? = null,
+) {
+    val tv = !isTouch()
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val reduced = rememberReducedMotion()
+    val scale by animateFloatAsState(
+        if (focused && tv && !reduced) Motion.FocusScale else 1f,
+        Motion.standard(Motion.Fast),
+        label = "roundActionScale",
+    )
+    val requester = if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier
+    if (tv) {
+        val ink = when {
+            focused -> Tone.onFocusFill
+            destructive -> Tone.danger
+            else -> Tone.text
+        }
+        Row(
+            modifier
+                .then(requester)
+                .heightIn(min = 48.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clip(CircleShape)
+                .background(
+                    when {
+                        focused && destructive -> Danger
+                        focused -> Tone.focusFill
+                        else -> Tone.surfaceHigh
+                    },
+                )
+                .focusRing(focused, CircleShape)
+                .clickable(interactionSource = interactions, indication = null, onClick = onClick)
+                .padding(start = 16.dp, end = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(22.dp))
+            Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = ink, maxLines = 1)
+        }
+        return
+    }
+    val ink = if (destructive) Tone.danger else Tone.text
+    Column(
+        modifier
+            .then(requester)
+            .width(RoundActionWidth)
+            .clip(RoundedCornerShape(Corner.Medium))
+            .clickable(interactionSource = interactions, indication = LocalIndication.current, onClick = onClick)
+            .semantics { contentDescription = listOfNotNull(label, detail).joinToString(". ") }
+            .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(if (focused) Tone.focusFill else Tone.surfaceHigh)
+                .border(1.dp, if (focused) Color.Transparent else Tone.outline, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = if (focused) Tone.onFocusFill else ink, modifier = Modifier.size(22.dp))
+        }
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = ink,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * An overview or a caption, cut to three lines under a finger and four on a television, with
+ * "More" under it while it is cut. A press opens it whole and "Less" closes it. On a remote it is
+ * a stop only while there is more to read, so a short one is not a dead step for the D-pad.
+ */
+@Composable
+internal fun Synopsis(text: String, modifier: Modifier = Modifier, style: TextStyle = MaterialTheme.typography.bodyMedium, lines: Int? = null) {
+    val s = LocalStrings.current
+    val tv = !isTouch()
+    val cutAt = lines ?: if (tv) 4 else 3
+    var open by remember(text) { mutableStateOf(false) }
+    var cut by remember(text) { mutableStateOf(false) }
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val shape = RoundedCornerShape(Corner.Small)
+    val pressable = cut || open
+    Column(
+        modifier
+            .clip(shape)
+            .background(if (focused) Tone.surfaceHigh else Color.Transparent)
+            .focusRing(focused, shape)
+            .then(
+                if (pressable) {
+                    Modifier.clickable(interactionSource = interactions, indication = if (tv) null else LocalIndication.current) { open = !open }
+                } else {
+                    Modifier
+                },
+            )
+            .padding(vertical = 2.dp, horizontal = if (tv) 6.dp else 0.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(
+            text,
+            style = style,
+            color = Tone.text,
+            maxLines = if (open) Int.MAX_VALUE else cutAt,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = { if (!open) cut = it.hasVisualOverflow },
+        )
+        if (pressable) {
+            Text(
+                if (open) s.commonLess else s.commonMore,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = Tone.accent,
+            )
+        }
+    }
+}
+
+/**
+ * Where the viewer stopped, at rest on the page: a short line of the share watched and "24 min
+ * left" beside it. Nothing for a video never started or already finished (the facts line says
+ * Watched for that).
+ */
+@Composable
+internal fun ResumeLine(watched: WatchPoint?, finished: Boolean, durationSec: Int, modifier: Modifier = Modifier) {
+    if (finished || watched == null || watched.fraction <= 0f) return
+    val s = LocalStrings.current
+    val leftSec = when {
+        watched.durationMs > 0 -> (watched.durationMs - watched.positionMs) / 1000
+        durationSec > 0 -> durationSec - watched.positionMs / 1000
+        else -> 0L
+    }
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        ProgressLine(watched.fraction, Modifier.width(RESUME_LINE))
+        if (leftSec > 0) {
+            Text(s.browseTimeLeft(s.formatter.duration(leftSec)), style = MaterialTheme.typography.labelLarge, color = Tone.muted, maxLines = 1)
+        }
+    }
+}
+
+/**
+ * A page's backdrop: the art ([ArtBackdrop], which falls back from the online picture to the
+ * Telegram thumbnail's soft field to the generated cover) with the long fades text needs.
+ * [fromStart] adds the start fade, for a wide page whose text sits on the start half; the foot
+ * always runs [fade] down into the page.
+ */
+@Composable
+internal fun PageBackdrop(source: BackdropSource, modifier: Modifier = Modifier, fromStart: Boolean = false, fade: Dp = BACKDROP_FADE) {
+    Box(modifier) {
+        ArtBackdrop(source, Modifier.fillMaxSize())
+        if (fromStart) Box(Modifier.fillMaxSize().background(Scrims.startLong()))
+        Box(Modifier.fillMaxSize().background(Scrims.bottomLong(fade)))
+    }
+}
+
+/**
+ * How tall a backdrop is across the top of a tall page [width] wide in a window [height] tall.
+ * An online picture is a real backdrop and gets Nuvio's measure, width x 1.33 within 420 to 760
+ * dp; Telegram's own thumbnail is small and soft, so it gets a shorter frame. Either way it
+ * leaves the lower third of the window for the title and Play.
+ */
+internal fun tallBackdropHeight(width: Dp, height: Dp, online: Boolean): Dp {
+    val wanted = if (online) (width * 1.33f).coerceIn(420.dp, 760.dp) else (width * 0.9f).coerceIn(280.dp, 520.dp)
+    return wanted.coerceAtMost(height * 0.66f)
+}
+
+/** How much of a wide page's width the backdrop takes, from the end edge. */
+internal const val BACKDROP_SHARE = 0.72f
+
+/** How fast a tall page's backdrop moves against the page's own scroll. */
+internal const val PARALLAX = 0.5f
+
+/** How wide the Play pill grows at most. */
+internal val HeroPillMax = 420.dp
+
+/** A round action and its label under it. */
+internal val RoundActionWidth = 72.dp
+
+/** The long fade at the foot of a page's backdrop. */
+internal val BACKDROP_FADE = 320.dp
+
+private val RESUME_LINE = 160.dp

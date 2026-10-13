@@ -101,7 +101,10 @@ fun rememberMetaExtras(info: MetaInfo?): MetaExtras? {
     return extras
 }
 
-/** "Drama, Crime  ·  56 min  ·  5 seasons  ·  TV-MA  ·  ★ 9.0", or null with nothing to say. */
+/**
+ * "Drama, Crime  ·  56 min  ·  5 seasons  ·  TV-MA  ·  ★ 9.0", or null with nothing to say. The
+ * score is the provider's own vote average, shown only when it sent one; nothing is made up.
+ */
 fun metaFactsLine(extras: MetaExtras, s: Messages): String? = listOfNotNull(
     extras.genres.take(3).joinToString(", ").ifBlank { null },
     extras.runtimeMin?.let { s.formatter.duration(it * 60L) },
@@ -130,7 +133,7 @@ fun MetaFactsLines(extras: MetaExtras?, modifier: Modifier = Modifier, maxLines:
             Text(
                 it,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Tone.text,
+                color = Tone.muted,
                 maxLines = maxLines,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.semantics {
@@ -447,7 +450,7 @@ private fun KnownPoster(known: KnownTitle, onClick: () -> Unit) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val width = if (tv) POSTER_TV else POSTER
-    val shape = RoundedCornerShape(Corner.Small)
+    val shape = RoundedCornerShape(Corner.Medium)
     Column(Modifier.width(width), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Box(
             Modifier
@@ -474,16 +477,16 @@ private fun KnownPoster(known: KnownTitle, onClick: () -> Unit) {
 private fun PaddingValues.startOnly(): PaddingValues =
     PaddingValues(start = calculateLeftPadding(androidx.compose.ui.unit.LayoutDirection.Ltr))
 
-private val FACE: Dp = 64.dp
-private val FACE_TV: Dp = 72.dp
+private val FACE: Dp = 72.dp
+private val FACE_TV: Dp = 88.dp
 
-/** A face is drawn at most ~72 dp, so about 160 px decoded is plenty on any screen here. */
+/** A face is drawn at most 88 dp, so about 160 px decoded is plenty for a face that small. */
 private const val FACE_PIXELS = 160
 
 /** The enlarged photo: sharp at its size on a 1080p screen. */
 private const val ENLARGED_PIXELS = 780
 
-private val POSTER: Dp = 92.dp
-private val POSTER_TV: Dp = 100.dp
+private val POSTER: Dp = 112.dp
+private val POSTER_TV: Dp = 140.dp
 private val QR_SIZE: Dp = 132.dp
 private const val QR_PIXELS = 360
