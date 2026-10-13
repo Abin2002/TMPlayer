@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import com.tmplayer.data.AndroidLogSink
+import com.tmplayer.data.AppLockSession
+import com.tmplayer.data.ChatGate
 import com.tmplayer.data.AppLocales
 import com.tmplayer.data.CrashReports
 import com.tmplayer.data.LocalDownloads
@@ -65,6 +67,12 @@ class App : Application() {
         // The isolated screenshot fixture must never open TDLib or touch a Telegram account.
         // BuildConfig is variant-specific, and the promo package is never part of a release APK.
         if (BuildConfig.APPLICATION_ID.endsWith(".promo")) return
+        // The kids lock (CP57), read once here for every list of chats in the process.
+        ChatGate.follow(SettingsStore(this))
+        // "Ask when the app opens": the app is opened again once its last activity has left the
+        // screen. Counted across activities, so the player starting in front of the browse screen
+        // (and the browse screen stopping behind it) does not count as leaving.
+        registerActivityLifecycleCallbacks(LockOnLeave())
         // Online subtitles: the build's OpenSubtitles key, the viewer's account in private files,
         // and the cache under the app's cache. A build without a key gets an instance that says
         // so (inBuild false), and nothing of the feature is drawn.
@@ -133,6 +141,27 @@ class App : Application() {
             // from a cache. This can. See [WatchCache.sweep].
             runCatching { WatchCache.sweep(this@App) }
         }
+    }
+
+    /** Locks [AppLockSession] when no activity of this app is started any more. */
+    private class LockOnLeave : ActivityLifecycleCallbacks {
+        private var started = 0
+
+        override fun onActivityStarted(activity: android.app.Activity) {
+            started++
+        }
+
+        override fun onActivityStopped(activity: android.app.Activity) {
+            started = (started - 1).coerceAtLeast(0)
+            // A rotation stops and starts the same activity; it is not the app being left.
+            if (started == 0 && !activity.isChangingConfigurations) AppLockSession.lock()
+        }
+
+        override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) = Unit
+        override fun onActivityResumed(activity: android.app.Activity) = Unit
+        override fun onActivityPaused(activity: android.app.Activity) = Unit
+        override fun onActivitySaveInstanceState(activity: android.app.Activity, outState: android.os.Bundle) = Unit
+        override fun onActivityDestroyed(activity: android.app.Activity) = Unit
     }
 
     override fun onTrimMemory(level: Int) {

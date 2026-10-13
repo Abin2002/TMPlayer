@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
@@ -122,10 +123,13 @@ class WatchLaterStore internal constructor(private val store: DataStore<Preferen
         .distinctUntilChanged()
         .flowOn(Dispatchers.Default)
 
-    /** The list, most recently added first. */
+    /**
+     * The list, most recently added first, without the chats the kids lock leaves out
+     * ([ChatGate], CP57): the Home row and the History tab both read this.
+     */
     val items: Flow<List<WatchLaterRecord>> = read { prefs ->
         decodeAll(prefs).sortedByDescending { it.addedAt }
-    }
+    }.combine(ChatGate.allowed) { records, allowed -> KidsLock.filter(records, allowed) { it.chatId } }
 
     /** Every saved video's [SettingsStore.progressKey], for a menu deciding between add and remove. */
     val keys: Flow<Set<String>> = read { prefs ->
@@ -167,7 +171,7 @@ class WatchLaterStore internal constructor(private val store: DataStore<Preferen
      * Keeps the list to [MAX_WATCH_LATER]. A list longer than that has stopped being a plan and
      * become an archive, and the whole file is read on every change.
      */
-    private fun evictOldest(prefs: MutablePreferences) {
+    internal fun evictOldest(prefs: MutablePreferences) {
         val all = decodeAll(prefs)
         if (all.size <= MAX_WATCH_LATER) return
         all.sortedBy { it.addedAt }

@@ -49,7 +49,21 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.BackupRead
+import com.tmplayer.data.BackupService
+import com.tmplayer.data.BackupWords
+import com.tmplayer.data.RestorePlan
+import com.tmplayer.data.AppLockSession
+import com.tmplayer.data.AppLockSettings
+import com.tmplayer.data.ResumeRewind
 import com.tmplayer.data.SettingsStore
+import com.tmplayer.ui.lock.AppLockWords
+import com.tmplayer.ui.lock.PinPad
+import com.tmplayer.ui.lock.PinPurpose
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.Checkbox
+import androidx.compose.runtime.produceState
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.SupportReminder
 import com.tmplayer.data.ThemeChoice
@@ -59,7 +73,9 @@ import com.tmplayer.data.Updates
 import com.tmplayer.data.WhatsNew
 import com.tmplayer.data.release
 import com.tmplayer.desktop.DesktopSettings
+import com.tmplayer.desktop.os.FilePicker
 import com.tmplayer.desktop.os.OpenExternal
+import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.player.SubtitlePosition
 import com.tmplayer.player.SubtitleSize
 import com.tmplayer.player.SubtitleStyle
@@ -72,7 +88,9 @@ import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.i18n.languageRowDetail
 import com.tmplayer.ui.theme.Tone
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * The settings that mean something on a desktop: theme, playback, the chat to open on launch,
@@ -97,8 +115,17 @@ fun SettingsPage(
     val settings = state.settings
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
+    // The app lock (CP57): a PIN being set, changed or removed takes the page's place.
+    val appLock by settings.appLock.collectAsState(initial = AppLockSettings())
+    var pinFlow by remember { mutableStateOf<DesktopPinFlow?>(null) }
+    var pickingKidsChats by remember { mutableStateOf(false) }
+    pinFlow?.let { flow ->
+        PinFlowPad(flow, state, appLock, onNext = { pinFlow = it }, onKidsChats = { pickingKidsChats = true })
+        return
+    }
     val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
     val autoplay by settings.autoplayNext.collectAsState(initial = true)
+    val resumeRewindMs by settings.resumeRewindMs.collectAsState(initial = ResumeRewind.DEFAULT_MS)
     val downloadFirst by settings.downloadBeforePlaying.collectAsState(initial = false)
     val openLast by settings.openLastChat.collectAsState(initial = false)
     val minSize by settings.minSizeBytes.collectAsState(initial = SizeFilter.DEFAULT_MIN)
@@ -124,6 +151,11 @@ fun SettingsPage(
     var stylingSubtitles by remember { mutableStateOf(false) }
     var whatsNew by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
+    // A backup file picked, with what restoring it would change, while the prompt is up.
+    var restorePlan by remember { mutableStateOf<RestorePlan?>(null) }
+    val backups = remember(settings, state.watched, version) {
+        BackupService(settings, state.watched, OnlineMetadata.current?.store, version)
+    }
 
     val scroll = rememberScrollState()
     Box(Modifier.fillMaxSize()) {
@@ -166,6 +198,18 @@ fun SettingsPage(
                         onLess = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, -1)) } } },
                         onMore = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, 1)) } } },
                     )
+                }
+                // Four short choices, so all of them at once, as the theme row has them.
+                Setting(s.settingsResumeRewind, s.settingsResumeRewindDetail) {
+                    SingleChoiceSegmentedButtonRow {
+                        ResumeRewind.CHOICES_MS.forEachIndexed { index, choice ->
+                            SegmentedButton(
+                                selected = resumeRewindMs == choice,
+                                onClick = { scope.launch { settings.setResumeRewindMs(choice) } },
+                                shape = SegmentedButtonDefaults.itemShape(index, ResumeRewind.CHOICES_MS.size),
+                            ) { Text(ResumeRewind.label(choice)) }
+                        }
+                    }
                 }
 
                 Toggle(
@@ -323,6 +367,77 @@ fun SettingsPage(
                     }) { Text(s.commonClear) }
                 }
 
+                // To a file and back: settings, lists and resume points, never the Telegram sign in.
+                Group(s.backupSection)
+                Setting(s.backupBackUp, s.backupBackUpDetail) {
+                    OutlinedButton(onClick = {
+                        scope.launch {
+                            val file = FilePicker.save(s.backupSaveTitle, backups.fileName(), "json") ?: return@launch
+                            val saved = withContext(Dispatchers.IO) {
+                                runCatching { file.writeText(backups.export()) }.isSuccess
+                            }
+                            toast(if (saved) s.backupSavedTo(file.absolutePath) else s.backupFailed)
+                        }
+                    }) { Text(s.backupBackUp) }
+                }
+                Setting(s.backupRestore, s.backupRestoreDetail) {
+                    OutlinedButton(onClick = {
+                        scope.launch {
+                            val file = FilePicker.open(s.backupPickTitle, "json") ?: return@launch
+                            val text = withContext(Dispatchers.IO) {
+                                // No backup comes near this; a film picked by mistake is not read whole.
+                                runCatching { file.takeIf { it.length() <= 32L * 1024 * 1024 }?.readText() }.getOrNull()
+                            }
+                            if (text == null) {
+                                toast(s.backupReadFailed)
+                                return@launch
+                            }
+                            when (val read = backups.read(text)) {
+                                is BackupRead.Ok -> {
+                                    val plan = backups.plan(read.backup)
+                                    if (plan.nothing) toast(s.backupRestoreNothing) else restorePlan = plan
+                                }
+                                else -> BackupWords.refusal(read)?.let { toast(it) }
+                            }
+                        }
+                    }) { Text(s.backupRestore) }
+                }
+                Group(s.lockTitle)
+                if (!appLock.pinSet) {
+                    Setting(s.lockSetPin, s.lockSetPinDetail) {
+                        OutlinedButton(onClick = { pinFlow = DesktopPinFlow.Set }) { Text(s.lockSetPin) }
+                    }
+                } else {
+                    Setting(s.lockChangePin, s.lockChangePinDetail) {
+                        OutlinedButton(onClick = { pinFlow = DesktopPinFlow.ChangeCheck }) { Text(s.commonChange) }
+                    }
+                    Toggle(s.lockOnOpen, s.lockOnOpenDetail, appLock.onOpen) { on ->
+                        // Whoever switches it on has just given the PIN to reach this page.
+                        if (on) AppLockSession.unlock()
+                        scope.launch { settings.setLockOnOpen(on) }
+                    }
+                }
+                Toggle(s.lockKids, AppLockWords.kidsDetail(appLock), appLock.kids) { on ->
+                    when {
+                        // The lock is only as good as the PIN that guards its switch.
+                        !appLock.pinSet -> pinFlow = DesktopPinFlow.SetForKids
+                        !on -> scope.launch { settings.setKidsLock(false) }
+                        else -> {
+                            scope.launch { settings.setKidsLock(true) }
+                            if (appLock.kidsChats.isEmpty()) pickingKidsChats = true
+                        }
+                    }
+                }
+                Setting(s.lockAllowedChats, s.lockAllowedChatsDetail(count = appLock.kidsChats.size)) {
+                    OutlinedButton(onClick = { pickingKidsChats = true }) { Text(s.commonChange) }
+                }
+                if (appLock.pinSet) {
+                    Setting(s.lockRemovePin, s.lockRemovePinDetail) {
+                        OutlinedButton(onClick = { pinFlow = DesktopPinFlow.Remove }) { Text(s.commonRemove) }
+                    }
+                }
+                Text(s.lockForgot, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+
                 state.extras.updates?.let { updates ->
                     Group(s.settingsUpdates)
                     Toggle(
@@ -402,6 +517,9 @@ fun SettingsPage(
     }
 
     if (confirmSignOut) SignOutDialog(state, onDismiss = { confirmSignOut = false })
+    if (pickingKidsChats) {
+        KidsChatsDialog(chatList, appLock.kidsChats, settings, onClose = { pickingKidsChats = false })
+    }
     if (supporting) SupportPopup(from = "settings", onClose = { supporting = false })
     if (pickingLanguage) LanguagePopup(settings, onClose = { pickingLanguage = false })
     if (stylingSubtitles) SubtitleStyleDialog(settings, subtitleStyle, onClose = { stylingSubtitles = false })
@@ -429,6 +547,24 @@ fun SettingsPage(
                 }
             },
             onDismiss = { confirmHideGroups = false },
+        )
+    }
+
+    restorePlan?.let { plan ->
+        ConfirmDialog(
+            title = s.backupRestoreTitle,
+            message = BackupWords.restoreMessage(plan),
+            detail = s.backupRestoreUntouched,
+            confirmLabel = s.backupRestoreConfirm,
+            destructive = false,
+            onConfirm = {
+                restorePlan = null
+                scope.launch {
+                    val done = runCatching { backups.restore(plan.backup) }.isSuccess
+                    toast(if (done) s.backupRestored else s.backupReadFailed)
+                }
+            },
+            onDismiss = { restorePlan = null },
         )
     }
 
@@ -476,6 +612,99 @@ private fun SubtitlePreview(style: SubtitleStyle, modifier: Modifier = Modifier)
                 .then(if (style.box) Modifier.background(Color(0xB3000000)).padding(horizontal = 4.dp, vertical = 1.dp) else Modifier),
         )
     }
+}
+
+/** A PIN being set, changed or removed from the App lock group. See the phone's `PinFlow`. */
+private enum class DesktopPinFlow { Set, SetForKids, ChangeCheck, ChangeChoose, Remove }
+
+/** The pad for [flow], in the page's place: Cancel and Esc go back to the page. */
+@Composable
+private fun PinFlowPad(
+    flow: DesktopPinFlow,
+    state: ShellState,
+    appLock: AppLockSettings,
+    onNext: (DesktopPinFlow?) -> Unit,
+    onKidsChats: () -> Unit,
+) {
+    val s = LocalStrings.current
+    val scope = rememberCoroutineScope()
+    val toast = rememberToast()
+    val settings = state.settings
+    val checking = flow == DesktopPinFlow.ChangeCheck || flow == DesktopPinFlow.Remove
+    PinPad(
+        settings = settings,
+        purpose = if (checking) PinPurpose.Check else PinPurpose.Choose,
+        title = if (checking) s.lockEnterCurrent else s.lockNewPin,
+        onDone = { pin ->
+            when (flow) {
+                DesktopPinFlow.ChangeCheck -> onNext(DesktopPinFlow.ChangeChoose)
+                DesktopPinFlow.Remove -> {
+                    onNext(null)
+                    scope.launch {
+                        settings.removePin()
+                        toast(s.lockPinRemovedToast)
+                    }
+                }
+                DesktopPinFlow.Set, DesktopPinFlow.ChangeChoose, DesktopPinFlow.SetForKids -> {
+                    onNext(null)
+                    scope.launch {
+                        settings.setPin(pin)
+                        if (flow == DesktopPinFlow.SetForKids) {
+                            settings.setKidsLock(true)
+                            if (appLock.kidsChats.isEmpty()) onKidsChats()
+                        }
+                        toast(s.lockPinSetToast)
+                    }
+                }
+            }
+        },
+        onCancel = { onNext(null) },
+        showForgot = false,
+    )
+}
+
+/**
+ * The kids lock's chats (CP57): every chat in the account with a box each, saved as it is ticked.
+ * The live list is what the lock already filters, so the last sync's whole list is read beside it.
+ */
+@Composable
+private fun KidsChatsDialog(
+    chatList: List<com.tmplayer.data.ChatSummary>,
+    chosen: Set<Long>,
+    settings: SettingsStore,
+    onClose: () -> Unit,
+) {
+    val s = LocalStrings.current
+    val scope = rememberCoroutineScope()
+    val every by produceState(initialValue = chatList, chatList) {
+        val remembered = runCatching { settings.cachedChatSnapshot() }.getOrNull().orEmpty()
+        value = (chatList + remembered).distinctBy { it.id }
+    }
+    TmAlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(s.lockAllowedChats) },
+        text = {
+            Column(Modifier.widthIn(max = 520.dp)) {
+                Text(s.lockAllowedChatsNote, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
+                val scroll = rememberScrollState()
+                Column(Modifier.padding(top = 12.dp).heightIn(max = 420.dp).verticalScroll(scroll)) {
+                    every.forEach { chat ->
+                        val ticked = chat.id in chosen
+                        Row(
+                            Modifier.fillMaxWidth().clickable {
+                                scope.launch { settings.setKidsChats(if (ticked) chosen - chat.id else chosen + chat.id) }
+                            },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(checked = ticked, onCheckedChange = null)
+                            Text(chat.title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onClose) { Text(s.commonClose) } },
+    )
 }
 
 /** A clear waiting on its yes: what the prompt says, and what happens on Clear. */

@@ -28,6 +28,7 @@ import com.tmplayer.ui.components.MediaArt
 import com.tmplayer.ui.components.PosterArt
 import com.tmplayer.ui.components.ProgressLine
 import com.tmplayer.ui.components.TileBadgeFill
+import com.tmplayer.ui.components.TileBadgeHeight
 import com.tmplayer.ui.components.TileBadgeInset
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.ui.i18n.LocalStrings
@@ -35,6 +36,7 @@ import com.tmplayer.ui.online.MetaPicture
 import com.tmplayer.ui.online.rememberMeta
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Scrims
+import com.tmplayer.ui.theme.Tone
 
 /**
  * A show's picture, as a 2:3 [poster] card in a grid of films and shows, or at a video tile's
@@ -63,6 +65,11 @@ fun SeriesArt(
     badge: (@Composable () -> Unit)? = null,
     /** A 2:3 poster card rather than a 16:9 tile: see [PosterArt]. */
     poster: Boolean = false,
+    /**
+     * Episodes posted since the viewer last watched the show (see [SeriesWatch.newEpisodes]): a
+     * [NewBadge] in the top end corner, unless the caller's own [badge] has it.
+     */
+    fresh: Boolean = false,
 ) {
     val s = LocalStrings.current
     val cover = series.cover
@@ -101,10 +108,32 @@ fun SeriesArt(
         if (progress.finished) {
             WatchedBadge(Modifier.align(Alignment.TopStart).padding(TileBadgeInset))
         }
-        if (badge != null) {
-            Box(Modifier.align(Alignment.TopEnd).padding(TileBadgeInset)) { badge() }
+        when {
+            badge != null -> Box(Modifier.align(Alignment.TopEnd).padding(TileBadgeInset)) { badge() }
+            fresh -> NewBadge(compact, Modifier.align(Alignment.TopEnd).padding(TileBadgeInset))
         }
     }
+}
+
+/**
+ * "New", in the accent, on a tile with an episode posted since the viewer last watched its show:
+ * the badge on a show's tile and on each tile of Home's New episodes row. A [TileBadge]'s pill in
+ * the accent rather than black, since it is the app telling the viewer something.
+ */
+@Composable
+fun NewBadge(compact: Boolean, modifier: Modifier = Modifier) {
+    Text(
+        LocalStrings.current.homeNewBadge,
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = Tone.onAccent,
+        maxLines = 1,
+        modifier = modifier
+            .heightIn(min = if (compact) TileBadgeHeight - 2.dp else TileBadgeHeight)
+            .clip(CircleShape)
+            .background(Tone.accent)
+            .padding(horizontal = 8.dp, vertical = 2.dp),
+    )
 }
 
 /** The episode count's pill: a little taller than a corner badge, as the one fact a show tile adds. */

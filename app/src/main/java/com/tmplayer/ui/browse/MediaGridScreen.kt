@@ -247,6 +247,11 @@ fun MediaGridScreen(
      * by default, which draws every tile as it was before the list existed.
      */
     watchedVideos: Map<String, WatchedRecord> = emptyMap(),
+    /**
+     * When each video was last watched, keyed like [watchProgress] (see
+     * [com.tmplayer.data.NewEpisodes.touchTimes]), for the "New" badge on a show's tile.
+     */
+    touchTimes: Map<String, Long> = emptyMap(),
     /** "Mark as watched" (true) or "Mark as unwatched" (false) from a tile's menu. */
     onSetWatched: (MediaItem, Boolean) -> Unit = { _, _ -> },
     onToggleFavorite: () -> Unit,
@@ -391,10 +396,11 @@ fun MediaGridScreen(
     val scope = rememberCoroutineScope()
     val settings = remember(context) { SettingsStore(context) }
     val detailFirst by settings.detailFirst.collectAsState(initial = true)
-    val watch = remember(watchProgress, watchedVideos) {
+    val watch = remember(watchProgress, watchedVideos, touchTimes) {
         SeriesWatch(
             point = { watchProgress[SettingsStore.progressKey(it.chatId, it.messageId)] },
             finished = { SettingsStore.progressKey(it.chatId, it.messageId) in watchedVideos },
+            touchedAt = { touchTimes[SettingsStore.progressKey(it.chatId, it.messageId)] },
         )
     }
 
@@ -617,6 +623,7 @@ fun MediaGridScreen(
                                             SeriesCard(
                                                 series = shelved.series,
                                                 progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
+                                                fresh = remember(shelved.series, watch) { watch.newEpisodes(shelved.series) > 0 },
                                                 onClick = { openSeries = shelved.series },
                                                 dense = dense,
                                                 poster = true,
@@ -680,6 +687,7 @@ fun MediaGridScreen(
                                         SeriesCard(
                                             series = shelved.series,
                                             progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
+                                            fresh = remember(shelved.series, watch) { watch.newEpisodes(shelved.series) > 0 },
                                             onClick = { openSeries = shelved.series },
                                             onFocused = { standingOn = shelved.series.cover },
                                             modifier = focusOf(shelved),
@@ -1729,9 +1737,12 @@ internal fun MediaCard(
      * says, since only it knows whether the row or grid around it has room for a tall card.
      */
     poster: Boolean = false,
+    /** What the caption says in place of the file's own name: Home's New episodes row names the episode. */
+    title: String? = null,
 ) {
+    val named = if (poster) remember(item) { SeriesShelf.posterTitle(item) } else tileTitle(item)
     VideoTile(
-        title = if (poster) remember(item) { SeriesShelf.posterTitle(item) } else tileTitle(item),
+        title = title ?: named,
         onClick = onClick,
         onLongClick = onLongClick,
         onFocused = onFocused,

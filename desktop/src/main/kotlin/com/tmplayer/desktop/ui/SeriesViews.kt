@@ -60,15 +60,21 @@ import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.launch
 
-/** The Watched list and saved positions, read the way [MediaTile] reads them, for the series view. */
+/**
+ * The Watched list and saved positions, read the way [MediaTile] reads them, for the series view,
+ * with when each was last watched for the "New" badge on a show's poster.
+ */
 @Composable
 internal fun rememberSeriesWatch(state: ShellState): SeriesWatch {
     val progress by state.settings.watchProgress.collectAsState(initial = emptyMap())
     val watched by state.watched.watched.collectAsState(initial = emptyMap())
-    return remember(progress, watched) {
+    val resume by state.settings.continueWatching.collectAsState(initial = emptyList())
+    val times = remember(resume, watched) { com.tmplayer.data.NewEpisodes.touchTimes(resume, watched.values) }
+    return remember(progress, watched, times) {
         SeriesWatch(
             point = { progress[SettingsStore.progressKey(it.chatId, it.messageId)] },
             finished = { SettingsStore.progressKey(it.chatId, it.messageId) in watched },
+            touchedAt = { times[SettingsStore.progressKey(it.chatId, it.messageId)] },
         )
     }
 }
@@ -116,7 +122,7 @@ internal fun SeriesPoster(
                 .graphicsLayer { scaleX = scale; scaleY = scale }
                 .then(if (focused) Modifier.border(com.tmplayer.ui.theme.Focus.Ring, Tone.accent, MaterialTheme.shapes.medium) else Modifier),
         ) {
-            SeriesArt(series, progress, Modifier.fillMaxWidth(), poster = poster)
+            SeriesArt(series, progress, Modifier.fillMaxWidth(), poster = poster, fresh = remember(series, watch) { watch.newEpisodes(series) > 0 })
         }
         // The poster's own lines (see Poster), so a show sits level with the videos beside it.
         if (poster) {

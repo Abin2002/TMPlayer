@@ -693,3 +693,33 @@ Acceptance:
 - **Decision for the user:** the phone series page replacing the sheet (WP4) changes navigation,
   not only looks. If the sheet should stay, WP4 restyles the sheet with the same hero at a
   reduced height instead.
+
+## 8. Addendum: portrait posters and measured values (2026-10-13)
+
+The user asked for portrait cards like Nuvio's, and then: "only take good inspirations from them make sure
+the essence of the project is maintained." So the earlier choice of 16:9 tiles everywhere is replaced:
+
+- **Films and shows** use 2:3 poster cards. Art comes from the online poster when there is one, else a
+  portrait Telegram thumbnail as it is, else a landscape thumbnail set inside the card over its own soft
+  backdrop with a bottom scrim (never cropped badly), else the generated cover in portrait.
+- **Everything else** (Continue watching, episodes, clips, lectures, topic videos) keeps wide 16:9 cards
+  that lead with information.
+- **TMPlayer stays TMPlayer:** its own colours, accent, icons, wording and sidebar; chat names, versions,
+  captions, quality and size stay visible; no ratings, no "trending", nothing that hides what a file is.
+
+Values measured from Nuvio's source (NuvioMobile, NuvioTV) and the screenshots on nuvio.tv, used as a guide:
+
+| Item | Phone | TV |
+| --- | --- | --- |
+| Poster | 126 x 189 dp, radius 12 dp, title under it (bodyMedium) plus a labelSmall line | same size, radius 12 dp |
+| Gap between cards | 10 dp | 12 dp |
+| Screen inset | 16 dp | about 52 dp start |
+| Row title | titleLarge SemiBold, 10 dp to the row | titleMedium SemiBold, 24 dp between rows |
+| Wide card | 16:9, about 247 dp, bottom 40% fade, label and title bottom left, time-left chip top right, 3 dp pill progress on a black 30% track | similar |
+| Hero | 82% of the viewport clamped 360 to 760 dp, 220 dp fade to the background, centred meta line, one pill button | backdrop on the right 72% with left and bottom fades |
+| Detail backdrop | width x 1.33 clamped 420 to 760 dp, 320 dp fade, 52 dp pill Play plus round icon buttons 12 dp apart | |
+| Episode card | 296 x 184 dp, full-bleed thumbnail, scrim from 42% to 0.92, radius 12 dp; or a list with the thumbnail on the left | 320 x 207 dp |
+| Focus | | 2 dp ring in the focus colour, scale 1.02 |
+
+About 2.8 posters show per Home row on a phone in portrait, the cut third one hinting at the scroll; a
+grid uses three columns.

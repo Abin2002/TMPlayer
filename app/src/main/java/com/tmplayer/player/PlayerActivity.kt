@@ -46,6 +46,7 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.Renderer
+import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.audio.AudioSink
@@ -300,6 +301,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** Volume boost as the viewer left it, read before the player is built. */
     private var volumeBoostOn = false
 
+    /**
+     * Skip silence, switched under the speeds and kept as a setting. Media3 drops the quiet stretches
+     * in the audio sink's own chain, so it works on the PCM the sink plays and does nothing to a
+     * track passed through to a receiver as a bitstream.
+     */
+    private var skipSilence = false
+
     /** The boost's processor, owned by the current player's sink. See [VolumeBoostProcessor]. */
     private var volumeBoost: VolumeBoostProcessor? = null
 
@@ -333,6 +341,22 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var fileSizeBytes = 0L
     private var durationSec = 0
     private var resumeMs = 0L
+
+    /**
+     * The A-B repeat marked from the menu, or null. Media3 has no loop of its own between two
+     * points, so [loopWatch] looks at the position a few times a second and seeks back to the start
+     * once it reaches the end. Not kept: the next video, which is a new activity, starts without.
+     */
+    private var abLoop: AbLoop? = null
+    private val loopHandler = android.os.Handler(Looper.getMainLooper())
+    private val loopWatch = object : Runnable {
+        override fun run() {
+            val loop = abLoop?.takeIf { it.complete } ?: return
+            val exo = player
+            if (exo != null) loop.wrap(exo.currentPosition)?.let(exo::seekTo)
+            loopHandler.postDelayed(this, LOOP_TICK_MS)
+        }
+    }
 
     /**
      * The tracks the saved position was playing with, put back once the player lists the file's
@@ -614,6 +638,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 sleepTimer = ::sleepTimerDetail,
                 onSleepTimer = ::setSleepTimer,
                 sleepChoice = ::sleepChoice,
+                loop = { abLoop },
+                paused = ::isPaused,
                 onEntry = ::onTvMenuEntry,
                 onShape = ::applyScale,
                 onClosed = { menuOpen = false; holdControls(); controls?.show(); controls?.focusRow() },
@@ -692,8 +718,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // Reading the saved position is a disk hit; do it off the main thread and seek once it
         // lands. Under "download the whole video first" there is no player to seek yet, so
         // [startPlayback] applies the same position as well; whichever arrives second sets it again.
+        // A few seconds before the saved point, as Settings has it ([ResumeRewind]).
         lifecycleScope.launch {
-            resumeMs = runCatching { settings.resumePosition(chatId, messageId) }.getOrDefault(0L)
+            resumeMs = runCatching { settings.resumeStart(chatId, messageId) }.getOrDefault(0L)
             if (resumeMs > 0) {
                 player?.seekTo(resumeMs)
                 resumeNotice = L.playerResumingFrom(Translator.messages.formatter.clock(resumeMs))
@@ -762,6 +789,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 (trackPlan.subtitles is SubtitlePlan.On || trackPlan.subtitles is SubtitlePlan.IfForeignAudio)
             downmixChoice = runCatching { settings.downmixChoiceNow() }.getOrNull()
             volumeBoostOn = runCatching { settings.volumeBoostNow() }.getOrDefault(false)
+            skipSilence = runCatching { settings.skipSilenceNow() }.getOrDefault(false)
             subtitleStyle = runCatching { settings.subtitleStyleNow() }.getOrDefault(SubtitleStyle())
             applySubtitleStyle()
             // Only a video from a message has somewhere to keep an offset; a file opened from
@@ -1264,7 +1292,15 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** The speed button: every speed to pick from at once, rather than stepping through them. */
     fun pickSpeed() {
-        showSheet { it.showSpeed(playbackSpeed, ::setSpeed) }
+        showSheet { it.showSpeed(playbackSpeed, ::setSpeed, skipSilence, ::setSkipSilence) }
+    }
+
+    /** The speed sheet's Skip silence: on the sound already playing, and kept for every video. */
+    private fun setSkipSilence(on: Boolean) {
+        skipSilence = on
+        player?.skipSilenceEnabled = on
+        showGestureFeedback(if (on) L.playerSkipSilenceOn else L.playerSkipSilenceOff)
+        lifecycleScope.launch { runCatching { settings.setSkipSilence(on) } }
     }
 
     /**
@@ -1566,6 +1602,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 setHandleAudioBecomingNoisy(true)
                 setWakeMode(C.WAKE_MODE_LOCAL)
                 setPlaybackSpeed(playbackSpeed)
+                skipSilenceEnabled = skipSilence
                 videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
                 // Media3 only ever asks the display for a seamless rate switch. On a television
                 // whose viewer set "Match content frame rate" to always, the app asks itself,
@@ -2882,11 +2919,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             openInAnotherApp = savable == true,
             saveToDownloads = canSaveToDownloads(),
             markWatched = hasMessage(),
+            paused = isPaused(),
         )
         // Speed and the sleep timer open the pickers' sheet rather than a submenu, so a choice
         // of one of several looks the same here as the subtitle and audio pickers.
         entries.forEachIndexed { order, entry ->
-            val label = entry.label(sleepDetail = sleepTimerDetail(), watched = onWatchedList)
+            val label = entry.label(sleepDetail = sleepTimerDetail(), watched = onWatchedList, loop = abLoop)
             val item = items.add(0, entry.ordinal, order, label)
             if (entry == PhoneMenuEntry.VolumeBoost) item.setCheckable(true).setChecked(volumeBoostOn)
         }
@@ -2896,6 +2934,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 PhoneMenuEntry.PictureInPicture -> enterPictureInPictureNow()
                 PhoneMenuEntry.VolumeBoost -> toggleVolumeBoost()
                 PhoneMenuEntry.SleepTimer -> showSheet { it.showSleep(sleepTimerDetail(), sleepChoice(), ::setSleepTimer) }
+                PhoneMenuEntry.AbLoop -> pressLoop()
+                PhoneMenuEntry.NextFrame -> frameStep(forward = true)
+                PhoneMenuEntry.PreviousFrame -> frameStep(forward = false)
                 PhoneMenuEntry.OpenInAnotherApp -> openInAnotherApp()
                 PhoneMenuEntry.LoadSubtitleFile -> subtitleFiles.pick()
                 PhoneMenuEntry.SaveToDownloads -> saveToDownloads()
@@ -2918,9 +2959,54 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             PlayerMenuEntry.SaveToDownloads -> saveToDownloads()
             PlayerMenuEntry.MarkWatched -> toggleWatched()
             PlayerMenuEntry.VolumeBoost -> toggleVolumeBoost()
+            PlayerMenuEntry.AbLoop -> pressLoop()
+            PlayerMenuEntry.NextFrame -> frameStep(forward = true)
+            PlayerMenuEntry.PreviousFrame -> frameStep(forward = false)
             // Pages of the menu itself, opened there.
             PlayerMenuEntry.PictureShape, PlayerMenuEntry.SleepTimer, PlayerMenuEntry.RemoteKeys -> Unit
         }
+    }
+
+    /** Paused by the viewer, not stalled for bytes: when the frame steps are offered. */
+    private fun isPaused(): Boolean = player?.playWhenReady == false
+
+    /**
+     * The repeat line: the start, then the end (and the loop runs), then off, as the desktop's R
+     * key has it ([AbLoop.press]). The marks go on the bar and "A-B" beside the time.
+     */
+    private fun pressLoop() {
+        val exo = player ?: return
+        val clock = Translator.messages.formatter::clock
+        val before = abLoop
+        val after = AbLoop.press(before, exo.currentPosition)
+        abLoop = after
+        controls?.loop = after
+        loopHandler.removeCallbacks(loopWatch)
+        val end = after?.endMs
+        when {
+            after == null -> showGestureFeedback(L.playerRepeatOff)
+            after == before -> showGestureFeedback(L.playerLoopTooShortMenu)
+            end != null -> {
+                showGestureFeedback(L.playerRepeating(clock(after.startMs), clock(end)))
+                // From the start straight away, so the viewer hears the loop they just marked.
+                exo.seekTo(after.startMs)
+                loopHandler.post(loopWatch)
+            }
+            else -> showGestureFeedback(L.playerLoopStartSet(clock(after.startMs)))
+        }
+    }
+
+    /**
+     * One frame forward or back on a paused picture. Media3 has no frame step, so this seeks by one
+     * frame's length ([FrameStep]) with an exact seek, which decodes from the keyframe before it and
+     * shows the very frame asked for. Slower than a nearest keyframe seek, which is fine for a step.
+     */
+    private fun frameStep(forward: Boolean) {
+        val exo = player ?: return
+        if (exo.playWhenReady) return
+        val fps = exo.videoFormat?.frameRate ?: 0f
+        exo.setSeekParameters(SeekParameters.EXACT)
+        exo.seekTo(FrameStep.target(exo.currentPosition, exo.duration.coerceAtLeast(0L), fps, forward))
     }
 
     /** The menu's Volume boost: switched on the sound already playing, and kept for every video. */
@@ -4148,6 +4234,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     }
 
     override fun onDestroy() {
+        loopHandler.removeCallbacks(loopWatch)
         stopArtDrift()
         saveResumePosition(leaving = true)
         controls?.thumbnails = null
@@ -4412,6 +4499,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         /** A saved position shorter than this is not worth a "Start over". */
         private const val RESUME_OFFER_MIN_MS = 15_000L
+
+        /** How often a running A-B repeat looks at the position: the loop overruns its end by at most this. */
+        private const val LOOP_TICK_MS = 100L
 
         /** How long the first-run hint stays up. */
         private const val HINT_MS = 5_000L

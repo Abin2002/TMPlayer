@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import okio.Path.Companion.toPath
 import java.io.File
@@ -130,10 +131,14 @@ class WatchedStore(private val store: DataStore<Preferences>) {
         decodeAll(prefs).associateBy { it.key }
     }
 
-    /** The "Watched" list: most recently finished first. */
+    /**
+     * The "Watched" list: most recently finished first, without the chats the kids lock leaves
+     * out ([ChatGate]). The ticks in [watched] are not screened: a grid only ever shows a chat the
+     * lock already let through.
+     */
     val history: Flow<List<WatchedRecord>> = read { prefs ->
         decodeAll(prefs).sortedByDescending { it.watchedAt }
-    }
+    }.combine(ChatGate.allowed) { records, allowed -> KidsLock.filter(records, allowed) { it.chatId } }
 
     suspend fun isWatched(chatId: Long, messageId: Long): Boolean =
         store.data.first()[keyOf(chatId, messageId)] != null
@@ -167,6 +172,22 @@ class WatchedStore(private val store: DataStore<Preferences>) {
         store.edit { prefs ->
             val doomed = prefs.asMap().keys.filter { it.name.startsWith(PREFIX) }
             for (key in doomed) prefs.remove(key)
+        }
+    }
+
+    /** Every stored mark under its stored name, for [Backups]. */
+    suspend fun rawEntries(): Map<String, Any> = store.data.first().asMap().mapKeys { it.key.name }
+
+    /**
+     * As [SettingsStore.restoreEntries]: one edit over the file as it is then, the watched list and
+     * [watchLater] alike, each capped after.
+     */
+    suspend fun restoreEntries(writes: (Map<String, Any>) -> Map<String, Any>) {
+        store.edit { prefs ->
+            val now = prefs.asMap().mapKeys { it.key.name }
+            for ((name, value) in writes(now)) prefs.putRaw(name, value)
+            evictOldest(prefs)
+            watchLater.evictOldest(prefs)
         }
     }
 

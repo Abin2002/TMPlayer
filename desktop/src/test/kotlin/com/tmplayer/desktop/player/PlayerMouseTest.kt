@@ -427,7 +427,8 @@ class PlayerMouseTest {
         open(fromStart = false)
         assertEquals(state, engine.lastPrefs?.resume)
         assertEquals(1.5f, engine.lastPrefs?.speed)
-        assertEquals(400_000L, engine.state.value.positionMs)
+        // The default rewind: three seconds before the saved point.
+        assertEquals(400_000L - com.tmplayer.data.ResumeRewind.DEFAULT_MS, engine.state.value.positionMs)
     }
 
     private fun track(id: Int, type: TrackType, lang: String, selected: Boolean) = MediaTrack(

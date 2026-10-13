@@ -71,6 +71,7 @@ import com.tmplayer.data.CourseProgress
 import com.tmplayer.data.EpisodeCopies
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.MediaMapper
+import com.tmplayer.data.NewEpisodes
 import com.tmplayer.data.SeasonDownload
 import com.tmplayer.data.Series
 import com.tmplayer.data.SeriesEpisode
@@ -115,6 +116,11 @@ import com.tmplayer.ui.theme.focusRing
 class SeriesWatch(
     val point: (MediaItem) -> WatchPoint?,
     finished: (MediaItem) -> Boolean,
+    /**
+     * When the viewer last watched a video, in milliseconds, or null when nothing says (see
+     * [NewEpisodes.touchTimes]). Only the "New" badge reads it; without it no show is new.
+     */
+    val touchedAt: (MediaItem) -> Long? = { null },
 ) {
     private val onList = finished
     val finished: (MediaItem) -> Boolean = { item -> Watching.counts(onList(item), point(item)) }
@@ -124,6 +130,10 @@ class SeriesWatch(
 
     fun progress(series: Series): SeriesProgress =
         SeriesShelf.progress(series, finished) { point(it)?.fraction ?: 0f }
+
+    /** How many of [series]' episodes arrived since the viewer last watched it: see [NewEpisodes.inSeries]. */
+    fun newEpisodes(series: Series): Int =
+        NewEpisodes.inSeries(series, { finished(it) || (point(it)?.fraction ?: 0f) > 0f }, touchedAt)
 
     /** Watched when any copy of the episode is. */
     fun finishedEpisode(episode: SeriesEpisode): Boolean = episode.copies.any(finished)

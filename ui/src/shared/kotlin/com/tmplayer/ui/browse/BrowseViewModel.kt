@@ -6,7 +6,9 @@ import com.tmplayer.i18n.L
 import com.tmplayer.platform.Background
 import com.tmplayer.data.Account
 import com.tmplayer.data.AuthState
+import com.tmplayer.data.ChatGate
 import com.tmplayer.data.ChatRepository
+import com.tmplayer.data.KidsLock
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.ForumTopicSummary
 import com.tmplayer.data.arrangeChats
@@ -73,6 +75,18 @@ class ChatListViewModel(private val settings: SettingsStore? = null) : ViewModel
         paintFromSnapshot()
         load()
         watchChatChanges()
+        followKidsLock()
+    }
+
+    /**
+     * The kids lock (CP57), applied where the list is handed to the screens rather than where it
+     * is read: the rows in hand stay whole, so the lock going off shows every chat at once, with
+     * no re-sync, and a chat arriving through an update is screened like the rest.
+     */
+    private fun followKidsLock() {
+        viewModelScope.launch {
+            ChatGate.allowed.collect { publish() }
+        }
     }
 
     /**
@@ -102,6 +116,10 @@ class ChatListViewModel(private val settings: SettingsStore? = null) : ViewModel
                 if (_state.value is UiState.Loading) _state.value = loading()
             }
             if (remembered.isEmpty() || chats != null) return@launch
+            // The kids lock is read before yesterday's list is drawn, not after: painting every
+            // chat for the moment the store takes to answer would show what the lock hides.
+            ChatGate.awaitReady()
+            if (chats != null) return@launch
             chats = remembered
             publish()
         }
@@ -452,11 +470,14 @@ class ChatListViewModel(private val settings: SettingsStore? = null) : ViewModel
     }
 
     private fun publish() {
-        val loaded = chats ?: return
-        _state.value = if (loaded.isEmpty()) {
-            UiState.Empty(L.browseNoChats)
-        } else {
-            UiState.Content(BrowseData(loaded, account))
+        val everything = chats ?: return
+        val allowed = ChatGate.allowed.value
+        val loaded = KidsLock.chats(everything, allowed)
+        _state.value = when {
+            loaded.isNotEmpty() -> UiState.Content(BrowseData(loaded, account))
+            // Said plainly, so a child's empty screen is not mistaken for a broken account.
+            allowed != null && everything.isNotEmpty() -> UiState.Empty(L.lockKidsEmpty)
+            else -> UiState.Empty(L.browseNoChats)
         }
     }
 }

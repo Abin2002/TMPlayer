@@ -43,6 +43,8 @@ internal fun SeriesCard(
     badge: (@Composable () -> Unit)? = null,
     /** A 2:3 poster card, in a grid of films and shows; a 16:9 card in a row of videos. */
     poster: Boolean = false,
+    /** Episodes posted since the viewer last watched the show: a "New" badge on the picture. */
+    fresh: Boolean = false,
 ) {
     val summary = listOfNotNull(seriesSummary(series), seriesProgressLine(progress)).joinToString("  ·  ")
     VideoTile(
@@ -62,7 +64,7 @@ internal fun SeriesCard(
             )
         },
     ) {
-        SeriesArt(series, progress, Modifier.fillMaxSize(), compact = dense, badge = badge, poster = poster)
+        SeriesArt(series, progress, Modifier.fillMaxSize(), compact = dense, badge = badge, poster = poster, fresh = fresh)
     }
 }
 

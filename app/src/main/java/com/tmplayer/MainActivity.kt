@@ -3,6 +3,7 @@ package com.tmplayer
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.BackHandler
@@ -54,6 +55,7 @@ import com.tmplayer.data.CardLayout
 import com.tmplayer.data.ChatKind
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.DiskSpace
+import com.tmplayer.data.AppLockSession
 import com.tmplayer.data.FormFactor
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.RoomOnDisk
@@ -87,6 +89,11 @@ import com.tmplayer.ui.browse.KeyPresses
 import com.tmplayer.ui.browse.TvBrowseHint
 import com.tmplayer.ui.browse.BrowseSection
 import com.tmplayer.ui.browse.HomeViewModel
+import com.tmplayer.ui.components.ScreensaverTimer
+import com.tmplayer.ui.components.TvIdle
+import com.tmplayer.ui.components.TvScreensaver
+import com.tmplayer.ui.lock.PinPad
+import com.tmplayer.ui.lock.PinPurpose
 import com.tmplayer.ui.browse.SeriesWatch
 import com.tmplayer.ui.browse.rememberHomeRows
 import com.tmplayer.data.HomeRow
@@ -251,6 +258,15 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
+     * Every key passes the screensaver first (CP57): it notes the remote is in use, and a key that
+     * only wakes the screensaver goes no further, so it neither moves focus nor presses anything.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (TvIdle.onKey(event)) return true
+        return super.dispatchKeyEvent(event)
+    }
+
+    /**
      * A language picked on Android's own page for this app (Android 13 and later) while it was in
      * the background becomes the in-app choice. See [AppLocales].
      */
@@ -351,13 +367,26 @@ private fun Root() {
     val minSize by settings.minSizeBytes.collectAsStateWithLifecycle(initialValue = SizeFilter.DEFAULT_MIN)
     val maxSize by settings.maxSizeBytes.collectAsStateWithLifecycle(initialValue = SizeFilter.DEFAULT_MAX)
     val chatLayout by settings.chatLayout.collectAsStateWithLifecycle(initialValue = CardLayout.List)
-    val homeWatch = remember(watchProgress, watchedVideos) {
+    // When each video was last watched, for the "New" badge on a show's tile.
+    val touchTimes = remember(continueWatching, watchedVideos) {
+        com.tmplayer.data.NewEpisodes.touchTimes(continueWatching, watchedVideos.values)
+    }
+    val homeWatch = remember(watchProgress, watchedVideos, touchTimes) {
         SeriesWatch(
             point = { watchProgress[SettingsStore.progressKey(it.chatId, it.messageId)] },
             finished = { SettingsStore.progressKey(it.chatId, it.messageId) in watchedVideos },
+            touchedAt = { touchTimes[SettingsStore.progressKey(it.chatId, it.messageId)] },
         )
     }
     val mediaLayout by settings.mediaLayout.collectAsStateWithLifecycle(initialValue = CardLayout.Grid)
+    // The app lock (CP57). Null until the store has answered, which gates nothing: the pad must
+    // never flash up over an app that has no PIN.
+    val appLock by settings.appLock.collectAsStateWithLifecycle(initialValue = null)
+    val appUnlocked by AppLockSession.unlocked.collectAsStateWithLifecycle()
+    // Settings asks once per visit: back to the chats and it asks again.
+    var settingsUnlocked by rememberSaveable { mutableStateOf(false) }
+    val screensaverMinutes by settings.screensaverMinutes.collectAsStateWithLifecycle(initialValue = 0)
+    val screensaverUp by TvIdle.showing.collectAsStateWithLifecycle()
 
     val toast = rememberToast()
 
@@ -497,7 +526,13 @@ private fun Root() {
     // in screen arms it; it is asked once the chat list (and with it the folder list) is in, only
     // when the account has folders, and never again on this install. See FirstSignIn.
     LaunchedEffect(auth) {
-        if (FirstSignIn.isSignInStep(auth)) runCatching { settings.armFirstSignInCard() }
+        if (FirstSignIn.isSignInStep(auth)) {
+            runCatching { settings.armFirstSignInCard() }
+            // A sign in screen means the account is gone, however it went: signed out here, or
+            // from Telegram's Devices list, which is the way back from a forgotten PIN. The lock
+            // was that account's.
+            runCatching { settings.clearAppLock() }
+        }
     }
     val signInCardPending by settings.firstSignInCardPending.collectAsStateWithLifecycle(initialValue = false)
     var signInCard by remember { mutableStateOf(false) }
@@ -897,6 +932,35 @@ private fun Root() {
             return@Box
         }
 
+        // "Ask when the app opens" (CP57): the pad instead of the app, not over it, so a remote
+        // cannot walk out of it into the screen behind. Back leaves the app.
+        if (appLock?.onOpen == true && !appUnlocked) {
+            val activity = LocalActivity.current
+            PinPad(
+                settings = settings,
+                purpose = PinPurpose.Check,
+                title = s.lockEnterForApp,
+                onDone = {
+                    AppLockSession.unlock()
+                    // The PIN has just been given; Settings need not ask for it again this visit.
+                    settingsUnlocked = true
+                },
+                onCancel = { activity?.finish() },
+            )
+            return@Box
+        }
+
+        // The TV screensaver (CP57), on the browse screens only: the player is another activity,
+        // and this one is not resumed while it plays.
+        if (FormFactor.isTv(context)) {
+            val browsing = inShell && (screen is Screen.Chats || screen is Screen.Media || screen is Screen.Downloads)
+            ScreensaverTimer(minutes = screensaverMinutes, browsing = browsing)
+        }
+        // Back to browsing locks Settings again.
+        LaunchedEffect(screen) {
+            if (screen is Screen.Chats || screen is Screen.Media) settingsUnlocked = false
+        }
+
         // A chat restored from the saved state carries only what could be written down, so its
         // blurred preview is missing until the real row turns up, when it is swapped back in.
         LaunchedEffect(chats, screen) {
@@ -1074,14 +1138,14 @@ private fun Root() {
                     folders = folders,
                     onToggleLayout = { scope.launch { settings.setChatLayout(chatLayout.toggled()) } },
                     layout = chatLayout,
-                    homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater),
+                    homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater, watchedVideos.values),
                     homeArt = homeViewModel.art.collectAsStateWithLifecycle().value,
                     homeWatch = homeWatch,
                     onHomeRowShown = { row ->
                         when (row) {
                             is HomeRow.Chat -> homeViewModel.request(row.chatId)
                             is HomeRow.Recent -> homeViewModel.requestRecent()
-                            is HomeRow.Continue, is HomeRow.WatchLater -> Unit
+                            is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> Unit
                         }
                     },
                     onHomeArtWanted = homeViewModel::requestArt,
@@ -1116,6 +1180,7 @@ private fun Root() {
                     maxSizeBytes = maxSize,
                     watchProgress = watchProgress,
                     watchedVideos = watchedVideos,
+                    touchTimes = touchTimes,
                     onSetWatched = { item, watched -> setWatched(item, current.chat.title, watched) },
                     onToggleFavorite = {
                         scope.launch {
@@ -1161,6 +1226,21 @@ private fun Root() {
                     screen = Screen.Chats
                 }
                 BackHandler(onBack = leaveSettings)
+                val lock = appLock
+                // With no PIN there is nothing to ask, and a PIN set from inside Settings must not
+                // lock the viewer out of the page they set it on.
+                LaunchedEffect(lock?.pinSet) { if (lock?.pinSet == false) settingsUnlocked = true }
+                if (lock == null) return@Box
+                if (lock.pinSet && !settingsUnlocked) {
+                    PinPad(
+                        settings = settings,
+                        purpose = PinPurpose.Check,
+                        title = s.lockEnterForSettings,
+                        onDone = { settingsUnlocked = true },
+                        onCancel = leaveSettings,
+                    )
+                    return@Box
+                }
                 SettingsScreen(
                     chats = chats,
                     onLoggedOut = {
@@ -1361,6 +1441,10 @@ private fun Root() {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp),
         )
+
+        // Over everything this window draws. The key that ends it never reaches the screen
+        // under it (TvIdle.onKey).
+        if (screensaverUp) TvScreensaver(continueWatching)
     }
 }
 

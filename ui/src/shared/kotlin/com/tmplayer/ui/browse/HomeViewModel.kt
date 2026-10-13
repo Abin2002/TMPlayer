@@ -12,10 +12,19 @@ import com.tmplayer.data.HomeRow
 import com.tmplayer.data.HomeRows
 import com.tmplayer.data.LocalFileAvailability
 import com.tmplayer.data.MediaItem
+import com.tmplayer.data.NewEpisode
+import com.tmplayer.data.NewEpisodes
 import com.tmplayer.data.ResumeRecord
 import com.tmplayer.data.SettingsStore
+import com.tmplayer.data.ShowReached
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.Td
+import com.tmplayer.data.WatchedRecord
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.withContext
 import com.tmplayer.data.WatchLaterRecord
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
@@ -57,6 +66,13 @@ interface HomeSource {
 
     /** Asks for [chatId]'s new posts as they happen until the handle is closed; null where nothing follows them. */
     suspend fun follow(chatId: Long): AutoCloseable? = null
+
+    /**
+     * A show's newest videos in [chatId], found by [query] and kept to the forum topic [messageId]
+     * (an episode the viewer watched) was posted in, newest first: one small search, for New
+     * episodes. None by default.
+     */
+    suspend fun showMedia(chatId: Long, messageId: Long, query: String): List<MediaItem> = emptyList()
 }
 
 /** The signed in account, through TDLib. */
@@ -87,6 +103,17 @@ object TdHomeSource : HomeSource {
         return Td.watchChat(chatId)
     }
 
+    override suspend fun showMedia(chatId: Long, messageId: Long, query: String): List<MediaItem> {
+        val repository = repository()
+        // In a group with topics the show is looked for in its own topic, as the player does, or
+        // another section's "Lecture 12" would pass for the next one of this course.
+        val topic = runCatching { repository.topicOf(chatId, messageId) }.getOrDefault(0)
+        return repository.mediaPage(chatId, query = query, pageSize = SHOW_PAGE, topicId = topic).items
+    }
+
+    /** Per search, for a show in progress: what arrived since a visit is the newest handful. */
+    private const val SHOW_PAGE = 10
+
     /** Longer than a grid's: a row fetched again is a search, and Home has several rows to keep. */
     private const val LIVE_WINDOW_MS = 3_000L
 
@@ -111,6 +138,8 @@ class HomeViewModel(
     private val source: HomeSource = TdHomeSource,
     /** The size limits from Settings, applied as in a chat's grid; read per fetch so a change lands on refresh. */
     private val sizeLimits: suspend () -> Pair<Long, Long> = { SizeFilter.DEFAULT_MIN to SizeFilter.DEFAULT_MAX },
+    /** Where the shows in progress and their new episodes are worked out: off the main thread. */
+    private val work: kotlin.coroutines.CoroutineContext = Dispatchers.Default,
 ) : ViewModel() {
 
     private val _loaded = MutableStateFlow<Map<Long, List<MediaItem>>>(emptyMap())
@@ -140,11 +169,68 @@ class HomeViewModel(
     /** The starred chats held open in TDLib for their new posts, as their rows were fetched. */
     private val following = LinkedHashMap<Long, AutoCloseable>()
 
+    /** The shows in progress, and every video the viewer has watched or started, by progress key. */
+    private class Tracked(val shows: List<ShowReached>, val touched: Set<String>)
+
+    /** Everything the New episodes row is drawn from, gathered for one pass of [NewEpisodes.collect]. */
+    private class NewInputs(
+        val tracked: Tracked,
+        val found: Map<String, List<MediaItem>>,
+        val loaded: Map<Long, List<MediaItem>>,
+        val recent: List<MediaItem>?,
+    ) {
+        fun newEpisodes(): List<NewEpisode> {
+            val pools = tracked.shows.associate { show ->
+                val searched = found[show.key].orEmpty()
+                // A search kept to a forum topic says which topic the show is in; the rows' videos
+                // join only from that topic, or from a chat without topics when nothing says.
+                val topic = searched.firstOrNull { it.topicId != 0 }?.topicId ?: 0
+                val alongside = (loaded[show.chatId].orEmpty() + recent.orEmpty().filter { it.chatId == show.chatId })
+                    .filter { it.topicId == topic }
+                show.key to searched + alongside
+            }
+            return NewEpisodes.collect(tracked.shows, pools) { SettingsStore.progressKey(it.chatId, it.messageId) in tracked.touched }
+        }
+    }
+
+    private val tracked = MutableStateFlow(Tracked(emptyList(), emptySet()))
+
+    /** What each show's search found, by [ShowReached.key], within the size limits. */
+    private val found = MutableStateFlow<Map<String, List<MediaItem>>>(emptyMap())
+
+    private val _newEpisodes = MutableStateFlow<List<NewEpisode>>(emptyList())
+
+    /** The New episodes row's tiles, empty until a show in progress turns one up. */
+    val newEpisodes: StateFlow<List<NewEpisode>> = _newEpisodes.asStateFlow()
+
+    private var showsJob: Job? = null
+
     init {
+        // A show's new episodes are worked out again whenever anything they are drawn from moves:
+        // a search landing, a starred chat's row or the recent row arriving or refreshing (which
+        // is how a post in a starred chat shows up here without a search of its own), or the
+        // viewer watching something. Off the main thread, and only the latest answer counts.
+        viewModelScope.launch {
+            combine(tracked, found, _loaded, _recent) { tracked, found, loaded, recent ->
+                NewInputs(tracked, found, loaded, recent)
+            }.collectLatest { inputs ->
+                if (inputs.tracked.shows.isEmpty()) {
+                    _newEpisodes.value = emptyList()
+                    return@collectLatest
+                }
+                _newEpisodes.value = withContext(work) { inputs.newEpisodes() }
+            }
+        }
         // A post in a starred chat refreshes its row, and the recent row that draws from those
         // chats, in place: the old tiles stay up until the new ones arrive.
         viewModelScope.launch {
             source.changedChats().collect { chats ->
+                // A post in the chat of a show in progress asks for that show again, past its cache.
+                tracked.value.shows.filter { it.chatId in chats }.forEach { show ->
+                    showCache.remove(show.key)
+                    asked -= "show:${show.key}"
+                    requestShow(show)
+                }
                 val rows = chats.filter { it in _loaded.value }
                 if (rows.isEmpty()) return@collect
                 rows.forEach { chatId ->
@@ -211,6 +297,36 @@ class HomeViewModel(
         }
     }
 
+    /**
+     * Works out which shows the viewer is part way through from [resume] and [watched], and asks
+     * each one's chat what has arrived since (see [NewEpisodes]): at most [NewEpisodes.SHOW_LIMIT]
+     * shows, one small search apiece, each answer kept for [SHOW_TTL_MS] across visits to Home.
+     * Called again whenever the records change; a show already asked is not asked again.
+     */
+    fun followShows(resume: List<ResumeRecord>, watched: Collection<WatchedRecord>) {
+        showsJob?.cancel()
+        showsJob = viewModelScope.launch {
+            val next = withContext(work) {
+                Tracked(NewEpisodes.inProgress(resume, watched), NewEpisodes.touchTimes(resume, watched).keys)
+            }
+            tracked.value = next
+            next.shows.forEach(::requestShow)
+        }
+    }
+
+    private fun requestShow(show: ShowReached) = once("show:${show.key}") {
+        val now = System.currentTimeMillis()
+        val items = showCache[show.key]?.takeIf { now - it.first < SHOW_TTL_MS }?.second
+            ?: runCatching { source.showMedia(show.chatId, show.item.messageId, show.searchFor) }.getOrElse { failure ->
+                if (failure is CancellationException) throw failure
+                // Not cached: a show whose search failed is asked again on the next visit.
+                null
+            }?.also { showCache[show.key] = now to it }
+            ?: return@once
+        val kept = withinLimits(items)
+        found.update { it + (show.key to kept) }
+    }
+
     /** Forgets everything fetched, so every row on screen asks again. */
     fun refresh() {
         jobs.forEach { it.cancel() }
@@ -219,6 +335,12 @@ class HomeViewModel(
         _loaded.value = emptyMap()
         _partial.value = emptySet()
         _recent.value = null
+        // The shows are asked again past their cache. What they found stays up meanwhile, so the
+        // New episodes row does not blink out and back.
+        tracked.value.shows.forEach { show ->
+            showCache.remove(show.key)
+            requestShow(show)
+        }
     }
 
     /**
@@ -288,6 +410,19 @@ class HomeViewModel(
          * step with the server, which is not free on a 1 GB stick; the first rows are the ones seen.
          */
         const val FOLLOW_MAX = 12
+
+        /**
+         * How long a show's search answers for. Ten minutes, like the forum topic counts: coming
+         * back to Home from the player is not worth a fresh round of searches, and a post that
+         * arrives while the app is open asks again on its own.
+         */
+        const val SHOW_TTL_MS = 10 * 60 * 1000L
+
+        /**
+         * Each show's search, by [ShowReached.key], with when it was made. For the process, not
+         * the screen: Home is built again on every visit and its searches should not be.
+         */
+        private val showCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, List<MediaItem>>>()
     }
 }
 
@@ -295,6 +430,8 @@ class HomeViewModel(
  * Home's rows for what is on screen now, rebuilt only when one of the inputs changes.
  *
  * @param chats the chat list, which decides the starred rows' order.
+ * @param watched the Watched list, which with [continueWatching] says which shows are in progress
+ *   for New episodes.
  */
 @Composable
 fun rememberHomeRows(
@@ -303,12 +440,15 @@ fun rememberHomeRows(
     favourites: Set<Long>,
     continueWatching: List<ResumeRecord>,
     watchLater: List<WatchLaterRecord> = emptyList(),
+    watched: Collection<WatchedRecord> = emptyList(),
 ): List<HomeRow> {
     val loaded by model.loaded.collectAsState()
     val recent by model.recent.collectAsState()
     val partial by model.partial.collectAsState()
+    val fresh by model.newEpisodes.collectAsState()
+    LaunchedEffect(model, continueWatching, watched) { model.followShows(continueWatching, watched) }
     val starred = remember(chats, favourites) { HomeRows.favouriteChats(chats, favourites) }
-    return remember(continueWatching, watchLater, starred, loaded, recent, partial) {
-        HomeRows.build(continueWatching, starred, loaded, recent, partial = partial, watchLater = watchLater)
+    return remember(continueWatching, watchLater, starred, loaded, recent, partial, fresh) {
+        HomeRows.build(continueWatching, starred, loaded, recent, partial = partial, watchLater = watchLater, fresh = fresh)
     }
 }
