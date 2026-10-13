@@ -4,7 +4,8 @@
     scripts/build-changelog.py
     scripts/build-changelog.py --input releases.json
 
-writes site/changelog/index.html and site/changelog/feed.xml. The release job runs it in the same
+writes site/changelog/index.html, site/changelog/feed.xml and one page per release at
+site/changelog/<version>/index.html, and lists those pages in site/sitemap.xml. The release job runs it in the same
 step that publishes the update feed, so the page names a release in the same commit as
 site/latest.json does; it can also be run by hand after a release that went out some other way.
 
@@ -54,6 +55,14 @@ ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / "site" / "download" / "index.html"
 OUT_DIR = ROOT / "site" / "changelog"
 FEED_ITEMS = 20
+SITEMAP = ROOT / "site" / "sitemap.xml"
+# A release page's folder name, so stale ones can be told apart from anything else in OUT_DIR.
+VERSION_DIR = re.compile(r"^\d+(\.\d+)+$")
+
+
+def release_url(version: str) -> str:
+    """Each release has a page of its own, so a search for "TMPlayer 1.25.0" lands on its notes."""
+    return f"{PAGE_URL}{version}/"
 
 TITLE = "TMPlayer changelog: every release"
 DESCRIPTION = ("What changed in every TMPlayer release, newest first: Android TV, phones, "
@@ -251,7 +260,7 @@ def entry(r: dict) -> str:
         f'<a href="{r["url"]}" rel="noopener">The release on GitHub</a> lists its files.</p>')
     return f"""        <article class="changelog-entry" id="v{v}" aria-labelledby="v{v}-h">
           <header class="changelog-entry-head">
-            <h2 id="v{v}-h"><a href="#v{v}">TMPlayer {v}</a></h2>
+            <h2 id="v{v}-h"><a href="/changelog/{v}/">TMPlayer {v}</a></h2>
             <p class="changelog-meta"><time datetime="{d.strftime('%Y-%m-%d')}">{human_date(d)}</time><span class="sep" aria-hidden="true">&middot;</span><a href="{r["url"]}" rel="noopener">On GitHub</a></p>
           </header>
           <div class="changelog-notes">
@@ -260,38 +269,39 @@ def entry(r: dict) -> str:
         </article>"""
 
 
-def page(releases: list, parts: dict) -> str:
-    entries = "\n\n".join(entry(r) for r in releases) or (
-        '        <p class="muted">No releases yet.</p>')
-    t, desc = html.escape(TITLE), html.escape(DESCRIPTION)
+def head(title: str, desc: str, url: str, ld: list, og_type: str = "website", extra: str = "") -> str:
+    """Everything above <body>: the same tags, icons, fonts and theme script as the other pages."""
+    t, d = html.escape(title), html.escape(desc)
+    blocks = "\n".join(f'<script type="application/ld+json">\n{json.dumps(x, indent=2, ensure_ascii=False)}\n</script>'
+                       for x in ld)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{t}</title>
-<meta name="description" content="{desc}">
-<link rel="canonical" href="{PAGE_URL}">
+<meta name="description" content="{d}">
+<link rel="canonical" href="{url}">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="author" content="dracu-lah">
 <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0B0C0E" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 
-<meta property="og:type" content="website">
+<meta property="og:type" content="{og_type}">
 <meta property="og:site_name" content="TMPlayer">
 <meta property="og:title" content="{t}">
-<meta property="og:description" content="{desc}">
-<meta property="og:url" content="{PAGE_URL}">
+<meta property="og:description" content="{d}">
+<meta property="og:url" content="{url}">
 <meta property="og:image" content="{SITE}/og.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="en_GB">
-
+{extra}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{t}">
-<meta name="twitter:description" content="{desc}">
+<meta name="twitter:description" content="{d}">
 <meta name="twitter:image" content="{SITE}/og.png">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -320,26 +330,7 @@ def page(releases: list, parts: dict) -> str:
 }})();
 </script>
 
-<script type="application/ld+json">
-{{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {{
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "{SITE}/"
-    }},
-    {{
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Changelog",
-      "item": "{PAGE_URL}"
-    }}
-  ]
-}}
-</script>
+{blocks}
 </head>
 <body>
 
@@ -349,41 +340,27 @@ def page(releases: list, parts: dict) -> str:
 -->
 
 <a class="skip" href="#main">Skip to content</a>
-{parts["notice"]}
+"""
+
+
+def crumbs(*trail) -> dict:
+    return {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": name, "item": url}
+                            for i, (name, url) in enumerate(trail)],
+    }
+
+
+def shell(top: str, parts: dict, body: str) -> str:
+    return f"""{top}{parts["notice"]}
 
 {parts["bg"]}
 
 {parts["header"]}
 
 <main id="main">
-
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span>Changelog</p>
-      <h1>Every <em>release</em></h1>
-      <p class="page-lede">What changed in each TMPlayer release, newest first. Installed copies offer each update, so this is where to find out what it brings.</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href="/download/">Download the latest</a>
-        <a class="btn btn-outline" href="/changelog/feed.xml" type="application/rss+xml">
-          <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5 3a1 1 0 0 0 0 2 14 14 0 0 1 14 14 1 1 0 1 0 2 0A16 16 0 0 0 5 3Zm0 6a1 1 0 0 0 0 2 8 8 0 0 1 8 8 1 1 0 1 0 2 0A10 10 0 0 0 5 9Zm1.5 7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/></svg>
-          Follow by RSS
-        </a>
-      </div>
-    </div>
-  </section>
-
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
-
-  <section class="band band-tonal" aria-label="Releases">
-    <div class="wrap">
-      <div class="changelog">
-{entries}
-      </div>
-
-      <p class="muted small section-note changelog-foot">Releases from before {releases[-1]["version"] if releases else "the first"} are on <a href="https://github.com/{REPO}/tags" rel="noopener">GitHub as tags</a>. Every release links the source tree it was built from.</p>
-    </div>
-  </section>
-
+{body}
 </main>
 
 {parts["to_top"]}
@@ -395,6 +372,213 @@ def page(releases: list, parts: dict) -> str:
 """
 
 
+WAVE = ('<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" '
+        'focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 '
+        '300-30 360-20v50H0Z"/></svg>')
+
+RSS_ICON = ('<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">'
+            '<path fill="currentColor" d="M5 3a1 1 0 0 0 0 2 14 14 0 0 1 14 14 1 1 0 1 0 2 0A16 16 0 0 0 '
+            '5 3Zm0 6a1 1 0 0 0 0 2 8 8 0 0 1 8 8 1 1 0 1 0 2 0A10 10 0 0 0 5 9Zm1.5 7a2.5 2.5 0 1 0 0 '
+            '5 2.5 2.5 0 0 0 0-5Z"/></svg>')
+
+
+# The coffee and sponsor offer, in the download page's words. A release page is read by people who
+# just got the update, which is the moment the offer makes the most sense.
+SPONSOR_ICON = ('<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false">'
+                '<path fill="currentColor" d="M12 20.6 10.7 19.4C6 15.2 3 12.4 3 9a4.8 4.8 0 0 1 4.9-4.9c1.6 0 '
+                '3.1.7 4.1 1.9a5.5 5.5 0 0 1 4.1-1.9A4.8 4.8 0 0 1 21 9c0 3.4-3 6.2-7.7 10.4L12 20.6Z"/></svg>')
+COFFEE_ICON = ('<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false">'
+               '<path fill="currentColor" d="M4 8h13v2h1.5a3.5 3.5 0 0 1 0 7H16.6A6 6 0 0 1 11 21H9a5 5 0 0 '
+               '1-5-5V8Zm13 4v3h1.5a1.5 1.5 0 0 0 0-3H17ZM7 2.5a1 1 0 0 1 1 1V6H6V3.5a1 1 0 0 1 1-1Zm3.5-1a1 '
+               '1 0 0 1 1 1V6h-2V2.5a1 1 0 0 1 1-1Zm3.5 1a1 1 0 0 1 1 1V6h-2V3.5a1 1 0 0 1 1-1Z"/></svg>')
+
+
+def give(lead: str) -> str:
+    return f"""
+      <div class="support support-slim">
+        <div class="support-more support-more-solo" id="sponsor">
+          <h2 class="release-notes-h">Support TMPlayer</h2>
+          <p>{lead} There are no ads of our own and no paid tier, so a coffee or a monthly sponsorship is what pays for the time each release takes. It is voluntary and unlocks nothing.</p>
+          <div class="support-actions support-give">
+            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener">
+              {SPONSOR_ICON}
+              Sponsor on GitHub
+            </a>
+            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener">
+              {COFFEE_ICON}
+              Buy me a coffee
+            </a>
+          </div>
+        </div>
+      </div>
+"""
+
+
+def summary(r: dict, limit: int = 155) -> str:
+    """The notes cut at a word to a search snippet's length, for the description tag."""
+    text = plain(r["notes"])
+    if not text:
+        return f"TMPlayer {r['version']}, released {human_date(r['date'])}: the files and notes on GitHub."
+    if len(text) <= limit:
+        return text
+    return text[:limit].rsplit(" ", 1)[0].rstrip(",;:.") + "..."
+
+
+def page(releases: list, parts: dict) -> str:
+    entries = "\n\n".join(entry(r) for r in releases) or (
+        '        <p class="muted">No releases yet.</p>')
+    blog = {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": "TMPlayer releases",
+        "url": PAGE_URL,
+        "description": DESCRIPTION,
+        "inLanguage": "en",
+        "blogPost": [{"@type": "BlogPosting", "headline": f"TMPlayer {r['version']}",
+                      "url": release_url(r["version"]),
+                      "datePublished": r["date"].strftime("%Y-%m-%d")} for r in releases],
+    }
+    top = head(TITLE, DESCRIPTION, PAGE_URL,
+               [crumbs(("Home", f"{SITE}/"), ("Changelog", PAGE_URL)), blog])
+    body = f"""
+  <section class="page-head">
+    <div class="wrap page-head-wrap">
+      <p class="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span>Changelog</p>
+      <h1>Every <em>release</em></h1>
+      <p class="page-lede">What changed in each TMPlayer release, newest first. Installed copies offer each update, so this is where to find out what it brings.</p>
+      <div class="page-actions">
+        <a class="btn btn-filled" href="/download/">Download the latest</a>
+        <a class="btn btn-outline" href="/changelog/feed.xml" type="application/rss+xml">
+          {RSS_ICON}
+          Follow by RSS
+        </a>
+      </div>
+    </div>
+  </section>
+
+{WAVE}
+
+  <section class="band band-tonal" aria-label="Releases">
+    <div class="wrap">
+      <div class="changelog">
+{entries}
+      </div>
+{give("Every release on this page was made in spare time.")}
+      <p class="muted small section-note changelog-foot">Releases from before {releases[-1]["version"] if releases else "the first"} are on <a href="https://github.com/{REPO}/tags" rel="noopener">GitHub as tags</a>. Every release links the source tree it was built from.</p>
+    </div>
+  </section>
+"""
+    return shell(top, parts, body)
+
+
+def release_page(r: dict, newer, older, latest: bool, parts: dict) -> str:
+    v, d = r["version"], r["date"]
+    url, iso = release_url(v), d.strftime("%Y-%m-%dT%H:%M:%SZ")
+    title = f"TMPlayer {v} release notes: what's new"
+    desc = summary(r)
+    post = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": f"TMPlayer {v}",
+        "description": desc,
+        "url": url,
+        "mainEntityOfPage": url,
+        "datePublished": iso,
+        "dateModified": iso,
+        "inLanguage": "en",
+        "image": f"{SITE}/og.png",
+        "author": {"@type": "Person", "name": "dracu-lah", "url": "https://github.com/dracu-lah"},
+        "publisher": {"@type": "Organization", "name": "TMPlayer", "url": f"{SITE}/",
+                      "logo": {"@type": "ImageObject", "url": f"{SITE}/icon-512.png"}},
+        "isPartOf": {"@type": "Blog", "name": "TMPlayer releases", "url": PAGE_URL},
+        "about": {"@type": "SoftwareApplication", "name": "TMPlayer", "softwareVersion": v,
+                  "applicationCategory": "MultimediaApplication",
+                  "operatingSystem": "Android, Android TV, Windows, Linux", "url": f"{SITE}/"},
+    }
+    top = head(title, desc, url,
+               [crumbs(("Home", f"{SITE}/"), ("Changelog", PAGE_URL), (f"TMPlayer {v}", url)), post],
+               og_type="article",
+               extra=f'<meta property="article:published_time" content="{iso}">\n')
+    notes = markdown(r["notes"], " " * 8) if r["notes"] else (
+        ' ' * 8 + '<p class="muted">No notes were written for this release. '
+        f'<a href="{r["url"]}" rel="noopener">The release on GitHub</a> lists its files.</p>')
+    if latest:
+        get = ('This is the newest release. Installed copies offer it on their own; a new install starts '
+               'from the download page.')
+        cta = '<a class="btn btn-filled" href="/download/">Download TMPlayer</a>'
+    else:
+        get = (f'A newer release is out. Installed copies move straight to it, and its files are the ones '
+               f'the download page offers. This release\'s own files stay on GitHub.')
+        cta = '<a class="btn btn-filled" href="/download/">Download the latest</a>'
+    nav = []
+    if older:
+        nav.append(f'<a class="release-nav-older" href="/changelog/{older["version"]}/" rel="prev">'
+                   f'<span class="muted small">Older</span>TMPlayer {older["version"]}</a>')
+    if newer:
+        nav.append(f'<a class="release-nav-newer" href="/changelog/{newer["version"]}/" rel="next">'
+                   f'<span class="muted small">Newer</span>TMPlayer {newer["version"]}</a>')
+    nav_html = ("\n      <nav class=\"release-nav\" aria-label=\"Other releases\">\n        "
+                + "\n        ".join(nav) + "\n      </nav>\n") if nav else ""
+    body = f"""
+  <section class="page-head">
+    <div class="wrap page-head-wrap">
+      <p class="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/changelog/">Changelog</a><span aria-hidden="true">/</span>{v}</p>
+      <h1>TMPlayer <em>{v}</em></h1>
+      <p class="page-lede">Released <time datetime="{d.strftime('%Y-%m-%d')}">{human_date(d)}</time>, for Android TV, Android phones, Windows and Linux.</p>
+    </div>
+  </section>
+
+{WAVE}
+
+  <section class="band band-tonal" aria-label="Release notes">
+    <div class="wrap">
+      <article class="changelog-entry release-article">
+        <h2 class="release-notes-h">What changed</h2>
+        <div class="changelog-notes">
+{notes}
+        </div>
+      </article>
+
+      <div class="changelog-entry release-get">
+        <h2 class="release-notes-h">Get it</h2>
+        <p class="changelog-notes">{get}</p>
+        <div class="page-actions">
+          {cta}
+          <a class="btn btn-outline" href="{r["url"]}" rel="noopener">The files on GitHub</a>
+          <a class="btn btn-outline" href="/changelog/feed.xml" type="application/rss+xml">{RSS_ICON} Follow by RSS</a>
+        </div>
+      </div>
+{give(f"Glad {v} reached you.")}{nav_html}
+      <p class="muted small section-note changelog-foot"><a href="/changelog/">Every release</a>, newest first.</p>
+    </div>
+  </section>
+"""
+    return shell(top, parts, body)
+
+
+# ---------- The sitemap ----------
+
+def sitemap(text: str, releases: list) -> str:
+    """Lists every release page after the changelog's own entry, which carries the newest date."""
+    text = re.sub(r"\n  <url>\n    <loc>" + re.escape(PAGE_URL) + r"\d[^<]*</loc>.*?</url>", "",
+                  text, flags=re.S)
+    if not releases:
+        return text
+    newest = releases[0]["date"].strftime("%Y-%m-%d")
+    own = re.search(r"  <url>\n    <loc>" + re.escape(PAGE_URL) + r"</loc>.*?</url>", text, flags=re.S)
+    if not own:
+        sys.exit(f"{SITEMAP.relative_to(ROOT)} has no entry for {PAGE_URL}")
+    block = re.sub(r"<lastmod>.*?</lastmod>", f"<lastmod>{newest}</lastmod>", own.group(0))
+    pages = "".join(f"""
+  <url>
+    <loc>{release_url(r["version"])}</loc>
+    <lastmod>{r["date"].strftime("%Y-%m-%d")}</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>""" for r in releases)
+    return text[:own.start()] + block + pages + text[own.end():]
+
+
 # ---------- The feed ----------
 
 def xml(text: str) -> str:
@@ -404,7 +588,7 @@ def xml(text: str) -> str:
 def feed(releases: list) -> str:
     items = []
     for r in releases[:FEED_ITEMS]:
-        link = f"{PAGE_URL}#v{r['version']}"
+        link = release_url(r["version"])
         summary = plain(r["notes"]) or "No notes were written for this release."
         body = markdown(r["notes"], "") if r["notes"] else f"<p>{xml(summary)}</p>"
         items.append(f"""    <item>
@@ -469,7 +653,22 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     for name, text in (("index.html", page(releases, parts)), ("feed.xml", feed(releases))):
         (out / name).write_text(text, encoding="utf-8", newline="\n")
-    print(f"Wrote the changelog with {len(releases)} releases to {out}.")
+    # One page per release; a folder left from a release that was since deleted goes with it.
+    wanted = {r["version"] for r in releases}
+    for old in out.iterdir():
+        if old.is_dir() and VERSION_DIR.match(old.name) and old.name not in wanted:
+            shutil.rmtree(old)
+    for i, r in enumerate(releases):
+        newer = releases[i - 1] if i > 0 else None
+        older = releases[i + 1] if i + 1 < len(releases) else None
+        folder = out / r["version"]
+        folder.mkdir(exist_ok=True)
+        (folder / "index.html").write_text(release_page(r, newer, older, i == 0, parts),
+                                           encoding="utf-8", newline="\n")
+    if out == OUT_DIR:
+        SITEMAP.write_text(sitemap(SITEMAP.read_text(encoding="utf-8"), releases),
+                           encoding="utf-8", newline="\n")
+    print(f"Wrote the changelog with {len(releases)} releases, and a page for each, to {out}.")
     return 0
 
 

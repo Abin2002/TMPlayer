@@ -146,8 +146,8 @@ official Telegram API through TDLib with your own Telegram account, as
 [permitted for third-party clients](https://core.telegram.org/api/obtaining_api_id).
 
 TMPlayer does not provide media, recommend channels, or bypass access controls. Use it only with
-content you own or are authorized to access. See the website's [Privacy](https://tmplayer.org/privacy)
-and [Lawful use](https://tmplayer.org/legal) pages.
+content you own or are authorized to access. See the website's [Privacy](https://tmplayer.org/privacy/)
+and [Lawful use](https://tmplayer.org/legal/) pages.
 
 ## License
 

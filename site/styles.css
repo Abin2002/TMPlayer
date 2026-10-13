@@ -2494,6 +2494,11 @@ a.card:hover .card-go svg { transform: translateX(4px); }
 .support-more .support-stats a:hover { color: var(--on-surface); }
 /* Two buttons, not three: kept to the width of two so they do not stretch across the card. */
 .support-give { max-width: 520px; }
+/* The same offer on a page with no star card of its own: a slim card at the end of the last band,
+   so the rule above it has nothing to separate and goes. */
+.support-slim { margin-top: clamp(28px, 3.6vw, 40px); padding: clamp(24px, 3.4vw, 40px); }
+.support-more-solo { margin-top: 0; padding-top: 0; border-top: 0; }
+.support-more-solo .support-actions { margin-bottom: 0; }
 /* The support links again as QR codes, for paying from a phone while reading on a computer.
    Black on a white plate in both themes, which is what a camera reads best. */
 .support-codes { display: none; }
@@ -2526,9 +2531,8 @@ a.card:hover .card-go svg { transform: translateX(4px); }
 
    One card per release, newest first, written by scripts/build-changelog.py. The cards are the
    panels' shape on the tonal band, and the notes inside them are prose at the page's measure, so
-   a long release reads like a paragraph rather than like a log. The version heading is its own
-   link, because the feed and the update popup point at these anchors and a reader who lands on
-   one should be able to copy it back out. The fixed header would cover a heading scrolled to the
+   a long release reads like a paragraph rather than like a log. The version heading links to the
+   release's own page; the anchors stay, because older update popups point at them. The fixed header would cover a heading scrolled to the
    top, hence the scroll margin. */
 
 .changelog { display: grid; gap: 16px; }
@@ -2570,6 +2574,15 @@ a.card:hover .card-go svg { transform: translateX(4px); }
 .changelog-notes h4 { margin: 1.2rem 0 0.5rem; font-size: 1rem; font-weight: 600; color: var(--on-surface); }
 .changelog-notes strong { color: var(--on-surface); font-weight: 600; }
 .changelog-foot { text-align: center; }
+
+/* A release's own page (/changelog/<version>/): the notes card, a card on how to get it, and the
+   neighbouring releases either side, older on the start edge and newer on the end edge. */
+.release-article, .release-get { margin-bottom: 16px; }
+.release-notes-h { margin: 0 0 12px; font-size: clamp(1.15rem, 2vw, 1.35rem); letter-spacing: -0.015em; }
+.release-get .page-actions { justify-content: flex-start; margin-top: 4px; }
+.release-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin: 8px 0 24px; }
+.release-nav a { display: grid; gap: 2px; font-weight: 600; }
+.release-nav-newer { margin-inline-start: auto; text-align: end; }
 
 /* ---------- Languages ----------
 
@@ -2794,6 +2807,52 @@ a[lang="ar"] { font-family: "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif; 
 
 /* The download page note on Android developer registration, under the phone files. */
 .platform-note { margin: 14px 0 0; font-size: 0.88rem; line-height: 1.6; color: var(--on-surface-variant); max-width: 62ch; }
+
+/* ---------- A closer look: marked screenshots ----------
+
+   The features page pairs a screenshot with a numbered list, and lays a numbered mark over each
+   part the list describes. The marks are drawn here rather than into the files, so they stay sharp
+   and the notes beside them stay translatable. Each mark carries --x and --y, percentages of the
+   screenshot, and sits centred on that point. The overlay is pinned left to right: the positions
+   belong to the picture, which does not mirror in Arabic or Persian. */
+.tour-shot .screen { counter-reset: tour-mark; }
+.tour-marks {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  direction: ltr;
+  pointer-events: none;
+}
+.tour-marks span,
+.tour-list li::before {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.tour-marks span {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  /* A light ring and a soft shadow keep a mark readable over a pale poster and a dark panel alike. */
+  box-shadow: 0 0 0 2px #fff, 0 2px 8px rgb(0 0 0 / 0.45);
+}
+.tour-marks span::before { counter-increment: tour-mark; content: counter(tour-mark); }
+.tour-shot figcaption h3 { margin: 0 0 8px; font-size: 1.2rem; }
+.tour-shot figcaption > p { margin: 0 0 14px; color: var(--on-surface-variant); }
+.tour-list { list-style: none; margin: 0; padding: 0; counter-reset: tour-note; display: grid; gap: 10px; }
+.tour-list li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; align-items: start; line-height: 1.55; }
+.tour-list li::before { counter-increment: tour-note; content: counter(tour-note); margin-top: 1px; }
+@media (max-width: 560px) {
+  .tour-marks span { width: 18px; height: 18px; font-size: 0.64rem; box-shadow: 0 0 0 1.5px #fff, 0 1px 5px rgb(0 0 0 / 0.45); }
+}
 
 /* ---------- Short landscape screens ---------- */
 

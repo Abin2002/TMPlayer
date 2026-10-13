@@ -79,6 +79,13 @@
 <link rel="apple-touch-icon" href="/icon-512.png">
 <link rel="manifest" href="/site.webmanifest">
 
+<!-- The page reads the release from the GitHub API, and every download button goes to github.com,
+     which hands the file over from GitHub's asset host. Opening those connections early takes the
+     DNS and TLS time off the first click. -->
+<link rel="preconnect" href="https://api.github.com" crossorigin>
+<link rel="preconnect" href="https://github.com">
+<link rel="preconnect" href="https://release-assets.githubusercontent.com">
+<link rel="dns-prefetch" href="https://objects.githubusercontent.com">
 <link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/poppins-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles.css">
@@ -254,7 +261,7 @@
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="download-h" data-i18n="download.every_platform_one_release">Mọi nền tảng, một bản phát hành</h2>
-          <p class="section-sub" data-i18n="download.every_file_comes_from_one_github">Mọi tệp đều đến từ một bản phát hành trên GitHub. Các tệp Android được ký bằng khóa của dự án. Trình cài đặt Windows chưa được ký mã: dự án đã nộp đơn xin <a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a> cấp chứng chỉ miễn phí dành cho các dự án mã nguồn mở (<a href="/signing">Chính sách ký mã</a>).</p>
+          <p class="section-sub" data-i18n="download.every_file_comes_from_one_github">Mọi tệp đều đến từ một bản phát hành trên GitHub. Các tệp Android được ký bằng khóa của dự án. Trình cài đặt Windows chưa được ký mã: dự án đã nộp đơn xin <a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a> cấp chứng chỉ miễn phí dành cho các dự án mã nguồn mở (<a href="/signing/">Chính sách ký mã</a>).</p>
         </div>
       </div>
 
@@ -540,8 +547,8 @@
       <a href="/vi/translate/" data-i18n="common.translate">Dịch</a>
       <a href="/security/" data-i18n="common.security">Bảo mật</a>
       <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener" data-i18n="common.source">Mã nguồn</a>
-      <a href="/privacy" data-i18n="common.privacy">Quyền riêng tư</a>
-      <a href="/legal" data-i18n="common.lawful_use">Sử dụng hợp pháp</a>
+      <a href="/privacy/" data-i18n="common.privacy">Quyền riêng tư</a>
+      <a href="/legal/" data-i18n="common.lawful_use">Sử dụng hợp pháp</a>
       <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
     </nav>
     <nav class="footer-links footer-guides" aria-label="Hướng dẫn" data-i18n-aria-label="common.guides">

@@ -79,6 +79,13 @@
 <link rel="apple-touch-icon" href="/icon-512.png">
 <link rel="manifest" href="/site.webmanifest">
 
+<!-- The page reads the release from the GitHub API, and every download button goes to github.com,
+     which hands the file over from GitHub's asset host. Opening those connections early takes the
+     DNS and TLS time off the first click. -->
+<link rel="preconnect" href="https://api.github.com" crossorigin>
+<link rel="preconnect" href="https://github.com">
+<link rel="preconnect" href="https://release-assets.githubusercontent.com">
+<link rel="dns-prefetch" href="https://objects.githubusercontent.com">
 <link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/poppins-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles.css">
@@ -254,7 +261,7 @@
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="download-h" data-i18n="download.every_platform_one_release">所有平台，同一個版本</h2>
-          <p class="section-sub" data-i18n="download.every_file_comes_from_one_github">所有檔案都來自同一個 GitHub 發布版本。Android 檔案以專案的金鑰簽署。Windows 安裝程式目前還沒有程式碼簽署：專案已向 <a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a> 申請為開源專案提供的免費憑證（<a href="/signing">程式碼簽署政策</a>）。</p>
+          <p class="section-sub" data-i18n="download.every_file_comes_from_one_github">所有檔案都來自同一個 GitHub 發布版本。Android 檔案以專案的金鑰簽署。Windows 安裝程式目前還沒有程式碼簽署：專案已向 <a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a> 申請為開源專案提供的免費憑證（<a href="/signing/">程式碼簽署政策</a>）。</p>
         </div>
       </div>
 
@@ -540,8 +547,8 @@
       <a href="/zh-tw/translate/" data-i18n="common.translate">翻譯</a>
       <a href="/security/" data-i18n="common.security">安全性</a>
       <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener" data-i18n="common.source">原始碼</a>
-      <a href="/privacy" data-i18n="common.privacy">隱私權</a>
-      <a href="/legal" data-i18n="common.lawful_use">合法使用</a>
+      <a href="/privacy/" data-i18n="common.privacy">隱私權</a>
+      <a href="/legal/" data-i18n="common.lawful_use">合法使用</a>
       <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
     </nav>
     <nav class="footer-links footer-guides" aria-label="教學" data-i18n-aria-label="common.guides">

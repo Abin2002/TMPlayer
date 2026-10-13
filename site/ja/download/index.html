@@ -79,6 +79,13 @@
 <link rel="apple-touch-icon" href="/icon-512.png">
 <link rel="manifest" href="/site.webmanifest">
 
+<!-- The page reads the release from the GitHub API, and every download button goes to github.com,
+     which hands the file over from GitHub's asset host. Opening those connections early takes the
+     DNS and TLS time off the first click. -->
+<link rel="preconnect" href="https://api.github.com" crossorigin>
+<link rel="preconnect" href="https://github.com">
+<link rel="preconnect" href="https://release-assets.githubusercontent.com">
+<link rel="dns-prefetch" href="https://objects.githubusercontent.com">
 <link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/poppins-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles.css">
@@ -254,7 +261,7 @@
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="download-h" data-i18n="download.every_platform_one_release">すべての環境を、ひとつのリリースで</h2>
-          <p class="section-sub" data-i18n="download.every_file_comes_from_one_github">すべてのファイルは、ひとつのGitHubリリースから提供されます。Android用ファイルは、プロジェクトの鍵で署名されています。Windowsのインストーラーはまだコード署名されていません。オープンソースプロジェクト向けに<a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a>が提供する無料の証明書を申請中です(<a href="/signing">コード署名ポリシー</a>)。</p>
+          <p class="section-sub" data-i18n="download.every_file_comes_from_one_github">すべてのファイルは、ひとつのGitHubリリースから提供されます。Android用ファイルは、プロジェクトの鍵で署名されています。Windowsのインストーラーはまだコード署名されていません。オープンソースプロジェクト向けに<a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a>が提供する無料の証明書を申請中です(<a href="/signing/">コード署名ポリシー</a>)。</p>
         </div>
       </div>
 
@@ -540,8 +547,8 @@
       <a href="/ja/translate/" data-i18n="common.translate">翻訳</a>
       <a href="/security/" data-i18n="common.security">セキュリティ</a>
       <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener" data-i18n="common.source">ソースコード</a>
-      <a href="/privacy" data-i18n="common.privacy">プライバシー</a>
-      <a href="/legal" data-i18n="common.lawful_use">適法な利用</a>
+      <a href="/privacy/" data-i18n="common.privacy">プライバシー</a>
+      <a href="/legal/" data-i18n="common.lawful_use">適法な利用</a>
       <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
     </nav>
     <nav class="footer-links footer-guides" aria-label="ガイド" data-i18n-aria-label="common.guides">

@@ -36,3 +36,52 @@ the sentence with a colon, a comma or a full stop instead. Before committing:
 ```sh
 grep -rInP '\x{2014}|\x{2013}' --exclude-dir=.git --exclude-dir=build --exclude-dir=.gradle .
 ```
+
+## Site SEO
+
+Every rule below exists so a new page or a release reaches search engines the same way the
+existing ones do. Check them whenever a page under `site/` is added or changed.
+
+- **URLs end in a slash.** `vercel.json` sets `trailingSlash` and `cleanUrls`, so `/privacy`
+  redirects to `/privacy/`. Canonicals, `og:url`, sitemap `<loc>`s and internal links all use the
+  slash form; a canonical that points at a redirect is ignored by Google.
+- **Every page's head** carries: a unique `<title>` (under about 60 characters, no "X - TMPlayer"
+  where X already says TMPlayer), a `description` of roughly 120 to 160 characters, `canonical`,
+  `robots`, `author`, `og:type`, `og:site_name`, `og:title`, `og:description`, `og:url`, `og:image`
+  with its type, width and height, `og:locale`, the four `twitter:` tags, the icons and the
+  manifest, and JSON-LD with at least a `BreadcrumbList`. `site/support/index.html` is the
+  smallest complete example. `404.html` is the one page that is `noindex` and has no canonical.
+- **One `<h1>` per page**; every `<img>` has `alt`, `width`, `height`, and below the fold
+  `loading="lazy" decoding="async"`.
+- **Sitemap.** A new indexable page gets a `<url>` in `site/sitemap.xml` with a real `lastmod` (the
+  date of its last content change, not today by default). Localized entries and their hreflang
+  alternates are written by `scripts/build-site-i18n.py`; never edit those by hand.
+- **Releases.** `scripts/build-changelog.py` writes `/changelog/`, the RSS feed, one page per
+  release at `/changelog/<version>/` (BlogPosting JSON-LD) and the release entries in the sitemap.
+  The release job commits all of it. Do not hand-edit anything under `site/changelog/`; change the
+  script and rerun it. Release notes are the tag message, so a good tag message is the SEO text
+  for that release.
+- **Caching** lives in `site/vercel.json`. Fonts are immutable (their names never change content);
+  `styles.css` and `app.js` keep a short cache because their names do not change between deploys,
+  so do not raise it without adding a content hash to their URLs. Images, the manifest, the
+  sitemap and the feed have their own entries; a new top-level asset type gets one too.
+- **Feature screenshots with markers.** When a feature is shown on a screenshot, the markers are
+  HTML overlays positioned in percent over the image (the feature tour on `/features/`), never
+  drawn into the image, so they stay sharp and get translated. Markers are numbered and matched by
+  a numbered list that carries the meaning; light and dark shots stay paired. Only demo-content
+  screenshots are used, never a real account.
+- **Files for crawlers and machines.** `site/llms.txt` is a hand-written summary of the site for AI
+  assistants: when a page is added, renamed or its claims change, update it too. The home page
+  carries `Organization` JSON-LD (logo, `sameAs` profiles); a new official profile goes there.
+  `site/.well-known/security.txt` expires on the date in it, so renew it before then.
+  `site/<key>.txt` is the IndexNow key the release job pings with; do not delete it.
+- **Download page** keeps its `preconnect` hints to GitHub's API, github.com and
+  `release-assets.githubusercontent.com`, the host the release files are served from.
+- **Sponsoring.** Every content page ends with the "Support TMPlayer" offer (GitHub Sponsors and
+  Buy Me a Coffee), the block first written on the download page: inside the page's star card
+  where it has one, otherwise as a `support-slim` card in the last band. Reuse its markup and its
+  `home.support_tmplayer`, `home.support_no_ads`, `home.sponsor_on_github` and
+  `home.buy_me_a_coffee` keys so it arrives translated; a new page gets it too. Release pages and
+  the changelog carry it from `scripts/build-changelog.py`. It stays an offer: no popups, no nags,
+  nothing locked.
+- After changing any localized page, run `scripts/build-site-i18n.py` and `--check`.

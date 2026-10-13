@@ -497,7 +497,7 @@ jobs:
               MESSAGE="site: the update feed names $VERSION"
             fi
             python3 scripts/build-changelog.py
-            git add site/latest.json site/changelog
+            git add site/latest.json site/changelog site/sitemap.xml
             if git diff --cached --quiet; then
               echo "The site already names $VERSION."
               exit 0
@@ -508,6 +508,20 @@ jobs:
           done
           echo "::error::Could not push the update feed and the changelog to main"
           exit 1
+
+      # Tells Bing, Yandex, Seznam and Naver (through IndexNow) that the release's pages changed,
+      # instead of waiting for their next crawl. Google does not take part and reads the sitemap.
+      # The key is public by design: site/<key>.txt proves the site asked. A failure here costs
+      # only the ping, never the release.
+      - name: Ping IndexNow with the release's pages
+        continue-on-error: true
+        run: |
+          VERSION="${{ needs.version.outputs.name }}"
+          KEY="af11d0ad703ff8c5a7006d0ccd768528"
+          curl -sS -o /dev/null -w "IndexNow answered %{http_code}\n" --max-time 30 \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "{\"host\":\"tmplayer.org\",\"key\":\"$KEY\",\"keyLocation\":\"https://tmplayer.org/$KEY.txt\",\"urlList\":[\"https://tmplayer.org/\",\"https://tmplayer.org/download/\",\"https://tmplayer.org/changelog/\",\"https://tmplayer.org/changelog/$VERSION/\"]}" \
+            https://api.indexnow.org/indexnow
 
       # The announcement on the Telegram channel, by the release bot. It lives in this job rather
       # than in a workflow of its own on `release: published` because the release above is made

@@ -79,6 +79,13 @@
 <link rel="apple-touch-icon" href="/icon-512.png">
 <link rel="manifest" href="/site.webmanifest">
 
+<!-- The page reads the release from the GitHub API, and every download button goes to github.com,
+     which hands the file over from GitHub's asset host. Opening those connections early takes the
+     DNS and TLS time off the first click. -->
+<link rel="preconnect" href="https://api.github.com" crossorigin>
+<link rel="preconnect" href="https://github.com">
+<link rel="preconnect" href="https://release-assets.githubusercontent.com">
+<link rel="dns-prefetch" href="https://objects.githubusercontent.com">
 <link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/poppins-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles.css">
@@ -254,7 +261,7 @@
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="download-h" data-i18n="download.every_platform_one_release">Ogni piattaforma, una sola versione</h2>
-          <p class="section-sub" data-i18n="download.every_file_comes_from_one_github">Ogni file viene da un'unica versione su GitHub. I file Android sono firmati con la chiave del progetto. L'installer per Windows non ha ancora la firma del codice: il progetto ha chiesto alla <a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a> un certificato gratuito per i progetti open source (<a href="/signing">Politica di firma del codice</a>).</p>
+          <p class="section-sub" data-i18n="download.every_file_comes_from_one_github">Ogni file viene da un'unica versione su GitHub. I file Android sono firmati con la chiave del progetto. L'installer per Windows non ha ancora la firma del codice: il progetto ha chiesto alla <a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a> un certificato gratuito per i progetti open source (<a href="/signing/">Politica di firma del codice</a>).</p>
         </div>
       </div>
 
@@ -540,8 +547,8 @@
       <a href="/it/translate/" data-i18n="common.translate">Traduci</a>
       <a href="/security/" data-i18n="common.security">Sicurezza</a>
       <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener" data-i18n="common.source">Codice</a>
-      <a href="/privacy" data-i18n="common.privacy">Privacy</a>
-      <a href="/legal" data-i18n="common.lawful_use">Uso lecito</a>
+      <a href="/privacy/" data-i18n="common.privacy">Privacy</a>
+      <a href="/legal/" data-i18n="common.lawful_use">Uso lecito</a>
       <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
     </nav>
     <nav class="footer-links footer-guides" aria-label="Guide" data-i18n-aria-label="common.guides">

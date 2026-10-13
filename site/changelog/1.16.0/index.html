@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TMPlayer 1.16.0 release notes: what&#x27;s new</title>
+<meta name="description" content="TMPlayer 1.16.0, released 29 August 2026: the files and notes on GitHub.">
+<link rel="canonical" href="https://tmplayer.org/changelog/1.16.0/">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="author" content="dracu-lah">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0C0E" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="TMPlayer">
+<meta property="og:title" content="TMPlayer 1.16.0 release notes: what&#x27;s new">
+<meta property="og:description" content="TMPlayer 1.16.0, released 29 August 2026: the files and notes on GitHub.">
+<meta property="og:url" content="https://tmplayer.org/changelog/1.16.0/">
+<meta property="og:image" content="https://tmplayer.org/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_GB">
+<meta property="article:published_time" content="2026-08-29T18:59:59Z">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TMPlayer 1.16.0 release notes: what&#x27;s new">
+<meta name="twitter:description" content="TMPlayer 1.16.0, released 29 August 2026: the files and notes on GitHub.">
+<meta name="twitter:image" content="https://tmplayer.org/og.png">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icon-512.png" type="image/png" sizes="512x512">
+<link rel="apple-touch-icon" href="/icon-512.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="alternate" type="application/rss+xml" title="TMPlayer releases" href="/changelog/feed.xml">
+
+<link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/poppins-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles.css">
+
+<!-- The stored theme, applied before the first paint. With no stored choice nothing is set and
+     the stylesheet follows prefers-color-scheme, which is the system theme. -->
+<script>
+(function () {
+  /* Scripting is on, so the header can collapse into a menu. Without this class the
+     stylesheet leaves the links where they are, which is the version that still works. */
+  document.documentElement.className += ' js';
+  try {
+    var t = localStorage.getItem('tm-theme');
+    if (t === 'light' || t === 'dark') { document.documentElement.setAttribute('data-theme', t); }
+    // The Keep Android Open notice, once closed, stays closed without a flash on the next page.
+    if (localStorage.getItem('tm-kao-closed')) { document.documentElement.className += ' kao-off'; }
+  } catch (e) {}
+})();
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://tmplayer.org/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Changelog",
+      "item": "https://tmplayer.org/changelog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "TMPlayer 1.16.0",
+      "item": "https://tmplayer.org/changelog/1.16.0/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "TMPlayer 1.16.0",
+  "description": "TMPlayer 1.16.0, released 29 August 2026: the files and notes on GitHub.",
+  "url": "https://tmplayer.org/changelog/1.16.0/",
+  "mainEntityOfPage": "https://tmplayer.org/changelog/1.16.0/",
+  "datePublished": "2026-08-29T18:59:59Z",
+  "dateModified": "2026-08-29T18:59:59Z",
+  "inLanguage": "en",
+  "image": "https://tmplayer.org/og.png",
+  "author": {
+    "@type": "Person",
+    "name": "dracu-lah",
+    "url": "https://github.com/dracu-lah"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "TMPlayer",
+    "url": "https://tmplayer.org/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://tmplayer.org/icon-512.png"
+    }
+  },
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "TMPlayer releases",
+    "url": "https://tmplayer.org/changelog/"
+  },
+  "about": {
+    "@type": "SoftwareApplication",
+    "name": "TMPlayer",
+    "softwareVersion": "1.16.0",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Android, Android TV, Windows, Linux",
+    "url": "https://tmplayer.org/"
+  }
+}
+</script>
+</head>
+<body>
+
+<!--
+  Written by scripts/build-changelog.py from the GitHub releases; the release job regenerates it.
+  Edit the script, not this file: a hand edit here is gone after the next release.
+-->
+
+<a class="skip" href="#main">Skip to content</a>
+<!-- i18n:notice -->
+<aside class="kao" id="kao" aria-label="Keep Android Open">
+  <div class="kao-bar"><p><span>From 2027, Android plans to install only apps from developers registered with Google.</span> <a href="https://keepandroidopen.org/" target="_blank" rel="noopener">Learn more</a></p><button type="button" class="kao-close" data-kao-close aria-label="Close this notice" title="Close this notice"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M18.3 7.1 13.4 12l4.9 4.9a1 1 0 0 1-1.4 1.4L12 13.4l-4.9 4.9a1 1 0 0 1-1.4-1.4l4.9-4.9-4.9-4.9a1 1 0 0 1 1.4-1.4l4.9 4.9 4.9-4.9a1 1 0 0 1 1.4 1.4Z"/></svg></button></div>
+</aside>
+<!-- /i18n:notice -->
+
+<!-- Decorative background art, hidden from assistive technology and still under reduced motion. -->
+<div class="bg-art" aria-hidden="true">
+  <svg class="bg-blob blob-a" viewBox="0 0 200 200" fill="none">
+    <path fill="currentColor" d="M154 22c26 18 40 55 34 89-6 34-32 65-63 73-31 8-67-7-89-33S8 85 22 55 71 6 103 8c32 2 25-4 51 14Z"/>
+  </svg>
+  <svg class="bg-blob blob-b" viewBox="0 0 200 200" fill="none">
+    <path fill="currentColor" d="M46 24c30-14 71-9 95 14s31 63 21 96c-10 33-37 59-70 63s-72-14-83-46C-2 119 12 76 24 52c12-24 -8 -14 22 -28Z"/>
+  </svg>
+  <svg class="bg-blob blob-c" viewBox="0 0 200 200" fill="none">
+    <path fill="currentColor" d="M100 4c53 0 96 43 96 96s-43 96-96 96S4 153 4 100 47 4 100 4Zm0 42a54 54 0 1 0 0 108 54 54 0 0 0 0-108Z"/>
+  </svg>
+  <svg class="bg-blob blob-d" viewBox="0 0 200 200" fill="none">
+    <path fill="currentColor" d="M100 0c0 55 45 100 100 100-55 0-100 45-100 100 0-55-45-100-100-100C55 100 100 55 100 0Z"/>
+  </svg>
+</div>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/" aria-label="TMPlayer home" data-i18n-aria-label="common.tmplayer_home">
+      <img class="brand-mark" src="/favicon.svg" width="32" height="32" alt="" decoding="async">
+      <span class="brand-name">TMPlayer</span>
+    </a>
+
+    <nav class="nav-links" id="site-nav" aria-label="Primary" data-i18n-aria-label="common.primary">
+        <a href="/" data-i18n="common.home">Home</a>
+        <a href="/features/" data-i18n="common.features">Features</a>
+        <a href="/download/" data-i18n="common.download">Download</a>
+        <a href="/install/" data-i18n="common.install">Install</a>
+        <a class="only-menu" href="/android-tv/">Android TV</a>
+        <a href="/faq/" data-i18n="common.questions">Questions</a>
+      </nav>
+
+    <div class="nav">
+      <a class="nav-icon" href="https://github.com/dracu-lah/TMPlayer" rel="noopener" aria-label="TMPlayer on GitHub" data-i18n-aria-label="common.tmplayer_on_github">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.9c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .8.1-.7.3-1.1.6-1.4-2.2-.2-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.8-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"/></svg>
+      </a>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" data-i18n-aria-label="common.switch_to_dark_theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4.6" fill="currentColor"/>
+          <g stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+            <line x1="12" y1="1.9" x2="12" y2="4.3"/>
+            <line x1="12" y1="19.7" x2="12" y2="22.1"/>
+            <line x1="1.9" y1="12" x2="4.3" y2="12"/>
+            <line x1="19.7" y1="12" x2="22.1" y2="12"/>
+            <line x1="4.85" y1="4.85" x2="6.55" y2="6.55"/>
+            <line x1="17.45" y1="17.45" x2="19.15" y2="19.15"/>
+            <line x1="4.85" y1="19.15" x2="6.55" y2="17.45"/>
+            <line x1="17.45" y1="6.55" x2="19.15" y2="4.85"/>
+          </g>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M21 14.2A9 9 0 0 1 9.8 3 9 9 0 1 0 21 14.2Z"/>
+        </svg>
+      </button>
+      <button class="menu-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav" data-i18n-aria-label="common.menu">
+        <svg class="icon-menu" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 7a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Zm0 5a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Zm0 5a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
+        <svg class="icon-close" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M18.3 7.1 13.4 12l4.9 4.9a1 1 0 0 1-1.4 1.4L12 13.4l-4.9 4.9a1 1 0 0 1-1.4-1.4l4.9-4.9-4.9-4.9a1 1 0 0 1 1.4-1.4l4.9 4.9 4.9-4.9a1 1 0 0 1 1.4 1.4Z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="page-head">
+    <div class="wrap page-head-wrap">
+      <p class="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/changelog/">Changelog</a><span aria-hidden="true">/</span>1.16.0</p>
+      <h1>TMPlayer <em>1.16.0</em></h1>
+      <p class="page-lede">Released <time datetime="2026-08-29">29 August 2026</time>, for Android TV, Android phones, Windows and Linux.</p>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" aria-label="Release notes">
+    <div class="wrap">
+      <article class="changelog-entry release-article">
+        <h2 class="release-notes-h">What changed</h2>
+        <div class="changelog-notes">
+        <p class="muted">No notes were written for this release. <a href="https://github.com/dracu-lah/TMPlayer/releases/tag/v1.16.0" rel="noopener">The release on GitHub</a> lists its files.</p>
+        </div>
+      </article>
+
+      <div class="changelog-entry release-get">
+        <h2 class="release-notes-h">Get it</h2>
+        <p class="changelog-notes">A newer release is out. Installed copies move straight to it, and its files are the ones the download page offers. This release's own files stay on GitHub.</p>
+        <div class="page-actions">
+          <a class="btn btn-filled" href="/download/">Download the latest</a>
+          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/releases/tag/v1.16.0" rel="noopener">The files on GitHub</a>
+          <a class="btn btn-outline" href="/changelog/feed.xml" type="application/rss+xml"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5 3a1 1 0 0 0 0 2 14 14 0 0 1 14 14 1 1 0 1 0 2 0A16 16 0 0 0 5 3Zm0 6a1 1 0 0 0 0 2 8 8 0 0 1 8 8 1 1 0 1 0 2 0A10 10 0 0 0 5 9Zm1.5 7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/></svg> Follow by RSS</a>
+        </div>
+      </div>
+
+      <div class="support support-slim">
+        <div class="support-more support-more-solo" id="sponsor">
+          <h2 class="release-notes-h">Support TMPlayer</h2>
+          <p>Glad 1.16.0 reached you. There are no ads of our own and no paid tier, so a coffee or a monthly sponsorship is what pays for the time each release takes. It is voluntary and unlocks nothing.</p>
+          <div class="support-actions support-give">
+            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener">
+              <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 20.6 10.7 19.4C6 15.2 3 12.4 3 9a4.8 4.8 0 0 1 4.9-4.9c1.6 0 3.1.7 4.1 1.9a5.5 5.5 0 0 1 4.1-1.9A4.8 4.8 0 0 1 21 9c0 3.4-3 6.2-7.7 10.4L12 20.6Z"/></svg>
+              Sponsor on GitHub
+            </a>
+            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener">
+              <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 8h13v2h1.5a3.5 3.5 0 0 1 0 7H16.6A6 6 0 0 1 11 21H9a5 5 0 0 1-5-5V8Zm13 4v3h1.5a1.5 1.5 0 0 0 0-3H17ZM7 2.5a1 1 0 0 1 1 1V6H6V3.5a1 1 0 0 1 1-1Zm3.5-1a1 1 0 0 1 1 1V6h-2V2.5a1 1 0 0 1 1-1Zm3.5 1a1 1 0 0 1 1 1V6h-2V3.5a1 1 0 0 1 1-1Z"/></svg>
+              Buy me a coffee
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <nav class="release-nav" aria-label="Other releases">
+        <a class="release-nav-newer" href="/changelog/1.20.0/" rel="next"><span class="muted small">Newer</span>TMPlayer 1.20.0</a>
+      </nav>
+
+      <p class="muted small section-note changelog-foot"><a href="/changelog/">Every release</a>, newest first.</p>
+    </div>
+  </section>
+
+</main>
+
+<button class="to-top" id="to-top" type="button" aria-label="Back to top" data-i18n-aria-label="common.back_to_top">
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 4.5a1 1 0 0 1 .71.29l6 6a1 1 0 0 1-1.42 1.42L13 7.91V19a1 1 0 1 1-2 0V7.91l-4.29 4.3a1 1 0 1 1-1.42-1.42l6-6A1 1 0 0 1 12 4.5Z"/></svg>
+</button>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p class="footer-brand">TMPlayer</p>
+    <nav class="footer-links" aria-label="Footer" data-i18n-aria-label="common.footer">
+      <a href="/" data-i18n="common.home">Home</a>
+      <a href="/features/" data-i18n="common.features">Features</a>
+      <a href="/download/" data-i18n="common.download">Download</a>
+      <a href="/install/" data-i18n="common.install">Install</a>
+      <a href="/android-tv/">Android TV</a>
+      <a href="/faq/" data-i18n="common.questions">Questions</a>
+      <a href="/changelog/" data-i18n="common.changelog">Changelog</a>
+      <a href="/fire-tv/">Fire TV</a>
+      <a href="/formats/" data-i18n="common.formats">Formats</a>
+      <a href="/translate/" data-i18n="common.translate">Translate</a>
+      <a href="/security/" data-i18n="common.security">Security</a>
+      <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener" data-i18n="common.source">Source</a>
+      <a href="/privacy/" data-i18n="common.privacy">Privacy</a>
+      <a href="/legal/" data-i18n="common.lawful_use">Lawful use</a>
+      <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
+    </nav>
+    <nav class="footer-links footer-guides" aria-label="Guides" data-i18n-aria-label="common.guides">
+      <a href="/guides/telegram-videos-on-android-tv/" data-i18n="common.telegram_on_android_tv">Telegram on Android TV</a>
+      <a href="/guides/telegram-videos-on-fire-tv/" data-i18n="common.telegram_on_fire_tv">Telegram on Fire TV</a>
+      <a href="/guides/telegram-on-tv-without-casting/" data-i18n="common.telegram_without_casting">Telegram without casting</a>
+    </nav>
+    <nav class="footer-links footer-community" aria-label="Community" data-i18n-aria-label="common.community">
+      <a href="https://t.me/tmplayerapp" rel="noopener" data-i18n="home.telegram_channel">Telegram channel</a>
+      <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
+      <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener" data-i18n="common.discussions">Discussions</a>
+      <a href="https://github.com/sponsors/dracu-lah" rel="noopener" data-i18n="common.sponsor">Sponsor</a>
+      <a href="https://buymeacoffee.com/nevil.dev" rel="noopener" data-i18n="home.buy_me_a_coffee">Buy me a coffee</a>
+      <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
+    </nav>
+    <!-- i18n:footer --><!-- /i18n:footer -->
+    <p class="footer-legal muted small" data-i18n="common.gpl_3_0_2026_dracu">GPL-3.0, &copy; 2026 dracu-lah. Unofficial, not affiliated with Telegram. Use it only with content you own or may access.</p>
+  </div>
+</footer>
+
+<script src="/app.js"></script>
+<!--
+  Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and
+  records no identifier that follows a reader between visits: it counts page views and where they
+  came from, and nothing more. Enabled per project in the Vercel dashboard; with it switched off
+  this path simply 404s and the page carries on. The privacy page names it.
+-->
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

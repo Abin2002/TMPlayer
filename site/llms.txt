@@ -1,0 +1,35 @@
+# TMPlayer
+
+> TMPlayer is a free, open source (GPL-3.0), unofficial Telegram video player for Android TV, Android phones, Windows and Linux. You sign in to your own Telegram account by scanning a QR code, and it plays the videos in your own chats and channels while they are still downloading. It has no server and no bot: the app talks to Telegram directly. It is not affiliated with Telegram.
+
+Key facts:
+
+- Platforms: Android 8.0 and above (phones, Android TV, Google TV, Fire TV), Windows 10 and 11 (64-bit), Linux x86_64 (AppImage, and an AUR package).
+- Playback: MKV, MP4, AVI, TS and more, with embedded and external subtitles, several audio tracks and autoplay of the next episode. Media3 with FFmpeg decoders on Android, mpv on the desktop.
+- Price: free, with nothing locked behind payment. Source code: https://github.com/dracu-lah/TMPlayer
+- Installed copies update themselves; every release is built by GitHub Actions from the tagged source, with a SHA-256 for every file.
+
+## Pages
+
+- [Home](https://tmplayer.org/): what TMPlayer is, with screenshots of the TV, phone and desktop apps
+- [Features](https://tmplayer.org/features/): streaming while downloading, instant seeking, subtitles, the TV and desktop layouts, keyboard shortcuts
+- [Download](https://tmplayer.org/download/): the APK for Android TV and phones, the Windows installer and the Linux AppImage
+- [How to install](https://tmplayer.org/install/): sideloading on Android TV, Windows SmartScreen, running the AppImage
+- [Android TV](https://tmplayer.org/android-tv/): watching Telegram videos on Android TV and Google TV
+- [Fire TV](https://tmplayer.org/fire-tv/): installing on a Fire TV Stick, Cube or Fire TV Edition TV
+- [Formats](https://tmplayer.org/formats/): the containers, codecs and subtitle formats it plays
+- [Questions](https://tmplayer.org/faq/): streaming without waiting, which file to download, privacy, what it will not do
+- [Changelog](https://tmplayer.org/changelog/): every release, newest first, with a page per release and an RSS feed at https://tmplayer.org/changelog/feed.xml
+
+## Guides
+
+- [How to watch Telegram videos on Android TV](https://tmplayer.org/guides/telegram-videos-on-android-tv/)
+- [How to watch Telegram videos on Fire TV](https://tmplayer.org/guides/telegram-videos-on-fire-tv/)
+- [Telegram on your TV without casting](https://tmplayer.org/guides/telegram-on-tv-without-casting/)
+
+## Optional
+
+- [Security](https://tmplayer.org/security/): how releases are built and how to check a download
+- [Privacy](https://tmplayer.org/privacy/): what stays on the device and which services it contacts
+- [Lawful use](https://tmplayer.org/legal/): use it only with content you own or may access
+- [Support](https://tmplayer.org/support/): sponsoring, starring and sharing

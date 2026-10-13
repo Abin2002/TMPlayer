@@ -81,6 +81,7 @@
 <link rel="icon" href="/icon-512.png" type="image/png" sizes="512x512">
 <link rel="apple-touch-icon" href="/icon-512.png">
 <link rel="manifest" href="/site.webmanifest">
+<link rel="alternate" type="application/rss+xml" title="TMPlayer releases" href="/changelog/feed.xml">
 
 <link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/poppins-600.woff2" as="font" type="font/woff2" crossorigin>
@@ -200,7 +201,37 @@
       "@type": "WebPage",
       "name": "Вопросы",
       "url": "https://tmplayer.org/ru/faq/"
+    },
+    {
+      "@type": "WebPage",
+      "name": "Changelog",
+      "url": "https://tmplayer.org/changelog/"
     }
+  ],
+  "publisher": {
+    "@id": "https://tmplayer.org/ru/#org"
+  }
+}
+</script>
+
+<!-- Who publishes the site: the logo and the profiles Google may show beside the site name. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://tmplayer.org/ru/#org",
+  "name": "TMPlayer",
+  "url": "https://tmplayer.org/ru/",
+  "logo": "https://tmplayer.org/icon-512.png",
+  "email": "hello@tmplayer.org",
+  "founder": {
+    "@type": "Person",
+    "name": "dracu-lah",
+    "url": "https://github.com/dracu-lah"
+  },
+  "sameAs": [
+    "https://github.com/dracu-lah/TMPlayer",
+    "https://t.me/tmplayerapp"
   ]
 }
 </script>
@@ -507,6 +538,16 @@
           <span data-i18n="home.gpl_3_0_and_free">GPL-3.0, и бесплатно навсегда</span><!-- i18n:langcount --><span>Языков: <b>21</b></span><!-- /i18n:langcount -->
         </p>
 
+        <!-- The coffee and sponsor links, the same block and words as on the download page, so a
+             reader who got something from this page has the offer where they finished reading. -->
+        <div class="support-more" id="sponsor">
+          <h3 data-i18n="home.support_tmplayer">Поддержать TMPlayer</h3>
+          <p data-i18n="home.support_no_ads">В TMPlayer нет собственной рекламы (спонсорские сообщения Telegram показываются в публичных каналах, как того требует Telegram) и нет платной версии. Если приложение сэкономило вам нервы, чашка кофе или ежемесячная поддержка оплатит время, которое уходит на его разработку. Это добровольно и ничего не открывает: все функции бесплатны для всех.</p>
+          <div class="support-actions support-give">
+            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener" data-i18n="home.sponsor_on_github"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 20.6 10.7 19.4C6 15.2 3 12.4 3 9a4.8 4.8 0 0 1 4.9-4.9c1.6 0 3.1.7 4.1 1.9a5.5 5.5 0 0 1 4.1-1.9A4.8 4.8 0 0 1 21 9c0 3.4-3 6.2-7.7 10.4L12 20.6Z"/></svg> Спонсировать на GitHub</a>
+            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener" data-i18n="home.buy_me_a_coffee"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 8h13v2h1.5a3.5 3.5 0 0 1 0 7H16.6A6 6 0 0 1 11 21H9a5 5 0 0 1-5-5V8Zm13 4v3h1.5a1.5 1.5 0 0 0 0-3H17ZM7 2.5a1 1 0 0 1 1 1V6H6V3.5a1 1 0 0 1 1-1Zm3.5-1a1 1 0 0 1 1 1V6h-2V2.5a1 1 0 0 1 1-1Zm3.5 1a1 1 0 0 1 1 1V6h-2V3.5a1 1 0 0 1 1-1Z"/></svg> Угостить кофе</a>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -538,9 +579,9 @@
       <a href="/ru/translate/" data-i18n="common.translate">Перевод</a>
       <a href="/security/" data-i18n="common.security">Безопасность</a>
       <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener" data-i18n="common.source">Исходный код</a>
-      <a href="/privacy" data-i18n="common.privacy">Конфиденциальность</a>
-      <a href="/signing" data-i18n="common.code_signing">Подпись кода</a>
-      <a href="/legal" data-i18n="common.lawful_use">Законное использование</a>
+      <a href="/privacy/" data-i18n="common.privacy">Конфиденциальность</a>
+      <a href="/signing/" data-i18n="common.code_signing">Подпись кода</a>
+      <a href="/legal/" data-i18n="common.lawful_use">Законное использование</a>
       <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
     </nav>
     <nav class="footer-links footer-guides" aria-label="Руководства" data-i18n-aria-label="common.guides">
