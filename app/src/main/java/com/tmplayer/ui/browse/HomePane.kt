@@ -371,8 +371,13 @@ internal fun HomePane(
     // first thing the remote stands on, unless the viewer has already moved off somewhere.
     val heroKey = spotlight?.record?.let { SettingsStore.progressKey(it.chatId, it.messageId) }
     LaunchedEffect(heroKey) {
-        if (touch || heroKey == null || moved) return@LaunchedEffect
+        if (heroKey == null || moved) return@LaunchedEffect
         withFrameNanos {}
+        // A spotlight that answers after the rows are drawn goes in above them, and the list keeps
+        // standing on the row it was showing, so the hero sat out of sight above the top. A list
+        // still at its top (now one item down, at no offset) moves up to show it.
+        if (listState.firstVisibleItemIndex == 1 && listState.firstVisibleItemScrollOffset == 0) listState.scrollToItem(0)
+        if (touch) return@LaunchedEffect
         if (listState.firstVisibleItemIndex == 0) runCatching { heroFocus.requestFocus() }
     }
 

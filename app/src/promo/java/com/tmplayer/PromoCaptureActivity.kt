@@ -30,6 +30,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.tmplayer.i18n.L
 import com.tmplayer.promo.PromoCatalog
+import com.tmplayer.ui.browse.shelfGrid
 import kotlinx.coroutines.runBlocking
 import com.tmplayer.data.Account
 import com.tmplayer.data.AuthState
@@ -539,10 +540,10 @@ private fun promoHome(variant: String?): PromoHome? {
 }
 
 /**
- * The phone's chat listing: an app bar, then Telegram's dense captionless grid.
+ * The phone's chat listing: the app bar, then the chat's grid as [PromoShelfGrid] draws it.
  *
- * This is the real scaffold and the real card, not a drawing of them, so a shot taken here cannot
- * quietly disagree with what the app does.
+ * This is the real scaffold, arrangement and cards, not a drawing of them, so a shot taken here
+ * cannot quietly disagree with what the app does.
  */
 @Composable
 private fun PhoneMediaScreen(variant: String, onBack: () -> Unit = {}) {
@@ -575,37 +576,7 @@ private fun PhoneMediaScreen(variant: String, onBack: () -> Unit = {}) {
             ) {}
             return@TouchMediaScaffold
         }
-        LazyVerticalGrid(
-            // Three, which is what the real grid computes for a 393dp phone from its minimum
-            // tile width. The fixture has to draw what the app draws or the screenshots are of a
-            // layout nobody has.
-            columns = GridCells.Fixed(3),
-            contentPadding = PaddingValues(start = DENSE_GAP, end = DENSE_GAP),
-            horizontalArrangement = Arrangement.spacedBy(DENSE_GAP),
-            verticalArrangement = Arrangement.spacedBy(DENSE_GAP),
-        ) {
-            // Three times through the set, so the grid runs past the bottom of the panel the way a
-            // real chat's does. A shot that ends in empty background reads as an empty chat, and
-            // twice was enough only while a tile was a bare picture: the caption under each one
-            // costs two lines and a meta row, which is a whole row of tiles fewer per screen.
-            val tiles = (0 until 3).flatMap { pass ->
-                media.map { it.copy(messageId = it.messageId + pass * media.size) }
-            }
-            if (series != null) {
-                items(series.files, key = { it.messageId }) { PromoCard(it, dense = true) }
-            } else {
-                items(tiles, key = { it.messageId }) { item ->
-                    MediaCard(
-                        item = item,
-                        watched = PROMO_WATCH.point(item),
-                        onClick = {},
-                        onFocused = {},
-                        dense = true,
-                        onLongClick = { held = item },
-                    )
-                }
-            }
-        }
+        PromoShelfGrid(series?.files ?: media, onHold = { held = it })
         series?.Opened()
         held?.let { PromoDetail(it) { held = null } }
     }
@@ -684,39 +655,7 @@ private fun TvMediaScreen(variant: String) {
             ) {}
             return@Column
         }
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
-            contentPadding = PaddingValues(
-                start = Tv.SafeH,
-                end = Tv.SafeH,
-                top = Tv.FocusClearance,
-                bottom = Tv.SafeV + 16.dp,
-            ),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            if (series != null) {
-                items(series.files, key = { it.messageId }) { item ->
-                    val focus = if (item === series.files.first()) Modifier.focusRequester(first) else Modifier
-                    PromoCard(item, modifier = focus)
-                }
-            } else {
-                items(media, key = { it.id }) { item ->
-                    MediaCard(
-                        item = item,
-                        watched = PROMO_WATCH.point(item),
-                        onClick = {},
-                        onFocused = {},
-                        onLongClick = { held = item },
-                        modifier = if (item === media.first()) {
-                            Modifier.focusRequester(first)
-                        } else {
-                            Modifier
-                        },
-                    )
-                }
-            }
-        }
+        PromoShelfGrid(series?.files ?: media, onHold = { held = it }, first = first)
     }
     series?.Opened()
     held?.let { PromoDetail(it) { held = null } }
@@ -756,22 +695,77 @@ private fun promoSeries(variant: String): PromoSeries? {
     )
 }
 
-/** A video's tile in the fixture, with the demo watch state on it. */
+/**
+ * A chat's grid over [items], drawn the way [com.tmplayer.ui.browse.MediaGridScreen] draws it: the
+ * same arrangement ([arrangeShelf]: a show as one tile, copies of a film as one poster, posters
+ * first), the same column counts ([TileGrid]), the same sections and spans ([shelfGrid]) and the
+ * same cards, with the demo viewer's watch state on them. Only the view model is left out.
+ */
 @Composable
-private fun PromoCard(item: MediaItem, modifier: Modifier = Modifier, dense: Boolean = false) {
-    var held by remember { mutableStateOf(false) }
-    if (held) PromoDetail(item) { held = false }
-    MediaCard(
-        item = item,
-        watched = PROMO_WATCH.point(item),
-        finished = PROMO_WATCH.finished(item),
-        onClick = {},
-        onFocused = {},
-        onLongClick = { held = true },
-        dense = dense,
-        modifier = modifier,
-    )
+private fun PromoShelfGrid(items: List<MediaItem>, onHold: (MediaItem) -> Unit, first: FocusRequester? = null) {
+    val s = com.tmplayer.ui.i18n.LocalStrings.current
+    val touch = !FormFactor.isTv(androidx.compose.ui.platform.LocalContext.current)
+    val edge = if (touch) com.tmplayer.ui.browse.TOUCH_EDGE else Tv.SafeH
+    val watch = PROMO_WATCH
+    val progress = remember(items) {
+        items.mapNotNull { item -> watch.point(item)?.let { SettingsStore.progressKey(item.chatId, item.messageId) to it } }.toMap()
+    }
+    val shelved = remember(items) { com.tmplayer.ui.browse.arrangeShelf(items, progress, grouping = true, layout = CardLayout.Grid) }
+    val feed = remember(shelved) { shelved.shelf.map { com.tmplayer.data.MediaFeedEntry.Media(it) } }
+    var openSeries by remember { mutableStateOf<Series?>(null) }
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+        val landscape = maxWidth > maxHeight
+        val posterColumns = com.tmplayer.ui.components.TileGrid.posterColumns(maxWidth - edge * 2, touch, landscape)
+        val wideColumns = com.tmplayer.ui.components.TileGrid.wideColumns(maxWidth - edge * 2, touch, landscape)
+        val columns = com.tmplayer.ui.components.TileGrid.columns(posterColumns, wideColumns)
+        val gap = if (touch) com.tmplayer.ui.components.TileGrid.TouchGap else com.tmplayer.ui.components.TileGrid.TvGap
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(columns),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = edge,
+                end = edge,
+                top = if (touch) 0.dp else Tv.FocusClearance,
+                bottom = if (touch) 32.dp else Tv.SafeV + 16.dp,
+            ),
+            horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalArrangement = Arrangement.spacedBy(gap),
+        ) {
+                shelfGrid(feed, shelved.posterKeys, columns, posterColumns, wideColumns, s.gridSectionFilms, s.gridSectionVideos) { entry ->
+                    val shelf = (entry as com.tmplayer.data.MediaFeedEntry.Media<ShelfEntry>).item
+                    val focus = if (first != null && shelf.key == shelved.shelf.firstOrNull()?.key) Modifier.focusRequester(first) else Modifier
+                    if (shelf is ShelfEntry.Show) {
+                        com.tmplayer.ui.browse.SeriesCard(
+                            series = shelf.series,
+                            progress = remember(shelf.series) { watch.progress(shelf.series) },
+                            fresh = remember(shelf.series) { watch.newEpisodes(shelf.series) > 0 || shelf.series.key in PROMO_FRESH_SHOWS },
+                            onClick = { openSeries = shelf.series },
+                            dense = touch,
+                            poster = true,
+                            modifier = focus,
+                        )
+                    } else {
+                        val item = (shelf as ShelfEntry.File).item
+                        MediaCard(
+                            item = item,
+                            watched = watch.point(item),
+                            finished = watch.finished(item),
+                            dense = touch,
+                            poster = shelf.key in shelved.posterKeys,
+                            onClick = { onHold(item) },
+                            onLongClick = { onHold(item) },
+                            onFocused = {},
+                            modifier = focus,
+                        )
+                    }
+                }
+        }
+    }
+    openSeries?.let { SeriesOpened(series = it, watch = watch, onPlay = {}, onDismiss = { openSeries = null }) }
 }
+
+/** The shows with episodes the demo viewer has not seen yet, for the "New" badge (see [PromoCatalog.Library.newEpisodes]). */
+private val PROMO_FRESH_SHOWS = setOf("harbour lines", "skybound academy")
 
 /**
  * The demo's three shows together, named the ways real uploads are: a scene release (Harbour
@@ -783,9 +777,6 @@ private fun promoSeriesMedia(): List<MediaItem> = PromoMeta.library.let { it.ani
 /** Where the demo viewer is: see [PromoCatalog.Library]. */
 private val PROMO_WATCH: SeriesWatch
     get() = PromoMeta.library.let { library -> SeriesWatch(point = library::point, finished = library::isFinished) }
-
-/** Telegram's grid gap, matched to [com.tmplayer.ui.browse] so the shot is the real spacing. */
-private val DENSE_GAP = 2.dp
 
 /** What the fixture's recent-search chips say: the kind of thing somebody types into a chat. */
 private val PROMO_RECENT = listOf("quiet orbit", "harbour lines", "lesson 03", "skybound")

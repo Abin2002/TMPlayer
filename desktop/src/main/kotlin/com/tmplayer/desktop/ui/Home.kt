@@ -151,6 +151,14 @@ internal fun HomeRowsView(
     // under it, and on the page's own background once the hero has scrolled away.
     val overHero = spotlight != null && rows.isNotEmpty()
     val list = rememberLazyListState()
+    // A spotlight that answers after the rows are drawn goes in above them, and the list keeps
+    // standing on the row it was showing, so the hero sat out of sight above the top. A list still
+    // at its top (now one item down, at no offset) moves up to show it.
+    LaunchedEffect(spotlight != null) {
+        if (spotlight == null) return@LaunchedEffect
+        androidx.compose.runtime.withFrameNanos {}
+        if (list.firstVisibleItemIndex == 1 && list.firstVisibleItemScrollOffset == 0) list.scrollToItem(0)
+    }
     val density = LocalDensity.current
     var headerHeight by remember { mutableStateOf(HEADER_GUESS) }
     val heroUnder by rememberHeroUnderHeader(list, headerHeight, overHero)
