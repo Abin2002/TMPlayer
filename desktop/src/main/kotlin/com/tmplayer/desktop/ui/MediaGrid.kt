@@ -244,7 +244,11 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             // A chat or a topic that is one course of lessons says how far through it the viewer
             // is, over the posters; not while searching, when the listing is what was searched for.
             val watch = rememberSeriesWatch(state)
-            val course = remember(content.items, watch, grouping) { if (grouping) watch.course(content.items) else null }
+            // Off the main thread, as the shelf is: it reads every name through the lesson parser,
+            // and runs again whenever anything is watched.
+            val course by produceState<com.tmplayer.data.CourseProgress?>(null, content.items, watch, grouping) {
+                value = if (grouping) withContext(Dispatchers.Default) { watch.course(content.items) } else null
+            }
             val shows = remember(arranged) {
                 arranged.filterIsInstance<com.tmplayer.data.ShelfEntry.Show>().associate { it.series.cover.id to it.series }
             }
@@ -404,7 +408,7 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
             onDismiss = { forgetting = null },
             onConfirm = {
                 forgetting = null
-                scope.launch { state.settings.clearResumePosition(record.chatId, record.messageId) }
+                scope.launch { state.settings.clearResumeCopies(record) }
             },
         )
     }

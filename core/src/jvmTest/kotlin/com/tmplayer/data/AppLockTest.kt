@@ -206,6 +206,17 @@ class AppLockTest {
     }
 
     @Test
+    fun `saved logs still scrub the names of chats the kids lock hides`() = runBlocking {
+        fun line(chat: String) = ResumeRecord.encode(3, "Film", chat, 1L, 2400, System.currentTimeMillis())
+        settings.saveResumePosition(5, 9, 600_000L, 40 * 60_000L, line("Allowed chat"))
+        settings.saveResumePosition(6, 9, 600_000L, 40 * 60_000L, line("Hidden family chat"))
+        settings.setPin("1234")
+        settings.setKidsChats(setOf(5L))
+        settings.setKidsLock(true)
+        assertTrue("Hidden family chat" in LogExport.knownNames(settings, null))
+    }
+
+    @Test
     fun `the gate follows what it is set to`() = runBlocking {
         ChatGate.set(setOf(4L))
         assertEquals(setOf(4L), ChatGate.awaitReady())

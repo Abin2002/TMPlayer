@@ -38,7 +38,9 @@ private val DETAIL_FIRST = booleanPreferencesKey("detail_first")
 private val DOWNMIX_STEREO = booleanPreferencesKey("downmix_stereo")
 private val VOLUME_BOOST = booleanPreferencesKey("volume_boost")
 private val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
-private val RESUME_REWIND = longPreferencesKey("resume_rewind_ms")
+// Not "resume_...": that prefix is a resume point's, and the sweeps over resume points (the
+// broken-history prune at launch, Clear history) would take this setting with them.
+private val RESUME_REWIND = longPreferencesKey("rewind_on_resume_ms")
 private val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
 private val REMOVE_AFTER_WATCHING = booleanPreferencesKey("remove_after_watching")
 private val TRICKPLAY = booleanPreferencesKey("trickplay")
@@ -1147,7 +1149,8 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /** Sets (or changes) the PIN, and forgets any wrong guesses made against the old one. */
     suspend fun setPin(pin: String) {
-        val line = PinHash.hash(pin)
+        // Twenty thousand rounds: off the caller, which is often the UI thread.
+        val line = kotlinx.coroutines.withContext(Dispatchers.Default) { PinHash.hash(pin) }
         prefs.edit {
             it[APP_PIN] = line
             it.remove(PIN_FAILURES)
@@ -1684,6 +1687,21 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             it.remove(resumeKey(chatId, messageId))
             it.remove(durationKey(chatId, messageId))
             it.remove(metaKey(chatId, messageId))
+        }
+    }
+
+    /**
+     * "Remove from Continue watching" for a card that may stand for several copies of one video
+     * ([HomeRows.foldCopies]): every copy goes, in one edit, so none comes up in its place.
+     */
+    suspend fun clearResumeCopies(record: ResumeRecord) {
+        val copies = HomeRows.copiesOf(record, continueWatching.first())
+        prefs.edit {
+            for (copy in copies) {
+                it.remove(resumeKey(copy.chatId, copy.messageId))
+                it.remove(durationKey(copy.chatId, copy.messageId))
+                it.remove(metaKey(copy.chatId, copy.messageId))
+            }
         }
     }
 

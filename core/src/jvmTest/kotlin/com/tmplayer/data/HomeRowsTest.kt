@@ -276,5 +276,11 @@ class HomeRowsTest {
         // Out of order, the newest copy still wins, in the place the first of them held.
         val kept = HomeRows.foldCopies(listOf(resume(e1sd, updatedAt = 1), resume(e1hd, updatedAt = 9)))
         assertEquals(listOf(e1hd.messageId), kept.map { it.messageId })
+        // Removing the folded card takes both copies, and nothing else.
+        assertEquals(
+            setOf(e1hd.messageId, e1sd.messageId),
+            HomeRows.copiesOf(records[0], records).map { it.messageId }.toSet(),
+        )
+        assertEquals(listOf(clip.messageId), HomeRows.copiesOf(records[4], records).map { it.messageId })
     }
 }
