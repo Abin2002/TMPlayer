@@ -32,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -49,6 +50,7 @@ import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.Series
 import com.tmplayer.data.SeriesSeason
 import com.tmplayer.data.SettingsStore
+import com.tmplayer.ui.browse.PageDiscButton
 import com.tmplayer.ui.browse.SeriesArt
 import com.tmplayer.ui.browse.SeriesPanel
 import com.tmplayer.ui.browse.SeriesWatch
@@ -162,18 +164,13 @@ internal fun SeriesPage(
     val toast = rememberToast()
     val history by state.settings.downloadHistory.collectAsState(initial = emptyList())
     val index = remember(history) { history.associateBy { "${it.chatId}:${it.messageId}" } }
-    Row(Modifier.fillMaxSize().padding(top = 8.dp)) {
-        Box(Modifier.padding(start = 16.dp, top = 4.dp)) {
-            IconButton(onClick = onClose) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = s.seriesBack)
-            }
-        }
+    Box(Modifier.fillMaxSize()) {
         SeriesPanel(
             series = series,
             watch = watch,
             onPlay = { state.openPlayer(it, startFromBeginning = false) },
-            contentPadding = PaddingValues(start = 8.dp, end = 32.dp, bottom = 24.dp),
-            modifier = Modifier.weight(1f).fillMaxSize(),
+            contentPadding = PaddingValues(start = 32.dp, end = 32.dp, bottom = 24.dp),
+            modifier = Modifier.fillMaxSize(),
             seasonPicker = { selected, onSelect ->
                 SeasonDropdown(series.seasons, selected, onSelect, startOpen)
             },
@@ -191,6 +188,14 @@ internal fun SeriesPage(
                     )
                 }
             },
+            chatTitle = state.chatTitleOf(series.cover.chatId),
+        )
+        // Over the backdrop, on a dark disc so it reads on any picture.
+        PageDiscButton(
+            Icons.AutoMirrored.Filled.ArrowBack,
+            s.seriesBack,
+            onClose,
+            Modifier.align(Alignment.TopStart).padding(16.dp),
         )
     }
 }

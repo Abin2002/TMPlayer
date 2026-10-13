@@ -10,11 +10,10 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,9 +22,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +33,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,19 +41,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import com.tmplayer.ui.components.TmIcons
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -63,52 +58,58 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.Bookmark
+import com.tmplayer.data.DetailAction
 import com.tmplayer.data.MediaFacts
 import com.tmplayer.data.MediaItem
-import com.tmplayer.online.MetaKind
-import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.MediaName
+import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.WatchPoint
+import com.tmplayer.i18n.Messages
+import com.tmplayer.online.MetaExtras
 import com.tmplayer.online.MetaInfo
+import com.tmplayer.online.MetaKind
 import com.tmplayer.online.OnlineMetadata
-import com.tmplayer.ui.components.MediaArt
-import com.tmplayer.ui.components.WatchedBadge
+import com.tmplayer.ui.components.BackdropSource
+import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.isTouch
+import com.tmplayer.ui.components.rememberCover
 import com.tmplayer.ui.components.revealFromTop
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.online.MetaCastRow
-import com.tmplayer.online.MetaExtras
-import com.tmplayer.ui.online.MetaFactsLines
-import com.tmplayer.ui.online.MetaPicture
-import com.tmplayer.ui.online.MoreLikeThisRow
 import com.tmplayer.ui.online.MetaCredit
-import com.tmplayer.ui.online.TrailerIcon
+import com.tmplayer.ui.online.MetaFactsLines
+import com.tmplayer.ui.online.MoreLikeThisRow
 import com.tmplayer.ui.online.TrailerHost
+import com.tmplayer.ui.online.TrailerIcon
 import com.tmplayer.ui.online.TrailerQr
 import com.tmplayer.ui.online.rememberMeta
 import com.tmplayer.ui.online.rememberMetaExtras
 import com.tmplayer.ui.online.rememberTrailerLauncher
 import com.tmplayer.ui.theme.Corner
-import com.tmplayer.ui.theme.Danger
 import com.tmplayer.ui.theme.Tone
-import com.tmplayer.ui.theme.focusRing
-import com.tmplayer.data.Bookmark
-import com.tmplayer.data.DetailAction
+import com.tmplayer.ui.theme.rememberReducedMotion
+import kotlinx.coroutines.launch
 
 /**
  * A video's detail as a whole screen, in the manner of a streaming app's title page, opened by a
  * long press, a hold of OK or the info key on a tile.
  *
- * A wide screen (a television, a phone on its side) keeps the picture across the top end of the
- * screen, faded into the background on its start and bottom edges, and writes the title, the facts
- * and the actions over the faded part. The picture stays where it is while the page scrolls up over
- * it to the cast, "More like this" and the file's facts, and dims as it goes, so it is never cut off
- * halfway as a picture scrolled out of a narrow pane was. A tall screen pins the picture across the
- * top and scrolls everything else under it.
+ * A wide screen (a television, a phone on its side) keeps the backdrop across the top end of the
+ * screen, faded into the page on its start and foot with the long seven-stop curve, and writes the
+ * title, the facts and the actions over the faded part. The backdrop stays where it is while the
+ * page scrolls up over it to the cast, "More like this" and the file's facts, and dims as it goes.
+ * A tall screen runs the backdrop across the top, under the status bar, with the title at its
+ * foot, and the backdrop scrolls away at half the page's speed (pinned with animations off).
+ *
+ * The backdrop is the online picture when posters and overviews have one, else the Telegram
+ * thumbnail as a soft field ([com.tmplayer.ui.components.ArtBackdrop]), else the video's
+ * generated cover. Under the title, one line of facts with dots between (year, length, quality,
+ * size, the chat), then one bright Play or Resume pill and the other actions as round buttons.
  *
  * Close sits at the top end on both; Back closes as well.
  *
- * @param firstAction focused when the screen opens on a remote or a keyboard.
+ * @param firstAction focused when the screen opens on a remote or a keyboard: Play or Resume.
  */
 @Composable
 fun MediaDetailScreen(
@@ -127,12 +128,15 @@ fun MediaDetailScreen(
 ) {
     val meta = rememberMeta(item)
     val extras = rememberMetaExtras(meta)
+    val cover = rememberCover(item)
+    val source = remember(item.id, cover, meta?.wideUrl) { BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, meta?.wideUrl) }
+    val page = DetailPage(item, chatTitle, watched, finished, rows, meta, extras, source, firstAction, onOpenItem, bookmarks, onOpenBookmark)
     BoxWithConstraints(modifier.fillMaxSize().background(Tone.background)) {
         val wide = maxWidth > maxHeight
         if (wide) {
-            CinemaLayout(item, chatTitle, watched, finished, rows, meta, extras, maxHeight, firstAction, onOpenItem, bookmarks, onOpenBookmark)
+            CinemaLayout(page, maxHeight)
         } else {
-            StackedLayout(item, chatTitle, watched, finished, rows, meta, extras, firstAction, onOpenItem, bookmarks, onOpenBookmark)
+            StackedLayout(page, maxWidth, maxHeight)
         }
         CloseButton(
             onClose,
@@ -144,21 +148,24 @@ fun MediaDetailScreen(
     }
 }
 
+/** Everything a layout of the detail page draws from, gathered once. */
+private class DetailPage(
+    val item: MediaItem,
+    val chatTitle: String,
+    val watched: WatchPoint?,
+    val finished: Boolean,
+    val rows: List<DetailRow>,
+    val meta: MetaInfo?,
+    val extras: MetaExtras?,
+    val source: BackdropSource,
+    val firstAction: FocusRequester?,
+    val onOpenItem: ((MediaItem) -> Unit)?,
+    val bookmarks: List<Bookmark>,
+    val onOpenBookmark: ((Bookmark) -> Unit)?,
+)
+
 @Composable
-private fun CinemaLayout(
-    item: MediaItem,
-    chatTitle: String,
-    watched: WatchPoint?,
-    finished: Boolean,
-    rows: List<DetailRow>,
-    meta: MetaInfo?,
-    extras: MetaExtras?,
-    height: Dp,
-    firstAction: FocusRequester?,
-    onOpenItem: ((MediaItem) -> Unit)?,
-    bookmarks: List<Bookmark>,
-    onOpenBookmark: ((Bookmark) -> Unit)?,
-) {
+private fun CinemaLayout(page: DetailPage, height: Dp) {
     val tv = !isTouch()
     val scroll = rememberScrollState()
     val episodes = remember { BringIntoViewRequester() }
@@ -166,14 +173,13 @@ private fun CinemaLayout(
     // How far the page has to scroll before the picture is as dim as it gets.
     val dimOver = with(LocalDensity.current) { (height * 0.6f).toPx() }
     Box(Modifier.fillMaxSize()) {
-        Backdrop(
-            item,
-            meta,
-            fadeStart = true,
+        PageBackdrop(
+            page.source,
+            fromStart = true,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .fillMaxWidth(0.7f)
-                .fillMaxHeight(0.8f)
+                .fillMaxWidth(BACKDROP_SHARE)
+                .fillMaxHeight(0.85f)
                 .graphicsLayer { alpha = 1f - 0.75f * (scroll.value / dimOver).coerceIn(0f, 1f) },
         )
         Column(
@@ -193,237 +199,206 @@ private fun CinemaLayout(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Bottom),
             ) {
                 Spacer(Modifier.height(if (tv) 24.dp else 12.dp))
-                // The words keep to the faded half; the buttons may run on under the picture,
-                // so they stay on one line rather than wrapping in a narrow column.
-                Box(Modifier.fillMaxWidth(0.55f)) {
-                    TitleBlock(item, chatTitle, watched, finished, meta, extras, large = true)
+                // The words keep to the faded half; the buttons may run on under the picture.
+                Column(Modifier.fillMaxWidth(0.55f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    TitleBlock(page)
+                    FactsBlock(page)
+                    synopsisOf(page)?.let { Synopsis(it, style = MaterialTheme.typography.bodyLarge, lines = if (tv) 3 else 2) }
+                    ProtectedNote(page.item)
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    ActionPills(rows, meta, extras, firstAction, onEpisodes = episodesButton(item, meta, episodes))
-                    Versions(item, onOpenItem)
+                    Actions(page, onEpisodes = episodesButton(page.item, page.meta, episodes))
+                    Versions(page.item, page.onOpenItem)
                 }
                 Spacer(Modifier.height(if (tv) 8.dp else 4.dp))
             }
             // Just under the first screen, so a long list never pushes the title off the top.
-            Box(Modifier.widthIn(max = 720.dp)) { DetailBookmarks(bookmarks, onOpenBookmark) }
-            BelowTheFold(item, meta, extras, onOpenItem, Modifier.bringIntoViewRequester(episodes))
+            Box(Modifier.widthIn(max = 720.dp)) { DetailBookmarks(page.bookmarks, page.onOpenBookmark) }
+            BelowTheFold(page.item, page.meta, page.extras, page.onOpenItem, Modifier.bringIntoViewRequester(episodes))
             Spacer(Modifier.height(24.dp))
         }
     }
     // Focus on the first action shows the first screen whole (see revealFromTop); the return to
     // the top once it has settled stays as a guard for a picture or a title that arrives late
     // and changes the height under it.
-    LaunchedEffect(item.id) {
-        runCatching { firstAction?.requestFocus() }
+    LaunchedEffect(page.item.id) {
+        runCatching { page.firstAction?.requestFocus() }
         kotlinx.coroutines.delay(FOCUS_SETTLE_MS)
         scroll.scrollTo(0)
     }
 }
 
 @Composable
-private fun StackedLayout(
-    item: MediaItem,
-    chatTitle: String,
-    watched: WatchPoint?,
-    finished: Boolean,
-    rows: List<DetailRow>,
-    meta: MetaInfo?,
-    extras: MetaExtras?,
-    firstAction: FocusRequester?,
-    onOpenItem: ((MediaItem) -> Unit)?,
-    bookmarks: List<Bookmark>,
-    onOpenBookmark: ((Bookmark) -> Unit)?,
-) {
+private fun StackedLayout(page: DetailPage, width: Dp, height: Dp) {
     val scroll = rememberScrollState()
     val episodes = remember { BringIntoViewRequester() }
-    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
-        // Pinned: the rest scrolls under it, so the picture is never half off the top.
-        Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
-            Backdrop(item, meta, fadeStart = false, modifier = Modifier.fillMaxSize())
-            ProgressStrip(watched, finished, Modifier.align(Alignment.BottomStart))
+    val reduced = rememberReducedMotion()
+    val backdrop = tallBackdropHeight(width, height, online = page.meta?.wideUrl != null)
+    Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
+        // Under the status bar and the full width; the title sits on its foot, in the fade.
+        Box(Modifier.fillMaxWidth().heightIn(min = backdrop).clipToBounds()) {
+            PageBackdrop(
+                page.source,
+                modifier = Modifier
+                    .matchParentSize()
+                    // Half the page's speed, so the picture drifts away under the title rather
+                    // than leaving with it.
+                    .graphicsLayer { if (!reduced) translationY = scroll.value * PARALLAX },
+            )
+            Column(
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(start = 16.dp, end = 16.dp, top = backdrop * 0.4f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TitleBlock(page)
+            }
         }
         Column(
             Modifier
-                .weight(1f)
-                .verticalScroll(scroll)
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(0.dp))
             // Back up on the buttons from below with a remote or keys, the title above them shows too.
             Column(Modifier.revealFromTop(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                TitleBlock(item, chatTitle, watched, finished, meta, extras, large = false, progress = false)
-                ActionPills(rows, meta, extras, firstAction, primaryFullWidth = true, onEpisodes = episodesButton(item, meta, episodes))
-                Versions(item, onOpenItem)
-                DetailBookmarks(bookmarks, onOpenBookmark)
+                FactsBlock(page)
+                Actions(page, primaryFullWidth = true, onEpisodes = episodesButton(page.item, page.meta, episodes))
+                synopsisOf(page)?.let { Synopsis(it) }
+                ProtectedNote(page.item)
+                Versions(page.item, page.onOpenItem)
+                DetailBookmarks(page.bookmarks, page.onOpenBookmark)
             }
-            BelowTheFold(item, meta, extras, onOpenItem, Modifier.bringIntoViewRequester(episodes))
+            BelowTheFold(page.item, page.meta, page.extras, page.onOpenItem, Modifier.bringIntoViewRequester(episodes))
             Spacer(Modifier.height(24.dp))
         }
     }
 }
 
-/** The film's wide picture, or the video's own frame until it comes, faded into the background. */
+/** The episode or part over the title in the accent, then the title in the page's display size. */
 @Composable
-private fun Backdrop(item: MediaItem, meta: MetaInfo?, fadeStart: Boolean, modifier: Modifier) {
-    val ground = Tone.background
-    Box(modifier) {
-        MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize()) {
-            Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(48.dp))
-        }
-        MetaPicture(meta?.wideUrl, Modifier.fillMaxSize(), maxWidth = 1280)
-        if (fadeStart) {
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.horizontalGradient(0f to ground, 0.35f to ground.copy(alpha = 0.6f), 0.7f to Color.Transparent),
-                ),
-            )
-        }
-        Box(
-            Modifier.fillMaxSize().background(
-                Brush.verticalGradient(
-                    0f to (if (fadeStart) Color.Transparent else ground.copy(alpha = 0.35f)),
-                    0.2f to Color.Transparent,
-                    0.6f to Color.Transparent,
-                    1f to ground,
-                ),
-            ),
-        )
-    }
-}
-
-/** The title, the episode or year, the facts, the synopsis and where the video is. */
-@Composable
-private fun TitleBlock(
-    item: MediaItem,
-    chatTitle: String,
-    watched: WatchPoint?,
-    finished: Boolean,
-    meta: MetaInfo?,
-    extras: MetaExtras?,
-    large: Boolean,
-    progress: Boolean = true,
-) {
-    val s = LocalStrings.current
+private fun TitleBlock(page: DetailPage) {
+    val item = page.item
+    val meta = page.meta
     val parsed = remember(item) { MediaName.parse(item.nameForParsing, item.caption) }
-    val facts = remember(item) { MediaFacts.of(item) }
+    // A match's own title, in the UI language; else the name as read, its joiners made spaces.
     val heading = meta?.title?.takeIf { it.isNotBlank() }
         ?: parsed.title.ifBlank { item.title }.let { if (' ' in it) it else it.replace(JOINERS, " ") }
-    val episodeLine = listOfNotNull(
+    val eyebrow = listOfNotNull(
         parsed.episodeCode,
         meta?.episode?.name?.takeIf { it.isNotBlank() },
-        (parsed.year ?: meta?.year)?.toString(),
     ).joinToString("  ·  ")
-    val synopsis = meta?.let { it.episode?.overview?.takeIf { o -> o.isNotBlank() } ?: it.overview.takeIf { o -> o.isNotBlank() } }
-        ?: item.caption.takeIf { it.isNotBlank() }
-    val quick = listOfNotNull(
-        facts.resolution,
-        item.durationSec.takeIf { it > 0 }?.let { s.formatter.duration(it.toLong()) },
-        item.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
-        s.detailWatchedLine.takeIf { finished },
-    )
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (episodeLine.isNotEmpty()) {
-            Text(episodeLine, style = MaterialTheme.typography.titleMedium, color = Tone.accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (eyebrow.isNotEmpty()) {
+            Text(eyebrow, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = Tone.accent, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         Text(
             heading,
-            style = if (large) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.displaySmall,
             color = Tone.text,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.semantics { heading() },
         )
-        if (quick.isNotEmpty()) {
-            Text(quick.joinToString("  ·  "), style = MaterialTheme.typography.bodyLarge, color = Tone.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        MetaFactsLines(extras)
-        if (progress) ProgressStrip(watched, finished, Modifier.widthIn(max = 320.dp).clip(CircleShape))
-        if (synopsis != null) {
-            Text(
-                synopsis,
-                style = if (large) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium,
-                color = Tone.text,
-                maxLines = if (large) 2 else 4,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        if (!item.canBeSaved) {
-            Text(
-                s.detailProtected,
-                style = MaterialTheme.typography.bodySmall,
-                color = Tone.muted,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(Corner.Small))
-                    .background(Tone.surfaceHigh)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-            )
-        }
     }
 }
 
-/** How far through the video the viewer is, as a thin bar; nothing for one never started. */
+/** The facts line, the provider's genres and people under it, and where the viewer stopped. */
 @Composable
-private fun ProgressStrip(watched: WatchPoint?, finished: Boolean, modifier: Modifier = Modifier) {
-    val fraction = when {
-        finished -> 1f
-        watched != null && watched.fraction > 0f -> watched.fraction
-        else -> 0f
+private fun FactsBlock(page: DetailPage) {
+    val s = LocalStrings.current
+    val facts = remember(page.item, page.meta, page.chatTitle, page.finished, s) { videoFacts(page, s) }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FactLine(facts)
+        MetaFactsLines(page.extras)
+        ResumeLine(page.watched, page.finished, page.item.durationSec)
     }
-    if (fraction <= 0f) return
-    Box(modifier.fillMaxWidth().height(4.dp).background(Color.White.copy(alpha = 0.25f))) {
-        Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).fillMaxHeight().background(Tone.accent))
-    }
+}
+
+/** Year, length, quality, size and the chat, then Watched; only what the file and the match know. */
+private fun videoFacts(page: DetailPage, s: Messages): List<Fact> {
+    val item = page.item
+    val parsed = MediaName.parse(item.nameForParsing, item.caption)
+    val facts = MediaFacts.of(item)
+    return listOfNotNull(
+        (parsed.year ?: page.meta?.year)?.let { Fact(it.toString()) },
+        item.durationSec.takeIf { it > 0 }?.let { Fact(s.formatter.duration(it.toLong())) },
+        facts.resolution?.let { Fact(it, chip = true) },
+        item.sizeBytes.takeIf { it > 0 }?.let { Fact(s.formatter.size(it)) },
+        page.chatTitle.takeIf { it.isNotBlank() }?.let { Fact(it) },
+        Fact(s.detailWatchedLine, accent = true).takeIf { page.finished },
+    )
+}
+
+/** The episode's or the film's overview when online metadata has one, else the caption. */
+private fun synopsisOf(page: DetailPage): String? {
+    val meta = page.meta
+    return meta?.let { it.episode?.overview?.takeIf { o -> o.isNotBlank() } ?: it.overview.takeIf { o -> o.isNotBlank() } }
+        ?: page.item.caption.takeIf { it.isNotBlank() }
+}
+
+/** "This chat does not allow saving": said once, quietly, where the download would be. */
+@Composable
+private fun ProtectedNote(item: MediaItem) {
+    if (item.canBeSaved) return
+    Text(
+        LocalStrings.current.detailProtected,
+        style = MaterialTheme.typography.bodySmall,
+        color = Tone.muted,
+        modifier = Modifier
+            .clip(RoundedCornerShape(Corner.Small))
+            .background(Tone.surfaceHigh)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    )
 }
 
 /**
- * The actions as buttons in a row that wraps: the first (Resume or Play) filled, the rest quiet.
- * The trailer and the switch for posters and overviews join them as the old panel's lines did.
+ * Play or Resume as the one bright pill, then every other action as a round button: the platform's
+ * own lines in their order, Episodes beside the pill for an episode, the trailer, and the switch
+ * for posters and overviews while they are off. On a television the pill and the others share one
+ * line that wraps, Play first, so Right walks along them.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ActionPills(
-    rows: List<DetailRow>,
-    meta: MetaInfo?,
-    extras: MetaExtras?,
-    firstAction: FocusRequester?,
+private fun Actions(
+    page: DetailPage,
     primaryFullWidth: Boolean = false,
     /** Scrolls down to the seasons and episodes; null where the video is not an episode. */
     onEpisodes: (() -> Unit)? = null,
 ) {
     val s = LocalStrings.current
+    val tv = !isTouch()
     val trailers = rememberTrailerLauncher()
     // Posters and overviews are off: one button to turn them on from here, as Settings can.
     val online = OnlineMetadata.current
     val metadataOff = online != null && !online.settings.collectAsState().value.enabled
-    val trailer = extras?.trailer
-    val all = buildList {
-        addAll(rows)
+    val trailer = page.extras?.trailer
+    val primary = page.rows.firstOrNull()
+    val others = buildList {
+        addAll(page.rows.drop(1))
         // Beside the main button, as a streaming app's "Episodes" sits by Play.
-        if (onEpisodes != null) add(minOf(1, size), DetailRow(DetailAction.Play, s.detailEpisodes, TmIcons.Episodes, onSelect = onEpisodes))
-        if (trailer != null) {
-            add(DetailRow(DetailAction.Play, s.metadataTrailer, TrailerIcon, onSelect = { trailers.open(trailer) }))
-        }
-        if (online != null && meta == null && metadataOff) {
-            add(DetailRow(DetailAction.Play, s.metadataTurnOn, Icons.Filled.Info, onSelect = { online.setEnabled(true) }))
+        if (onEpisodes != null) add(0, DetailRow(DetailAction.Play, s.detailEpisodes, TmIcons.Episodes, onSelect = onEpisodes))
+        if (trailer != null) add(DetailRow(DetailAction.Play, s.metadataTrailer, TrailerIcon, onSelect = { trailers.open(trailer) }))
+        if (online != null && page.meta == null && metadataOff) {
+            add(DetailRow(DetailAction.Play, s.metadataTurnOn, Icons.Filled.Info, s.metadataTurnOnDetail, onSelect = { online.setEnabled(true) }))
         }
     }
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            all.forEachIndexed { index, row ->
-                val first = index == 0
-                Pill(
-                    row,
-                    primary = first,
-                    modifier = Modifier
-                        .then(if (first && primaryFullWidth) Modifier.fillMaxWidth() else Modifier)
-                        .then(if (first && firstAction != null) Modifier.focusRequester(firstAction) else Modifier),
-                )
+    // The time left is on the line over the buttons (see ResumeLine), so the pill says only Resume.
+    val hero: @Composable (Modifier) -> Unit = { modifier ->
+        if (primary != null) HeroPill(primary.label, primary.icon, primary.onSelect, modifier, focusRequester = page.firstAction)
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (tv) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                hero(Modifier)
+                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail) }
+            }
+        } else {
+            hero(if (primaryFullWidth) Modifier.fillMaxWidth() else Modifier)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail) }
             }
         }
         trailers.unopened?.let { TrailerQr(it, Modifier.padding(vertical = 8.dp)) }
@@ -436,6 +411,7 @@ private fun ActionPills(
  * "720p · 900 MB", "1080p · HEVC · 1.8 GB". Choosing one turns the page to it, so Play, the
  * download line and the facts all speak of that copy. Nothing when the film was posted once.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun Versions(item: MediaItem, onOpenItem: ((MediaItem) -> Unit)?) {
     if (item.versions.size <= 1 || onOpenItem == null) return
@@ -451,52 +427,6 @@ internal fun Versions(item: MediaItem, onOpenItem: ((MediaItem) -> Unit)?) {
                 CopyChip(copy, chosen = copy.id == item.id, onClick = { if (copy.id != item.id) onOpenItem(copy.asVersion(item)) })
             }
         }
-    }
-}
-
-/** One action: filled for the main one, a quiet outline for the rest, the focus colour under a remote. */
-@Composable
-private fun Pill(row: DetailRow, primary: Boolean, modifier: Modifier = Modifier) {
-    val tv = !isTouch()
-    val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(Corner.Medium)
-    val background = when {
-        focused && row.destructive -> Danger
-        focused -> Tone.focusFill
-        primary -> Color.White
-        else -> Tone.surfaceHigh
-    }
-    val ink = when {
-        focused -> Tone.onFocusFill
-        primary -> Color.Black
-        row.destructive -> Tone.danger
-        else -> Tone.text
-    }
-    Row(
-        modifier
-            .height(if (tv) 52.dp else 44.dp)
-            .clip(shape)
-            .background(background)
-            .focusRing(focused, shape)
-            .clickable(
-                interactionSource = interactions,
-                indication = if (tv) null else androidx.compose.foundation.LocalIndication.current,
-                onClick = row.onSelect,
-            )
-            .padding(start = 16.dp, end = 20.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
-    ) {
-        Icon(row.icon, contentDescription = null, tint = ink, modifier = Modifier.size(22.dp))
-        Text(
-            row.label,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = if (primary) FontWeight.Bold else FontWeight.Medium,
-            color = ink,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
@@ -526,7 +456,15 @@ private fun BelowTheFold(
 /** Close, at the top end, on a dark disc so it reads over any picture. */
 @Composable
 private fun CloseButton(onClose: () -> Unit, modifier: Modifier = Modifier) {
-    val s = LocalStrings.current
+    PageDiscButton(Icons.Filled.Close, LocalStrings.current.commonClose, onClose, modifier)
+}
+
+/**
+ * A page's own close or back control, on a dark disc so it reads over any backdrop: the detail
+ * page's Close and a show page's Back.
+ */
+@Composable
+fun PageDiscButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -535,11 +473,11 @@ private fun CloseButton(onClose: () -> Unit, modifier: Modifier = Modifier) {
             .size(if (tv) 48.dp else 40.dp)
             .clip(CircleShape)
             .background(if (focused) Tone.focusFill else Color.Black.copy(alpha = 0.55f))
-            .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClose)
-            .semantics { contentDescription = s.commonClose },
+            .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClick)
+            .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Filled.Close, contentDescription = null, tint = if (focused) Tone.onFocusFill else Color.White, modifier = Modifier.size(24.dp))
+        Icon(icon, contentDescription = null, tint = if (focused) Tone.onFocusFill else Color.White, modifier = Modifier.size(24.dp))
     }
 }
 

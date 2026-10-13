@@ -735,6 +735,7 @@ fun MediaGridScreen(
                         onDownload = { request ->
                             scope.launch { queueSeason(context, settings, request) { chatTitle }?.let(onOfflineAction) }
                         },
+                        chatTitle = chatTitle,
                     )
                 }
 
