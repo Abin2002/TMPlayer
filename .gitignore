@@ -22,3 +22,4 @@ captures/
 
 # Python bytecode from the scripts in scripts/
 __pycache__/
+/promo-art-src/
