@@ -36,7 +36,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Icon
@@ -45,7 +44,6 @@ import androidx.tv.material3.Text
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.ui.components.BottomCardInset
 import com.tmplayer.ui.components.PhonePad
-import com.tmplayer.ui.components.TmButton
 import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
@@ -58,8 +56,9 @@ import kotlinx.coroutines.launch
 /**
  * Home on a first run, before anything has been played or starred: how to get a first video in
  * (forward it to Saved Messages, or with the default groups hidden to a chat in a folder), with
- * the button that opens it ([DefaultGroups.firstStep]), and the line on starring chats under it. It used to be one muted sentence; the forwarding advice lived only in
- * Saved Messages' own empty state, where nobody new would look.
+ * the button that opens it ([DefaultGroups.firstStep]), and the line on starring chats under it,
+ * all on one [FirstVideoCard]. It used to be one muted sentence; the forwarding advice lived only
+ * in Saved Messages' own empty state, where nobody new would look.
  */
 @Composable
 internal fun FirstVideoEmpty(step: DefaultGroups.FirstStep, onOpen: (BrowseSection) -> Unit) {
@@ -75,51 +74,17 @@ internal fun FirstVideoEmpty(step: DefaultGroups.FirstStep, onOpen: (BrowseSecti
             .padding(bottom = BottomCardInset.height),
         contentAlignment = Alignment.Center,
     ) {
-        Column(
-            Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(if (touch) 12.dp else 16.dp),
-        ) {
-            Icon(
-                TmIcons.Bookmark,
-                contentDescription = null,
-                tint = Tone.accent,
-                modifier = Modifier.size(if (touch) 44.dp else 56.dp),
-            )
-            val measure = Modifier.widthIn(max = if (touch) 420.dp else 600.dp)
-            Text(
-                s.homeFirstTitle,
-                style = if (touch) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall,
-                color = Tone.text,
-                textAlign = TextAlign.Center,
-                modifier = measure,
-            )
-            Text(
-                step.body,
-                style = if (touch) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleMedium,
-                color = Tone.muted,
-                textAlign = TextAlign.Center,
-                modifier = measure,
-            )
-            // With Telegram's default groups hidden and no folders there is nowhere to send the
-            // viewer, so the words say what to do and there is no button.
-            val target = step.target
-            val button = step.button
-            if (button != null && target != null) {
-                Spacer(Modifier.size(4.dp))
-                TmButton(onClick = { onOpen(target) }, modifier = Modifier.focusRequester(focus)) { Text(button) }
-                Spacer(Modifier.size(4.dp))
-            } else {
-                Spacer(Modifier.size(4.dp))
-            }
-            Text(
-                s.homeFirstMore,
-                style = if (touch) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
-                color = Tone.muted,
-                textAlign = TextAlign.Center,
-                modifier = measure,
-            )
-        }
+        // With Telegram's default groups hidden and no folders there is nowhere to send the
+        // viewer, so the words say what to do and there is no button.
+        val target = step.target
+        FirstVideoCard(
+            title = s.homeFirstTitle,
+            body = step.body,
+            more = s.homeFirstMore,
+            button = step.button?.takeIf { target != null },
+            onButton = { target?.let(onOpen) },
+            focus = focus,
+        )
     }
     if (!touch && step.target != null) LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 }

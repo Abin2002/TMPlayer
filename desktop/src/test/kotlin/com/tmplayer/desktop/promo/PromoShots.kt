@@ -320,6 +320,69 @@ class PromoShots {
         }
     }
 
+    /**
+     * Home over the demo chats: Continue watching, two starred chats (one of films and clips, one
+     * of shows) and Recently added. Without posters and overviews there is nothing sharp enough
+     * to lead with, so Home opens on its rows; with them, the film the viewer is part way through
+     * takes the spotlight over its backdrop. Each at 1280 and 1920 dp wide, light and dark.
+     */
+    @Test
+    fun home() = homeShots("home", meta = false)
+
+    @Test
+    fun homeMeta() = homeShots("home-meta", meta = true)
+
+    private fun homeShots(name: String, meta: Boolean) {
+        val online = if (meta) com.tmplayer.desktop.ui.MetaFixture.install("on") else null
+        try {
+            val bunny = MediaItem(
+                chatId = 102, messageId = 900, fileId = 0, title = "Big.Buck.Bunny.2008.1080p.BluRay.x264.mkv",
+                sizeBytes = 885L * 1024 * 1024, durationSec = 596, mimeType = "video/x-matroska", thumbnailFileId = 0,
+                miniThumbnail = demo("forest"), date = 9_100, fileName = "Big.Buck.Bunny.2008.1080p.BluRay.x264.mkv",
+                width = 1920, height = 1080,
+            )
+            if (online != null) runBlocking {
+                // Warm the answer and the backdrop, so the frame shows them rather than the wait.
+                val query = com.tmplayer.online.MetaQuery.of(bunny.fileName)!!
+                online.lookup(query)
+                online.lookup(query.showOnly())
+                val url = "https://image.tmdb.org/t/p/w780/render-bbb-wide.webp"
+                com.tmplayer.data.Thumbnails.online(url, 1280) { online.image(url) }
+            }
+            var id = 1_000L
+            fun from(chatId: Long, items: List<MediaItem>, newest: Int) =
+                items.mapIndexed { index, item -> item.copy(chatId = chatId, messageId = id++, date = newest - index) }
+            val projects = from(102, listOf(bunny) + videos.take(6), newest = 9_000)
+            val shows = from(104, seriesVideos.filter { "Harbour" in it.fileName || "Sky Garden" in it.fileName }, newest = 8_000)
+            val elsewhere = from(101, videos.take(6).reversed(), newest = 6_000)
+            val started = listOf(projects[0], shows[3], projects[3], elsewhere[1])
+            val resume = started.mapIndexed { index, item ->
+                com.tmplayer.data.ResumeRecord(
+                    chatId = item.chatId, messageId = item.messageId, fileId = 0, title = item.title,
+                    chatTitle = chats.first { it.id == item.chatId }.title, sizeBytes = item.sizeBytes,
+                    durationSec = item.durationSec, positionMs = item.durationSec * 1000L * (index + 1) / 5,
+                    durationMs = item.durationSec * 1000L, updatedAt = 100L - index,
+                )
+            }
+            val rows = com.tmplayer.data.HomeRows.build(
+                continueWatching = resume,
+                favourites = com.tmplayer.data.HomeRows.favouriteChats(chats, setOf(102L, 104L)),
+                loaded = mapOf(102L to projects, 104L to shows),
+                recent = elsewhere,
+            )
+            val art = started.associateBy { SettingsStore.progressKey(it.chatId, it.messageId) }
+            for ((width, suffix) in listOf(WIDTH to "", WIDE to "-1920")) {
+                both("$name$suffix", width = width) {
+                    withSidebar {
+                        com.tmplayer.desktop.ui.HomeRowsView(shell, rows, chats, art, onRowShown = {}, onArtWanted = {}, onRefresh = {})
+                    }
+                }
+            }
+        } finally {
+            com.tmplayer.online.OnlineMetadata.current = null
+        }
+    }
+
     /** The tour as the desktop shows it before sign in, page by page; not shipped anywhere, only checked. */
     @Test
     fun tour() {
@@ -354,18 +417,18 @@ class PromoShots {
         }
     }
 
-    private fun both(name: String, before: () -> Unit = {}, darkOnly: Boolean = false, content: @Composable () -> Unit) {
+    private fun both(name: String, before: () -> Unit = {}, darkOnly: Boolean = false, width: Int = WIDTH, content: @Composable () -> Unit) {
         before()
         for (dark in if (darkOnly) listOf(true) else listOf(true, false)) {
-            val png = render(dark, content)
+            val png = render(dark, width, content)
             assertTrue("$name drew nothing", png.size > 10_000)
             val out = System.getenv("TMPLAYER_PROMO")?.takeIf { it.isNotBlank() } ?: continue
             File(out).apply { mkdirs() }.resolve(if (dark) "$name.png" else "$name-light.png").writeBytes(png)
         }
     }
 
-    private fun render(dark: Boolean, content: @Composable () -> Unit): ByteArray =
-        ImageComposeScene(WIDTH, HEIGHT, Density(DENSITY)) {
+    private fun render(dark: Boolean, width: Int = WIDTH, content: @Composable () -> Unit): ByteArray =
+        ImageComposeScene(width, HEIGHT, Density(DENSITY)) {
             TmMaterialTheme(dark = dark) {
                 Surface(Modifier.fillMaxSize(), color = Tone.background) { content() }
             }
@@ -429,6 +492,9 @@ class PromoShots {
 
     private companion object {
         const val WIDTH = 1920
+
+        /** 1920 dp across at the same density, for the pages that change with a wide window. */
+        const val WIDE = 2880
         const val HEIGHT = 1200
         const val DENSITY = 1.5f
 

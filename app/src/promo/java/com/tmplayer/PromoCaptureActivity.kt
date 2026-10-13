@@ -528,7 +528,14 @@ private fun promoHome(variant: String?): PromoHome? {
             items.mapIndexed { index, item -> item.copy(chatId = chatId, messageId = id++, date = newest - index) }
         // With posters on, a real film leads the starred chat and Continue, so Home shows one.
         val film = if (PromoMeta.on) listOf(PromoMeta.bunny) else emptyList()
-        val projects = from(102, film + media + media.reversed(), newest = 9_000)
+        // A lecture posted with no picture at all, so Home shows its generated cover.
+        val bare = media.first().copy(
+            title = "Workshop Lecture 07 - Joinery.mp4",
+            fileName = "Workshop Lecture 07 - Joinery.mp4",
+            miniThumbnail = null,
+            thumbnailFileId = 0,
+        )
+        val projects = from(102, film + media + listOf(bare) + media.reversed(), newest = 9_000)
         val travel = from(104, shows.take(10), newest = 8_000) + from(104, media.take(2), newest = 7_000)
         val elsewhere = from(101, media, newest = 6_500) + from(103, media.reversed(), newest = 6_400) +
             from(106, media.take(3), newest = 6_300)
