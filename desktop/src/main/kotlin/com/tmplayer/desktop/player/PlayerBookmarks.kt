@@ -39,10 +39,16 @@ import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.i18n.LocalStrings
 
 /**
- * What the note dialog is for: a new bookmark at [positionMs], or a new note for [editing], which
- * was made at that same position.
+ * What the note dialog is for: a new bookmark at [positionMs] in the video [chatId], [messageId],
+ * or a new note for [editing], which was made at that same position. The video is taken when the
+ * dialog opens: playback runs on behind it, and autoplay may have moved to the next episode by Save.
  */
-internal data class NotePrompt(val positionMs: Long, val editing: Bookmark? = null)
+internal data class NotePrompt(
+    val chatId: Long,
+    val messageId: Long,
+    val positionMs: Long,
+    val editing: Bookmark? = null,
+)
 
 /**
  * The note for a bookmark, asked in a dialog with the cursor already in the field: B, a few words

@@ -935,14 +935,14 @@ fun PlayerScreen(
     /** B and the menu's Add bookmark: the moment playing, with a note asked for in a dialog. */
     fun addBookmark() {
         if (!marksOn) return
-        notePrompt = NotePrompt(positionMs = status.positionMs)
+        notePrompt = NotePrompt(item.chatId, item.messageId, positionMs = status.positionMs)
     }
 
     fun saveNote(prompt: NotePrompt, note: String) {
         val store = bookmarks ?: return
-        val chat = item.chatId
-        val message = item.messageId
         val editing = prompt.editing
+        val chat = editing?.chatId ?: prompt.chatId
+        val message = editing?.messageId ?: prompt.messageId
         playerScope.launch {
             runCatching {
                 if (editing != null) store.rename(chat, message, editing.id, note)
@@ -1218,7 +1218,7 @@ fun PlayerScreen(
                             engine.seekTo(action.bookmark.positionMs)
                             showFlash(Flash.Kind.Text, SeekMath.clock(action.bookmark.positionMs))
                         }
-                        is MenuAction.EditBookmark -> notePrompt = NotePrompt(action.bookmark.positionMs, action.bookmark)
+                        is MenuAction.EditBookmark -> notePrompt = NotePrompt(action.bookmark.chatId, action.bookmark.messageId, action.bookmark.positionMs, action.bookmark)
                         is MenuAction.DeleteBookmark -> deleteBookmark(action.bookmark)
                     }
                 },

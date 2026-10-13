@@ -1149,7 +1149,8 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /** Sets (or changes) the PIN, and forgets any wrong guesses made against the old one. */
     suspend fun setPin(pin: String) {
-        val line = PinHash.hash(pin)
+        // Twenty thousand rounds: off the caller, which is often the UI thread.
+        val line = kotlinx.coroutines.withContext(Dispatchers.Default) { PinHash.hash(pin) }
         prefs.edit {
             it[APP_PIN] = line
             it.remove(PIN_FAILURES)

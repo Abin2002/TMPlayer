@@ -254,7 +254,12 @@ class MainActivity : ComponentActivity() {
     private fun playFromHomeScreen(intent: Intent?) {
         val video = WatchNextPublisher.videoFrom(intent) ?: return
         intent?.action = Intent.ACTION_MAIN
-        startActivity(PlayerActivity.intent(this, video.toMediaItem(), video.chatTitle))
+        // An entry published before the kids lock went on (CP57) still names its chat; one the
+        // lock leaves out opens the app instead of the video.
+        lifecycleScope.launch {
+            if (!com.tmplayer.data.KidsLock.allows(com.tmplayer.data.ChatGate.awaitReady(), video.chatId)) return@launch
+            startActivity(PlayerActivity.intent(this@MainActivity, video.toMediaItem(), video.chatTitle))
+        }
     }
 
     /**
@@ -385,6 +390,11 @@ private fun Root() {
     val appUnlocked by AppLockSession.unlocked.collectAsStateWithLifecycle()
     // Settings asks once per visit: back to the chats and it asks again.
     var settingsUnlocked by rememberSaveable { mutableStateOf(false) }
+    // Leaving the app locks the session, and Settings with it: whoever opens the app next, or
+    // the activity restored after the process died, must not find Settings already open.
+    LaunchedEffect(appUnlocked) {
+        if (!appUnlocked) settingsUnlocked = false
+    }
     val screensaverMinutes by settings.screensaverMinutes.collectAsStateWithLifecycle(initialValue = 0)
     val screensaverUp by TvIdle.showing.collectAsStateWithLifecycle()
 
