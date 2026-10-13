@@ -68,6 +68,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.CourseProgress
 import com.tmplayer.data.EpisodeCopies
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.MediaMapper
@@ -78,6 +79,7 @@ import com.tmplayer.data.SeriesProgress
 import com.tmplayer.data.SeriesSeason
 import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.WatchPoint
+import com.tmplayer.data.Watching
 import com.tmplayer.player.StreamStats
 import com.tmplayer.ui.components.MediaArt
 import com.tmplayer.ui.online.MetaCastRow
@@ -105,11 +107,22 @@ import com.tmplayer.ui.theme.focusRing
  * screen page on the television, and a page with a season dropdown on the desktop.
  */
 
-/** What the panels need to know about watching, read from the platform's stores. */
+/**
+ * What the panels need to know about watching, read from the platform's stores.
+ *
+ * [finished] is handed the Watched list; a video also counts as watched once its saved position is
+ * past the watched mark (see [Watching.counts]), so a show's count and a course's agree.
+ */
 class SeriesWatch(
     val point: (MediaItem) -> WatchPoint?,
-    val finished: (MediaItem) -> Boolean,
+    finished: (MediaItem) -> Boolean,
 ) {
+    private val onList = finished
+    val finished: (MediaItem) -> Boolean = { item -> Watching.counts(onList(item), point(item)) }
+
+    /** How far through the course [items] make up, or null when they are not one: see [CourseProgress.of]. */
+    fun course(items: List<MediaItem>): CourseProgress? = CourseProgress.of(items, onList, point)
+
     fun progress(series: Series): SeriesProgress =
         SeriesShelf.progress(series, finished) { point(it)?.fraction ?: 0f }
 
@@ -764,7 +777,11 @@ fun SeriesPanel(
                     val target = next ?: series.episodes.first()
                     val started = (watch.pointOf(target)?.positionMs ?: 0L) > 0
                     PlayButton(
-                        label = if (started) s.seriesResume(target.code) else s.seriesPlay(target.code),
+                        label = when {
+                            started -> s.seriesResume(target.code)
+                            progress.watched > 0 -> s.seriesContinue(target.code)
+                            else -> s.seriesPlay(target.code)
+                        },
                         onClick = { onPlay(next?.item ?: watch.pick(target, progress)) },
                         modifier = Modifier.focusRequester(playFocus),
                     )
@@ -817,6 +834,13 @@ fun SeriesPanel(
         }
         TrailerHost(trailers)
         Spacer(Modifier.height(12.dp))
+        // How far through the whole show, over its episodes; the line above says it in words.
+        if (progress.watched > 0) {
+            ProgressLine(
+                progress.watched.toFloat() / progress.total,
+                Modifier.padding(contentPadding.horizontalOnly()).padding(bottom = 12.dp),
+            )
+        }
         // An anime season runs to hundreds of episodes, and scrolling to the 850th is no way to
         // find it. Past [EPISODE_RANGE] the season is cut into ranges, opened on the one holding
         // the next episode to watch, and the list opens on that episode rather than at the top.
@@ -928,8 +952,25 @@ private fun EpisodeRanges(
 /** Episodes per range once a season is longer than this; see [EpisodeRanges]. */
 private const val EPISODE_RANGE = 100
 
+/**
+ * A thin rounded bar of how much of a show or a course is watched, for the top of its list: the
+ * tile's bar, drawn at rest on the page rather than over a picture.
+ */
 @Composable
-private fun PlayButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ProgressLine(fraction: Float, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(4.dp)
+            .clip(CircleShape)
+            .background(Tone.muted.copy(alpha = 0.25f)),
+    ) {
+        Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).fillMaxHeight().clip(CircleShape).background(Tone.accent))
+    }
+}
+
+@Composable
+internal fun PlayButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val tv = !isTouch()
