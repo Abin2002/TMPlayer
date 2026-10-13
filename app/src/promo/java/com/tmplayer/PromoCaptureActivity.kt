@@ -171,6 +171,9 @@ class PromoCaptureActivity : ComponentActivity() {
         // `--ez firsttip true` shows the chat list's first-run tip (forward a video to Saved
         // Messages); without it the tip stays away, so the usual chat list shots are unchanged.
         com.tmplayer.ui.browse.FirstVideoTipOverride.show = intent.getBooleanExtra("firsttip", false)
+        // `--ez metanotice true` shows the grid's one-time note on online metadata; without it the
+        // note stays away, so the usual grid shots are unchanged.
+        com.tmplayer.ui.browse.MetaNoticeOverride.show = intent.getBooleanExtra("metanotice", false)
 
         // `--ez hide_groups true|false` sets "Only my folders" (Telegram's default groups off the
         // sidebar), and `--ez groups_demo true` puts four of the demo chats in the two demo folders

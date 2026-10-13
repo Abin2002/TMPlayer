@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram auf deinem TV ohne Casting",
     "watch_telegram_videos_on_3a48": "Schau Telegram-Videos auf dem Fernseher, ohne dein Smartphone zu casten oder zu spiegeln: Ein Player auf dem Fernseher selbst meldet sich in deinem Konto an und streamt die Videos in deinen Chats.",
     "finds_subtitles_online_through_a322": "Findet Untertitel online über OpenSubtitles und verschiebt Untertitel oder Ton passend",
-    "groups_series_by_season_709a": "Gruppiert Serien nach Staffeln auf einer eigenen Seite, optional mit Postern und Beschreibungen",
+    "groups_series_by_season_709a": "Gruppiert Serien nach Staffeln auf einer eigenen Seite, mit Postern und Beschreibungen, die du abschalten kannst",
     "changelog_164b": "Änderungsprotokoll"
   },
   "features": {
@@ -327,7 +327,7 @@
     "home_and_series_pages": "{strong1} Die Startseite sammelt aus allen Chats, was du als Nächstes schauen kannst, und jede Serie bekommt eine eigene Seite mit Folgen nach Staffeln gruppiert.",
     "home_and_series_pages__strong1": "Bringt Serien in Ordnung.",
     "posters_and_overviews": "{strong1} Abgefragt bei TMDB, TVmaze und AniList über den bereinigten Titel des Videos, und sonst nichts.",
-    "posters_and_overviews__strong1": "Ergänzt Poster und Beschreibungen, wenn du willst.",
+    "posters_and_overviews__strong1": "Ergänzt Poster und Beschreibungen, außer du schaltest sie ab.",
     "a_closer_look": "Genauer hingeschaut",
     "four_screens_with_their_parts": "Vier Bildschirme mit markierten Bereichen, nummeriert passend zu den Notizen daneben.",
     "the_player_watching_while_it": "Der Player: schauen, während er lädt",

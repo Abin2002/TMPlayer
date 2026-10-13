@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram trên TV của bạn mà không cần truyền màn hình",
     "watch_telegram_videos_on_3a48": "Xem video Telegram trên TV mà không cần truyền hay chiếu màn hình điện thoại: trình phát ngay trên TV đăng nhập vào tài khoản của bạn và phát các video trong cuộc trò chuyện.",
     "finds_subtitles_online_through_a322": "Tìm phụ đề trực tuyến qua OpenSubtitles, và chỉnh phụ đề hoặc âm thanh cho khớp",
-    "groups_series_by_season_709a": "Nhóm phim bộ theo mùa trên trang riêng, kèm poster và phần giới thiệu tùy chọn",
+    "groups_series_by_season_709a": "Nhóm phim bộ theo mùa trên trang riêng, kèm poster và phần giới thiệu mà bạn có thể tắt",
     "changelog_164b": "Nhật ký thay đổi"
   },
   "features": {
@@ -327,7 +327,7 @@
     "home_and_series_pages": "{strong1} Trang chủ gom những gì nên xem tiếp từ mọi cuộc trò chuyện, và mỗi bộ phim có trang riêng, với các tập được nhóm theo mùa.",
     "home_and_series_pages__strong1": "Sắp xếp phim bộ gọn gàng.",
     "posters_and_overviews": "{strong1} Được tra cứu trên TMDB, TVmaze và AniList chỉ bằng tiêu đề đã làm gọn của video, ngoài ra không gì khác.",
-    "posters_and_overviews__strong1": "Thêm poster và phần giới thiệu, nếu bạn muốn.",
+    "posters_and_overviews__strong1": "Thêm poster và phần giới thiệu, trừ khi bạn tắt đi.",
     "a_closer_look": "Xem kỹ hơn",
     "four_screens_with_their_parts": "Bốn màn hình với các phần được đánh dấu, đánh số khớp với ghi chú bên cạnh.",
     "the_player_watching_while_it": "Trình phát: xem trong khi tải",
