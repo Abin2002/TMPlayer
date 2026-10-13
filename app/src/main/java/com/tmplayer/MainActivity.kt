@@ -351,10 +351,15 @@ private fun Root() {
     val minSize by settings.minSizeBytes.collectAsStateWithLifecycle(initialValue = SizeFilter.DEFAULT_MIN)
     val maxSize by settings.maxSizeBytes.collectAsStateWithLifecycle(initialValue = SizeFilter.DEFAULT_MAX)
     val chatLayout by settings.chatLayout.collectAsStateWithLifecycle(initialValue = CardLayout.List)
-    val homeWatch = remember(watchProgress, watchedVideos) {
+    // When each video was last watched, for the "New" badge on a show's tile.
+    val touchTimes = remember(continueWatching, watchedVideos) {
+        com.tmplayer.data.NewEpisodes.touchTimes(continueWatching, watchedVideos.values)
+    }
+    val homeWatch = remember(watchProgress, watchedVideos, touchTimes) {
         SeriesWatch(
             point = { watchProgress[SettingsStore.progressKey(it.chatId, it.messageId)] },
             finished = { SettingsStore.progressKey(it.chatId, it.messageId) in watchedVideos },
+            touchedAt = { touchTimes[SettingsStore.progressKey(it.chatId, it.messageId)] },
         )
     }
     val mediaLayout by settings.mediaLayout.collectAsStateWithLifecycle(initialValue = CardLayout.Grid)
@@ -1074,14 +1079,14 @@ private fun Root() {
                     folders = folders,
                     onToggleLayout = { scope.launch { settings.setChatLayout(chatLayout.toggled()) } },
                     layout = chatLayout,
-                    homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater),
+                    homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater, watchedVideos.values),
                     homeArt = homeViewModel.art.collectAsStateWithLifecycle().value,
                     homeWatch = homeWatch,
                     onHomeRowShown = { row ->
                         when (row) {
                             is HomeRow.Chat -> homeViewModel.request(row.chatId)
                             is HomeRow.Recent -> homeViewModel.requestRecent()
-                            is HomeRow.Continue, is HomeRow.WatchLater -> Unit
+                            is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> Unit
                         }
                     },
                     onHomeArtWanted = homeViewModel::requestArt,
@@ -1116,6 +1121,7 @@ private fun Root() {
                     maxSizeBytes = maxSize,
                     watchProgress = watchProgress,
                     watchedVideos = watchedVideos,
+                    touchTimes = touchTimes,
                     onSetWatched = { item, watched -> setWatched(item, current.chat.title, watched) },
                     onToggleFavorite = {
                         scope.launch {
