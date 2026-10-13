@@ -2,7 +2,8 @@
   The transport controls, one design for the thumb and the D-pad.
 
   Everything sits at the bottom of the picture the way the big streaming apps draw it: the name of
-  the video, the scrub bar under it, and a single row of round buttons under that, all read against
+  the video, the scrub bar under it, and a single row of round buttons in one dark pill under
+  that, all read against
   a gradient that darkens only the bottom of the frame. There is no centre cluster and no top bar;
   the picture keeps the screen.
 
@@ -113,10 +114,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
                 android:maxLines="1"
                 android:textColor="#FFFFFFFF"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/topbar_subtitle"
@@ -124,8 +125,8 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="#E6FFFFFF"
-                android:textSize="13sp"
+                android:textColor="#B8FFFFFF"
+                android:textSize="14sp"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -297,10 +298,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
             android:maxLines="1"
             android:textColor="#FFFFFFFF"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            android:textSize="24sp" />
 
         <TextView
             android:id="@+id/controls_subtitle"
@@ -309,7 +310,7 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="#E6FFFFFF"
+            android:textColor="#B8FFFFFF"
             android:textSize="14sp"
             android:visibility="gone" />
 
@@ -329,7 +330,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textColor="#E6FFFFFF"
+                android:textColor="#B8FFFFFF"
                 android:textSize="13sp" />
 
             <TextView
@@ -341,7 +342,7 @@
                 android:minWidth="48dp"
                 android:gravity="end"
                 android:paddingStart="8dp"
-                android:textColor="#E6FFFFFF"
+                android:textColor="#B8FFFFFF"
                 android:textSize="13sp" />
         </LinearLayout>
 
@@ -356,13 +357,13 @@
             android:nextFocusDown="@+id/control_play_pause"
             app:ad_marker_color="#FFFFC107"
             app:bar_height="4dp"
-            app:buffered_color="#66FFFFFF"
+            app:buffered_color="#592AABEE"
             app:played_color="@color/accent"
             app:scrubber_color="@color/accent"
             app:scrubber_dragged_size="18dp"
             app:scrubber_enabled_size="12dp"
             app:touch_target_height="@dimen/player_timebar_touch"
-            app:unplayed_color="#40FFFFFF" />
+            app:unplayed_color="#4DFFFFFF" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -384,11 +385,19 @@
                 android:overScrollMode="never"
                 android:scrollbars="none">
 
+                <!-- The round buttons share one seat (bg_controls_pill): a dark pill with a
+                     faint edge, so the group reads as one control over any frame. Focus still
+                     fills the focused button white inside it. -->
                 <LinearLayout
                     android:id="@+id/controls_buttons"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:background="@drawable/bg_controls_pill"
+                    android:orientation="horizontal"
+                    android:paddingStart="2dp"
+                    android:paddingTop="2dp"
+                    android:paddingEnd="6dp"
+                    android:paddingBottom="2dp">
 
                     <ImageButton
                         android:id="@+id/control_subtitles"
@@ -499,7 +508,7 @@
                 android:paddingTop="6dp"
                 android:paddingEnd="10dp"
                 android:paddingBottom="6dp"
-                android:textColor="#E6FFFFFF"
+                android:textColor="#B8FFFFFF"
                 android:textSize="14sp" />
         </LinearLayout>
     </LinearLayout>
