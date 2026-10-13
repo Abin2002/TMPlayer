@@ -312,8 +312,10 @@ fun PlayerScreen(
         launch { tdlibVersion = current.tdlibVersion() }
         autoplayNext = runCatching { settings.autoplayNextNow() }.getOrDefault(true)
         showRemaining = runCatching { settings.touchPrefsNow().showRemaining }.getOrDefault(false)
+        // A saved position opens a few seconds early, as Settings has it ([ResumeRewind]); Keep
+        // watching reopens exactly where the file stopped.
         val start = reopenAt ?: if (ignoreSavedPosition) 0L else runCatching {
-            settings.resumePosition(item.chatId, item.messageId)
+            settings.resumeStart(item.chatId, item.messageId)
         }.getOrDefault(0L)
         val reopening = reopenAt != null
         reopenAt = null

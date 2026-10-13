@@ -137,7 +137,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [ ] CP55 Timestamped bookmarks with notes (batch 2)
 - [x] CP56 Android chapters, A-B loop and frame step (desktop has them since CP08) (batch 2) (A-B repeat in the phone overflow and the TV More menu, marks on the bar and "A-B" by the time; frame steps there while paused, menu only on TV since the arrows seek; `AbLoop` moved to core. Chapters skipped: Media3 1.10.1's Matroska and MP4 extractors expose none, only MP3's ID3 chapter frames. Not yet tried on a device)
 - [ ] CP57 TV screensaver, PIN lock for settings and a kids lock (batch 2)
-- [ ] CP58 Skip silence, rewind a few seconds on resume (batch 2)
+- [x] CP58 Skip silence, rewind a few seconds on resume (batch 2) (skip silence under the speeds on phone and TV, kept as a setting; Android only, mpv's silenceremove drifts sound from picture. "Rewind when resuming" Off/3/5/10 s, default 3 s, on phone, TV and desktop via `ResumeRewind`, unit tested. Not yet tried on a device)
 - [ ] CP59 UI scale, log export for bug reports (batch 2)
 - [ ] CP60 Episode thumbnails in the series list (batch 2)
 - [ ] CP61 (later, user 2026-10-13: no new outside services for now) Absolute anime episode numbers to season and episode via ani.zip or the Fribb list (batch 2)

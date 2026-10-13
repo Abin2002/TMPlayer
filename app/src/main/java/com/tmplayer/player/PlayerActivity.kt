@@ -297,6 +297,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** Volume boost as the viewer left it, read before the player is built. */
     private var volumeBoostOn = false
 
+    /**
+     * Skip silence, switched under the speeds and kept as a setting. Media3 drops the quiet stretches
+     * in the audio sink's own chain, so it works on the PCM the sink plays and does nothing to a
+     * track passed through to a receiver as a bitstream.
+     */
+    private var skipSilence = false
+
     /** The boost's processor, owned by the current player's sink. See [VolumeBoostProcessor]. */
     private var volumeBoost: VolumeBoostProcessor? = null
 
@@ -690,8 +697,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // Reading the saved position is a disk hit; do it off the main thread and seek once it
         // lands. Under "download the whole video first" there is no player to seek yet, so
         // [startPlayback] applies the same position as well; whichever arrives second sets it again.
+        // A few seconds before the saved point, as Settings has it ([ResumeRewind]).
         lifecycleScope.launch {
-            resumeMs = runCatching { settings.resumePosition(chatId, messageId) }.getOrDefault(0L)
+            resumeMs = runCatching { settings.resumeStart(chatId, messageId) }.getOrDefault(0L)
             if (resumeMs > 0) {
                 player?.seekTo(resumeMs)
                 resumeNotice = L.playerResumingFrom(Translator.messages.formatter.clock(resumeMs))
@@ -756,6 +764,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 .getOrDefault(TrackChoice())
             downmixChoice = runCatching { settings.downmixChoiceNow() }.getOrNull()
             volumeBoostOn = runCatching { settings.volumeBoostNow() }.getOrDefault(false)
+            skipSilence = runCatching { settings.skipSilenceNow() }.getOrDefault(false)
             subtitleStyle = runCatching { settings.subtitleStyleNow() }.getOrDefault(SubtitleStyle())
             applySubtitleStyle()
             // Only a video from a message has somewhere to keep an offset; a file opened from
@@ -1257,7 +1266,15 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** The speed button: every speed to pick from at once, rather than stepping through them. */
     fun pickSpeed() {
-        showSheet { it.showSpeed(playbackSpeed, ::setSpeed) }
+        showSheet { it.showSpeed(playbackSpeed, ::setSpeed, skipSilence, ::setSkipSilence) }
+    }
+
+    /** The speed sheet's Skip silence: on the sound already playing, and kept for every video. */
+    private fun setSkipSilence(on: Boolean) {
+        skipSilence = on
+        player?.skipSilenceEnabled = on
+        showGestureFeedback(if (on) L.playerSkipSilenceOn else L.playerSkipSilenceOff)
+        lifecycleScope.launch { runCatching { settings.setSkipSilence(on) } }
     }
 
     /**
@@ -1549,6 +1566,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 setHandleAudioBecomingNoisy(true)
                 setWakeMode(C.WAKE_MODE_LOCAL)
                 setPlaybackSpeed(playbackSpeed)
+                skipSilenceEnabled = skipSilence
                 videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
                 // Media3 only ever asks the display for a seamless rate switch. On a television
                 // whose viewer set "Match content frame rate" to always, the app asks itself,

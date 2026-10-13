@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.ResumeRewind
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.SupportReminder
@@ -98,6 +99,7 @@ fun SettingsPage(
     val toast = rememberToast()
     val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
     val autoplay by settings.autoplayNext.collectAsState(initial = true)
+    val resumeRewindMs by settings.resumeRewindMs.collectAsState(initial = ResumeRewind.DEFAULT_MS)
     val downloadFirst by settings.downloadBeforePlaying.collectAsState(initial = false)
     val openLast by settings.openLastChat.collectAsState(initial = false)
     val minSize by settings.minSizeBytes.collectAsState(initial = SizeFilter.DEFAULT_MIN)
@@ -164,6 +166,18 @@ fun SettingsPage(
                         onLess = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, -1)) } } },
                         onMore = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, 1)) } } },
                     )
+                }
+                // Four short choices, so all of them at once, as the theme row has them.
+                Setting(s.settingsResumeRewind, s.settingsResumeRewindDetail) {
+                    SingleChoiceSegmentedButtonRow {
+                        ResumeRewind.CHOICES_MS.forEachIndexed { index, choice ->
+                            SegmentedButton(
+                                selected = resumeRewindMs == choice,
+                                onClick = { scope.launch { settings.setResumeRewindMs(choice) } },
+                                shape = SegmentedButtonDefaults.itemShape(index, ResumeRewind.CHOICES_MS.size),
+                            ) { Text(ResumeRewind.label(choice)) }
+                        }
+                    }
                 }
 
                 Toggle(

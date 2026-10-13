@@ -34,6 +34,8 @@ private val AUTOPLAY_NEXT = booleanPreferencesKey("autoplay_next")
 private val DETAIL_FIRST = booleanPreferencesKey("detail_first")
 private val DOWNMIX_STEREO = booleanPreferencesKey("downmix_stereo")
 private val VOLUME_BOOST = booleanPreferencesKey("volume_boost")
+private val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
+private val RESUME_REWIND = longPreferencesKey("resume_rewind_ms")
 private val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
 private val REMOVE_AFTER_WATCHING = booleanPreferencesKey("remove_after_watching")
 private val TRICKPLAY = booleanPreferencesKey("trickplay")
@@ -385,6 +387,43 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /** Read before the player is built, so the first second of sound is already at its level. */
     suspend fun volumeBoostNow(): Boolean = prefs.data.first()[VOLUME_BOOST] ?: false
+
+    /**
+     * Skip silence, from the speed picker: the quiet stretches of a lecture or a talk played
+     * through at once. Off until turned on, then kept for every video.
+     *
+     * Android only. FFmpeg's silenceremove filter in mpv's audio chain drops samples without the
+     * picture following, so sound and picture drift apart; the mpv scripts that skip silence speed
+     * playback up through it instead, which is a feature of its own rather than a filter line.
+     */
+    val skipSilence: Flow<Boolean> = read { it[SKIP_SILENCE] ?: false }
+
+    suspend fun setSkipSilence(value: Boolean) {
+        prefs.edit { it[SKIP_SILENCE] = value }
+    }
+
+    /** Read before the player is built, so a lecture opens already skipping. */
+    suspend fun skipSilenceNow(): Boolean = prefs.data.first()[SKIP_SILENCE] ?: false
+
+    /**
+     * How far before the saved position a resumed video starts, one of [ResumeRewind.CHOICES_MS]
+     * (zero is off). A stored value off the list reads as the default.
+     */
+    val resumeRewindMs: Flow<Long> = read { ResumeRewind.sanitise(it[RESUME_REWIND]) }
+
+    suspend fun setResumeRewindMs(value: Long) {
+        prefs.edit { it[RESUME_REWIND] = ResumeRewind.sanitise(value) }
+    }
+
+    suspend fun resumeRewindNow(): Long = ResumeRewind.sanitise(prefs.data.first()[RESUME_REWIND])
+
+    /**
+     * Where a video with a saved position opens: that position, a few seconds earlier as the
+     * viewer has set ([ResumeRewind]), or zero for one without. Continue watching and the history
+     * keep the saved position itself; only the player starts from this.
+     */
+    suspend fun resumeStart(chatId: Long, messageId: Long): Long =
+        ResumeRewind.start(resumePosition(chatId, messageId), resumeRewindNow())
 
     // ---- the watch cache ---------------------------------------------------------------------
 
