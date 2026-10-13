@@ -9,13 +9,14 @@ import java.util.Properties
 /**
  * The poster and overview switches as this device knows them.
  *
- * [enabled] is off until the viewer turns it on: a lookup sends a video's cleaned name to TMDB,
- * TVmaze or AniList, which nobody should get without asking. [ownKey] is a TMDB key of the
+ * [enabled] is on unless the viewer turns it off (the user's call on 2026-10-13: posters are what make
+ * the grid readable). A lookup sends only a video's cleaned name to TMDB, TVmaze or AniList, and the
+ * privacy page says so. [ownKey] is a TMDB key of the
  * viewer's own, used instead of the build's. [refusedKey] is a fingerprint of a key TMDB refused,
  * so TMDB stays off for that key and comes back by itself when an update brings another.
  */
 data class MetaSettings(
-    val enabled: Boolean = false,
+    val enabled: Boolean = true,
     val ownKey: String = "",
     val refusedKey: String = "",
     val refusedAt: Long = 0,
@@ -44,7 +45,7 @@ class MetadataStore(private val file: File) {
         val p = Properties()
         runCatching { if (file.isFile) file.inputStream().use { p.load(it) } }
         return MetaSettings(
-            enabled = p.getProperty("enabled") == "true",
+            enabled = p.getProperty("enabled") != "false",
             ownKey = p.getProperty("own_key").orEmpty(),
             refusedKey = p.getProperty("refused_key").orEmpty(),
             refusedAt = p.getProperty("refused_at")?.toLongOrNull() ?: 0L,
