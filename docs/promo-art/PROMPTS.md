@@ -1,8 +1,12 @@
 # Promo artwork: prompts to generate
 
-8 images for the promo build's demo content and the site screenshots. Every title is invented: no real films, people, brands or logos.
+6 images for the promo build's demo content and the site screenshots. Every title is invented: no real films, people, brands or logos.
 
 Fewer images, more use from each: every image is wide and text-free. Claude crops posters out of it and letters the titles itself (sharp, spelt right, in TMPlayer's own font), uses it whole as the backdrop, and takes episode thumbnails from different crops. Lesson thumbnails, channel avatars, clips and the other demo titles use the app's own generated covers, as real Telegram files without art do, so they need no images.
+
+## For now: Unsplash stand-ins
+
+Until these are generated, the same six file names are filled with Unsplash photos (no people's faces), credited in `docs/promo-art/CREDITS.md`. Generating an image later only means saving it under the same name in `promo-art-src/` and running `scripts/promo-art.py` again.
 
 ## How to use this file
 
@@ -12,7 +16,7 @@ Fewer images, more use from each: every image is wide and text-free. Claude crop
 4. Check there is no stray text or watermark in the picture; regenerate if there is.
 5. Tick the box. When all are done, tell Claude: it crops, letters, converts to WebP, wires them into the promo app and redoes the screenshots and the social card.
 
-## Films (5): each becomes the film's backdrop and, cropped and lettered, its poster
+## Films (4): each becomes the film's backdrop and, cropped and lettered, its poster
 
 ### 1. `promo_saltwater_lanterns.png`
 
@@ -54,19 +58,9 @@ Paper Kingdoms (animated family)
 A whimsical city folded entirely from origami paper, a small paper fox standing on a paper bridge in the centre, paper birds and paper boats on a ribbon river, pastel colours, soft light, 3D animated film look. Wide 3:2 frame with the main subject centred, so a tall portrait crop from the middle still reads well; calm sky or space in the top third. Original cinematic artwork, rich colour grading, soft film grain, high detail. No text, no lettering, no logos, no watermarks, no real people or celebrity likeness, no brand names.
 ```
 
-### 5. `promo_neon_tiffin.png`
-
-Neon Tiffin (comedy)
-
-- [ ] done
-
-```text
-A cheerful food delivery rider on a scooter in the centre of a neon-lit Indian city street at night after rain, steel tiffin boxes stacked on the back, street food stalls, pink and cyan neon reflections, playful energy. Wide 3:2 frame with the main subject centred, so a tall portrait crop from the middle still reads well; calm sky or space in the top third. Original cinematic artwork, rich colour grading, soft film grain, high detail. No text, no lettering, no logos, no watermarks, no real people or celebrity likeness, no brand names.
-```
-
 ## Shows (2): one wide image each, cropped for the poster, the backdrop and the episode thumbnails
 
-### 6. `promo_harbour_lines.png`
+### 5. `promo_harbour_lines.png`
 
 Harbour Lines (drama series), key art
 
@@ -76,7 +70,7 @@ Harbour Lines (drama series), key art
 A container port at golden hour, tall cranes and stacked colourful containers, a young dock worker and an older ship captain seen from behind in the centre looking at a ship leaving the harbour, warm gold and steel blue. Wide 3:2 frame with the main subject centred, so a tall portrait crop from the middle still reads well; calm sky or space in the top third. Original cinematic artwork, rich colour grading, soft film grain, high detail. No text, no lettering, no logos, no watermarks, no real people or celebrity likeness, no brand names.
 ```
 
-### 7. `promo_skybound_academy.png`
+### 6. `promo_skybound_academy.png`
 
 Skybound Academy (anime series), key art
 
@@ -84,15 +78,5 @@ Skybound Academy (anime series), key art
 
 ```text
 Hand-drawn anime style: a floating island school with towers above a sea of clouds, students on small gliders and airships around it, bright blue midday sky. Wide 3:2 frame with the main subject centred, so a tall portrait crop from the middle still reads well; calm sky or space in the top third. Original cinematic artwork, rich colour grading, soft film grain, high detail. No text, no lettering, no logos, no watermarks, no real people or celebrity likeness, no brand names.
-```
-
-### 8. `promo_python_course.png`
-
-Python from Zero (study course) cover; the lesson thumbnails are drawn by the app
-
-- [ ] done
-
-```text
-A tidy desk with a laptop showing colourful code, a notebook and a cup of tea, soft daylight, friendly and modern, screen content abstract and unreadable. Wide 3:2 frame with the main subject centred, so a tall portrait crop from the middle still reads well; calm sky or space in the top third. Original cinematic artwork, rich colour grading, soft film grain, high detail. No text, no lettering, no logos, no watermarks, no real people or celebrity likeness, no brand names.
 ```
 
