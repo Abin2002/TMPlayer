@@ -38,7 +38,9 @@ private val DETAIL_FIRST = booleanPreferencesKey("detail_first")
 private val DOWNMIX_STEREO = booleanPreferencesKey("downmix_stereo")
 private val VOLUME_BOOST = booleanPreferencesKey("volume_boost")
 private val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
-private val RESUME_REWIND = longPreferencesKey("resume_rewind_ms")
+// Not "resume_...": that prefix is a resume point's, and the sweeps over resume points (the
+// broken-history prune at launch, Clear history) would take this setting with them.
+private val RESUME_REWIND = longPreferencesKey("rewind_on_resume_ms")
 private val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
 private val REMOVE_AFTER_WATCHING = booleanPreferencesKey("remove_after_watching")
 private val TRICKPLAY = booleanPreferencesKey("trickplay")
