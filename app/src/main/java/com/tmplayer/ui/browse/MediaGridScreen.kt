@@ -358,6 +358,8 @@ fun MediaGridScreen(
 
     // Whichever video's page is open, and nothing while none is.
     var showingDetailsOf by remember(chatId) { mutableStateOf<MediaItem?>(null) }
+    /** The show whose seasons and episodes are open over the grid. */
+    var openSeries by remember(chatId) { mutableStateOf<com.tmplayer.data.Series?>(null) }
     // Whichever video a long press is asking about: the quick menu, which leads to the page.
     var heldMenuOf by remember(chatId) { mutableStateOf<MediaItem?>(null) }
 
@@ -433,8 +435,23 @@ fun MediaGridScreen(
             } else {
                 COLUMNS
             }
-            // Every file on its own, episodes included: a chat lists what was posted, one by one.
-            val shelf = remember(list.items) { list.items.map { ShelfEntry.File(it) } }
+            // A show is one tile that opens its seasons and episodes, and a film posted several
+            // times over (720p, 1080p, HEVC) is one tile led by the copy the viewer already
+            // started, the rest a pick in its details. Not while searching or ticking videos:
+            // then every episode stands on its own, to be found or picked one by one.
+            val grouping = query.isBlank() && !selecting
+            val shelf = remember(list.items, watchProgress, grouping) {
+                val arranged = if (grouping) {
+                    SeriesShelf.arrange(list.items)
+                } else {
+                    SeriesShelf.foldFilmCopies(list.items).map { ShelfEntry.File(it) }
+                }
+                arranged.map { entry ->
+                    val film = (entry as? ShelfEntry.File)?.item?.takeIf { it.versions.size > 1 } ?: return@map entry
+                    val started = film.versions.firstOrNull { SettingsStore.progressKey(it.chatId, it.messageId) in watchProgress }
+                    if (started == null) entry else ShelfEntry.File(started.asVersion(film))
+                }
+            }
             val repeatedCaptions = remember(list.items) { MediaMapper.repeatedCaptionLines(list.items) }
             val feed = remember(shelf, list.sponsored) {
                 placeSponsored(shelf, list.sponsored)
@@ -531,7 +548,17 @@ fun MediaGridScreen(
                             when (entry) {
                                 is MediaFeedEntry.Media -> {
                                     val shelved = entry.item
-                                    val item = shelved.item
+                                    if (shelved is ShelfEntry.Show) {
+                                        SeriesCard(
+                                            series = shelved.series,
+                                            progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
+                                            onClick = { openSeries = shelved.series },
+                                            dense = dense,
+                                            onFocused = { standingOn = shelved.series.cover },
+                                            modifier = focusOf(shelved),
+                                        )
+                                    } else {
+                                    val item = (shelved as ShelfEntry.File).item
                                     MediaCard(
                                         item = item,
                                         watched = watchProgress[
@@ -547,6 +574,7 @@ fun MediaGridScreen(
                                         onFocused = { standingOn = item },
                                         modifier = focusOf(shelved),
                                     )
+                                    }
                                 }
                                 is MediaFeedEntry.Sponsored -> SponsoredCard(
                                     item = entry.item,
@@ -579,7 +607,16 @@ fun MediaGridScreen(
                             when (entry) {
                                 is MediaFeedEntry.Media -> {
                                     val shelved = entry.item
-                                    val item = shelved.item
+                                    if (shelved is ShelfEntry.Show) {
+                                        SeriesCard(
+                                            series = shelved.series,
+                                            progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
+                                            onClick = { openSeries = shelved.series },
+                                            onFocused = { standingOn = shelved.series.cover },
+                                            modifier = focusOf(shelved),
+                                        )
+                                    } else {
+                                    val item = (shelved as ShelfEntry.File).item
                                     MediaRow(
                                         item = item,
                                         captionLine = MediaMapper.captionLine(item, repeatedCaptions),
@@ -595,6 +632,7 @@ fun MediaGridScreen(
                                         onFocused = { standingOn = item },
                                         modifier = focusOf(shelved),
                                     )
+                                    }
                                 }
                                 is MediaFeedEntry.Sponsored -> SponsoredCard(
                                     item = entry.item,
@@ -608,6 +646,16 @@ fun MediaGridScreen(
                             }
                         }
                     }
+                }
+
+                openSeries?.let { series ->
+                    SeriesOpened(
+                        series = series,
+                        watch = watch,
+                        onPlay = { onPlay(it) },
+                        onDismiss = { openSeries = null },
+                        onLongClick = { heldMenuOf = it },
+                    )
                 }
 
                 heldMenuOf?.let { item ->
@@ -2114,7 +2162,8 @@ private fun MetaLine(
 ) {
     val s = LocalStrings.current
     val duration = s.formatter.duration(item.durationSec.toLong())
-    val size = s.formatter.size(item.sizeBytes)
+    // A tile standing for several copies says how many rather than one copy's size.
+    val size = if (item.versions.size > 1) s.detailVersions(item.versions.size) else s.formatter.size(item.sizeBytes)
     val resume = watched
         ?.takeIf { it.positionMs > 0 }
         ?.let { s.gridStoppedAt(s.formatter.clock(it.positionMs)) }

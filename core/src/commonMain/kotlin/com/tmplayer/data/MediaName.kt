@@ -101,7 +101,7 @@ object MediaName {
         val normalised = stripDecoration(stripExtension(text)).replace(SEPARATORS, " ").replace(WHITESPACE, " ").trim()
         val code = (PAIRED_EPISODE + EPISODE_ONLY + BARE_EPISODE)
             .mapNotNull { it.find(normalised) }
-            .plus(listOfNotNull(DASHED_EPISODE.find(normalised)?.takeUnless { looksLikeYear(it) }))
+            .plus(listOfNotNull(DASHED_EPISODE.find(normalised)?.takeUnless { notAnEpisode(it, normalised) }))
             .minByOrNull { it.range.first }
             ?: return null
         // A file that holds two episodes, "S01E01-E02", names the second straight after the first.
@@ -226,7 +226,7 @@ object MediaName {
             }
 
         val season = SEASON_ONLY.find(text)
-        val number = EPISODE_ONLY.find(text) ?: DASHED_EPISODE.find(text)?.takeUnless { looksLikeYear(it) }
+        val number = EPISODE_ONLY.find(text) ?: DASHED_EPISODE.find(text)?.takeUnless { notAnEpisode(it, text) }
         if (season == null && number == null) return null
         return Episode(
             season = season?.groupValues?.get(1)?.toIntOrNull(),
@@ -235,8 +235,14 @@ object MediaName {
         )
     }
 
-    /** "Show - 2019" is a year, not episode 2019; the dashed form is otherwise four digits wide. */
-    private fun looksLikeYear(match: MatchResult): Boolean {
+    /**
+     * "Show - 2019" is a year, not episode 2019. A number after the release tags, "Film 2026
+     * HDRip - 1080" or "- x264 - AAC - 40", is a picture height or what is left of a name Telegram
+     * cut short, since a fansub's "One Piece - 1080" puts the number before any tag. Anime run to
+     * four figures, so a bare 1080 with nothing in front of it is an episode.
+     */
+    private fun notAnEpisode(match: MatchResult, text: String): Boolean {
+        if (TAGS.containsMatchIn(text.substring(0, match.range.first))) return true
         val digits = match.groupValues[1]
         return digits.length == 4 && digits.toInt() in MIN_YEAR..2099
     }
@@ -359,7 +365,7 @@ object MediaName {
      * The fansub form: "Show - 02", "Show - 1071", "Show - 02v2". Spaces on both sides of the dash
      * and at least two digits, which is how every group pads the number, so "Part - 2" stays a
      * title. A resolution never matches, because the number has to end the word, and a year is
-     * turned away by [looksLikeYear].
+     * turned away by [notAnEpisode].
      */
     private val DASHED_EPISODE = Regex("""\s-\s(\d{2,4})(?:v\d)?(?=\s|$)""")
 

@@ -338,14 +338,27 @@ object MediaMapper {
         val name = fileName?.lowercase() ?: return emptyList()
         return when {
             RESOLUTION_4K.containsMatchIn(name) -> listOf("4K")
-            name.contains("1080p") || name.contains("1080i") -> listOf("1080p")
-            name.contains("720p") -> listOf("720p")
+            name.contains("1080p") || name.contains("1080i") || (BARE_1080.containsMatchIn(name) && RELEASE_WORDS.containsMatchIn(name)) -> listOf("1080p")
+            name.contains("720p") || (BARE_720.containsMatchIn(name) && RELEASE_WORDS.containsMatchIn(name)) -> listOf("720p")
             name.contains("480p") || name.contains("360p") -> listOf("SD")
             else -> emptyList()
         }
     }
 
     private val RESOLUTION_4K = Regex("""\b(2160p|4k|uhd)\b""")
+
+    /**
+     * "HDRip - 1080.mkv": the height with its "p" left off, which some uploaders do. Only as a
+     * word of its own, so a 1920x1080 or a bitrate with digits round it is not read as one.
+     */
+    private val BARE_1080 = Regex("""(?<![\w])1080(?![\w])""")
+    private val BARE_720 = Regex("""(?<![\w])720(?![\w])""")
+
+    /**
+     * Only a release names its height bare, "HDRip - 1080". Without one of these beside it the
+     * number is an episode: anime run to four figures, and "One Piece - 1080" is not a 1080p file.
+     */
+    private val RELEASE_WORDS = Regex("""(rip|web|blu-?ray|x26[45]|h\.?26[45]|hevc|avc|aac|hq)""")
 
     /** A name a person chose beats a caption, a caption beats a made-up name, and either beats nothing. */
     fun displayTitle(fileName: String?, caption: String?, fallback: String): String {

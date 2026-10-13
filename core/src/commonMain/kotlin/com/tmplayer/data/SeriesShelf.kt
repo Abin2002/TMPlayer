@@ -128,23 +128,42 @@ object SeriesShelf {
             .filterValues { files -> files.distinctBy { (it.name.season ?: 1) to it.episode }.size >= MIN_EPISODES }
             .keys
 
+        // The same season uploaded twice under two names, "Kerala Crime Files" and "Kerala Crime
+        // Files Shiju Parayil Veedu Neendakara", is one show: the longer name joins the shorter
+        // when it starts with it and most of its episodes are ones the shorter already has. A
+        // sequel under a longer name has episodes of its own and stays apart.
+        val numbersOf = strict.filterNotNull().groupBy { it.key }
+            .mapValues { (_, files) -> files.mapTo(HashSet()) { (it.name.season ?: 1) to it.episode } }
+        val alias = showKeys.associateWith { key ->
+            val mine = numbersOf[key].orEmpty()
+            showKeys.filter { other -> other != key && key.startsWith("$other ") && other.split(' ').size >= 2 }
+                .maxByOrNull { it.length }
+                ?.takeIf { other -> mine.count { it in numbersOf[other].orEmpty() } * 2 >= mine.size }
+                ?: key
+        }
+
         // Everything else gets a second look, now that the chat has said which shows it holds.
         val placedUnder = items.indices.map { index ->
             val found = strict[index] ?: loose(items[index])
             when {
                 found == null -> null
-                found.key in showKeys -> found
-                else -> joining(found, showKeys)?.let { key -> Found(found.item, key, found.name, found.episode, emptyList()) }
+                found.key in showKeys -> alias.getValue(found.key).let { key ->
+                    if (key == found.key) found else Found(found.item, key, found.name, found.episode, emptyList())
+                }
+                else -> joining(found, showKeys)?.let { key -> Found(found.item, alias.getValue(key), found.name, found.episode, emptyList()) }
             }
         }
         val shows = placedUnder.filterNotNull()
             .groupBy { it.key }
             .mapValues { (key, files) -> series(key, files) }
 
-        // What is left over and names a film: copies of one film fold into one tile.
+        // What is left over and names a film, or one episode of a show the chat has no more of:
+        // copies of it (a 720p and a 1080p of Loki S02E05) fold into one tile.
+        fun copyKey(index: Int): String? = filmKey(items[index])
+            ?: strict[index]?.let { "episode:${it.key}|${it.name.season ?: 1}|${it.episode}" }
         val films = items.indices
             .filter { placedUnder[it] == null }
-            .mapNotNull { index -> filmKey(items[index])?.let { index to it } }
+            .mapNotNull { index -> copyKey(index)?.let { index to it } }
             .groupBy({ it.second }, { items[it.first] })
             .filterValues { it.size >= 2 }
             .mapValues { (_, copies) -> copies.sortedWith(compareByDescending<MediaItem> { it.date }.thenBy { it.messageId }) }
@@ -153,15 +172,34 @@ object SeriesShelf {
         return items.mapIndexedNotNull { index, item ->
             val key = placedUnder[index]?.key
             val show = key?.let { shows[it] }
-            val film = if (show == null) filmKey(item)?.let { films[it] } else null
+            val copies = if (show == null) copyKey(index) else null
+            val film = copies?.let { films[it] }
             when {
                 film != null -> {
-                    if (placed.add("film:" + filmKey(item))) ShelfEntry.File(film.first().copy(versions = film)) else null
+                    if (placed.add("film:$copies")) ShelfEntry.File(film.first().copy(versions = film)) else null
                 }
                 show == null -> ShelfEntry.File(item)
                 placed.add(key) -> ShelfEntry.Show(show)
                 else -> null
             }
+        }
+    }
+
+    /**
+     * [items] with the copies of each film folded into one, and nothing else touched: what a
+     * chat's grid lists. Episodes stay one tile apiece, in the chat's order, since a chat lists
+     * what was posted; only a film posted five times over (720p, 1080p, HEVC, a small x264) is one
+     * tile, its [MediaItem.versions] the copies, newest first. It sits where its newest copy was.
+     */
+    fun foldFilmCopies(items: List<MediaItem>): List<MediaItem> {
+        val grouped = arrange(items).mapNotNull { (it as? ShelfEntry.File)?.item?.takeIf { item -> item.versions.size > 1 } }
+        if (grouped.isEmpty()) return items
+        val groupOf = HashMap<String, MediaItem>()
+        grouped.forEach { film -> film.versions.forEach { groupOf[it.id] = film } }
+        val placed = HashSet<String>()
+        return items.mapNotNull { item ->
+            val film = groupOf[item.id] ?: return@mapNotNull item
+            if (placed.add(film.id)) film else null
         }
     }
 

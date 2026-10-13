@@ -748,15 +748,36 @@ fun SeriesPanel(
         }
         TrailerHost(trailers)
         Spacer(Modifier.height(12.dp))
+        // An anime season runs to hundreds of episodes, and scrolling to the 850th is no way to
+        // find it. Past [EPISODE_RANGE] the season is cut into ranges, opened on the one holding
+        // the next episode to watch, and the list opens on that episode rather than at the top.
+        val ranges = remember(shown) {
+            if (shown.episodes.size > EPISODE_RANGE) shown.episodes.chunked(EPISODE_RANGE) else emptyList()
+        }
+        var rangeAt by remember(shown) {
+            mutableIntStateOf(ranges.indexOfFirst { range -> next != null && range.any { it.sameAs(next) } }.coerceAtLeast(0))
+        }
+        val listed = ranges.getOrNull(rangeAt) ?: shown.episodes
+        if (ranges.isNotEmpty()) {
+            EpisodeRanges(
+                ranges = ranges,
+                selected = rangeAt,
+                onSelect = { rangeAt = it },
+                modifier = Modifier.padding(contentPadding.horizontalOnly()).padding(bottom = 8.dp),
+            )
+        }
         val list = rememberLazyListState()
-        LaunchedEffect(shown.number) { list.scrollToItem(0) }
+        LaunchedEffect(shown.number, rangeAt) {
+            val at = if (next != null) listed.indexOfFirst { it.sameAs(next) } else -1
+            list.scrollToItem(at.coerceAtLeast(0))
+        }
         LazyColumn(
             state = list,
             modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
             contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            items(shown.episodes, key = { it.item.id }) { episode ->
+            items(listed, key = { it.item.id }) { episode ->
                 val chosen = if (next != null && episode.sameAs(next)) next.item else watch.pick(episode, progress)
                 EpisodeRow(
                     episode = episode,
@@ -781,6 +802,62 @@ fun SeriesPanel(
         }
     }
 }
+
+/**
+ * A long season's episodes in ranges of [EPISODE_RANGE], "1-100", "101-200", drawn like the
+ * season tabs. Numbered by the episodes in each range, so a season with gaps says what it holds.
+ */
+@Composable
+private fun EpisodeRanges(
+    ranges: List<List<SeriesEpisode>>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tv = !isTouch()
+    Row(
+        modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ranges.forEachIndexed { index, range ->
+            val interactions = remember { MutableInteractionSource() }
+            val focused by interactions.collectIsFocusedAsState()
+            val chosen = index == selected
+            val shape = RoundedCornerShape(Corner.Medium)
+            Text(
+                "${range.first().episode}-${range.last().episode}",
+                style = if (tv) MaterialTheme.typography.titleSmall else MaterialTheme.typography.labelLarge,
+                fontWeight = if (chosen) FontWeight.SemiBold else FontWeight.Normal,
+                color = when {
+                    focused -> Tone.onFocusFill
+                    chosen -> Tone.accent
+                    else -> Tone.text
+                },
+                maxLines = 1,
+                modifier = Modifier
+                    .clip(shape)
+                    .background(
+                        when {
+                            focused -> Tone.focusFill
+                            chosen -> Tone.accent.copy(alpha = 0.18f)
+                            else -> Tone.surfaceHigh
+                        },
+                    )
+                    .border(if (chosen && !focused) 1.5.dp else 0.dp, if (chosen && !focused) Tone.accent else Color.Transparent, shape)
+                    .focusRing(focused, shape)
+                    .semantics {
+                        role = Role.Tab
+                        this.selected = chosen
+                    }
+                    .clickable(interactionSource = interactions, indication = null) { onSelect(index) }
+                    .padding(horizontal = if (tv) 18.dp else 14.dp, vertical = if (tv) 10.dp else 8.dp),
+            )
+        }
+    }
+}
+
+/** Episodes per range once a season is longer than this; see [EpisodeRanges]. */
+private const val EPISODE_RANGE = 100
 
 @Composable
 private fun PlayButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {

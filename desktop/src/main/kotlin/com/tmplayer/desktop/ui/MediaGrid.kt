@@ -154,6 +154,12 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         val model = rememberViewModel(Triple(chat.id, min, max)) { MediaListViewModel(chat.id, min, max, onSearched = { state.settings.addRecentSearch(it) }, downloadedIds = { DownloadIndex.presentIds(state.settings) }, topicMemory = state.settings.topicMemory()) }
         val ui by model.state.collectAsState()
         var query by remember(chat.id) { mutableStateOf("") }
+        var openSeries by remember(chat.id) { mutableStateOf<com.tmplayer.data.Series?>(null) }
+        // A show's seasons and episodes take the page, as they do from Home; Close comes back here.
+        openSeries?.let { shown ->
+            SeriesPage(state, shown, rememberSeriesWatch(state), onClose = { openSeries = null })
+            return@Column
+        }
         // The grid's keyboard focus, once the grid exists; the search field's Down arrow enters it.
         var gridNav by remember(chat.id) { mutableStateOf<KeyboardNav?>(null) }
         LaunchedEffect(model, query) {
@@ -190,9 +196,28 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             val grid = rememberLazyGridState()
             LoadMoreNearEnd(grid, enabled = !content.endReached && !content.loadingMore) { model.loadMore() }
             val ad = content.sponsored?.messages?.firstOrNull()
+            // A show as one poster that opens its seasons, and copies of one film (720p, 1080p,
+            // HEVC) as one poster with the rest a pick in its details. While searching, every
+            // episode stands on its own so the one searched for can be found.
+            val grouping = query.isBlank()
+            val arranged = remember(content.items, grouping) {
+                if (grouping) {
+                    com.tmplayer.data.SeriesShelf.arrange(content.items)
+                } else {
+                    com.tmplayer.data.SeriesShelf.foldFilmCopies(content.items).map { com.tmplayer.data.ShelfEntry.File(it) }
+                }
+            }
+            val cells = remember(arranged) {
+                arranged.map { if (it is com.tmplayer.data.ShelfEntry.Show) it.series.cover else (it as com.tmplayer.data.ShelfEntry.File).item }
+            }
+            val shows = remember(arranged) {
+                arranged.filterIsInstance<com.tmplayer.data.ShelfEntry.Show>().associate { it.series.cover.id to it.series }
+            }
             VideoGrid(
                 state = state,
-                items = content.items,
+                items = cells,
+                series = shows,
+                onOpenSeries = { openSeries = it },
                 chatTitle = chat.title,
                 grid = grid,
                 onNav = { gridNav = it },
@@ -217,7 +242,11 @@ internal fun VideoGrid(
     onNav: (KeyboardNav) -> Unit = {},
     header: (@Composable () -> Unit)? = null,
     loadingMore: Boolean = false,
+    /** Shows by the id of their cover, the item standing in for each in [items]. */
+    series: Map<String, com.tmplayer.data.Series> = emptyMap(),
+    onOpenSeries: (com.tmplayer.data.Series) -> Unit = {},
 ) {
+    val watch = if (series.isEmpty()) null else rememberSeriesWatch(state)
     // Every file on its own, episodes included: a chat lists what was posted, one by one.
     val cells by rememberUpdatedState(items)
     val headerItems by rememberUpdatedState(if (header != null) 1 else 0)
@@ -241,7 +270,12 @@ internal fun VideoGrid(
                 item(key = "sponsored", span = { GridItemSpan(maxLineSpan) }) { header() }
             }
             itemsIndexed(items, key = { _, it -> "media-${it.id}" }) { index, item ->
-                MediaTile(state, item, chatTitle, nav, index)
+                val show = series[item.id]
+                if (show != null && watch != null) {
+                    SeriesPoster(show, watch, onOpen = { onOpenSeries(show) }, nav = nav, index = index)
+                } else {
+                    MediaTile(state, item, chatTitle, nav, index)
+                }
             }
             if (loadingMore) {
                 item(key = "more", span = { GridItemSpan(maxLineSpan) }) {
@@ -443,7 +477,7 @@ internal fun MediaTile(
         },
         subtitle = buildString {
             if (item.durationSec > 0) append(MediaMapper.formatDuration(item.durationSec)).append("  ·  ")
-            append(MediaMapper.formatSize(item.sizeBytes))
+            append(if (item.versions.size > 1) s.detailVersions(item.versions.size) else MediaMapper.formatSize(item.sizeBytes))
             item.qualityTags.firstOrNull()?.let { append("  ·  ").append(it) }
             if (WatchedWords.showsWatched(point?.fraction, finished)) append("  ·  ").append(s.watchedBadge)
         },
@@ -626,7 +660,9 @@ internal fun Poster(
             }
         }
         // Two lines, always: a short name reserves the second so the subtitles across a row stay level.
-        Text(item.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, minLines = 2, overflow = TextOverflow.Ellipsis)
+        // A poster for several copies of one film is named for the film, not for its newest file.
+        val title = if (item.versions.size > 1) remember(item.id) { com.tmplayer.data.SeriesShelf.filmTitle(item) } else item.title
+        Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 2, minLines = 2, overflow = TextOverflow.Ellipsis)
         Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Tone.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

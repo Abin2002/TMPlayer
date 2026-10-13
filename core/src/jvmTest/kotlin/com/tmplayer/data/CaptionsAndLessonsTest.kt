@@ -101,4 +101,68 @@ class CaptionsAndLessonsTest {
         assertNull(EpisodeNeighbours.showOf(film))
         assertNull(EpisodeNeighbours.around(film, listOf(film, video("Other.Film.2021.mkv"))).next)
     }
+
+    @Test
+    fun `a height written without its p still gets a badge`() {
+        assertEquals(listOf("1080p"), MediaMapper.qualityTags("Pradhama Drishtiya Kuttakkar 2026 Malayalam HQ HDRip - 1080.mkv"))
+        assertEquals(listOf("720p"), MediaMapper.qualityTags("Some Film 2026 - 720 - x264.mkv"))
+        assertEquals(emptyList<String>(), MediaMapper.qualityTags("Khalifa The Ruler 2026 Malayalam HQ HDRip - x264 - AAC - 40.mkv"))
+        assertEquals(emptyList<String>(), MediaMapper.qualityTags("clip_10800.mp4"))
+    }
+
+    @Test
+    fun `copies of one film fold into one tile and episodes stay apart`() {
+        val items = listOf(
+            video("Pradhama Drishtiya Kuttakkar 2026 Malayalam HQ HDRip - 720p.mkv"),
+            video("Harbour.Notes.S01E02.720p.mkv"),
+            video("Pradhama Drishtiya Kuttakkar 2026 Malayalam HQ HDRip - 1080.mkv"),
+            video("Harbour.Notes.S01E01.720p.mkv"),
+            video("Pradhama.Drishtiya.Kuttakkar.2026.720p.NF.WEB-DL.DD+5.1.x264.mkv"),
+            video("Khalifa The Ruler 2026 Malayalam HQ HDRip - 720p - HEVC - x.mkv"),
+            video("Khalifa The Ruler 2026 Malayalam HQ HDRip - x264 - AAC - 40.mkv"),
+        )
+        val folded = SeriesShelf.foldFilmCopies(items)
+        assertEquals(4, folded.size)
+        assertEquals(3, folded[0].versions.size)
+        assertEquals("Harbour.Notes.S01E02.720p.mkv", folded[1].fileName)
+        assertEquals("Harbour.Notes.S01E01.720p.mkv", folded[2].fileName)
+        assertEquals(2, folded[3].versions.size)
+    }
+
+    @Test
+    fun `one season uploaded under a longer name joins the shorter show`() {
+        val short = (1..3).map { video("Kerala_Crime_Files_S01E0${it}_Day_${it}_720p_DSNP_WEB_DL_HEVC.mkv") }
+        val long = (1..3).map { video("Kerala_Crime_Files_Shiju_Parayil_Veedu_Neendakara_S01E0${it}_Day_$it.mkv") }
+        val shows = SeriesShelf.arrange(short + long).filterIsInstance<ShelfEntry.Show>()
+        assertEquals(1, shows.size)
+        assertEquals(3, shows[0].series.episodeCount)
+        assertEquals(2, shows[0].series.episodes.first().copies.size)
+    }
+
+    @Test
+    fun `a sequel under a longer name stays its own show`() {
+        val first = (1..3).map { video("Harbour.Notes.S01E0$it.mkv") }
+        val sequel = (1..3).map { video("Harbour.Notes.New.Tides.S02E0$it.mkv") }
+        assertEquals(2, SeriesShelf.arrange(first + sequel).filterIsInstance<ShelfEntry.Show>().size)
+    }
+
+    @Test
+    fun `copies of a lone episode fold into one tile`() {
+        val items = listOf(
+            video("Loki (2023) S02E05 [ ScienceFiction ] 720p.mkv"),
+            video("Loki (2023) S02E05 [ ScienceFiction ] 1080p.mkv"),
+        )
+        val folded = SeriesShelf.foldFilmCopies(items)
+        assertEquals(1, folded.size)
+        assertEquals(2, folded[0].versions.size)
+    }
+
+    @Test
+    fun `a four figure anime episode is an episode, not a picture height`() {
+        assertEquals(emptyList<String>(), MediaMapper.qualityTags("[SubsPlease] One Piece - 1080 (720p) [ABCD1234].mkv").filter { it == "1080p" })
+        val items = (1078..1080).map { video("[SubsPlease] One Piece - $it (1080p) [ABCD1234].mkv") }
+        val show = SeriesShelf.arrange(items).filterIsInstance<ShelfEntry.Show>().single().series
+        assertEquals(3, show.episodeCount)
+        assertEquals(1080, show.episodes.last().episode)
+    }
 }

@@ -426,7 +426,7 @@ private fun ActionPills(
  * download line and the facts all speak of that copy. Nothing when the film was posted once.
  */
 @Composable
-private fun Versions(item: MediaItem, onOpenItem: ((MediaItem) -> Unit)?) {
+internal fun Versions(item: MediaItem, onOpenItem: ((MediaItem) -> Unit)?) {
     if (item.versions.size <= 1 || onOpenItem == null) return
     val s = LocalStrings.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

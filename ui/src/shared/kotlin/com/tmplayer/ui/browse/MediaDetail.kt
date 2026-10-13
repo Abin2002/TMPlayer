@@ -343,6 +343,9 @@ fun MediaDetailPanel(
             }
         }
 
+        // A film the chat posted several times over: every copy by quality and size, one click away.
+        Versions(item, onOpenItem)
+
         DetailFacts(item, facts, s, overview ?: metaOverview, meta.takeIf { overview == null && metaOverview != null })
 
         if (meta != null && extras != null) {
