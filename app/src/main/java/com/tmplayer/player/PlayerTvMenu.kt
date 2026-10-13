@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
@@ -82,6 +83,9 @@ class PlayerTvMenu(
     /** Whether Mark as watched is offered at all, and whether the video is on the list already. */
     private val markWatched: () -> Boolean = { false },
     private val watched: () -> Boolean = { false },
+    /** Whether the bookmark lines are offered (the video came from a message), and how many it has. */
+    private val bookmarks: () -> Boolean = { false },
+    private val bookmarkCount: () -> Int = { 0 },
     /** Whether Open in another app is offered, asked each time the menu opens. */
     private val openInAnotherApp: () -> Boolean = { true },
     /** Whether volume boost is on, for the line's detail. */
@@ -135,6 +139,7 @@ class PlayerTvMenu(
                     saveToDownloads(),
                     markWatched(),
                     openInAnotherApp(),
+                    bookmarks(),
                 ).map { action(it) },
                 onDismiss = ::close,
                 onClose = ::close,
@@ -203,6 +208,13 @@ class PlayerTvMenu(
                     detail = s.playerMarkWatchedDetail,
                 ) { choose(entry) }
             }
+            // Saved at once, without the keyboard: a note is for later, from Bookmarks.
+            PlayerMenuEntry.AddBookmark -> MenuAction(s.playerAddBookmark, Icons.Filled.Add) { choose(entry) }
+            PlayerMenuEntry.Bookmarks -> MenuAction(
+                label = s.playerBookmarks,
+                icon = TmIcons.Bookmark,
+                detail = bookmarkCount().takeIf { it > 0 }?.let { s.playerBookmarksCount(it) },
+            ) { choose(entry) }
             PlayerMenuEntry.PictureInPicture ->
                 MenuAction(s.playerPictureInPicture, ImageVector.vectorResource(R.drawable.ic_pip)) { choose(entry) }
             PlayerMenuEntry.OpenInAnotherApp ->

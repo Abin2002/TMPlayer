@@ -110,3 +110,21 @@ private object WatchedFile {
 
 /** Every screen builds its own [WatchedStore] from a context; they all share [WatchedFile]. */
 fun WatchedStore(context: Context): WatchedStore = WatchedStore(WatchedFile.get(context))
+
+/**
+ * The bookmarks' own DataStore, opened once per process for the reason [WatchedFile] is:
+ * `filesDir/datastore/bookmarks.preferences_pb`, beside the Watched list.
+ */
+private object BookmarkFile {
+    @Volatile
+    private var store: DataStore<Preferences>? = null
+
+    fun get(context: Context): DataStore<Preferences> = store ?: synchronized(this) {
+        store ?: BookmarkStore.openDataStore(
+            File(context.applicationContext.filesDir, "datastore/${BookmarkStore.FILE_NAME}"),
+        ).also { store = it }
+    }
+}
+
+/** Every screen builds its own [BookmarkStore] from a context; they all share [BookmarkFile]. */
+fun BookmarkStore(context: Context): BookmarkStore = BookmarkStore(BookmarkFile.get(context))

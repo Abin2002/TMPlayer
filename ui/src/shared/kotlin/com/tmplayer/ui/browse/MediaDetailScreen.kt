@@ -92,6 +92,7 @@ import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Danger
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.focusRing
+import com.tmplayer.data.Bookmark
 import com.tmplayer.data.DetailAction
 
 /**
@@ -120,15 +121,18 @@ fun MediaDetailScreen(
     modifier: Modifier = Modifier,
     firstAction: FocusRequester? = null,
     onOpenItem: ((MediaItem) -> Unit)? = null,
+    /** This video's bookmarks, under the actions; each opens the player at its moment. */
+    bookmarks: List<Bookmark> = emptyList(),
+    onOpenBookmark: ((Bookmark) -> Unit)? = null,
 ) {
     val meta = rememberMeta(item)
     val extras = rememberMetaExtras(meta)
     BoxWithConstraints(modifier.fillMaxSize().background(Tone.background)) {
         val wide = maxWidth > maxHeight
         if (wide) {
-            CinemaLayout(item, chatTitle, watched, finished, rows, meta, extras, maxHeight, firstAction, onOpenItem)
+            CinemaLayout(item, chatTitle, watched, finished, rows, meta, extras, maxHeight, firstAction, onOpenItem, bookmarks, onOpenBookmark)
         } else {
-            StackedLayout(item, chatTitle, watched, finished, rows, meta, extras, firstAction, onOpenItem)
+            StackedLayout(item, chatTitle, watched, finished, rows, meta, extras, firstAction, onOpenItem, bookmarks, onOpenBookmark)
         }
         CloseButton(
             onClose,
@@ -152,6 +156,8 @@ private fun CinemaLayout(
     height: Dp,
     firstAction: FocusRequester?,
     onOpenItem: ((MediaItem) -> Unit)?,
+    bookmarks: List<Bookmark>,
+    onOpenBookmark: ((Bookmark) -> Unit)?,
 ) {
     val tv = !isTouch()
     val scroll = rememberScrollState()
@@ -198,6 +204,8 @@ private fun CinemaLayout(
                 }
                 Spacer(Modifier.height(if (tv) 8.dp else 4.dp))
             }
+            // Just under the first screen, so a long list never pushes the title off the top.
+            Box(Modifier.widthIn(max = 720.dp)) { DetailBookmarks(bookmarks, onOpenBookmark) }
             BelowTheFold(item, meta, extras, onOpenItem, Modifier.bringIntoViewRequester(episodes))
             Spacer(Modifier.height(24.dp))
         }
@@ -223,6 +231,8 @@ private fun StackedLayout(
     extras: MetaExtras?,
     firstAction: FocusRequester?,
     onOpenItem: ((MediaItem) -> Unit)?,
+    bookmarks: List<Bookmark>,
+    onOpenBookmark: ((Bookmark) -> Unit)?,
 ) {
     val scroll = rememberScrollState()
     val episodes = remember { BringIntoViewRequester() }
@@ -245,6 +255,7 @@ private fun StackedLayout(
                 TitleBlock(item, chatTitle, watched, finished, meta, extras, large = false, progress = false)
                 ActionPills(rows, meta, extras, firstAction, primaryFullWidth = true, onEpisodes = episodesButton(item, meta, episodes))
                 Versions(item, onOpenItem)
+                DetailBookmarks(bookmarks, onOpenBookmark)
             }
             BelowTheFold(item, meta, extras, onOpenItem, Modifier.bringIntoViewRequester(episodes))
             Spacer(Modifier.height(24.dp))

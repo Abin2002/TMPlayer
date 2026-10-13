@@ -134,7 +134,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [ ] CP52 Course progress: "12 of 40 watched" on lecture series and topics (batch 1)
 - [ ] CP53 Backup and restore settings, lists and progress to a file (batch 2)
 - [ ] CP54 Updates feed: new episodes of shows being watched, badges on tiles (batch 2)
-- [ ] CP55 Timestamped bookmarks with notes (batch 2)
+- [x] CP55 Timestamped bookmarks with notes (batch 2)
 - [ ] CP56 Android chapters, A-B loop and frame step (desktop has them since CP08) (batch 2)
 - [ ] CP57 TV screensaver, PIN lock for settings and a kids lock (batch 2)
 - [ ] CP58 Skip silence, rewind a few seconds on resume (batch 2)

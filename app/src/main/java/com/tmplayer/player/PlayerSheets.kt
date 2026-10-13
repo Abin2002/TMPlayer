@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -27,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.tmplayer.data.Bookmark
+import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.components.ChoiceLine
 import com.tmplayer.ui.components.ChoiceList
 import com.tmplayer.ui.components.ChoiceSheet
@@ -54,11 +58,19 @@ class PlayerSheets(
     root: ViewGroup,
     private val onClosed: () -> Unit,
 ) {
+    /** Whether the device is driven by touch, read once: the bookmark list's Add asks for a note only there. */
+    private val isTouchHost = !com.tmplayer.data.FormFactor.isTv(activity)
+
     private sealed interface Sheet {
         class Speed(val current: Float, val onPick: (Float) -> Unit) : Sheet
         class Shape(val current: VideoScale, val onPick: (VideoScale) -> Unit) : Sheet
         class Sleep(val running: String?, val chosen: Int?, val onPick: (Int?) -> Unit) : Sheet
         class Details(val title: String, val lines: List<String>) : Sheet
+        class Bookmarks(val actions: BookmarkSheetActions) : Sheet
+        class BookmarkActions(val mark: Bookmark, val actions: BookmarkSheetActions) : Sheet
+
+        /** A note for a new bookmark at [positionMs] ([editing] null), or for [editing]. */
+        class Note(val positionMs: Long, val editing: Bookmark?, val actions: BookmarkSheetActions, val fromList: Boolean) : Sheet
     }
 
     private val sheet = mutableStateOf<Sheet?>(null)
@@ -88,6 +100,16 @@ class PlayerSheets(
 
     fun showDetails(title: String, lines: List<String>) {
         sheet.value = Sheet.Details(title, lines)
+    }
+
+    /** The video's bookmarks; the list follows [BookmarkSheetActions.bookmarks] while it is up. */
+    fun showBookmarks(actions: BookmarkSheetActions) {
+        sheet.value = Sheet.Bookmarks(actions)
+    }
+
+    /** The note for a new bookmark at [positionMs], straight from the overflow. */
+    fun showNewBookmark(positionMs: Long, actions: BookmarkSheetActions) {
+        sheet.value = Sheet.Note(positionMs, editing = null, actions = actions, fromList = false)
     }
 
     private fun close() {
@@ -120,6 +142,54 @@ class PlayerSheets(
                 onClose = ::close,
             )
             is Sheet.Details -> PlaybackDetailsSheet(shown.title, shown.lines, onClose = ::close)
+            is Sheet.Bookmarks -> {
+                val actions = shown.actions
+                val list by actions.bookmarks.collectAsState()
+                BookmarksSheet(
+                    bookmarks = list,
+                    onAdd = {
+                        // The television saves at once, without the keyboard; the phone asks for a note.
+                        val at = actions.position()
+                        if (isTouchHost) {
+                            sheet.value = Sheet.Note(at, editing = null, actions = actions, fromList = true)
+                        } else {
+                            actions.add(at, "")
+                        }
+                    },
+                    onPick = { sheet.value = Sheet.BookmarkActions(it, actions) },
+                    onDismiss = ::close,
+                    onClose = ::close,
+                )
+            }
+            is Sheet.BookmarkActions -> {
+                val actions = shown.actions
+                val back = { sheet.value = Sheet.Bookmarks(actions) }
+                BookmarkActionsSheet(
+                    mark = shown.mark,
+                    onPlay = { close(); actions.jump(shown.mark) },
+                    onNote = { sheet.value = Sheet.Note(shown.mark.positionMs, shown.mark, actions, fromList = true) },
+                    onDelete = { actions.delete(shown.mark); back() },
+                    onDismiss = back,
+                    onClose = ::close,
+                )
+            }
+            is Sheet.Note -> {
+                val actions = shown.actions
+                val back = { if (shown.fromList) sheet.value = Sheet.Bookmarks(actions) else close() }
+                val s = LocalStrings.current
+                BookmarkNoteSheet(
+                    title = s.playerBookmarkNoteTitle(Translator.messages.formatter.clock(shown.positionMs)),
+                    initial = shown.editing?.note.orEmpty(),
+                    saveLabel = if (shown.editing != null) s.playerBookmarkSaveNote else s.playerBookmarkSave,
+                    onSave = { note ->
+                        val editing = shown.editing
+                        if (editing != null) actions.rename(editing, note) else actions.add(shown.positionMs, note)
+                        back()
+                    },
+                    onDismiss = back,
+                    onClose = ::close,
+                )
+            }
         }
     }
 }

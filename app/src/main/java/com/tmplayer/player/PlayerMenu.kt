@@ -21,6 +21,10 @@ enum class PlayerMenuEntry {
     SaveToDownloads,
     /** "Mark as watched", or "Mark as unwatched" once it is on the list. */
     MarkWatched,
+    /** Saves the moment playing at once; a note can be added from Bookmarks, where typing is optional. */
+    AddBookmark,
+    /** This video's bookmarks: play from one, give it a note, delete it. */
+    Bookmarks,
     /** Fit, crop or stretch: a page of the three. Its only home on the television, the row has no button for it. */
     PictureShape,
     PictureInPicture,
@@ -43,15 +47,18 @@ enum class PhoneMenuEntry {
     LoadSubtitleFile,
     SaveToDownloads,
     MarkWatched,
+    /** Asks for an optional note, then saves the moment the note was asked at. */
+    AddBookmark,
+    Bookmarks,
     /** Last: a line for bug reports, not for watching. */
     PlaybackDetails,
 }
 
 /**
  * The line's text. [sleepDetail] is a running sleep timer's time left, which the line carries;
- * [watched] turns Mark as watched into Mark as unwatched.
+ * [watched] turns Mark as watched into Mark as unwatched; [bookmarks] is how many the video has.
  */
-fun PhoneMenuEntry.label(sleepDetail: String? = null, watched: Boolean = false): String = when (this) {
+fun PhoneMenuEntry.label(sleepDetail: String? = null, watched: Boolean = false, bookmarks: Int = 0): String = when (this) {
     PhoneMenuEntry.LockScreen -> L.playerLockScreen
     PhoneMenuEntry.PictureInPicture -> L.playerPictureInPicture
     PhoneMenuEntry.VolumeBoost -> L.playerVolumeBoost
@@ -60,6 +67,8 @@ fun PhoneMenuEntry.label(sleepDetail: String? = null, watched: Boolean = false):
     PhoneMenuEntry.LoadSubtitleFile -> L.playerLoadSubtitleFile
     PhoneMenuEntry.SaveToDownloads -> L.playerSaveToDownloads
     PhoneMenuEntry.MarkWatched -> if (watched) L.playerMarkUnwatched else L.playerMarkWatched
+    PhoneMenuEntry.AddBookmark -> L.playerAddBookmark
+    PhoneMenuEntry.Bookmarks -> if (bookmarks > 0) L.commonWithDetail(L.playerBookmarks, bookmarks.toString()) else L.playerBookmarks
     PhoneMenuEntry.PlaybackDetails -> L.playerPlaybackDetails
 }
 
@@ -81,12 +90,16 @@ object PlayerMenu {
      *
      * [openInAnotherApp] is false for a video from a chat that restricts saving content, whose
      * file must not be handed to another app.
+     *
+     * [bookmarks] is whether the video can keep bookmarks: like the Watched list, they are keyed
+     * by its message.
      */
     fun tvEntries(
         pictureInPicture: Boolean,
         saveToDownloads: Boolean = false,
         markWatched: Boolean = false,
         openInAnotherApp: Boolean = true,
+        bookmarks: Boolean = false,
     ): List<PlayerMenuEntry> = buildList {
         add(PlayerMenuEntry.PlaybackDetails)
         add(PlayerMenuEntry.StartOver)
@@ -94,6 +107,10 @@ object PlayerMenu {
         add(PlayerMenuEntry.SleepTimer)
         if (saveToDownloads) add(PlayerMenuEntry.SaveToDownloads)
         if (markWatched) add(PlayerMenuEntry.MarkWatched)
+        if (bookmarks) {
+            add(PlayerMenuEntry.AddBookmark)
+            add(PlayerMenuEntry.Bookmarks)
+        }
         add(PlayerMenuEntry.PictureShape)
         if (pictureInPicture) add(PlayerMenuEntry.PictureInPicture)
         if (openInAnotherApp) add(PlayerMenuEntry.OpenInAnotherApp)
@@ -103,13 +120,15 @@ object PlayerMenu {
     /**
      * The phone's overflow, in the order it draws. [pictureInPicture] is whether the device can do
      * it; [openInAnotherApp] false for a chat that restricts saving; [markWatched]
-     * needs a message to point at; [saveToDownloads] only while the video can still become one.
+     * needs a message to point at, and so does [bookmarks]; [saveToDownloads] only while the video
+     * can still become one. The bookmark lines live here rather than on the crowded row.
      */
     fun phoneEntries(
         pictureInPicture: Boolean,
         openInAnotherApp: Boolean,
         saveToDownloads: Boolean,
         markWatched: Boolean,
+        bookmarks: Boolean = false,
     ): List<PhoneMenuEntry> = buildList {
         add(PhoneMenuEntry.LockScreen)
         if (pictureInPicture) add(PhoneMenuEntry.PictureInPicture)
@@ -119,6 +138,10 @@ object PlayerMenu {
         add(PhoneMenuEntry.LoadSubtitleFile)
         if (saveToDownloads) add(PhoneMenuEntry.SaveToDownloads)
         if (markWatched) add(PhoneMenuEntry.MarkWatched)
+        if (bookmarks) {
+            add(PhoneMenuEntry.AddBookmark)
+            add(PhoneMenuEntry.Bookmarks)
+        }
         add(PhoneMenuEntry.PlaybackDetails)
     }
 }

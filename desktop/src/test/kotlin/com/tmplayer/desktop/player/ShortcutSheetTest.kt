@@ -22,6 +22,7 @@ class ShortcutSheetTest {
         "Previous, next chapter" to { it is PlayerAction.ChapterStep },
         "Frame step while paused" to { it is PlayerAction.FrameStep },
         "Repeat A to B: start, end, off" to { it == PlayerAction.AbRepeat },
+        "Add a bookmark" to { it == PlayerAction.AddBookmark },
         "Jump to 0 to 90 %" to { it is PlayerAction.JumpToTenth },
         "Start, end" to { it == PlayerAction.JumpToTenth(0) || it == PlayerAction.JumpToEnd },
         "Volume" to { it is PlayerAction.VolumeBy },
@@ -119,7 +120,8 @@ class ShortcutSheetTest {
     private fun letter(name: String): Key = LETTERS[name] ?: error("unknown key name '$name' on the sheet")
 
     private val LETTERS = mapOf(
-        "A" to Key.A, "C" to Key.C, "F" to Key.F, "G" to Key.G, "I" to Key.I, "J" to Key.J, "K" to Key.K, "L" to Key.L,
+        "A" to Key.A, "B" to Key.B, "C" to Key.C, "F" to Key.F, "G" to Key.G, "I" to Key.I, "J" to Key.J, "K" to Key.K,
+        "L" to Key.L,
         "M" to Key.M, "N" to Key.N, "P" to Key.P, "Q" to Key.Q, "R" to Key.R, "S" to Key.S, "T" to Key.T,
         "V" to Key.V, "X" to Key.X, "Z" to Key.Z,
     )

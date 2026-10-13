@@ -61,6 +61,9 @@ import com.tmplayer.desktop.os.UserDirs
 import com.tmplayer.data.TrackChoice
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedStore
+import com.tmplayer.data.Bookmark
+import com.tmplayer.data.BookmarkJump
+import com.tmplayer.data.BookmarkStore
 import com.tmplayer.desktop.DesktopPrefs
 import com.tmplayer.desktop.WatchedWords
 import com.tmplayer.data.DownloadRunner
@@ -110,7 +113,7 @@ internal data class Flash(val kind: Kind, val text: String, val id: Long) {
     enum class Kind { Play, Pause, SeekBack, SeekForward, Text, Volume }
 }
 
-internal enum class MenuPage { Main, Audio, Subtitles, Speed, Shape, Sleep, Options, SubtitleStyle }
+internal enum class MenuPage { Main, Audio, Subtitles, Speed, Shape, Sleep, Options, SubtitleStyle, Bookmarks }
 
 /** Where an open menu hangs: at the cursor for a right click, or under a button. */
 internal data class MenuAt(val page: MenuPage, val anchor: Anchor, val at: Offset = Offset.Zero) {
@@ -126,7 +129,7 @@ internal data class MenuAt(val page: MenuPage, val anchor: Anchor, val at: Offse
         MenuPage.Subtitles -> if (anchor == Anchor.Subtitles) null else MenuPage.Main
         MenuPage.Speed -> if (anchor == Anchor.Speed) null else MenuPage.Main
         MenuPage.Sleep, MenuPage.Shape -> MenuPage.Options
-        MenuPage.Options -> MenuPage.Main
+        MenuPage.Options, MenuPage.Bookmarks -> MenuPage.Main
         MenuPage.SubtitleStyle -> if (anchor == Anchor.Subtitles) MenuPage.Subtitles else MenuPage.Main
     }
 }
@@ -153,6 +156,8 @@ private val blankCursor: PointerIcon by lazy {
  *   per series track choice are read from and written to it exactly as on Android.
  * @param watched the Watched list: a video played to the end goes on it, and the menu marks or
  *   unmarks the one playing. Null (the UI tests) leaves both out.
+ * @param bookmarks the viewer's bookmarks: B and the menu add one, the menu lists them and the
+ *   timebar marks them. Null (the UI tests) leaves all three out.
  * @param prefs the desktop's own settings: volume, mute and downmix are kept there across
  *   launches, and the wheel and decoder choices are read from it.
  * @param onPlayingItemChanged called with each item once it has opened, including episodes the
@@ -181,6 +186,7 @@ fun PlayerScreen(
     settings: SettingsStore,
     prefs: DesktopPrefs,
     watched: WatchedStore? = null,
+    bookmarks: BookmarkStore? = null,
     modifier: Modifier = Modifier,
     onMiniPlayer: (() -> Unit)? = null,
     onToggleAlwaysOnTop: (() -> Unit)? = null,
@@ -269,6 +275,14 @@ fun PlayerScreen(
     val item = current.item
     val seriesKey = remember(item) { seriesKeyOf(item) }
     val progressMap by remember(settings) { settings.watchProgress }.collectAsState(initial = emptyMap())
+    // This video's bookmarks, for the menu's list and the ticks on the timebar. A file with no
+    // message behind it (the dev harness) has nothing to key them by, so it has none.
+    val marksOn = bookmarks != null && hasMessage(item)
+    val marks by remember(bookmarks, item.chatId, item.messageId) {
+        if (bookmarks != null && hasMessage(item)) bookmarks.bookmarks(item.chatId, item.messageId) else flowOf(emptyList())
+    }.collectAsState(initial = emptyList())
+    // The note dialog: for a new bookmark at a position, or for one already made.
+    var notePrompt by remember { mutableStateOf<NotePrompt?>(null) }
 
     fun showFlash(kind: Flash.Kind, text: String = "") {
         flash = Flash(kind, text, System.nanoTime())
@@ -312,7 +326,8 @@ fun PlayerScreen(
         launch { tdlibVersion = current.tdlibVersion() }
         autoplayNext = runCatching { settings.autoplayNextNow() }.getOrDefault(true)
         showRemaining = runCatching { settings.touchPrefsNow().showRemaining }.getOrDefault(false)
-        val start = reopenAt ?: if (ignoreSavedPosition) 0L else runCatching {
+        // A bookmark chosen on the detail page opens the video at its moment, once.
+        val start = reopenAt ?: BookmarkJump.take(item.chatId, item.messageId) ?: if (ignoreSavedPosition) 0L else runCatching {
             settings.resumePosition(item.chatId, item.messageId)
         }.getOrDefault(0L)
         val reopening = reopenAt != null
@@ -899,6 +914,32 @@ fun PlayerScreen(
         showFlash(Flash.Kind.Text, Chapters.label(chapters, target))
     }
 
+    /** B and the menu's Add bookmark: the moment playing, with a note asked for in a dialog. */
+    fun addBookmark() {
+        if (!marksOn) return
+        notePrompt = NotePrompt(positionMs = status.positionMs)
+    }
+
+    fun saveNote(prompt: NotePrompt, note: String) {
+        val store = bookmarks ?: return
+        val chat = item.chatId
+        val message = item.messageId
+        val editing = prompt.editing
+        playerScope.launch {
+            runCatching {
+                if (editing != null) store.rename(chat, message, editing.id, note)
+                else store.add(chat, message, prompt.positionMs, note)
+            }
+        }
+        if (editing == null) showFlash(Flash.Kind.Text, L.playerBookmarkSaved(SeekMath.clock(prompt.positionMs)))
+    }
+
+    fun deleteBookmark(mark: Bookmark) {
+        val store = bookmarks ?: return
+        playerScope.launch { runCatching { store.delete(mark.chatId, mark.messageId, mark.id) } }
+        showFlash(Flash.Kind.Text, L.playerBookmarkDeleted)
+    }
+
     fun dispatch(action: PlayerAction) {
         when (action) {
             PlayerAction.TogglePlay -> togglePlay()
@@ -952,6 +993,7 @@ fun PlayerScreen(
             is PlayerAction.Screenshot -> takeScreenshot(action.withSubtitles)
             PlayerAction.AbRepeat -> pressAbRepeat()
             is PlayerAction.ChapterStep -> stepChapter(action.forward)
+            PlayerAction.AddBookmark -> addBookmark()
         }
     }
 
@@ -1122,6 +1164,7 @@ fun PlayerScreen(
                 },
                 sleepTimer = sleepTimerDetail(),
                 loop = abLoop,
+                bookmarks = if (marksOn) marks else null,
                 onMenuAction = { action ->
                     noteInput()
                     when (action) {
@@ -1152,6 +1195,13 @@ fun PlayerScreen(
                         MenuAction.Shortcuts -> showShortcuts = true
                         MenuAction.ToggleWatched -> toggleWatched()
                         MenuAction.SearchOnline -> showOnline = true
+                        MenuAction.AddBookmark -> addBookmark()
+                        is MenuAction.JumpTo -> {
+                            engine.seekTo(action.bookmark.positionMs)
+                            showFlash(Flash.Kind.Text, SeekMath.clock(action.bookmark.positionMs))
+                        }
+                        is MenuAction.EditBookmark -> notePrompt = NotePrompt(action.bookmark.positionMs, action.bookmark)
+                        is MenuAction.DeleteBookmark -> deleteBookmark(action.bookmark)
                     }
                 },
                 onEpisodes = if (episodes.series != null) {
@@ -1304,6 +1354,21 @@ fun PlayerScreen(
                         },
                     ),
                     onClose = ::closeEpisodes,
+                )
+            }
+
+            notePrompt?.let { prompt ->
+                BookmarkNoteDialog(
+                    prompt = prompt,
+                    onSave = { note ->
+                        notePrompt = null
+                        saveNote(prompt, note)
+                        refocus()
+                    },
+                    onDismiss = {
+                        notePrompt = null
+                        refocus()
+                    },
                 )
             }
 

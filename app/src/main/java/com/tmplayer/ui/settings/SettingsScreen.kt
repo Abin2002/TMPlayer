@@ -1531,6 +1531,8 @@ fun SettingsScreen(
                     // What this account watched is its own as much as the preferences are, and it
                     // lives in a file of its own, so it is cleared on its own.
                     runCatching { watchedStore.clear() }
+                    // The bookmarks go with it, for the same reason.
+                    runCatching { com.tmplayer.data.BookmarkStore(context).clear() }
                     Td.logOut()
                     onLoggedOut()
                 }

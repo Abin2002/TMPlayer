@@ -18,6 +18,8 @@ class PlayerMenuTest {
                 PlayerMenuEntry.SleepTimer,
                 PlayerMenuEntry.SaveToDownloads,
                 PlayerMenuEntry.MarkWatched,
+                PlayerMenuEntry.AddBookmark,
+                PlayerMenuEntry.Bookmarks,
                 PlayerMenuEntry.PictureShape,
                 PlayerMenuEntry.PictureInPicture,
                 PlayerMenuEntry.OpenInAnotherApp,
@@ -27,6 +29,7 @@ class PlayerMenuTest {
                 pictureInPicture = true,
                 saveToDownloads = true,
                 markWatched = true,
+                bookmarks = true,
             ),
         )
     }
@@ -41,6 +44,13 @@ class PlayerMenuTest {
     fun `mark as watched is only offered for a video that came from a message`() {
         assertFalse(PlayerMenuEntry.MarkWatched in PlayerMenu.tvEntries(pictureInPicture = true, saveToDownloads = true))
         assertTrue(PlayerMenuEntry.MarkWatched in PlayerMenu.tvEntries(pictureInPicture = true, markWatched = true))
+    }
+
+    @Test
+    fun `bookmarks are only offered for a video that came from a message`() {
+        assertFalse(PlayerMenuEntry.AddBookmark in PlayerMenu.tvEntries(pictureInPicture = true, markWatched = true))
+        assertTrue(PlayerMenuEntry.Bookmarks in PlayerMenu.tvEntries(pictureInPicture = true, bookmarks = true))
+        assertFalse(PhoneMenuEntry.AddBookmark in PlayerMenu.phoneEntries(true, true, true, true))
     }
 
     @Test
@@ -64,6 +74,7 @@ class PlayerMenuTest {
             pictureInPicture = false,
             saveToDownloads = true,
             markWatched = true,
+            bookmarks = true,
         )
         assertFalse(PlayerMenuEntry.PictureInPicture in entries)
         assertEquals(PlayerMenuEntry.entries.size - 1, entries.size)
@@ -77,6 +88,7 @@ class PlayerMenuTest {
                 pictureInPicture = true,
                 saveToDownloads = true,
                 markWatched = true,
+                bookmarks = true,
             ).toSet(),
         )
     }
@@ -100,6 +112,7 @@ class PlayerMenuTest {
                 openInAnotherApp = true,
                 saveToDownloads = true,
                 markWatched = true,
+                bookmarks = true,
             ),
         )
         assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true).toSet())
