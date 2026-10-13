@@ -1771,6 +1771,8 @@ internal fun MediaCard(
     poster: Boolean = false,
     /** What the caption says in place of the file's own name: Home's New episodes row names the episode. */
     title: String? = null,
+    /** The line of facts in place of the file's own (Home's New episodes row: the chat, quality and size). */
+    meta: (@Composable (ink: Color) -> Unit)? = null,
 ) {
     val named = if (poster) remember(item) { SeriesShelf.posterTitle(item) } else tileTitle(item)
     VideoTile(
@@ -1782,7 +1784,7 @@ internal fun MediaCard(
         poster = poster,
         selected = selected,
         modifier = modifier,
-        meta = { ink -> MetaLine(item, watched, ink, finished = finished, poster = poster) },
+        meta = meta ?: { ink -> MetaLine(item, watched, ink, finished = finished, poster = poster) },
     ) {
         MediaArt(
             item = item,

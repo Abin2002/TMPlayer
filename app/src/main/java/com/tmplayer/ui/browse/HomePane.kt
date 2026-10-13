@@ -29,7 +29,10 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -135,10 +138,21 @@ internal fun HomePane(
     onSeeWatchLater: () -> Unit = {},
     /** Download season and Download unwatched on a show's page; null leaves them out. */
     onDownloadSeason: ((SeasonDownloadRequest) -> Unit)? = null,
+    /**
+     * How far the hero's picture runs up behind a header drawn over the top of the pane (a
+     * phone's app bar, a television's heading); zero for a header above it.
+     */
+    under: Dp = 0.dp,
+    /** Told whether there is a hero and whether it is under that header, for the header's look. */
+    hero: HeroUnderHeader? = null,
 ) {
     val s = LocalStrings.current
+    if (hero != null) {
+        DisposableEffect(hero) { onDispose { hero.update(present = false, underHeader = false) } }
+    }
     if (rows.isEmpty()) {
         // Nothing played and nothing starred: a first run, so say how to get a first video in.
+        SideEffect { hero?.update(present = false, underHeader = false) }
         FirstVideoEmpty(firstStep, onOpenSection)
         return
     }
@@ -156,12 +170,14 @@ internal fun HomePane(
         rows.filterIsInstance<HomeRow.Continue>().firstOrNull()?.let { HomeRows.spotlight(it.records + it.more) }.orEmpty()
     }
     val spotlight = (rememberSpotlight(candidates, art, onArtWanted) as? SpotlightState.Ready)?.spotlight
+    val heroUnder by rememberHeroUnderHeader(listState, under, spotlight != null)
+    if (hero != null) SideEffect { hero.update(present = spotlight != null, underHeader = heroUnder) }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         // A television and a phone on its side put the words beside the picture; a phone upright
-        // puts them under it.
+        // puts them under it. Measured on the screen under any header drawn over the pane.
         val wide = !touch || maxWidth > maxHeight
-        val heroHeight = spotlightHeight(maxHeight, wide, touch)
+        val heroHeight = spotlightHeight(maxHeight - under, wide, touch)
         // Tiles here may wear the show's or the film's picture (see LocalOnlineArt); a chat's grid keeps frames.
         CompositionLocalProvider(LocalOnlineArt provides true) {
             LazyColumn(
@@ -185,7 +201,7 @@ internal fun HomePane(
                 verticalArrangement = Arrangement.spacedBy(if (touch) ROW_GAP_TOUCH else ROW_GAP_TV),
             ) {
                 if (spotlight != null) {
-                    item(key = "spotlight", contentType = "spotlight") {
+                    item(key = SPOTLIGHT_KEY, contentType = "spotlight") {
                         val record = spotlight.record
                         val chat = record.chatTitle.ifEmpty { chatTitle(record.chatId) }
                         HomeSpotlight(
@@ -198,6 +214,7 @@ internal fun HomePane(
                             onResume = { onResume(record) },
                             onDetails = { onHoldMedia(spotlight.item, chat) },
                             resumeFocus = heroFocus,
+                            under = under,
                         )
                     }
                 }
@@ -302,9 +319,10 @@ internal fun HomePane(
                             is HomeRow.NewEpisodes -> TileRow(start, end, upToSeeAll) {
                                 items(row.episodes, key = { "n-${it.item.id}" }) { episode ->
                                     val item = episode.item
-                                    val label = s.homeNewEpisode(episode.code)
+                                    val chat = chatTitle(item.chatId)
                                     // The show's name, then which episode: the file name would say the
-                                    // same less readably, and the "new" is the reason the row exists.
+                                    // same less readably. Under it Telegram's facts, as on every other
+                                    // row; the New badge on the art says it is new.
                                     MediaCard(
                                         item = item,
                                         watched = null,
@@ -312,8 +330,9 @@ internal fun HomePane(
                                         onLongClick = { onHoldMedia(item, chatTitle(item.chatId)) },
                                         onFocused = {},
                                         dense = touch,
-                                        title = if (episode.show.isBlank()) label else "${episode.show}  ·  $label",
+                                        title = if (episode.show.isBlank()) episode.code else "${episode.show}  ·  ${episode.code}",
                                         badge = { NewBadge(compact = touch) },
+                                        meta = { ink -> CaptionLine(telegramFacts(chat, item), ink) },
                                         modifier = Modifier.width(wideWidth(touch))
                                             .then(if (isFirst && episode === row.episodes.first()) Modifier.focusRequester(first) else Modifier),
                                     )
@@ -656,3 +675,21 @@ private val TILE_GAP_TV = 12.dp
 
 /** Between a row's poster strip and its strip of cards, on a phone. */
 private val STRIP_GAP = 12.dp
+
+/**
+ * What Home's hero tells the header drawn over it (the phone's app bar, the television's heading):
+ * whether there is a hero, so the header goes over the pane at all, and whether its picture is
+ * still under the header, so the header stands on the picture rather than on its own ground.
+ */
+@Stable
+internal class HeroUnderHeader {
+    var present by mutableStateOf(false)
+        private set
+    var underHeader by mutableStateOf(false)
+        private set
+
+    fun update(present: Boolean, underHeader: Boolean) {
+        if (this.present != present) this.present = present
+        if (this.underHeader != underHeader) this.underHeader = underHeader
+    }
+}

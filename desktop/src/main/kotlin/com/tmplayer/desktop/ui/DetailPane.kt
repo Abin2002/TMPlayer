@@ -40,6 +40,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.key
 import com.tmplayer.data.BookmarkJump
 import com.tmplayer.data.ContentProtection
 import com.tmplayer.data.DetailAction
@@ -78,7 +79,8 @@ import java.io.File
  * shared [MediaDetailPanel] along the right edge, over a scrim. Esc, Back or a click on the scrim
  * closes it, and focus goes back to the poster it came from.
  *
- * Drawn by the shell over the page area, and by the render tests over a page of their own.
+ * What the shell draws where the page is too narrow to keep beside the pane ([DetailPaneSide]),
+ * and what the render tests draw over a page of their own.
  */
 @Composable
 fun BoxScope.DetailPaneHost(state: ShellState) {
@@ -90,12 +92,28 @@ fun BoxScope.DetailPaneHost(state: ShellState) {
             .background(FloatingTone.scrim)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { state.closeDetail() },
     )
+    PaneSheet(state, request, Modifier.align(Alignment.CenterEnd))
+}
+
+/**
+ * The detail pane docked as a side panel beside the page, with no scrim: the page stays in view
+ * and in reach, a click on another poster swaps what the pane shows, and Esc, Back or its close
+ * button hide it.
+ */
+@Composable
+fun DetailPaneSide(state: ShellState) {
+    val request = state.detail ?: return
+    BackHandler { state.closeDetail() }
+    PaneSheet(state, request, Modifier)
+}
+
+@Composable
+private fun PaneSheet(state: ShellState, request: DetailRequest, modifier: Modifier) {
     Surface(
         shape = RoundedCornerShape(topStart = Corner.ExtraLarge, bottomStart = Corner.ExtraLarge),
         color = FloatingTone.sheet,
         border = floatingBorder(),
-        modifier = Modifier
-            .align(Alignment.CenterEnd)
+        modifier = modifier
             .fillMaxHeight()
             .width(DETAIL_PANE_WIDTH)
             .onPreviewKeyEvent { event ->
@@ -107,9 +125,13 @@ fun BoxScope.DetailPaneHost(state: ShellState) {
                 }
             },
     ) {
-        DetailPane(state, request)
+        // A new video is a new pane: nothing of the last one's state carries over.
+        key(request.item.id) { DetailPane(state, request) }
     }
 }
+
+/** From this width of page the pane docks beside it: the pane and a row of posters still fit. */
+internal val DOCK_FROM = DETAIL_PANE_WIDTH + 560.dp
 
 @Composable
 private fun DetailPane(state: ShellState, request: DetailRequest) {

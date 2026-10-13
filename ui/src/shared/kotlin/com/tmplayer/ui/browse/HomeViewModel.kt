@@ -293,6 +293,7 @@ class HomeViewModel(
                 if (failure is CancellationException) throw failure
                 null
             } ?: return@once
+            RecordItems.keep(item)
             _art.update { it + (key to item) }
         }
     }

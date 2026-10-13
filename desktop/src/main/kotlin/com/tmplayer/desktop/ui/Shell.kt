@@ -218,6 +218,7 @@ private fun Browse(state: ShellState, player: PlayerContent) {
     val chats = rememberViewModel(Unit) { ChatListViewModel(state.settings) }
     DisposableEffect(chats) { onDispose { chats.reset() } }
     LaunchedEffect(Unit) { chats.refreshIfStale() }
+    LaunchedEffect(state) { state.settings.detailFirst.collect { state.detailFirst = it } }
     // "Only my folders", mirrored into the shell for every page to read.
     LaunchedEffect(state) {
         state.settings.hideDefaultGroups.collect {
@@ -323,27 +324,36 @@ private fun Browse(state: ShellState, player: PlayerContent) {
             Row(Modifier.fillMaxSize()) {
                 if (wide) Sidebar(state, update) else Rail(state, update)
                 VerticalDivider(color = Tone.outline)
-                Box(Modifier.weight(1f).fillMaxHeight()) {
-                    val open = state.openChat
-                    when {
-                        open != null -> MediaGridPage(state, open)
-                        else -> when (state.destination) {
-                            Destination.Home -> HomePage(state, chats)
-                            Destination.Chats -> ChatsPage(state, chats, favouritesOnly = false, showSections = !wide)
-                            Destination.Favourites -> ChatsPage(state, chats, favouritesOnly = true)
-                            Destination.History -> HistoryPage(state)
-                            Destination.Downloads -> DownloadsPage(state)
-                            Destination.Settings -> LockedSettings(state) {
-                                SettingsPage(
-                                    state,
-                                    BuildInfo.VERSION,
-                                    chatList = (chatsUi as? UiState.Content)?.value?.chats.orEmpty(),
-                                )
+                BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
+                    // The detail pane docks beside the page where both fit, so the grid stays in
+                    // view and in reach (a click on another poster swaps the pane), and goes over
+                    // the page where they do not.
+                    val docked = state.detail != null && maxWidth >= DOCK_FROM
+                    Row(Modifier.fillMaxSize()) {
+                        Box(Modifier.weight(1f).fillMaxHeight()) {
+                            val open = state.openChat
+                            when {
+                                open != null -> MediaGridPage(state, open)
+                                else -> when (state.destination) {
+                                    Destination.Home -> HomePage(state, chats)
+                                    Destination.Chats -> ChatsPage(state, chats, favouritesOnly = false, showSections = !wide)
+                                    Destination.Favourites -> ChatsPage(state, chats, favouritesOnly = true)
+                                    Destination.History -> HistoryPage(state)
+                                    Destination.Downloads -> DownloadsPage(state)
+                                    Destination.Settings -> LockedSettings(state) {
+                                        SettingsPage(
+                                            state,
+                                            BuildInfo.VERSION,
+                                            chatList = (chatsUi as? UiState.Content)?.value?.chats.orEmpty(),
+                                        )
+                                    }
+                                }
                             }
                         }
+                        if (docked) DetailPaneSide(state)
                     }
                     // Over the page only, so the side bar stays reachable while a pane is open.
-                    DetailPaneHost(state)
+                    if (!docked) DetailPaneHost(state)
                 }
             }
         }

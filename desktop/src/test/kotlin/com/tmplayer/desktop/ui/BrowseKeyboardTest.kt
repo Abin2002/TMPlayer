@@ -175,15 +175,30 @@ class BrowseKeyboardTest {
     }
 
     @Test
-    fun `enter and p play the focused poster`() = runComposeUiTest {
+    fun `enter opens the focused poster's page first, p plays it`() = runComposeUiTest {
         setContent { TmMaterialTheme(dark = true) { Box(Modifier.size(1000.dp, 640.dp)) { VideoGrid(shell, videos, "Film Club") } } }
         onNode(poster(3)).requestFocus()
         onNode(isFocused()).performKeyInput { pressKey(Key.Enter) }
-        assertEquals("Video 3", shell.nowPlaying?.item?.title)
-        shell.closePlayer()
+        assertEquals("Video 3", shell.detail?.item?.title)
+        assertEquals(null, shell.nowPlaying)
+        shell.closeDetail()
         onNode(poster(3)).requestFocus()
         onNode(isFocused()).performKeyInput { pressKey(Key.P) }
         assertEquals("Video 3", shell.nowPlaying?.item?.title)
+    }
+
+    @Test
+    fun `with the page first off, enter plays the focused poster`() = runComposeUiTest {
+        shell.detailFirst = false
+        try {
+            setContent { TmMaterialTheme(dark = true) { Box(Modifier.size(1000.dp, 640.dp)) { VideoGrid(shell, videos, "Film Club") } } }
+            onNode(poster(3)).requestFocus()
+            onNode(isFocused()).performKeyInput { pressKey(Key.Enter) }
+            assertEquals("Video 3", shell.nowPlaying?.item?.title)
+            assertEquals(null, shell.detail)
+        } finally {
+            shell.detailFirst = true
+        }
     }
 
     @Test

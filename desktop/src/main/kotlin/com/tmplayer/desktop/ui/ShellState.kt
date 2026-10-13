@@ -206,7 +206,13 @@ class ShellState(
     /** The chats the list has shown, by id, so a pane opened from Home or search can go to one. */
     private val knownChats = mutableMapOf<Long, ChatSummary>()
 
-    /** The detail pane over the page, or null while none is open. */
+    /**
+     * "Open a video's page first" from Settings, mirrored here for every poster to read: a click
+     * (or Enter) on a video opens its detail pane and a double click plays it; off, a click plays.
+     */
+    var detailFirst by mutableStateOf(true)
+
+    /** The detail pane beside or over the page, or null while none is open. */
     var detail by mutableStateOf<DetailRequest?>(null)
         private set
 

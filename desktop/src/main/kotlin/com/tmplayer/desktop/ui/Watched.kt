@@ -1,6 +1,8 @@
 package com.tmplayer.desktop.ui
 
 import com.tmplayer.ui.browse.HistoryTab
+import com.tmplayer.ui.browse.rememberRecordItem
+import com.tmplayer.ui.online.OnlineArt
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -151,7 +153,8 @@ private fun WatchedTile(
     onUnwatch: () -> Unit,
 ) {
     val s = LocalStrings.current
-    val item = remember(record) { record.toMediaItem() }
+    // The video as Telegram describes it once it answers, for its thumbnail, as on Home.
+    val item = rememberRecordItem(record.chatId, record.messageId, remember(record) { record.toMediaItem() })
     Poster(
         state = state,
         nav = nav,
@@ -159,7 +162,7 @@ private fun WatchedTile(
         item = item,
         chatTitle = record.chatTitle,
         progress = WatchedWords.posterProgress(fraction, finished = true),
-        art = { RecordArt(item) },
+        art = { OnHome { OnlineArt(item, Modifier.fillMaxSize()) { RecordArt(item) } } },
         subtitle = listOf(record.chatTitle, WatchedWhen.phrase(record.watchedAt, now))
             .filter { it.isNotBlank() }
             .joinToString("  ·  "),
@@ -236,7 +239,8 @@ private fun WatchLaterTile(
     onRemove: () -> Unit,
 ) {
     val s = LocalStrings.current
-    val item = remember(record) { record.toMediaItem() }
+    // The video as Telegram describes it once it answers, for its thumbnail, as on Home.
+    val item = rememberRecordItem(record.chatId, record.messageId, remember(record) { record.toMediaItem() })
     Poster(
         state = state,
         nav = nav,
@@ -244,7 +248,7 @@ private fun WatchLaterTile(
         item = item,
         chatTitle = record.chatTitle,
         progress = fraction,
-        art = { RecordArt(item) },
+        art = { OnHome { OnlineArt(item, Modifier.fillMaxSize()) { RecordArt(item) } } },
         subtitle = listOfNotNull(
             record.chatTitle.ifBlank { null },
             record.durationSec.takeIf { it > 0 }?.let(MediaMapper::formatDuration),

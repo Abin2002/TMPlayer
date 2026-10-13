@@ -204,6 +204,20 @@ object SeriesShelf {
     }
 
     /**
+     * What makes [item] a copy of another file: the same film (see [filmKey]) or the same episode
+     * of the same show, whatever its size or quality. Null for a video that names neither, which
+     * is never a copy of anything. The key [arrange] folds copies on, for a file read alone.
+     */
+    fun sameVideoKey(item: MediaItem): String? {
+        filmKey(item)?.let { return it }
+        val name = episodeOf(item)
+        val episode = name.episode ?: return null
+        val key = keyOf(name.title)
+        if (key.isEmpty()) return null
+        return "episode:$key|${name.season ?: 1}|$episode"
+    }
+
+    /**
      * The film's own name for a tile that stands for several copies: "Night Train (2019)" rather
      * than whichever file name happened to be newest. The item's title when the name reads as nothing.
      */

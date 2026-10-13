@@ -152,6 +152,7 @@ fun SettingsPage(
     var supporting by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf<Confirm?>(null) }
     val touchPrefs by settings.touchPrefs.collectAsState(initial = TouchPrefs())
+    val detailFirst by settings.detailFirst.collectAsState(initial = true)
     val subtitleStyle by settings.subtitleStyle.collectAsState(initial = SubtitleStyle())
     val trackPrefs by settings.trackPreferences.collectAsState(initial = TrackPreferences())
     val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
@@ -209,6 +210,11 @@ fun SettingsPage(
                 }
 
                 Group(s.settingsPlayback)
+                Toggle(
+                    s.settingsDetailFirst,
+                    if (detailFirst) s.settingsDetailFirstClickOn else s.settingsDetailFirstClickOff,
+                    detailFirst,
+                ) { on -> scope.launch { settings.setDetailFirst(on) } }
                 Toggle(s.settingsAutoplayNext, s.settingsAutoplayDetail, autoplay) {
                     scope.launch { settings.setAutoplayNext(it) }
                 }

@@ -94,6 +94,7 @@ import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.combinedClickable
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.ContentProtection
 import com.tmplayer.data.MediaItem
@@ -117,6 +118,7 @@ import com.tmplayer.player.StreamStats
 import com.tmplayer.ui.browse.MediaListViewModel
 import com.tmplayer.ui.browse.topicMemory
 import com.tmplayer.ui.components.MediaArt
+import com.tmplayer.ui.online.OnlineArt
 import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.UiState
 import com.tmplayer.ui.components.rememberToast
@@ -128,6 +130,7 @@ import kotlinx.coroutines.launch
 import com.tmplayer.desktop.os.OpenExternal
 import com.tmplayer.desktop.DownloadIndex
 import com.tmplayer.ui.browse.CourseHeader
+import com.tmplayer.ui.browse.rememberRecordItem
 import com.tmplayer.ui.nav.BackHandler
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -378,13 +381,16 @@ fun PosterSizeStep(state: ShellState) {
 
 /**
  * History's Continue tab: what the viewer was part way through, newest first, as posters.
- * The records keep no artwork (see the phone's ContinueArt), so each poster is the play mark.
+ * The records keep no artwork, so each card asks Telegram for its video as Home does
+ * ([rememberRecordItem]) and wears the thumbnail, with the generated cover only without one.
  * [tabs] is History's tab row, drawn under the heading.
  */
 @Composable
 fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
     val s = LocalStrings.current
-    val records by state.settings.continueWatching.collectAsState(initial = null)
+    val stored by state.settings.continueWatching.collectAsState(initial = null)
+    // The copies of one film or episode as one card, the one watched last, as on Home.
+    val records = remember(stored) { stored?.let(com.tmplayer.data.HomeRows::foldCopies) }
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
     // The card waiting on "Remove from Continue watching?": its saved place cannot be got back.
@@ -450,8 +456,8 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
 /**
  * A video part way through, as a card a quarter wider than a poster: the art with the episode
  * ("S1 E3") and the title written on it over the tile's foot scrim, how long is left under it, and
- * the progress line at its foot. The records keep no picture, so the art is the video's
- * [GeneratedCover] unless a thumbnail turns up.
+ * the progress line at its foot. The art is Home's: the show's or the film's picture where
+ * allowed, the video's thumbnail, and its [GeneratedCover] only when it has none.
  */
 @Composable
 private fun ContinueTile(
@@ -463,7 +469,8 @@ private fun ContinueTile(
     onForget: () -> Unit,
 ) {
     val s = LocalStrings.current
-    val item = remember(record) { record.toMediaItem() }
+    // The video as Telegram describes it once it answers, for its thumbnail, as on Home.
+    val item = rememberRecordItem(record.chatId, record.messageId, remember(record) { record.toMediaItem() })
     Poster(
         state = state,
         nav = nav,
@@ -471,7 +478,7 @@ private fun ContinueTile(
         item = item,
         chatTitle = record.chatTitle,
         progress = record.fraction,
-        art = { ContinueArt(item) },
+        art = { OnHome { ContinueArt(item) } },
         titleBelow = false,
         subtitle = s.continueLeft(record.chatTitle, MediaMapper.formatDuration((record.remainingMs / 1000).toInt())),
         extraMenu = { close ->
@@ -497,8 +504,10 @@ private fun ContinueArt(item: MediaItem) {
     val episode = parsed.episode?.let { number -> parsed.season?.let { s.seriesEpisodeShort(it, number) } ?: s.seriesEpisode(number) }
     val name = if (episode != null) parsed.title.ifBlank { title } else title
     Box(Modifier.fillMaxSize()) {
-        MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize()) {
-            GeneratedCover(cover, Modifier.fillMaxSize(), showTitle = false)
+        OnlineArt(item, Modifier.fillMaxSize()) {
+            MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize()) {
+                GeneratedCover(cover, Modifier.fillMaxSize(), showTitle = false)
+            }
         }
         Box(Modifier.fillMaxSize().background(Scrims.tileFoot))
         Column(
@@ -614,6 +623,10 @@ internal fun MediaTile(
  * From the keyboard ([nav], B2.1): focus draws a ring and lifts it like a hover, the arrows move
  * between posters, Enter, Space or P plays, and the context menu key or Shift+F10 opens the
  * overflow.
+ *
+ * With [ShellState.detailFirst] on (the default, as on the phone and the television) a click and
+ * Enter open the video's detail pane instead, which has Play on it; a double click, Space, P and
+ * the Play button shown on hover still play at once.
  */
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -686,6 +699,15 @@ internal fun Poster(
     val record = LocalDownloadIndex.current[item.id]
     val selected = selection?.isSelected(item.id) == true
     val details: (() -> Unit)? = onDetails?.let { open -> { open { runCatching { requester.requestFocus() } } } }
+    // A click's and Enter's: the detail pane first, by Settings; a page that keeps the menu for
+    // its own lines (Continue watching, Watched) still opens the pane here.
+    val page: () -> Unit = details ?: {
+        state.openDetail(DetailRequest(item = item, chatTitle = chatTitle, outsideChat = true, onClosed = { runCatching { requester.requestFocus() } }))
+    }
+    val detailFirst = state.detailFirst
+    val click: () -> Unit = {
+        if (detailFirst && !(picking && selection != null)) page() else play()
+    }
     val openMenu: () -> Unit = {
         if (details != null) {
             details()
@@ -733,14 +755,20 @@ internal fun Poster(
                     }
                     event.type == KeyEventType.KeyDown && event.key in PLAY_KEYS && !event.keyCtrl &&
                         !event.isAltPressed && !event.isMetaPressed && !event.isShiftPressed -> {
-                        play()
+                        if (detailFirst && (event.key == Key.Enter || event.key == Key.NumPadEnter)) page() else play()
                         true
                     }
                     else -> false
                 }
             }
             // No hover or press plate: the lift and the ring on the art are the feedback.
-            .clickable(interactionSource = interaction, indication = null, onClick = play),
+            .then(
+                if (detailFirst) {
+                    Modifier.combinedClickable(interactionSource = interaction, indication = null, onDoubleClick = play, onClick = click)
+                } else {
+                    Modifier.clickable(interactionSource = interaction, indication = null, onClick = play)
+                },
+            ),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Box(

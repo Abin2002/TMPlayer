@@ -21,6 +21,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
@@ -205,6 +210,11 @@ private suspend fun findArt(item: MediaItem, online: OnlineMetadata?, lowMemory:
  *
  * [resumeFocus] is the pill's, for a television to open Home on it. One picture at a time, and on
  * a device short of memory only the thumbnail's soft field.
+ *
+ * [under] is how far the picture reaches up behind a page header drawn over the top of it (the
+ * page's title and buttons, or a phone's app bar): the hero is that much taller, the picture runs
+ * to the top edge, and the words stay where they were, under the header. The header stands on
+ * [Scrims.headerTop] meanwhile (see [overHero]). Zero leaves the hero under its header as before.
  */
 @Composable
 fun HomeSpotlight(
@@ -218,6 +228,7 @@ fun HomeSpotlight(
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
     resumeFocus: FocusRequester? = null,
+    under: Dp = 0.dp,
 ) {
     val s = LocalStrings.current
     val item = spotlight.item
@@ -228,17 +239,20 @@ fun HomeSpotlight(
         BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, spotlight.wideUrl)
     }
     val words = remember(item, spotlight.info, record, s) { SpotlightWords.of(item, spotlight.info, record, s) }
-    Box(modifier.fillMaxWidth().heightIn(min = height)) {
+    Box(modifier.fillMaxWidth().heightIn(min = height + under)) {
         Box(Modifier.matchParentSize()) {
             if (wide) {
                 Box(Modifier.align(Alignment.TopEnd).fillMaxWidth(SPOTLIGHT_BACKDROP_SHARE).fillMaxHeight()) {
                     ArtBackdrop(source, Modifier.fillMaxSize(), fieldOnly = lowMemory)
                     Box(Modifier.fillMaxSize().background(Scrims.startLong()))
-                    // A short fade at the top too, so the picture does not start on a hard line under the header.
-                    Box(
-                        Modifier.fillMaxWidth().height(TOP_FADE)
-                            .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Tone.scrim, Tone.scrim.copy(alpha = 0f)))),
-                    )
+                    // A short fade at the top too, so the picture does not start on a hard line under
+                    // the header; none where the picture runs on up behind the header instead.
+                    if (under == 0.dp) {
+                        Box(
+                            Modifier.fillMaxWidth().height(TOP_FADE)
+                                .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Tone.scrim, Tone.scrim.copy(alpha = 0f)))),
+                        )
+                    }
                     Box(Modifier.fillMaxSize().background(Scrims.bottomLong(WIDE_FOOT_FADE)))
                 }
             } else {
@@ -309,6 +323,48 @@ fun HomeSpotlight(
                 RoundAction(s.detailOpenDetails, onDetails)
             }
         }
+    }
+}
+
+/** The key Home's lists give the spotlight's item, which [rememberHeroUnderHeader] looks for. */
+const val SPOTLIGHT_KEY = "spotlight"
+
+/**
+ * Whether Home's hero, the first item of [list] under [SPOTLIGHT_KEY], still reaches down past a
+ * header [header] tall drawn over the top of the list. While it does, the header stands on the
+ * picture ([overHero] true); once the hero has scrolled up under it, or there is none ([hero]
+ * false), the header goes back to its own look.
+ *
+ * A hero that has just arrived over a list still at its top counts before the list has laid it
+ * out, so the header starts on the picture rather than fading over to it.
+ */
+@Composable
+fun rememberHeroUnderHeader(list: LazyListState, header: Dp, hero: Boolean): State<Boolean> {
+    val reach = with(LocalDensity.current) { header.roundToPx() }
+    return remember(list, reach, hero) {
+        derivedStateOf {
+            if (!hero) return@derivedStateOf false
+            val first = list.layoutInfo.visibleItemsInfo.firstOrNull() ?: return@derivedStateOf true
+            if (first.key == SPOTLIGHT_KEY) first.offset + first.size > reach
+            else list.layoutInfo.visibleItemsInfo.none { it.key == SPOTLIGHT_KEY } && list.firstVisibleItemIndex == 0 && list.firstVisibleItemScrollOffset == 0
+        }
+    }
+}
+
+/**
+ * The ground of a page header drawn over Home's hero ([HomeSpotlight]'s `under`). Over the
+ * picture it is [Scrims.headerTop], reaching [Scrims.HEADER_REACH] times the header's height
+ * down, and the header's words and icons are to be [Tone.onArt] in either theme; otherwise it is
+ * [solid], the page's own background by default, so the rows scrolling up under the header do not
+ * show through it.
+ * The two cross fade.
+ */
+@Composable
+fun Modifier.overHero(overArt: Boolean, solid: Color = Tone.background): Modifier {
+    val art by animateFloatAsState(if (overArt) 1f else 0f, Motion.standard(Motion.Fast), label = "headerOverHero")
+    return drawBehind {
+        if (art < 1f) drawRect(solid, alpha = 1f - art)
+        if (art > 0f) drawRect(Scrims.headerTop, size = Size(size.width, size.height * Scrims.HEADER_REACH), alpha = art)
     }
 }
 

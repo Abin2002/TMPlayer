@@ -237,4 +237,44 @@ class HomeRowsTest {
         assertEquals(1, ids(rows[2]).size)
         assertTrue(HomeRows.build(emptyList(), emptyList(), emptyMap(), recent = emptyList(), watchLater = emptyList()).isEmpty())
     }
+
+    @Test
+    fun `two copies of one film in continue watching are one card, the one watched last`() {
+        val hd = video(1, "Bethlehem Kudumba Unit (2024) 1080p WEB-DL x264.mkv")
+        val sd = video(1, "Bethlehem Kudumba Unit (2024) 720p WEB-DL x264.mkv")
+        val other = video(1, "Night Train (2019) 1080p.mkv")
+        val rows = HomeRows.build(
+            continueWatching = listOf(resume(sd, updatedAt = 30), resume(other, updatedAt = 20), resume(hd, updatedAt = 10)),
+            favourites = listOf(chat(1)),
+            loaded = mapOf(1L to listOf(hd, sd, other)),
+            recent = null,
+        )
+        val continuing = rows.first() as HomeRow.Continue
+        assertEquals(listOf(sd.messageId, other.messageId), continuing.records.map { it.messageId })
+        // The other copy is not offered again in the chat's row either.
+        assertTrue(rows.drop(1).none { row -> hd.messageId in ids(row) })
+    }
+
+    @Test
+    fun `copies of one episode fold, other episodes and other chats stay apart`() {
+        val e1hd = video(1, "Loki.S02E05.1080p.WEB.x265.mkv")
+        val e1sd = video(1, "Loki.S02E05.720p.WEB.x264.mkv")
+        val e2 = video(1, "Loki.S02E06.720p.WEB.x264.mkv")
+        val elsewhere = video(2, "Loki.S02E05.480p.mkv")
+        val clip = video(1, "Holiday clip.mp4")
+        val clip2 = video(1, "Holiday clip.mp4")
+        val records = listOf(
+            resume(e1hd, updatedAt = 50),
+            resume(e2, updatedAt = 40),
+            resume(e1sd, updatedAt = 30),
+            resume(elsewhere, updatedAt = 20),
+            resume(clip, updatedAt = 10),
+            resume(clip2, updatedAt = 5),
+        )
+        val folded = HomeRows.foldCopies(records)
+        assertEquals(listOf(e1hd, e2, elsewhere, clip, clip2).map { it.messageId }, folded.map { it.messageId })
+        // Out of order, the newest copy still wins, in the place the first of them held.
+        val kept = HomeRows.foldCopies(listOf(resume(e1sd, updatedAt = 1), resume(e1hd, updatedAt = 9)))
+        assertEquals(listOf(e1hd.messageId), kept.map { it.messageId })
+    }
 }

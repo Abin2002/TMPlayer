@@ -24,7 +24,8 @@ import androidx.compose.ui.unit.LayoutDirection
  *
  * [bottomLong] and [startLong] fade into [Tone.scrim], the page's own background, so they follow
  * light and dark. [tileFoot] is black in both themes, because it sits inside a tile, where the
- * page is not what the picture meets.
+ * page is not what the picture meets. [headerTop] is black in both themes too: it is what a page
+ * header ([Tone.onArt] words and icons) stands on while a hero's picture runs up behind it.
  *
  * Apply one with `Modifier.background(brush)` on a box drawn over the picture.
  */
@@ -52,6 +53,38 @@ object Scrims {
         0.60f to 0.70f,
         1f to 0.95f,
     )
+
+    /**
+     * The top of a hero's picture where a page header sits over it, as (position, alpha) pairs
+     * of black from the top edge down. The header fills the first [HEADER_SHARE] of the height,
+     * where the black never drops under 0.66: enough for [Tone.onArtMuted] at 4.5:1 over a white
+     * picture, and [Tone.onArt] at 7:1. Under the header it eases out to clear.
+     */
+    internal val TopCurve: List<Pair<Float, Float>> = listOf(
+        0f to 0.74f,
+        0.25f to 0.70f,
+        HEADER_SHARE to 0.66f,
+        0.62f to 0.50f,
+        0.74f to 0.30f,
+        0.86f to 0.11f,
+        1f to 0f,
+    )
+
+    /**
+     * [TopCurve] down whatever it is drawn across: a header's own height stretched by
+     * [HEADER_REACH], so the header sits in its dark part and the picture shows clear under it.
+     * Draw it behind the header with [androidx.compose.ui.draw.drawBehind], sized
+     * `size.height * HEADER_REACH`.
+     */
+    val headerTop: Brush = Brush.verticalGradient(
+        colorStops = TopCurve.map { (at, alpha) -> at to Color.Black.copy(alpha = alpha) }.toTypedArray(),
+    )
+
+    /** The share of [headerTop]'s height the header itself takes. */
+    const val HEADER_SHARE = 0.5f
+
+    /** How much taller than the header [headerTop] is drawn: the header over its first [HEADER_SHARE]. */
+    const val HEADER_REACH = 1f / HEADER_SHARE
 
     /**
      * The fade at the foot of a hero or a page backdrop: clear above the last [height] of

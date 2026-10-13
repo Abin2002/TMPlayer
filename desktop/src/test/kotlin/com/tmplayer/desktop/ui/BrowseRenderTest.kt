@@ -339,6 +339,15 @@ class BrowseRenderTest {
                     }
                 })
             }
+            // Docked beside the page, as the shell draws it on a wide window: the rows stay in reach.
+            save("desktop-detail-home-docked.png", render {
+                androidx.compose.foundation.layout.Row(Modifier.fillMaxSize()) {
+                    Box(Modifier.weight(1f).fillMaxHeight()) {
+                        HomeRowsView(shell, rows, chats, emptyMap(), onRowShown = {}, onArtWanted = {}, onRefresh = {})
+                    }
+                    DetailPaneSide(shell)
+                }
+            })
         } finally {
             shell.closeDetail()
             shell.go(Destination.Chats)
@@ -405,6 +414,8 @@ class BrowseRenderTest {
         val grid = render { VideoGrid(shell, items, "Weekend series") }
         save("watched-grid.png", grid)
         shell.showHistory(com.tmplayer.ui.browse.HistoryTab.Watched)
+        // As Home would have looked them up: History's cards wear the thumbnail, not the cover.
+        items.take(1).forEach(com.tmplayer.ui.browse.RecordItems::keep)
         val page = render { HistoryPage(shell) }
         save("watched-page.png", page)
         shell.showHistory(com.tmplayer.ui.browse.HistoryTab.Continue)

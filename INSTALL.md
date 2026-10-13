@@ -244,8 +244,10 @@ picked a storage location in the Flatpak's settings, check it again in the AppIm
 3. If your account has two-step verification, type the password.
 
 You land on your chats. The sidebar has Chats, Favourites, Continue, Downloads and Settings; open a
-chat for its videos, hover a tile for its Play button, or right click it to play from the start,
-download it or copy its Telegram link. Ctrl+click (Cmd+click on a Mac) picks several tiles and
+chat for its videos and click a tile for its page beside the list, with Play, the cast and the
+download on it; double click a tile, or hover it for its Play button, to play at once. Settings,
+Playback, **Open a video's page first** turns the page off, so a click plays. Right click a tile to
+play from the start, download it or copy its Telegram link. Ctrl+click (Cmd+click on a Mac) picks several tiles and
 Shift+click a run of them; **Download selected** then queues them all.
 
 ## Storage on a computer

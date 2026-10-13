@@ -93,6 +93,8 @@ sealed interface HomeRow {
  *   work and news as often as films, so what is new there is not what Home is for. It needs two
  *   starred chats at least: with one, it would repeat that chat's own row.
  * - Every row holds at most [LIMIT] tiles. A show folded into one tile counts once.
+ * - Continue watching holds one record per film or episode: copies of it (a 1080p and a 720p)
+ *   fold into the one watched last ([foldCopies]).
  * - A video appears once among Continue, Watch later and the chat rows: something part way
  *   through is in Continue and nowhere else, something saved for later is in Watch later. Recently added is the starred chats' videos again, merged into one
  *   timeline, so it leaves out only what is in Continue.
@@ -132,9 +134,13 @@ object HomeRows {
     ): List<HomeRow> = buildList {
         val seen = HashSet<String>()
 
-        val everyResume = continueWatching.distinctBy { keyOf(it.chatId, it.messageId) }
+        val distinct = continueWatching.distinctBy { keyOf(it.chatId, it.messageId) }
+        val everyResume = foldCopies(distinct)
         val resume = everyResume.take(LIMIT)
         resume.forEach { seen += keyOf(it.chatId, it.messageId) }
+        // A copy folded under the one watched last is in Continue too, through that one.
+        val shownCopies = resume.mapTo(HashSet()) { record -> copyKeyOf(record) }
+        distinct.forEach { record -> if (copyKeyOf(record).let { it != null && it in shownCopies }) seen += keyOf(record.chatId, record.messageId) }
         if (resume.isNotEmpty()) add(HomeRow.Continue(resume, everyResume.drop(LIMIT)))
         val inContinue = HashSet(seen)
 
@@ -216,6 +222,30 @@ object HomeRows {
             .filterNot { it.id in shown }
             .sortedWith(compareByDescending<MediaItem> { it.date }.thenByDescending { it.messageId })
     }
+
+    /**
+     * [records] with the copies of one film or one episode in a chat (a 1080p and a 720p of it,
+     * see [SeriesShelf.sameVideoKey]) folded into one: the copy watched last, with its own place
+     * and quality, where the newest of them stood. Everything else is left as it is, in its order.
+     * What Continue watching lists, on Home and in History alike.
+     */
+    fun foldCopies(records: List<ResumeRecord>): List<ResumeRecord> {
+        val latest = HashMap<String, ResumeRecord>()
+        records.forEach { record ->
+            val key = copyKeyOf(record) ?: return@forEach
+            val held = latest[key]
+            if (held == null || record.updatedAt > held.updatedAt) latest[key] = record
+        }
+        val placed = HashSet<String>()
+        return records.mapNotNull { record ->
+            val key = copyKeyOf(record) ?: return@mapNotNull record
+            if (placed.add(key)) latest.getValue(key) else null
+        }
+    }
+
+    /** Which film or episode [record] is a copy of, within its chat; null for a video that names neither. */
+    private fun copyKeyOf(record: ResumeRecord): String? =
+        SeriesShelf.sameVideoKey(record.toMediaItem())?.let { "${record.chatId}|$it" }
 
     /** How many Continue watching records the spotlight looks through for one with art: see [spotlight]. */
     const val SPOTLIGHT_CANDIDATES = 3

@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -38,6 +39,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -60,6 +63,9 @@ import com.tmplayer.ui.browse.FirstVideoCard
 import com.tmplayer.ui.browse.HistoryTab
 import com.tmplayer.ui.browse.HomeSpotlight
 import com.tmplayer.ui.browse.HomeViewModel
+import com.tmplayer.ui.browse.SPOTLIGHT_KEY
+import com.tmplayer.ui.browse.overHero
+import com.tmplayer.ui.browse.rememberHeroUnderHeader
 import com.tmplayer.ui.browse.NewBadge
 import com.tmplayer.ui.browse.SpotlightState
 import com.tmplayer.ui.browse.rememberHomeRows
@@ -140,196 +146,225 @@ internal fun HomeRowsView(
         rows.filterIsInstance<HomeRow.Continue>().firstOrNull()?.let { HomeRows.spotlight(it.records + it.more) }.orEmpty()
     }
     val spotlight = (rememberSpotlight(candidates, art, onArtWanted) as? SpotlightState.Ready)?.spotlight
-    Column(Modifier.fillMaxSize()) {
+    // With a spotlight the header is drawn over the list, and the hero's picture runs up behind
+    // it to the top of the page; the header stands on the picture's top scrim while the hero is
+    // under it, and on the page's own background once the hero has scrolled away.
+    val overHero = spotlight != null && rows.isNotEmpty()
+    val list = rememberLazyListState()
+    val density = LocalDensity.current
+    var headerHeight by remember { mutableStateOf(HEADER_GUESS) }
+    val heroUnder by rememberHeroUnderHeader(list, headerHeight, overHero)
+    val header: @Composable (Modifier, Boolean) -> Unit = { modifier, onArt ->
         PageHeader(
             BrowseTab.Home.heading,
             BrowseTab.Home.blurb,
+            modifier = modifier,
+            onArt = onArt,
             actions = {
                 IconButton(onClick = onRefresh) { Icon(Icons.Filled.Refresh, contentDescription = s.commonRefresh) }
                 PosterSizeStep(state)
             },
         )
-        if (rows.isEmpty()) {
-            // Nothing played and nothing starred: a first run, so say how to get a first video in:
-            // through Saved Messages, or with the default groups hidden, through a folder.
-            val folders by com.tmplayer.data.Td.folders.collectAsState()
-            val step = remember(state.hideDefaultGroups, folders) {
-                com.tmplayer.ui.browse.DefaultGroups.firstStep(state.hideDefaultGroups, folders)
-            }
-            Box(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(32.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                val target = step.target
-                FirstVideoCard(
-                    title = s.homeFirstTitle,
-                    body = step.body,
-                    more = s.homeFirstMore,
-                    button = step.button?.takeIf { target != null },
-                    onButton = { target?.let(state::showChats) },
-                )
-            }
-            return@Column
-        }
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val heroHeight = (maxHeight * HERO_SHARE).coerceIn(HERO_MIN, HERO_MAX)
-            val side = if (maxWidth > WIDE_WINDOW) 32.dp else 24.dp
-            LazyColumn(
-                Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-            ) {
-                if (spotlight != null) {
-                    item(key = "spotlight", contentType = "spotlight") {
-                        val record = spotlight.record
-                        val chatTitle = record.chatTitle.ifEmpty { titles[record.chatId].orEmpty() }
-                        HomeSpotlight(
-                            spotlight = spotlight,
-                            chatTitle = chatTitle,
-                            wide = true,
-                            height = heroHeight,
-                            start = side,
-                            end = side,
-                            onResume = { state.openPlayer(spotlight.item, startFromBeginning = false) },
-                            onDetails = {
-                                state.openDetail(DetailRequest(item = spotlight.item, chatTitle = chatTitle, outsideChat = true))
-                            },
-                        )
-                    }
+    }
+    Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize()) {
+            if (!overHero) header(Modifier, false)
+            if (rows.isEmpty()) {
+                // Nothing played and nothing starred: a first run, so say how to get a first video in:
+                // through Saved Messages, or with the default groups hidden, through a folder.
+                val folders by com.tmplayer.data.Td.folders.collectAsState()
+                val step = remember(state.hideDefaultGroups, folders) {
+                    com.tmplayer.ui.browse.DefaultGroups.firstStep(state.hideDefaultGroups, folders)
                 }
-                items(rows, key = { it.key }, contentType = { it::class }) { row ->
-                    val loaded = when (row) {
-                        is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> true
-                        is HomeRow.Chat -> row.loaded
-                        is HomeRow.Recent -> row.loaded
-                    }
-                    LaunchedEffect(row.key, loaded) { if (!loaded) onRowShown(row) }
-                    val heading: Pair<String, (() -> Unit)?> = when (row) {
-                        is HomeRow.Continue -> s.homeRowContinue to { state.showHistory(HistoryTab.Continue) }
-                        is HomeRow.WatchLater -> s.homeRowWatchLater to { state.showHistory(HistoryTab.WatchLater) }
-                        is HomeRow.Chat -> row.title to { chats.firstOrNull { it.id == row.chatId }?.let(state::openChat); Unit }
-                        is HomeRow.NewEpisodes -> s.homeRowNewEpisodes to null
-                        is HomeRow.Recent -> s.homeRowRecent to null
-                    }
-                    // Only a row that leaves something out offers the rest of it.
-                    val title = heading.first
-                    val seeAll = heading.second?.takeIf { row.hasMore }
-                    Column {
-                        Row(
-                            Modifier.fillMaxWidth().padding(start = side, end = side).heightIn(min = 40.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                title,
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f),
+                Box(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(32.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val target = step.target
+                    FirstVideoCard(
+                        title = s.homeFirstTitle,
+                        body = step.body,
+                        more = s.homeFirstMore,
+                        button = step.button?.takeIf { target != null },
+                        onButton = { target?.let(state::showChats) },
+                    )
+                }
+                return@Column
+            }
+            BoxWithConstraints(Modifier.fillMaxSize()) {
+                // Measured on the page under the header, as when the header sat above the list.
+                val heroHeight = ((maxHeight - if (overHero) headerHeight else 0.dp) * HERO_SHARE).coerceIn(HERO_MIN, HERO_MAX)
+                val side = if (maxWidth > WIDE_WINDOW) 32.dp else 24.dp
+                LazyColumn(
+                    Modifier.fillMaxSize(),
+                    state = list,
+                    contentPadding = PaddingValues(bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                ) {
+                    if (spotlight != null) {
+                        item(key = SPOTLIGHT_KEY, contentType = "spotlight") {
+                            val record = spotlight.record
+                            val chatTitle = record.chatTitle.ifEmpty { titles[record.chatId].orEmpty() }
+                            HomeSpotlight(
+                                spotlight = spotlight,
+                                chatTitle = chatTitle,
+                                wide = true,
+                                height = heroHeight,
+                                start = side,
+                                end = side,
+                                onResume = { state.openPlayer(spotlight.item, startFromBeginning = false) },
+                                onDetails = {
+                                    state.openDetail(DetailRequest(item = spotlight.item, chatTitle = chatTitle, outsideChat = true))
+                                },
+                                under = headerHeight,
                             )
-                            if (seeAll != null) {
-                                TextButton(onClick = seeAll) {
-                                    Text(s.homeSeeAll)
-                                    Text(
-                                        "  ·  " + if (row.totalAtLeast) s.homeSeeAllCountAtLeast(row.total) else s.homeSeeAllCount(row.total),
-                                        color = Tone.muted,
-                                    )
-                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(18.dp))
-                                }
-                            }
                         }
-                        if (!loaded) {
-                            Row(Modifier.padding(start = side, top = 8.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                // A card's art and its caption in the same type with nothing in it, so the
-                                // rows below stay put when this one fills.
-                                repeat(4) {
-                                    Column(Modifier.width(state.posterWidth), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Box(
-                                            Modifier.padding(bottom = 4.dp).fillMaxWidth()
-                                                .aspectRatio(16f / 9f)
-                                                .background(Tone.surface, MaterialTheme.shapes.medium),
-                                        )
-                                        Text(" ", style = MaterialTheme.typography.titleSmall, maxLines = 1)
-                                        Text(" ", style = MaterialTheme.typography.labelMedium, maxLines = 1)
-                                    }
-                                }
-                            }
-                            return@Column
+                    }
+                    items(rows, key = { it.key }, contentType = { it::class }) { row ->
+                        val loaded = when (row) {
+                            is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> true
+                            is HomeRow.Chat -> row.loaded
+                            is HomeRow.Recent -> row.loaded
                         }
-                        when (row) {
-                            is HomeRow.Continue -> Strip(side) {
-                                items(row.records, key = { "r-${it.chatId}_${it.messageId}" }) { record ->
-                                    val key = SettingsStore.progressKey(record.chatId, record.messageId)
-                                    LaunchedEffect(key) { onArtWanted(record) }
-                                    LaunchedEffect(key) { state.noteChatTitle(record.chatId, record.chatTitle) }
-                                    val item = art[key] ?: remember(record) { record.toMediaItem() }
-                                    val chatTitle = record.chatTitle.ifEmpty { titles[record.chatId].orEmpty() }
-                                    Box(Modifier.width(state.posterWidth * CONTINUE_SHARE)) {
-                                        Poster(
-                                            state = state,
-                                            nav = null,
-                                            index = 0,
-                                            item = item,
-                                            chatTitle = chatTitle,
-                                            // The card draws its own pill of progress, under the name.
-                                            progress = null,
-                                            art = { OnHome { ContinueCardArt(record, item, Modifier.fillMaxSize()) } },
-                                            titleBelow = false,
-                                            // Where it came from and what the file is: Telegram's facts.
-                                            subtitle = listOfNotNull(
-                                                chatTitle.ifBlank { null },
-                                                item.qualityTags.firstOrNull(),
-                                                item.sizeBytes.takeIf { it > 0 }?.let { MediaMapper.formatSize(it) },
-                                            ).joinToString("  ·  "),
-                                            onDetails = { refocus ->
-                                                state.openDetail(DetailRequest(item = item, chatTitle = chatTitle, outsideChat = true, onClosed = refocus))
-                                            },
+                        LaunchedEffect(row.key, loaded) { if (!loaded) onRowShown(row) }
+                        val heading: Pair<String, (() -> Unit)?> = when (row) {
+                            is HomeRow.Continue -> s.homeRowContinue to { state.showHistory(HistoryTab.Continue) }
+                            is HomeRow.WatchLater -> s.homeRowWatchLater to { state.showHistory(HistoryTab.WatchLater) }
+                            is HomeRow.Chat -> row.title to { chats.firstOrNull { it.id == row.chatId }?.let(state::openChat); Unit }
+                            is HomeRow.NewEpisodes -> s.homeRowNewEpisodes to null
+                            is HomeRow.Recent -> s.homeRowRecent to null
+                        }
+                        // Only a row that leaves something out offers the rest of it.
+                        val title = heading.first
+                        val seeAll = heading.second?.takeIf { row.hasMore }
+                        Column {
+                            Row(
+                                Modifier.fillMaxWidth().padding(start = side, end = side).heightIn(min = 40.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    title,
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                if (seeAll != null) {
+                                    TextButton(onClick = seeAll) {
+                                        Text(s.homeSeeAll)
+                                        Text(
+                                            "  ·  " + if (row.totalAtLeast) s.homeSeeAllCountAtLeast(row.total) else s.homeSeeAllCount(row.total),
+                                            color = Tone.muted,
                                         )
+                                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(18.dp))
                                     }
                                 }
                             }
-                            // The card a chat's grid draws, so the pane offers Remove from Watch later.
-                            is HomeRow.WatchLater -> Strip(side) {
-                                items(row.records, key = { "l-${it.key}" }) { record ->
-                                    LaunchedEffect(record.key) { onLaterArtWanted(record) }
-                                    LaunchedEffect(record.key) { state.noteChatTitle(record.chatId, record.chatTitle) }
-                                    val item = art[record.key] ?: remember(record) { record.toMediaItem() }
-                                    Box(Modifier.width(state.posterWidth)) {
-                                        OnHome { MediaTile(state, item, record.chatTitle, outsideChat = true) }
+                            if (!loaded) {
+                                Row(Modifier.padding(start = side, top = 8.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    // A card's art and its caption in the same type with nothing in it, so the
+                                    // rows below stay put when this one fills.
+                                    repeat(4) {
+                                        Column(Modifier.width(state.posterWidth), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            Box(
+                                                Modifier.padding(bottom = 4.dp).fillMaxWidth()
+                                                    .aspectRatio(16f / 9f)
+                                                    .background(Tone.surface, MaterialTheme.shapes.medium),
+                                            )
+                                            Text(" ", style = MaterialTheme.typography.titleSmall, maxLines = 1)
+                                            Text(" ", style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                                        }
                                     }
                                 }
+                                return@Column
                             }
-                            is HomeRow.NewEpisodes -> Strip(side) {
-                                items(row.episodes, key = { "n-${it.item.id}" }) { episode ->
-                                    val item = episode.item
-                                    val chatTitle = titles[item.chatId].orEmpty()
-                                    Box(Modifier.width(state.posterWidth)) {
-                                        Poster(
-                                            state = state,
-                                            nav = null,
-                                            index = 0,
-                                            item = item,
-                                            chatTitle = chatTitle,
-                                            progress = null,
-                                            badge = { NewBadge(compact = false) },
-                                            art = { OnHome { OnlineArt(item, Modifier.fillMaxSize()) { RecordArt(item) } } },
-                                            // Which episode and that it is new, then where it was posted.
-                                            subtitle = listOf(
-                                                if (episode.show.isBlank()) s.homeNewEpisode(episode.code) else "${episode.show} ${s.homeNewEpisode(episode.code)}",
-                                                chatTitle,
-                                            ).filter { it.isNotBlank() }.joinToString("  ·  "),
-                                            onDetails = { refocus ->
-                                                state.openDetail(DetailRequest(item = item, chatTitle = chatTitle, outsideChat = true, onClosed = refocus))
-                                            },
-                                        )
+                            when (row) {
+                                is HomeRow.Continue -> Strip(side) {
+                                    items(row.records, key = { "r-${it.chatId}_${it.messageId}" }) { record ->
+                                        val key = SettingsStore.progressKey(record.chatId, record.messageId)
+                                        LaunchedEffect(key) { onArtWanted(record) }
+                                        LaunchedEffect(key) { state.noteChatTitle(record.chatId, record.chatTitle) }
+                                        val item = art[key] ?: remember(record) { record.toMediaItem() }
+                                        val chatTitle = record.chatTitle.ifEmpty { titles[record.chatId].orEmpty() }
+                                        Box(Modifier.width(state.posterWidth * CONTINUE_SHARE)) {
+                                            Poster(
+                                                state = state,
+                                                nav = null,
+                                                index = 0,
+                                                item = item,
+                                                chatTitle = chatTitle,
+                                                // The card draws its own pill of progress, under the name.
+                                                progress = null,
+                                                art = { OnHome { ContinueCardArt(record, item, Modifier.fillMaxSize()) } },
+                                                titleBelow = false,
+                                                // Where it came from and what the file is: Telegram's facts.
+                                                subtitle = listOfNotNull(
+                                                    chatTitle.ifBlank { null },
+                                                    item.qualityTags.firstOrNull(),
+                                                    item.sizeBytes.takeIf { it > 0 }?.let { MediaMapper.formatSize(it) },
+                                                ).joinToString("  ·  "),
+                                                onDetails = { refocus ->
+                                                    state.openDetail(DetailRequest(item = item, chatTitle = chatTitle, outsideChat = true, onClosed = refocus))
+                                                },
+                                            )
+                                        }
                                     }
                                 }
+                                // The card a chat's grid draws, so the pane offers Remove from Watch later.
+                                is HomeRow.WatchLater -> Strip(side) {
+                                    items(row.records, key = { "l-${it.key}" }) { record ->
+                                        LaunchedEffect(record.key) { onLaterArtWanted(record) }
+                                        LaunchedEffect(record.key) { state.noteChatTitle(record.chatId, record.chatTitle) }
+                                        val item = art[record.key] ?: remember(record) { record.toMediaItem() }
+                                        Box(Modifier.width(state.posterWidth)) {
+                                            OnHome { MediaTile(state, item, record.chatTitle, outsideChat = true) }
+                                        }
+                                    }
+                                }
+                                is HomeRow.NewEpisodes -> Strip(side) {
+                                    items(row.episodes, key = { "n-${it.item.id}" }) { episode ->
+                                        val item = episode.item
+                                        val chatTitle = titles[item.chatId].orEmpty()
+                                        Box(Modifier.width(state.posterWidth)) {
+                                            Poster(
+                                                state = state,
+                                                nav = null,
+                                                index = 0,
+                                                item = item,
+                                                chatTitle = chatTitle,
+                                                progress = null,
+                                                badge = { NewBadge(compact = false) },
+                                                art = { OnHome { OnlineArt(item, Modifier.fillMaxSize()) { RecordArt(item) } } },
+                                                // Telegram's facts, as on every other row: the title already
+                                                // names the episode, and the New badge on the art says it is new.
+                                                subtitle = listOfNotNull(
+                                                    chatTitle.ifBlank { null },
+                                                    item.qualityTags.firstOrNull(),
+                                                    item.sizeBytes.takeIf { it > 0 }?.let { MediaMapper.formatSize(it) },
+                                                ).joinToString("  ·  "),
+                                                onDetails = { refocus ->
+                                                    state.openDetail(DetailRequest(item = item, chatTitle = chatTitle, outsideChat = true, onClosed = refocus))
+                                                },
+                                            )
+                                        }
+                                    }
+                                }
+                                is HomeRow.Chat -> ShelfStrips(state, side, row.entries, { row.title }) { openSeries = it }
+                                is HomeRow.Recent -> ShelfStrips(state, side, row.entries, { titles[it].orEmpty() }) { openSeries = it }
                             }
-                            is HomeRow.Chat -> ShelfStrips(state, side, row.entries, { row.title }) { openSeries = it }
-                            is HomeRow.Recent -> ShelfStrips(state, side, row.entries, { titles[it].orEmpty() }) { openSeries = it }
                         }
                     }
                 }
             }
+        }
+        if (overHero) {
+            header(
+                Modifier
+                    .fillMaxWidth()
+                    .onSizeChanged { headerHeight = with(density) { it.height.toDp() } }
+                    .overHero(heroUnder),
+                heroUnder,
+            )
         }
     }
 }
@@ -379,11 +414,14 @@ private fun LazyListScope.shelf(
     }
 }
 
-/** Home's tiles may wear the show's or the film's picture (see LocalOnlineArt); a chat's grid keeps frames. */
+/** Home's and History's tiles may wear the show's or the film's picture (see LocalOnlineArt); a chat's grid keeps frames. */
 @Composable
-private fun OnHome(content: @Composable () -> Unit) {
+internal fun OnHome(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalOnlineArt provides true, content = content)
 }
+
+/** The header's height before it is first measured: the display title, its line and the padding. */
+private val HEADER_GUESS = 96.dp
 
 /** A poster on Home, as in a chat's grid: three quarters of a card's width. */
 private const val POSTER_SHARE = 0.75f

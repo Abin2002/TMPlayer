@@ -1,6 +1,7 @@
 package com.tmplayer.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -47,6 +48,18 @@ class ThemeTokensTest {
         val foot = Scrims.FootCurve
         assertTrue(foot.filter { it.first <= 0.45f }.all { it.second == 0f })
         assertEquals(0.95f, foot.last().second)
+    }
+
+    @Test
+    fun `a header over a white picture keeps both its lines at 4,5 to 1`() {
+        val top = Scrims.TopCurve
+        assertTrue(top.zipWithNext().all { (a, b) -> b.first > a.first && b.second <= a.second })
+        assertEquals(0f, top.last().second)
+        val thinnest = top.filter { it.first <= Scrims.HEADER_SHARE }.minOf { it.second }
+        // The header's darkest ground and its lightest: black at [thinnest] over white.
+        val ground = Color.Black.copy(alpha = thinnest).compositeOver(Color.White)
+        assertTrue(contrast(OnArt, ground) >= 7f)
+        assertTrue(contrast(OnArtMuted.compositeOver(ground), ground) >= 4.5f)
     }
 
     private fun contrast(a: Color, b: Color): Float {

@@ -112,6 +112,7 @@ import com.tmplayer.ui.components.ChatListSkeleton
 import com.tmplayer.ui.components.StateScaffold
 import com.tmplayer.data.ResumeRecord
 import com.tmplayer.data.HomeRow
+import com.tmplayer.data.HomeRows
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.WatchLaterRecord
@@ -172,6 +173,10 @@ import com.tmplayer.ui.theme.Motion
 import com.tmplayer.ui.theme.rememberReducedMotion
 import com.tmplayer.ui.components.ProgressLine
 import com.tmplayer.ui.components.GeneratedCover
+import com.tmplayer.ui.components.MediaArt
+import com.tmplayer.ui.online.LocalOnlineArt
+import com.tmplayer.ui.online.OnlineArt
+import androidx.compose.runtime.CompositionLocalProvider
 import com.tmplayer.ui.components.CoverArt
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.snap
@@ -370,6 +375,10 @@ fun BrowseScreen(
     val pickSort: (ChatSort) -> Unit = { panelScope.launch { browseSettings.setChatSort(it.name) } }
     val pickHistory: (HistoryTab) -> Unit = { panelScope.launch { browseSettings.setHistoryTab(it.name) } }
     val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
+    // Home's hero, for the header drawn over it: the phone's app bar or the television's heading.
+    val homeHero = remember { HeroUnderHeader() }
+    // History's Continue tab, with the copies of one film or episode as one card, as on Home.
+    val continuing = remember(continueWatching) { HomeRows.foldCopies(continueWatching) }
     val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
     val showsWatchLater = tab.listsVideos && historyTab == HistoryTab.WatchLater
 
@@ -432,45 +441,65 @@ fun BrowseScreen(
             val headerAccount = data.account ?: account
             Column(Modifier.fillMaxSize()) {
                     if (tab.isHome) {
-                        if (!touch) {
-                            TabHeading(tab, 0, insets, headerAccount) { RefreshAction(onRefreshHome) }
+                        // With a hero, a television's heading goes over the pane and the hero's
+                        // picture runs up behind it to the top of the content area; the heading
+                        // stands on the picture's top scrim while the hero is under it. A phone's
+                        // app bar does the same through the shell (see TouchBrowseShell).
+                        val headingOverHero = !touch && homeHero.present
+                        var headingHeight by remember { mutableStateOf(0.dp) }
+                        val density = LocalDensity.current
+                        val heading: @Composable (Modifier, Boolean) -> Unit = { modifier, onArt ->
+                            TabHeading(tab, 0, insets, headerAccount, modifier = modifier, onArt = onArt) { RefreshAction(onRefreshHome) }
                         }
+                        if (!touch && !headingOverHero) heading(Modifier, false)
                         val titles = remember(data.chats) { data.chats.associate { it.id to it.title } }
-                        HomePane(
-                            rows = homeRows,
-                            watch = homeWatch,
-                            art = homeArt,
-                            chatTitle = { titles[it].orEmpty() },
-                            start = insets.start,
-                            end = insets.end,
-                            bottom = insets.bottom,
-                            onRowShown = onHomeRowShown,
-                            onArtWanted = onHomeArtWanted,
-                            onResume = openResume,
-                            onPlay = openMedia,
-                            onHoldMedia = holdMedia,
-                            onSeeContinue = {
-                                pickHistory(HistoryTab.Continue)
-                                onPickTab(BrowseSection.of(BrowseTab.History))
-                                query = ""
-                            },
-                            onOpenChat = { id -> data.chats.firstOrNull { it.id == id }?.let(onOpenChat) },
-                            noFavourites = favorites.isEmpty(),
-                            firstStep = remember(defaultsHidden, folders) { DefaultGroups.firstStep(defaultsHidden, folders) },
-                            onOpenSection = { onPickTab(it); query = "" },
-                            onOpenWatchLater = openLater,
-                            onLaterArtWanted = onHomeLaterArtWanted,
-                            onSeeWatchLater = {
-                                pickHistory(HistoryTab.WatchLater)
-                                onPickTab(BrowseSection.of(BrowseTab.History))
-                                query = ""
-                            },
-                            onDownloadSeason = { request ->
-                                panelScope.launch {
-                                    queueSeason(panelContext, SettingsStore(panelContext), request) { titles[it.chatId].orEmpty() }?.let(onMessage)
-                                }
-                            },
-                        )
+                        Box(Modifier.fillMaxSize()) {
+                            HomePane(
+                                rows = homeRows,
+                                watch = homeWatch,
+                                art = homeArt,
+                                chatTitle = { titles[it].orEmpty() },
+                                start = insets.start,
+                                end = insets.end,
+                                bottom = insets.bottom,
+                                onRowShown = onHomeRowShown,
+                                onArtWanted = onHomeArtWanted,
+                                onResume = openResume,
+                                onPlay = openMedia,
+                                onHoldMedia = holdMedia,
+                                onSeeContinue = {
+                                    pickHistory(HistoryTab.Continue)
+                                    onPickTab(BrowseSection.of(BrowseTab.History))
+                                    query = ""
+                                },
+                                onOpenChat = { id -> data.chats.firstOrNull { it.id == id }?.let(onOpenChat) },
+                                noFavourites = favorites.isEmpty(),
+                                firstStep = remember(defaultsHidden, folders) { DefaultGroups.firstStep(defaultsHidden, folders) },
+                                onOpenSection = { onPickTab(it); query = "" },
+                                onOpenWatchLater = openLater,
+                                onLaterArtWanted = onHomeLaterArtWanted,
+                                onSeeWatchLater = {
+                                    pickHistory(HistoryTab.WatchLater)
+                                    onPickTab(BrowseSection.of(BrowseTab.History))
+                                    query = ""
+                                },
+                                onDownloadSeason = { request ->
+                                    panelScope.launch {
+                                        queueSeason(panelContext, SettingsStore(panelContext), request) { titles[it.chatId].orEmpty() }?.let(onMessage)
+                                    }
+                                },
+                                under = if (touch) LocalUnderBar.current else if (headingOverHero) headingHeight else 0.dp,
+                                hero = homeHero,
+                            )
+                            if (headingOverHero) {
+                                heading(
+                                    Modifier
+                                        .onSizeChanged { headingHeight = with(density) { it.height.toDp() } }
+                                        .overHero(homeHero.underHeader),
+                                    homeHero.underHeader,
+                                )
+                            }
+                        }
                     } else if (tab.listsVideos) {
                         // One branch for both tabs, so the chip row stays the same composition when
                         // OK switches tab and the remote's focus stays on the chip it pressed.
@@ -478,7 +507,7 @@ fun BrowseScreen(
                         // the content area starts with the content.
                         if (!touch) {
                             val shown = when {
-                                showsContinue -> continueWatching.size
+                                showsContinue -> continuing.size
                                 showsWatchLater -> watchLater.size
                                 else -> watchedHistory.size
                             }
@@ -486,7 +515,7 @@ fun BrowseScreen(
                                 LayoutAction(layout, onToggleLayout)
                                 // No Refresh here: History is read off this device and cannot be
                                 // behind, so the button would be one that visibly does nothing.
-                                if (showsContinue && continueWatching.isNotEmpty()) {
+                                if (showsContinue && continuing.isNotEmpty()) {
                                     HeaderAction(
                                         label = s.browseClearHistory,
                                         icon = Icons.Filled.Close,
@@ -504,11 +533,11 @@ fun BrowseScreen(
                         }
                         historyChips()
                         if (showsContinue) {
-                            if (continueWatching.isEmpty()) {
+                            if (continuing.isEmpty()) {
                                 EmptyTab(tab, query = "", history = HistoryTab.Continue)
                             } else {
                                 ContinueSection(
-                                    records = continueWatching,
+                                    records = continuing,
                                     layout = layout,
                                     insets = insets,
                                     tiles = tiles,
@@ -701,7 +730,7 @@ fun BrowseScreen(
         val count = if (tab.isHome) {
             0
         } else if (showsContinue) {
-            continueWatching.size
+            continuing.size
         } else if (showsWatched) {
             watchedHistory.size
         } else if (showsWatchLater) {
@@ -729,6 +758,7 @@ fun BrowseScreen(
             searchQuery = if (tab.listsVideos || tab.isHome) null else query,
             onSearchQueryChange = { query = it },
             onVoiceSearch = voiceSearch,
+            barOverHero = if (tab.isHome && homeHero.present) homeHero.underHeader else null,
             actions = actions@{
                 // Home is rows of tiles whatever the arrangement, so it only offers a refresh.
                 if (tab.isHome) {
@@ -1060,6 +1090,8 @@ private class VideoCardText(
     /** The chat the video is in, which picks the colours of its generated cover. */
     val chatId: Long,
     val fraction: Float,
+    /** The video as the record keeps it, with no picture: what the card shows until Telegram answers. */
+    val item: MediaItem,
 )
 
 private fun ResumeRecord.cardText() = VideoCardText(
@@ -1076,6 +1108,7 @@ private fun ResumeRecord.cardText() = VideoCardText(
     chatTitle = chatTitle,
     chatId = chatId,
     fraction = fraction,
+    item = toMediaItem(),
 )
 
 /** A finished video: when it was finished, and a full bar, which is what "watched" looks like. */
@@ -1086,6 +1119,7 @@ private fun WatchedRecord.cardText(now: Long) = VideoCardText(
     chatTitle = chatTitle,
     chatId = chatId,
     fraction = 1f,
+    item = toMediaItem(),
 )
 
 /** A video saved for later: how long it is and how big, and no bar until it is started. */
@@ -1099,6 +1133,7 @@ private fun WatchLaterRecord.cardText() = VideoCardText(
     chatTitle = chatTitle,
     chatId = chatId,
     fraction = 0f,
+    item = toMediaItem(),
 )
 
 @Composable
@@ -1355,12 +1390,13 @@ private fun ContinueCard(
 }
 
 /**
- * Artwork for a Continue watching card: the video's generated cover with a play mark on it.
+ * Artwork for a History card (Continue watching, Watch later, Watched), with a play mark on it.
  *
- * A resume record deliberately contains no remote artwork URL. The cover is drawn from the title
- * and the chat alone, so it remains useful offline, discloses no selected media to another
- * service, and never blocks this screen. It is dark in both themes, which is what lets the
- * progress line lie on it the way it lies on every other video's art.
+ * Home's art: a record keeps no picture, so the card asks Telegram for its video once
+ * ([rememberRecordItem]) and wears its thumbnail, under the show's or the film's own picture
+ * where online pictures are on. The generated cover, drawn from the title and the chat alone,
+ * stands in until then and for good when there is no thumbnail, so the card never waits on the
+ * network and still works offline. Both are dark enough in either theme for the progress line.
  *
  * [modifier] carries the size, because the row wants a thumbnail and the tile wants the whole
  * width of its column. [badge] follows it: a 34 dp disc that reads as a play button over a 96 dp
@@ -1369,9 +1405,16 @@ private fun ContinueCard(
 @Composable
 private fun ContinueArt(text: VideoCardText, modifier: Modifier = Modifier, badge: Dp) {
     val cover = remember(text.chatId, text.title) { CoverArt.of(text.chatId, text.title) }
+    val item = rememberRecordItem(text.item.chatId, text.item.messageId, text.item)
     Box(modifier.clip(RoundedCornerShape(Corner.Small)), contentAlignment = Alignment.Center) {
-        // No title on the cover: the card prints it beside or under the art already.
-        GeneratedCover(cover, Modifier.fillMaxSize(), compact = true, showTitle = false)
+        CompositionLocalProvider(LocalOnlineArt provides true) {
+            OnlineArt(item, Modifier.fillMaxSize()) {
+                MediaArt(item.miniThumbnail, item.thumbnailFileId, Modifier.fillMaxSize()) {
+                    // No title on the cover: the card prints it beside or under the art already.
+                    GeneratedCover(cover, Modifier.fillMaxSize(), compact = true, showTitle = false)
+                }
+            }
+        }
         Icon(
             imageVector = Icons.Filled.PlayArrow,
             contentDescription = null,
@@ -1901,13 +1944,16 @@ private fun TabHeading(
     account: Account?,
     /** History's line follows its tab rather than the section's. */
     blurb: String = tab.blurb,
+    modifier: Modifier = Modifier,
+    /** Standing on a hero's picture under [com.tmplayer.ui.theme.Scrims.headerTop]: the words in [Tone.onArt]. */
+    onArt: Boolean = false,
     action: @Composable () -> Unit = {},
 ) {
     // The number always carries its unit, and History counts videos rather than chats.
     val s = LocalStrings.current
     val counted = if (tab.listsVideos) s.browseVideosCount(count) else s.browseChatsCount(count)
     Row(
-        Modifier.fillMaxWidth().padding(
+        modifier.fillMaxWidth().padding(
             start = insets.start,
             end = insets.end,
             top = insets.top,
@@ -1919,12 +1965,12 @@ private fun TabHeading(
             Text(
                 tab.heading,
                 style = MaterialTheme.typography.headlineLarge,
-                color = Tone.text,
+                color = if (onArt) Tone.onArt else Tone.text,
             )
             Text(
                 if (count > 0) "$blurb  ·  $counted" else blurb,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Tone.muted,
+                color = if (onArt) Tone.onArtMuted else Tone.muted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -1940,7 +1986,7 @@ private fun TabHeading(
         }
         if (!isTouch()) {
             Spacer(Modifier.width(20.dp))
-            TvStatusCluster(account)
+            TvStatusCluster(account, onArt)
         }
     }
 }
@@ -1958,7 +2004,7 @@ private fun TabHeading(
  * happened to open, so the minute changes when the minute changes.
  */
 @Composable
-private fun TvStatusCluster(account: Account?) {
+private fun TvStatusCluster(account: Account?, onArt: Boolean = false) {
     var now by remember { mutableStateOf(java.util.Date()) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -1981,13 +2027,13 @@ private fun TvStatusCluster(account: Account?) {
             Text(
                 (if (twentyFour) clock24 else clock).format(now),
                 style = MaterialTheme.typography.titleMedium,
-                color = Tone.text,
+                color = if (onArt) Tone.onArt else Tone.text,
                 maxLines = 1,
             )
             Text(
                 day.format(now),
                 style = MaterialTheme.typography.bodySmall,
-                color = Tone.muted,
+                color = if (onArt) Tone.onArtMuted else Tone.muted,
                 maxLines = 1,
             )
         }

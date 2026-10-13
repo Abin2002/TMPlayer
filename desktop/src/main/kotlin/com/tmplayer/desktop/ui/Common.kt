@@ -16,12 +16,14 @@ import com.tmplayer.ui.components.TmAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -212,6 +214,9 @@ private val WIDE_WINDOW = 1440.dp
 /**
  * A page title with an optional line under it and actions to the right. The title is the type
  * scale's display size, the one step above the headlines kept for a hero and a page's own name.
+ *
+ * [onArt] is for a header standing on a picture under [com.tmplayer.ui.theme.Scrims.headerTop]
+ * (Home over its hero): the words and the action icons go to [Tone.onArt] in either theme.
  */
 @Composable
 fun PageHeader(
@@ -219,24 +224,30 @@ fun PageHeader(
     subtitle: String? = null,
     modifier: Modifier = Modifier,
     leading: (@Composable () -> Unit)? = null,
+    onArt: Boolean = false,
     actions: @Composable () -> Unit = {},
 ) {
-    Row(
-        modifier.padding(horizontal = pageMargin(), vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        leading?.invoke()
-        Column(Modifier.weight(1f)) {
-            Text(
-                title,
-                style = MaterialTheme.typography.displaySmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
+    val ink = if (onArt) Tone.onArt else LocalContentColor.current
+    CompositionLocalProvider(LocalContentColor provides ink) {
+        Row(
+            modifier.padding(horizontal = pageMargin(), vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            leading?.invoke()
+            Column(Modifier.weight(1f)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.displaySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (subtitle != null) {
+                    Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = if (onArt) Tone.onArtMuted else Tone.muted)
+                }
+            }
+            actions()
         }
-        actions()
     }
 }
 

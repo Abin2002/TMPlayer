@@ -1484,6 +1484,8 @@
     "crash_reports_on": "If TMPlayer crashes, the stack trace is sent to the developer. No chat names, no filenames, no history",
     "deleting": "Deleting…",
     "detail_first": "Open a video's page first",
+    "detail_first_click_off": "A click plays at once; right-click for the video's page",
+    "detail_first_click_on": "A click shows the video's page beside the list; a double click plays",
     "detail_first_off": "A tap plays at once; hold it for the video's page",
     "detail_first_on": "A tap shows the poster, cast and buttons; Play is one more press",
     "double_tap": "Double tap to jump",

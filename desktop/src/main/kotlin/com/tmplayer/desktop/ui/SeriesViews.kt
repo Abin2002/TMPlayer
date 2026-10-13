@@ -168,7 +168,14 @@ internal fun SeriesPage(
         SeriesPanel(
             series = series,
             watch = watch,
-            onPlay = { state.openPlayer(it, startFromBeginning = false) },
+            // An episode's page first, as a poster opens it (Settings, "Open a video's page first").
+            onPlay = {
+                if (state.detailFirst) {
+                    state.openDetail(DetailRequest(it, state.chatTitleOf(it.chatId), outsideChat = true))
+                } else {
+                    state.openPlayer(it, startFromBeginning = false)
+                }
+            },
             contentPadding = PaddingValues(start = 32.dp, end = 32.dp, bottom = 24.dp),
             modifier = Modifier.fillMaxSize(),
             seasonPicker = { selected, onSelect ->
