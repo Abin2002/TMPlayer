@@ -92,6 +92,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tmplayer.data.MediaItem
+import com.tmplayer.online.SkipKind
 import com.tmplayer.data.EpisodeNeighbours
 import com.tmplayer.player.PlaybackSpeed
 import com.tmplayer.player.SleepTimer
@@ -832,7 +833,7 @@ internal fun BoxScope.NextUpCard(label: String, secondsLeft: Int, lifted: Boolea
         enter = slideInHorizontally { it } + fadeIn(),
         exit = slideOutHorizontally { it } + fadeOut(),
     ) {
-        Surface(shape = RoundedCornerShape(12.dp), color = Color(0xE61C1C1E), modifier = Modifier.width(300.dp)) {
+        Surface(shape = RoundedCornerShape(12.dp), color = NextUpSurface, modifier = Modifier.width(300.dp)) {
             Column(Modifier.padding(16.dp)) {
                 Text(s.playerNextUp(label), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(s.playerNextIn(secondsLeft), color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp)
@@ -841,6 +842,56 @@ internal fun BoxScope.NextUpCard(label: String, secondsLeft: Int, lifted: Boolea
                     TextButton(onClick = onPlayNow) { Text(s.playerPlayNow) }
                     TextButton(onClick = onHide) { Text(s.commonHide) }
                 }
+            }
+        }
+    }
+}
+
+/** The next-up card's surface, which the skip pill shares so the two read as one family. */
+private val NextUpSurface = Color(0xE61C1C1E)
+
+/** The words on the pill for each kind of segment: "Skip intro", "Skip credits" and the rest. */
+internal fun skipLabel(kind: SkipKind, s: com.tmplayer.i18n.Strings): String = when (kind) {
+    SkipKind.Intro -> s.playerSkipIntro
+    SkipKind.Recap -> s.playerSkipRecap
+    SkipKind.Opening -> s.playerSkipOpening
+    SkipKind.Ending -> s.playerSkipEnding
+    SkipKind.Credits -> s.playerSkipCredits
+    SkipKind.Preview -> s.playerSkipPreview
+}
+
+/**
+ * "Skip intro", in the corner the next-up card uses, for as long as the playhead is inside the
+ * segment. It is drawn outside the controls overlay, so it stays when they fade, and rises above
+ * the bar ([lifted]) when they are up, as the card does. G does the same; the tooltip says so,
+ * since the "?" sheet is a long way from the moment it is wanted.
+ */
+@Composable
+internal fun BoxScope.SkipPill(kind: SkipKind, lifted: Boolean, onSkip: () -> Unit) {
+    val s = LocalStrings.current
+    val label = skipLabel(kind, s)
+    val hover = remember { MutableInteractionSource() }
+    val hovered by hover.collectIsHoveredAsState()
+    AnimatedVisibility(
+        true,
+        Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = if (lifted) 120.dp else 24.dp),
+        enter = slideInHorizontally { it } + fadeIn(),
+        exit = slideOutHorizontally { it } + fadeOut(),
+    ) {
+        Tip("$label (G)") {
+            Row(
+                Modifier.testTag("skip-pill").height(44.dp).clip(RoundedCornerShape(22.dp))
+                    .background(NextUpSurface)
+                    .background(if (hovered) Color(0x33FFFFFF) else Color.Transparent)
+                    .border(1.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(22.dp))
+                    .hoverable(hover)
+                    .clickable(onClick = onSkip)
+                    .padding(start = 20.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(label, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Icon(PlayerIcons.SkipNext, null, tint = Color.White, modifier = Modifier.size(20.dp))
             }
         }
     }

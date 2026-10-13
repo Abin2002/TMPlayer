@@ -124,7 +124,7 @@ class TmdbApi(
      * recommended any). Videos in the UI language and English, and those with no language.
      */
     suspend fun extras(key: String, film: Boolean, id: String, language: String, region: String): MetaReply<MetaExtras> {
-        val append = if (film) "credits,videos,release_dates,recommendations,similar" else "aggregate_credits,videos,content_ratings,recommendations,similar"
+        val append = if (film) "credits,videos,release_dates,recommendations,similar" else "aggregate_credits,videos,content_ratings,recommendations,similar,external_ids"
         val ui = language.substringBefore('-').lowercase()
         val videoLanguages = listOf(ui, "en", "null").distinct().joinToString(",")
         return get(key, if (film) "movie/$id" else "tv/$id", "language=$language&include_video_language=$videoLanguages&append_to_response=$append") { json ->
@@ -208,6 +208,10 @@ class TmdbApi(
             seasonList = seasonList,
             nextEpisode = next,
             ended = !film && json.optString("status") in setOf("Ended", "Canceled"),
+            // A film carries its IMDb id itself; a show's comes in `external_ids`, with TheTVDB's.
+            imdbId = (json.optJSONObject("external_ids")?.optString("imdb_id") ?: json.optString("imdb_id"))
+                ?.takeIf { it.startsWith("tt") },
+            tvdbId = json.optJSONObject("external_ids")?.optInt("tvdb_id")?.takeIf { it > 0 }?.toString(),
         )
     }
 
@@ -379,6 +383,8 @@ class TvMazeApi(
                 seasonList = seasonList,
                 nextEpisode = next,
                 ended = json.optString("status") == "Ended",
+                imdbId = json.optJSONObject("externals")?.optString("imdb")?.takeIf { it.startsWith("tt") },
+                tvdbId = json.optJSONObject("externals")?.optInt("thetvdb")?.takeIf { it > 0 }?.toString(),
             )
         }
     }
@@ -478,6 +484,7 @@ class AniListApi(
                 cast = cast,
                 trailer = trailer,
                 similar = similar,
+                malId = media.optInt("idMal").takeIf { it > 0 }?.toString(),
             )
         }
     }
@@ -493,7 +500,7 @@ class AniListApi(
                 "description(asHtml: false) coverImage { large } bannerImage } } }"
 
         private const val EXTRAS_QUERY =
-            "query (\$id: Int) { Media(id: \$id, type: ANIME) { genres averageScore duration trailer { id site } " +
+            "query (\$id: Int) { Media(id: \$id, type: ANIME) { idMal genres averageScore duration trailer { id site } " +
                 "characters(sort: [ROLE, RELEVANCE], perPage: 10) { edges { node { name { full } image { medium } } " +
                 "voiceActors(language: JAPANESE) { name { full } } } } " +
                 "recommendations(perPage: 20, sort: RATING_DESC) { nodes { mediaRecommendation { id format isAdult title { romaji english } } } } } }"
@@ -513,3 +520,125 @@ internal fun metaPlain(html: String): String = html
     .lines().joinToString("\n") { it.trim() }
     .replace(Regex("\n{3,}"), "\n\n")
     .trim()
+
+/**
+ * The two skip-time databases: TheIntroDB for shows and films (by TMDB, IMDb or TheTVDB id), and
+ * AniSkip for anime (by MyAnimeList id). Neither wants a key for reading. A 404 is their way of
+ * saying nobody has timed this one yet, which is an empty answer rather than a failure.
+ */
+class SkipTimesApi(
+    private val http: HttpTransport,
+    private val introLimiter: RateLimiter,
+    private val aniLimiter: RateLimiter,
+    private val userAgent: String,
+) {
+    /**
+     * TheIntroDB's segments for a film ([season] and [episode] null) or one episode. Times there
+     * are in milliseconds, a null start meaning the very start and a null end the very end.
+     * https://github.com/TheIntroDB/theintrodb-npm
+     */
+    suspend fun theIntroDb(
+        tmdbId: String?,
+        imdbId: String?,
+        tvdbId: String?,
+        season: Int?,
+        episode: Int?,
+    ): MetaReply<List<SkipSegment>> {
+        val id = when {
+            tmdbId != null -> "tmdb_id=${enc(tmdbId)}"
+            imdbId != null -> "imdb_id=${enc(imdbId)}"
+            tvdbId != null -> "tvdb_id=${enc(tvdbId)}"
+            else -> return MetaReply.Ok(emptyList())
+        }
+        val numbers = if (season != null && episode != null) "&season=$season&episode=$episode" else ""
+        introLimiter.acquire()
+        val request = HttpRequest("GET", "$INTRO_BASE/media?$id$numbers", headers())
+        val response = try {
+            http.send(request)
+        } catch (e: IOException) {
+            return MetaReply.Failed(0)
+        }
+        if (response.code == 404) return MetaReply.Ok(emptyList())
+        return sort(response, DEFAULT_WAIT_MS) { json ->
+            fun read(name: String, kind: SkipKind) = objects(json.optJSONArray(name)).mapNotNull { seg ->
+                val start = if (seg.isNull("start_ms")) 0L else seg.optLong("start_ms", -1)
+                val end = if (seg.isNull("end_ms")) null else seg.optLong("end_ms", -1)
+                if (start < 0 || (end != null && end <= start)) null else SkipSegment(kind, start, end)
+            }
+            read("recap", SkipKind.Recap) + read("intro", SkipKind.Intro) +
+                read("credits", SkipKind.Credits) + read("preview", SkipKind.Preview)
+        }
+    }
+
+    /**
+     * AniSkip's opening, ending and recap for one episode, in seconds. [lengthSec] is the file's
+     * running time, which AniSkip matches against the length the times were taken on, so a cut
+     * with a different length does not get times that land in the wrong place; 0 takes any.
+     * https://github.com/aniskip/aniskip-api
+     */
+    suspend fun aniSkip(malId: String, episode: Int, lengthSec: Int): MetaReply<List<SkipSegment>> {
+        aniLimiter.acquire()
+        val types = listOf("op", "ed", "mixed-op", "mixed-ed", "recap").joinToString("") { "&types=$it" }
+        val request = HttpRequest("GET", "$ANISKIP_BASE/skip-times/${enc(malId)}/$episode?episodeLength=$lengthSec$types", headers())
+        val response = try {
+            http.send(request)
+        } catch (e: IOException) {
+            return MetaReply.Failed(0)
+        }
+        if (response.code == 404) return MetaReply.Ok(emptyList())
+        return sort(response, DEFAULT_WAIT_MS) { json ->
+            objects(json.optJSONArray("results")).mapNotNull { result ->
+                val interval = result.optJSONObject("interval") ?: return@mapNotNull null
+                val kind = when (result.optString("skipType")) {
+                    "op", "mixed-op" -> SkipKind.Opening
+                    "ed", "mixed-ed" -> SkipKind.Ending
+                    "recap" -> SkipKind.Recap
+                    else -> return@mapNotNull null
+                }
+                val start = (interval.optDouble("startTime", -1.0) * 1000).toLong()
+                val end = (interval.optDouble("endTime", -1.0) * 1000).toLong()
+                if (start < 0 || end <= start) null else SkipSegment(kind, start, end)
+            }
+        }
+    }
+
+    /**
+     * IntroDB.app's segments for one episode or film, by IMDb id: a second community database,
+     * separate from TheIntroDB, asked when that one has nothing. Each kind is one object or null,
+     * with times in milliseconds. https://api.introdb.app/openapi.json
+     */
+    suspend fun introDbApp(imdbId: String, season: Int?, episode: Int?): MetaReply<List<SkipSegment>> {
+        val numbers = if (season != null && episode != null) "&season=$season&episode=$episode" else "&is_movie=true"
+        introLimiter.acquire()
+        val request = HttpRequest("GET", "$INTRODB_APP_BASE/segments?imdb_id=${enc(imdbId)}$numbers", headers())
+        val response = try {
+            http.send(request)
+        } catch (e: IOException) {
+            return MetaReply.Failed(0)
+        }
+        if (response.code == 404) return MetaReply.Ok(emptyList())
+        return sort(response, DEFAULT_WAIT_MS) { json ->
+            listOf("recap" to SkipKind.Recap, "intro" to SkipKind.Intro, "outro" to SkipKind.Credits).mapNotNull { (name, kind) ->
+                val seg = json.optJSONObject(name) ?: return@mapNotNull null
+                val start = seg.optLong("start_ms", -1)
+                val end = seg.optLong("end_ms", -1)
+                if (start < 0 || end <= start) null else SkipSegment(kind, start, end)
+            }
+        }
+    }
+
+    private fun headers() = mapOf("Accept" to "application/json", "User-Agent" to userAgent)
+
+    companion object {
+        const val INTRODB_APP_BASE = "https://api.introdb.app"
+        const val INTRO_BASE = "https://api.theintrodb.org/v3"
+        const val ANISKIP_BASE = "https://api.aniskip.com/v2"
+
+        /** TheIntroDB allows 30 requests in ten seconds. */
+        const val INTRO_GAP_MS = 400L
+
+        /** AniSkip allows 120 a minute. */
+        const val ANISKIP_GAP_MS = 500L
+        const val DEFAULT_WAIT_MS = 10_000L
+    }
+}

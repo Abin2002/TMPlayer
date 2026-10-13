@@ -444,7 +444,7 @@ class ChatRepository(private val td: TdlClient) {
      * a group is opened, not for every refresh. A count that fails leaves its topic in: offering a
      * topic that turns out empty is a smaller harm than hiding the one the viewer came for.
      */
-    suspend fun forumTopics(chatId: Long): List<ForumTopicSummary> = withContext(Dispatchers.IO) {
+    suspend fun forumTopics(chatId: Long, countVideos: Boolean = true): List<ForumTopicSummary> = withContext(Dispatchers.IO) {
         val chat = td.getChat(chatId).valueOrNull ?: return@withContext emptyList()
         val type = chat.type as? ChatTypeSupergroup ?: return@withContext emptyList()
         if (type.isChannel) return@withContext emptyList()
@@ -472,17 +472,28 @@ class ChatRepository(private val td: TdlClient) {
                 chunk.map { topic ->
                     async {
                         val id = topic.info.forumTopicId
-                        suspend fun count(filter: dev.g000sha256.tdl.dto.SearchMessagesFilter) =
-                            td.getChatMessageCount(chatId, MessageTopicForum(id), filter, false).valueOrNull?.count
-                        val videos = count(SearchMessagesFilterVideo())
-                        val files = if (videos != null && videos > 0) videos else count(SearchMessagesFilterDocument())
+                        val known = if (countVideos) countedTopics["$chatId:$id"]?.takeIf { now() - it.first < COUNT_TTL_MS }?.second else true
+                        val hasVideos = known ?: run {
+                            // TDLib's own figure first, which costs no round trip when it has one;
+                            // the server only for what it cannot say (-1).
+                            suspend fun count(filter: dev.g000sha256.tdl.dto.SearchMessagesFilter): Int? {
+                                val local = td.getChatMessageCount(chatId, MessageTopicForum(id), filter, true).valueOrNull?.count
+                                if (local != null && local >= 0) return local
+                                return td.getChatMessageCount(chatId, MessageTopicForum(id), filter, false).valueOrNull?.count
+                            }
+                            val videos = count(SearchMessagesFilterVideo())
+                            val files = if (videos != null && videos > 0) videos else count(SearchMessagesFilterDocument())
+                            val answer = videos == null || files == null || videos > 0 || files > 0
+                            if (videos != null && files != null) countedTopics["$chatId:$id"] = now() to answer
+                            answer
+                        }
                         ForumTopicSummary(
                             id = id,
                             name = topic.info.name.ifBlank { L.gridTopicUntitled },
                             isPinned = topic.isPinned,
                             isClosed = topic.info.isClosed,
                             unreadCount = topic.unreadCount,
-                            hasVideos = videos == null || files == null || videos > 0 || files > 0,
+                            hasVideos = hasVideos,
                         )
                     }
                 }.awaitAll()
@@ -737,6 +748,15 @@ class ChatRepository(private val td: TdlClient) {
 
         /** Topics whose videos are counted at once: two server calls each. */
         private const val COUNT_CHUNK = 8
+
+        /**
+         * Whether each topic held videos, by `chatId:topicId`, with when that was learnt: a group
+         * opened again within [COUNT_TTL_MS] shows its tabs without counting every topic again.
+         * For the process only; a topic that gains its first video shows up on the next launch.
+         */
+        private val countedTopics = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, Boolean>>()
+        private const val COUNT_TTL_MS = 10 * 60 * 1000L
+        private fun now() = System.currentTimeMillis()
 
         /**
          * How many chats are read from TDLib at once.

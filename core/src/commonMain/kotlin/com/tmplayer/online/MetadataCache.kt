@@ -31,6 +31,33 @@ class MetadataCache(
     private val images get() = File(dir, "images")
     private val extras get() = File(dir, "extras")
     private val seasons get() = File(dir, "seasons")
+    private val skips get() = File(dir, "skips")
+
+    /**
+     * An episode's skip times learnt within [SKIP_FOUND_TTL_MS], or an empty list for one nobody
+     * had timed, asked again after [SKIP_MISS_TTL_MS]: the databases are community-run and grow.
+     * Null when it has to be asked.
+     */
+    @Synchronized
+    fun skipTimes(key: String): List<SkipSegment>? {
+        val file = File(skips, name(key) + ".json")
+        if (!file.isFile) return null
+        val json = runCatching { JSONObject(file.readText()) }.getOrNull() ?: return null
+        val list = SkipSegment.listFromJson(json.optJSONArray("segments"))
+        val ttl = if (list.isEmpty()) SKIP_MISS_TTL_MS else SKIP_FOUND_TTL_MS
+        if (now() - json.optLong("saved") > ttl) {
+            file.delete()
+            return null
+        }
+        return list
+    }
+
+    @Synchronized
+    fun putSkipTimes(key: String, segments: List<SkipSegment>) {
+        skips.mkdirs()
+        val json = JSONObject().put("key", key).put("saved", now()).put("segments", SkipSegment.listToJson(segments))
+        write(File(skips, name(key) + ".json"), json.toString().toByteArray())
+    }
 
     /** What was learnt the last time, if it is still fresh: a result, or null to ask again. */
     @Synchronized
@@ -190,5 +217,7 @@ class MetadataCache(
         const val MAX_TTL_MS = 180 * DAY_MS
         const val FOUND_TTL_MS = 60 * DAY_MS
         const val MISS_TTL_MS = 7 * DAY_MS
+        const val SKIP_FOUND_TTL_MS = 30 * DAY_MS
+        const val SKIP_MISS_TTL_MS = 3 * DAY_MS
     }
 }

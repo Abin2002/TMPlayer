@@ -30,6 +30,12 @@ sealed interface PlayerAction {
     data object SpeedDown : PlayerAction
     data object SpeedReset : PlayerAction
     data object NextEpisode : PlayerAction
+
+    /**
+     * Past the intro, recap or credits the playhead is in, as the "Skip intro" pill does; nothing
+     * while no pill is up. See [com.tmplayer.online.SkipSegments].
+     */
+    data object SkipSegment : PlayerAction
     data object PreviousEpisode : PlayerAction
     data object AlwaysOnTop : PlayerAction
     data object MiniPlayer : PlayerAction
@@ -176,6 +182,9 @@ object PlayerKeys {
             Key.X -> PlayerAction.SubtitleDelay(1)
             Key.T -> PlayerAction.AlwaysOnTop
             Key.I -> PlayerAction.Stats
+            // "Go past": S, the obvious letter, has been mpv's screenshot key since before there
+            // was anything to skip, and G was free in both tables.
+            Key.G -> if (shift) null else PlayerAction.SkipSegment
             Key.Slash -> if (shift) PlayerAction.ShortcutSheet else null
             else -> null
         }
@@ -219,6 +228,8 @@ object PlayerKeys {
                 L.keysRowSeek1min to L.keysShiftLeftRight,
                 L.keysRowSpeed to L.keysSpeedKeys,
                 L.keysRowEpisodes to L.keysEpisodesKeys,
+                // The pill's own words name the row; it skips a recap or the credits the same way.
+                L.playerSkipIntro to "G",
                 L.keysRowJump to L.keysDigits,
                 L.keysRowStartEnd to L.keysHomeEnd,
             ),

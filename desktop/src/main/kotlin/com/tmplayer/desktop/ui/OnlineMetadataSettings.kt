@@ -56,6 +56,12 @@ internal fun OnlineMetadataGroup() {
     Setting(s.metadataToggle, if (settings.enabled) s.metadataToggleOn else s.metadataToggleOff) {
         Switch(checked = settings.enabled, onCheckedChange = { online.setEnabled(it) })
     }
+    // The player's skip intro button rides on lookups, so it is offered only while they are on.
+    if (settings.enabled) {
+        Setting(s.metadataSkipTimes, s.metadataSkipTimesDetail) {
+            Switch(checked = settings.skipTimes, onCheckedChange = { online.setSkipTimes(it) })
+        }
+    }
     Setting(
         s.metadataKey,
         MetaWords.key(state),

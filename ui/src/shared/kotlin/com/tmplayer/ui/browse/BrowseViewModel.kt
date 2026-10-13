@@ -607,7 +607,15 @@ class MediaListViewModel(
     private fun loadTopics() {
         viewModelScope.launch {
             val session = Td.awaitAuthorizedSession()
-            val found = runCatching { ChatRepository(session.client).forumTopics(chatId) }
+            val repository = ChatRepository(session.client)
+            // The tabs first, straight from the topic list, so the row is up at once; then again
+            // once each topic's videos are counted, without the ones that turned out to have none.
+            val listed = runCatching { repository.forumTopics(chatId, countVideos = false) }
+                .onFailure { if (it is CancellationException) throw it }
+                .getOrNull() ?: return@launch
+            if (!session.isCurrent() || listed.isEmpty()) return@launch
+            _topics.value = TopicBar(listed, topicId)
+            val found = runCatching { repository.forumTopics(chatId) }
                 .onFailure { if (it is CancellationException) throw it }
                 .getOrNull() ?: return@launch
             if (!session.isCurrent()) return@launch
@@ -617,7 +625,7 @@ class MediaListViewModel(
                 selectTopic(0)
                 return@launch
             }
-            _topics.value = if (offered.isEmpty()) null else TopicBar(offered, topicId)
+            _topics.value = if (offered.isEmpty()) null else TopicBar(offered, _topics.value?.selected ?: topicId)
         }
     }
 

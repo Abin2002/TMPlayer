@@ -440,19 +440,29 @@ fun MediaGridScreen(
             // started, the rest a pick in its details. Not while searching or ticking videos:
             // then every episode stands on its own, to be found or picked one by one.
             val grouping = query.isBlank() && !selecting
-            val shelf = remember(list.items, watchProgress, grouping) {
-                val arranged = if (grouping) {
-                    SeriesShelf.arrange(list.items)
-                } else {
-                    SeriesShelf.foldFilmCopies(list.items).map { ShelfEntry.File(it) }
-                }
-                arranged.map { entry ->
-                    val film = (entry as? ShelfEntry.File)?.item?.takeIf { it.versions.size > 1 } ?: return@map entry
-                    val started = film.versions.firstOrNull { SettingsStore.progressKey(it.chatId, it.messageId) in watchProgress }
-                    if (started == null) entry else ShelfEntry.File(started.asVersion(film))
+            // Worked out off the main thread: grouping reads every file name through the name
+            // parser, which on a page of a few hundred videos is a frame or two on a television
+            // stick. The skeleton stays up until the first answer, so tiles never jump from one
+            // file each into shows; later pages keep the previous listing up while they are read.
+            val arrangedShelf by produceState<Pair<List<ShelfEntry>, Set<String>>?>(null, list.items, watchProgress, grouping) {
+                value = withContext(Dispatchers.Default) {
+                    val arranged = if (grouping) {
+                        SeriesShelf.arrange(list.items)
+                    } else {
+                        SeriesShelf.foldFilmCopies(list.items).map { ShelfEntry.File(it) }
+                    }
+                    val led = arranged.map { entry ->
+                        val film = (entry as? ShelfEntry.File)?.item?.takeIf { it.versions.size > 1 } ?: return@map entry
+                        val started = film.versions.firstOrNull { SettingsStore.progressKey(it.chatId, it.messageId) in watchProgress }
+                        if (started == null) entry else ShelfEntry.File(started.asVersion(film))
+                    }
+                    led to MediaMapper.repeatedCaptionLines(list.items)
                 }
             }
-            val repeatedCaptions = remember(list.items) { MediaMapper.repeatedCaptionLines(list.items) }
+            val (shelf, repeatedCaptions) = arrangedShelf ?: run {
+                MediaGridSkeleton(layout = layout)
+                return@BoxWithConstraints
+            }
             val feed = remember(shelf, list.sponsored) {
                 placeSponsored(shelf, list.sponsored)
             }

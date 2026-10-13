@@ -60,6 +60,13 @@ interface PlayerMedia {
     /** The episodes either side of this one. */
     suspend fun episodes(): Episodes
 
+    /**
+     * Where this video's intro, recap and credits are, for the skip button: asked of the online
+     * lookups once per video, and empty without asking anybody when they are off. A file on disk
+     * (the dev harness) has none, since nothing names it the way a lookup needs.
+     */
+    suspend fun skipTimes(): List<com.tmplayer.online.SkipSegment> = emptyList()
+
     /** The same kind of source, for another episode. */
     fun episode(other: MediaItem): PlayerMedia
 
@@ -281,6 +288,12 @@ class TelegramPlayerMedia(
             if (ActiveStreams.isOpen(fileId)) return@launch
             runCatching { Td.cancelDownload(fileId) }
         }
+    }
+
+    /** [OnlineMetadata.skipTimes][com.tmplayer.online.OnlineMetadata.skipTimes], off the UI thread. */
+    override suspend fun skipTimes(): List<com.tmplayer.online.SkipSegment> {
+        val online = com.tmplayer.online.OnlineMetadata.current ?: return emptyList()
+        return withContext(Dispatchers.IO) { online.skipTimes(item) }
     }
 
     /**

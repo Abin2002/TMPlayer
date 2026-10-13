@@ -41,6 +41,7 @@ internal fun LazyListScope.onlineMetadataSection(onEditKey: () -> Unit) {
     if (OnlineMetadata.current == null) return
     item { SectionTitle(LocalStrings.current.metadataTitle) }
     item { MetadataToggleRow() }
+    item { SkipTimesToggleRow() }
     item { MetadataKeyRow(onEditKey) }
     item { MetadataCacheRow() }
 }
@@ -56,6 +57,25 @@ private fun MetadataToggleRow() {
         icon = TmIcons.Image,
         checked = settings.enabled,
         onToggle = { online.setEnabled(!settings.enabled) },
+    )
+}
+
+/**
+ * The player's skip intro button, which rides on lookups: the title it is asked about is the one
+ * the lookup matched. Shown only while lookups are on, since it means nothing without them.
+ */
+@Composable
+private fun SkipTimesToggleRow() {
+    val s = LocalStrings.current
+    val online = OnlineMetadata.current ?: return
+    val settings by online.settings.collectAsState()
+    if (!settings.enabled) return
+    ToggleRow(
+        title = s.metadataSkipTimes,
+        subtitle = s.metadataSkipTimesDetail,
+        icon = TmIcons.Episodes,
+        checked = settings.skipTimes,
+        onToggle = { online.setSkipTimes(!settings.skipTimes) },
     )
 }
 

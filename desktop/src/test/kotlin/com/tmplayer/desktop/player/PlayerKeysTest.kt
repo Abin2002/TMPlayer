@@ -126,11 +126,13 @@ class PlayerKeysTest {
         assertEquals(PlayerAction.Stats, action(Key.I, shift = true))
         assertEquals(PlayerAction.Quit, action(Key.Q, ctrl = true))
         assertEquals(PlayerAction.ShortcutSheet, action(Key.Slash, shift = true))
+        assertEquals(PlayerAction.SkipSegment, action(Key.G))
     }
 
     @Test
     fun `unbound keys and stray modifiers do nothing`() {
-        assertNull(action(Key.G))
+        assertNull(action(Key.H))
+        assertNull(action(Key.G, shift = true))
         assertNull(action(Key.K, ctrl = true))
         assertNull(action(Key.Q))
         assertNull(action(Key.Spacebar, shift = true))

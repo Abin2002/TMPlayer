@@ -19,6 +19,8 @@ data class MetaSettings(
     val ownKey: String = "",
     val refusedKey: String = "",
     val refusedAt: Long = 0,
+    /** Skip intro, recap and credits buttons in the player, from TheIntroDB and AniSkip. */
+    val skipTimes: Boolean = true,
 )
 
 /** [MetaSettings] kept in a small properties file in the app's private storage. */
@@ -46,6 +48,7 @@ class MetadataStore(private val file: File) {
             ownKey = p.getProperty("own_key").orEmpty(),
             refusedKey = p.getProperty("refused_key").orEmpty(),
             refusedAt = p.getProperty("refused_at")?.toLongOrNull() ?: 0L,
+            skipTimes = p.getProperty("skip_times") != "false",
         )
     }
 
@@ -55,6 +58,7 @@ class MetadataStore(private val file: File) {
         p["own_key"] = s.ownKey
         p["refused_key"] = s.refusedKey
         p["refused_at"] = s.refusedAt.toString()
+        p["skip_times"] = s.skipTimes.toString()
         runCatching {
             file.parentFile?.mkdirs()
             val temp = File(file.parentFile, file.name + ".tmp")

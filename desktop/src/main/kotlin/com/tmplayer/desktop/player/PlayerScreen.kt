@@ -50,6 +50,9 @@ import com.tmplayer.data.EpisodeNeighbours
 import com.tmplayer.data.SeriesShelf
 import com.tmplayer.online.EpisodeNames
 import com.tmplayer.online.OnlineMetadata
+import com.tmplayer.online.SkipKind
+import com.tmplayer.online.SkipSegment
+import com.tmplayer.online.SkipSegments
 import com.tmplayer.data.ResumeRecord
 import com.tmplayer.data.ResumeRules
 import com.tmplayer.data.ResumeState
@@ -244,6 +247,11 @@ fun PlayerScreen(
     // Videos already put on the Watched list for being left past 90 %, so leaving the same one
     // twice (switching away, then closing) marks it once.
     val watchedHere = remember { mutableSetOf<String>() }
+    // Where this video's intro, recap and credits are, from the online lookups, and the ones
+    // already skipped (by start), which do not offer themselves again in this playback. Both
+    // belong to the video playing: an episode switch starts with none until its own answer.
+    var skips by remember(current) { mutableStateOf(emptyList<SkipSegment>()) }
+    var skipped by remember(current) { mutableStateOf(emptySet<Long>()) }
     // A-B repeat, for the video playing only: a new video starts with none.
     var abLoop by remember(current) { mutableStateOf<AbLoop?>(null) }
 
@@ -271,6 +279,19 @@ fun PlayerScreen(
     }
 
     // ---- open, resume, episodes --------------------------------------------------------------
+
+    // The skip times, asked once per video and not again on a retry. With lookups off this
+    // returns at once with nothing, and no request leaves the machine.
+    LaunchedEffect(current) {
+        skips = try {
+            current.skipTimes()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Logger.w("PlayerScreen", "Skip times lookup failed", e)
+            emptyList()
+        }
+    }
 
     LaunchedEffect(current, attempt) {
         phase = Phase.Loading(if (item.chatId != 0L) s.playerConnectingTelegram else s.playerOpeningVideo)
@@ -580,10 +601,45 @@ fun PlayerScreen(
 
     val left = status.durationMs - status.positionMs
     val next = episodes.next
+    // The card comes up in the last half minute, or where the closing credits begin when the skip
+    // times know that and it is earlier: once the credits roll, the next episode is the offer.
+    val creditsAt = SkipSegments.creditsStart(skips, status.durationMs)
+    val nextUpLead = maxOf(NEXT_UP_LEAD_MS, creditsAt?.let { status.durationMs - it } ?: 0L)
     val nextUpVisible = phase == Phase.Playing && next != null && autoplayNext && !nextUpDismissed &&
-        status.durationMs > 0 && left in 1..NEXT_UP_LEAD_MS
+        status.durationMs > 0 && left in 1..nextUpLead
     LaunchedEffect(nextUpVisible) { if (nextUpVisible) nextUpShown = true }
-    LaunchedEffect(left > NEXT_UP_LEAD_MS) { if (left > NEXT_UP_LEAD_MS) nextUpShown = false }
+    LaunchedEffect(left > nextUpLead) { if (left > nextUpLead) nextUpShown = false }
+    // Credits timed to start well before the last half minute: the card counts [CREDITS_COUNTDOWN_MS]
+    // down from where they begin and then moves on, rather than counting through every name.
+    val earlyCredits = creditsAt != null && status.durationMs - creditsAt > NEXT_UP_LEAD_MS
+    val nextUpIn = if (earlyCredits) creditsAt!! + CREDITS_COUNTDOWN_MS - status.positionMs else left
+    LaunchedEffect(earlyCredits && nextUpVisible && nextUpIn <= 0) {
+        if (!(earlyCredits && nextUpVisible && nextUpIn <= 0) || next == null) return@LaunchedEffect
+        recordWatched(current, status.durationMs, manual = false)
+        runCatching { settings.clearResumePosition(item.chatId, item.messageId) }
+        if (StillWatching.askBeforeAutoplay(autoplayedInARow)) {
+            askStillWatching(s.playerStillAutoplayLimit(StillWatching.AUTOPLAY_LIMIT), next, ended = true)
+        } else {
+            autoplay(next)
+        }
+    }
+
+    // The segment the pill offers to skip. Credits that run to the end are the next-up card's
+    // when there is a next episode, so they get no pill of their own; without one, the pill
+    // skips to the end like any other. Never while the card is up, which has the same corner.
+    val activeSkip = if (phase == Phase.Playing && status.durationMs > 0 && !nextUpVisible) {
+        SkipSegments.active(skips, status.positionMs, status.durationMs, skipped)
+            ?.takeUnless { next != null && isClosing(it, status.durationMs) }
+    } else {
+        null
+    }
+
+    /** The pill, or G: past the segment, which is then left alone for the rest of this playback. */
+    fun skipSegment() {
+        val segment = activeSkip ?: return
+        skipped = skipped + segment.startMs
+        engine.seekTo(segment.target(status.durationMs))
+    }
 
     // The subtitle look is one setting for every video: a change in Settings (or in the subtitle
     // menu, which writes the same setting) reaches the video playing now.
@@ -882,6 +938,7 @@ fun PlayerScreen(
             PlayerAction.SpeedDown -> setSpeed(SeekMath.fineSpeed(status.speed, up = false))
             PlayerAction.SpeedReset -> setSpeed(1f)
             PlayerAction.NextEpisode -> episodes.next?.let(::switchTo) ?: showFlash(Flash.Kind.Text, L.playerNoNextEpisode)
+            PlayerAction.SkipSegment -> skipSegment()
             PlayerAction.PreviousEpisode -> episodes.previous?.let(::switchTo)
                 ?: showFlash(Flash.Kind.Text, L.playerNoPreviousEpisode)
             PlayerAction.AlwaysOnTop -> onToggleAlwaysOnTop?.invoke()
@@ -1122,10 +1179,17 @@ fun PlayerScreen(
                 )
             }
 
+            activeSkip?.let { segment ->
+                SkipPill(kind = segment.kind, lifted = showControls, onSkip = {
+                    skipSegment()
+                    refocus()
+                })
+            }
+
             if (nextUpVisible && next != null) {
                 NextUpCard(
                     label = episodes.labelFor(next),
-                    secondsLeft = ((left + 999) / 1000).toInt(),
+                    secondsLeft = ((nextUpIn.coerceAtLeast(0) + 999) / 1000).toInt(),
                     lifted = showControls,
                     onPlayNow = { switchTo(next) },
                     onHide = { nextUpDismissed = true },
@@ -1309,6 +1373,13 @@ internal fun PlayerTheme(content: @Composable () -> Unit) = TmMaterialTheme(dark
 
 private const val RESUME_TICK_MS = 10_000L
 private const val NEXT_UP_LEAD_MS = 30_000L
+
+/** How long the card counts down from the start of timed credits before the next episode. */
+private const val CREDITS_COUNTDOWN_MS = 15_000L
+
+/** Credits or an ending that roll until the file ends: what [SkipSegments.creditsStart] reads. */
+private fun isClosing(segment: SkipSegment, durationMs: Long): Boolean =
+    (segment.kind == SkipKind.Credits || segment.kind == SkipKind.Ending) && segment.runsToEnd(durationMs)
 private const val AUTOPLAY_COUNTDOWN_SEC = 8
 private const val SEEK_RUN_MS = 1_000L
 private const val STILL_WATCHING_TICK_MS = 5_000L

@@ -68,6 +68,13 @@ data class MetaExtras(
     val nextEpisode: MetaAiring? = null,
     /** The show has ended or been cancelled: no new season to wait for. */
     val ended: Boolean = false,
+    /**
+     * The title's ids elsewhere, for asking the skip-time databases about it: IMDb's `tt0903747`
+     * and TheTVDB's number from TVmaze, MyAnimeList's from AniList. Null where the provider gave none.
+     */
+    val imdbId: String? = null,
+    val tvdbId: String? = null,
+    val malId: String? = null,
 ) {
     val isEmpty: Boolean
         get() = genres.isEmpty() && runtimeMin == null && seasons == null && rating == null && certification == null &&
@@ -95,6 +102,9 @@ data class MetaExtras(
             }
         }
         .put("ended", ended)
+        .put("imdb", imdbId.orEmpty())
+        .put("tvdb", tvdbId.orEmpty())
+        .put("mal", malId.orEmpty())
 
     companion object {
         fun fromJson(json: JSONObject): MetaExtras? = runCatching {
@@ -127,6 +137,9 @@ data class MetaExtras(
                     MetaAiring(it.optInt("season"), it.optInt("episode"), it.optString("airDate"), it.optString("name"))
                 }?.takeIf { it.airDate.isNotBlank() && it.season > 0 },
                 ended = json.optBoolean("ended"),
+                imdbId = json.optString("imdb").ifBlank { null },
+                tvdbId = json.optString("tvdb").ifBlank { null },
+                malId = json.optString("mal").ifBlank { null },
             )
         }.getOrNull()
     }

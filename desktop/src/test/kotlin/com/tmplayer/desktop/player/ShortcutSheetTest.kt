@@ -35,6 +35,7 @@ class ShortcutSheetTest {
         "Subtitles earlier, later" to { it is PlayerAction.SubtitleDelay },
         "Sound earlier, later" to { it is PlayerAction.AudioDelay },
         "Speed up, down, reset" to { it == PlayerAction.SpeedUp || it == PlayerAction.SpeedDown || it == PlayerAction.SpeedReset },
+        "Skip intro" to { it == PlayerAction.SkipSegment },
         "Next, previous episode" to { it == PlayerAction.NextEpisode || it == PlayerAction.PreviousEpisode },
         "Always on top" to { it == PlayerAction.AlwaysOnTop },
         "Mini player" to { it == PlayerAction.MiniPlayer },
@@ -118,7 +119,7 @@ class ShortcutSheetTest {
     private fun letter(name: String): Key = LETTERS[name] ?: error("unknown key name '$name' on the sheet")
 
     private val LETTERS = mapOf(
-        "A" to Key.A, "C" to Key.C, "F" to Key.F, "I" to Key.I, "J" to Key.J, "K" to Key.K, "L" to Key.L,
+        "A" to Key.A, "C" to Key.C, "F" to Key.F, "G" to Key.G, "I" to Key.I, "J" to Key.J, "K" to Key.K, "L" to Key.L,
         "M" to Key.M, "N" to Key.N, "P" to Key.P, "Q" to Key.Q, "R" to Key.R, "S" to Key.S, "T" to Key.T,
         "V" to Key.V, "X" to Key.X, "Z" to Key.Z,
     )

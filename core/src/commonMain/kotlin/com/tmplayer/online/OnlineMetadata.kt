@@ -46,6 +46,12 @@ class OnlineMetadata(
     private val tvmaze = TvMazeApi(http, RateLimiter(TvMazeApi.GAP_MS, now, sleep), userAgent)
     private val anilist = AniListApi(http, RateLimiter(AniListApi.GAP_MS, now, sleep), userAgent)
     private val imageLimiter = RateLimiter(IMAGE_GAP_MS, now, sleep)
+    private val skipApi = SkipTimesApi(
+        http,
+        RateLimiter(SkipTimesApi.INTRO_GAP_MS, now, sleep),
+        RateLimiter(SkipTimesApi.ANISKIP_GAP_MS, now, sleep),
+        userAgent,
+    )
 
     private val locks = HashMap<String, Mutex>()
     private val memory = object : LinkedHashMap<String, MetaResult>(64, 0.75f, true) {
@@ -59,6 +65,8 @@ class OnlineMetadata(
     val buildHasKey: Boolean get() = buildKey.isNotBlank()
 
     fun setEnabled(value: Boolean) = store.update { it.copy(enabled = value) }
+
+    fun setSkipTimes(value: Boolean) = store.update { it.copy(skipTimes = value) }
 
     /** The viewer's own TMDB key; blank goes back to the build's. A new key gets a fresh chance. */
     fun setOwnKey(key: String) = store.update { it.copy(ownKey = key.trim(), refusedKey = "", refusedAt = 0) }
@@ -338,7 +346,7 @@ class OnlineMetadata(
     }
 
     private fun extrasKey(info: MetaInfo, lang: String, region: String): String =
-        listOf("extras", info.provider.name, info.kind.name, info.id, lang, region).joinToString("|")
+        listOf("extras2", info.provider.name, info.kind.name, info.id, lang, region).joinToString("|")
 
     /** The extras for [info] already in memory, for the first frame. Never touches the disk or the network. */
     fun peekExtras(info: MetaInfo): MetaExtras? {
@@ -352,6 +360,68 @@ class OnlineMetadata(
      * AniList query), then kept as long as the match is. Null while off, or when the provider
      * could not be asked; an empty [MetaExtras] when it had nothing.
      */
+    /**
+     * Where [item]'s intro, recap and credits are, for the player's skip button: empty when
+     * lookups or skip times are off, when the video matched no title, or when nobody has timed it.
+     *
+     * The title comes from the same lookup as its poster. A TMDB match asks TheIntroDB by TMDB id;
+     * a TVmaze match asks it by the IMDb or TheTVDB id TVmaze lists; an AniList match asks AniSkip
+     * by MyAnimeList id, with the episode's absolute number. Where TheIntroDB has nothing,
+     * IntroDB.app is asked by IMDb id, then for a show AniSkip by the title's AniList match.
+     * Answers, empty ones too, are kept.
+     */
+    suspend fun skipTimes(item: com.tmplayer.data.MediaItem): List<SkipSegment> {
+        val settings = store.now
+        if (!settings.enabled || !settings.skipTimes) return emptyList()
+        val query = MetaQuery.of(item.nameForParsing, item.caption) ?: return emptyList()
+        val info = (lookup(query) as? MetaResult.Found)?.info ?: return emptyList()
+        val show = info.kind == MetaKind.Show
+        if (show && query.episode == null) return emptyList()
+        val season = if (show) query.season ?: 1 else null
+        val episode = if (show) query.episode else null
+        val key = listOf("skips", info.provider.name, info.kind.name, info.id, season ?: 0, episode ?: 0).joinToString("|")
+        cache.skipTimes(key)?.let { return it }
+        return lockFor(key).withLock {
+            cache.skipTimes(key)?.let { return@withLock it }
+            val reply = when (info.provider) {
+                MetaProvider.Tmdb -> skipApi.theIntroDb(info.id, null, null, season, episode)
+                MetaProvider.TvMaze -> {
+                    val ids = extras(info) ?: return@withLock emptyList()
+                    if (ids.imdbId == null && ids.tvdbId == null) return@withLock emptyList()
+                    skipApi.theIntroDb(null, ids.imdbId, ids.tvdbId, season, episode)
+                }
+                MetaProvider.AniList -> {
+                    val mal = extras(info)?.malId ?: return@withLock emptyList()
+                    skipApi.aniSkip(mal, episode ?: 1, item.durationSec.coerceAtLeast(0))
+                }
+            }
+            // Only a real answer is kept; a failure is asked about again next time.
+            var segments = (reply as? MetaReply.Ok)?.value ?: return@withLock emptyList()
+            // TheIntroDB had nothing: IntroDB.app, the other community database, by IMDb id.
+            if (segments.isEmpty() && info.provider != MetaProvider.AniList) {
+                val imdb = extras(info)?.imdbId
+                if (imdb != null) {
+                    val second = skipApi.introDbApp(imdb, season, episode)
+                    segments = (second as? MetaReply.Ok)?.value ?: return@withLock emptyList()
+                }
+            }
+            // An anime matched on TMDB or TVmaze: TheIntroDB has few of those, and neither gives a
+            // MyAnimeList id. The same title asked of AniList first finds it if it is an anime,
+            // and AniSkip is asked by that. A show AniList does not know comes back as before.
+            if (segments.isEmpty() && show && info.provider != MetaProvider.AniList) {
+                val anime = (lookup(query.showOnly().copy(anime = true)) as? MetaResult.Found)?.info
+                    ?.takeIf { it.provider == MetaProvider.AniList }
+                val mal = anime?.let { extras(it)?.malId }
+                if (mal != null) {
+                    val aniReply = skipApi.aniSkip(mal, episode ?: 1, item.durationSec.coerceAtLeast(0))
+                    segments = (aniReply as? MetaReply.Ok)?.value ?: return@withLock emptyList()
+                }
+            }
+            cache.putSkipTimes(key, segments)
+            segments
+        }
+    }
+
     suspend fun extras(info: MetaInfo): MetaExtras? {
         if (!store.now.enabled) return null
         val lang = tmdbLanguage()

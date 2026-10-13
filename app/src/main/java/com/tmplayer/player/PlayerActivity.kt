@@ -127,6 +127,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import com.tmplayer.online.MovieHash
 import com.tmplayer.online.EpisodeNames
 import com.tmplayer.online.OnlineMetadata
+import com.tmplayer.online.SkipSegment
+import com.tmplayer.online.SkipSegments
 import com.tmplayer.online.OnlineSubtitles
 import com.tmplayer.online.SubtitleTarget
 import java.io.File
@@ -418,6 +420,20 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var nextUpShown = false
     private var nextUpDismissed = false
 
+    /** The next episode was started from the credits, so the real end of the file does not start it again. */
+    private var creditsSkipped = false
+
+    /**
+     * The "Skip intro" pill and what it works from: the timed stretches of this video, as
+     * [OnlineMetadata.skipTimes] found them (empty while lookups are off or nobody has timed it),
+     * the stretches already skipped this playback, by start, so none comes back after a seek
+     * back over it, and the one the pill is offering now.
+     */
+    private var skipPill: SkipPill? = null
+    private var skipSegments: List<SkipSegment> = emptyList()
+    private val skippedSegments = mutableSetOf<Long>()
+    private var offeredSkip: SkipSegment? = null
+
     /** True while the transport row is up: the download figure is shown alongside it. */
     private var controlsUp = false
 
@@ -650,6 +666,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         observeConnectivity()
         startResumeHeartbeat()
         findEpisodes()
+        findSkipTimes()
 
         // Reading the saved position is a disk hit; do it off the main thread and seek once it
         // lands. Under "download the whole video first" there is no player to seek yet, so
@@ -799,7 +816,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 onHold = ::holdFastForward,
                 onTapControls = ::toggleControls,
                 onTogglePlay = ::togglePlaybackFromPicture,
-                isOnChrome = { x, y -> controls?.isOnChrome(x, y) == true || isOnNextUpCard(x, y) },
+                isOnChrome = { x, y ->
+                    controls?.isOnChrome(x, y) == true || isOnNextUpCard(x, y) || isOnSkipPill(x, y)
+                },
                 systemEdges = ::systemGestureEdges,
             ).also { it.prefs = touchPrefs }
         }
@@ -845,6 +864,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             topBar.updatePadding(left = barLeft + safe.left, right = barRight + safe.right, top = safe.top)
             corner?.updatePadding(right = safe.right, top = safe.top + underTheBar)
             nextUpCard?.view?.updateLayoutParams<FrameLayout.LayoutParams> {
+                rightMargin = safe.right + NextUpCard.MARGIN_PX
+                bottomMargin = safe.bottom + NextUpCard.BOTTOM_PX
+            }
+            skipPill?.view?.updateLayoutParams<FrameLayout.LayoutParams> {
                 rightMargin = safe.right + NextUpCard.MARGIN_PX
                 bottomMargin = safe.bottom + NextUpCard.BOTTOM_PX
             }
@@ -1634,7 +1657,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                         controls?.show()
                     }
                 }
-                Player.STATE_ENDED -> onVideoEnded()
+                // Already moved on from the credits; the file running out behind it changes nothing.
+                Player.STATE_ENDED -> if (!creditsSkipped) onVideoEnded()
                 else -> Unit
             }
         }
@@ -2318,6 +2342,17 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         if (!FormFactor.isTv(this) && handleTouchDeviceKey(event)) return true
 
+        // The skip pill over the bare picture on a television: OK is the skip rather than the
+        // pause, the way the pill's second line says. With the row up OK keeps its meaning on
+        // whatever is focused, and the pill never takes focus itself. A held OK is swallowed whole
+        // so its repeats do not pause the video the skip just moved.
+        if (skipHasTheRemote() &&
+            (event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER || event.keyCode == KeyEvent.KEYCODE_ENTER)
+        ) {
+            if (event.repeatCount == 0) skipOffered()
+            return true
+        }
+
         // The next-up card on a television: left, right and OK stay on its one button,
         // Back puts it away. Up and down still raise the row below.
         if (nextUpHasTheRemote()) {
@@ -2730,6 +2765,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             controls?.hideNow()
             feedback?.clear()
             hideNextUp()
+            hideSkipPill()
         }
         subtitleView.visibility = if (isInPictureInPictureMode) View.GONE else View.VISIBLE
         downloadChip.visibility = View.GONE
@@ -3158,35 +3194,63 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             },
             onPlay = { _episodes.value.next?.let(::playEpisode) },
         )
+        skipPill = SkipPill(
+            root = findViewById(R.id.player_root),
+            below = findViewById(R.id.overlay_container),
+            tv = FormFactor.isTv(this),
+            onSkip = ::skipOffered,
+        )
         watchForTheEnd()
     }
 
     /**
-     * Twice a second while playing, near the end of an episode with a successor and autoplay on:
-     * the card comes up and counts the remaining seconds down.
+     * Twice a second while playing: the skip pill comes and goes with the stretch the playhead is
+     * in, and near the end of an episode with a successor and autoplay on, the card comes up and
+     * counts the remaining seconds down.
+     *
+     * "Near the end" is the last half minute, or from the start of the closing credits where
+     * somebody has timed them and they begin earlier than that: credits that roll for two minutes
+     * are two minutes nobody is watching for, which is when every streaming service raises its
+     * next-episode offer. From there the card counts down a quarter of a minute and moves on.
      */
     private fun watchForTheEnd() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 val autoplay = runCatching { settings.autoplayNextNow() }.getOrDefault(true)
-                if (!autoplay) return@repeatOnLifecycle
                 while (true) {
                     delay(500)
                     val exo = player ?: continue
+                    updateSkipPill(exo, autoplay)
+                    if (!autoplay) continue
                     val next = _episodes.value.next ?: continue
                     val duration = exo.duration
                     if (duration <= 0 || nextUpDismissed || locked || inPictureInPicture) continue
                     // Autoplay is going to stop and ask, or the sleep timer to stop: nothing
                     // is starting in thirty seconds, so nothing says it is.
                     if (sleepAtTheEnd || StillWatching.askBeforeAutoplay(autoplayedInARow)) continue
-                    val left = duration - exo.currentPosition
-                    if (left in 1..NEXT_UP_LEAD_MS && statusOverlay.visibility != View.VISIBLE) {
+                    val position = exo.currentPosition
+                    val left = duration - position
+                    val credits = SkipSegments.creditsStart(skipSegments, duration)
+                    val lead = maxOf(NEXT_UP_LEAD_MS, credits?.let { duration - it } ?: 0L)
+                    // Credits timed to start well before the last half minute: the card counts
+                    // [CREDITS_COUNTDOWN_MS] down from where they begin and then moves on, as the
+                    // streaming services do, rather than counting through two minutes of names.
+                    val early = credits != null && duration - credits > NEXT_UP_LEAD_MS
+                    val until = if (early) credits!! + CREDITS_COUNTDOWN_MS - position else left
+                    if (early && until <= 0 && nextUpShown && !creditsSkipped) {
+                        creditsSkipped = true
+                        onVideoEnded()
+                        continue
+                    }
+                    if (left in 1..lead && statusOverlay.visibility != View.VISIBLE) {
                         val label = _episodes.value.nextTag?.label ?: next.title
-                        if (nextUpCard?.show(label, (left + 999) / 1000) == true) {
+                        if (nextUpCard?.show(label, (until.coerceAtLeast(0) + 999) / 1000) == true) {
                             nextUpShown = true
+                            // The card and the pill share a corner; the card is the offer then.
+                            hideSkipPill()
                             if (FormFactor.isTv(this@PlayerActivity) && !controlsUp) nextUpCard?.play?.requestFocus()
                         }
-                    } else if (left > NEXT_UP_LEAD_MS && nextUpCard?.isShown == true) {
+                    } else if (left > lead && nextUpCard?.isShown == true) {
                         // Seeked back out of the last half minute: the offer goes, and comes back.
                         hideNextUp()
                         nextUpShown = false
@@ -3194,6 +3258,91 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 }
             }
         }
+    }
+
+    /**
+     * Asks once per video where its intro and credits are, for the skip pill and the next-up
+     * card. Nothing is asked while online lookups or skip times are off; [OnlineMetadata.skipTimes]
+     * answers empty without going to the network then.
+     *
+     * A video opened without a known length waits a little for the player to report one, since
+     * AniSkip matches an episode's timings by its length. A video that never reports one is asked
+     * about without it. Another episode is another start of this activity (see [playEpisode]), so
+     * this runs again for it from [onCreate].
+     */
+    private fun findSkipTimes() {
+        val metadata = OnlineMetadata.current ?: return
+        lifecycleScope.launch {
+            var seconds = durationSec
+            if (seconds <= 0) {
+                withTimeoutOrNull(SKIP_TIMES_WAIT_MS) {
+                    while (true) {
+                        val known = player?.duration?.takeIf { it > 0 }
+                        if (known != null) {
+                            seconds = (known / 1_000).toInt()
+                            break
+                        }
+                        delay(500)
+                    }
+                }
+            }
+            val item = currentItem().copy(durationSec = seconds.coerceAtLeast(0))
+            skipSegments = withContext(Dispatchers.IO) {
+                runCatching { metadata.skipTimes(item) }.getOrDefault(emptyList())
+            }
+        }
+    }
+
+    /**
+     * Raises the pill for the stretch the playhead is in, or puts it away. Not over the failure
+     * sheet, a locked screen or a thumbnail, and not while the next-up card is up: credits that
+     * run to the end of an episode with a successor are the card's, so they get no pill at all
+     * when autoplay is going to offer that card. Without a successor a credits pill skips to the
+     * end, which is the finished screen.
+     */
+    private fun updateSkipPill(exo: ExoPlayer, autoplay: Boolean) {
+        val pill = skipPill ?: return
+        val duration = exo.duration
+        val cardCoversTheEnd = autoplay && !nextUpDismissed && _episodes.value.next != null
+        val segment = if (
+            skipSegments.isEmpty() || duration <= 0 || locked || inPictureInPicture ||
+            statusOverlay.visibility == View.VISIBLE || nextUpCard?.isShown == true
+        ) {
+            null
+        } else {
+            SkipSegments.active(skipSegments, exo.currentPosition, duration, skippedSegments)
+                ?.takeUnless { cardCoversTheEnd && it.runsToEnd(duration) }
+        }
+        offeredSkip = segment
+        if (segment == null) pill.hide() else pill.show(segment.kind)
+    }
+
+    /** The pill's press, or OK on a television: past the stretch on offer, which then stays gone. */
+    private fun skipOffered() {
+        val exo = player ?: return
+        val segment = offeredSkip ?: return
+        val duration = exo.duration.takeIf { it > 0 } ?: return
+        skippedSegments += segment.startMs
+        hideSkipPill()
+        exo.seekTo(segment.target(duration).coerceAtMost(duration))
+    }
+
+    private fun hideSkipPill() {
+        offeredSkip = null
+        skipPill?.hide()
+    }
+
+    /** Whether the skip pill is up over the bare picture on a television, so OK is the skip. */
+    private fun skipHasTheRemote(): Boolean =
+        FormFactor.isTv(this) && skipPill?.isShown == true && offeredSkip != null && !controlsUp &&
+            statusOverlay.visibility != View.VISIBLE
+
+    private fun isOnSkipPill(rawX: Float, rawY: Float): Boolean {
+        val pill = skipPill?.view ?: return false
+        if (pill.visibility != View.VISIBLE) return false
+        val at = IntArray(2)
+        pill.getLocationInWindow(at)
+        return rawX >= at[0] && rawX < at[0] + pill.width && rawY >= at[1] && rawY < at[1] + pill.height
     }
 
     private fun hideNextUp() {
@@ -4162,6 +4311,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         /** How long before the end the "Next episode" card comes up. */
         private const val NEXT_UP_LEAD_MS = 30_000L
+
+        /** How long the card counts down from the start of timed credits before the next episode. */
+        private const val CREDITS_COUNTDOWN_MS = 15_000L
+
+        /** How long the skip times lookup waits for a video of unknown length to report one. */
+        private const val SKIP_TIMES_WAIT_MS = 20_000L
 
         /** How often the sleep timer and the idle count are looked at. */
         private const val STILL_WATCHING_TICK_MS = 5_000L
