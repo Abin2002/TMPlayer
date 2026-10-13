@@ -43,6 +43,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -469,28 +470,7 @@ fun MediaGridScreen(
             // stick. The skeleton stays up until the first answer, so tiles never jump from one
             // file each into shows; later pages keep the previous listing up while they are read.
             val arrangedShelf by produceState<Shelved?>(null, list.items, watchProgress, grouping, layout) {
-                value = withContext(Dispatchers.Default) {
-                    val arranged = if (grouping) {
-                        SeriesShelf.arrange(list.items)
-                    } else {
-                        SeriesShelf.foldFilmCopies(list.items).map { ShelfEntry.File(it) }
-                    }
-                    val led = arranged.map { entry ->
-                        val film = (entry as? ShelfEntry.File)?.item?.takeIf { it.versions.size > 1 } ?: return@map entry
-                        val started = film.versions.firstOrNull { SettingsStore.progressKey(it.chatId, it.messageId) in watchProgress }
-                        if (started == null) entry else ShelfEntry.File(started.asVersion(film))
-                    }
-                    // In the grid, the films and shows come first as one block of posters and every
-                    // other video after them, each block in the chat's own order. Mixed into one
-                    // order, tall and short cards would leave a ragged row wherever they met.
-                    val posters = led.filter(SeriesShelf::isPoster).mapTo(HashSet()) { it.key }
-                    val ordered = if (layout == CardLayout.Grid) {
-                        led.filter { it.key in posters } + led.filter { it.key !in posters }
-                    } else {
-                        led
-                    }
-                    Shelved(ordered, MediaMapper.repeatedCaptionLines(list.items), posters)
-                }
+                value = withContext(Dispatchers.Default) { arrangeShelf(list.items, watchProgress, grouping, layout) }
             }
             val (shelf, repeatedCaptions, posterKeys) = arrangedShelf ?: run {
                 MediaGridSkeleton(layout = layout)
@@ -610,30 +590,15 @@ fun MediaGridScreen(
                         if (course != null) {
                             item(key = "course", span = { GridItemSpan(maxLineSpan) }) { courseHeader() }
                         }
-                        // Headed only when the chat has both: a page of films needs no "Films".
-                        val sections = splitSections(feed, posterKeys)
-                        sections.forEach { (section, part) ->
-                            if (sections.size > 1) {
-                                item(key = "section-$section", span = { GridItemSpan(maxLineSpan) }) {
-                                    SectionHeading(if (section == Section.Posters) s.gridSectionFilms else s.gridSectionVideos)
-                                }
-                            }
-                            gridItems(
-                                items = part,
-                                key = {
-                                    when (it) {
-                                        is MediaFeedEntry.Media -> it.item.key
-                                        is MediaFeedEntry.Sponsored -> "sponsor-${it.item.messageId}"
-                                    }
-                                },
-                                span = {
-                                    when {
-                                        it is MediaFeedEntry.Sponsored -> GridItemSpan(maxLineSpan)
-                                        (it as MediaFeedEntry.Media).item.key in posterKeys -> GridItemSpan(columns / posterColumns)
-                                        else -> GridItemSpan(columns / wideColumns)
-                                    }
-                                },
-                            ) { entry ->
+                        shelfGrid(
+                            feed = feed,
+                            posterKeys = posterKeys,
+                            columns = columns,
+                            posterColumns = posterColumns,
+                            wideColumns = wideColumns,
+                            filmsHeading = s.gridSectionFilms,
+                            videosHeading = s.gridSectionVideos,
+                        ) { entry ->
                                 when (entry) {
                                     is MediaFeedEntry.Media -> {
                                         val shelved = entry.item
@@ -678,7 +643,6 @@ fun MediaGridScreen(
                                         onReport = { handleReport(entry.item) },
                                     )
                                 }
-                            }
                         }
                     }
 
@@ -2273,7 +2237,7 @@ private fun MetaLine(
 }
 
 /** No overscan to clear on a phone, so the margin is only what keeps art off the bezel. */
-private val TOUCH_EDGE = 16.dp
+internal val TOUCH_EDGE = 16.dp
 
 /** How many rows from the bottom the next page is fetched in the list arrangement. */
 private const val LIST_LEAD = 4
@@ -2312,11 +2276,85 @@ private const val REFRESH_TIMEOUT_MS = 20_000L
 private const val FOCUS_SETTLE_MS = 150L
 
 /** The grid's listing once arranged: the entries in order, the caption lines to skip, and which are posters. */
-private data class Shelved(
+internal data class Shelved(
     val shelf: List<ShelfEntry>,
     val repeatedCaptions: Set<String>,
     val posterKeys: Set<String>,
 )
+
+/**
+ * What a chat's listing draws, in order: shows folded into one entry each while [grouping], copies
+ * of one film folded into one (led by the copy the viewer started), and in the grid the films and
+ * shows first as one block of posters and every other video after them, each block in the chat's
+ * own order. Mixed into one order, tall and short cards would leave a ragged row wherever they met.
+ * Shared with the promo fixture, so its shots are of this arrangement and not a copy of it.
+ */
+internal fun arrangeShelf(
+    items: List<MediaItem>,
+    watchProgress: Map<String, WatchPoint>,
+    grouping: Boolean,
+    layout: CardLayout,
+): Shelved {
+    val arranged = if (grouping) {
+        SeriesShelf.arrange(items)
+    } else {
+        SeriesShelf.foldFilmCopies(items).map { ShelfEntry.File(it) }
+    }
+    val led = arranged.map { entry ->
+        val film = (entry as? ShelfEntry.File)?.item?.takeIf { it.versions.size > 1 } ?: return@map entry
+        val started = film.versions.firstOrNull { SettingsStore.progressKey(it.chatId, it.messageId) in watchProgress }
+        if (started == null) entry else ShelfEntry.File(started.asVersion(film))
+    }
+    val posters = led.filter(SeriesShelf::isPoster).mapTo(HashSet()) { it.key }
+    val ordered = if (layout == CardLayout.Grid) {
+        led.filter { it.key in posters } + led.filter { it.key !in posters }
+    } else {
+        led
+    }
+    return Shelved(ordered, MediaMapper.repeatedCaptionLines(items), posters)
+}
+
+/**
+ * A chat's grid of [feed]: posters spanning [columns] / [posterColumns], wide cards and the rest
+ * [columns] / [wideColumns], a sponsored message the whole row, and the two blocks headed only when
+ * the chat has both (a page of films needs no "Films"). [card] draws each entry; the promo fixture
+ * calls this with the same cards, so its shots are of the real grid.
+ */
+internal fun LazyGridScope.shelfGrid(
+    feed: List<MediaFeedEntry<ShelfEntry>>,
+    posterKeys: Set<String>,
+    columns: Int,
+    posterColumns: Int,
+    wideColumns: Int,
+    filmsHeading: String,
+    videosHeading: String,
+    card: @Composable (MediaFeedEntry<ShelfEntry>) -> Unit,
+) {
+    val sections = splitSections(feed, posterKeys)
+    sections.forEach { (section, part) ->
+        if (sections.size > 1) {
+            item(key = "section-$section", span = { GridItemSpan(maxLineSpan) }) {
+                SectionHeading(if (section == Section.Posters) filmsHeading else videosHeading)
+            }
+        }
+        gridItems(
+            items = part,
+            key = {
+                when (it) {
+                    is MediaFeedEntry.Media -> it.item.key
+                    is MediaFeedEntry.Sponsored -> "sponsor-${it.item.messageId}"
+                }
+            },
+            span = {
+                when {
+                    it is MediaFeedEntry.Sponsored -> GridItemSpan(maxLineSpan)
+                    (it as MediaFeedEntry.Media).item.key in posterKeys -> GridItemSpan(columns / posterColumns)
+                    else -> GridItemSpan(columns / wideColumns)
+                }
+            },
+        ) { entry -> card(entry) }
+    }
+}
 
 /** The two blocks of a chat's grid: films and shows as posters, then every other video. */
 private enum class Section { Posters, Videos }

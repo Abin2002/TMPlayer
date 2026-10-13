@@ -140,6 +140,15 @@ internal fun HomeRowsView(
         rows.filterIsInstance<HomeRow.Continue>().firstOrNull()?.let { HomeRows.spotlight(it.records + it.more) }.orEmpty()
     }
     val spotlight = (rememberSpotlight(candidates, art, onArtWanted) as? SpotlightState.Ready)?.spotlight
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    // A spotlight that answers after the rows are drawn goes in above them, and the list keeps
+    // standing on the row it was showing, so the hero sat out of sight above the top. A list still
+    // at its top (now one item down, at no offset) moves up to show it.
+    LaunchedEffect(spotlight != null) {
+        if (spotlight == null) return@LaunchedEffect
+        androidx.compose.runtime.withFrameNanos {}
+        if (listState.firstVisibleItemIndex == 1 && listState.firstVisibleItemScrollOffset == 0) listState.scrollToItem(0)
+    }
     Column(Modifier.fillMaxSize()) {
         PageHeader(
             BrowseTab.Home.heading,
@@ -176,6 +185,7 @@ internal fun HomeRowsView(
             val side = if (maxWidth > WIDE_WINDOW) 32.dp else 24.dp
             LazyColumn(
                 Modifier.fillMaxSize(),
+                state = listState,
                 contentPadding = PaddingValues(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
