@@ -743,7 +743,7 @@ internal fun PlayerMenu(
                 if (bookmarks != null) {
                     HorizontalDivider()
                     Entry(s.playerAddBookmark, trailing = "B") { pick(MenuAction.AddBookmark) }
-                    Entry(s.playerBookmarks, trailing = bookmarks.size.takeIf { it > 0 }?.toString()) { page(MenuPage.Bookmarks) }
+                    Entry(s.playerBookmarks, trailing = bookmarks.size.takeIf { it > 0 }?.let { s.messages.formatter.number(it) }) { page(MenuPage.Bookmarks) }
                 }
                 HorizontalDivider()
                 Entry(s.playerHelp, trailing = "?") { pick(MenuAction.Shortcuts) }

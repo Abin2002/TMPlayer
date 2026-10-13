@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tmplayer.data.DeviceForm
 import com.tmplayer.data.PinAttempts
+import com.tmplayer.data.PinClock
 import com.tmplayer.data.PinCheck
 import com.tmplayer.data.PinHash
 import com.tmplayer.data.SettingsStore
@@ -112,19 +113,19 @@ fun PinPad(
     var message by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     var waitUntil by remember { mutableLongStateOf(0L) }
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var now by remember { mutableLongStateOf(PinClock.now()) }
     val waiting = waitUntil > now
 
     // A wait earned before this pad opened is still a wait.
     LaunchedEffect(purpose) {
         if (purpose != PinPurpose.Check) return@LaunchedEffect
         val attempts = runCatching { settings.pinAttemptsNow() }.getOrDefault(PinAttempts())
-        if (attempts.waitMs(System.currentTimeMillis()) > 0) waitUntil = attempts.waitUntil
+        if (attempts.waitMs(PinClock.now()) > 0) waitUntil = attempts.waitUntil
     }
     // The countdown, a second at a time, and the keys back once it runs out.
     LaunchedEffect(waitUntil) {
         while (true) {
-            now = System.currentTimeMillis()
+            now = PinClock.now()
             if (now >= waitUntil) break
             delay(1_000L)
         }
@@ -159,7 +160,7 @@ fun PinPad(
                     when (verdict) {
                         PinCheck.Right, PinCheck.NoPin -> onDone(pin)
                         is PinCheck.Wrong -> {
-                            val wait = verdict.attempts.waitMs(System.currentTimeMillis())
+                            val wait = verdict.attempts.waitMs(PinClock.now())
                             if (wait > 0) {
                                 waitUntil = verdict.attempts.waitUntil
                                 message = null
@@ -168,7 +169,7 @@ fun PinPad(
                             }
                         }
                         is PinCheck.Waiting -> {
-                            waitUntil = System.currentTimeMillis() + verdict.waitMs
+                            waitUntil = PinClock.now() + verdict.waitMs
                             message = null
                         }
                     }

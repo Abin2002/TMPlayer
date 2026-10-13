@@ -643,7 +643,15 @@ fun SeriesPanel(
     }
     val shown = series.seasons.firstOrNull { it.number == season } ?: series.seasons.first()
     val playFocus = remember { FocusRequester() }
-    LaunchedEffect(series.key) { if (tv) runCatching { playFocus.requestFocus() } }
+    // After a frame, and a few more if need be: Play sits in a lazy list item, which is not
+    // attached until the list has laid it out, and a request before then is lost.
+    LaunchedEffect(series.key) {
+        if (!tv) return@LaunchedEffect
+        repeat(FOCUS_TRIES) {
+            withFrameNanos { }
+            if (runCatching { playFocus.requestFocus() }.isSuccess) return@LaunchedEffect
+        }
+    }
     // Download is for the season shown, so its buttons follow the season picked.
     val downloads = onDownload != null && SeasonDownload.anySavable(shown)
     val bothDownloads = downloads && SeasonDownload.unwatchedDiffers(shown, watch.finished)
@@ -1062,4 +1070,5 @@ private fun Modifier.okHold(
 
 private val OK_KEYS = setOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter)
 
-
+/** Frames to wait for a lazily composed button before giving up on focusing it. */
+private const val FOCUS_TRIES = 5
