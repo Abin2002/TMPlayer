@@ -48,6 +48,7 @@ import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.ui.components.BottomCardInset
 import com.tmplayer.ui.components.PhonePad
 import com.tmplayer.ui.components.TmSecondaryButton
+import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.TmIcons
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
@@ -149,6 +150,52 @@ internal fun FirstVideoTip(nothingPlayed: Boolean, start: Dp, end: Dp, defaultsH
 object MetaNoticeOverride {
     @Volatile
     var show: Boolean? = null
+
+    /** The same for the invite to turn lookups on ([OnlineMetaInvite]). */
+    @Volatile
+    var invite: Boolean? = null
+}
+
+/**
+ * The one-time invite for a viewer whose online metadata is off from an older version, when off
+ * was the default (see [MetaNotice.shouldInvite]). The app's own prompt ([TvConfirm]), with Turn
+ * on focused first on a television, since it is the press that adds rather than removes. Not now,
+ * Back or a tap outside all answer it, and it is never asked again. [onAnswered] runs after, for
+ * the grid to hand a remote back to a video.
+ */
+@Composable
+internal fun OnlineMetaInvite(onAnswered: () -> Unit = {}) {
+    val online = OnlineMetadata.current ?: return
+    val context = LocalContext.current
+    val settings = remember { SettingsStore(context.applicationContext) }
+    val meta by online.settings.collectAsState()
+    // Seen until the store answers, so it never flashes up for somebody who already answered.
+    val seen by settings.onlineMetaInviteSeen.collectAsState(initial = true)
+    var answered by remember { mutableStateOf(false) }
+    val due = MetaNoticeOverride.invite ?: MetaNotice.shouldInvite(meta, seen)
+    if (!due || answered) return
+    val s = LocalStrings.current
+    val scope = rememberCoroutineScope()
+    fun answer(turnOn: Boolean) {
+        answered = true
+        MetaNoticeOverride.invite = null
+        if (turnOn) online.setEnabled(true)
+        scope.launch {
+            runCatching { settings.markOnlineMetaInviteSeen(turnedOn = turnOn) }
+            onAnswered()
+        }
+    }
+    TvConfirm(
+        title = s.metadataInviteTitle,
+        message = s.metadataInviteBody,
+        confirmLabel = s.metadataInviteTurnOn,
+        cancelLabel = s.metadataInviteNotNow,
+        onConfirm = { answer(turnOn = true) },
+        onDismiss = { answer(turnOn = false) },
+        destructive = false,
+        icon = TmIcons.Image,
+        focusConfirm = true,
+    )
 }
 
 /** Whether the grid's note on online metadata is due: lookups on and the note not put away. */

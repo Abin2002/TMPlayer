@@ -174,6 +174,8 @@ class PromoCaptureActivity : ComponentActivity() {
         // `--ez metanotice true` shows the grid's one-time note on online metadata; without it the
         // note stays away, so the usual grid shots are unchanged.
         com.tmplayer.ui.browse.MetaNoticeOverride.show = intent.getBooleanExtra("metanotice", false)
+        // `--ez metainvite true` shows the one-time invite to turn online metadata on.
+        com.tmplayer.ui.browse.MetaNoticeOverride.invite = intent.getBooleanExtra("metainvite", false)
 
         // `--ez hide_groups true|false` sets "Only my folders" (Telegram's default groups off the
         // sidebar), and `--ez groups_demo true` puts four of the demo chats in the two demo folders

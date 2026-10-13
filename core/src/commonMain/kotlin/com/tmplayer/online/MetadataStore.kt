@@ -22,6 +22,12 @@ data class MetaSettings(
     val refusedAt: Long = 0,
     /** Skip intro, recap and credits buttons in the player, from TheIntroDB and AniSkip. */
     val skipTimes: Boolean = true,
+    /**
+     * Whether [enabled] was turned off by this version or a later one (Settings, the first-run
+     * switch, the grid's note, a restore). False with [enabled] off means the off came from an
+     * older version, when off was the default, so the viewer is asked once (see [MetaNotice]).
+     */
+    val offByChoice: Boolean = false,
 )
 
 /** [MetaSettings] kept in a small properties file in the app's private storage. */
@@ -50,6 +56,7 @@ class MetadataStore(private val file: File) {
             refusedKey = p.getProperty("refused_key").orEmpty(),
             refusedAt = p.getProperty("refused_at")?.toLongOrNull() ?: 0L,
             skipTimes = p.getProperty("skip_times") != "false",
+            offByChoice = p.getProperty("off_by_choice") == "true",
         )
     }
 
@@ -60,6 +67,7 @@ class MetadataStore(private val file: File) {
         p["refused_key"] = s.refusedKey
         p["refused_at"] = s.refusedAt.toString()
         p["skip_times"] = s.skipTimes.toString()
+        p["off_by_choice"] = s.offByChoice.toString()
         runCatching {
             file.parentFile?.mkdirs()
             val temp = File(file.parentFile, file.name + ".tmp")

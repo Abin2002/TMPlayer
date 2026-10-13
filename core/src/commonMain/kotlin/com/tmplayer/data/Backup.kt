@@ -572,6 +572,8 @@ object Backups {
     fun metadataAfter(current: MetaSettings, backup: Backup): MetaSettings = current.copy(
         enabled = backup.metadata["enabled"] ?: current.enabled,
         skipTimes = backup.metadata["skip_times"] ?: current.skipTimes,
+        // Off in a backup was chosen on the device that wrote it, so a restore does not ask again.
+        offByChoice = current.offByChoice || backup.metadata["enabled"] == false,
     )
 }
 
