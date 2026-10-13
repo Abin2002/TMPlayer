@@ -359,6 +359,24 @@
     "resolution": "Rozdzielczość",
     "resume_at": "Wznów od {time}",
     "resume_at_detail": "Kontynuuje od miejsca przerwania",
+    "round_chat": "Czat",
+    "round_delete": "Usuń",
+    "round_download": "Pobierz",
+    "round_downloaded": "Pobrane",
+    "round_link": "Link",
+    "round_open_with": "Otwórz w",
+    "round_remove": "Odznacz",
+    "round_restart": "Od początku",
+    "round_save": "Zapisz",
+    "round_season": "Sezon",
+    "round_select": "Wybierz",
+    "round_show_info": "Info",
+    "round_stop": "Zatrzymaj",
+    "round_trailer": "Zwiastun",
+    "round_unseen": "Nieobejrzane",
+    "round_unwatched": "Nieobejrzane",
+    "round_watch_later": "Na później",
+    "round_watched": "Obejrzane",
     "season_starts": "Sezon {number} zaczyna się {date}",
     "seasons_count": "{count, plural, one {# sezon} few {# sezony} many {# sezonów} other {# sezonu}}",
     "show_ended": "Zakończony",
@@ -691,10 +709,15 @@
     "row_continue": "Oglądaj dalej",
     "row_new_episodes": "Nowe odcinki",
     "row_recent": "Ostatnio dodane w czatach z gwiazdką",
+    "row_scroll_back": "Przewiń wstecz",
+    "row_scroll_on": "Przewiń dalej",
     "row_watch_later": "Obejrzyj później",
     "see_all": "Zobacz wszystko",
     "see_all_count": "{count, plural, one {# film} few {# filmy} many {# filmów} other {# filmu}}",
-    "see_all_count_at_least": "{count, plural, one {#+ film} few {#+ filmy} many {#+ filmów} other {#+ filmu}}"
+    "see_all_count_at_least": "{count, plural, one {#+ film} few {#+ filmy} many {#+ filmów} other {#+ filmu}}",
+    "spotlight_next": "Dalej",
+    "spotlight_position": "{index} z {count}",
+    "spotlight_previous": "Wstecz"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "Bez ramki",
     "subtitles": "Napisy",
     "support_detail": "GitHub Sponsors lub Buy Me a Coffee, z kodem QR dla każdego",
+    "system_title_bar": "Używaj systemowego paska tytułu",
+    "system_title_bar_off": "TMPlayer rysuje własne przyciski okna. Działa po ponownym uruchomieniu",
+    "system_title_bar_on": "Pasek tytułu rysuje system okien. Działa po ponownym uruchomieniu",
     "tap_plays": "Dotknij obrazu, aby odtworzyć lub wstrzymać",
     "tap_plays_off": "Wyłączone: dotknięcie pokazuje sterowanie, a duży przycisk wstrzymuje",
     "tap_plays_on": "Dotknięcie wstrzymuje i pokazuje sterowanie; kolejne odtwarza",
@@ -2001,5 +2027,11 @@
     "highlight_series": "Widok serialu: odcinki pogrupowane według sezonów, z kartą dla każdego",
     "subtitle": "Najważniejsze zmiany w tej wersji",
     "title": "Co nowego w {version}"
+  },
+  "window": {
+    "close": "Zamknij",
+    "maximize": "Maksymalizuj",
+    "minimize": "Minimalizuj",
+    "restore": "Przywróć"
   }
 }

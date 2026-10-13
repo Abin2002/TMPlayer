@@ -11,6 +11,8 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
+import com.tmplayer.desktop.ui.WindowControls
+import com.tmplayer.desktop.ui.windowDrag
 import androidx.compose.foundation.TooltipPlacement
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -330,9 +332,12 @@ internal fun BoxScope.PlayerOverlay(
             Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(BottomScrimHeight).background(BottomScrim))
 
             // Top bar.
+            // Windowed, the bar is the window's title bar too: its empty space moves the window, and
+            // the window's own buttons end it (where the app draws them), fading out with the rest.
             Row(
                 Modifier.align(Alignment.TopCenter).fillMaxWidth()
                     .hoverReport(onHoverControls)
+                    .then(if (fullscreen) Modifier else Modifier.windowDrag())
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -350,6 +355,7 @@ internal fun BoxScope.PlayerOverlay(
                         PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
                     }
                 }
+                if (!fullscreen) WindowControls(onArt = true)
             }
 
             // The download chip, top right under the bar.
@@ -744,7 +750,7 @@ internal fun PlayerMenu(
                 if (bookmarks != null) {
                     HorizontalDivider()
                     Entry(s.playerAddBookmark, trailing = "B") { pick(MenuAction.AddBookmark) }
-                    Entry(s.playerBookmarks, trailing = bookmarks.size.takeIf { it > 0 }?.toString()) { page(MenuPage.Bookmarks) }
+                    Entry(s.playerBookmarks, trailing = bookmarks.size.takeIf { it > 0 }?.let { s.messages.formatter.number(it) }) { page(MenuPage.Bookmarks) }
                 }
                 HorizontalDivider()
                 Entry(s.playerHelp, trailing = "?") { pick(MenuAction.Shortcuts) }

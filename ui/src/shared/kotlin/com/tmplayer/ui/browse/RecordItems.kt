@@ -3,6 +3,7 @@ package com.tmplayer.ui.browse
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.SettingsStore
 import kotlinx.coroutines.CancellationException
@@ -60,5 +61,10 @@ fun rememberRecordItem(chatId: Long, messageId: Long, fallback: MediaItem): Medi
     val item by produceState(RecordItems.peek(key) ?: fallback, key) {
         if (RecordItems.peek(key) == null) RecordItems.lookup(chatId, messageId)?.let { value = it }
     }
-    return item
+    // The picture is Telegram's, but whether the file is on this device is the record's: the
+    // cache keeps an item for the life of the process, and the watch cache moves on long before
+    // that, so its "Cached" would outlive the file.
+    return remember(item, fallback.locality) {
+        if (item.locality == fallback.locality) item else item.withLocality(fallback.locality)
+    }
 }

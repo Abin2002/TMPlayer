@@ -78,11 +78,24 @@ object PinHash {
 }
 
 /**
+ * The clock the PIN's waits are timed on: one that only moves forward, so setting the device's
+ * date ahead does not end a wait. Milliseconds from an arbitrary start; the Android app points it
+ * at `SystemClock.elapsedRealtime`, which keeps counting through deep sleep.
+ */
+object PinClock {
+    @Volatile
+    var source: () -> Long = { System.nanoTime() / 1_000_000L }
+
+    fun now(): Long = source()
+}
+
+/**
  * Wrong guesses and the wait they earn, as stored beside the PIN.
  *
- * [failures] counts wrong PINs since the last right one; [waitUntil] is the wall clock time before
+ * [failures] counts wrong PINs since the last right one; [waitUntil] is the [PinClock] time before
  * which the pad takes no PIN at all. Both survive a restart, or closing the app would be the way
- * round the wait.
+ * round the wait: what is stored is the wait left and the [PinClock] time it was written at (see
+ * [stored] and [restored]), since that clock starts again from nothing after a reboot.
  */
 data class PinAttempts(val failures: Int = 0, val waitUntil: Long = 0L) {
 
@@ -98,6 +111,19 @@ data class PinAttempts(val failures: Int = 0, val waitUntil: Long = 0L) {
 
     /** How many more wrong PINs are free before the next one earns a wait. */
     val freeLeft: Int get() = (PinBackoff.FREE_TRIES - failures).coerceAtLeast(0)
+
+    companion object {
+        /**
+         * The attempts from what was stored: [waitLeftMs] as of [stampedAt]. A clock behind the
+         * stamp has started again (a reboot, a new desktop session), and then none of the wait
+         * counts as served; it is never longer than [PinBackoff.MAX_WAIT_MS] either way.
+         */
+        fun restored(failures: Int, waitLeftMs: Long, stampedAt: Long, now: Long): PinAttempts {
+            val served = if (now >= stampedAt) now - stampedAt else 0L
+            val left = (waitLeftMs.coerceIn(0L, PinBackoff.MAX_WAIT_MS) - served).coerceAtLeast(0L)
+            return PinAttempts(failures, if (left > 0) now + left else 0L)
+        }
+    }
 }
 
 /**

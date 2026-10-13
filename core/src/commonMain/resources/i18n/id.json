@@ -359,6 +359,24 @@
     "resolution": "Resolusi",
     "resume_at": "Lanjutkan {time}",
     "resume_at_detail": "Lanjut dari tempat kamu berhenti",
+    "round_chat": "Obrolan",
+    "round_delete": "Hapus",
+    "round_download": "Unduh",
+    "round_downloaded": "Terunduh",
+    "round_link": "Tautan",
+    "round_open_with": "Buka dengan",
+    "round_remove": "Keluarkan",
+    "round_restart": "Dari awal",
+    "round_save": "Simpan",
+    "round_season": "Musim",
+    "round_select": "Pilih",
+    "round_show_info": "Info",
+    "round_stop": "Hentikan",
+    "round_trailer": "Trailer",
+    "round_unseen": "Belum ditonton",
+    "round_unwatched": "Belum ditonton",
+    "round_watch_later": "Tonton nanti",
+    "round_watched": "Ditonton",
     "season_starts": "Musim {number} mulai {date}",
     "seasons_count": "{count, plural, other {# musim}}",
     "show_ended": "Tamat",
@@ -691,10 +709,15 @@
     "row_continue": "Lanjutkan menonton",
     "row_new_episodes": "Episode baru",
     "row_recent": "Baru ditambahkan di chat berbintang",
+    "row_scroll_back": "Gulir mundur",
+    "row_scroll_on": "Gulir maju",
     "row_watch_later": "Tonton nanti",
     "see_all": "Lihat semua",
     "see_all_count": "{count, plural, other {# video}}",
-    "see_all_count_at_least": "{count, plural, other {#+ video}}"
+    "see_all_count_at_least": "{count, plural, other {#+ video}}",
+    "spotlight_next": "Berikutnya",
+    "spotlight_position": "{index} dari {count}",
+    "spotlight_previous": "Sebelumnya"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "Tanpa kotak",
     "subtitles": "Subtitle",
     "support_detail": "GitHub Sponsors atau Buy Me a Coffee, dengan kode QR untuk masing-masing",
+    "system_title_bar": "Gunakan bilah judul sistem",
+    "system_title_bar_off": "TMPlayer menggambar tombol jendelanya sendiri. Berlaku setelah dimulai ulang",
+    "system_title_bar_on": "Sistem jendela menggambar bilah judul. Berlaku setelah dimulai ulang",
     "tap_plays": "Ketuk gambar untuk memutar atau menjeda",
     "tap_plays_off": "Mati: ketukan menampilkan kontrol, dan tombol besar menjeda",
     "tap_plays_on": "Ketukan menjeda dan menampilkan kontrol; ketukan lagi memutar",
@@ -2001,5 +2027,11 @@
     "highlight_series": "Tampilan serial: episode dikelompokkan per musim, dengan tab untuk tiap musim",
     "subtitle": "Sorotan versi ini",
     "title": "Yang baru di {version}"
+  },
+  "window": {
+    "close": "Tutup",
+    "maximize": "Maksimalkan",
+    "minimize": "Minimalkan",
+    "restore": "Pulihkan"
   }
 }

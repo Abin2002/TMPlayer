@@ -44,6 +44,10 @@ state is carried by colour and background, as the sidebar pill already does.
 | `Sort` | SortingAZ02 |  | TmIcons.Sort | The chat list sorted by name. |
 | `OpenExternal` | LinkSquare02 |  | Material ExitToApp | Open in another app. |
 | `SignOut` | Logout05 | yes | Material ExitToApp | Sign out. |
+| `WindowMinimize` | MinusSign |  | WindowGlyphs.Minimize | Minimise the window. |
+| `WindowMaximize` | Stop |  | WindowGlyphs.Maximize | Maximise the window. |
+| `WindowRestore` | Copy |  | WindowGlyphs.Restore | Restore a maximised window: one square behind another. |
+| `WindowClose` | Cancel01 |  | WindowGlyphs.Close | Close the window. |
 | `Add` | Add01 |  | Material Add | Add. |
 | `Remove` | MinusSign |  | TmIcons.Remove | Take one away, on a stepper. |
 | `Check` | Tick02 |  | Material Check, PlayerIcons.Check | Done, chosen. |

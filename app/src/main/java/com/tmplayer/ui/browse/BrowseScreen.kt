@@ -261,6 +261,10 @@ fun BrowseScreen(
     onUpdate: () -> Unit = {},
     /** Home's rows, built by [com.tmplayer.data.HomeRows] from what has loaded so far. */
     homeRows: List<HomeRow> = emptyList(),
+    /** Home's carousel candidates from the starred chats (see [rememberFeatured]). */
+    homeFeatured: List<com.tmplayer.data.FeaturedPick> = emptyList(),
+    /** Puts a video on Watch later (true) or takes it off (false); the second argument is its chat's name. */
+    onSetWatchLater: ((MediaItem, String, Boolean) -> Unit)? = null,
     /** Continue watching videos as Telegram describes them, by progress key, for their pictures. */
     homeArt: Map<String, MediaItem> = emptyMap(),
     homeWatch: SeriesWatch = SeriesWatch.None,
@@ -365,6 +369,7 @@ fun BrowseScreen(
     val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
     // Home's hero, for the header drawn over it: the phone's app bar or the television's heading.
     val homeHero = remember { HeroUnderHeader() }
+    val laterKeys = remember(watchLater) { watchLater.mapTo(HashSet()) { it.key } }
     // History's Continue tab, with the copies of one film or episode as one card, as on Home.
     val continuing = remember(continueWatching) { HomeRows.foldCopies(continueWatching) }
     val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
@@ -478,6 +483,11 @@ fun BrowseScreen(
                                 },
                                 under = if (touch) LocalUnderBar.current else if (headingOverHero) headingHeight else 0.dp,
                                 hero = homeHero,
+                                featured = homeFeatured,
+                                inWatchLater = { item -> laterKeys.contains(SettingsStore.progressKey(item.chatId, item.messageId)) },
+                                onToggleWatchLater = onSetWatchLater?.let { set ->
+                                    { item, chat -> set(item, chat, !laterKeys.contains(SettingsStore.progressKey(item.chatId, item.messageId))) }
+                                },
                             )
                             if (headingOverHero) {
                                 heading(

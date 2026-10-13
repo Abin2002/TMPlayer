@@ -38,7 +38,9 @@ private val DETAIL_FIRST = booleanPreferencesKey("detail_first")
 private val DOWNMIX_STEREO = booleanPreferencesKey("downmix_stereo")
 private val VOLUME_BOOST = booleanPreferencesKey("volume_boost")
 private val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
-private val RESUME_REWIND = longPreferencesKey("resume_rewind_ms")
+// Not "resume_...": that prefix is a resume point's, and the sweeps over resume points (the
+// broken-history prune at launch, Clear history) would take this setting with them.
+private val RESUME_REWIND = longPreferencesKey("rewind_on_resume_ms")
 private val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
 private val REMOVE_AFTER_WATCHING = booleanPreferencesKey("remove_after_watching")
 private val TRICKPLAY = booleanPreferencesKey("trickplay")
@@ -57,7 +59,9 @@ private val HIDE_DEFAULT_GROUPS = booleanPreferencesKey("hide_default_groups")
 // back from a forgotten PIN.
 private val APP_PIN = stringPreferencesKey("app_pin")
 private val PIN_FAILURES = longPreferencesKey("app_pin_failures")
-private val PIN_WAIT_UNTIL = longPreferencesKey("app_pin_wait_until")
+// The wait left after wrong PINs, and the [PinClock] time it was written at: see [PinAttempts].
+private val PIN_WAIT_LEFT = longPreferencesKey("app_pin_wait_left_ms")
+private val PIN_WAIT_STAMP = longPreferencesKey("app_pin_wait_stamp")
 private val LOCK_ON_OPEN = booleanPreferencesKey("app_lock_on_open")
 private val KIDS_LOCK = booleanPreferencesKey("kids_lock")
 private val KIDS_CHATS = stringSetPreferencesKey("kids_chats")
@@ -175,8 +179,12 @@ private fun kidsChatsOf(prefs: Preferences): Set<Long> =
 private fun allowedChatsOf(prefs: Preferences): Set<Long>? =
     if (KidsLock.inForce(prefs[KIDS_LOCK] == true, prefs[APP_PIN] != null)) kidsChatsOf(prefs) else null
 
-private fun attemptsOf(prefs: Preferences): PinAttempts =
-    PinAttempts((prefs[PIN_FAILURES] ?: 0L).toInt(), prefs[PIN_WAIT_UNTIL] ?: 0L)
+private fun attemptsOf(prefs: Preferences, now: Long): PinAttempts = PinAttempts.restored(
+    failures = (prefs[PIN_FAILURES] ?: 0L).toInt(),
+    waitLeftMs = prefs[PIN_WAIT_LEFT] ?: 0L,
+    stampedAt = prefs[PIN_WAIT_STAMP] ?: 0L,
+    now = now,
+)
 
 /**
  * A speed remembered for a show, a course, a chat or a topic: see [SpeedMemory]. The scope keeps its
@@ -1143,15 +1151,17 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
     suspend fun pinSetNow(): Boolean = prefs.data.first()[APP_PIN] != null
 
     /** The wrong guesses so far and any wait they earned, now. */
-    suspend fun pinAttemptsNow(): PinAttempts = attemptsOf(prefs.data.first())
+    suspend fun pinAttemptsNow(now: Long = PinClock.now()): PinAttempts = attemptsOf(prefs.data.first(), now)
 
     /** Sets (or changes) the PIN, and forgets any wrong guesses made against the old one. */
     suspend fun setPin(pin: String) {
-        val line = PinHash.hash(pin)
+        // Twenty thousand rounds: off the caller, which is often the UI thread.
+        val line = kotlinx.coroutines.withContext(Dispatchers.Default) { PinHash.hash(pin) }
         prefs.edit {
             it[APP_PIN] = line
             it.remove(PIN_FAILURES)
-            it.remove(PIN_WAIT_UNTIL)
+            it.remove(PIN_WAIT_LEFT)
+            it.remove(PIN_WAIT_STAMP)
         }
     }
 
@@ -1163,34 +1173,37 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         prefs.edit {
             it.remove(APP_PIN)
             it.remove(PIN_FAILURES)
-            it.remove(PIN_WAIT_UNTIL)
+            it.remove(PIN_WAIT_LEFT)
+            it.remove(PIN_WAIT_STAMP)
             it.remove(LOCK_ON_OPEN)
             it.remove(KIDS_LOCK)
         }
     }
 
     /**
-     * Checks [pin] against the stored one at wall clock [now], counting a wrong one and refusing
+     * Checks [pin] against the stored one at [PinClock] time [now], counting a wrong one and refusing
      * to look at all while an earlier run of wrong ones is still waiting out its [PinBackoff].
      * The verdict and the count are written in one edit, so two pads cannot both get a free try.
      */
-    suspend fun checkPin(pin: String, now: Long = System.currentTimeMillis()): PinCheck {
+    suspend fun checkPin(pin: String, now: Long = PinClock.now()): PinCheck {
         var verdict: PinCheck = PinCheck.NoPin
         prefs.edit { prefs ->
             val stored = prefs[APP_PIN] ?: return@edit
-            val attempts = attemptsOf(prefs)
+            val attempts = attemptsOf(prefs, now)
             val wait = attempts.waitMs(now)
             verdict = when {
                 wait > 0 -> PinCheck.Waiting(wait)
                 PinHash.verify(pin, stored) -> {
                     prefs.remove(PIN_FAILURES)
-                    prefs.remove(PIN_WAIT_UNTIL)
+                    prefs.remove(PIN_WAIT_LEFT)
+                    prefs.remove(PIN_WAIT_STAMP)
                     PinCheck.Right
                 }
                 else -> {
                     val next = attempts.failed(now)
                     prefs[PIN_FAILURES] = next.failures.toLong()
-                    prefs[PIN_WAIT_UNTIL] = next.waitUntil
+                    prefs[PIN_WAIT_LEFT] = next.waitMs(now)
+                    prefs[PIN_WAIT_STAMP] = now
                     PinCheck.Wrong(next)
                 }
             }
@@ -1222,7 +1235,8 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         prefs.edit {
             it.remove(APP_PIN)
             it.remove(PIN_FAILURES)
-            it.remove(PIN_WAIT_UNTIL)
+            it.remove(PIN_WAIT_LEFT)
+            it.remove(PIN_WAIT_STAMP)
             it.remove(LOCK_ON_OPEN)
             it.remove(KIDS_LOCK)
             it.remove(KIDS_CHATS)
@@ -1565,6 +1579,9 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             val key = resumeKey(chatId, messageId)
             // Watch time for the support ladder, read off the same heartbeat.
             noteSupportProgress(prefs, progressKey(chatId, messageId), positionMs, System.currentTimeMillis())
+            // Still inside the few seconds the resume rewound: the place saved before stands, or
+            // opening and closing a video would walk it back by the rewind every time.
+            val positionMs = ResumeRewind.kept(prefs[key], positionMs, ResumeRewind.sanitise(prefs[RESUME_REWIND]))
             // In the first three minutes, or in the credits: there is nothing worth resuming.
             if (!ResumeRules.keeps(positionMs, durationMs)) {
                 prefs.remove(key)
@@ -1684,6 +1701,21 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             it.remove(resumeKey(chatId, messageId))
             it.remove(durationKey(chatId, messageId))
             it.remove(metaKey(chatId, messageId))
+        }
+    }
+
+    /**
+     * "Remove from Continue watching" for a card that may stand for several copies of one video
+     * ([HomeRows.foldCopies]): every copy goes, in one edit, so none comes up in its place.
+     */
+    suspend fun clearResumeCopies(record: ResumeRecord) {
+        val copies = HomeRows.copiesOf(record, continueWatching.first())
+        prefs.edit {
+            for (copy in copies) {
+                it.remove(resumeKey(copy.chatId, copy.messageId))
+                it.remove(durationKey(copy.chatId, copy.messageId))
+                it.remove(metaKey(copy.chatId, copy.messageId))
+            }
         }
     }
 

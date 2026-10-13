@@ -29,6 +29,20 @@ object ResumeRewind {
         return (savedMs - rewindMs).coerceAtLeast(0L)
     }
 
+    /**
+     * What to save when a video resumed from [savedMs] is now at [positionMs]: the saved place
+     * while the position is still inside the rewind (with [SEEK_SLACK_MS] for a seek that landed
+     * on an earlier key frame), the position otherwise. A video opened and closed again keeps its
+     * place instead of losing [rewindMs] each time.
+     */
+    fun kept(savedMs: Long?, positionMs: Long, rewindMs: Long): Long {
+        if (savedMs == null || rewindMs <= 0L || savedMs < MIN_SAVED_MS) return positionMs
+        return if (positionMs < savedMs && positionMs >= savedMs - rewindMs - SEEK_SLACK_MS) savedMs else positionMs
+    }
+
+    /** How far before the rewound start a seek may land and still count as the resume. */
+    const val SEEK_SLACK_MS = 1_500L
+
     /** "Off", or "3 seconds". */
     fun label(ms: Long): String = if (ms <= 0L) L.commonOff else L.unitSeconds(ms / 1000)
 }

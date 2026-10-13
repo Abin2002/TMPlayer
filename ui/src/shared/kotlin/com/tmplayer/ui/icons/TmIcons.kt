@@ -188,6 +188,26 @@ object TmIcons {
         )
     }
 
+    // Desktop window buttons
+
+    /** Minimise the window. Hugeicons MinusSign. */
+    val WindowMinimize: ImageVector by lazy { icon("WindowMinimize", s("M20 12L4 12")) }
+
+    /** Maximise the window. Hugeicons Stop. */
+    val WindowMaximize: ImageVector by lazy { icon("WindowMaximize", s("M4 12C4 8.72077 4 7.08116 4.81382 5.91891C5.1149 5.48891 5.48891 5.1149 5.91891 4.81382C7.08116 4 8.72077 4 12 4C15.2792 4 16.9188 4 18.0811 4.81382C18.5111 5.1149 18.8851 5.48891 19.1862 5.91891C20 7.08116 20 8.72077 20 12C20 15.2792 20 16.9188 19.1862 18.0811C18.8851 18.5111 18.5111 18.8851 18.0811 19.1862C16.9188 20 15.2792 20 12 20C8.72077 20 7.08116 20 5.91891 19.1862C5.48891 18.8851 5.1149 18.5111 4.81382 18.0811C4 16.9188 4 15.2792 4 12Z")) }
+
+    /** Restore a maximised window: one square behind another. Hugeicons Copy. */
+    val WindowRestore: ImageVector by lazy {
+        icon(
+            "WindowRestore",
+            s("M7 11V9C7 5.70017 7 4.05025 8.02513 3.02513C9.05025 2 10.7002 2 14 2C17.2998 2 18.9497 2 19.9749 3.02513C21 4.05025 21 5.70017 21 9V11C21 14.2998 21 15.9497 19.9749 16.9749C18.9497 18 17.2998 18 14 18C10.7002 18 9.05025 18 8.02513 16.9749C7 15.9497 7 14.2998 7 11Z"),
+            s("M3 6V15C3 18.2998 3 19.9497 4.02513 20.9749C5.05025 22 6.70017 22 10 22H17"),
+        )
+    }
+
+    /** Close the window. Hugeicons Cancel01. */
+    val WindowClose: ImageVector by lazy { icon("WindowClose", s("M18 6L6.00081 17.9992M17.9992 18L6 6.00085")) }
+
     // Actions and states
 
     /** Add. Hugeicons Add01. */

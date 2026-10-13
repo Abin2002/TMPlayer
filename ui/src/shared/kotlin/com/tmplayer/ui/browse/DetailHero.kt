@@ -37,15 +37,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.DetailAction
 import com.tmplayer.data.WatchPoint
+import com.tmplayer.i18n.Messages
 import com.tmplayer.ui.components.ArtBackdrop
 import com.tmplayer.ui.components.BackdropSource
 import com.tmplayer.ui.components.isTouch
@@ -216,6 +220,8 @@ internal fun RoundAction(
     destructive: Boolean = false,
     detail: String? = null,
     focusRequester: FocusRequester? = null,
+    /** The word or two under the round button; [label] stays for the pill and for screen readers. */
+    short: String = label,
 ) {
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
@@ -282,12 +288,15 @@ internal fun RoundAction(
         ) {
             Icon(icon, contentDescription = null, tint = if (focused) Tone.onFocusFill else ink, modifier = Modifier.size(22.dp))
         }
+        // Up to three lines, in type small enough for the longest word to fit the button's width:
+        // in Malayalam "Mark as watched" ran past two lines, and German and French broke
+        // "Herunterladen" and "Recommencer" in the middle of the word.
         Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
+            short,
+            style = fitLongestWord(short, MaterialTheme.typography.labelSmall, RoundActionWidth),
             color = ink,
             textAlign = TextAlign.Center,
-            maxLines = 2,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis,
         )
     }
@@ -400,8 +409,59 @@ internal const val PARALLAX = 0.5f
 /** How wide the Play pill grows at most. */
 internal val HeroPillMax = 420.dp
 
+/**
+ * The short word under [row]'s round button. A menu line says "Mark as watched", but in Russian or
+ * Malayalam that runs to words too long for a 72 dp button, so the button says "Watched" and reads
+ * the full line out. A line with no short form here keeps its own label.
+ */
+internal fun roundLabel(row: DetailRow, s: Messages): String = when (row.action) {
+    DetailAction.StartOver -> s.detailRoundRestart
+    DetailAction.MarkWatched -> s.detailRoundWatched
+    DetailAction.MarkUnwatched -> s.detailRoundUnwatched
+    DetailAction.AddWatchLater -> s.detailRoundWatchLater
+    DetailAction.RemoveWatchLater -> s.detailRoundRemove
+    DetailAction.Download -> s.detailRoundDownload
+    DetailAction.SaveToDownloads -> s.detailRoundSave
+    DetailAction.InDownloads -> s.detailRoundDownloaded
+    DetailAction.RemoveDownload -> s.detailRoundDelete
+    DetailAction.CancelDownload -> s.detailRoundStop
+    DetailAction.SelectVideos -> s.detailRoundSelect
+    DetailAction.OpenElsewhere -> s.detailRoundOpenWith
+    DetailAction.CopyLink -> s.detailRoundLink
+    DetailAction.OpenChat -> s.detailRoundChat
+    // Play rows beside the pill are the extras, told apart by their wording.
+    else -> roundLabel(row.label, s)
+}
+
+/** The short word for a round button known only by its [label], as a series page's are. */
+internal fun roundLabel(label: String, s: Messages): String = when (label) {
+    s.metadataTrailer -> s.detailRoundTrailer
+    s.metadataTurnOn -> s.detailRoundShowInfo
+    s.seriesDownloadSeason -> s.detailRoundSeason
+    s.seriesDownloadUnwatched -> s.detailRoundUnseen
+    else -> label
+}
+
 /** A round action and its label under it. */
 internal val RoundActionWidth = 72.dp
+
+/**
+ * [style], made smaller (down to [MIN_WORD_SCALE] of its size) until the longest word of [text]
+ * fits [width] whole, so a narrow label wraps between words rather than inside one.
+ */
+@Composable
+private fun fitLongestWord(text: String, style: TextStyle, width: Dp): TextStyle {
+    val measurer = rememberTextMeasurer()
+    val room = with(LocalDensity.current) { width.toPx() }
+    return remember(text, style, room) {
+        val widest = text.split(' ').filter { it.isNotEmpty() }.maxOfOrNull { word ->
+            measurer.measure(word, style, maxLines = 1, softWrap = false).size.width
+        } ?: 0
+        if (widest <= room) style else style.copy(fontSize = style.fontSize * (room / widest).coerceAtLeast(MIN_WORD_SCALE))
+    }
+}
+
+private const val MIN_WORD_SCALE = 0.8f
 
 /** The long fade at the foot of a page's backdrop. */
 internal val BACKDROP_FADE = 320.dp

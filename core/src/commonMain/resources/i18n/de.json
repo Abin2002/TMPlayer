@@ -359,6 +359,24 @@
     "resolution": "Auflösung",
     "resume_at": "Ab {time} fortsetzen",
     "resume_at_detail": "Macht dort weiter, wo du aufgehört hast",
+    "round_chat": "Chat",
+    "round_delete": "Löschen",
+    "round_download": "Download",
+    "round_downloaded": "Geladen",
+    "round_link": "Link",
+    "round_open_with": "Öffnen mit",
+    "round_remove": "Entfernen",
+    "round_restart": "Von vorn",
+    "round_save": "Speichern",
+    "round_season": "Staffel",
+    "round_select": "Auswählen",
+    "round_show_info": "Infos",
+    "round_stop": "Stopp",
+    "round_trailer": "Trailer",
+    "round_unseen": "Ungesehene",
+    "round_unwatched": "Ungesehen",
+    "round_watch_later": "Später",
+    "round_watched": "Gesehen",
     "season_starts": "Staffel {number} startet am {date}",
     "seasons_count": "{count, plural, one {# Staffel} other {# Staffeln}}",
     "show_ended": "Beendet",
@@ -691,10 +709,15 @@
     "row_continue": "Weiter ansehen",
     "row_new_episodes": "Neue Folgen",
     "row_recent": "Neu in Chats mit Stern",
+    "row_scroll_back": "Zurückscrollen",
+    "row_scroll_on": "Weiterscrollen",
     "row_watch_later": "Später ansehen",
     "see_all": "Alle anzeigen",
     "see_all_count": "{count, plural, one {# Video} other {# Videos}}",
-    "see_all_count_at_least": "{count, plural, one {#+ Video} other {#+ Videos}}"
+    "see_all_count_at_least": "{count, plural, one {#+ Video} other {#+ Videos}}",
+    "spotlight_next": "Weiter",
+    "spotlight_position": "{index} von {count}",
+    "spotlight_previous": "Zurück"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "Keine Box",
     "subtitles": "Untertitel",
     "support_detail": "GitHub Sponsors oder Buy Me a Coffee, jeweils mit QR-Code",
+    "system_title_bar": "Titelleiste des Systems verwenden",
+    "system_title_bar_off": "TMPlayer zeichnet eigene Fensterknöpfe. Wirkt nach einem Neustart",
+    "system_title_bar_on": "Das Fenstersystem zeichnet die Titelleiste. Wirkt nach einem Neustart",
     "tap_plays": "Aufs Bild tippen zum Abspielen oder Pausieren",
     "tap_plays_off": "Aus: Ein Tipp zeigt die Steuerung, und die große Taste pausiert",
     "tap_plays_on": "Ein Tipp pausiert und zeigt die Steuerung. Ein weiterer Tipp spielt ab",
@@ -2001,5 +2027,11 @@
     "highlight_series": "Serienansicht: Folgen nach Staffeln gruppiert, mit einem Tab für jede",
     "subtitle": "Die Highlights dieser Version",
     "title": "Neu in {version}"
+  },
+  "window": {
+    "close": "Schließen",
+    "maximize": "Maximieren",
+    "minimize": "Minimieren",
+    "restore": "Wiederherstellen"
   }
 }

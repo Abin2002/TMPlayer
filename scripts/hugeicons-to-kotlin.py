@@ -85,6 +85,12 @@ ICONS: list[tuple[str, list[Icon]]] = [
         Icon("OpenExternal", "LinkSquare02", "Open in another app.", "Material ExitToApp"),
         Icon("SignOut", "Logout05", "Sign out.", "Material ExitToApp", mirror=True),
     ]),
+    ("Desktop window buttons", [
+        Icon("WindowMinimize", "MinusSign", "Minimise the window.", "WindowGlyphs.Minimize"),
+        Icon("WindowMaximize", "Stop", "Maximise the window.", "WindowGlyphs.Maximize"),
+        Icon("WindowRestore", "Copy", "Restore a maximised window: one square behind another.", "WindowGlyphs.Restore"),
+        Icon("WindowClose", "Cancel01", "Close the window.", "WindowGlyphs.Close"),
+    ]),
     ("Actions and states", [
         Icon("Add", "Add01", "Add.", "Material Add"),
         Icon("Remove", "MinusSign", "Take one away, on a stepper.", "TmIcons.Remove"),

@@ -133,7 +133,7 @@ fun SettingsPage(
     var pinFlow by remember { mutableStateOf<DesktopPinFlow?>(null) }
     var pickingKidsChats by remember { mutableStateOf(false) }
     pinFlow?.let { flow ->
-        PinFlowPad(flow, state, appLock, onNext = { pinFlow = it }, onKidsChats = { pickingKidsChats = true })
+        PinFlowPad(flow, state, appLock, scope, toast, onNext = { pinFlow = it }, onKidsChats = { pickingKidsChats = true })
         return
     }
     val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
@@ -205,6 +205,15 @@ fun SettingsPage(
                             ) { Text(choice.label) }
                         }
                     }
+                }
+                // Only where TMPlayer would draw window buttons of its own: Windows, and a tiling
+                // window manager. Read at launch, so the change waits for a restart.
+                if (remember { com.tmplayer.desktop.os.WindowChromeMode.current(systemTitleBar = false).inApp }) {
+                    Toggle(
+                        s.settingsSystemTitleBar,
+                        if (desktop.systemTitleBar) s.settingsSystemTitleBarOn else s.settingsSystemTitleBarOff,
+                        desktop.systemTitleBar,
+                    ) { on -> state.extras.prefs.update { it.copy(systemTitleBar = on) } }
                 }
 
                 Group(s.settingsPlayback)
@@ -671,18 +680,23 @@ private fun SubtitlePreview(style: SubtitleStyle, modifier: Modifier = Modifier)
 /** A PIN being set, changed or removed from the App lock group. See the phone's `PinFlow`. */
 private enum class DesktopPinFlow { Set, SetForKids, ChangeCheck, ChangeChoose, Remove }
 
-/** The pad for [flow], in the page's place: Cancel and Esc go back to the page. */
+/**
+ * The pad for [flow], in the page's place: Cancel and Esc go back to the page.
+ *
+ * [scope] and [toast] are the page's: a finished PIN takes the pad away at once, and work launched
+ * on the pad's own scope was cancelled with it, halfway through saving the PIN.
+ */
 @Composable
 private fun PinFlowPad(
     flow: DesktopPinFlow,
     state: ShellState,
     appLock: AppLockSettings,
+    scope: kotlinx.coroutines.CoroutineScope,
+    toast: (String) -> Unit,
     onNext: (DesktopPinFlow?) -> Unit,
     onKidsChats: () -> Unit,
 ) {
     val s = LocalStrings.current
-    val scope = rememberCoroutineScope()
-    val toast = rememberToast()
     val settings = state.settings
     val checking = flow == DesktopPinFlow.ChangeCheck || flow == DesktopPinFlow.Remove
     PinPad(
@@ -783,20 +797,46 @@ internal fun Group(title: String) {
  */
 @Composable
 internal fun Setting(title: String, detail: String, titleColor: Color = Color.Unspecified, control: @Composable () -> Unit) {
-    Row(
-        Modifier
+    // The words and the control side by side, unless the control would leave the words under
+    // half the row and they need more than that: a row of four segments in German or Malayalam
+    // squeezed the title to a word a line, so there the control goes under the words instead.
+    Layout(
+        content = {
+            Column {
+                Text(title, style = MaterialTheme.typography.bodyLarge, color = titleColor)
+                Text(detail, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+            }
+            Box { control() }
+        },
+        modifier = Modifier
             .layoutId(SettingsPart.Row)
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .padding(horizontal = SETTING_INSET, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, color = titleColor)
-            Text(detail, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+    ) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val gap = 16.dp.roundToPx()
+        val loose = Constraints(maxWidth = width)
+        val controlPlaced = measurables[1].measure(loose)
+        val beside = width - controlPlaced.width - gap
+        val stacked = beside < width / 2 && measurables[0].maxIntrinsicWidth(constraints.maxHeight) > beside
+        val words = measurables[0].measure(
+            Constraints(maxWidth = if (stacked) width else beside.coerceAtLeast(0)),
+        )
+        if (stacked) {
+            val below = words.height + 8.dp.roundToPx()
+            val height = maxOf(constraints.minHeight, below + controlPlaced.height)
+            layout(width, height) {
+                words.placeRelative(0, 0)
+                controlPlaced.placeRelative(0, below)
+            }
+        } else {
+            val height = maxOf(constraints.minHeight, words.height, controlPlaced.height)
+            layout(width, height) {
+                words.placeRelative(0, (height - words.height) / 2)
+                controlPlaced.placeRelative(width - controlPlaced.width, (height - controlPlaced.height) / 2)
+            }
         }
-        control()
     }
 }
 

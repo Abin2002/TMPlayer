@@ -96,6 +96,7 @@ import com.tmplayer.ui.lock.PinPad
 import com.tmplayer.ui.lock.PinPurpose
 import com.tmplayer.ui.browse.SeriesWatch
 import com.tmplayer.ui.browse.rememberHomeRows
+import com.tmplayer.ui.browse.rememberFeatured
 import com.tmplayer.data.HomeRow
 import com.tmplayer.ui.browse.ChatListViewModel
 import com.tmplayer.ui.browse.MediaGridScreen
@@ -254,7 +255,12 @@ class MainActivity : ComponentActivity() {
     private fun playFromHomeScreen(intent: Intent?) {
         val video = WatchNextPublisher.videoFrom(intent) ?: return
         intent?.action = Intent.ACTION_MAIN
-        startActivity(PlayerActivity.intent(this, video.toMediaItem(), video.chatTitle))
+        // An entry published before the kids lock went on (CP57) still names its chat; one the
+        // lock leaves out opens the app instead of the video.
+        lifecycleScope.launch {
+            if (!com.tmplayer.data.KidsLock.allows(com.tmplayer.data.ChatGate.awaitReady(), video.chatId)) return@launch
+            startActivity(PlayerActivity.intent(this@MainActivity, video.toMediaItem(), video.chatTitle))
+        }
     }
 
     /**
@@ -385,6 +391,11 @@ private fun Root() {
     val appUnlocked by AppLockSession.unlocked.collectAsStateWithLifecycle()
     // Settings asks once per visit: back to the chats and it asks again.
     var settingsUnlocked by rememberSaveable { mutableStateOf(false) }
+    // Leaving the app locks the session, and Settings with it: whoever opens the app next, or
+    // the activity restored after the process died, must not find Settings already open.
+    LaunchedEffect(appUnlocked) {
+        if (!appUnlocked) settingsUnlocked = false
+    }
     val screensaverMinutes by settings.screensaverMinutes.collectAsStateWithLifecycle(initialValue = 0)
     val screensaverUp by TvIdle.showing.collectAsStateWithLifecycle()
 
@@ -1140,6 +1151,19 @@ private fun Root() {
                     layout = chatLayout,
                     homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater, watchedVideos.values),
                     homeArt = homeViewModel.art.collectAsStateWithLifecycle().value,
+                    homeFeatured = rememberFeatured(homeViewModel, chats, favorites, continueWatching, watchedVideos.values),
+                    onSetWatchLater = { item, chatTitle, add ->
+                        App.backgroundScope.launch {
+                            runCatching {
+                                if (add) {
+                                    watchedStore.watchLater.add(com.tmplayer.data.WatchLaterRecord.of(item, chatTitle, System.currentTimeMillis()))
+                                } else {
+                                    watchedStore.watchLater.remove(item.chatId, item.messageId)
+                                }
+                            }
+                        }
+                        toast(if (add) L.detailWatchLaterAdded(item.title) else L.detailWatchLaterRemoved(item.title))
+                    },
                     homeWatch = homeWatch,
                     onHomeRowShown = { row ->
                         when (row) {
@@ -1304,7 +1328,7 @@ private fun Root() {
                 onConfirm = {
                     forgetPrompt = null
                     scope.launch {
-                        settings.clearResumePosition(record.chatId, record.messageId)
+                        settings.clearResumeCopies(record)
                         toast(L.mainForgotResume(title = record.title))
                     }
                 },

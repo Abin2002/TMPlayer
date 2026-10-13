@@ -359,6 +359,24 @@
     "resolution": "Độ phân giải",
     "resume_at": "Tiếp tục từ {time}",
     "resume_at_detail": "Tiếp tục từ chỗ bạn dừng",
+    "round_chat": "Trò chuyện",
+    "round_delete": "Xóa",
+    "round_download": "Tải xuống",
+    "round_downloaded": "Đã tải",
+    "round_link": "Liên kết",
+    "round_open_with": "Mở bằng",
+    "round_remove": "Bỏ",
+    "round_restart": "Từ đầu",
+    "round_save": "Lưu",
+    "round_season": "Mùa",
+    "round_select": "Chọn",
+    "round_show_info": "Thông tin",
+    "round_stop": "Dừng",
+    "round_trailer": "Trailer",
+    "round_unseen": "Chưa xem",
+    "round_unwatched": "Chưa xem",
+    "round_watch_later": "Xem sau",
+    "round_watched": "Đã xem",
     "season_starts": "Mùa {number} bắt đầu {date}",
     "seasons_count": "{count, plural, other {# mùa}}",
     "show_ended": "Đã kết thúc",
@@ -691,10 +709,15 @@
     "row_continue": "Xem tiếp",
     "row_new_episodes": "Tập mới",
     "row_recent": "Mới thêm trong các cuộc trò chuyện đã gắn sao",
+    "row_scroll_back": "Cuộn lại",
+    "row_scroll_on": "Cuộn tiếp",
     "row_watch_later": "Xem sau",
     "see_all": "Xem tất cả",
     "see_all_count": "{count, plural, other {# video}}",
-    "see_all_count_at_least": "{count, plural, other {#+ video}}"
+    "see_all_count_at_least": "{count, plural, other {#+ video}}",
+    "spotlight_next": "Tiếp",
+    "spotlight_position": "{index} trên {count}",
+    "spotlight_previous": "Trước"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "Không khung",
     "subtitles": "Phụ đề",
     "support_detail": "GitHub Sponsors hoặc Buy Me a Coffee, có mã QR cho từng loại",
+    "system_title_bar": "Dùng thanh tiêu đề của hệ thống",
+    "system_title_bar_off": "TMPlayer tự vẽ các nút cửa sổ. Có hiệu lực sau khi khởi động lại",
+    "system_title_bar_on": "Hệ thống cửa sổ vẽ thanh tiêu đề. Có hiệu lực sau khi khởi động lại",
     "tap_plays": "Chạm vào hình để phát hoặc tạm dừng",
     "tap_plays_off": "Tắt: chạm sẽ hiện các nút điều khiển, và nút lớn dùng để tạm dừng",
     "tap_plays_on": "Chạm để tạm dừng và hiện các nút điều khiển; chạm lần nữa để phát",
@@ -2001,5 +2027,11 @@
     "highlight_series": "Chế độ xem phim bộ: các tập nhóm theo mùa, với tab cho từng mùa",
     "subtitle": "Điểm nổi bật của phiên bản này",
     "title": "Có gì mới trong {version}"
+  },
+  "window": {
+    "close": "Đóng",
+    "maximize": "Phóng to",
+    "minimize": "Thu nhỏ",
+    "restore": "Khôi phục"
   }
 }

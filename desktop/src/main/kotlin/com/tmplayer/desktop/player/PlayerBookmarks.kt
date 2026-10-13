@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,10 +41,16 @@ import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
 
 /**
- * What the note dialog is for: a new bookmark at [positionMs], or a new note for [editing], which
- * was made at that same position.
+ * What the note dialog is for: a new bookmark at [positionMs] in the video [chatId], [messageId],
+ * or a new note for [editing], which was made at that same position. The video is taken when the
+ * dialog opens: playback runs on behind it, and autoplay may have moved to the next episode by Save.
  */
-internal data class NotePrompt(val positionMs: Long, val editing: Bookmark? = null)
+internal data class NotePrompt(
+    val chatId: Long,
+    val messageId: Long,
+    val positionMs: Long,
+    val editing: Bookmark? = null,
+)
 
 /**
  * The note for a bookmark, asked in a dialog with the cursor already in the field: B, a few words
@@ -75,7 +82,13 @@ internal fun BookmarkNoteDialog(prompt: NotePrompt, onSave: (String) -> Unit, on
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(s.commonCancel) } },
     )
-    LaunchedEffect(Unit) { runCatching { field.requestFocus() } }
+    // After the dialog's first frame: its window is not attached when the effect first runs.
+    LaunchedEffect(Unit) {
+        repeat(5) {
+            withFrameNanos { }
+            if (runCatching { field.requestFocus() }.isSuccess) return@LaunchedEffect
+        }
+    }
 }
 
 /**

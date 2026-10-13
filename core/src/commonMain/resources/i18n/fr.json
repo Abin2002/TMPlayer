@@ -359,6 +359,24 @@
     "resolution": "Résolution",
     "resume_at": "Reprendre à {time}",
     "resume_at_detail": "Reprend là où vous vous êtes arrêté",
+    "round_chat": "Discussion",
+    "round_delete": "Supprimer",
+    "round_download": "Télécharger",
+    "round_downloaded": "Téléchargé",
+    "round_link": "Lien",
+    "round_open_with": "Ouvrir avec",
+    "round_remove": "Retirer",
+    "round_restart": "Du début",
+    "round_save": "Enregistrer",
+    "round_season": "Saison",
+    "round_select": "Choisir",
+    "round_show_info": "Infos",
+    "round_stop": "Arrêter",
+    "round_trailer": "Bande-annonce",
+    "round_unseen": "Non vus",
+    "round_unwatched": "Non vue",
+    "round_watch_later": "Plus tard",
+    "round_watched": "Vue",
     "season_starts": "La saison {number} commence le {date}",
     "seasons_count": "{count, plural, one {# saison} many {# de saisons} other {# saisons}}",
     "show_ended": "Terminée",
@@ -691,10 +709,15 @@
     "row_continue": "Reprendre la lecture",
     "row_new_episodes": "Nouveaux épisodes",
     "row_recent": "Ajoutées récemment dans les favoris",
+    "row_scroll_back": "Défiler en arrière",
+    "row_scroll_on": "Défiler en avant",
     "row_watch_later": "À regarder plus tard",
     "see_all": "Tout voir",
     "see_all_count": "{count, plural, one {# vidéo} many {# de vidéos} other {# vidéos}}",
-    "see_all_count_at_least": "{count, plural, one {#+ vidéo} many {#+ de vidéos} other {#+ vidéos}}"
+    "see_all_count_at_least": "{count, plural, one {#+ vidéo} many {#+ de vidéos} other {#+ vidéos}}",
+    "spotlight_next": "Suivant",
+    "spotlight_position": "{index} sur {count}",
+    "spotlight_previous": "Précédent"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "Sans boîte",
     "subtitles": "Sous-titres",
     "support_detail": "GitHub Sponsors ou Buy Me a Coffee, avec un QR code pour chacun",
+    "system_title_bar": "Utiliser la barre de titre du système",
+    "system_title_bar_off": "TMPlayer dessine ses propres boutons de fenêtre. Prend effet après un redémarrage",
+    "system_title_bar_on": "Le système de fenêtres dessine la barre de titre. Prend effet après un redémarrage",
     "tap_plays": "Toucher l'image pour lire ou mettre en pause",
     "tap_plays_off": "Désactivé : un appui affiche les commandes, et le gros bouton met en pause",
     "tap_plays_on": "Un appui met en pause et affiche les commandes ; un autre appui relance la lecture",
@@ -2001,5 +2027,11 @@
     "highlight_series": "Vue Séries : épisodes regroupés par saison, avec un onglet pour chacune",
     "subtitle": "Les points forts de cette version",
     "title": "Nouveautés de la {version}"
+  },
+  "window": {
+    "close": "Fermer",
+    "maximize": "Agrandir",
+    "minimize": "Réduire",
+    "restore": "Restaurer"
   }
 }

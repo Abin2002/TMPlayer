@@ -77,8 +77,13 @@ internal val REMOVE_AFTER_WATCHING_DETAIL: String get() = L.downloadsRemoveAfter
 fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloadsDir) {
     val s = LocalStrings.current
     val active by OfflineDownloads.active.collectAsState()
-    val history by state.settings.downloadHistory.collectAsState(initial = emptyList())
-    val cachedRecords by state.settings.cachedVideos.collectAsState(initial = emptyList())
+    // The kids lock (CP57) leaves out the chats it does not allow here too: a download from one
+    // of them would otherwise be a way round it.
+    val allowedChats by com.tmplayer.data.ChatGate.allowed.collectAsState()
+    val allHistory by state.settings.downloadHistory.collectAsState(initial = emptyList())
+    val allCached by state.settings.cachedVideos.collectAsState(initial = emptyList())
+    val history = remember(allHistory, allowedChats) { com.tmplayer.data.KidsLock.records(allHistory, allowedChats) }
+    val cachedRecords = remember(allCached, allowedChats) { com.tmplayer.data.KidsLock.records(allCached, allowedChats) }
     val unlisted by DownloadIndex.unlisted.collectAsState()
     val removeAfterWatching by state.settings.removeAfterWatching.collectAsState(initial = false)
     val desktop by state.extras.prefs.state.collectAsState()

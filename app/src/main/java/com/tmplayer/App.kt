@@ -64,6 +64,8 @@ class App : Application() {
         }
         // The tour's pictures are this app's drawables, which the shared :ui code cannot name.
         OnboardingImages.drawable = ::onboardingDrawable
+        // The PIN's waits run on time since boot, deep sleep included, which no date setting moves.
+        com.tmplayer.data.PinClock.source = { android.os.SystemClock.elapsedRealtime() }
         // The isolated screenshot fixture must never open TDLib or touch a Telegram account.
         // BuildConfig is variant-specific, and the promo package is never part of a release APK.
         if (BuildConfig.APPLICATION_ID.endsWith(".promo")) return

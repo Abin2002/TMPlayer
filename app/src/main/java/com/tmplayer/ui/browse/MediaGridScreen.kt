@@ -470,7 +470,11 @@ fun MediaGridScreen(
             }
             // A chat or a topic that is one course of lessons says how far through it the viewer
             // is, over the listing; not while searching or ticking, when the listing is a pick.
-            val course = remember(list.items, watch, grouping) { if (grouping) watch.course(list.items) else null }
+            // Off the main thread, as the shelf is: it reads every name through the lesson parser,
+            // and runs again whenever anything is watched.
+            val course by produceState<com.tmplayer.data.CourseProgress?>(null, list.items, watch, grouping) {
+                value = if (grouping) withContext(Dispatchers.Default) { watch.course(list.items) } else null
+            }
             val courseTitle = topicBar?.let { bar -> bar.nameOf(bar.selected) } ?: chatTitle
             val courseHeader: @Composable () -> Unit = {
                 course?.let {

@@ -359,6 +359,24 @@
     "resolution": "Разрешение",
     "resume_at": "Продолжить с {time}",
     "resume_at_detail": "С того места, где вы остановились",
+    "round_chat": "Чат",
+    "round_delete": "Удалить",
+    "round_download": "Скачать",
+    "round_downloaded": "Скачано",
+    "round_link": "Ссылка",
+    "round_open_with": "Открыть в",
+    "round_remove": "Убрать",
+    "round_restart": "С начала",
+    "round_save": "Сохранить",
+    "round_season": "Сезон",
+    "round_select": "Выбрать",
+    "round_show_info": "Описание",
+    "round_stop": "Стоп",
+    "round_trailer": "Трейлер",
+    "round_unseen": "Остальные",
+    "round_unwatched": "Не просмотрено",
+    "round_watch_later": "Смотреть позже",
+    "round_watched": "Просмотрено",
     "season_starts": "Сезон {number} начнётся {date}",
     "seasons_count": "{count, plural, one {# сезон} few {# сезона} many {# сезонов} other {# сезона}}",
     "show_ended": "Завершён",
@@ -691,10 +709,15 @@
     "row_continue": "Продолжить просмотр",
     "row_new_episodes": "Новые серии",
     "row_recent": "Новое в чатах со звёздочкой",
+    "row_scroll_back": "Прокрутить назад",
+    "row_scroll_on": "Прокрутить дальше",
     "row_watch_later": "Смотреть позже",
     "see_all": "Все",
     "see_all_count": "{count, plural, one {# видео} few {# видео} many {# видео} other {# видео}}",
-    "see_all_count_at_least": "{count, plural, one {#+ видео} few {#+ видео} many {#+ видео} other {#+ видео}}"
+    "see_all_count_at_least": "{count, plural, one {#+ видео} few {#+ видео} many {#+ видео} other {#+ видео}}",
+    "spotlight_next": "Далее",
+    "spotlight_position": "{index} из {count}",
+    "spotlight_previous": "Назад"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "Без подложки",
     "subtitles": "Субтитры",
     "support_detail": "GitHub Sponsors или Buy Me a Coffee, для каждого есть QR-код",
+    "system_title_bar": "Использовать системный заголовок окна",
+    "system_title_bar_off": "TMPlayer рисует свои кнопки окна. Вступит в силу после перезапуска",
+    "system_title_bar_on": "Заголовок окна рисует система. Вступит в силу после перезапуска",
     "tap_plays": "Касание картинки: воспроизведение или пауза",
     "tap_plays_off": "Выкл.: касание показывает управление, а пауза ставится большой кнопкой",
     "tap_plays_on": "Касание ставит на паузу и показывает управление; ещё одно возобновляет",
@@ -2001,5 +2027,11 @@
     "highlight_series": "Вид сериала: серии сгруппированы по сезонам, для каждого своя вкладка",
     "subtitle": "Главное в этой версии",
     "title": "Что нового в версии {version}"
+  },
+  "window": {
+    "close": "Закрыть",
+    "maximize": "Развернуть",
+    "minimize": "Свернуть",
+    "restore": "Свернуть в окно"
   }
 }

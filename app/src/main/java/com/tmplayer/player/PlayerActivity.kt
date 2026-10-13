@@ -361,7 +361,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             val loop = abLoop?.takeIf { it.complete } ?: return
             val exo = player
             if (exo != null) loop.wrap(exo.currentPosition)?.let(exo::seekTo)
-            loopHandler.postDelayed(this, LOOP_TICK_MS)
+            // Only while the picture moves: paused, buffering or stopped there is nothing to wrap,
+            // and [onIsPlayingChanged] starts the watch again when it plays.
+            if (exo?.isPlaying == true) loopHandler.postDelayed(this, LOOP_TICK_MS)
         }
     }
 
@@ -1707,6 +1709,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            loopHandler.removeCallbacks(loopWatch)
+            if (isPlaying && abLoop?.complete == true) loopHandler.post(loopWatch)
             // Started again from outside the card (a headset, the notification): the question
             // has been answered.
             if (isPlaying && stillWatchingUp) {
@@ -4282,6 +4286,23 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     delay(RESUME_TICK_MS)
                     if (player?.isPlaying == true) saveResumePosition()
                 }
+            }
+        }
+    }
+
+    /**
+     * "Ask when the app opens" (CP57). Leaving the app locks the session, but only the main
+     * activity draws the pad, so a task brought back from Recents with the player on top would
+     * play on without it. The player steps aside instead, and the pad behind it asks.
+     */
+    override fun onStart() {
+        super.onStart()
+        if (com.tmplayer.data.AppLockSession.unlocked.value) return
+        lifecycleScope.launch {
+            val askOnOpen = runCatching { settings.appLock.first().onOpen }.getOrDefault(false)
+            if (askOnOpen && !com.tmplayer.data.AppLockSession.unlocked.value && !isFinishing) {
+                player?.pause()
+                finish()
             }
         }
     }

@@ -359,6 +359,24 @@
     "resolution": "रेज़ोल्यूशन",
     "resume_at": "{time} से जारी रखें",
     "resume_at_detail": "जहाँ रुके थे वहीं से आगे बढ़ता है",
+    "round_chat": "चैट",
+    "round_delete": "मिटाएँ",
+    "round_download": "डाउनलोड",
+    "round_downloaded": "डाउनलोड हुआ",
+    "round_link": "लिंक",
+    "round_open_with": "बाहर खोलें",
+    "round_remove": "हटाएँ",
+    "round_restart": "शुरू से",
+    "round_save": "सहेजें",
+    "round_season": "सीज़न",
+    "round_select": "चुनें",
+    "round_show_info": "जानकारी",
+    "round_stop": "रोकें",
+    "round_trailer": "ट्रेलर",
+    "round_unseen": "अनदेखे",
+    "round_unwatched": "अनदेखा",
+    "round_watch_later": "बाद में",
+    "round_watched": "देखा",
     "season_starts": "सीज़न {number} {date} को शुरू होगा",
     "seasons_count": "{count, plural, one {# सीज़न} other {# सीज़न}}",
     "show_ended": "समाप्त",
@@ -691,10 +709,15 @@
     "row_continue": "देखना जारी रखें",
     "row_new_episodes": "नए एपिसोड",
     "row_recent": "स्टार वाली चैट में हाल में जोड़े गए",
+    "row_scroll_back": "पीछे स्क्रॉल करें",
+    "row_scroll_on": "आगे स्क्रॉल करें",
     "row_watch_later": "बाद में देखें",
     "see_all": "सभी देखें",
     "see_all_count": "{count, plural, one {# वीडियो} other {# वीडियो}}",
-    "see_all_count_at_least": "{count, plural, one {#+ वीडियो} other {#+ वीडियो}}"
+    "see_all_count_at_least": "{count, plural, one {#+ वीडियो} other {#+ वीडियो}}",
+    "spotlight_next": "अगला",
+    "spotlight_position": "{count} में से {index}",
+    "spotlight_previous": "पिछला"
   },
   "install": {
     "appimage": "AppImage",
@@ -1628,6 +1651,9 @@
     "subtitle_style_no_box": "बिना बॉक्स",
     "subtitles": "सबटाइटल",
     "support_detail": "GitHub Sponsors या Buy Me a Coffee, हर एक के लिए QR कोड के साथ",
+    "system_title_bar": "सिस्टम का टाइटल बार इस्तेमाल करें",
+    "system_title_bar_off": "TMPlayer अपने विंडो बटन खुद बनाता है। रीस्टार्ट के बाद लागू होगा",
+    "system_title_bar_on": "टाइटल बार विंडो सिस्टम बनाता है। रीस्टार्ट के बाद लागू होगा",
     "tap_plays": "चलाने या रोकने के लिए तस्वीर पर टैप करें",
     "tap_plays_off": "बंद: टैप से कंट्रोल दिखते हैं, और बड़ा बटन रोकता है",
     "tap_plays_on": "एक टैप रोकता है और कंट्रोल दिखाता है; दूसरा टैप चलाता है",
@@ -2001,5 +2027,11 @@
     "highlight_series": "सीरीज़ व्यू: एपिसोड सीज़न के हिसाब से, हर एक के लिए टैब के साथ",
     "subtitle": "इस वर्शन की खास बातें",
     "title": "{version} में नया क्या है"
+  },
+  "window": {
+    "close": "बंद करें",
+    "maximize": "बड़ा करें",
+    "minimize": "छोटा करें",
+    "restore": "पुनर्स्थापित करें"
   }
 }

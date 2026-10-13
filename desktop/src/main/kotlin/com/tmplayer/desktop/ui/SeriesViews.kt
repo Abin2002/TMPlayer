@@ -134,7 +134,9 @@ internal fun SeriesPoster(
             listOfNotNull(seriesSummary(series), seriesProgressLine(progress)).joinToString("  ·  "),
             style = if (poster) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
             color = if (progress.watched > 0) Tone.accent else Tone.muted,
-            maxLines = 1,
+            // A poster is three quarters of a card wide, where "2 seasons · 8 eps · 1 of 8
+            // watched" lost its end even in English; it gets a second line.
+            maxLines = if (poster) 2 else 1,
             overflow = TextOverflow.Ellipsis,
         )
     }
