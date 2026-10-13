@@ -94,6 +94,7 @@
     "empty_other": "Nothing here yet.",
     "empty_saved": "Saved Messages is empty. Forward a video to yourself in Telegram and it appears here.",
     "empty_unread": "Nothing unread. You're up to date.",
+    "empty_watch_later": "Nothing saved for later yet. Open a video's menu and choose Add to Watch later.",
     "empty_watched": "Nothing watched yet. Videos you finish, or mark as watched, appear here.",
     "favourite": "Favourite",
     "filter_all": "All",
@@ -182,6 +183,9 @@
     "tab_saved": "Saved",
     "tab_saved_blurb": "The chat you send things to yourself in",
     "tab_saved_heading": "Saved Messages",
+    "tab_watch_later": "Watch later",
+    "tab_watch_later_blurb": "Videos you've saved for later",
+    "tab_watch_later_heading": "Watch later",
     "tab_watched": "Watched",
     "tab_watched_blurb": "Videos you've finished",
     "tab_watched_heading": "Previously watched",
@@ -338,6 +342,11 @@
     "upcoming": "Upcoming",
     "versions": "{count, plural, one {# version} other {# versions}}",
     "video": "Video",
+    "watch_later_add": "Add to Watch later",
+    "watch_later_add_detail": "Keeps this one video on Home, without starring its chat",
+    "watch_later_added": "{title} added to Watch later",
+    "watch_later_remove": "Remove from Watch later",
+    "watch_later_removed": "{title} removed from Watch later",
     "watched_line": "Watched"
   },
   "downloads": {
@@ -642,6 +651,7 @@
     "first_title": "Get your first video in",
     "row_continue": "Continue watching",
     "row_recent": "Recently added in starred chats",
+    "row_watch_later": "Watch later",
     "see_all": "See all",
     "see_all_count": "{count, plural, one {# video} other {# videos}}",
     "see_all_count_at_least": "{count, plural, one {#+ video} other {#+ videos}}"

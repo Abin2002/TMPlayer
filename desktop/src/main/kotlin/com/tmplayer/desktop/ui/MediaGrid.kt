@@ -109,6 +109,7 @@ import com.tmplayer.data.Td
 import com.tmplayer.data.valueOrNull
 import com.tmplayer.data.WatchPoint
 import com.tmplayer.desktop.WatchedWords
+import com.tmplayer.desktop.setWatchLater
 import com.tmplayer.desktop.setWatched
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.player.StreamStats
@@ -709,6 +710,8 @@ internal fun TileMenu(
     val record = LocalDownloadIndex.current[item.id]
     val row = downloads[item.fileId]
     val title = chatTitle.ifBlank { state.chatTitleOf(item.chatId) }
+    val laterKeys by state.watched.watchLater.keys.collectAsState(initial = emptySet())
+    val later = SettingsStore.progressKey(item.chatId, item.messageId) in laterKeys
     // Measured each time the menu opens, off the UI thread, for the "x GB free" on the download line.
     val free by produceState(0L, expanded) {
         if (expanded) value = withContext(Dispatchers.IO) { DiskInfo.of(DesktopPaths.downloadsDir).freeBytes }
@@ -753,6 +756,14 @@ internal fun TileMenu(
                 }
             })
         }
+        // Nothing is copied, so this stays for a chat that restricts saving.
+        DropdownMenuItem(text = { Text(if (later) s.detailWatchLaterRemove else s.detailWatchLaterAdd) }, onClick = {
+            onDismiss()
+            scope.launch {
+                runCatching { setWatchLater(state.watched, item, title, add = !later) }
+                toast(if (later) s.detailWatchLaterRemoved(item.title) else s.detailWatchLaterAdded(item.title))
+            }
+        })
         when {
             record != null -> {
                 DropdownMenuItem(text = { Text(s.downloadsInDownloads) }, onClick = { onDismiss(); state.go(Destination.Downloads) })

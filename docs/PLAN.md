@@ -129,7 +129,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [x] CP47 Skip intro, recap and credits from TheIntroDB, IntroDB.app and AniSkip, next-up counted from the credits (eb8661b; unit tested, privacy page updated; the skip pill is not yet seen on a device, the promo app has online metadata off)
 - [ ] CP48 Speed remembered per series, per chat and per forum topic, presets 0.75 to 2 (batch 1)
 - [ ] CP49 Preferred audio and subtitle language, subtitle mode (batch 1)
-- [ ] CP50 Watch later: single videos without starring the chat, Home row, History tab (batch 1)
+- [x] CP50 Watch later: single videos without starring the chat, Home row, History tab (batch 1)
 - [ ] CP51 Download a season, or only its unwatched episodes, from the series page (batch 1)
 - [ ] CP52 Course progress: "12 of 40 watched" on lecture series and topics (batch 1)
 - [ ] CP53 Backup and restore settings, lists and progress to a file (batch 2)

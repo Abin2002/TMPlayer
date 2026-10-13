@@ -129,26 +129,31 @@ enum class ChatSort(val icon: ImageVector) {
     }
 }
 
-/** The two tabs of History. */
+/** The tabs of History. */
 enum class HistoryTab(val icon: ImageVector) {
     /** Videos part way through, kept on this device. */
     Continue(Icons.Filled.PlayArrow),
+    /** Single videos put aside for later, without starring their chats. */
+    WatchLater(TmIcons.Clock),
     /** Videos played to the end or marked by hand. */
     Watched(Icons.Filled.Check),
     ;
 
     val label: String get() = when (this) {
         Continue -> L.browseTabContinue
+        WatchLater -> L.browseTabWatchLater
         Watched -> L.browseTabWatched
     }
 
     val heading: String get() = when (this) {
         Continue -> L.browseTabContinueHeading
+        WatchLater -> L.browseTabWatchLaterHeading
         Watched -> L.browseTabWatchedHeading
     }
 
     val blurb: String get() = when (this) {
         Continue -> L.browseTabContinueBlurb
+        WatchLater -> L.browseTabWatchLaterBlurb
         Watched -> L.browseTabWatchedBlurb
     }
 

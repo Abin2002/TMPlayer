@@ -54,6 +54,20 @@ sealed interface HomeRow {
         override val hasMore: Boolean get() = loaded && (more.isNotEmpty() || !complete)
     }
 
+    /**
+     * The videos the viewer put aside for later, newest first.
+     *
+     * @param more the records past the row's [HomeRows.LIMIT], for the See all count.
+     */
+    data class WatchLater(
+        val records: List<WatchLaterRecord>,
+        val more: List<WatchLaterRecord> = emptyList(),
+    ) : HomeRow {
+        override val key: String get() = "watch-later"
+        override val total: Int get() = records.size + more.size
+        override val hasMore: Boolean get() = more.isNotEmpty()
+    }
+
     /** The starred chats' newest videos in one line, newest first, whichever chat they came from. */
     data class Recent(val entries: List<ShelfEntry>, val loaded: Boolean) : HomeRow {
         override val key: String get() = "recent"
@@ -64,14 +78,14 @@ sealed interface HomeRow {
  * Builds Home's rows from what is on this device and what Telegram has answered so far.
  *
  * Pure, so the rules live in one place for the phone, the television and the desktop:
- * - Continue watching first, then one row per starred chat in the chat list's own order, then
- *   "Recently added in starred chats".
+ * - Continue watching first, then Watch later, then one row per starred chat in the chat list's
+ *   own order, then "Recently added in starred chats".
  * - Recently added draws only from the starred chats. Somebody's other chats are family groups,
  *   work and news as often as films, so what is new there is not what Home is for. It needs two
  *   starred chats at least: with one, it would repeat that chat's own row.
  * - Every row holds at most [LIMIT] tiles. A show folded into one tile counts once.
- * - A video appears once among Continue and the chat rows: something part way through is in
- *   Continue and nowhere else. Recently added is the starred chats' videos again, merged into one
+ * - A video appears once among Continue, Watch later and the chat rows: something part way
+ *   through is in Continue and nowhere else, something saved for later is in Watch later. Recently added is the starred chats' videos again, merged into one
  *   timeline, so it leaves out only what is in Continue.
  * - A row that has loaded and found nothing is left out rather than drawn as an empty strip.
  */
@@ -93,6 +107,7 @@ object HomeRows {
      * @param recent the newest videos across every chat, or null while that search is running. Only
      *   the starred chats' are kept, together with what [loaded] already has of them.
      * @param partial the starred chats whose fetch stopped short of their oldest video.
+     * @param watchLater the Watch later list, newest first.
      */
     fun build(
         continueWatching: List<ResumeRecord>,
@@ -100,6 +115,7 @@ object HomeRows {
         loaded: Map<Long, List<MediaItem>>,
         recent: List<MediaItem>?,
         partial: Set<Long> = emptySet(),
+        watchLater: List<WatchLaterRecord> = emptyList(),
     ): List<HomeRow> = buildList {
         val seen = HashSet<String>()
 
@@ -108,6 +124,12 @@ object HomeRows {
         resume.forEach { seen += keyOf(it.chatId, it.messageId) }
         if (resume.isNotEmpty()) add(HomeRow.Continue(resume, everyResume.drop(LIMIT)))
         val inContinue = HashSet(seen)
+
+        // Started since it was saved: Continue already has it, with its place.
+        val everyLater = watchLater.distinctBy { it.key }.filterNot { it.key in inContinue }
+        val later = everyLater.take(LIMIT)
+        later.forEach { seen += it.key }
+        if (later.isNotEmpty()) add(HomeRow.WatchLater(later, everyLater.drop(LIMIT)))
 
         val starred = favourites.distinctBy { it.id }
         starred.forEach { chat ->
