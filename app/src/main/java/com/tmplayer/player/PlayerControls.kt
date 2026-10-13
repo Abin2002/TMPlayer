@@ -175,6 +175,9 @@ class PlayerControls(
         wire(episodesButton) { onEpisodes() }
         episodesButton.text = L.episodesTitle
         rotate.visibility = if (isTv) View.GONE else View.VISIBLE
+        // The scrims on five stops, which their XML stand-ins cannot hold without a seam.
+        root.findViewById<View>(R.id.controls_scrim_top).background = ControlsScrim.top()
+        root.findViewById<View>(R.id.controls_scrim_bottom).background = ControlsScrim.bottom()
         describeFromCatalog(root)
         if (!isTv) setUpPhone(root) else setUpTv(root)
 
@@ -521,7 +524,7 @@ class PlayerControls(
             // Cancels a fade out still running, and the GONE at its end with it.
             container.animate().cancel()
             container.visibility = View.VISIBLE
-            container.animate().alpha(1f).setDuration(FADE_MS).start()
+            container.animate().alpha(1f).setDuration(FADE_IN_MS).start()
             onVisibility(true)
             renderPlayPause()
             renderProgress()
@@ -709,6 +712,9 @@ class PlayerControls(
     private companion object {
         /** Nuvio's figure, and Netflix's: long enough to read as calm, short enough to feel live. */
         const val FADE_MS = 200L
+
+        /** The row arrives a touch slower than it leaves, so it settles in rather than pops. */
+        const val FADE_IN_MS = 250L
 
         /** Long enough to read the row and reach for something on it, short enough to get out. */
         const val TIMEOUT_MS = 3_500L

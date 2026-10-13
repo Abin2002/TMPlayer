@@ -54,6 +54,9 @@ import com.tmplayer.data.MediaName
 import com.tmplayer.data.Thumbnails
 import com.tmplayer.online.MetaInfo
 import com.tmplayer.online.OnlineMetadata
+import com.tmplayer.ui.components.Cover
+import com.tmplayer.ui.components.CoverArt
+import com.tmplayer.ui.components.GeneratedCover
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.online.rememberMeta
 
@@ -80,12 +83,18 @@ data class LoaderWords(
     val overview: String = "",
 )
 
-/** The words and the two pictures, as [rememberLoaderContent] resolves them. */
+/**
+ * The words and the two pictures, as [rememberLoaderContent] resolves them. [cover] is the
+ * video's [GeneratedCover], the backdrop of last resort: drawn under [backdrop] while it is still
+ * on its way, and alone for a video with no picture at all, so the wait never sits on a plain
+ * surface. Null leaves the theme's tonal ground instead.
+ */
 @Immutable
 data class LoaderContent(
     val words: LoaderWords,
     val backdrop: ImageBitmap? = null,
     val poster: ImageBitmap? = null,
+    val cover: Cover? = null,
 )
 
 /** A wide TMDB picture at a size fit for [screenWidthPx]: w780 up to a phone or a 1080p stick, w1280 past that. */
@@ -113,6 +122,7 @@ fun rememberLoaderContent(
     durationSec: Int,
     thumbnail: ImageBitmap?,
     screenWidthPx: Int,
+    chatId: Long = 0L,
 ): LoaderContent {
     val s = LocalStrings.current
     val parsed = remember(fileName, caption) { MediaName.parse(fileName.ifBlank { fallbackTitle }, caption) }
@@ -123,7 +133,10 @@ fun rememberLoaderContent(
     val backdropUrl = (meta?.backdropUrl ?: meta?.episode?.stillUrl)?.let { backdropUrlFor(it, screenWidthPx) }
     val backdrop = rememberOnlinePicture(backdropUrl, screenWidthPx.coerceIn(320, 1280))
     val poster = rememberOnlinePicture(meta?.posterUrl, POSTER_DECODE_WIDTH)
-    return LoaderContent(words, backdrop ?: thumbnail, poster)
+    val cover = remember(chatId, fileName, caption, fallbackTitle) {
+        CoverArt.of(chatId, fileName.ifBlank { fallbackTitle }, caption, fallbackTitle = fallbackTitle)
+    }
+    return LoaderContent(words, backdrop ?: thumbnail, poster, cover)
 }
 
 /** The loader's words from a match, or from the parsed name when there is none. Pure, for the tests. */
@@ -209,11 +222,13 @@ fun PlayerLoader(
         val labelSp = (bodySp * 0.9f).coerceAtLeast(if (tv) 14f else 12f)
 
         val art = content.backdrop
-        if (art == null) {
+        val cover = content.cover
+        val pictured = art != null || cover != null
+        if (!pictured) {
             TonalBackdrop()
         } else if (portrait) {
             Box(Modifier.fillMaxWidth().height(h * ART_SHARE)) {
-                Backdrop(art, motion)
+                Picture(art, cover, motion)
                 Box(
                     Modifier.fillMaxSize().background(
                         Brush.verticalGradient(
@@ -226,7 +241,7 @@ fun PlayerLoader(
                 )
             }
         } else {
-            Backdrop(art, motion)
+            Picture(art, cover, motion)
             Box(
                 Modifier.fillMaxSize().background(
                     Brush.horizontalGradient(
@@ -255,7 +270,7 @@ fun PlayerLoader(
 
         // A short dark band under the status bar, so its white icons read over a bright sky
         // whether the bars are showing or not; the picture below it is untouched.
-        if (art != null) {
+        if (pictured) {
             val band = maxOf(insets.calculateTopPadding(), 24.dp) + 56.dp
             Box(
                 Modifier.fillMaxWidth().height(band).background(
@@ -340,6 +355,17 @@ private fun TonalBackdrop() {
             ),
         ),
     )
+}
+
+/**
+ * The picture behind the words: the [cover] as the ground, still, and the [art] fading in over
+ * it when there is one, so a backdrop that arrives late replaces the cover rather than the bare
+ * surface.
+ */
+@Composable
+private fun Picture(art: ImageBitmap?, cover: Cover?, motion: Boolean) {
+    cover?.let { GeneratedCover(it, Modifier.fillMaxSize(), showTitle = false) }
+    art?.let { Backdrop(it, motion) }
 }
 
 /** The backdrop: faded in when it arrives, then a slow push in (1.00 to 1.06 over 12 s) unless motion is off. */
