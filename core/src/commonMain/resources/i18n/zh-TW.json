@@ -1484,6 +1484,8 @@
     "crash_reports_on": "如果 TMPlayer 當機，堆疊追蹤會傳送給開發者。不含聊天名稱、檔案名稱或紀錄",
     "deleting": "刪除中…",
     "detail_first": "先開啟影片的頁面",
+    "detail_first_click_off": "按一下立即播放；按右鍵開啟影片頁面",
+    "detail_first_click_on": "按一下在清單旁顯示影片頁面；按兩下播放",
     "detail_first_off": "點一下直接播放；長按可開啟影片的頁面",
     "detail_first_on": "點一下會顯示海報、演員和按鈕；播放要再按一次",
     "double_tap": "連點兩下跳轉",

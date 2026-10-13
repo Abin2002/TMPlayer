@@ -1484,6 +1484,8 @@
     "crash_reports_on": "Wenn TMPlayer abstürzt, wird der Stack-Trace an den Entwickler gesendet. Keine Chatnamen, keine Dateinamen, kein Verlauf",
     "deleting": "Wird gelöscht…",
     "detail_first": "Zuerst die Seite eines Videos öffnen",
+    "detail_first_click_off": "Ein Klick spielt sofort ab; Rechtsklick öffnet die Seite des Videos",
+    "detail_first_click_on": "Ein Klick zeigt die Seite des Videos neben der Liste; ein Doppelklick spielt ab",
     "detail_first_off": "Ein Tipp spielt sofort ab. Halte gedrückt für die Seite des Videos",
     "detail_first_on": "Ein Tipp zeigt Poster, Besetzung und Schaltflächen. Abspielen ist ein weiterer Druck",
     "double_tap": "Doppeltippen zum Springen",

@@ -1484,6 +1484,8 @@
     "crash_reports_on": "Si TMPlayer falla, el registro de errores se envía al desarrollador. Sin nombres de chats, sin nombres de archivos, sin historial",
     "deleting": "Eliminando…",
     "detail_first": "Abrir primero la página del video",
+    "detail_first_click_off": "Un clic reproduce de inmediato; clic derecho para la página del video",
+    "detail_first_click_on": "Un clic muestra la página del video junto a la lista; doble clic para reproducir",
     "detail_first_off": "Al tocar se reproduce de inmediato; mantén presionado para ver la página del video",
     "detail_first_on": "Al tocar se ven el póster, el reparto y los botones; Reproducir está a un toque más",
     "double_tap": "Doble toque para saltar",

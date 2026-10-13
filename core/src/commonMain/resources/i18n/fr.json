@@ -1484,6 +1484,8 @@
     "crash_reports_on": "Si TMPlayer plante, la trace d'exécution est envoyée au développeur. Ni noms de discussions, ni noms de fichiers, ni historique",
     "deleting": "Suppression…",
     "detail_first": "Ouvrir d'abord la page d'une vidéo",
+    "detail_first_click_off": "Un clic lance la lecture ; clic droit pour la page de la vidéo",
+    "detail_first_click_on": "Un clic affiche la page de la vidéo à côté de la liste ; un double-clic lance la lecture",
     "detail_first_off": "Un appui lance la lecture aussitôt ; maintenez pour la page de la vidéo",
     "detail_first_on": "Un appui affiche l'affiche, la distribution et les boutons ; Lecture demande un appui de plus",
     "double_tap": "Double appui pour sauter",

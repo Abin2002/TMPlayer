@@ -1484,6 +1484,8 @@
     "crash_reports_on": "TMPlayer çökerse yığın izi geliştiriciye gönderilir. Sohbet adı, dosya adı ya da geçmiş yok",
     "deleting": "Siliniyor…",
     "detail_first": "Önce videonun sayfasını aç",
+    "detail_first_click_off": "Tıklama hemen oynatır; videonun sayfası için sağ tıklayın",
+    "detail_first_click_on": "Tıklama listenin yanında videonun sayfasını açar; çift tıklama oynatır",
     "detail_first_off": "Dokunuş hemen oynatır; videonun sayfası için basılı tut",
     "detail_first_on": "Dokunuş afişi, oyuncuları ve düğmeleri gösterir; Oynat bir basış daha",
     "double_tap": "Atlamak için çift dokun",

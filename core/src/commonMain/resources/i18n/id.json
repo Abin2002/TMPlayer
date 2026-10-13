@@ -1484,6 +1484,8 @@
     "crash_reports_on": "Jika TMPlayer crash, stack trace dikirim ke pengembang. Tanpa nama chat, nama file, atau riwayat",
     "deleting": "Menghapus…",
     "detail_first": "Buka halaman video dulu",
+    "detail_first_click_off": "Satu klik langsung memutar; klik kanan untuk halaman video",
+    "detail_first_click_on": "Satu klik menampilkan halaman video di samping daftar; klik dua kali untuk memutar",
     "detail_first_off": "Ketuk langsung memutar; tahan untuk halaman video",
     "detail_first_on": "Ketuk menampilkan poster, pemeran, dan tombol; Putar butuh satu tekan lagi",
     "double_tap": "Ketuk dua kali untuk melompat",

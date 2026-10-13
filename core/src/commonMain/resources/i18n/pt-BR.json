@@ -1484,6 +1484,8 @@
     "crash_reports_on": "Se o TMPlayer travar, o rastreamento da pilha é enviado ao desenvolvedor. Sem nomes de chats, sem nomes de arquivos, sem histórico",
     "deleting": "Excluindo…",
     "detail_first": "Abrir primeiro a página do vídeo",
+    "detail_first_click_off": "Um clique reproduz na hora; clique direito para a página do vídeo",
+    "detail_first_click_on": "Um clique mostra a página do vídeo ao lado da lista; clique duplo reproduz",
     "detail_first_off": "Um toque reproduz na hora; mantenha pressionado para ver a página do vídeo",
     "detail_first_on": "Um toque mostra o pôster, o elenco e os botões; Reproduzir é mais um toque",
     "double_tap": "Toque duplo para pular",

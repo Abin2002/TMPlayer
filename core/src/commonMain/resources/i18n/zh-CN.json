@@ -1484,6 +1484,8 @@
     "crash_reports_on": "如果 TMPlayer 崩溃，堆栈跟踪会发送给开发者。不含聊天名称、文件名或历史记录",
     "deleting": "正在删除…",
     "detail_first": "先打开视频详情页",
+    "detail_first_click_off": "单击立即播放；右键单击打开视频页面",
+    "detail_first_click_on": "单击在列表旁显示视频页面；双击播放",
     "detail_first_off": "点按立即播放；长按打开视频详情页",
     "detail_first_on": "点按会显示海报、演员和按钮；播放需要再按一次",
     "double_tap": "双击跳转",

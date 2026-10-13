@@ -1484,6 +1484,8 @@
     "crash_reports_on": "TMPlayer가 충돌하면 스택 트레이스를 개발자에게 보내요. 채팅 이름, 파일 이름, 기록은 포함되지 않아요",
     "deleting": "삭제하는 중…",
     "detail_first": "영상 페이지를 먼저 열기",
+    "detail_first_click_off": "클릭하면 바로 재생, 오른쪽 클릭하면 동영상 페이지",
+    "detail_first_click_on": "클릭하면 목록 옆에 동영상 페이지, 두 번 클릭하면 재생",
     "detail_first_off": "탭하면 바로 재생해요. 길게 누르면 영상 페이지가 열려요",
     "detail_first_on": "탭하면 포스터, 출연진, 버튼이 나와요. 재생은 한 번 더 눌러야 해요",
     "double_tap": "두 번 탭해서 이동",

@@ -1484,6 +1484,8 @@
     "crash_reports_on": "Se TMPlayer si arresta in modo anomalo, la traccia dello stack viene inviata allo sviluppatore. Niente nomi di chat, niente nomi di file, niente cronologia",
     "deleting": "Eliminazione…",
     "detail_first": "Apri prima la pagina del video",
+    "detail_first_click_off": "Un clic riproduce subito; clic destro per la pagina del video",
+    "detail_first_click_on": "Un clic mostra la pagina del video accanto all'elenco; doppio clic per riprodurre",
     "detail_first_off": "Un tocco riproduce subito; tieni premuto per la pagina del video",
     "detail_first_on": "Un tocco mostra locandina, cast e pulsanti; per riprodurre serve un altro tocco",
     "double_tap": "Doppio tocco per saltare",

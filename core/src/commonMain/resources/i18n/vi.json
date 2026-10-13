@@ -1484,6 +1484,8 @@
     "crash_reports_on": "Nếu TMPlayer gặp sự cố, dấu vết ngăn xếp sẽ được gửi cho nhà phát triển. Không có tên cuộc trò chuyện, tên tệp hay lịch sử",
     "deleting": "Đang xóa…",
     "detail_first": "Mở trang của video trước",
+    "detail_first_click_off": "Nhấp là phát ngay; nhấp chuột phải để mở trang video",
+    "detail_first_click_on": "Nhấp để xem trang video bên cạnh danh sách; nhấp đúp để phát",
     "detail_first_off": "Chạm để phát ngay; giữ để mở trang của video",
     "detail_first_on": "Chạm để hiện poster, diễn viên và các nút; Phát thêm một lần nhấn",
     "double_tap": "Chạm đúp để nhảy",
