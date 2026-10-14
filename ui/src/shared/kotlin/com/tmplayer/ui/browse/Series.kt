@@ -1,5 +1,11 @@
 package com.tmplayer.ui.browse
 
+import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -275,8 +281,14 @@ fun SeasonTabs(
 ) {
     val s = LocalStrings.current
     val tv = !isTouch()
+    // Up or Down into the row lands on the season shown, not on whichever tab sits nearest the
+    // card the remote left: since the tab under focus is the season shown, landing on the next one
+    // would swap the episodes from under the viewer.
+    val chosenFocus = focusRequester ?: remember { FocusRequester() }
     Row(
-        modifier.horizontalScroll(rememberScrollState()),
+        modifier
+            .then(if (tv) Modifier.focusProperties { onEnter = { chosenFocus.requestFocus() } } else Modifier)
+            .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         seasons.forEach { season ->
@@ -291,7 +303,7 @@ fun SeasonTabs(
             }
             Column(
                 Modifier
-                    .then(if (chosen && focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                    .then(if (chosen) Modifier.focusRequester(chosenFocus) else Modifier)
                     .clip(RoundedCornerShape(Corner.Small))
                     .background(fill)
                     .border(
@@ -641,13 +653,19 @@ fun SeriesPanel(
     }
     val shown = series.seasons.firstOrNull { it.number == season } ?: series.seasons.first()
     val playFocus = remember { FocusRequester() }
+    // Whether anything on the page holds focus, so Play is only asked for while nothing does.
+    var pageFocused by remember(series.key) { mutableStateOf(false) }
+    // A page opened from a card on the TV home screen comes up before its window has focus, and a
+    // request made then is lost; it is made again once the window has it.
+    val windowFocused = LocalWindowInfo.current.isWindowFocused
     // After a frame, and a few more if need be: Play sits in a lazy list item, which is not
     // attached until the list has laid it out, and a request before then is lost.
-    LaunchedEffect(series.key) {
-        if (!tv) return@LaunchedEffect
+    LaunchedEffect(series.key, windowFocused) {
+        if (!tv || !windowFocused) return@LaunchedEffect
         repeat(FOCUS_TRIES) {
             withFrameNanos { }
-            if (runCatching { playFocus.requestFocus() }.isSuccess) return@LaunchedEffect
+            if (pageFocused) return@LaunchedEffect
+            runCatching { playFocus.requestFocus() }
         }
     }
     // Download is for the season shown, so its buttons follow the season picked.
@@ -711,7 +729,7 @@ fun SeriesPanel(
         Modifier
     }
 
-    BoxWithConstraints(modifier) {
+    BoxWithConstraints(modifier.onFocusChanged { pageFocused = it.hasFocus }) {
         val wide = maxWidth > maxHeight || maxWidth >= WIDE_PAGE
         val heroHeight = if (wide) {
             (maxHeight * 0.62f).coerceIn(280.dp, 560.dp)
@@ -807,7 +825,7 @@ fun SeriesPanel(
             }
         }
 
-        LazyColumn(
+        HeroStaysWhole(list) { LazyColumn(
             state = list,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
@@ -890,7 +908,7 @@ fun SeriesPanel(
                 }
             }
         }
-    }
+    } }
 }
 
 /**
@@ -1070,3 +1088,35 @@ private val OK_KEYS = setOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter)
 
 /** Frames to wait for a lazily composed button before giving up on focusing it. */
 private const val FOCUS_TRIES = 5
+
+/**
+ * Where the page's list scrolls to bring a focused control into view, so the hero is never cut
+ * at its top on a television, whose own rule stands every focused item a third of the way down
+ * the screen: focused on opening, Play went up that far and took the show's name off the top.
+ *
+ * While the list is still on the hero, a control that fits with the list at its top takes the list
+ * back to the top, and one already on screen moves nothing. Past the hero, and for the rows inside
+ * the list (season tabs, cast), the platform's own rule stands.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HeroStaysWhole(list: LazyListState, content: @Composable () -> Unit) {
+    val platform = LocalBringIntoViewSpec.current
+    val spec = remember(list, platform) {
+        object : BringIntoViewSpec {
+            override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
+                val viewport = list.layoutInfo.viewportSize.height.toFloat()
+                // A row inside the list asks with its own width: not this list's question.
+                if (viewport <= 0f || containerSize != viewport || list.firstVisibleItemIndex != 0) {
+                    return platform.calculateScrollDistance(offset, size, containerSize)
+                }
+                val toTop = -list.firstVisibleItemScrollOffset.toFloat()
+                val atTop = offset - toTop
+                if (atTop >= 0f && atTop + size <= containerSize) return toTop
+                if (offset >= 0f && offset + size <= containerSize) return 0f
+                return platform.calculateScrollDistance(offset, size, containerSize)
+            }
+        }
+    }
+    CompositionLocalProvider(LocalBringIntoViewSpec provides spec, content = content)
+}
