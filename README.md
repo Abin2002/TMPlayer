@@ -9,7 +9,7 @@
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" />
   <img alt="Platform" src="https://img.shields.io/badge/platform-Android%208.0%2B%20(TV%20and%20phone)-3ddc84" />
-  <img alt="Desktop" src="https://img.shields.io/badge/desktop-Windows%20%7C%20Linux-0078d4" />
+  <img alt="Desktop" src="https://img.shields.io/badge/desktop-Windows%20%7C%20macOS%20%7C%20Linux-0078d4" />
   <img alt="Tests" src="https://img.shields.io/badge/tests-209%20passing-brightgreen" />
 </p>
 
@@ -23,7 +23,7 @@
 ---
 
 TMPlayer plays the videos in your own Telegram chats and channels on an Android TV, a phone, or a
-Windows or Linux computer. It starts within seconds while the file is still downloading, and
+Windows, Mac or Linux computer. It starts within seconds while the file is still downloading, and
 seeking re-aims the download instead of waiting for it.
 
 Sign in by scanning a QR code with your phone, pick a chat, and only its playable videos appear.
@@ -49,6 +49,8 @@ No messages, no server, no account except yours.
 - **Windows 10 and 11**, 64-bit, as an MSI installer.
 - **Linux**, 64-bit x86 with glibc 2.38 or newer, as an AppImage, with an Arch PKGBUILD in
   [desktop/packaging/aur](desktop/packaging/aur).
+- **macOS 26 Tahoe or newer** on Apple Silicon (M1 and later), as a DMG. This one is a preview:
+  it is not notarized by Apple yet, it is the least tested build, and Intel Macs are not supported.
 
 Everything is on the same [GitHub release](../../releases), and
 [tmplayer.org/download](https://tmplayer.org/download/) lists it by platform.
@@ -82,6 +84,13 @@ It downloads the MSI from the release, checks it against the published SHA-256 a
 your user, with no SmartScreen warning. Prefer an installer? Download
 `TMPlayer-<version>-windows-x64.msi` and open it. It is not code signed yet, so SmartScreen says
 *Windows protected your PC*: click **More info**, then **Run anyway**.
+
+### macOS
+
+Download `TMPlayer-<version>-macos-arm64.dmg`, open it and drag **TMPlayer** onto
+**Applications**. It is not notarized by Apple yet, so the first launch says *"TMPlayer" Not
+Opened*: click **Done**, then **Open Anyway** in **System Settings**, **Privacy and Security**.
+[INSTALL.md](INSTALL.md#macos) has every step, and how updates work on a Mac.
 
 ### Linux
 
@@ -126,7 +135,7 @@ the reference test devices, and the version pins that are not free choices.
 
 - [Feature list](docs/FEATURES.md): everything the app does, and what it deliberately does not.
 - [Changelog](https://tmplayer.org/changelog/): every release, with an RSS feed.
-- [Install guide](INSTALL.md): sideloading, Windows and Linux, shortcuts, the remote and the keyboard, troubleshooting.
+- [Install guide](INSTALL.md): sideloading, Windows, macOS and Linux, shortcuts, the remote and the keyboard, troubleshooting.
 - [Architecture](docs/ARCHITECTURE.md): TDLib, the streaming `DataSource`, why it is built this way.
 - [Building](docs/BUILDING.md) and [releasing](docs/RELEASING.md).
 - [Contributing](CONTRIBUTING.md): ground rules, style, how to report an issue.
