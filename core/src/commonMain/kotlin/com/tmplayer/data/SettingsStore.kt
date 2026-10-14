@@ -41,6 +41,7 @@ private val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
 // broken-history prune at launch, Clear history) would take this setting with them.
 private val RESUME_REWIND = longPreferencesKey("rewind_on_resume_ms")
 private val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
+private val SAVE_MOBILE_DATA = booleanPreferencesKey("save_mobile_data")
 private val REMOVE_AFTER_WATCHING = booleanPreferencesKey("remove_after_watching")
 private val LOW_STORAGE_MODE = booleanPreferencesKey("low_storage_mode")
 private val LIGHTER_PICTURES = booleanPreferencesKey("lighter_pictures")
@@ -290,8 +291,9 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             val theme = prefs[THEME_CHOICE]
             val dynamic = prefs[DYNAMIC_COLOUR]
             val uiScale = prefs[UI_SCALE]
-            // How light the device needs the app to be is the device's, not the account's.
-            val device = listOf(LIGHTER_PICTURES, REDUCE_MOTION, DEVICE_CARD_DISMISSED, DEVICE_HINT_SHOWN)
+            // How light the device needs the app to be is the device's, not the account's, and so
+            // is how sparingly it may use the mobile data it pays for.
+            val device = listOf(LIGHTER_PICTURES, REDUCE_MOTION, DEVICE_CARD_DISMISSED, DEVICE_HINT_SHOWN, SAVE_MOBILE_DATA)
                 .mapNotNull { key -> prefs[key]?.let { Pair(key, it) } }
             val migrated = prefs[DOWNLOADS_MIGRATED]
             val support = SUPPORT_KEYS.mapNotNull { key -> prefs[key]?.let { Pair(key, it) } }
@@ -662,6 +664,24 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /** Read at the start of playback, where the flow's first emission has not arrived yet. */
     suspend fun wifiOnlyDownloadsNow(): Boolean = prefs.data.first()[WIFI_ONLY] ?: false
+
+    /**
+     * "Save mobile data": on a metered connection a streamed video is fetched only a bounded
+     * stretch ahead of where it is playing, and the stretch is extended as playback nears its
+     * end, so a film stopped after twenty minutes has not cost most of its size. Nothing already
+     * fetched is deleted, so seeking back costs nothing. Off by default, because many people
+     * watch on mobile data with data to spare, and a stream fetched to the end rides out a
+     * patchy signal better. Never applies to a video the viewer is downloading. See
+     * [com.tmplayer.player.SaveDataStreams].
+     */
+    val saveMobileData: Flow<Boolean> = read { it[SAVE_MOBILE_DATA] ?: false }
+
+    suspend fun setSaveMobileData(value: Boolean) {
+        prefs.edit { it[SAVE_MOBILE_DATA] = value }
+    }
+
+    /** Read once at the start of playback, where a flow that has not emitted yet would lie. */
+    suspend fun saveMobileDataNow(): Boolean = prefs.data.first()[SAVE_MOBILE_DATA] ?: false
 
     /**
      * "Remove after watching": a download is deleted once it is marked watched. Off by default,

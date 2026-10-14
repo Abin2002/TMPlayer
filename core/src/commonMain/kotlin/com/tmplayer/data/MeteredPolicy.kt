@@ -37,6 +37,19 @@ object MeteredPolicy {
      */
     fun wifiOnlyInForce(stored: Boolean, television: Boolean): Boolean = stored && wifiOnlyOffered(television)
 
+    /**
+     * Whether Settings offers "Save mobile data" here: where "Wi-Fi only" is, for the same reason.
+     * A television is never on a data allowance, and the desktop has no metered state to read.
+     */
+    fun saveMobileDataOffered(television: Boolean): Boolean = wifiOnlyOffered(television)
+
+    /**
+     * "Save mobile data" as it applies on this device: kept where it is not offered, so a backup
+     * carries it on, but bounding nothing there, as with [wifiOnlyInForce].
+     */
+    fun saveMobileDataInForce(stored: Boolean, television: Boolean): Boolean =
+        stored && saveMobileDataOffered(television)
+
     fun decide(
         metered: Boolean,
         wifiOnly: Boolean,

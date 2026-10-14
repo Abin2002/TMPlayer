@@ -111,6 +111,13 @@ class TdByteWindow(private val td: TdlClient) {
     private var lowStorage = false
 
     /**
+     * Whether this file streams with "Save mobile data", as [SaveDataStreams] said at [watch].
+     * Only a shortcut for the fast path, like [lowStorage]; every decision asks again.
+     */
+    @Volatile
+    private var saveData = false
+
+    /**
      * Up while a roll or a seek in Low storage mode is deleting the file: updates about the file
      * being deleted say nothing true about the one coming next, so they are not absorbed.
      */
@@ -136,6 +143,7 @@ class TdByteWindow(private val td: TdlClient) {
     fun watch(fileId: Int) {
         this.fileId = fileId
         lowStorage = LowStorageStreams.isRolling(fileId)
+        saveData = !lowStorage && SaveDataStreams.isActive(fileId)
         stopWatching()
         val watcher = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         scope = watcher
@@ -174,6 +182,8 @@ class TdByteWindow(private val td: TdlClient) {
         if (localPath == null) return null
         // A roll is due: the slow path performs it before this read is served.
         if (lowStorage && LowStorageStreams.rollDue(fileId, target, size)) return null
+        // Likewise an extension, or a change of connection, in "Save mobile data".
+        if (saveData && SaveDataStreams.extendDue(fileId, target, size)) return null
         val known = window
         return DownloadWindow.availableAt(
             position = target,
@@ -281,6 +291,7 @@ class TdByteWindow(private val td: TdlClient) {
      */
     suspend fun awaitBytesAt(target: Long): Long {
         if (lowStorage) rollIfDue(target)
+        if (saveData) extendIfDue(target)
         // The collector may already have absorbed what this read needs.
         cachedAvailable(target)?.let { return it }
 
@@ -369,7 +380,8 @@ class TdByteWindow(private val td: TdlClient) {
     }
 
     /**
-     * `limit = 0` means "keep going to the end of the file", exactly what playback wants.
+     * `limit = 0` means "keep going to the end of the file", exactly what playback wants, unless
+     * Low storage mode or "Save mobile data" bounds the request.
      *
      * The result is checked rather than dropped. A refused request looks exactly like a slow
      * one from here (no bytes arrive), and swallowing it turns a flood wait or an expired file
@@ -381,11 +393,15 @@ class TdByteWindow(private val td: TdlClient) {
         // than the window on disk deletes the file first: a roll, or a seek far from what is here.
         val bounded = LowStorageStreams.plan(fileId, offset, size, roll)
         if (bounded?.deleteFirst == true) deleteForLowStorage(offset)
+        // On mobile data with "Save mobile data" on, a request reaches only so far ahead and is
+        // extended as reading nears its end; nothing is deleted. Low storage mode's own window
+        // wins when both apply, which [SaveDataStreams] sees to.
+        val saving = if (bounded == null) SaveDataStreams.plan(fileId, offset, size) else null
         val result = td.downloadFile(
             fileId = fileId,
             priority = PLAYBACK_PRIORITY,
             offset = offset,
-            limit = bounded?.limit ?: 0L,
+            limit = bounded?.limit ?: saving ?: 0L,
             synchronous = false,
         )
         val error = result.errorMessage
@@ -406,6 +422,20 @@ class TdByteWindow(private val td: TdlClient) {
         val from = LowStorageWindow.rollStart(target)
         Logger.i(TAG, "Low storage: rolling file $fileId on at $target, from $from")
         requestDownloadFrom(from, roll = true)
+    }
+
+    /**
+     * Asks TDLib again when [SaveDataStreams] says a read at [target] is due one: reading has
+     * nearly reached the end of the stretch asked for on mobile data, or the connection changed
+     * between metered and not since the last request. The request starts at [target], on a part
+     * boundary, and deletes nothing: TDLib skips what it already has and carries on from the end
+     * of it. Readers that find it due meanwhile wait here, as for a roll.
+     */
+    private suspend fun extendIfDue(target: Long) = rollLock.withLock {
+        if (!SaveDataStreams.extendDue(fileId, target, size)) return@withLock
+        val from = SaveDataWindow.extendStart(target)
+        Logger.i(TAG, "Save mobile data: asking again for file $fileId from $from")
+        requestDownloadFrom(from)
     }
 
     /**

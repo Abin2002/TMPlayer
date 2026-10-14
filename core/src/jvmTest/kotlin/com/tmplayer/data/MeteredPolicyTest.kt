@@ -19,6 +19,15 @@ class MeteredPolicyTest {
     }
 
     @Test
+    fun `save mobile data sits beside wifi only, on a phone alone`() {
+        assertEquals(true, MeteredPolicy.saveMobileDataOffered(television = false))
+        assertEquals(false, MeteredPolicy.saveMobileDataOffered(television = true))
+        assertEquals(true, MeteredPolicy.saveMobileDataInForce(stored = true, television = false))
+        assertEquals(false, MeteredPolicy.saveMobileDataInForce(stored = false, television = false))
+        assertEquals(false, MeteredPolicy.saveMobileDataInForce(stored = true, television = true))
+    }
+
+    @Test
     fun `wifi never asks anything`() {
         assertEquals(
             MeteredDecision.Allow,
