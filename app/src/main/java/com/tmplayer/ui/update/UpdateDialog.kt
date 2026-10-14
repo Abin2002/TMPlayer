@@ -398,7 +398,7 @@ private fun body(state: UpdateState, offer: Offer?, device: String): List<String
     val size = Translator.messages.formatter.bytes(offer.sizeBytes)
     val how = when {
         state is UpdateState.Downloading -> L.updateDownloading(size = size)
-        !offer.allowed && device == "tv" ->
+        !offer.allowed && device.equals("tv", ignoreCase = true) ->
             L.updateBlockedTv
         !offer.allowed ->
             L.updateBlockedPhone
