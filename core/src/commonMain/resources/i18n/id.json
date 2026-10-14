@@ -709,6 +709,7 @@
     "shown_toast": "Chat dan Pesan Tersimpan kembali"
   },
   "home": {
+    "channel_recent": "Baru ditambahkan",
     "favourites_hint": "{form, select, tv {Tambahkan chat ke favorit dan videonya tampil di sini, satu baris untuk tiap chat. Tahan OK pada chat mana pun di daftar lalu pilih Tambah ke favorit.} other {Tambahkan chat ke favorit dan videonya tampil di sini, satu baris untuk tiap chat. Tekan dan tahan chat mana pun di daftar lalu pilih Tambah ke favorit.}}",
     "first_body": "Teruskan video apa saja ke Pesan Tersimpan di Telegram, lalu buka Pesan Tersimpan di sini untuk memutarnya.",
     "first_more": "Beri bintang pada chat agar punya baris di sini. Video yang Anda mulai menunggu di atas.",
@@ -1653,6 +1654,9 @@
     "trickplay_low_memory": "Tidak di perangkat ini: memorinya terlalu kecil",
     "trickplay_off": "Mati: menggeser hanya menampilkan waktu",
     "trickplay_on": "Gambar di atas bilah, dari bagian video yang sudah diunduh",
+    "tv_channels": "Tampilkan di layar utama TV",
+    "tv_channels_off": "Mati: TMPlayer tidak menambahkan baris ke layar utama",
+    "tv_channels_on": "Baris berisi yang baru di chat berbintang, di layar utama",
     "up_to_date": "TMPlayer {version} adalah versi terbaru",
     "update_detail": "Mengunduh {size} dari GitHub, lalu Android meminta konfirmasimu",
     "update_notify": "Beri tahu saat versi baru tersedia",

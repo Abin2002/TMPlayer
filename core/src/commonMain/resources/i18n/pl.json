@@ -709,6 +709,7 @@
     "shown_toast": "Czaty i Zapisane wiadomości wróciły"
   },
   "home": {
+    "channel_recent": "Ostatnio dodane",
     "favourites_hint": "{form, select, tv {Dodaj czaty do ulubionych, a ich filmy pojawią się tutaj, każdy czat w osobnym rzędzie. Przytrzymaj OK na dowolnym czacie na liście i wybierz Dodaj do ulubionych.} other {Dodaj czaty do ulubionych, a ich filmy pojawią się tutaj, każdy czat w osobnym rzędzie. Przytrzymaj dowolny czat na liście i wybierz Dodaj do ulubionych.}}",
     "first_body": "Przekaż dowolny film do Zapisanych wiadomości w Telegramie, a potem otwórz tutaj Zapisane wiadomości, aby go obejrzeć.",
     "first_more": "Oznacz czat gwiazdką, aby miał tu swój rząd. Rozpoczęte filmy czekają na górze.",
@@ -1653,6 +1654,9 @@
     "trickplay_low_memory": "Niedostępne na tym urządzeniu: ma za mało pamięci",
     "trickplay_off": "Wyłączone: przewijanie pokazuje tylko czas",
     "trickplay_on": "Obraz nad paskiem, z już pobranej części filmu",
+    "tv_channels": "Pokazuj na ekranie głównym telewizora",
+    "tv_channels_off": "Wyłączone: TMPlayer nie dodaje rzędów do ekranu głównego",
+    "tv_channels_on": "Rzędy z nowościami z czatów z gwiazdką, na ekranie głównym",
     "up_to_date": "TMPlayer {version} to najnowsza wersja",
     "update_detail": "Pobiera {size} z GitHuba, potem Android prosi o potwierdzenie",
     "update_notify": "Powiadom, gdy pojawi się nowa wersja",

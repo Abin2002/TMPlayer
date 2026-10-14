@@ -709,6 +709,7 @@
     "shown_toast": "Chats und Gespeicherte Nachrichten sind zurück"
   },
   "home": {
+    "channel_recent": "Neu hinzugefügt",
     "favourites_hint": "{form, select, tv {Füge Chats zu deinen Favoriten hinzu, dann erscheinen ihre Videos hier, je eine Zeile pro Chat. Halte OK auf einem Chat in der Liste gedrückt und wähle „Zu Favoriten hinzufügen“.} other {Füge Chats zu deinen Favoriten hinzu, dann erscheinen ihre Videos hier, je eine Zeile pro Chat. Halte einen Chat in der Liste gedrückt und wähle „Zu Favoriten hinzufügen“.}}",
     "first_body": "Leite ein beliebiges Video in Telegram an Gespeicherte Nachrichten weiter und öffne dann hier Gespeicherte Nachrichten, um es abzuspielen.",
     "first_more": "Gib einem Chat einen Stern, dann bekommt er hier eine Reihe. Begonnene Videos warten ganz oben.",
@@ -1653,6 +1654,9 @@
     "trickplay_low_memory": "Nicht auf diesem Gerät: Es hat zu wenig Arbeitsspeicher",
     "trickplay_off": "Aus: Beim Spulen wird nur die Zeit angezeigt",
     "trickplay_on": "Ein Bild über der Leiste, aus dem bereits heruntergeladenen Teil des Videos",
+    "tv_channels": "Auf dem TV-Startbildschirm zeigen",
+    "tv_channels_off": "Aus: TMPlayer fügt dem Startbildschirm keine Reihen hinzu",
+    "tv_channels_on": "Reihen mit Neuem aus deinen Chats mit Stern, auf dem Startbildschirm",
     "up_to_date": "TMPlayer {version} ist die neueste Version",
     "update_detail": "Lädt {size} von GitHub herunter, dann bittet Android dich um Bestätigung",
     "update_notify": "Benachrichtige mich über neue Versionen",

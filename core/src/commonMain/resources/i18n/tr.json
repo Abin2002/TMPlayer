@@ -709,6 +709,7 @@
     "shown_toast": "Sohbetler ve Kayıtlı Mesajlar geri geldi"
   },
   "home": {
+    "channel_recent": "Yeni eklenenler",
     "favourites_hint": "{form, select, tv {Sohbetleri favorilerine ekle, videoları burada her biri için bir satırda görünsün. Listede herhangi bir sohbette Tamam'a basılı tut ve Favorilere ekle'yi seç.} other {Sohbetleri favorilerine ekle, videoları burada her biri için bir satırda görünsün. Listede herhangi bir sohbete basılı tut ve Favorilere ekle'yi seç.}}",
     "first_body": "Telegram'da herhangi bir videoyu Kayıtlı Mesajlar'a iletin, sonra oynatmak için burada Kayıtlı Mesajlar'ı açın.",
     "first_more": "Burada bir satır alması için bir sohbeti yıldızlayın. Başladığınız videolar en üstte bekler.",
@@ -1653,6 +1654,9 @@
     "trickplay_low_memory": "Bu cihazda yok: belleği çok az",
     "trickplay_off": "Kapalı: arama yalnızca zamanı gösterir",
     "trickplay_on": "Çubuğun üstünde, videonun zaten indirilmiş kısmından bir görüntü",
+    "tv_channels": "TV ana ekranında göster",
+    "tv_channels_off": "Kapalı: TMPlayer ana ekrana satır eklemez",
+    "tv_channels_on": "Yıldızlı sohbetlerindeki yenilikler, ana ekranda satırlar halinde",
     "up_to_date": "TMPlayer {version} en yeni sürüm",
     "update_detail": "GitHub'dan {size} indirir, sonra Android onay ister",
     "update_notify": "Yeni sürüm çıkınca haber ver",

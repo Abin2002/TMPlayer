@@ -709,6 +709,7 @@
     "shown_toast": "聊天和已儲存的訊息已恢復顯示"
   },
   "home": {
+    "channel_recent": "最近新增",
     "favourites_hint": "{form, select, tv {把聊天加入我的最愛，它們的影片就會顯示在這裡，每個聊天一列。在清單中的任何聊天上長按 OK，然後選擇「加入我的最愛」。} other {把聊天加入我的最愛，它們的影片就會顯示在這裡，每個聊天一列。在清單中的任何聊天上按住不放，然後選擇「加入我的最愛」。}}",
     "first_body": "在 Telegram 把任何影片轉傳到已儲存的訊息，然後在這裡開啟已儲存的訊息來播放。",
     "first_more": "替聊天加上星號，它就會在這裡有一列。開始看的影片會在最上方等你。",
@@ -1653,6 +1654,9 @@
     "trickplay_low_memory": "這台裝置無法使用：記憶體太少",
     "trickplay_off": "關閉：快轉時只顯示時間",
     "trickplay_on": "在進度列上方顯示畫面，來自影片已下載的部分",
+    "tv_channels": "在電視主畫面上顯示",
+    "tv_channels_off": "關閉：TMPlayer 不會在主畫面新增列",
+    "tv_channels_on": "在主畫面上以列顯示星號聊天裡的新內容",
     "up_to_date": "TMPlayer {version} 是最新版本",
     "update_detail": "從 GitHub 下載 {size}，然後 Android 會請你確認",
     "update_notify": "有新版本時通知我",

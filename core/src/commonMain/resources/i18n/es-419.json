@@ -709,6 +709,7 @@
     "shown_toast": "Chats y Mensajes guardados volvieron"
   },
   "home": {
+    "channel_recent": "Agregado recientemente",
     "favourites_hint": "{form, select, tv {Agrega chats a tus favoritos y sus videos aparecerán aquí, una fila por cada uno. Mantén presionado OK sobre un chat de la lista y elige Agregar a favoritos.} other {Agrega chats a tus favoritos y sus videos aparecerán aquí, una fila por cada uno. Mantén presionado un chat de la lista y elige Agregar a favoritos.}}",
     "first_body": "Reenvía cualquier video a Mensajes guardados en Telegram y luego abre Mensajes guardados aquí para verlo.",
     "first_more": "Marca un chat con estrella para darle una fila aquí. Los videos que empiezas esperan arriba.",
@@ -1653,6 +1654,9 @@
     "trickplay_low_memory": "No disponible en este dispositivo: tiene muy poca memoria",
     "trickplay_off": "Desactivado: al buscar solo se muestra el tiempo",
     "trickplay_on": "Una imagen sobre la barra, de la parte del video ya descargada",
+    "tv_channels": "Mostrar en la pantalla de inicio de la TV",
+    "tv_channels_off": "Desactivado: TMPlayer no agrega filas a la pantalla de inicio",
+    "tv_channels_on": "Filas con lo nuevo de tus chats destacados, en la pantalla de inicio",
     "up_to_date": "TMPlayer {version} es la versión más reciente",
     "update_detail": "Descarga {size} de GitHub y luego Android te pide confirmar",
     "update_notify": "Avisarme cuando salga una versión nueva",

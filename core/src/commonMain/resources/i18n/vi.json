@@ -709,6 +709,7 @@
     "shown_toast": "Trò chuyện và Tin nhắn đã lưu đã trở lại"
   },
   "home": {
+    "channel_recent": "Mới thêm",
     "favourites_hint": "{form, select, tv {Thêm cuộc trò chuyện vào yêu thích và video của chúng sẽ hiện ở đây, mỗi cuộc một hàng. Giữ OK trên một cuộc trò chuyện trong danh sách và chọn Thêm vào yêu thích.} other {Thêm cuộc trò chuyện vào yêu thích và video của chúng sẽ hiện ở đây, mỗi cuộc một hàng. Nhấn giữ một cuộc trò chuyện trong danh sách và chọn Thêm vào yêu thích.}}",
     "first_body": "Chuyển tiếp một video bất kỳ tới Tin nhắn đã lưu trong Telegram, rồi mở Tin nhắn đã lưu ở đây để phát.",
     "first_more": "Gắn sao cho một cuộc trò chuyện để nó có một hàng ở đây. Video bạn đã bắt đầu chờ ở trên cùng.",
@@ -1653,6 +1654,9 @@
     "trickplay_low_memory": "Không dùng được trên thiết bị này: bộ nhớ quá ít",
     "trickplay_off": "Tắt: khi tua chỉ hiện thời gian",
     "trickplay_on": "Một ảnh phía trên thanh, lấy từ phần video đã tải",
+    "tv_channels": "Hiện trên màn hình chính của TV",
+    "tv_channels_off": "Tắt: TMPlayer không thêm hàng nào vào màn hình chính",
+    "tv_channels_on": "Các hàng nội dung mới trong cuộc trò chuyện gắn sao, trên màn hình chính",
     "up_to_date": "TMPlayer {version} là phiên bản mới nhất",
     "update_detail": "Tải {size} từ GitHub, rồi Android sẽ yêu cầu bạn xác nhận",
     "update_notify": "Báo cho tôi khi có phiên bản mới",

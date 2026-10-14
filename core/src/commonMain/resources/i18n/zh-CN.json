@@ -709,6 +709,7 @@
     "shown_toast": "聊天和已保存的消息已恢复显示"
   },
   "home": {
+    "channel_recent": "最近添加",
     "favourites_hint": "{form, select, tv {把聊天添加到收藏，它们的视频会显示在这里，每个聊天一行。在列表中的任意聊天上长按确定键，然后选择“添加到收藏”。} other {把聊天添加到收藏，它们的视频会显示在这里，每个聊天一行。在列表中长按任意聊天，然后选择“添加到收藏”。}}",
     "first_body": "在 Telegram 里把任意视频转发到已保存的消息，然后在这里打开已保存的消息播放它。",
     "first_more": "给聊天加星标，它就会在这里有一行。开始看过的视频在最上方等你。",
@@ -1653,6 +1654,9 @@
     "trickplay_low_memory": "此设备不支持：内存太小",
     "trickplay_off": "已关闭：拖动时只显示时间",
     "trickplay_on": "在进度条上方显示一幅画面，取自视频已下载的部分",
+    "tv_channels": "在电视主屏幕上显示",
+    "tv_channels_off": "关闭：TMPlayer 不会向主屏幕添加行",
+    "tv_channels_on": "在主屏幕上以行的形式显示星标聊天里的新内容",
     "up_to_date": "TMPlayer {version} 是最新版本",
     "update_detail": "从 GitHub 下载 {size}，然后 Android 会请你确认",
     "update_notify": "有新版本时通知我",

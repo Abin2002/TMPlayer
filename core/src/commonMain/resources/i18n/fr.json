@@ -709,6 +709,7 @@
     "shown_toast": "Discussions et Messages enregistrés sont de retour"
   },
   "home": {
+    "channel_recent": "Ajouts récents",
     "favourites_hint": "{form, select, tv {Ajoutez des discussions à vos favoris et leurs vidéos s'affichent ici, une ligne chacune. Maintenez OK sur une discussion de la liste et choisissez Ajouter aux favoris.} other {Ajoutez des discussions à vos favoris et leurs vidéos s'affichent ici, une ligne chacune. Appuyez longuement sur une discussion de la liste et choisissez Ajouter aux favoris.}}",
     "first_body": "Transférez n'importe quelle vidéo vers Messages enregistrés dans Telegram, puis ouvrez Messages enregistrés ici pour la lire.",
     "first_more": "Mettez une étoile à une discussion pour lui donner une rangée ici. Les vidéos commencées attendent en haut.",
@@ -1653,6 +1654,9 @@
     "trickplay_low_memory": "Indisponible sur cet appareil : il a trop peu de mémoire",
     "trickplay_off": "Désactivé : le défilement n'affiche que le temps",
     "trickplay_on": "Une image au-dessus de la barre, tirée de la partie de la vidéo déjà téléchargée",
+    "tv_channels": "Afficher sur l'écran d'accueil de la TV",
+    "tv_channels_off": "Désactivé : TMPlayer n'ajoute aucune rangée à l'écran d'accueil",
+    "tv_channels_on": "Des rangées avec les nouveautés de vos discussions favorites, sur l'écran d'accueil",
     "up_to_date": "TMPlayer {version} est la dernière version",
     "update_detail": "Télécharge {size} depuis GitHub, puis Android vous demande de confirmer",
     "update_notify": "Me prévenir de la sortie d'une nouvelle version",

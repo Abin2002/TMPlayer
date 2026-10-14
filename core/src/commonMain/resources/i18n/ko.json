@@ -709,6 +709,7 @@
     "shown_toast": "채팅과 저장한 메시지가 다시 표시됩니다"
   },
   "home": {
+    "channel_recent": "최근 추가됨",
     "favourites_hint": "{form, select, tv {즐겨찾기에 채팅을 추가하면 그 영상이 채팅마다 한 줄씩 여기에 표시돼요. 목록에서 채팅의 확인 버튼을 길게 누르고 즐겨찾기에 추가를 선택하세요.} other {즐겨찾기에 채팅을 추가하면 그 영상이 채팅마다 한 줄씩 여기에 표시돼요. 목록에서 채팅을 길게 누르고 즐겨찾기에 추가를 선택하세요.}}",
     "first_body": "Telegram에서 아무 동영상이나 저장한 메시지로 전달한 다음, 여기에서 저장한 메시지를 열어 재생하세요.",
     "first_more": "채팅에 별표하면 여기에 줄이 생깁니다. 보기 시작한 동영상은 맨 위에서 기다립니다.",
@@ -1653,6 +1654,9 @@
     "trickplay_low_memory": "이 기기에서는 사용할 수 없어요. 메모리가 너무 적어요",
     "trickplay_off": "끔: 탐색할 때 시간만 표시해요",
     "trickplay_on": "이미 다운로드된 부분의 화면을 바 위에 보여 줘요",
+    "tv_channels": "TV 홈 화면에 표시",
+    "tv_channels_off": "끔: TMPlayer가 홈 화면에 행을 추가하지 않음",
+    "tv_channels_on": "별표한 채팅의 새 영상을 홈 화면에 행으로 표시",
     "up_to_date": "TMPlayer {version}이(가) 최신 버전이에요",
     "update_detail": "GitHub에서 {size}를 다운로드한 다음 Android에서 확인을 요청해요",
     "update_notify": "새 버전이 나오면 알림",
