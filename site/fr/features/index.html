@@ -255,6 +255,8 @@
             <li data-i18n="features.with_a_continue_watching_row"><strong>Retient où vous vous êtes arrêté</strong>, avec une rangée Reprendre la lecture au lancement.</li>
             <li data-i18n="features.the_previous_one_is_cleared"><strong>Garde une seule vidéo sur l'appareil.</strong> La précédente est effacée, donc une clé de 8 Go ne se remplit jamais.</li>
             <li data-i18n="features.downloads_you_choose"><strong>Garde celles que vous choisissez.</strong> Une vidéo téléchargée reste jusqu'à ce que vous la supprimiez, ou part une fois vue si vous préférez.</li>
+            <li data-i18n="features.skips_intros_and_credits"><strong>Passe les génériques.</strong> Retient la vitesse de chaque série et active les langues audio et de sous-titres que vous préférez.</li>
+            <li data-i18n="features.bookmarks_and_a_b_repeat"><strong>Utile aussi pour les cours.</strong> Signets avec une note, répétition A-B, saut des silences et un court retour en arrière à la reprise.</li>
             <li data-i18n="features.subtitles_found_online"><strong>Trouve des sous-titres en ligne.</strong> Quand un fichier n'en a pas, cherchez sur OpenSubtitles depuis le lecteur, puis avancez ou retardez les sous-titres ou le son.</li>
             <li data-i18n="features.the_same_library_drawn_for"><strong>Est une vraie appli de téléphone sur un téléphone.</strong> La même bibliothèque, dessinée pour la main.</li>
           </ul>
@@ -269,10 +271,13 @@
           <ul class="ticks">
             <li data-i18n="features.chats_filter_down_to_playable"><strong>Montre des médias, pas des messages.</strong> Les discussions se filtrent sur les vidéos lisibles, y compris celles envoyées comme fichiers.</li>
             <li data-i18n="features.home_and_series_pages"><strong>Met les séries en ordre.</strong> L'accueil réunit ce qu'il y a à regarder ensuite dans toutes les discussions, et chaque série a sa propre page, avec les épisodes groupés par saison.</li>
+            <li data-i18n="features.topics_tabs_one_tile"><strong>Range une discussion chargée.</strong> Les sujets d'un forum deviennent des onglets, une série tient en une seule vignette et les copies d'un film se rangent sous une affiche.</li>
+            <li data-i18n="features.watch_later_new_episodes"><strong>Suit tout pour vous.</strong> À regarder plus tard, les nouveaux épisodes de vos séries, une saison entière téléchargée d'un coup et votre avancée dans un cours.</li>
             <li data-i18n="features.posters_and_overviews"><strong>Ajoute affiches et résumés, sauf si vous les désactivez.</strong> Recherchés sur TMDB, TVmaze et AniList à partir du titre nettoyé de la vidéo, et rien d'autre.</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>Comprend les noms de fichiers d'épisodes.</strong> La suivante démarre après un compte à rebours que vous pouvez arrêter.</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>Pardonne votre façon de taper.</strong> Fautes de frappe, accents manquants et un mot erroné : la vidéo est quand même trouvée.</li>
             <li data-i18n="features.with_your_remote_s_microphone"><strong>Recherche vocale</strong> avec le micro de votre télécommande, et mettez des discussions en favoris pour les garder à portée d'un appui.</li>
+            <li data-i18n="features.pin_kids_lock_backup"><strong>Verrouille, sauvegarde et s'agrandit.</strong> Un code PIN pour l'appli, un contrôle parental qui n'affiche que les discussions autorisées, une sauvegarde à restaurer sur un autre appareil et une taille pour toute l'interface.</li>
             <li data-i18n="features.from_github_on_android_windows"><strong>Se met à jour tout seul</strong> depuis GitHub, sur Android, Windows et Linux. La déconnexion efface votre historique et vos favoris ; vos téléchargements restent sauf si vous choisissez le contraire.</li>
           </ul>
         </div>
@@ -339,13 +344,13 @@
             <div class="screen">
               <picture>
                 <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-home.webp" alt="L&#x27;accueil de TMPlayer sur un téléviseur : un film de démonstration d&#x27;une discussion étoilée en haut, avec Reprendre et ses détails, et Continuer à regarder en dessous." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tmplayer_s_home_on_a">
+                <img src="/screenshots/tv-home.webp" alt="L&#x27;accueil de TMPlayer sur un téléviseur : Reprendre avec le temps restant de chaque film et série de démonstration, et en dessous les affiches ajoutées récemment aux discussions favorites." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_rows_alt">
               </picture>
             </div>
             <div class="stand"></div>
             <div class="foot"></div>
           </div>
-          <figcaption data-i18n="features.films_and_shows_from_your"><b>L'accueil, depuis vos discussions étoilées</b>Les films et séries de vos discussions favorites en haut, et juste en dessous ce que vous regardiez.</figcaption>
+          <figcaption data-i18n="features.home_rows_caption"><b>L'accueil, depuis vos discussions étoilées</b>D'abord ce que vous regardiez, puis les nouveautés de vos discussions favorites, une rangée à la fois.</figcaption>
         </figure>
 
         <figure class="shot" data-reveal>
@@ -448,7 +453,7 @@
             <h3 data-i18n="features.browsing_a_chat_on_windows">Parcourir une discussion sous Windows et Linux</h3>
             <p data-i18n="features.every_video_in_a_chat">Chaque vidéo d'une discussion sous forme d'affiche, avec une barre latérale pour le reste de votre compte.</p>
             <ol class="tour-list">
-              <li data-i18n="features.continue_watched_favourites_and_downloads">Reprendre, Vues, Favoris et Téléchargements : les vidéos auxquelles vous revenez.</li>
+              <li data-i18n="features.home_history_favourites_and_downloads">Accueil, Historique, Favoris et Téléchargements : les vidéos auxquelles vous revenez.</li>
               <li data-i18n="features.your_chats_split_the_way">Vos discussions, réparties comme Telegram les répartit : récentes, non lues, enregistrées, canaux, groupes et contacts.</li>
               <li data-i18n="features.each_poster_gives_the_running">Chaque affiche indique l'année, la taille du fichier ou le nombre de copies, et la résolution avant que vous lanciez la lecture.</li>
               <li data-i18n="features.search_inside_the_chat_you">Recherchez dans la discussion où vous êtes.</li>
@@ -464,10 +469,10 @@
                 <img src="/screenshots/tv-chats.webp" alt="La même liste de discussions sur un téléviseur, avec une barre de navigation à gauche." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.the_same_chat_list_on">
               </picture>
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 9.5%; --y: 28%"></span>
-                <span style="--x: 37.5%; --y: 34%"></span>
-                <span style="--x: 94.5%; --y: 17.5%"></span>
-                <span style="--x: 37%; --y: 60%"></span>
+                <span style="--x: 17%; --y: 27.8%"></span>
+                <span style="--x: 38.3%; --y: 34%"></span>
+                <span style="--x: 93.8%; --y: 17.5%"></span>
+                <span style="--x: 37%; --y: 63%"></span>
               </div>
             </div>
             <div class="stand"></div>
@@ -535,7 +540,7 @@
             </span> La fenêtre</h3>
           <ul class="ticks">
             <li data-i18n="features.or_with_a_phone_number"><strong>Se connecte avec le même QR code</strong>, ou avec un numéro de téléphone.</li>
-            <li data-i18n="features.chats_favourites_continue_downloads_and"><strong>Une barre latérale et une grille.</strong> Discussions, Favoris, Reprendre, Téléchargements et Paramètres, avec des affiches redimensionnables.</li>
+            <li data-i18n="features.home_history_favourites_downloads_sidebar"><strong>Une barre latérale et une grille.</strong> Accueil, Historique, Favoris, Téléchargements, vos discussions et Réglages, avec des affiches à la taille réglable.</li>
             <li data-i18n="features.to_play_restart_download_or"><strong>Clic droit sur une vidéo</strong> pour lire, relancer, télécharger ou copier son lien Telegram.</li>
             <li data-i18n="features.your_downloads_folder_unless_you"><strong>Les téléchargements sont des fichiers dans un dossier visible</strong>, votre dossier Téléchargements sauf si vous choisissez un autre disque, et ils restent jusqu'à ce que vous les supprimiez. Les vidéos lues sont mises en cache jusqu'à une limite que vous fixez.</li>
             <li data-i18n="features.size_and_position_a_second"><strong>Retient sa fenêtre</strong> taille et position. Un second lancement la remet au premier plan.</li>

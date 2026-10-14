@@ -255,6 +255,8 @@
             <li data-i18n="features.with_a_continue_watching_row"><strong>याद रखता है कि आप कहाँ रुके थे</strong>, खुलते ही जारी रखें वाली कतार के साथ।</li>
             <li data-i18n="features.the_previous_one_is_cleared"><strong>डिवाइस पर एक ही वीडियो रखता है।</strong> पिछला हट जाता है, इसलिए 8 GB का स्टिक कभी नहीं भरता।</li>
             <li data-i18n="features.downloads_you_choose"><strong>आपके चुने वीडियो सहेजता है।</strong> डाउनलोड किया वीडियो तब तक रहता है जब तक आप उसे हटा न दें, या आप चाहें तो देखने के बाद हट जाता है।</li>
+            <li data-i18n="features.skips_intros_and_credits"><strong>इंट्रो और क्रेडिट छोड़ देता है।</strong> हर सीरीज़ के लिए स्पीड याद रखता है, और आपकी पसंद की ऑडियो और सबटाइटल भाषाएँ चालू करता है।</li>
+            <li data-i18n="features.bookmarks_and_a_b_repeat"><strong>लेक्चर में भी काम आता है।</strong> नोट वाले बुकमार्क, A-B रिपीट, चुप्पी छोड़ना, और फिर से शुरू करने पर थोड़ा पीछे जाना।</li>
             <li data-i18n="features.subtitles_found_online"><strong>सबटाइटल ऑनलाइन ढूँढता है।</strong> जब फ़ाइल में सबटाइटल न हों, तो प्लेयर से ही OpenSubtitles पर खोजें, फिर सबटाइटल या आवाज़ को आगे या पीछे करें।</li>
             <li data-i18n="features.the_same_library_drawn_for"><strong>फ़ोन पर फ़ोन ऐप है।</strong> वही लाइब्रेरी, हाथ के लिए बनाई गई।</li>
           </ul>
@@ -269,10 +271,13 @@
           <ul class="ticks">
             <li data-i18n="features.chats_filter_down_to_playable"><strong>मीडिया दिखाता है, संदेश नहीं।</strong> चैट सिर्फ़ चलने लायक वीडियो तक छन जाती हैं, फ़ाइल के रूप में भेजे वीडियो भी।</li>
             <li data-i18n="features.home_and_series_pages"><strong>शो को क्रम में रखता है।</strong> होम हर चैट से आगे देखने लायक चीज़ें एक जगह लाता है, और हर सीरीज़ का अपना पेज होता है, जिसमें एपिसोड सीज़न के हिसाब से होते हैं।</li>
+            <li data-i18n="features.topics_tabs_one_tile"><strong>भरी हुई चैट को सजाता है।</strong> फ़ोरम के टॉपिक टैब बन जाते हैं, एक सीरीज़ एक टाइल होती है, और एक फ़िल्म की कॉपियाँ एक पोस्टर में आ जाती हैं।</li>
+            <li data-i18n="features.watch_later_new_episodes"><strong>आपके लिए हिसाब रखता है।</strong> बाद में देखें, आपकी सीरीज़ के नए एपिसोड, पूरा सीज़न एक बार में डाउनलोड, और किसी कोर्स में आप कितना आगे हैं।</li>
             <li data-i18n="features.posters_and_overviews"><strong>पोस्टर और विवरण जोड़ता है, जब तक आप इन्हें बंद न करें।</strong> TMDB, TVmaze और AniList पर सिर्फ़ वीडियो के साफ़ किए गए शीर्षक से खोजा जाता है, और कुछ नहीं।</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>एपिसोड के फ़ाइल नाम समझता है।</strong> अगला एपिसोड रोकने लायक काउंटडाउन के बाद शुरू होता है।</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>आपकी टाइपिंग की गलतियाँ माफ़ करता है।</strong> टाइपिंग की गलती, छूटे अक्षर-चिह्न और एक गलत शब्द के बाद भी वीडियो मिल जाता है।</li>
             <li data-i18n="features.with_your_remote_s_microphone"><strong>आवाज़ से खोजें</strong> अपने रिमोट के माइक्रोफ़ोन से, और चैट को स्टार करें ताकि वे बस एक प्रेस दूर रहें।</li>
+            <li data-i18n="features.pin_kids_lock_backup"><strong>लॉक, बैकअप और आकार बदलना।</strong> ऐप का PIN, बच्चों का लॉक जो सिर्फ़ आपकी अनुमति वाली चैट दिखाता है, दूसरे डिवाइस पर बहाल करने के लिए बैकअप फ़ाइल, और पूरे इंटरफ़ेस का आकार।</li>
             <li data-i18n="features.from_github_on_android_windows"><strong>खुद अपडेट होता है</strong> GitHub से, Android, Windows और Linux पर। साइन आउट करने पर आपका इतिहास और पसंदीदा हट जाते हैं; आपके डाउनलोड तब तक रहते हैं जब तक आप कुछ और न चुनें।</li>
           </ul>
         </div>
@@ -339,13 +344,13 @@
             <div class="screen">
               <picture>
                 <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-home.webp" alt="टीवी पर TMPlayer का होम: ऊपर स्टार की गई चैट की एक डेमो फ़िल्म, रिज़्यूम और उसके विवरण के साथ, और नीचे देखना जारी रखें।" width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tmplayer_s_home_on_a">
+                <img src="/screenshots/tv-home.webp" alt="टीवी पर TMPlayer का होम: जारी रखें में हर डेमो फ़िल्म और सीरीज़ का बचा हुआ समय, और नीचे स्टार वाली चैट में हाल में जुड़े पोस्टर।" width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_rows_alt">
               </picture>
             </div>
             <div class="stand"></div>
             <div class="foot"></div>
           </div>
-          <figcaption data-i18n="features.films_and_shows_from_your"><b>होम, आपकी स्टार की गई चैट से</b>ऊपर आपकी पसंदीदा चैट की फ़िल्में और सीरीज़, और ठीक नीचे वह जो आप देख रहे थे।</figcaption>
+          <figcaption data-i18n="features.home_rows_caption"><b>होम, आपकी स्टार की गई चैट से</b>पहले वह जो आप देख रहे थे, फिर आपकी पसंदीदा चैट में जो नया है, एक-एक पंक्ति में।</figcaption>
         </figure>
 
         <figure class="shot" data-reveal>
@@ -448,7 +453,7 @@
             <h3 data-i18n="features.browsing_a_chat_on_windows">Windows और Linux पर चैट ब्राउज़ करना</h3>
             <p data-i18n="features.every_video_in_a_chat">चैट का हर वीडियो एक पोस्टर के रूप में, और आपके अकाउंट के बाकी हिस्सों के लिए एक साइडबार।</p>
             <ol class="tour-list">
-              <li data-i18n="features.continue_watched_favourites_and_downloads">जारी रखें, देखे गए, पसंदीदा और डाउनलोड: वे वीडियो जिन पर आप लौटते हैं।</li>
+              <li data-i18n="features.home_history_favourites_and_downloads">होम, इतिहास, पसंदीदा और डाउनलोड: वे वीडियो जिन पर आप लौटते हैं।</li>
               <li data-i18n="features.your_chats_split_the_way">आपकी चैट, उसी तरह बँटी हुई जैसे Telegram उन्हें बाँटता है: हाल की, अनपढ़ी, सेव्ड, चैनल, ग्रुप और लोग।</li>
               <li data-i18n="features.each_poster_gives_the_running">हर पोस्टर पर साल, फ़ाइल का साइज़ या कॉपियों की गिनती और रेज़ोल्यूशन दिखता है, प्ले दबाने से पहले ही।</li>
               <li data-i18n="features.search_inside_the_chat_you">जिस चैट में आप हैं, उसके अंदर खोजें।</li>
@@ -464,10 +469,10 @@
                 <img src="/screenshots/tv-chats.webp" alt="टीवी पर वही चैट सूची, बाईं ओर नेविगेशन रेल के साथ।" width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.the_same_chat_list_on">
               </picture>
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 9.5%; --y: 28%"></span>
-                <span style="--x: 37.5%; --y: 34%"></span>
-                <span style="--x: 94.5%; --y: 17.5%"></span>
-                <span style="--x: 37%; --y: 60%"></span>
+                <span style="--x: 17%; --y: 27.8%"></span>
+                <span style="--x: 38.3%; --y: 34%"></span>
+                <span style="--x: 93.8%; --y: 17.5%"></span>
+                <span style="--x: 37%; --y: 63%"></span>
               </div>
             </div>
             <div class="stand"></div>
@@ -535,7 +540,7 @@
             </span> विंडो</h3>
           <ul class="ticks">
             <li data-i18n="features.or_with_a_phone_number"><strong>उसी QR कोड से साइन इन होता है</strong>, या फ़ोन नंबर से।</li>
-            <li data-i18n="features.chats_favourites_continue_downloads_and"><strong>साइडबार और ग्रिड।</strong> चैट, पसंदीदा, जारी रखें, डाउनलोड और सेटिंग्स, ऐसे पोस्टर के साथ जिनका आकार बदल सकते हैं।</li>
+            <li data-i18n="features.home_history_favourites_downloads_sidebar"><strong>साइडबार और ग्रिड।</strong> होम, इतिहास, पसंदीदा, डाउनलोड, आपकी चैट और सेटिंग, और पोस्टर का आकार बदला जा सकता है।</li>
             <li data-i18n="features.to_play_restart_download_or"><strong>वीडियो पर राइट क्लिक करें</strong> ताकि चलाएँ, दोबारा शुरू करें, डाउनलोड करें या उसका Telegram लिंक कॉपी करें।</li>
             <li data-i18n="features.your_downloads_folder_unless_you"><strong>डाउनलोड एक ऐसे फ़ोल्डर की फ़ाइलें हैं जिसे आप देख सकते हैं</strong>, आपका डाउनलोड फ़ोल्डर, जब तक आप कोई और ड्राइव न चुनें, और हटाने तक वहीं रहते हैं। चलाए गए वीडियो आपकी तय की सीमा तक कैश होते हैं।</li>
             <li data-i18n="features.size_and_position_a_second"><strong>अपनी विंडो याद रखता है</strong> साइज़ और जगह। दोबारा खोलने पर वही विंडो आगे आ जाती है।</li>

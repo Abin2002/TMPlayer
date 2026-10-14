@@ -255,6 +255,8 @@
             <li data-i18n="features.with_a_continue_watching_row"><strong>Recuerda dónde te quedaste</strong>, con una fila de Seguir viendo al abrir la app.</li>
             <li data-i18n="features.the_previous_one_is_cleared"><strong>Guarda un solo video en el dispositivo.</strong> El anterior se borra, así que un stick de 8 GB nunca se llena.</li>
             <li data-i18n="features.downloads_you_choose"><strong>Guarda los que tú eliges.</strong> Un video que descargas se queda hasta que lo borres, o se va después de verlo si lo prefieres.</li>
+            <li data-i18n="features.skips_intros_and_credits"><strong>Salta intros y créditos.</strong> Recuerda la velocidad de cada serie y activa los idiomas de audio y subtítulos que prefieres.</li>
+            <li data-i18n="features.bookmarks_and_a_b_repeat"><strong>También sirve para clases.</strong> Marcadores con una nota, repetición A-B, saltar silencios y un breve retroceso al reanudar.</li>
             <li data-i18n="features.subtitles_found_online"><strong>Encuentra subtítulos en internet.</strong> Si un archivo no tiene, búscalos en OpenSubtitles desde el reproductor y luego adelanta o atrasa los subtítulos o el sonido.</li>
             <li data-i18n="features.the_same_library_drawn_for"><strong>En el teléfono, es una app de teléfono.</strong> La misma biblioteca, pensada para la mano.</li>
           </ul>
@@ -269,10 +271,13 @@
           <ul class="ticks">
             <li data-i18n="features.chats_filter_down_to_playable"><strong>Muestra contenido, no mensajes.</strong> Los chats se filtran para mostrar solo videos reproducibles, incluidos los enviados como archivo.</li>
             <li data-i18n="features.home_and_series_pages"><strong>Pone las series en orden.</strong> Inicio reúne qué ver a continuación de todos tus chats, y cada serie tiene su propia página, con los episodios agrupados por temporada.</li>
+            <li data-i18n="features.topics_tabs_one_tile"><strong>Ordena un chat lleno.</strong> Los temas de un foro se vuelven pestañas, una serie es un solo mosaico y las copias de una película se juntan en un póster.</li>
+            <li data-i18n="features.watch_later_new_episodes"><strong>Lleva la cuenta por ti.</strong> Ver más tarde, episodios nuevos de tus series, una temporada entera descargada de una vez y cuánto llevas de un curso.</li>
             <li data-i18n="features.posters_and_overviews"><strong>Agrega pósters y sinopsis, a menos que los desactives.</strong> Se buscan en TMDB, TVmaze y AniList solo con el título limpio del video, y nada más.</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>Entiende los nombres de archivo de los episodios.</strong> El siguiente arranca tras una cuenta regresiva que puedes detener.</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>Perdona cómo escribes.</strong> Aunque haya errores de tipeo, falten acentos o una palabra esté mal, encuentra el video.</li>
             <li data-i18n="features.with_your_remote_s_microphone"><strong>Busca por voz</strong> con el micrófono del control remoto, y marca chats con estrella para tenerlos a un botón de distancia.</li>
+            <li data-i18n="features.pin_kids_lock_backup"><strong>Bloquea, respalda y escala.</strong> Un PIN para la app, un bloqueo infantil que solo muestra los chats que permites, una copia de seguridad para restaurar en otro dispositivo y un tamaño para toda la interfaz.</li>
             <li data-i18n="features.from_github_on_android_windows"><strong>Se actualiza sola</strong> desde GitHub, en Android, Windows y Linux. Al cerrar sesión se borran tu historial y tus favoritos; tus descargas se quedan, salvo que elijas lo contrario.</li>
           </ul>
         </div>
@@ -339,13 +344,13 @@
             <div class="screen">
               <picture>
                 <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-home.webp" alt="El Inicio de TMPlayer en un televisor: una película de demostración de un chat con estrella arriba, con Reanudar y sus detalles, y Seguir viendo debajo." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tmplayer_s_home_on_a">
+                <img src="/screenshots/tv-home.webp" alt="Inicio de TMPlayer en un televisor: Seguir viendo con el tiempo que le queda a cada película y serie de demostración, y debajo los pósteres agregados hace poco a los chats con estrella." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_rows_alt">
               </picture>
             </div>
             <div class="stand"></div>
             <div class="foot"></div>
           </div>
-          <figcaption data-i18n="features.films_and_shows_from_your"><b>Inicio, desde los chats que marcas con estrella</b>Películas y series de tus chats favoritos arriba, y justo debajo lo que estabas viendo.</figcaption>
+          <figcaption data-i18n="features.home_rows_caption"><b>Inicio, desde los chats que marcas con estrella</b>Primero lo que estabas viendo, luego lo nuevo en tus chats favoritos, una fila a la vez.</figcaption>
         </figure>
 
         <figure class="shot" data-reveal>
@@ -448,7 +453,7 @@
             <h3 data-i18n="features.browsing_a_chat_on_windows">Explorar un chat en Windows y Linux</h3>
             <p data-i18n="features.every_video_in_a_chat">Cada video de un chat como un póster, con una barra lateral para el resto de tu cuenta.</p>
             <ol class="tour-list">
-              <li data-i18n="features.continue_watched_favourites_and_downloads">Seguir, Vistos, Favoritos y Descargas: los videos a los que vuelves.</li>
+              <li data-i18n="features.home_history_favourites_and_downloads">Inicio, Historial, Favoritos y Descargas: los videos a los que vuelves.</li>
               <li data-i18n="features.your_chats_split_the_way">Tus chats, divididos como los divide Telegram: recientes, no leídos, guardados, canales, grupos y personas.</li>
               <li data-i18n="features.each_poster_gives_the_running">Cada póster muestra el año, el tamaño del archivo o la cantidad de copias y la resolución antes de darle play.</li>
               <li data-i18n="features.search_inside_the_chat_you">Busca dentro del chat en el que estás.</li>
@@ -464,10 +469,10 @@
                 <img src="/screenshots/tv-chats.webp" alt="La misma lista de chats en un televisor, con una barra de navegación a la izquierda." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.the_same_chat_list_on">
               </picture>
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 9.5%; --y: 28%"></span>
-                <span style="--x: 37.5%; --y: 34%"></span>
-                <span style="--x: 94.5%; --y: 17.5%"></span>
-                <span style="--x: 37%; --y: 60%"></span>
+                <span style="--x: 17%; --y: 27.8%"></span>
+                <span style="--x: 38.3%; --y: 34%"></span>
+                <span style="--x: 93.8%; --y: 17.5%"></span>
+                <span style="--x: 37%; --y: 63%"></span>
               </div>
             </div>
             <div class="stand"></div>
@@ -535,7 +540,7 @@
             </span> La ventana</h3>
           <ul class="ticks">
             <li data-i18n="features.or_with_a_phone_number"><strong>Inicia sesión con el mismo código QR</strong>, o con un número de teléfono.</li>
-            <li data-i18n="features.chats_favourites_continue_downloads_and"><strong>Una barra lateral y una cuadrícula.</strong> Chats, Favoritos, Seguir viendo, Descargas y Ajustes, con pósteres de tamaño ajustable.</li>
+            <li data-i18n="features.home_history_favourites_downloads_sidebar"><strong>Una barra lateral y una cuadrícula.</strong> Inicio, Historial, Favoritos, Descargas, tus chats y Configuración, con pósteres de tamaño ajustable.</li>
             <li data-i18n="features.to_play_restart_download_or"><strong>Haz clic derecho en un video</strong> para reproducirlo, empezarlo de nuevo, descargarlo o copiar su enlace de Telegram.</li>
             <li data-i18n="features.your_downloads_folder_unless_you"><strong>Las descargas son archivos en una carpeta que puedes ver</strong>, tu carpeta de Descargas salvo que elijas otra unidad, y se quedan ahí hasta que los borres. Los videos que ves se guardan en caché hasta el límite que tú fijes.</li>
             <li data-i18n="features.size_and_position_a_second"><strong>La ventana recuerda</strong> su tamaño y posición. Si la abres otra vez, pasa al frente.</li>

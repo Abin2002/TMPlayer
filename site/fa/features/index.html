@@ -255,6 +255,8 @@
             <li data-i18n="features.with_a_continue_watching_row"><strong>یادش می‌ماند کجا ایستادید</strong>، با ردیف «ادامه تماشا» هنگام باز شدن.</li>
             <li data-i18n="features.the_previous_one_is_cleared"><strong>فقط یک ویدیو روی دستگاه نگه می‌دارد.</strong> قبلی پاک می‌شود، پس یک Stick با 8 گیگابایت هیچ‌وقت پر نمی‌شود.</li>
             <li data-i18n="features.downloads_you_choose"><strong>همان‌هایی را که انتخاب می‌کنید نگه می‌دارد.</strong> ویدیویی که دانلود می‌کنید تا وقتی پاکش نکنید می‌ماند، یا اگر بخواهید پس از تماشا پاک می‌شود.</li>
+            <li data-i18n="features.skips_intros_and_credits"><strong>تیتراژ آغاز و پایان را رد می‌کند.</strong> سرعت هر سریال را به خاطر می‌سپارد و زبان صدا و زیرنویس دلخواهتان را روشن می‌کند.</li>
+            <li data-i18n="features.bookmarks_and_a_b_repeat"><strong>برای کلاس‌های درس هم به کار می‌آید.</strong> نشانک با یادداشت، تکرار A-B، رد کردن سکوت و کمی برگشت به عقب هنگام ادامه.</li>
             <li data-i18n="features.subtitles_found_online"><strong>زیرنویس را آنلاین پیدا می‌کند.</strong> اگر فایلی زیرنویس نداشته باشد، از داخل پخش‌کننده در OpenSubtitles جستجو کنید، سپس زیرنویس یا صدا را جلوتر یا عقب‌تر ببرید.</li>
             <li data-i18n="features.the_same_library_drawn_for"><strong>روی گوشی یک برنامهٔ گوشی است.</strong> همان کتابخانه، طراحی‌شده برای دست.</li>
           </ul>
@@ -269,10 +271,13 @@
           <ul class="ticks">
             <li data-i18n="features.chats_filter_down_to_playable"><strong>رسانه را نشان می‌دهد، نه پیام را.</strong> چت‌ها به ویدیوهای قابل پخش فیلتر می‌شوند، از جمله ویدیوهایی که به‌صورت فایل فرستاده شده‌اند.</li>
             <li data-i18n="features.home_and_series_pages"><strong>سریال‌ها را مرتب می‌کند.</strong> صفحهٔ خانه آنچه را باید بعداً تماشا کنید از همهٔ چت‌ها جمع می‌کند، و هر سریال صفحهٔ خودش را دارد، با قسمت‌هایی که بر اساس فصل دسته‌بندی شده‌اند.</li>
+            <li data-i18n="features.topics_tabs_one_tile"><strong>گفتگوی شلوغ را مرتب می‌کند.</strong> موضوع‌های انجمن زبانه می‌شوند، هر سریال یک کاشی است و نسخه‌های یک فیلم زیر یک پوستر جمع می‌شوند.</li>
+            <li data-i18n="features.watch_later_new_episodes"><strong>همه‌چیز را برایتان دنبال می‌کند.</strong> «بعداً تماشا کن»، قسمت‌های تازهٔ سریال‌هایتان، دانلود یک فصل کامل در یک بار و میزان پیشرفتتان در یک دوره.</li>
             <li data-i18n="features.posters_and_overviews"><strong>پوستر و خلاصه اضافه می‌کند، مگر اینکه خاموشش کنید.</strong> در TMDB، TVmaze و AniList فقط با عنوان تمیزشدهٔ ویدیو جستجو می‌شوند، نه با چیز دیگری.</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>نام فایل قسمت‌ها را می‌فهمد.</strong> قسمت بعدی بعد از شمارش معکوسی که می‌توانید متوقفش کنید شروع می‌شود.</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>تایپ شما را می‌بخشد.</strong> غلط تایپی، نبود اعراب و حتی یک واژهٔ اشتباه هم ویدیو را پیدا می‌کند.</li>
             <li data-i18n="features.with_your_remote_s_microphone"><strong>جستجوی صوتی</strong> با میکروفون ریموت، و چت‌ها را ستاره‌دار کنید تا یک دکمه فاصله داشته باشند.</li>
+            <li data-i18n="features.pin_kids_lock_backup"><strong>قفل می‌کند، پشتیبان می‌گیرد و اندازه را تنظیم می‌کند.</strong> رمز PIN برای برنامه، قفل کودک که فقط گفتگوهای مجاز را نشان می‌دهد، فایل پشتیبان برای بازگردانی روی دستگاهی دیگر و اندازه‌ای برای کل رابط.</li>
             <li data-i18n="features.from_github_on_android_windows"><strong>خودش به‌روز می‌شود</strong> از GitHub، روی Android، Windows و Linux. خروج از حساب تاریخچه و علاقه‌مندی‌ها را پاک می‌کند؛ دانلودهایتان می‌مانند مگر خودتان بخواهید.</li>
           </ul>
         </div>
@@ -339,13 +344,13 @@
             <div class="screen">
               <picture>
                 <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-home.webp" alt="صفحه خانه TMPlayer روی تلویزیون: یک فیلم نمایشی از یک گفتگوی ستاره‌دار در بالا با دکمه ادامه و جزئیاتش، و ادامه تماشا در پایین." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tmplayer_s_home_on_a">
+                <img src="/screenshots/tv-home.webp" alt="صفحهٔ «خانه» TMPlayer روی تلویزیون: «ادامهٔ تماشا» با زمان باقی‌ماندهٔ هر فیلم و سریال نمایشی، و زیرش پوسترهایی که تازه به گفتگوهای ستاره‌دار اضافه شده‌اند." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_rows_alt">
               </picture>
             </div>
             <div class="stand"></div>
             <div class="foot"></div>
           </div>
-          <figcaption data-i18n="features.films_and_shows_from_your"><b>خانه، از گفتگوهایی که ستاره می‌زنید</b>فیلم‌ها و سریال‌های گفتگوهای محبوبتان در بالا، و درست زیرشان آنچه داشتید تماشا می‌کردید.</figcaption>
+          <figcaption data-i18n="features.home_rows_caption"><b>خانه، از گفتگوهایی که ستاره می‌زنید</b>اول آنچه داشتید تماشا می‌کردید، بعد تازه‌های گفتگوهای محبوبتان، ردیف به ردیف.</figcaption>
         </figure>
 
         <figure class="shot" data-reveal>
@@ -448,7 +453,7 @@
             <h3 data-i18n="features.browsing_a_chat_on_windows">مرور یک چت در Windows و Linux</h3>
             <p data-i18n="features.every_video_in_a_chat">همهٔ ویدیوهای یک چت به‌صورت پوستر، با نوار کناری برای بقیهٔ حسابتان.</p>
             <ol class="tour-list">
-              <li data-i18n="features.continue_watched_favourites_and_downloads">«ادامه»، «دیده‌شده»، «علاقه‌مندی‌ها» و «دانلودها»: ویدیوهایی که دوباره سراغشان می‌روید.</li>
+              <li data-i18n="features.home_history_favourites_and_downloads">«خانه»، «تاریخچه»، «علاقه‌مندی‌ها» و «دانلودها»: ویدیوهایی که دوباره سراغشان می‌روید.</li>
               <li data-i18n="features.your_chats_split_the_way">چت‌هایتان همان‌طور که Telegram تقسیمشان می‌کند: اخیر، خوانده‌نشده، ذخیره‌شده، کانال‌ها، گروه‌ها و افراد.</li>
               <li data-i18n="features.each_poster_gives_the_running">هر پوستر پیش از پخش، سال، حجم فایل یا تعداد نسخه‌ها و کیفیت تصویر را نشان می‌دهد.</li>
               <li data-i18n="features.search_inside_the_chat_you">در همان چتی که هستید جستجو کنید.</li>
@@ -464,10 +469,10 @@
                 <img src="/screenshots/tv-chats.webp" alt="همان فهرست گفتگوها روی تلویزیون، با نوار پیمایش در سمت چپ." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.the_same_chat_list_on">
               </picture>
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 9.5%; --y: 28%"></span>
-                <span style="--x: 37.5%; --y: 34%"></span>
-                <span style="--x: 94.5%; --y: 17.5%"></span>
-                <span style="--x: 37%; --y: 60%"></span>
+                <span style="--x: 17%; --y: 27.8%"></span>
+                <span style="--x: 38.3%; --y: 34%"></span>
+                <span style="--x: 93.8%; --y: 17.5%"></span>
+                <span style="--x: 37%; --y: 63%"></span>
               </div>
             </div>
             <div class="stand"></div>
@@ -535,7 +540,7 @@
             </span> پنجره</h3>
           <ul class="ticks">
             <li data-i18n="features.or_with_a_phone_number"><strong>با همان کد QR وارد می‌شود</strong>، یا با شمارهٔ تلفن.</li>
-            <li data-i18n="features.chats_favourites_continue_downloads_and"><strong>نوار کناری و شبکه.</strong> چت‌ها، علاقه‌مندی‌ها، ادامه، دانلودها و تنظیمات، با پوسترهایی که اندازه‌شان را می‌توانید تغییر دهید.</li>
+            <li data-i18n="features.home_history_favourites_downloads_sidebar"><strong>نوار کناری و شبکه.</strong> «خانه»، «تاریخچه»، «علاقه‌مندی‌ها»، «دانلودها»، گفتگوهایتان و «تنظیمات»، با پوسترهایی که اندازه‌شان قابل تغییر است.</li>
             <li data-i18n="features.to_play_restart_download_or"><strong>روی یک ویدیو راست‌کلیک کنید</strong> برای پخش، شروع دوباره، دانلود یا کپی پیوند Telegram آن.</li>
             <li data-i18n="features.your_downloads_folder_unless_you"><strong>دانلودها فایل‌هایی در پوشه‌ای هستند که می‌توانید ببینید</strong>، پوشهٔ Downloads شما مگر درایو دیگری انتخاب کنید، و تا وقتی پاکشان نکنید می‌مانند. ویدیوهای پخش‌شده تا سقفی که شما تعیین می‌کنید در حافظهٔ نهان می‌مانند.</li>
             <li data-i18n="features.size_and_position_a_second"><strong>پنجره‌اش را به یاد می‌آورد</strong> اندازه و جای آن. اجرای دوباره پنجره را جلو می‌آورد.</li>

@@ -121,6 +121,7 @@
     "https://tmplayer.org/screenshots/tv-grid.webp",
     "https://tmplayer.org/screenshots/phone-chats.webp",
     "https://tmplayer.org/screenshots/phone-grid.webp",
+    "https://tmplayer.org/screenshots/phone-show.webp",
     "https://tmplayer.org/screenshots/desktop-grid.webp",
     "https://tmplayer.org/screenshots/desktop-player.webp"
   ],
@@ -393,15 +394,15 @@
       <p class="hero-quiet" data-i18n="home.android_phones_and_tvs_windows">Điện thoại và TV Android, Windows và Linux. <a href="/vi/install/">Cách cài đặt</a> <span class="sep" aria-hidden="true">&middot;</span> <a href="/vi/download/">Tất cả bản phát hành</a> </p>
     </div>
 
-      <!-- Both frames are drawn in CSS around the real screenshots. The phone carries the clip
-           rather than a still, because the one thing a picture cannot show is that the video
-           starts before the download has finished. -->
+      <!-- Both frames are drawn in CSS around the real screenshots: Home on the television, and a
+           show's page on the phone, for a different title, so the two frames show more of the
+           demo library rather than the same pictures twice. -->
       <figure class="showcase">
         <div class="device device-tv">
           <div class="screen">
             <picture>
-              <source data-theme-src srcset="/screenshots/tv-grid-light.webp" media="(prefers-color-scheme: light)">
-              <img src="/screenshots/tv-grid.webp" alt="TMPlayer trên TV, hiển thị phim lẻ và phim bộ trong một cuộc trò chuyện Telegram dưới dạng áp phích kèm năm, dung lượng và độ phân giải." width="1920" height="1080" fetchpriority="high" decoding="async" data-i18n-alt="home.tmplayer_on_a_television_showing">
+              <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
+              <img src="/screenshots/tv-home.webp" alt="Trang chủ TMPlayer trên TV: phim và phim bộ demo để xem tiếp, mỗi mục có thời gian còn lại, phía trên các áp phích mới thêm vào cuộc trò chuyện gắn sao." width="1920" height="1080" fetchpriority="high" decoding="async" data-i18n-alt="home.tv_home_hero_alt">
             </picture>
           </div>
           <div class="stand"></div>
@@ -409,7 +410,10 @@
         </div>
         <div class="device device-phone">
           <div class="screen">
-            <video src="/screenshots/demo-phone.mp4" data-dark-src="/screenshots/demo-phone.mp4" data-theme-src="/screenshots/demo-phone-light.mp4" width="396" height="880" autoplay muted loop playsinline preload="metadata" aria-label="Điện thoại mở một cuộc trò chuyện Telegram trong TMPlayer và hiển thị video dưới dạng lưới." data-i18n-aria-label="home.a_phone_opening_a_telegram"></video>
+            <picture>
+              <source data-theme-src srcset="/screenshots/phone-show-light.webp" media="(prefers-color-scheme: light)">
+              <img src="/screenshots/phone-show.webp" alt="Trang của một phim bộ trong TMPlayer trên điện thoại: phim bộ demo Skybound Academy với hình ảnh, tóm tắt và nút để xem tiếp tập thứ hai." width="1080" height="2400" decoding="async" data-i18n-alt="home.phone_show_page_alt">
+            </picture>
           </div>
         </div>
       </figure>

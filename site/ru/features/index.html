@@ -255,6 +255,8 @@
             <li data-i18n="features.with_a_continue_watching_row"><strong>Помнит, где вы остановились</strong>, при запуске есть ряд «Продолжить просмотр».</li>
             <li data-i18n="features.the_previous_one_is_cleared"><strong>Хранит на устройстве одно видео.</strong> Предыдущее удаляется, поэтому приставка на 8 ГБ никогда не переполнится.</li>
             <li data-i18n="features.downloads_you_choose"><strong>Сохраняет те, что вы выберете.</strong> Загруженное видео остаётся, пока вы его не удалите, или исчезает после просмотра, если вам так удобнее.</li>
+            <li data-i18n="features.skips_intros_and_credits"><strong>Пропускает заставки и титры.</strong> Запоминает скорость для каждого сериала и включает предпочитаемые языки звука и субтитров.</li>
+            <li data-i18n="features.bookmarks_and_a_b_repeat"><strong>Помогает и с лекциями.</strong> Закладки с заметкой, повтор A-B, пропуск тишины и короткая перемотка назад при продолжении.</li>
             <li data-i18n="features.subtitles_found_online"><strong>Находит субтитры в интернете.</strong> Если в файле их нет, найдите их в OpenSubtitles прямо из плеера, а затем сдвиньте субтитры или звук раньше или позже.</li>
             <li data-i18n="features.the_same_library_drawn_for"><strong>На телефоне это приложение для телефона.</strong> Та же библиотека, но нарисованная под руку.</li>
           </ul>
@@ -269,10 +271,13 @@
           <ul class="ticks">
             <li data-i18n="features.chats_filter_down_to_playable"><strong>Показывает медиа, а не сообщения.</strong> Чаты фильтруются до воспроизводимых видео, включая видео, отправленные файлами.</li>
             <li data-i18n="features.home_and_series_pages"><strong>Наводит порядок в сериалах.</strong> Главная собирает из всех чатов то, что смотреть дальше, а у каждого сериала есть своя страница с сериями по сезонам.</li>
+            <li data-i18n="features.topics_tabs_one_tile"><strong>Наводит порядок в загруженном чате.</strong> Темы форума становятся вкладками, сериал занимает одну плитку, а копии фильма собираются под одним постером.</li>
+            <li data-i18n="features.watch_later_new_episodes"><strong>Всё отслеживает за вас.</strong> «Смотреть позже», новые серии ваших сериалов, загрузка целого сезона разом и прогресс по курсу.</li>
             <li data-i18n="features.posters_and_overviews"><strong>Добавляет постеры и описания, если вы их не отключите.</strong> Ищутся в TMDB, TVmaze и AniList только по очищенному названию видео, и больше ни по чему.</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>Понимает названия файлов серий.</strong> Следующая серия начинается после обратного отсчёта, который можно остановить.</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>Прощает ошибки при вводе.</strong> Опечатки, пропущенные диакритические знаки и одно неверное слово не помешают найти видео.</li>
             <li data-i18n="features.with_your_remote_s_microphone"><strong>Голосовой поиск</strong> через микрофон пульта, а чатам можно поставить звезду, чтобы они были под рукой.</li>
+            <li data-i18n="features.pin_kids_lock_backup"><strong>Защищает, сохраняет и масштабирует.</strong> PIN-код приложения, детский режим, показывающий только разрешённые чаты, резервная копия для восстановления на другом устройстве и масштаб всего интерфейса.</li>
             <li data-i18n="features.from_github_on_android_windows"><strong>Обновляется сам</strong> с GitHub, на Android, Windows и Linux. При выходе из аккаунта история и избранное удаляются; загрузки остаются, если вы не решите иначе.</li>
           </ul>
         </div>
@@ -339,13 +344,13 @@
             <div class="screen">
               <picture>
                 <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-home.webp" alt="Главная TMPlayer на телевизоре: наверху демонстрационный фильм из чата со звёздочкой с кнопкой «Продолжить» и подробностями, ниже «Продолжить просмотр»." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tmplayer_s_home_on_a">
+                <img src="/screenshots/tv-home.webp" alt="Главная TMPlayer на телевизоре: «Продолжить просмотр» с оставшимся временем каждого демонстрационного фильма и сериала, а ниже постеры, недавно добавленные в избранные чаты." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_rows_alt">
               </picture>
             </div>
             <div class="stand"></div>
             <div class="foot"></div>
           </div>
-          <figcaption data-i18n="features.films_and_shows_from_your"><b>Главная, из чатов со звёздочкой</b>Фильмы и сериалы из избранных чатов наверху, а прямо под ними то, что вы смотрели.</figcaption>
+          <figcaption data-i18n="features.home_rows_caption"><b>Главная, из чатов со звёздочкой</b>Сначала то, что вы смотрели, затем новое в избранных чатах, ряд за рядом.</figcaption>
         </figure>
 
         <figure class="shot" data-reveal>
@@ -448,7 +453,7 @@
             <h3 data-i18n="features.browsing_a_chat_on_windows">Просмотр чата на Windows и Linux</h3>
             <p data-i18n="features.every_video_in_a_chat">Каждое видео чата в виде постера, а в боковой панели всё остальное из вашего аккаунта.</p>
             <ol class="tour-list">
-              <li data-i18n="features.continue_watched_favourites_and_downloads">Продолжить, Просмотрено, Избранное и Загрузки: видео, к которым вы возвращаетесь.</li>
+              <li data-i18n="features.home_history_favourites_and_downloads">Главная, История, Избранное и Загрузки: видео, к которым вы возвращаетесь.</li>
               <li data-i18n="features.your_chats_split_the_way">Ваши чаты разделены так же, как в Telegram: недавние, непрочитанные, сохранённое, каналы, группы и люди.</li>
               <li data-i18n="features.each_poster_gives_the_running">На каждом постере видны год, размер файла или число копий и разрешение ещё до запуска.</li>
               <li data-i18n="features.search_inside_the_chat_you">Поиск внутри открытого чата.</li>
@@ -464,10 +469,10 @@
                 <img src="/screenshots/tv-chats.webp" alt="Тот же список чатов на телевизоре, с панелью навигации слева." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.the_same_chat_list_on">
               </picture>
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 9.5%; --y: 28%"></span>
-                <span style="--x: 37.5%; --y: 34%"></span>
-                <span style="--x: 94.5%; --y: 17.5%"></span>
-                <span style="--x: 37%; --y: 60%"></span>
+                <span style="--x: 17%; --y: 27.8%"></span>
+                <span style="--x: 38.3%; --y: 34%"></span>
+                <span style="--x: 93.8%; --y: 17.5%"></span>
+                <span style="--x: 37%; --y: 63%"></span>
               </div>
             </div>
             <div class="stand"></div>
@@ -535,7 +540,7 @@
             </span> Окно</h3>
           <ul class="ticks">
             <li data-i18n="features.or_with_a_phone_number"><strong>Вход по тому же QR-коду</strong> или по номеру телефона.</li>
-            <li data-i18n="features.chats_favourites_continue_downloads_and"><strong>Боковая панель и сетка.</strong> Чаты, «Избранное», «Продолжить», «Загрузки» и «Настройки», постеры можно менять по размеру.</li>
+            <li data-i18n="features.home_history_favourites_downloads_sidebar"><strong>Боковая панель и сетка.</strong> Главная, История, Избранное, Загрузки, ваши чаты и Настройки, а размер постеров можно менять.</li>
             <li data-i18n="features.to_play_restart_download_or"><strong>Щёлкните видео правой кнопкой</strong>, чтобы воспроизвести, начать заново, загрузить или скопировать ссылку на него в Telegram.</li>
             <li data-i18n="features.your_downloads_folder_unless_you"><strong>Загрузки это файлы в папке, которую вы видите</strong>: папка «Загрузки», если вы не выберете другой диск; они остаются, пока вы их не удалите. Просмотренные видео кэшируются до заданного вами предела.</li>
             <li data-i18n="features.size_and_position_a_second"><strong>Запоминает окно:</strong> размер и положение. Повторный запуск выводит его на передний план.</li>

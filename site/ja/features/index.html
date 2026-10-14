@@ -255,6 +255,8 @@
             <li data-i18n="features.with_a_continue_watching_row"><strong>止めた位置を覚えています</strong>。起動時には「続きから見る」の行が表示されます。</li>
             <li data-i18n="features.the_previous_one_is_cleared"><strong>端末に残す動画は1本だけ。</strong>前の動画は削除されるので、8 GBのスティックでもいっぱいになりません。</li>
             <li data-i18n="features.downloads_you_choose"><strong>選んだ動画を保存できます。</strong>ダウンロードした動画は削除するまで残ります。お好みで、見終わったら消すこともできます。</li>
+            <li data-i18n="features.skips_intros_and_credits"><strong>オープニングとエンディングをスキップ。</strong>シリーズごとに再生速度を覚え、好みの音声と字幕の言語をオンにします。</li>
+            <li data-i18n="features.bookmarks_and_a_b_repeat"><strong>講義にも便利です。</strong>メモ付きのブックマーク、A-B リピート、無音のスキップ、再開時の少しの巻き戻し。</li>
             <li data-i18n="features.subtitles_found_online"><strong>字幕をオンラインで探せます。</strong>字幕のないファイルでは、プレーヤーからOpenSubtitlesを検索し、字幕や音声を前後にずらせます。</li>
             <li data-i18n="features.the_same_library_drawn_for"><strong>スマートフォンでは、スマートフォンのアプリです。</strong>同じライブラリを、手で操作しやすい形で表示します。</li>
           </ul>
@@ -269,10 +271,13 @@
           <ul class="ticks">
             <li data-i18n="features.chats_filter_down_to_playable"><strong>表示するのはメッセージではなく、メディア。</strong>チャットは再生できる動画だけに絞り込まれ、ファイルとして送られた動画も含まれます。</li>
             <li data-i18n="features.home_and_series_pages"><strong>番組を整理します。</strong>ホームにはすべてのチャットから次に見るものが集まり、シリーズごとに専用のページがあり、エピソードはシーズン別にまとめられます。</li>
+            <li data-i18n="features.topics_tabs_one_tile"><strong>にぎやかなチャットも整理。</strong>フォーラムのトピックはタブになり、シリーズは 1 枚のタイルに、同じ映画のコピーは 1 枚のポスターにまとまります。</li>
+            <li data-i18n="features.watch_later_new_episodes"><strong>代わりに管理します。</strong>「あとで見る」、追っているシリーズの新しいエピソード、シーズン丸ごとのダウンロード、講座の進み具合。</li>
             <li data-i18n="features.posters_and_overviews"><strong>ポスターとあらすじを追加します。オフにもできます。</strong>動画のタイトルを整えたものだけを使って、TMDB、TVmaze、AniListで検索します。</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>エピソードのファイル名を理解します。</strong>次の動画は、止められるカウントダウンのあとに始まります。</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>入力の揺れを許容します。</strong>誤字、アクセント記号の抜け、1語の間違いがあっても、動画が見つかります。</li>
             <li data-i18n="features.with_your_remote_s_microphone"><strong>音声で検索</strong>。リモコンのマイクで操作でき、チャットにスターを付ければワンボタンで開けます。</li>
+            <li data-i18n="features.pin_kids_lock_backup"><strong>ロック、バックアップ、拡大縮小。</strong>アプリの PIN、許可したチャットだけを表示するキッズロック、別の端末で復元できるバックアップファイル、画面全体の表示サイズ。</li>
             <li data-i18n="features.from_github_on_android_windows"><strong>自動で更新</strong>。GitHubから、Android、Windows、Linuxで更新されます。サインアウトすると履歴とお気に入りは消えますが、ダウンロードした動画は、指定しない限り残ります。</li>
           </ul>
         </div>
@@ -339,13 +344,13 @@
             <div class="screen">
               <picture>
                 <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-home.webp" alt="テレビで表示したTMPlayerのホーム。上にスター付きチャットのデモ映画と再開ボタン、詳細が並び、その下に「視聴を続ける」があります。" width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tmplayer_s_home_on_a">
+                <img src="/screenshots/tv-home.webp" alt="テレビで表示した TMPlayer のホーム。「視聴を続ける」にデモの映画とシリーズが残り時間付きで並び、その下にスター付きチャットに最近追加されたポスターが並びます。" width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_rows_alt">
               </picture>
             </div>
             <div class="stand"></div>
             <div class="foot"></div>
           </div>
-          <figcaption data-i18n="features.films_and_shows_from_your"><b>ホーム、スターを付けたチャットから</b>お気に入りのチャットの映画やシリーズが上に、そのすぐ下に見ていた続きが並びます。</figcaption>
+          <figcaption data-i18n="features.home_rows_caption"><b>ホーム、スターを付けたチャットから</b>まず見ていた続き、次にお気に入りのチャットの新着が、1 行ずつ並びます。</figcaption>
         </figure>
 
         <figure class="shot" data-reveal>
@@ -448,7 +453,7 @@
             <h3 data-i18n="features.browsing_a_chat_on_windows">WindowsとLinuxでチャットをブラウズ</h3>
             <p data-i18n="features.every_video_in_a_chat">チャット内のすべての動画をポスターで表示し、サイドバーからアカウントのほかの部分にも移動できます。</p>
             <ol class="tour-list">
-              <li data-i18n="features.continue_watched_favourites_and_downloads">「視聴中」、「視聴済み」、「お気に入り」、「ダウンロード」: 何度も見返す動画のための場所です。</li>
+              <li data-i18n="features.home_history_favourites_and_downloads">「ホーム」、「履歴」、「お気に入り」、「ダウンロード」: 何度も見返す動画のための場所です。</li>
               <li data-i18n="features.your_chats_split_the_way">チャットはTelegramと同じ分け方で並びます: 最近、未読、保存済み、チャンネル、グループ、個人。</li>
               <li data-i18n="features.each_poster_gives_the_running">各ポスターには公開年、ファイルサイズまたはコピーの数、解像度が表示されるので、再生する前に確認できます。</li>
               <li data-i18n="features.search_inside_the_chat_you">開いているチャットの中を検索できます。</li>
@@ -464,10 +469,10 @@
                 <img src="/screenshots/tv-chats.webp" alt="テレビで表示した同じチャット一覧。左側にナビゲーションレールがあります。" width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.the_same_chat_list_on">
               </picture>
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 9.5%; --y: 28%"></span>
-                <span style="--x: 37.5%; --y: 34%"></span>
-                <span style="--x: 94.5%; --y: 17.5%"></span>
-                <span style="--x: 37%; --y: 60%"></span>
+                <span style="--x: 17%; --y: 27.8%"></span>
+                <span style="--x: 38.3%; --y: 34%"></span>
+                <span style="--x: 93.8%; --y: 17.5%"></span>
+                <span style="--x: 37%; --y: 63%"></span>
               </div>
             </div>
             <div class="stand"></div>
@@ -535,7 +540,7 @@
             </span> ウィンドウ</h3>
           <ul class="ticks">
             <li data-i18n="features.or_with_a_phone_number"><strong>同じQRコードでサインイン</strong>。電話番号でもサインインできます。</li>
-            <li data-i18n="features.chats_favourites_continue_downloads_and"><strong>サイドバーとグリッド。</strong>チャット、お気に入り、続きから見る、ダウンロード、設定が並び、ポスターのサイズも変えられます。</li>
+            <li data-i18n="features.home_history_favourites_downloads_sidebar"><strong>サイドバーとグリッド。</strong>「ホーム」、「履歴」、「お気に入り」、「ダウンロード」、あなたのチャット、「設定」が並び、ポスターのサイズも変えられます。</li>
             <li data-i18n="features.to_play_restart_download_or"><strong>動画を右クリック</strong>。再生、最初から再生、ダウンロード、Telegramリンクのコピーができます。</li>
             <li data-i18n="features.your_downloads_folder_unless_you"><strong>ダウンロードは、見えるフォルダーにあるファイルです</strong>。別のドライブを選ばない限り「ダウンロード」フォルダーに保存され、削除するまで残ります。再生した動画は、設定した上限までキャッシュされます。</li>
             <li data-i18n="features.size_and_position_a_second"><strong>ウィンドウの状態を記憶</strong>。サイズと位置も保存されます。2回目に起動すると、開いているウィンドウが前面に出ます。</li>

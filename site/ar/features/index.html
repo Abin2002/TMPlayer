@@ -255,6 +255,8 @@
             <li data-i18n="features.with_a_continue_watching_row"><strong>يتذكّر أين توقفت</strong>، مع صف «متابعة المشاهدة» عند التشغيل.</li>
             <li data-i18n="features.the_previous_one_is_cleared"><strong>يحتفظ بفيديو واحد على الجهاز.</strong> يُحذف الفيديو السابق، فلا تمتلئ عصا بسعة 8 غيغابايت أبدًا.</li>
             <li data-i18n="features.downloads_you_choose"><strong>يحفظ ما تختاره.</strong> يبقى الفيديو الذي تنزّله حتى تحذفه، أو يُحذف بعد مشاهدته إن فضّلت ذلك.</li>
+            <li data-i18n="features.skips_intros_and_credits"><strong>يتخطى المقدمة والشارة الختامية.</strong> يتذكّر السرعة لكل مسلسل، ويشغّل لغات الصوت والترجمة التي تفضّلها.</li>
+            <li data-i18n="features.bookmarks_and_a_b_repeat"><strong>يفيد في المحاضرات أيضًا.</strong> إشارات مرجعية مع ملاحظة، وتكرار A-B، وتخطي الصمت، ورجوع قصير عند الاستئناف.</li>
             <li data-i18n="features.subtitles_found_online"><strong>يجد الترجمات عبر الإنترنت.</strong> إذا لم يكن للملف ترجمة، فابحث في OpenSubtitles من داخل المشغّل، ثم قدّم الترجمة أو الصوت أو أخّره.</li>
             <li data-i18n="features.the_same_library_drawn_for"><strong>تطبيق هاتف حقيقي على الهاتف.</strong> المكتبة نفسها، مصممة لليد.</li>
           </ul>
@@ -269,10 +271,13 @@
           <ul class="ticks">
             <li data-i18n="features.chats_filter_down_to_playable"><strong>يعرض الوسائط لا الرسائل.</strong> تُصفّى المحادثات لتعرض الفيديوهات القابلة للتشغيل فقط، بما فيها الفيديوهات المرسلة كملفات.</li>
             <li data-i18n="features.home_and_series_pages"><strong>يرتّب المسلسلات.</strong> تجمع الصفحة الرئيسية ما ستشاهده تاليًا من كل المحادثات، ولكل مسلسل صفحته الخاصة، مع الحلقات مرتّبة حسب الموسم.</li>
+            <li data-i18n="features.topics_tabs_one_tile"><strong>يرتّب المحادثة المزدحمة.</strong> تصبح مواضيع المنتدى علامات تبويب، والمسلسل مربعًا واحدًا، وتجتمع نسخ الفيلم في ملصق واحد.</li>
+            <li data-i18n="features.watch_later_new_episodes"><strong>يتابع عنك.</strong> «المشاهدة لاحقًا»، والحلقات الجديدة من مسلسلاتك، وتنزيل موسم كامل دفعة واحدة، ومدى تقدّمك في دورة.</li>
             <li data-i18n="features.posters_and_overviews"><strong>يضيف الملصقات والملخّصات، ما لم توقفها.</strong> يُبحث عنها في TMDB وTVmaze وAniList بعنوان الفيديو بعد تنظيفه، ولا شيء غيره.</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>يفهم أسماء ملفات الحلقات.</strong> تبدأ الحلقة التالية بعد عدّ تنازلي يمكنك إيقافه.</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>يتسامح مع طريقة كتابتك.</strong> الأخطاء الإملائية والتشكيل الناقص وحتى كلمة خاطئة لا تمنع العثور على الفيديو.</li>
             <li data-i18n="features.with_your_remote_s_microphone"><strong>ابحث بالصوت</strong> بميكروفون جهاز التحكم عن بُعد، وميّز المحادثات بنجمة لتبقى على بُعد ضغطة واحدة.</li>
+            <li data-i18n="features.pin_kids_lock_backup"><strong>يقفل وينسخ احتياطيًا ويغيّر الحجم.</strong> رمز PIN للتطبيق، وقفل للأطفال لا يعرض إلا المحادثات التي تسمح بها، وملف نسخة احتياطية لاستعادته على جهاز آخر، وحجم للواجهة كلها.</li>
             <li data-i18n="features.from_github_on_android_windows"><strong>يحدّث نفسه بنفسه</strong> من GitHub، على Android وWindows وLinux. تسجيل الخروج يمسح سجلّك ومفضّلاتك؛ أما التنزيلات فتبقى ما لم تختر غير ذلك.</li>
           </ul>
         </div>
@@ -339,13 +344,13 @@
             <div class="screen">
               <picture>
                 <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-home.webp" alt="الصفحة الرئيسية في TMPlayer على شاشة تلفاز: فيلم تجريبي من محادثة مميّزة بنجمة في الأعلى مع زر الاستئناف وتفاصيله، وأسفلها «متابعة المشاهدة»." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tmplayer_s_home_on_a">
+                <img src="/screenshots/tv-home.webp" alt="الصفحة الرئيسية في TMPlayer على تلفزيون: «متابعة المشاهدة» مع الوقت المتبقي لكل فيلم ومسلسل تجريبي، وتحتها ملصقات أُضيفت مؤخرًا إلى المحادثات المميزة بنجمة." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_rows_alt">
               </picture>
             </div>
             <div class="stand"></div>
             <div class="foot"></div>
           </div>
-          <figcaption data-i18n="features.films_and_shows_from_your"><b>الرئيسية، من المحادثات التي تميّزها بنجمة</b>أفلام ومسلسلات من محادثاتك المفضلة في الأعلى، وما كنت تشاهده تحتها مباشرة.</figcaption>
+          <figcaption data-i18n="features.home_rows_caption"><b>الرئيسية، من المحادثات التي تميّزها بنجمة</b>ما كنت تشاهده أولًا، ثم الجديد في محادثاتك المفضلة، صفًا بعد صف.</figcaption>
         </figure>
 
         <figure class="shot" data-reveal>
@@ -448,7 +453,7 @@
             <h3 data-i18n="features.browsing_a_chat_on_windows">تصفّح محادثة على Windows وLinux</h3>
             <p data-i18n="features.every_video_in_a_chat">كل فيديو في المحادثة يظهر كملصق، مع شريط جانبي لبقية حسابك.</p>
             <ol class="tour-list">
-              <li data-i18n="features.continue_watched_favourites_and_downloads">«متابعة» و«المُشاهَدة» و«المفضلة» و«التنزيلات»: الفيديوهات التي تعود إليها.</li>
+              <li data-i18n="features.home_history_favourites_and_downloads">«الرئيسية» و«السجل» و«المفضلة» و«التنزيلات»: الفيديوهات التي تعود إليها.</li>
               <li data-i18n="features.your_chats_split_the_way">محادثاتك مقسّمة كما يقسّمها Telegram: الأخيرة وغير المقروءة والمحفوظة والقنوات والمجموعات والأشخاص.</li>
               <li data-i18n="features.each_poster_gives_the_running">يعرض كل ملصق السنة وحجم الملف أو عدد النسخ والدقة قبل أن تضغط تشغيل.</li>
               <li data-i18n="features.search_inside_the_chat_you">ابحث داخل المحادثة التي أنت فيها.</li>
@@ -464,10 +469,10 @@
                 <img src="/screenshots/tv-chats.webp" alt="قائمة المحادثات نفسها على التلفاز، مع شريط تنقل على اليسار." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.the_same_chat_list_on">
               </picture>
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 9.5%; --y: 28%"></span>
-                <span style="--x: 37.5%; --y: 34%"></span>
-                <span style="--x: 94.5%; --y: 17.5%"></span>
-                <span style="--x: 37%; --y: 60%"></span>
+                <span style="--x: 17%; --y: 27.8%"></span>
+                <span style="--x: 38.3%; --y: 34%"></span>
+                <span style="--x: 93.8%; --y: 17.5%"></span>
+                <span style="--x: 37%; --y: 63%"></span>
               </div>
             </div>
             <div class="stand"></div>
@@ -535,7 +540,7 @@
             </span> النافذة</h3>
           <ul class="ticks">
             <li data-i18n="features.or_with_a_phone_number"><strong>يسجّل الدخول برمز QR نفسه</strong>، أو برقم الهاتف.</li>
-            <li data-i18n="features.chats_favourites_continue_downloads_and"><strong>شريط جانبي وشبكة.</strong> المحادثات والمفضّلة والمتابعة والتنزيلات والإعدادات، مع ملصقات يمكنك تغيير حجمها.</li>
+            <li data-i18n="features.home_history_favourites_downloads_sidebar"><strong>شريط جانبي وشبكة.</strong> «الرئيسية» و«السجل» و«المفضلة» و«التنزيلات» ومحادثاتك و«الإعدادات»، مع ملصقات يمكنك تغيير حجمها.</li>
             <li data-i18n="features.to_play_restart_download_or"><strong>انقر بزر الفأرة الأيمن على أي فيديو</strong> لتشغيله أو إعادة تشغيله من البداية أو تنزيله أو نسخ رابطه على Telegram.</li>
             <li data-i18n="features.your_downloads_folder_unless_you"><strong>التنزيلات ملفات في مجلد يمكنك رؤيته</strong>، هو مجلد التنزيلات ما لم تختر قرصًا آخر، وتبقى حتى تحذفها. أما الفيديوهات التي شاهدتها فتُخزَّن مؤقتًا حتى حدّ تضبطه أنت.</li>
             <li data-i18n="features.size_and_position_a_second"><strong>يتذكّر نافذته:</strong> حجمها وموضعها. وتشغيله مرة ثانية يُبرز النافذة المفتوحة.</li>

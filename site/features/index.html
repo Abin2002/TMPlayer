@@ -260,6 +260,8 @@
             <li data-i18n="features.with_a_continue_watching_row"><strong>Remembers where you stopped</strong>, with a Continue watching row on launch.</li>
             <li data-i18n="features.the_previous_one_is_cleared"><strong>Keeps one video on the device.</strong> The previous one is cleared, so an 8 GB stick never fills up.</li>
             <li data-i18n="features.downloads_you_choose"><strong>Saves the ones you choose.</strong> A video you download stays until you remove it, or goes once watched if you prefer.</li>
+            <li data-i18n="features.skips_intros_and_credits"><strong>Skips intros and credits.</strong> Remembers the speed for each series, and turns on the audio and subtitle languages you prefer.</li>
+            <li data-i18n="features.bookmarks_and_a_b_repeat"><strong>Helps with lectures too.</strong> Bookmarks with a note, A-B repeat, skipping silence, and a short rewind when you resume.</li>
             <li data-i18n="features.subtitles_found_online"><strong>Finds subtitles online.</strong> When a file has none, search OpenSubtitles from the player, then move the subtitles or the sound earlier or later.</li>
             <li data-i18n="features.the_same_library_drawn_for"><strong>Is a phone app on a phone.</strong> The same library, drawn for the hand.</li>
           </ul>
@@ -277,10 +279,13 @@
           <ul class="ticks">
             <li data-i18n="features.chats_filter_down_to_playable"><strong>Shows media, not messages.</strong> Chats filter down to playable videos, including videos sent as files.</li>
             <li data-i18n="features.home_and_series_pages"><strong>Puts shows in order.</strong> Home gathers what to watch next from every chat, and each series gets its own page, with episodes grouped by season.</li>
+            <li data-i18n="features.topics_tabs_one_tile"><strong>Tidies a busy chat.</strong> Forum topics become tabs, a show is one tile, and copies of a film fold into one poster.</li>
+            <li data-i18n="features.watch_later_new_episodes"><strong>Keeps track for you.</strong> Watch later, new episodes of your shows, a whole season downloaded at once, and how far you are through a course.</li>
             <li data-i18n="features.posters_and_overviews"><strong>Adds posters and overviews, unless you switch them off.</strong> Looked up on TMDB, TVmaze and AniList by the video's cleaned-up title, and nothing else.</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>Understands episode filenames.</strong> The next one starts after a countdown you can stop.</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>Forgives how you type.</strong> Typos, missing accents and one wrong word still find the video.</li>
             <li data-i18n="features.with_your_remote_s_microphone"><strong>Search by voice</strong> with your remote's microphone, and star chats to keep them one press away.</li>
+            <li data-i18n="features.pin_kids_lock_backup"><strong>Locks, backs up and scales.</strong> An app PIN, a kids lock that shows only the chats you allow, a backup file to restore on another device, and a size for the whole interface.</li>
             <li data-i18n="features.from_github_on_android_windows"><strong>Updates itself</strong> from GitHub, on Android, Windows and Linux. Signing out clears your history and favourites; your downloads stay unless you choose otherwise.</li>
           </ul>
         </div>
@@ -347,13 +352,13 @@
             <div class="screen">
               <picture>
                 <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-home.webp" alt="TMPlayer's Home on a television: a demo film from a starred chat across the top with Resume and its details, and Continue watching below it." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tmplayer_s_home_on_a">
+                <img src="/screenshots/tv-home.webp" alt="TMPlayer's Home on a television: Continue watching with the time left on each demo film and show, and below it the posters recently added to starred chats." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_rows_alt">
               </picture>
             </div>
             <div class="stand"></div>
             <div class="foot"></div>
           </div>
-          <figcaption data-i18n="features.films_and_shows_from_your"><b>Home, from the chats you star</b>Films and shows from your favourite chats across the top, and what you were watching right under them.</figcaption>
+          <figcaption data-i18n="features.home_rows_caption"><b>Home, from the chats you star</b>What you were watching comes first, then what is new in your favourite chats, a row at a time.</figcaption>
         </figure>
 
         <figure class="shot" data-reveal>
@@ -456,7 +461,7 @@
             <h3 data-i18n="features.browsing_a_chat_on_windows">Browsing a chat on Windows and Linux</h3>
             <p data-i18n="features.every_video_in_a_chat">Every video in a chat as a poster, with a sidebar for the rest of your account.</p>
             <ol class="tour-list">
-              <li data-i18n="features.continue_watched_favourites_and_downloads">Continue, Watched, Favourites and Downloads: the videos you come back to.</li>
+              <li data-i18n="features.home_history_favourites_and_downloads">Home, History, Favourites and Downloads: the videos you come back to.</li>
               <li data-i18n="features.your_chats_split_the_way">Your chats, split the way Telegram splits them: recent, unread, saved, channels, groups and people.</li>
               <li data-i18n="features.each_poster_gives_the_running">Each poster gives the year, the file size or the number of copies, and the resolution before you press play.</li>
               <li data-i18n="features.search_inside_the_chat_you">Search inside the chat you are in.</li>
@@ -472,10 +477,10 @@
                 <img src="/screenshots/tv-chats.webp" alt="The same chat list on a television, with a navigation rail down the left." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.the_same_chat_list_on">
               </picture>
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 9.5%; --y: 28%"></span>
-                <span style="--x: 37.5%; --y: 34%"></span>
-                <span style="--x: 94.5%; --y: 17.5%"></span>
-                <span style="--x: 37%; --y: 60%"></span>
+                <span style="--x: 17%; --y: 27.8%"></span>
+                <span style="--x: 38.3%; --y: 34%"></span>
+                <span style="--x: 93.8%; --y: 17.5%"></span>
+                <span style="--x: 37%; --y: 63%"></span>
               </div>
             </div>
             <div class="stand"></div>
@@ -546,7 +551,7 @@
           </h3>
           <ul class="ticks">
             <li data-i18n="features.or_with_a_phone_number"><strong>Signs in with the same QR code</strong>, or with a phone number.</li>
-            <li data-i18n="features.chats_favourites_continue_downloads_and"><strong>A sidebar and a grid.</strong> Chats, Favourites, Continue, Downloads and Settings, with posters you can resize.</li>
+            <li data-i18n="features.home_history_favourites_downloads_sidebar"><strong>A sidebar and a grid.</strong> Home, History, Favourites, Downloads, your chats and Settings, with posters you can resize.</li>
             <li data-i18n="features.to_play_restart_download_or"><strong>Right click a video</strong> to play, restart, download or copy its Telegram link.</li>
             <li data-i18n="features.your_downloads_folder_unless_you"><strong>Downloads are files in a folder you can see</strong>, your Downloads folder unless you pick another drive, and stay until you remove them. Played videos are cached up to a limit you set.</li>
             <li data-i18n="features.size_and_position_a_second"><strong>Remembers its window</strong> size and position. A second launch brings it forward.</li>

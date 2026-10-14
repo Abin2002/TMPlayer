@@ -255,6 +255,8 @@
             <li data-i18n="features.with_a_continue_watching_row"><strong>记住你看到哪里</strong>，启动时有“继续观看”行。</li>
             <li data-i18n="features.the_previous_one_is_cleared"><strong>设备上只保留一个视频。</strong> 上一个会被清除，所以 8 GB 的电视棒永远不会被占满。</li>
             <li data-i18n="features.downloads_you_choose"><strong>保存你选中的视频。</strong> 下载的视频会一直保留到你删除为止，也可以设为看完即删。</li>
+            <li data-i18n="features.skips_intros_and_credits"><strong>跳过片头和片尾。</strong> 为每部剧集记住播放速度，并开启你偏好的音轨和字幕语言。</li>
+            <li data-i18n="features.bookmarks_and_a_b_repeat"><strong>听课也好用。</strong> 带备注的书签、A-B 循环、跳过静音，继续播放时稍微回退几秒。</li>
             <li data-i18n="features.subtitles_found_online"><strong>在线查找字幕。</strong> 文件没有字幕时，可在播放器里搜索 OpenSubtitles，再把字幕或声音调早或调晚。</li>
             <li data-i18n="features.the_same_library_drawn_for"><strong>在手机上就是手机应用。</strong> 同一个资料库，为手而设计。</li>
           </ul>
@@ -269,10 +271,13 @@
           <ul class="ticks">
             <li data-i18n="features.chats_filter_down_to_playable"><strong>显示媒体，不显示消息。</strong> 聊天会筛选出可播放的视频，包括以文件形式发送的视频。</li>
             <li data-i18n="features.home_and_series_pages"><strong>把剧集整理有序。</strong> 首页汇集所有聊天中接下来要看的内容，每部剧集都有自己的页面，剧集按季分组。</li>
+            <li data-i18n="features.topics_tabs_one_tile"><strong>让热闹的聊天井然有序。</strong> 论坛话题变成标签页，一部剧集只占一格，同一部电影的多个副本合并为一张海报。</li>
+            <li data-i18n="features.watch_later_new_episodes"><strong>替你记着进度。</strong> 稍后观看、你追的剧集的新一集、一次下载整季，以及课程的学习进度。</li>
             <li data-i18n="features.posters_and_overviews"><strong>添加海报和简介，可随时关闭。</strong> 仅凭视频整理后的标题在 TMDB、TVmaze 和 AniList 上查询，不涉及其他任何信息。</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>能识别剧集文件名。</strong> 下一集会在可取消的倒计时后开始。</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>容忍你的输入错误。</strong> 打错字、漏掉重音符号或错一个词，照样能找到视频。</li>
             <li data-i18n="features.with_your_remote_s_microphone"><strong>语音搜索</strong> 使用遥控器的麦克风，还可以给聊天加星标，让它们一键可达。</li>
+            <li data-i18n="features.pin_kids_lock_backup"><strong>上锁、备份、缩放。</strong> 应用 PIN 码、只显示允许聊天的儿童锁、可在另一台设备上恢复的备份文件，以及整个界面的缩放大小。</li>
             <li data-i18n="features.from_github_on_android_windows"><strong>自动更新</strong> 来自 GitHub，支持 Android、Windows 和 Linux。退出登录会清除你的历史记录和收藏；下载的内容除非你选择删除，否则会保留。</li>
           </ul>
         </div>
@@ -339,13 +344,13 @@
             <div class="screen">
               <picture>
                 <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-home.webp" alt="电视上的 TMPlayer 首页：顶部是一个加星聊天里的演示电影，带有继续播放和详情，下方是继续观看。" width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tmplayer_s_home_on_a">
+                <img src="/screenshots/tv-home.webp" alt="电视上的 TMPlayer 主页：“继续观看”标出每部演示电影和剧集的剩余时间，下方是收藏聊天里新添加的海报。" width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_rows_alt">
               </picture>
             </div>
             <div class="stand"></div>
             <div class="foot"></div>
           </div>
-          <figcaption data-i18n="features.films_and_shows_from_your"><b>首页，来自你加星的聊天</b>顶部是收藏聊天里的电影和剧集，下方紧接着是你看到一半的内容。</figcaption>
+          <figcaption data-i18n="features.home_rows_caption"><b>首页，来自你加星的聊天</b>先是你在看的内容，然后是收藏聊天里的新内容，一行一行排开。</figcaption>
         </figure>
 
         <figure class="shot" data-reveal>
@@ -448,7 +453,7 @@
             <h3 data-i18n="features.browsing_a_chat_on_windows">在 Windows 和 Linux 上浏览聊天</h3>
             <p data-i18n="features.every_video_in_a_chat">聊天中的每个视频都以海报形式显示，侧边栏放着账号里的其他内容。</p>
             <ol class="tour-list">
-              <li data-i18n="features.continue_watched_favourites_and_downloads">“继续”“已观看”“收藏”和“下载”：你常会回来看的视频。</li>
+              <li data-i18n="features.home_history_favourites_and_downloads">“主页”“历史记录”“收藏”和“下载”：你常会回来看的视频。</li>
               <li data-i18n="features.your_chats_split_the_way">你的聊天按 Telegram 的方式分类：最近、未读、已保存、频道、群组和个人。</li>
               <li data-i18n="features.each_poster_gives_the_running">每张海报在你按下播放前就显示年份、文件大小或副本数量以及分辨率。</li>
               <li data-i18n="features.search_inside_the_chat_you">在当前聊天中搜索。</li>
@@ -464,10 +469,10 @@
                 <img src="/screenshots/tv-chats.webp" alt="电视上的同一个聊天列表，左侧有导航栏。" width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.the_same_chat_list_on">
               </picture>
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 9.5%; --y: 28%"></span>
-                <span style="--x: 37.5%; --y: 34%"></span>
-                <span style="--x: 94.5%; --y: 17.5%"></span>
-                <span style="--x: 37%; --y: 60%"></span>
+                <span style="--x: 17%; --y: 27.8%"></span>
+                <span style="--x: 38.3%; --y: 34%"></span>
+                <span style="--x: 93.8%; --y: 17.5%"></span>
+                <span style="--x: 37%; --y: 63%"></span>
               </div>
             </div>
             <div class="stand"></div>
@@ -535,7 +540,7 @@
             </span> 窗口</h3>
           <ul class="ticks">
             <li data-i18n="features.or_with_a_phone_number"><strong>使用同样的二维码登录</strong>，也可以用手机号登录。</li>
-            <li data-i18n="features.chats_favourites_continue_downloads_and"><strong>侧边栏加网格。</strong> 聊天、收藏、继续观看、下载和设置，海报大小可调。</li>
+            <li data-i18n="features.home_history_favourites_downloads_sidebar"><strong>侧边栏加网格。</strong> “主页”“历史记录”“收藏”“下载”、你的聊天和“设置”，海报大小可以调节。</li>
             <li data-i18n="features.to_play_restart_download_or"><strong>右键点击视频</strong> 即可播放、重新开始、下载或复制其 Telegram 链接。</li>
             <li data-i18n="features.your_downloads_folder_unless_you"><strong>下载的内容是你看得见的文件夹里的文件</strong>，默认在“下载”文件夹，也可以选择其他磁盘，并一直保留到你删除为止。已播放的视频会缓存，上限由你设定。</li>
             <li data-i18n="features.size_and_position_a_second"><strong>记住窗口</strong> 的大小和位置。再次启动会把它带到前台。</li>

@@ -38,7 +38,7 @@
       "sizes": "1920x1080",
       "type": "image/webp",
       "form_factor": "wide",
-      "label": "Home on a television, led by a film from a starred chat"
+      "label": "Home on a television: Continue watching, then the newest posters from starred chats"
     },
     {
       "src": "/screenshots/tv-grid.webp",
@@ -60,6 +60,13 @@
       "type": "image/webp",
       "form_factor": "narrow",
       "label": "Playable videos in a Telegram chat, on a phone"
+    },
+    {
+      "src": "/screenshots/phone-show.webp",
+      "sizes": "1080x2400",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "A show's page on a phone, with its artwork, overview and resume button"
     },
     {
       "src": "/screenshots/desktop-grid.webp",

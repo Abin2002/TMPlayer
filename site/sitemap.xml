@@ -28,12 +28,20 @@
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://tmplayer.org/screenshots/tv-grid.webp</image:loc>
-      <image:title>TMPlayer browsing Telegram videos on Android TV</image:title>
+      <image:loc>https://tmplayer.org/screenshots/tv-home.webp</image:loc>
+      <image:title>TMPlayer's Home on Android TV: Continue watching and the newest posters from starred chats</image:title>
     </image:image>
     <image:image>
-      <image:loc>https://tmplayer.org/screenshots/tv-grid-light.webp</image:loc>
-      <image:title>Playable videos in a Telegram chat, on a television, in the light theme</image:title>
+      <image:loc>https://tmplayer.org/screenshots/tv-home-light.webp</image:loc>
+      <image:title>TMPlayer's Home on a television, in the light theme</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/phone-show.webp</image:loc>
+      <image:title>A show's page in TMPlayer on a phone, with its artwork, overview and resume button</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/phone-show-light.webp</image:loc>
+      <image:title>A show's page in TMPlayer on a phone, in the light theme</image:title>
     </image:image>
   </url>
   <url>
@@ -637,7 +645,7 @@
     </image:image>
     <image:image>
       <image:loc>https://tmplayer.org/screenshots/tv-home.webp</image:loc>
-      <image:title>TMPlayer's Home on Android TV, led by a film from a starred chat</image:title>
+      <image:title>TMPlayer's Home on Android TV: Continue watching, then the newest posters from starred chats</image:title>
     </image:image>
     <image:image>
       <image:loc>https://tmplayer.org/screenshots/tv-settings.webp</image:loc>

@@ -121,6 +121,7 @@
     "https://tmplayer.org/screenshots/tv-grid.webp",
     "https://tmplayer.org/screenshots/phone-chats.webp",
     "https://tmplayer.org/screenshots/phone-grid.webp",
+    "https://tmplayer.org/screenshots/phone-show.webp",
     "https://tmplayer.org/screenshots/desktop-grid.webp",
     "https://tmplayer.org/screenshots/desktop-player.webp"
   ],
@@ -393,15 +394,15 @@
       <p class="hero-quiet" data-i18n="home.android_phones_and_tvs_windows">Android 手機與電視、Windows 與 Linux。<a href="/zh-tw/install/">安裝方式</a> <span class="sep" aria-hidden="true">&middot;</span> <a href="/zh-tw/download/">所有版本</a> </p>
     </div>
 
-      <!-- Both frames are drawn in CSS around the real screenshots. The phone carries the clip
-           rather than a still, because the one thing a picture cannot show is that the video
-           starts before the download has finished. -->
+      <!-- Both frames are drawn in CSS around the real screenshots: Home on the television, and a
+           show's page on the phone, for a different title, so the two frames show more of the
+           demo library rather than the same pictures twice. -->
       <figure class="showcase">
         <div class="device device-tv">
           <div class="screen">
             <picture>
-              <source data-theme-src srcset="/screenshots/tv-grid-light.webp" media="(prefers-color-scheme: light)">
-              <img src="/screenshots/tv-grid.webp" alt="電視上的 TMPlayer，以海報展示一個 Telegram 聊天裡的電影和影集，並標出年份、大小和解析度。" width="1920" height="1080" fetchpriority="high" decoding="async" data-i18n-alt="home.tmplayer_on_a_television_showing">
+              <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
+              <img src="/screenshots/tv-home.webp" alt="電視上的 TMPlayer 首頁：可繼續觀看的示範電影和影集，各自標出剩餘時間，下方是我的最愛聊天中新加入的海報。" width="1920" height="1080" fetchpriority="high" decoding="async" data-i18n-alt="home.tv_home_hero_alt">
             </picture>
           </div>
           <div class="stand"></div>
@@ -409,7 +410,10 @@
         </div>
         <div class="device device-phone">
           <div class="screen">
-            <video src="/screenshots/demo-phone.mp4" data-dark-src="/screenshots/demo-phone.mp4" data-theme-src="/screenshots/demo-phone-light.mp4" width="396" height="880" autoplay muted loop playsinline preload="metadata" aria-label="手機上的 TMPlayer 開啟一個 Telegram 聊天，並以格狀顯示其中的影片。" data-i18n-aria-label="home.a_phone_opening_a_telegram"></video>
+            <picture>
+              <source data-theme-src srcset="/screenshots/phone-show-light.webp" media="(prefers-color-scheme: light)">
+              <img src="/screenshots/phone-show.webp" alt="手機上 TMPlayer 的影集頁面：示範影集 Skybound Academy，附有封面圖、簡介和繼續觀看第二集的按鈕。" width="1080" height="2400" decoding="async" data-i18n-alt="home.phone_show_page_alt">
+            </picture>
           </div>
         </div>
       </figure>
