@@ -3,7 +3,7 @@
   <channel>
     <title>TMPlayer releases</title>
     <link>https://tmplayer.org/changelog/</link>
-    <description>What changed in every TMPlayer release, newest first: Android TV, phones, Windows and Linux, all from one release.</description>
+    <description>What changed in every TMPlayer release, newest first: Android TV, phones, Windows, macOS and Linux, all from one release.</description>
     <language>en-gb</language>
     <lastBuildDate>Wed, 14 Oct 2026 20:45:18 GMT</lastBuildDate>
     <atom:link href="https://tmplayer.org/changelog/feed.xml" rel="self" type="application/rss+xml"/>

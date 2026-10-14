@@ -66,7 +66,14 @@ def release_url(version: str) -> str:
 
 TITLE = "TMPlayer changelog: every release"
 DESCRIPTION = ("What changed in every TMPlayer release, newest first: Android TV, phones, "
-               "Windows and Linux, all from one release.")
+               "Windows, macOS and Linux, all from one release.")
+
+# The first release with a Mac build; the ones before it name only the systems they shipped for.
+FIRST_MAC = (1, 26, 0)
+
+
+def has_mac(version: str) -> bool:
+    return tuple(int(x) for x in version.split(".")[:3]) >= FIRST_MAC
 
 # Lines git adds to a message that are not part of what the release says.
 TRAILER = re.compile(r"^(Co-Authored-By|Claude-Session|Signed-off-by|Change-Id):", re.I)
@@ -493,7 +500,8 @@ def release_page(r: dict, newer, older, latest: bool, parts: dict) -> str:
         "isPartOf": {"@type": "Blog", "name": "TMPlayer releases", "url": PAGE_URL},
         "about": {"@type": "SoftwareApplication", "name": "TMPlayer", "softwareVersion": v,
                   "applicationCategory": "MultimediaApplication",
-                  "operatingSystem": "Android, Android TV, Windows, Linux", "url": f"{SITE}/"},
+                  "operatingSystem": "Android, Android TV, Windows, macOS, Linux" if has_mac(v)
+                  else "Android, Android TV, Windows, Linux", "url": f"{SITE}/"},
     }
     top = head(title, desc, url,
                [crumbs(("Home", f"{SITE}/"), ("Changelog", PAGE_URL), (f"TMPlayer {v}", url)), post],
@@ -524,7 +532,7 @@ def release_page(r: dict, newer, older, latest: bool, parts: dict) -> str:
     <div class="wrap page-head-wrap">
       <p class="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/changelog/">Changelog</a><span aria-hidden="true">/</span>{v}</p>
       <h1>TMPlayer <em>{v}</em></h1>
-      <p class="page-lede">Released <time datetime="{d.strftime('%Y-%m-%d')}">{human_date(d)}</time>, for Android TV, Android phones, Windows and Linux.</p>
+      <p class="page-lede">Released <time datetime="{d.strftime('%Y-%m-%d')}">{human_date(d)}</time>, for Android TV, Android phones, Windows{", macOS" if has_mac(v) else ""} and Linux.</p>
     </div>
   </section>
 

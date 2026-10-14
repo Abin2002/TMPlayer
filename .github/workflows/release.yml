@@ -475,7 +475,7 @@ jobs:
           # The macOS runtime's libraries are Homebrew's, not MSYS2's or Ubuntu's, so their source
           # is a second archive (scripts/build-mediamp-source.sh --macos), first attached by hand to
           # v1.26.0. MAC_TAG works as TAG does: empty links this release's own copy.
-          MAC_TAG=""
+          MAC_TAG="v1.26.0"
           MAC_URL="https://github.com/${{ github.repository }}/releases/download/${MAC_TAG:-$GITHUB_REF_NAME}/mediamp-corresponding-source-$COVERED-macos.tar.gz"
           if [ -n "$MAC_TAG" ]; then
             curl --fail --silent --show-error --head --location --max-time 60 "$MAC_URL" > /dev/null
