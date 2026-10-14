@@ -25,16 +25,39 @@ removed in the commit that added this file), the listing plan artifact
 
 1.26.0, not before 2026-10-17 (release cadence guard: 1.25.0 shipped 2026-10-10). Notes are a "- " list in
 the annotated tag (`docs/RELEASING.md`); tag a commit CI has passed so the release skips the unit tests. The
-store changelog is `fastlane/metadata/android/en-US/changelogs/12600.txt`. Pre-release work (device pass on
-the emulators, desktop AppImage and MSI, screenshots and site copy, translations) ran on 2026-10-14.
+store changelog is `fastlane/metadata/android/en-US/changelogs/12600.txt`; refresh it before tagging, it
+predates CP65 to CP68 (TV home screen rows, Low storage mode, setup after sign in, low-end device help).
 
-Testing: emulators only, never the Mi TV stick. Both AVDs (`tmplayer_phone_api36`, `tmplayer_tv_api36`) are
-signed in to Telegram in the debug build; keep it with `adb install -r`. Windows CI builds carry no API keys,
-so sign in and playback on Windows are untested.
+Pre-release work done on 2026-10-14, all on main at `7254781` with core, ui, app and desktop tests green,
+every app and site string in all 21 languages, `build-site-i18n.py --check` clean, no dashes:
+- Device pass CP44 (stick, then emulators): rail focus, TV update wording, home screen row kept on toggle,
+  PIN focus, show page focus and seasons, launcher card focus on Play (40fb955), kids lock favourites
+  count, TV hint wording; phone pass: 8 fixes (a81937f to 772fad9), episode names, back band, posters
+  outside English, show page survives rotation (01d574b), Arabic titles on one line, RTL rail chevrons.
+- Desktop: blank window crash on every signed in start fixed (1ac3cc4); AppImage checked.
+- Settings parity audit: backups carry skip silence and rewind on resume; Wi-Fi only ignored on TV.
+- New: CP65 TV home screen rows, CP66 Low storage mode, CP67 setup after sign in, CP68 low-end help.
+- Site: new hero (TV Home, phone show page), all shots retaken, marked TV page cards and tour stop, star
+  count in the header, install steps one path per platform, Windows button leads to the PowerShell line.
+
+Before tagging:
+- Windows MSI check, last, on a CI build of the final main: signed in Home, dark theme, uninstall.
+  Steps: `podman start win11`, `gh run download <run> -n tmplayer-desktop-windows`, MSI to
+  `/home/dracu/vms/win11/shared/`, jars from a keyed local build into `shared/jars/`, then in the VM
+  `powershell -executionpolicy bypass -file \\host.lan\data\test.ps1`. The VNC driver scripts lived in a
+  session scratchpad; recreate them if needed (vncdotool).
+- Refresh the store changelog (above).
+
+Not seen on real hardware: real first sign in, a low-end device, Low storage mode on a phone or stick,
+course progress (no numbered course on the test account), the New episodes row. The emulator AVD
+`tmplayer_phone_api36` no longer boots (graphics error on cold boot, 2026-10-14): recreate it, then sign in
+again (the user scans the QR). `tmplayer_tv_api36` and `tmplayer_promo_tv` work; screenshots use one
+emulator and the promo app only. Agents cannot start emulators inside their sandbox; the main session
+starts them headless (`-no-window`).
 
 Open after 1.26.0: the desktop neither exits nor answers SIGTERM when startup fails (found 2026-10-14
-with the ChatListViewModel crash fixed in 1ac3cc4; that crash no longer triggers it). The Windows MSI
-check (signed in Home, dark theme, uninstall) runs last, on a CI build at or after 1ac3cc4.
+with the ChatListViewModel crash fixed in 1ac3cc4; that crash no longer triggers it). The plain "Khalifa"
+(2026) file matches no metadata in any language.
 
 On hold: F-Droid needs a decision on the Telegram API key, and nothing about F-Droid goes in the app, site or
 README until then. `/signing` says the SignPath application is pending; update it when it is approved.
