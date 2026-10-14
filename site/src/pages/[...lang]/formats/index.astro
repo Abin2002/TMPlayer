@@ -1,6 +1,4 @@
 ---
-// The stored theme, applied before the first paint. With no stored choice nothing is set and the stylesheet follows prefers-color-scheme, which is the system theme.
-
 import Base from '../../../layouts/Base.astro';
 import BgArt from '../../../components/BgArt.astro';
 import Header from '../../../components/Header.astro';
@@ -9,6 +7,10 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import Band from '../../../components/formats/Band.astro';
+import KeysTable from '../../../components/formats/KeysTable.astro';
+import KeysRow from '../../../components/formats/KeysRow.astro';
+import SponsorOffer from '../../../components/formats/SponsorOffer.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -19,7 +21,7 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const ld0 = {
+const breadcrumbLd = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
@@ -37,12 +39,19 @@ const ld0 = {
     }
   ]
 };
+
+// The kinds of message that show up in a chat's list, as title and text keys.
+const listed = [
+  ['formats.videos', 'formats.anything_telegram_sent_as_a'],
+  ['formats.files_sent_as_documents', 'formats.films_are_often_sent_as'],
+  ['formats.silent_clips', 'formats.the_short_looping_videos_telegram'],
+];
 ---
 <Base page="formats" title={t('formats.supported_formats_what_tmplayer_plays')} description={t('formats.the_containers_video_and_audio')}>
   <Fragment slot="head">
-    <JsonLd data={ld0} />
+    <JsonLd data={breadcrumbLd} />
   </Fragment>
-<!-- Decorative background art, hidden from assistive technology and still under reduced motion. -->
+{/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />
 
 <Header page="formats" />
@@ -63,135 +72,70 @@ const ld0 = {
     </div>
   </section>
 
-<Icon name="wave" />
+  <Icon name="wave" />
 
-  <section class="band band-tonal" id="listed" aria-labelledby="listed-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="listed-h">{t('formats.which_files_show_up_in')}</h2>
-          <p class="section-sub">{t('formats.the_same_on_every_platform')}</p>
-        </div>
-      </div>
-
-      <div class="card-grid card-grid-3" data-reveal>
+  <Band id="listed" labelledby="listed-h" tonal title={t('formats.which_files_show_up_in')} sub={t('formats.the_same_on_every_platform')}>
+    <div class="card-grid card-grid-3" data-reveal>
+      {listed.map(([title, body]) => (
         <div class="card">
-          <h3>{t('formats.videos')}</h3>
-          <p>{t('formats.anything_telegram_sent_as_a')}</p>
+          <h3>{t(title)}</h3>
+          <p>{t(body)}</p>
         </div>
-        <div class="card">
-          <h3>{t('formats.files_sent_as_documents')}</h3>
-          <p>{t('formats.films_are_often_sent_as')}</p>
-        </div>
-        <div class="card">
-          <h3>{t('formats.silent_clips')}</h3>
-          <p>{t('formats.the_short_looping_videos_telegram')}</p>
-        </div>
+      ))}
+    </div>
+  </Band>
+
+  <Icon name="wave-flip" />
+
+  <Band id="android" labelledby="android-h" title={t('formats.on_android_tv_and_phones_2')} sub={t('formats.the_device_s_own_decoders')}>
+    <KeysTable>
+      <KeysRow what={t('formats.containers')}>{t('formats.mkv_webm_mp4_m4v_mov')}</KeysRow>
+      <KeysRow what={t('formats.video_h_264_hevc_h')}>{t('formats.yes_in_hardware_where_the')}</KeysRow>
+      <KeysRow what={t('formats.video_av1_mpeg_4_part')}>{t('formats.through_the_device_s_own')}</KeysRow>
+      <KeysRow what={t('formats.audio_aac_mp3_opus_vorbis')}>{t('formats.yes')}</KeysRow>
+      <KeysRow what={t('formats.audio_dolby_digital_dolby_digital')}><T k="formats.sent_as_it_is_to"><em slot="em1">{t('formats.sent_as_it_is_to__em1')}</em></T></KeysRow>
+      <KeysRow what={t('formats.several_audio_tracks')}>{t('formats.yes_switched_during_playback_and')}</KeysRow>
+      <KeysRow what={t('formats.subtitles_inside_the_file')}>{t('formats.srt_ass_and_ssa_with')}</KeysRow>
+      <KeysRow what="HDR">{t('formats.handed_to_the_device_s')}</KeysRow>
+      <KeysRow what={t('formats.frame_rate_matching')}><T k="formats.on_android_tv_12_and"><em slot="em1">{t('formats.on_android_tv_12_and__em1')}</em><em slot="em2">{t('formats.on_android_tv_12_and__em2')}</em></T></KeysRow>
+    </KeysTable>
+
+    <div class="callout" data-reveal>
+      <p><T k="formats.wmv_and_asf_realmedia_rmvb"><strong slot="strong1">{t('formats.wmv_and_asf_realmedia_rmvb__strong1')}</strong><em slot="em1">{t('formats.wmv_and_asf_realmedia_rmvb__em1')}</em></T></p>
+    </div>
+  </Band>
+
+  <Icon name="wave" />
+
+  <Band id="desktop" labelledby="desktop-h" tonal title={t('features.on_windows_and_linux')} sub={t('formats.the_desktop_app_plays_through')}>
+    <KeysTable>
+      <KeysRow what={t('formats.containers')}>{t('formats.every_one_in_the_list')}</KeysRow>
+      <KeysRow what={t('formats.video')}><T k="formats.h_264_hevc_vp9_av1"><em slot="em1">{t('formats.h_264_hevc_vp9_av1__em1')}</em></T></KeysRow>
+      <KeysRow what={t('formats.audio')}>{t('formats.aac_mp3_opus_vorbis_flac')}</KeysRow>
+      <KeysRow what={t('formats.subtitles_inside_the_file')}>{t('formats.text_and_image_subtitles_alike')}</KeysRow>
+      <KeysRow what={t('formats.several_audio_tracks')}>{t('formats.yes_from_the_right_click')}</KeysRow>
+    </KeysTable>
+  </Band>
+
+  <Icon name="wave-flip" />
+
+  <Band id="subtitles" labelledby="subtitles-h" title={t('formats.subtitle_files_of_your_own')} sub={t('formats.for_a_video_whose_subtitles')}>
+    <div class="two-col" data-reveal>
+      <div class="panel panel-prose">
+        <h3>{t('formats.on_a_phone')}</h3>
+        <p><T k="formats.in_the_player_s_menu"><em slot="em1">{t('formats.in_the_player_s_menu__em1')}</em><code slot="code1">.srt</code><code slot="code2">.ass</code><code slot="code3">.ssa</code><code slot="code4">.vtt</code><code slot="code5">.sub</code></T></p>
+      </div>
+      <div class="panel panel-prose">
+        <h3>{t('features.on_windows_and_linux')}</h3>
+        <p><T k="formats.drop_the_file_on_the"><code slot="code1">.srt</code><code slot="code2">.ass</code><code slot="code3">.ssa</code><code slot="code4">.vtt</code><code slot="code5">.sub</code></T></p>
       </div>
     </div>
-  </section>
+    <p class="muted small section-note" data-reveal><T k="formats.picture_based_vobsub_files_cannot"><code slot="code1">.sub</code></T></p>
 
-<Icon name="wave-flip" />
-
-  <section class="band" id="android" aria-labelledby="android-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="android-h">{t('formats.on_android_tv_and_phones_2')}</h2>
-          <p class="section-sub">{t('formats.the_device_s_own_decoders')}</p>
-        </div>
-      </div>
-
-      <div class="keys-wrap" data-reveal>
-        <table class="keys">
-          <thead>
-            <tr><th scope="col">{t('formats.what')}</th><th scope="col">{t('formats.plays')}</th></tr>
-          </thead>
-          <tbody>
-            <tr><th scope="row">{t('formats.containers')}</th><td>{t('formats.mkv_webm_mp4_m4v_mov')}</td></tr>
-            <tr><th scope="row">{t('formats.video_h_264_hevc_h')}</th><td>{t('formats.yes_in_hardware_where_the')}</td></tr>
-            <tr><th scope="row">{t('formats.video_av1_mpeg_4_part')}</th><td>{t('formats.through_the_device_s_own')}</td></tr>
-            <tr><th scope="row">{t('formats.audio_aac_mp3_opus_vorbis')}</th><td>{t('formats.yes')}</td></tr>
-            <tr><th scope="row">{t('formats.audio_dolby_digital_dolby_digital')}</th><td><T k="formats.sent_as_it_is_to"><em slot="em1">{t('formats.sent_as_it_is_to__em1')}</em></T></td></tr>
-            <tr><th scope="row">{t('formats.several_audio_tracks')}</th><td>{t('formats.yes_switched_during_playback_and')}</td></tr>
-            <tr><th scope="row">{t('formats.subtitles_inside_the_file')}</th><td>{t('formats.srt_ass_and_ssa_with')}</td></tr>
-            <tr><th scope="row">HDR</th><td>{t('formats.handed_to_the_device_s')}</td></tr>
-            <tr><th scope="row">{t('formats.frame_rate_matching')}</th><td><T k="formats.on_android_tv_12_and"><em slot="em1">{t('formats.on_android_tv_12_and__em1')}</em><em slot="em2">{t('formats.on_android_tv_12_and__em2')}</em></T></td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="callout" data-reveal>
-        <p><T k="formats.wmv_and_asf_realmedia_rmvb"><strong slot="strong1">{t('formats.wmv_and_asf_realmedia_rmvb__strong1')}</strong><em slot="em1">{t('formats.wmv_and_asf_realmedia_rmvb__em1')}</em></T></p>
-      </div>
+    <div class="support support-slim" data-reveal>
+      <SponsorOffer solo />
     </div>
-  </section>
-
-<Icon name="wave" />
-
-  <section class="band band-tonal" id="desktop" aria-labelledby="desktop-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="desktop-h">{t('features.on_windows_and_linux')}</h2>
-          <p class="section-sub">{t('formats.the_desktop_app_plays_through')}</p>
-        </div>
-      </div>
-
-      <div class="keys-wrap" data-reveal>
-        <table class="keys">
-          <thead>
-            <tr><th scope="col">{t('formats.what')}</th><th scope="col">{t('formats.plays')}</th></tr>
-          </thead>
-          <tbody>
-            <tr><th scope="row">{t('formats.containers')}</th><td>{t('formats.every_one_in_the_list')}</td></tr>
-            <tr><th scope="row">{t('formats.video')}</th><td><T k="formats.h_264_hevc_vp9_av1"><em slot="em1">{t('formats.h_264_hevc_vp9_av1__em1')}</em></T></td></tr>
-            <tr><th scope="row">{t('formats.audio')}</th><td>{t('formats.aac_mp3_opus_vorbis_flac')}</td></tr>
-            <tr><th scope="row">{t('formats.subtitles_inside_the_file')}</th><td>{t('formats.text_and_image_subtitles_alike')}</td></tr>
-            <tr><th scope="row">{t('formats.several_audio_tracks')}</th><td>{t('formats.yes_from_the_right_click')}</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-<Icon name="wave-flip" />
-
-  <section class="band" id="subtitles" aria-labelledby="subtitles-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="subtitles-h">{t('formats.subtitle_files_of_your_own')}</h2>
-          <p class="section-sub">{t('formats.for_a_video_whose_subtitles')}</p>
-        </div>
-      </div>
-
-      <div class="two-col" data-reveal>
-        <div class="panel panel-prose">
-          <h3>{t('formats.on_a_phone')}</h3>
-          <p><T k="formats.in_the_player_s_menu"><em slot="em1">{t('formats.in_the_player_s_menu__em1')}</em><code slot="code1">.srt</code><code slot="code2">.ass</code><code slot="code3">.ssa</code><code slot="code4">.vtt</code><code slot="code5">.sub</code></T></p>
-        </div>
-        <div class="panel panel-prose">
-          <h3>{t('features.on_windows_and_linux')}</h3>
-          <p><T k="formats.drop_the_file_on_the"><code slot="code1">.srt</code><code slot="code2">.ass</code><code slot="code3">.ssa</code><code slot="code4">.vtt</code><code slot="code5">.sub</code></T></p>
-        </div>
-      </div>
-      <p class="muted small section-note" data-reveal><T k="formats.picture_based_vobsub_files_cannot"><code slot="code1">.sub</code></T></p>
-
-      <div class="support support-slim" data-reveal>
-          <!-- The coffee and sponsor links, the same block and words as on the download page, so a
-               reader who got something from this page has the offer where they finished reading. -->
-          <div class="support-more support-more-solo" id="sponsor">
-            <h3>{t('home.support_tmplayer')}</h3>
-            <p>{t('home.support_no_ads')}</p>
-            <div class="support-actions support-give">
-              <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
-              <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
-            </div>
-          </div>
-      </div>
-    </div>
-  </section>
+  </Band>
 
 </main>
 
