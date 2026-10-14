@@ -1,7 +1,7 @@
 ---
 // One page per release, so a search for "TMPlayer 1.25.0" lands on its notes.
 import Shell from '../../../components/changelog/Shell.astro';
-import Give from '../../../components/changelog/Give.astro';
+import SponsorOffer from '../../../components/SponsorOffer.astro';
 import RssIcon from '../../../components/changelog/RssIcon.astro';
 import Wave from '../../../components/changelog/Wave.astro';
 import JsonLd from '../../../components/JsonLd.astro';
@@ -93,7 +93,7 @@ const get = latest
           <a class="btn btn-outline" href="/changelog/feed.xml" type="application/rss+xml"><RssIcon /> Follow by RSS</a>
         </div>
       </div>
-<Give lead={`Glad ${v} reached you.`} />
+<SponsorOffer release lede={`Glad ${v} reached you.`} />
 {(older || newer) && (
       <nav class="release-nav" aria-label="Other releases">
         {older && <a class="release-nav-older" href={`/changelog/${older.version}/`} rel="prev"><span class="muted small">Older</span>TMPlayer {older.version}</a>}

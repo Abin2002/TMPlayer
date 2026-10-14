@@ -12,6 +12,7 @@ import T from '../../components/T.astro';
 import Icon from '../../components/Icon.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import LangCount from '../../components/LangCount.astro';
+import StarCard from '../../components/StarCard.astro';
 import { langPaths } from '../../i18n/paths';
 import { text } from '../../i18n/t';
 import { l as link } from '../../i18n/links';
@@ -325,37 +326,14 @@ const ld2 = {
     it can offer is that other people already gave it. So the star goes here, at full size, with
     the real figure next to it rather than a badge nobody can read.
   -->
-  <section class="band band-tonal" id="support" aria-labelledby="support-h">
-    <div class="wrap">
-      <div class="support" data-reveal>
-        <h2 id="support-h">{t('home.if_it_earned_its_place')}</h2>
-        <p>{t('home.a_star_takes_one_click')}</p>
-
-        <div class="support-actions">
-          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
-          <a class="btn btn-outline" href="https://t.me/tmplayerapp" rel="noopener"> <Icon name="telegram-btn" /> {t('home.telegram_channel')}</a>
-          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener"> <Icon name="bug-btn" /> {t('home.report_a_problem')}</a>
-        </div>
-
-        <p class="support-stats">
-          <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
-          <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
-          <span>{t('home.gpl_3_0_and_free')}</span><LangCount />
-        </p>
-
-        <!-- The coffee and sponsor links, the same block and words as on the download page, so a
-             reader who got something from this page has the offer where they finished reading. -->
-        <div class="support-more" id="sponsor">
-          <h3>{t('home.support_tmplayer')}</h3>
-          <p>{t('home.support_no_ads')}</p>
-          <div class="support-actions support-give">
-            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
-            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
-          </div>
-        </div>
-      </div>
+  <StarCard id="support" tonal title={t('home.if_it_earned_its_place')} lede={t('home.a_star_takes_one_click')}>
+    <div class="support-actions" slot="actions">
+      <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
+      <a class="btn btn-outline" href="https://t.me/tmplayerapp" rel="noopener"> <Icon name="telegram-btn" /> {t('home.telegram_channel')}</a>
+      <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener"> <Icon name="bug-btn" /> {t('home.report_a_problem')}</a>
     </div>
-  </section>
+    <LangCount slot="stats" />
+  </StarCard>
 
 </main>
 

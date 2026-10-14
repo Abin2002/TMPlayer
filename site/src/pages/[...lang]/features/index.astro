@@ -14,7 +14,7 @@ import Band from '../../../components/Band.astro';
 import TickPanel from '../../../components/features/TickPanel.astro';
 import GalleryShot from '../../../components/features/GalleryShot.astro';
 import TourShot from '../../../components/features/TourShot.astro';
-import StarSupport from '../../../components/features/StarSupport.astro';
+import StarCard from '../../../components/StarCard.astro';
 import NextCard from '../../../components/features/NextCard.astro';
 import type { Shot } from '../../../components/features/GalleryShot.astro';
 import type { Point } from '../../../components/features/TourShot.astro';
@@ -252,7 +252,7 @@ const next = [
 
 <Icon name="wave" />
 
-  <StarSupport title="features.star_it_if_it_helped" body="features.every_feature_here_started_as" />
+  <StarCard tonal lede={t('features.every_feature_here_started_as')} />
 
   <Band wave labelledby="next-h" title={t('features.where_to_next')}>
     <div class="card-grid card-grid-3" data-reveal>

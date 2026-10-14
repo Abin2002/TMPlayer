@@ -1,11 +1,11 @@
 ---
 // The last band of a guide: where to read on, then the sponsor offer.
 import Band from '../Band.astro';
-import SupportSlim from './SupportSlim.astro';
+import SponsorOffer from '../SponsorOffer.astro';
 import { text } from '../../i18n/t';
 ---
 <Band wave id="more" title={text(Astro.locals.lang, 'guide_android_tv.more_help')}>
   <p class="muted small section-note" data-reveal><slot /></p>
 
-  <SupportSlim />
+  <SponsorOffer slim />
 </Band>

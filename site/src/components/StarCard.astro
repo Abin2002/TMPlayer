@@ -1,0 +1,64 @@
+---
+// The star card that closes a content page: star and fork, the live counts app.js fills in, the
+// licence, then the "Support TMPlayer" offer. A sideloaded app asks a stranger for a lot of trust,
+// and the only evidence it can offer is that other people already gave it, so the star sits here
+// at full size with the real figure next to it.
+//
+// The heading and the lede are the page's own. The "actions" slot replaces the star and fork
+// buttons, and the "stats" slot adds to the line of counts. `codes` adds the QR codes, which are
+// for a reader on a computer who would rather pay from their phone (on a phone they are hidden,
+// since nobody scans their own screen); `talk` adds the Telegram and discussion links.
+import Icon from './Icon.astro';
+import SponsorOffer from './SponsorOffer.astro';
+import QrCode from './QrCode.astro';
+import { text } from '../i18n/t';
+
+interface Props { id?: string; tonal?: boolean; title?: string; lede: string; codes?: boolean; talk?: boolean }
+const t = (k: string) => text(Astro.locals.lang, k);
+const { id, tonal = false, title = t('features.star_it_if_it_helped'), lede, codes = false, talk = false } = Astro.props;
+---
+<section class:list={['band', { 'band-tonal': tonal }]} id={id} aria-labelledby="support-h">
+  <div class="wrap">
+    <div class="support" data-reveal>
+      <h2 id="support-h">{title}</h2>
+      <p>{lede}</p>
+      {Astro.slots.has('actions') ? <slot name="actions" /> : (
+        <div class="support-actions">
+          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
+          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/fork" rel="noopener"> <Icon name="fork-btn" /> {t('home.fork_the_repository')}</a>
+        </div>
+      )}
+      <p class="support-stats">
+        <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
+        <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
+        <span>{t('home.gpl_3_0_and_free')}</span><slot name="stats" />
+      </p>
+
+      <SponsorOffer>
+        {codes && (
+          <div class="support-codes">
+            <QrCode icon="qr-sponsors" caption={t('home.scan_for_github_sponsors')} />
+            <QrCode icon="qr-coffee" caption={t('home.scan_for_buy_me_a_coffee')} />
+          </div>
+        )}
+      </SponsorOffer>
+
+      {talk && (
+        <div class="support-more support-talk">
+          <h3>{t('home.come_and_talk')}</h3>
+          <p>{t('home.news_and_help_live_on')}</p>
+          <div class="support-actions">
+            <a class="btn btn-outline" href="https://t.me/tmplayerapp" rel="noopener"> <Icon name="telegram-btn" /> {t('home.telegram_channel')}</a>
+          </div>
+          <p class="support-stats">
+            <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
+            <span class="sep" aria-hidden="true">&middot;</span>
+            <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener">{t('home.github_discussions')}</a>
+            <span class="sep" aria-hidden="true">&middot;</span>
+            <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
+          </p>
+        </div>
+      )}
+    </div>
+  </div>
+</section>

@@ -13,7 +13,7 @@ import Band from '../../../components/Band.astro';
 import FeatureCard from '../../../components/android-tv/FeatureCard.astro';
 import TvShot from '../../../components/android-tv/TvShot.astro';
 import FitPanel from '../../../components/android-tv/FitPanel.astro';
-import SupportBand from '../../../components/android-tv/SupportBand.astro';
+import StarCard from '../../../components/StarCard.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -111,7 +111,7 @@ const features = [
 
   <Icon name="wave-flip" />
 
-  <SupportBand lede={t('android_tv.a_tv_app_outside_the')} />
+  <StarCard tonal lede={t('android_tv.a_tv_app_outside_the')} />
 
 </main>
 

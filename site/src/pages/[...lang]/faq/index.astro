@@ -10,7 +10,7 @@ import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
 import FaqItem from '../../../components/faq/FaqItem.astro';
 import ListPanel from '../../../components/faq/ListPanel.astro';
-import SponsorOffer from '../../../components/faq/SponsorOffer.astro';
+import StarCard from '../../../components/StarCard.astro';
 import { faqLd } from '../../../components/faq/ld';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
@@ -112,23 +112,7 @@ const questions = [
 
   <Icon name="wave" />
 
-  <Band labelledby="support-h" tonal>
-    <div class="support" data-reveal>
-      <h2 id="support-h">{t('features.star_it_if_it_helped')}</h2>
-      <p>{t('faq.no_money_no_account_no')}</p>
-      <div class="support-actions">
-        <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
-        <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/fork" rel="noopener"> <Icon name="fork-btn" /> {t('home.fork_the_repository')}</a>
-      </div>
-      <p class="support-stats">
-        <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
-        <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
-        <span>{t('home.gpl_3_0_and_free')}</span>
-      </p>
-
-      <SponsorOffer />
-    </div>
-  </Band>
+  <StarCard tonal lede={t('faq.no_money_no_account_no')} />
 
 </main>
 

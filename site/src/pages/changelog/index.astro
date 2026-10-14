@@ -1,7 +1,7 @@
 ---
 // Every release, newest first, from src/data/releases.json (written by scripts/release-data.py).
 import Shell from '../../components/changelog/Shell.astro';
-import Give from '../../components/changelog/Give.astro';
+import SponsorOffer from '../../components/SponsorOffer.astro';
 import RssIcon from '../../components/changelog/RssIcon.astro';
 import Wave from '../../components/changelog/Wave.astro';
 import JsonLd from '../../components/JsonLd.astro';
@@ -70,7 +70,7 @@ const oldest = releases.length ? releases[releases.length - 1].version : 'the fi
         </article>
 ))}
       </div>
-<Give lead="Every release on this page was made in spare time." />
+<SponsorOffer release lede="Every release on this page was made in spare time." />
       <p class="muted small section-note changelog-foot">Releases from before {oldest} are on <a href={`https://github.com/${REPO}/tags`} rel="noopener">GitHub as tags</a>. Every release links the source tree it was built from.</p>
     </div>
   </section>
