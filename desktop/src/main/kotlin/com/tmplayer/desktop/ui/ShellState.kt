@@ -29,6 +29,7 @@ import com.tmplayer.desktop.DesktopPrefs
 import com.tmplayer.desktop.DesktopServices
 import com.tmplayer.desktop.DesktopWatchCache
 import com.tmplayer.desktop.SelfUpdate
+import com.tmplayer.desktop.os.OsInfo
 import com.tmplayer.i18n.L
 import com.tmplayer.ui.browse.BrowseSection
 import com.tmplayer.ui.browse.BrowseTab
@@ -282,19 +283,21 @@ class ShellState(
     }
 
     /**
-     * Shortcuts that work wherever focus is, even inside a text field: Ctrl+F (Cmd+F) to search,
-     * Ctrl+, (Cmd+,) for Settings.
-     */
-    /**
-     * Ends the app, set by the window. Ctrl+Q reaches it from any page: a tiling window manager such
-     * as sway draws no title bar, so there is no close button to find, and the player already
-     * answered Ctrl+Q while the rest of the app did not.
+     * Ends the app, set by the window. Ctrl+Q (Cmd+Q) reaches it from any page: a tiling window
+     * manager such as sway draws no title bar, so there is no close button to find, and the player
+     * already answered Ctrl+Q while the rest of the app did not.
      */
     var quit: (() -> Unit)? = null
 
+    /**
+     * Shortcuts that work wherever focus is, even inside a text field: Ctrl+F (Cmd+F) to search,
+     * Ctrl+, (Cmd+,) for Settings, Ctrl+Q (Cmd+Q) to quit. The command key is the OS's own, as
+     * the player reads it: Ctrl on a Mac is a text field's caret key, and Super+Q on Linux belongs
+     * to the window manager.
+     */
     fun onPreviewKey(event: KeyEvent): Boolean {
         if (event.type != KeyEventType.KeyDown || nowPlaying != null) return false
-        val command = (event.isCtrlPressed || event.isMetaPressed) && !event.isAltPressed
+        val command = (if (OsInfo.isMac) event.isMetaPressed else event.isCtrlPressed) && !event.isAltPressed
         return when {
             command && event.key == Key.Q && quit != null -> {
                 quit?.invoke()

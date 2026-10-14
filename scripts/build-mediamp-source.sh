@@ -16,12 +16,35 @@
 # against the SHA-256 pinned here. A mismatch stops the script. Nothing is uploaded: attaching the
 # archive to a release is a separate, manual step.
 #
-# Usage: scripts/build-mediamp-source.sh [output dir]   (default: build/mediamp-source)
+# With --macos it builds a separate archive, mediamp-corresponding-source-0.5.0-macos.tar.gz, for
+# mediamp-mpv-runtime-macos-arm64 (the macOS DMG). mediamp builds that runtime on a self-hosted
+# Apple Silicon runner: libmpv, FFmpeg and dav1d from the same pinned sources as above, and libass
+# and libplacebo with their dependencies copied out of the runner's Homebrew (`brew install meson
+# ninja libass libplacebo` in release.yml, then MpvTaskTypes.kt bundles every non-system dylib,
+# rewrites the install names to @loader_path and signs them ad hoc). The rewrite and the new
+# signature change the file bytes, so each dylib was proven instead by its LC_UUID and the SHA-256
+# of its __TEXT,__text section, both equal to the dylib in the Homebrew arm64_sequoia bottle of
+# the version listed (bottle SHA-256 in the comment beside it; neighbouring versions and rebuilds
+# were fetched too and differ). Each formula file is taken from the homebrew-core commit that
+# published that bottle, so it holds the bottle's SHA-256 as well as the source URL and patches.
+# mpv's own build options and FFmpeg's configure line are embedded in libmpv.2.dylib and
+# libavutil.60.dylib; they show -Dgpl=false, no --enable-gpl, mpv v0.41.0 and FFmpeg 8.0.1.
+#
+# Usage: scripts/build-mediamp-source.sh [--macos] [output dir]   (default: build/mediamp-source)
 # Downloads are kept in <output dir>/downloads, so a second run fetches nothing.
 set -euo pipefail
 
+macos=false
+if [ "${1:-}" = "--macos" ]; then
+  macos=true
+  shift
+fi
+
 VERSION="0.5.0"
 NAME="mediamp-corresponding-source-$VERSION"
+if $macos; then
+  NAME="$NAME-macos"
+fi
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 out="${1:-$root/build/mediamp-source}"
@@ -40,14 +63,84 @@ fi
 github="https://github.com"
 msys2="https://repo.msys2.org/mingw/sources"
 ubuntu="https://snapshot.ubuntu.com/ubuntu/20260919T000000Z"
+brewcore="https://raw.githubusercontent.com/Homebrew/homebrew-core"
 
 # directory in the archive, SHA-256, file name, address
-manifest() {
+upstream_manifest() {
   cat <<EOF
 upstream f383b9d9ddcad983793c721d8d54f62019f99582499a18fb8915fbb3a5976288 mediamp-0.5.0.tar.gz $github/open-ani/mediamp/archive/refs/tags/v0.5.0.tar.gz
 upstream 068960e89211f2adc80af03f637fa393fb5e407d3dd23592c8fe8c5490bb7ae4 mpv-0.41.0.tar.gz $github/mpv-player/mpv/archive/41f6a645068483470267271e1d09966ca3b9f413.tar.gz
 upstream 269e43f5560fb647ee8df47b5b09fabaf3de2ad24dd0ee14c9f690b85b873ccc ffmpeg-8.0.1-449453a9.tar.gz $github/FFmpeg/FFmpeg/archive/449453a9713aa1af31a12e148fb0caba80ed02d7.tar.gz
 upstream 9edb11a2108b375cc58370354e705feebc93430bb780130363815c1e1ac0c250 dav1d-1.5.4.tar.gz $github/videolan/dav1d/archive/54706fc6bc0cdecab7e9593974a4039cc038fca7.tar.gz
+EOF
+}
+
+# macOS arm64 (--macos). How each bundled dylib was proven: its LC_UUID (second column) and the
+# SHA-256 of its __TEXT,__text section are the same as in the dylib of the Homebrew arm64_sequoia
+# bottle whose SHA-256 is in the last column (ghcr.io/v2/homebrew/core/<formula>/blobs/sha256:...).
+# The formula file pinned below carries that same bottle SHA-256. Versions next to it were fetched
+# and differ, as noted.
+#   libglib-2.0.0      6bee9501347f38e9912c4d8d075e5ed8  glib 2.84.4                 8c27060502813360234e956090f1c6436f83769c422434e022921afa2f8c5f62
+#   libintl.8          9414c1625ccc3b6d8a0dc7c743f7fec1  gettext 0.26 (0.26_1 differs) b25ac1e62443f8f79eadc3dadf6d3af954d4cbc33a0577fc626aa0c8f2bb01a5
+#   libpcre2-8.0       cb5b10c2f523342eac8daeb83b1612c6  pcre2 10.46 (10.45 differs) 6ddb89f2eef25f73e258a97bf4379539e24ea76e207fa3c0eb49222bdb656de2
+#   libharfbuzz.0      3818745daa553cdea12661d888401ebd  harfbuzz 11.4.5             caea11e390402d2201fa2430e4cff4a1fa0acec8b3c564f6ec792784e98fcd9a
+#   libgraphite2.3.2.1 d07b94fcf3223e73a5e0727b6e8e8c90  graphite2 1.3.14 (rebuilds 1, 2 differ) 150b286ab4cfc8696fcd3fa4e7fa24c9825f024ef991899850b850e6f334100f
+#   libfreetype.6      cfd169d0526f3a45b5db836906fec3d7  freetype 2.13.3 (2.14.0 differs) bcd39d3a523690cb0673df46122ff62763c5cd93bfff21bdcab856501d2dfb49
+#   libpng16.16        1d4868683c8c321e97273a5ba5cd220e  libpng 1.6.50               0e84944536d6bf2c7cfd393a4576acf5c0ced03992d156685a7f83c7d2a60215
+#   libfribidi.0       dd2ba6d9be7f3a9aa790384d5d8e799b  fribidi 1.0.16              4904bb3375c1b1f2539cb657fbf17b0d93c050904febbba51e9dd690f3540e3b
+#   libunibreak.6      bec38d9767d43659bfe87c7b16b4949b  libunibreak 6.1             0bed33fbc272073291fa047e1f72422aff56e83276de789d02a0f3f82f117b45
+#   libass.9           4ee550b266ab35e6a09aa2015c957c56  libass 0.17.4 (0.17.4_1 differs) d097cb72eb4e70bce4ca584649fa8874e4407da3067d6faa0dcc89013ffe1743
+#   liblcms2.2         cd4b47155ce339d9a1b0f9e59af30f3a  little-cms2 2.17            3827b5a8583f0e92987bd0e7c721bda834157ad366d2cb66596559dd8654c9ac
+#   libvulkan.1.4.326  e74f08459df83a3886237a812c87e886  vulkan-loader 1.4.326       2b3d377d43d59f2576e136e706395c6c64dff5e077fa43c4b0a921b615f635a5
+#   libshaderc_shared.1 f102f2c153c73049a160af6eb41a0cc4 shaderc 2025.3 (2025.2, 2025.4 differ) 45d6afe8db7c6f5fd474d0197aad4cf53c1995db94fecf06be9f001b643a2bea
+#   libplacebo.351     9e059c07c700313885bba36d0b7ee444  libplacebo 7.351.0, bottle rebuild 1 (rebuild 0 differs) 4e5f0af5ad2cb7d838cff63d56a50d7db5e9f7ca27c2045a546834397853240f
+# shaderc links glslang, SPIRV-Tools and SPIRV-Headers statically, at the commits its formula pins
+# (the dylib reports "glslang Khronos. 15.3.0", the version in glslang efd24d75's CHANGES.md).
+# libplacebo's formula stages glad2, Jinja2 and MarkupSafe, which generate part of its source.
+# The source tarballs and the glib patch are the ones each formula names, with its SHA-256; the
+# three glslang/SPIRV archives are GitHub archives of the pinned commits.
+macos_manifest() {
+  cat <<EOF
+macos/homebrew f309a36e72cd86b9b3bdf2c7c094e9fb0aa86bcb395acc38eff2bc1f7c15cf0d glib-2.84.4.rb $brewcore/74cde75b34835027a9de2933e534b617d0d573ea/Formula/g/glib.rb
+macos/homebrew 57887e3ea6790688c4cab455588c16c111657126870fcbf624d48c0b5a6fd83f gettext-0.26.rb $brewcore/4095987e1869dfd88eed987fd04577717938b2e3/Formula/g/gettext.rb
+macos/homebrew c4ced9680393b60ee737914dddcbffa3b37fa66d899c1dd2a6c90e4f1a120258 pcre2-10.46.rb $brewcore/4a738276ddfbf60f796ff7b8a7106cabe5fa4032/Formula/p/pcre2.rb
+macos/homebrew b7572ebe63c21529e02b5b277b7429881d86fa93ec98e4fd9ba5f6ba123eac18 harfbuzz-11.4.5.rb $brewcore/9db4cbabe5d8edab76d53163a25c18f8506b8712/Formula/h/harfbuzz.rb
+macos/homebrew 0ce2e3c9e15793e1ef839481f169a0106f42b1860e8b7eb2d0fcb54b6062e5da graphite2-1.3.14.rb $brewcore/9b26312fe7ceebdf774170484e7f889aa7993724/Formula/g/graphite2.rb
+macos/homebrew f2869764c65717c9c708bb77a60453fb675cfbea9391f90a7fc9d2aae4289a75 freetype-2.13.3.rb $brewcore/aa4f0e9fe7abdff3e28e754ae90f50664c60fa09/Formula/f/freetype.rb
+macos/homebrew 8e4de7a19c550f14160c0d5f8be77490972c3a032f871402b7d5909027776212 libpng-1.6.50.rb $brewcore/74b5b85b1a4d7243305812cdb10ae2ef4629a2ac/Formula/lib/libpng.rb
+macos/homebrew 54693c5739662b7396217eeb9506e6538f1b5fd8de4fa19c93aa8732f73c252a fribidi-1.0.16.rb $brewcore/8633dd0356aedb86304b5bbd83f1b51e19622981/Formula/f/fribidi.rb
+macos/homebrew ff7231cf9ea7bf491cc5530f34b8dacf9884d5c4c83db4d0d5a712b2c6b29f42 libunibreak-6.1.rb $brewcore/4b0c373d30d8e09c18fd7562776fa531c90d95ca/Formula/lib/libunibreak.rb
+macos/homebrew 512bb269fc11890c340a702bb8f4ae1823c4673e7b99f0070cc9cd017362b989 libass-0.17.4.rb $brewcore/45ab754dcd6694699f0076f81ebabc1c927af095/Formula/lib/libass.rb
+macos/homebrew b9bbd29b12c2d15ff7f2944158e669617c7c2bf89f6203298028ef6c8b10df3d little-cms2-2.17.rb $brewcore/3755f216851a0e0d0975db6d552427b37b09f1cd/Formula/l/little-cms2.rb
+macos/homebrew a585e890286bc6de0a0933753b1e062dfc2ead3a137a570d88f152df3020662e vulkan-loader-1.4.326.rb $brewcore/5bf54585a0bb98381a4eac6aaeb2fb90d4b1c857/Formula/v/vulkan-loader.rb
+macos/homebrew 6bd81ded76f9d9022a4f300ec84b925e84edf054bf8fa73f0687cd66afe4f012 shaderc-2025.3.rb $brewcore/9b06f6d97edff471bb87e4ec1c7305cda0856eea/Formula/s/shaderc.rb
+macos/homebrew 3cad60a678b3eeb7642783b4697c7725a2b5b9ba8ba6925d4a9ff76d61c6cb6a libplacebo-7.351.0.rb $brewcore/599542601b6aa9ad2889ac280afe4dc0dcfb1cb8/Formula/lib/libplacebo.rb
+macos/homebrew d846efd0bf62918350da94f850db33b0f8727fece9bfaf8164566e3094e80c97 glib-hardcoded-paths.diff https://raw.githubusercontent.com/Homebrew/formula-patches/b46d8deae6983110b4e39bb2971bcbd10bb59716/glib/hardcoded-paths.diff
+macos 8a9ea10943c36fc117e253f80c91e477b673525ae45762942858aef57631bb90 glib-2.84.4.tar.xz https://download.gnome.org/sources/glib/2.84/glib-2.84.4.tar.xz
+macos 39acf4b0371e9b110b60005562aace5b3631fed9b1bb9ecccfc7f56e58bb1d7f gettext-0.26.tar.gz https://ftp.gnu.org/gnu/gettext/gettext-0.26.tar.gz
+macos 15fbc5aba6beee0b17aecb04602ae39432393aba1ebd8e39b7cabf7db883299f pcre2-10.46.tar.bz2 $github/PCRE2Project/pcre2/releases/download/pcre2-10.46/pcre2-10.46.tar.bz2
+macos 5bc7a571b476eeda0c1996a04006da7c25f8edbc01cdf394ef729a6ecd1296d6 harfbuzz-11.4.5.tar.gz $github/harfbuzz/harfbuzz/archive/refs/tags/11.4.5.tar.gz
+macos f99d1c13aa5fa296898a181dff9b82fb25f6cc0933dbaa7a475d8109bd54209d graphite2-1.3.14.tgz $github/silnrsi/graphite/releases/download/1.3.14/graphite2-1.3.14.tgz
+macos 0550350666d427c74daeb85d5ac7bb353acba5f76956395995311a9c6f063289 freetype-2.13.3.tar.xz https://download.savannah.gnu.org/releases/freetype/freetype-2.13.3.tar.xz
+macos 4df396518620a7aa3651443e87d1b2862e4e88cad135a8b93423e01706232307 libpng-1.6.50.tar.xz https://downloads.sourceforge.net/project/libpng/libpng16/1.6.50/libpng-1.6.50.tar.xz
+macos 1b1cde5b235d40479e91be2f0e88a309e3214c8ab470ec8a2744d82a5a9ea05c fribidi-1.0.16.tar.xz $github/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz
+macos cc4de0099cf7ff05005ceabff4afed4c582a736abc38033e70fdac86335ce93f libunibreak-6.1.tar.gz $github/adah1972/libunibreak/releases/download/libunibreak_6_1/libunibreak-6.1.tar.gz
+macos 78f1179b838d025e9c26e8fef33f8092f65611444ffa1bfc0cfac6a33511a05a libass-0.17.4.tar.xz $github/libass/libass/releases/download/0.17.4/libass-0.17.4.tar.xz
+macos d11af569e42a1baa1650d20ad61d12e41af4fead4aa7964a01f93b08b53ab074 lcms2-2.17.tar.gz https://downloads.sourceforge.net/project/lcms/lcms/2.17/lcms2-2.17.tar.gz
+macos 86772b60eeef6f510586636b7cf7a0e0eabd9e9920bcabf6e8f3b1c2a634a4cc vulkan-loader-1.4.326.tar.gz $github/KhronosGroup/Vulkan-Loader/archive/refs/tags/v1.4.326.tar.gz
+macos a8e4a25e5c2686fd36981e527ed05e451fcfc226bddf350f4e76181371190937 shaderc-2025.3.tar.gz $github/google/shaderc/archive/refs/tags/v2025.3.tar.gz
+macos 9427deccbdf4bde6a269938df38c6bd75247493786a310d8d733a2c82065ef47 glslang-15.3.0-efd24d75.tar.gz $github/KhronosGroup/glslang/archive/efd24d75bcbc55620e759f6bf42c45a32abac5f8.tar.gz
+macos 44d1005880c583fc00a0fb41c839214c68214b000ea8dcb54d352732fee600ff SPIRV-Tools-33e02568.tar.gz $github/KhronosGroup/SPIRV-Tools/archive/33e02568181e3312f49a3cf33df470bf96ef293a.tar.gz
+macos c2225a49c3d7efa5c4f4ce4a6b42081e6ea3daca376f3353d9d7c2722d77a28a SPIRV-Headers-2a611a97.tar.gz $github/KhronosGroup/SPIRV-Headers/archive/2a611a970fdbc41ac2e3e328802aed9985352dca.tar.gz
+macos d68159280842a7f0482dcea44a440f4c9a8e9403b82eccf185e46394dfc77e6a libplacebo-v7.351.0.tar.bz2 https://code.videolan.org/videolan/libplacebo/-/archive/v7.351.0/libplacebo-v7.351.0.tar.bz2
+macos b84079b9fa404f37171b961bdd1d8da21370e6c818defb8481c5b3fe3d6436da glad2-2.0.8.tar.gz https://files.pythonhosted.org/packages/6e/5a/d62b24fe1c7c2f34e15c2aa4418a5327a8550fdc272999a59e0dddebc3ee/glad2-2.0.8.tar.gz
+macos 0137fb05990d35f1275a587e9aee6d56da821fc83491a0fb838183be43f66d6d jinja2-3.1.6.tar.gz https://files.pythonhosted.org/packages/df/bf/f7da0350254c0ed7c72f3e33cef02e048281fec7ecec5f032d4aac52226b/jinja2-3.1.6.tar.gz
+macos ee55d3edf80167e48ea11a923c7386f4669df67d7994554387f84e7d8b0a2bf0 markupsafe-3.0.2.tar.gz https://files.pythonhosted.org/packages/b2/97/5d42485e71dfc078108a86d6de8fa46db44a1a9295e89c5d6d4a06e23a62/markupsafe-3.0.2.tar.gz
+EOF
+}
+
+desktop_manifest() {
+  cat <<EOF
 windows 4a68edae2c1454ffcf7cf0a6fccf6930c876caa5fe2422cdb0b34d1fc0f5fb03 mingw-w64-libass-0.17.5-1.src.tar.zst $msys2/mingw-w64-libass-0.17.5-1.src.tar.zst
 windows 2f0f93875aac21990d20f1eaf0ad8b970eb6f186c663c77ae47aaaf9e5711fcf mingw-w64-brotli-1.2.0-1.src.tar.zst $msys2/mingw-w64-brotli-1.2.0-1.src.tar.zst
 windows fd9360917314d1cbccb3cb15ed8450d1e56b8a9f733b606504aba52c52159e54 mingw-w64-bzip2-1.0.8-4.src.tar.zst $msys2/mingw-w64-bzip2-1.0.8-4.src.tar.zst
@@ -155,6 +248,11 @@ linux 56a7cd029863cbddafce831e4e63cccfa84017f93617929cb7c02f80bb5a122a zlib_1.3.
 EOF
 }
 
+manifest() {
+  upstream_manifest
+  if $macos; then macos_manifest; else desktop_manifest; fi
+}
+
 rm -rf "$stage"
 mkdir -p "$cache" "$stage"
 count=0
@@ -176,6 +274,82 @@ done < <(manifest)
 
 manifest | awk '{ print $2 "  " $1 "/" $3 }' > "$stage/SHA256SUMS"
 
+if $macos; then
+  # A copy of each component's licence texts, taken from its own source archive.
+  while read -r dir sum file url; do
+    case "$file" in *.tar.gz | *.tgz | *.tar.xz | *.tar.bz2) ;; *) continue ;; esac
+    members=$(tar -tf "$cache/$file" | grep -iE \
+      '^[^/]+/(copying[^/]*|licen[cs]e[^/]*|copyright[^/]*|notice[^/]*|licenses/[^/]+|docs/(ftl|gplv2)\.txt|gettext-runtime/intl/copying[^/]*)$' || true)
+    [ -n "$members" ] || continue
+    dest="$stage/licenses/${file%.t*}"
+    mkdir -p "$dest"
+    echo "$members" | tar -xf "$cache/$file" -C "$dest" --strip-components=1 --files-from=-
+  done < <(manifest)
+
+  cat > "$stage/README.md" <<'EOF'
+# Corresponding source for the mpv runtime in TMPlayer's macOS build
+
+TMPlayer's macOS (Apple Silicon) build plays video through mediamp 0.5.0 (`org.openani.mediamp`,
+by Open Ani, Apache-2.0), whose runtime jar `mediamp-mpv-runtime-macos-arm64` bundles libmpv,
+FFmpeg and the dylibs listed below. This archive holds the exact source of each of them.
+`SHA256SUMS` lists every file; `licenses/` holds a copy of each component's licence texts, taken
+from its source archive.
+
+TMPlayer's own source is at <https://github.com/dracu-lah/TMPlayer>, under GPL-3.0-or-later.
+
+## Built from source by mediamp (`upstream/`)
+
+| Component | Version | Licence | File |
+|---|---|---|---|
+| mediamp (the build scripts in `buildSrc/`, the JNI glue `libmediampv.dylib` with its Metal/IOSurface renderer, and `mediamp-mpv/render_d3d11.patch`, which is applied to the mpv tree on every platform) | 0.5.0 | Apache-2.0 | `mediamp-0.5.0.tar.gz` |
+| mpv (`libmpv.2.dylib`) | 0.41.0, commit `41f6a645` | LGPL-2.1-or-later (`-Dgpl=false`) | `mpv-0.41.0.tar.gz` |
+| FFmpeg (`libavutil.60`, `libavcodec.62`, `libavformat.62`, `libavfilter.11`, `libavdevice.62`, `libswresample.6`, `libswscale.9`) | release/8.0 branch, commit `449453a9` (reports 8.0.1) | LGPL-2.1-or-later (no `--enable-gpl`, no non-free parts) | `ffmpeg-8.0.1-449453a9.tar.gz` |
+| dav1d (linked statically into libavcodec) | 1.5.4, commit `54706fc6` | BSD-2-Clause | `dav1d-1.5.4.tar.gz` |
+
+mediamp builds these on its Apple Silicon runner for macOS 12.0 and later. The FFmpeg configure
+line (`buildSrc/src/main/kotlin/ffmpeg/FfmpegTargets.kt`, macOS target: Secure Transport for TLS,
+VideoToolbox, dav1d) is embedded in the shipped `libavutil`, and the mpv meson options
+(`buildSrc/src/main/kotlin/mpv/MpvTargets.kt`, macOS target: Cocoa, Core Audio, OpenGL,
+VideoToolbox, Swift) in the shipped `libmpv`.
+
+## Homebrew libraries (`macos/`)
+
+mediamp's release job installs `libass` and `libplacebo` from Homebrew and copies every non-system
+dylib they need into the runtime, rewriting the install names to `@loader_path` and signing them
+ad hoc. Each dylib below has the same LC_UUID and the same code (`__TEXT,__text`) as the dylib in
+the Homebrew `arm64_sequoia` bottle of the version listed. `macos/homebrew/` holds each formula
+file as of the homebrew-core commit that published that bottle (the bottle's SHA-256 is in it):
+the build recipe, configure options and patches. The source archives are the ones the formulae
+name, with the SHA-256 they pin.
+
+| Library (dylib) | Homebrew formula and version | Licence | Source |
+|---|---|---|---|
+| libass (`libass.9.dylib`) | libass 0.17.4 | ISC | `libass-0.17.4.tar.xz` |
+| libplacebo (`libplacebo.351.dylib`) | libplacebo 7.351.0 (bottle rebuild 1) | LGPL-2.1-or-later | `libplacebo-v7.351.0.tar.bz2`, plus the build-time generators glad2 2.0.8 (MIT), Jinja2 3.1.6 and MarkupSafe 3.0.2 (BSD-3-Clause) |
+| shaderc (`libshaderc_shared.1.dylib`) | shaderc 2025.3 | Apache-2.0 | `shaderc-2025.3.tar.gz` |
+| glslang (static, inside shaderc) | 15.3.0, commit `efd24d75` | BSD-3-Clause and others, see its LICENSE.txt | `glslang-15.3.0-efd24d75.tar.gz` |
+| SPIRV-Tools (static, inside shaderc) | commit `33e02568` | Apache-2.0 | `SPIRV-Tools-33e02568.tar.gz` |
+| SPIRV-Headers (headers, inside shaderc) | commit `2a611a97` | MIT | `SPIRV-Headers-2a611a97.tar.gz` |
+| Vulkan loader (`libvulkan.1.4.326.dylib`) | vulkan-loader 1.4.326 | Apache-2.0 | `vulkan-loader-1.4.326.tar.gz` |
+| Little CMS (`liblcms2.2.dylib`) | little-cms2 2.17 | MIT | `lcms2-2.17.tar.gz` |
+| FreeType (`libfreetype.6.dylib`) | freetype 2.13.3 | FTL or GPL-2.0-or-later | `freetype-2.13.3.tar.xz` |
+| FriBidi (`libfribidi.0.dylib`) | fribidi 1.0.16 | LGPL-2.1-or-later | `fribidi-1.0.16.tar.xz` |
+| HarfBuzz (`libharfbuzz.0.dylib`) | harfbuzz 11.4.5 | MIT | `harfbuzz-11.4.5.tar.gz` |
+| Graphite2 (`libgraphite2.3.2.1.dylib`) | graphite2 1.3.14 | LGPL-2.1-or-later, GPL-2.0-or-later or MPL-1.1, at your choice | `graphite2-1.3.14.tgz` |
+| libunibreak (`libunibreak.6.dylib`) | libunibreak 6.1 | Zlib | `libunibreak-6.1.tar.gz` |
+| libpng (`libpng16.16.dylib`) | libpng 1.6.50 | libpng-2.0 | `libpng-1.6.50.tar.xz` |
+| GLib (`libglib-2.0.0.dylib`) | glib 2.84.4, with Homebrew's `glib-hardcoded-paths.diff` | LGPL-2.1-or-later | `glib-2.84.4.tar.xz` |
+| PCRE2 (`libpcre2-8.0.dylib`) | pcre2 10.46 | BSD-3-Clause | `pcre2-10.46.tar.bz2` |
+| GNU libintl, from gettext (`libintl.8.dylib`) | gettext 0.26 | LGPL-2.1-or-later | `gettext-0.26.tar.gz` |
+
+zlib, bzip2, libiconv, libc++ and the system frameworks are part of macOS and are not shipped.
+
+libplacebo also compiles in two header-only build dependencies that Homebrew does not pin to a
+version: fast_float (MIT, Apache-2.0 or BSL-1.0) and the Vulkan headers (Apache-2.0 or MIT). Their
+versions cannot be read from the shipped dylib, so they are not included here; both are
+permissively licensed and available from their upstream projects.
+EOF
+else
 cat > "$stage/README.md" <<'EOF'
 # Corresponding source for the mpv runtime in TMPlayer's desktop builds
 
@@ -270,6 +444,7 @@ package of the same version.
 On Linux the FFmpeg build also compiles in the NVIDIA codec headers (nv-codec-headers, MIT,
 headers only) from Ubuntu's `libffmpeg-nvenc-dev`; no library of theirs is shipped.
 EOF
+fi
 
 tar -C "$out" --owner=0 --group=0 --sort=name --mtime='2026-09-19 00:00Z' -chf - "$NAME" \
   | gzip -n > "$out/$NAME.tar.gz"
