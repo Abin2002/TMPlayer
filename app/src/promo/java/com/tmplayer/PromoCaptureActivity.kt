@@ -155,6 +155,7 @@ class PromoCaptureActivity : ComponentActivity() {
         // `--ez nobars true` does the same on a phone: the site's phone shots carry no status bar or
         // gesture pill, and the page fills the whole 1080x2400 rather than leaving a band where
         // the bars were. A swipe from the edge still brings them back for a moment.
+        com.tmplayer.ui.browse.ScreenshotBarsOverride.hidden = barsHidden
         if (barsHidden) {
             // A television has no status bar and no gesture pill, and a shot of the TV layout with
             // a phone's clock and battery in the corner would be a picture of something that does

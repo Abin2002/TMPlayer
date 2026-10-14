@@ -113,6 +113,7 @@ private fun SeriesPage(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
+        if (ScreenshotBarsOverride.hidden) HideDialogBars()
         Box(Modifier.fillMaxSize().background(Tone.background)) {
             SeriesPanel(
                 series = series,
@@ -142,6 +143,28 @@ private fun SeriesPage(
                         .padding(12.dp),
                 )
             }
+        }
+    }
+}
+
+/**
+ * Set by the promo build's screenshot fixture when it hides the system bars (`--ez nobars true`):
+ * the show's page is a window of its own, so it has to hide them again for itself. Never set in
+ * the app.
+ */
+object ScreenshotBarsOverride {
+    @Volatile
+    var hidden: Boolean = false
+}
+
+@Composable
+private fun HideDialogBars() {
+    val view = androidx.compose.ui.platform.LocalView.current
+    androidx.compose.runtime.LaunchedEffect(view) {
+        val window = (view.parent as? androidx.compose.ui.window.DialogWindowProvider)?.window ?: return@LaunchedEffect
+        androidx.core.view.WindowInsetsControllerCompat(window, window.decorView).apply {
+            systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(androidx.core.view.WindowInsetsCompat.Type.statusBars() or androidx.core.view.WindowInsetsCompat.Type.navigationBars())
         }
     }
 }
