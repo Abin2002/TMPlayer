@@ -274,10 +274,11 @@ class PlayerMouseTest {
         onNodeWithText("Previous, next chapter").assertExists()
     }
 
-    private fun ComposeUiTest.press(key: Key, ctrl: Boolean = false, shift: Boolean = false) {
+    /** [command] is Ctrl, or Cmd on a Mac, where the player reads the chapter keys from Cmd. */
+    private fun ComposeUiTest.press(key: Key, command: Boolean = false, shift: Boolean = false) {
         onNode(isFocused()).performKeyInput {
             when {
-                ctrl -> withKeyDown(Key.CtrlLeft) { pressKey(key) }
+                command -> withKeyDown(if (com.tmplayer.desktop.os.OsInfo.isMac) Key.MetaLeft else Key.CtrlLeft) { pressKey(key) }
                 shift -> withKeyDown(Key.ShiftLeft) { pressKey(key) }
                 else -> pressKey(key)
             }
@@ -320,27 +321,27 @@ class PlayerMouseTest {
     }
 
     @Test
-    fun `Ctrl and the arrows step through chapters, and seek a minute in a file without`() = runComposeUiTest {
+    fun `Ctrl (Cmd on a Mac) and the arrows step through chapters, and seek a minute in a file without`() = runComposeUiTest {
         engine.chapters = listOf(Chapter(0, "Opening"), Chapter(120_000, "The Station"), Chapter(300_000, "Chapter 3"))
         open()
         seek(130_000)
-        press(Key.DirectionRight, ctrl = true)
+        press(Key.DirectionRight, command = true)
         assertEquals(1, engine.count("seekTo:300000"))
         onNodeWithText("Chapter 3 of 3").assertExists()
         // Straight after the jump, back goes to the chapter before rather than this one's start.
-        press(Key.DirectionLeft, ctrl = true)
+        press(Key.DirectionLeft, command = true)
         assertEquals(1, engine.count("seekTo:120000"))
         onNodeWithText("Chapter 2 of 3: The Station").assertExists()
         // A minute in, back is the start of the same chapter.
         seek(180_000)
-        press(Key.DirectionLeft, ctrl = true)
+        press(Key.DirectionLeft, command = true)
         assertEquals(2, engine.count("seekTo:120000"))
     }
 
     @Test
     fun `a file without chapters seeks a minute on the chapter keys`() = runComposeUiTest {
         open()
-        press(Key.DirectionRight, ctrl = true)
+        press(Key.DirectionRight, command = true)
         assertEquals(1, engine.count("seekBy:60000"))
     }
 
