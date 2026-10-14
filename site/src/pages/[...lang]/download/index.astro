@@ -78,9 +78,7 @@ const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
     </div>
   </section>
 
-<Icon name="wave" />
-
-  <Band id="download" labelledby="download-h" title={t('download.every_platform_one_release')} tonal body>
+  <Band wave id="download" labelledby="download-h" title={t('download.every_platform_one_release')} tonal body>
     <T slot="sub" k="download.every_file_comes_from_one_github"><a href="https://about.signpath.io/" rel="noopener" slot="a1">{t('download.every_file_comes_from_one_github__a1')}</a><a href="/signing/" slot="a2">{t('download.every_file_comes_from_one_github__a2')}</a></T>
 
         {/*
@@ -185,24 +183,20 @@ const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
         </section>
   </Band>
 
-<Icon name="wave-flip" />
-
-  <Band labelledby="before-h" title={t('download.before_you_open_the_file')} sub={t('download.worth_knowing_about_any_app')}>
-      <div class="two-col" data-reveal>
-        <Panel kind="yes" title={t('download.what_you_are_getting')}>
-            <li><T k="download.on_a_tv_stick_box"><strong slot="strong1">{t('download.on_a_tv_stick_box__strong1')}</strong></T></li>
-            <li><T k="download.with_the_same_library_and"><strong slot="strong1">{t('download.with_the_same_library_and__strong1')}</strong></T></li>
-            <li><T k="download.every_release_links_the_source"><strong slot="strong1">{t('download.every_release_links_the_source__strong1')}</strong></T></li>
-        </Panel>
-        <Panel kind="no" title={t('download.what_it_will_not_do')}>
-            {['download.it_is_not_in_a', 'download.it_comes_with_no_media', 'download.no_store_updates_tmplayer_looks'].map((k) => <li>{t(k)}</li>)}
-        </Panel>
-      </div>
+  <Band wave labelledby="before-h" title={t('download.before_you_open_the_file')} sub={t('download.worth_knowing_about_any_app')}>
+    <div class="two-col" data-reveal>
+      <Panel kind="yes" title={t('download.what_you_are_getting')}>
+          <li><T k="download.on_a_tv_stick_box"><strong slot="strong1">{t('download.on_a_tv_stick_box__strong1')}</strong></T></li>
+          <li><T k="download.with_the_same_library_and"><strong slot="strong1">{t('download.with_the_same_library_and__strong1')}</strong></T></li>
+          <li><T k="download.every_release_links_the_source"><strong slot="strong1">{t('download.every_release_links_the_source__strong1')}</strong></T></li>
+      </Panel>
+      <Panel kind="no" title={t('download.what_it_will_not_do')}>
+          {['download.it_is_not_in_a', 'download.it_comes_with_no_media', 'download.no_store_updates_tmplayer_looks'].map((k) => <li>{t(k)}</li>)}
+      </Panel>
+    </div>
   </Band>
 
-<Icon name="wave" />
-
-  <StarCard tonal lede={t('download.an_app_from_outside_the')} codes talk />
+  <StarCard wave tonal lede={t('download.an_app_from_outside_the')} codes talk />
 
 </main>
 

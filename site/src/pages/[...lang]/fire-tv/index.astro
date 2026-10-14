@@ -15,7 +15,7 @@ import Cards from '../../../components/Cards.astro';
 import Steps from '../../../components/Steps.astro';
 import Panel from '../../../components/Panel.astro';
 import Step from '../../../components/Step.astro';
-import Format from '../../../components/fire-tv/Format.astro';
+import Way from '../../../components/Way.astro';
 import Card from '../../../components/Card.astro';
 import FaqItem from '../../../components/FaqItem.astro';
 import SponsorOffer from '../../../components/SponsorOffer.astro';
@@ -109,9 +109,7 @@ const howTo = {
     </div>
   </section>
 
-  <Icon name="wave" />
-
-  <Band tonal id="fit" labelledby="fit-h" title={t('android_tv.will_it_run_on_yours')} sub={t('fire_tv.tmplayer_needs_android_8_0')}>
+    <Band wave tonal id="fit" labelledby="fit-h" title={t('android_tv.will_it_run_on_yours')} sub={t('fire_tv.tmplayer_needs_android_8_0')}>
     <div class="two-col" data-reveal>
       <Panel kind="yes" title={t('android_tv.yes')}>
         <li>{t('fire_tv.fire_tv_stick_stick_4k')}</li>
@@ -125,9 +123,7 @@ const howTo = {
     </div>
   </Band>
 
-  <Icon name="wave-flip" />
-
-  <Band id="steps" labelledby="steps-h" title={t('fire_tv.five_steps_with_the_remote')} sub={t('fire_tv.no_computer_needed_amazon_s')}>
+    <Band wave id="steps" labelledby="steps-h" title={t('fire_tv.five_steps_with_the_remote')} sub={t('fire_tv.no_computer_needed_amazon_s')}>
     <div class="section-body" data-reveal>
       <Steps>
         <Step id="fire-1" title={t('fire_tv.turn_on_developer_options')}>
@@ -155,27 +151,23 @@ const howTo = {
     </div>
   </Band>
 
-  <Icon name="wave" />
-
-  <Band tonal id="other-ways" labelledby="other-h" title={t('fire_tv.or_with_a_computer_or')} sub={t('fire_tv.both_still_need_developer_options')}>
+    <Band wave tonal id="other-ways" labelledby="other-h" title={t('fire_tv.or_with_a_computer_or')} sub={t('fire_tv.both_still_need_developer_options')}>
     <div class="section-body" data-reveal>
       <div class="formats">
-        <Format title={t('fire_tv.adb_from_a_computer')}>
+        <Way title={t('fire_tv.adb_from_a_computer')}>
           <p><T k="fire_tv.turn_on_in_and_find"><em slot="em1">{t('fire_tv.turn_on_in_and_find__em1')}</em><em slot="em2">{t('fire_tv.turn_on_in_and_find__em2')}</em><em slot="em3">{t('fire_tv.turn_on_in_and_find__em3')}</em><em slot="em4">{t('fire_tv.turn_on_in_and_find__em4')}</em><em slot="em5">{t('fire_tv.turn_on_in_and_find__em5')}</em><em slot="em6">{t('fire_tv.turn_on_in_and_find__em6')}</em><a href={l('/download/#android-tv')} slot="a1">{t('fire_tv.turn_on_in_and_find__a1')}</a></T></p>
           <pre class="code"><code>adb connect &lt;fire-tv-ip&gt;:5555
 adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
           <p>{t('fire_tv.accept_the_debugging_prompt_that')}</p>
-        </Format>
-        <Format title={t('fire_tv.send_files_to_tv')}>
+        </Way>
+        <Way title={t('fire_tv.send_files_to_tv')}>
           <p><T k="fire_tv.install_on_your_phone_and"><a href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" rel="noopener" slot="a1">{t('fire_tv.install_on_your_phone_and__a1')}</a><em slot="em1">{t('fire_tv.install_on_your_phone_and__em1')}</em></T></p>
-        </Format>
+        </Way>
       </div>
     </div>
   </Band>
 
-  <Icon name="wave-flip" />
-
-  <Band id="remote" labelledby="remote-h" title={t('fire_tv.the_remote_and_keeping_it')} sub={t('fire_tv.everything_works_from_the_fire')}>
+    <Band wave id="remote" labelledby="remote-h" title={t('fire_tv.the_remote_and_keeping_it')} sub={t('fire_tv.everything_works_from_the_fire')}>
     <Cards>
       <Card title={t('fire_tv.the_d_pad_does_it')}><T k="fire_tv.arrows_to_move_ok_to"><a href={l('/android-tv/')} slot="a1">{t('fire_tv.arrows_to_move_ok_to__a1')}</a></T></Card>
       <Card title={t('fire_tv.voice_search_where_fire_os')}>{t('fire_tv.tmplayer_s_own_search_can')}</Card>
@@ -183,9 +175,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
     </Cards>
   </Band>
 
-  <Icon name="wave" />
-
-  <Band tonal labelledby="trouble-h" title={t('install.if_it_goes_wrong')}>
+    <Band wave tonal labelledby="trouble-h" title={t('install.if_it_goes_wrong')}>
     <div class="faq" data-reveal>
       <FaqItem q={t('fire_tv.there_is_no_install_unknown')}>{t('fire_tv.developer_options_is_still_hidden')}</FaqItem>
       <FaqItem q={t('fire_tv.it_says_there_was_a')}>{t('fire_tv.usually_the_fire_os_version')}</FaqItem>

@@ -15,7 +15,7 @@ import Steps from '../../../components/Steps.astro';
 import StarCard from '../../../components/StarCard.astro';
 import Step from '../../../components/Step.astro';
 import SignIn from '../../../components/install/SignIn.astro';
-import Way from '../../../components/install/Way.astro';
+import Way from '../../../components/Way.astro';
 import Panel from '../../../components/Panel.astro';
 import FaqItem from '../../../components/FaqItem.astro';
 import { langPaths } from '../../../i18n/paths';
@@ -107,9 +107,7 @@ const ld1 = {
     </div>
   </section>
 
-<Icon name="wave" />
-
-  <Band id="android-tv" labelledby="tv-h" title={t('install.tv_title')} tonal body>
+  <Band wave id="android-tv" labelledby="tv-h" title={t('install.tv_title')} tonal body>
     <T slot="sub" k="install.tv_sub"><a href={l('/fire-tv/')} slot="a1">{t('install.tv_sub__a1')}</a></T>
         <Steps>
           <Step id="step-1" title={t('install.tv_step1_h')}>
@@ -141,117 +139,107 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
         </div>
   </Band>
 
-<Icon name="wave-flip" />
-
-  <Band id="android" labelledby="phone-h" title={t('install.phone_title')} sub={t('install.phone_sub')} body>
-        <Steps>
-          <Step id="phone-1" title={t('install.phone_step1_h')}>
-            <p><T k="install.phone_step1"><a href={l('/download/')} slot="a1">{t('install.phone_step1__a1')}</a></T></p>
-          </Step>
-          <Step id="phone-2" title={t('install.phone_step2_h')}>
-            <p><T k="install.phone_step2"><em slot="em1">{t('install.phone_step2__em1')}</em></T></p>
-          </Step>
-          <Step id="phone-3" title={t('home.sign_in')}>
-            <p>{t('install.phone_step3')}</p>
-          </Step>
-        </Steps>
-        <p class="muted small section-note"><T k="install.phone_obtainium"><a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener" slot="a1">Obtainium</a></T></p>
+  <Band wave id="android" labelledby="phone-h" title={t('install.phone_title')} sub={t('install.phone_sub')} body>
+    <Steps>
+      <Step id="phone-1" title={t('install.phone_step1_h')}>
+        <p><T k="install.phone_step1"><a href={l('/download/')} slot="a1">{t('install.phone_step1__a1')}</a></T></p>
+      </Step>
+      <Step id="phone-2" title={t('install.phone_step2_h')}>
+        <p><T k="install.phone_step2"><em slot="em1">{t('install.phone_step2__em1')}</em></T></p>
+      </Step>
+      <Step id="phone-3" title={t('home.sign_in')}>
+        <p>{t('install.phone_step3')}</p>
+      </Step>
+    </Steps>
+    <p class="muted small section-note"><T k="install.phone_obtainium"><a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener" slot="a1">Obtainium</a></T></p>
   </Band>
 
-<Icon name="wave" />
+  <Band wave id="windows" labelledby="windows-h" title={t('install.on_windows')} sub={t('install.windows_10_or_11_64')} tonal body>
+    <Steps>
+      <Step id="win-1" title={t('install.win_step1_h')}>
+        <p><T k="install.win_step1"><em slot="em1">{t('install.win_step1__em1')}</em><em slot="em2">{t('install.win_step1__em2')}</em></T></p>
+      </Step>
+      <Step id="win-2" title={t('install.win_step2_h')}>
+        <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+        <p>{t('install.win_step2_paste')}</p>
+        <p><T k="install.win_step2_done"><a href="#windows-installer" slot="a1">{t('install.win_step2_done__a1')}</a></T></p>
+      </Step>
+      <Step id="win-3" title={t('install.win_step3_h')}>
+        <p>{t('install.win_step3')}</p>
+        <p><T k="install.scan_the_qr_code_with"><em slot="em1">{t('install.scan_the_qr_code_with__em1')}</em><em slot="em2">{t('install.scan_the_qr_code_with__em2')}</em><em slot="em3">{t('install.scan_the_qr_code_with__em3')}</em><em slot="em4">{t('install.scan_the_qr_code_with__em4')}</em></T></p>
+      </Step>
+    </Steps>
 
-  <Band id="windows" labelledby="windows-h" title={t('install.on_windows')} sub={t('install.windows_10_or_11_64')} tonal body>
-        <Steps>
-          <Step id="win-1" title={t('install.win_step1_h')}>
-            <p><T k="install.win_step1"><em slot="em1">{t('install.win_step1__em1')}</em><em slot="em2">{t('install.win_step1__em2')}</em></T></p>
-          </Step>
-          <Step id="win-2" title={t('install.win_step2_h')}>
-            <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p>{t('install.win_step2_paste')}</p>
-            <p><T k="install.win_step2_done"><a href="#windows-installer" slot="a1">{t('install.win_step2_done__a1')}</a></T></p>
-          </Step>
-          <Step id="win-3" title={t('install.win_step3_h')}>
-            <p>{t('install.win_step3')}</p>
-            <p><T k="install.scan_the_qr_code_with"><em slot="em1">{t('install.scan_the_qr_code_with__em1')}</em><em slot="em2">{t('install.scan_the_qr_code_with__em2')}</em><em slot="em3">{t('install.scan_the_qr_code_with__em3')}</em><em slot="em4">{t('install.scan_the_qr_code_with__em4')}</em></T></p>
-          </Step>
-        </Steps>
-
-        <Panel id="windows-installer" title={t('install.win_msi_h')} wide>
-          <p><T k="install.win_msi"><code data-name="windows-x64-msi" slot="code1">TMPlayer-&lt;version&gt;-windows-x64.msi</code><a href={l('/download/#windows')} slot="a1">{t('install.win_msi__a1')}</a><em slot="em1">{t('install.win_msi__em1')}</em><em slot="em2">{t('install.win_msi__em2')}</em><em slot="em3">{t('install.win_msi__em3')}</em></T></p>
-        </Panel>
-        <p class="muted small section-note">{t('install.win_zip_note')}</p>
+    <Panel id="windows-installer" title={t('install.win_msi_h')} wide>
+      <p><T k="install.win_msi"><code data-name="windows-x64-msi" slot="code1">TMPlayer-&lt;version&gt;-windows-x64.msi</code><a href={l('/download/#windows')} slot="a1">{t('install.win_msi__a1')}</a><em slot="em1">{t('install.win_msi__em1')}</em><em slot="em2">{t('install.win_msi__em2')}</em><em slot="em3">{t('install.win_msi__em3')}</em></T></p>
+    </Panel>
+    <p class="muted small section-note">{t('install.win_zip_note')}</p>
   </Band>
 
-<Icon name="wave-flip" />
+  <Band wave id="macos" labelledby="macos-h" title={t('install.on_macos')} sub={t('install.macos_sub')} body>
+    <Steps>
+      <Step id="mac-1" title={t('install.mac_step1_h')}>
+        <p><T k="install.mac_step1"><code slot="code1">TMPlayer-&lt;version&gt;-macos-arm64.dmg</code><a href={l('/download/#macos')} slot="a1">{t('install.mac_step1__a1')}</a><em slot="em1">TMPlayer</em><em slot="em2">{t('install.mac_step1__em2')}</em></T></p>
+      </Step>
+      <Step id="mac-2" title={t('install.mac_step2_h')}>
+        <p><T k="install.mac_step2"><em slot="em1">{t('install.mac_step2__em1')}</em><em slot="em2">{t('install.mac_step2__em2')}</em></T></p>
+        <p><T k="install.mac_step2b"><em slot="em1">{t('install.mac_step2b__em1')}</em><em slot="em2">{t('install.mac_step2b__em2')}</em><em slot="em3">{t('install.mac_step2b__em3')}</em><em slot="em4">{t('install.mac_step2b__em4')}</em><em slot="em5">{t('install.mac_step2b__em5')}</em></T></p>
+        <p>{t('install.mac_terminal')}</p>
+        <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+      </Step>
+      <SignIn id="mac-3" />
+    </Steps>
 
-  <Band id="macos" labelledby="macos-h" title={t('install.on_macos')} sub={t('install.macos_sub')} body>
-        <Steps>
-          <Step id="mac-1" title={t('install.mac_step1_h')}>
-            <p><T k="install.mac_step1"><code slot="code1">TMPlayer-&lt;version&gt;-macos-arm64.dmg</code><a href={l('/download/#macos')} slot="a1">{t('install.mac_step1__a1')}</a><em slot="em1">TMPlayer</em><em slot="em2">{t('install.mac_step1__em2')}</em></T></p>
-          </Step>
-          <Step id="mac-2" title={t('install.mac_step2_h')}>
-            <p><T k="install.mac_step2"><em slot="em1">{t('install.mac_step2__em1')}</em><em slot="em2">{t('install.mac_step2__em2')}</em></T></p>
-            <p><T k="install.mac_step2b"><em slot="em1">{t('install.mac_step2b__em1')}</em><em slot="em2">{t('install.mac_step2b__em2')}</em><em slot="em3">{t('install.mac_step2b__em3')}</em><em slot="em4">{t('install.mac_step2b__em4')}</em><em slot="em5">{t('install.mac_step2b__em5')}</em></T></p>
-            <p>{t('install.mac_terminal')}</p>
-            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
-          </Step>
-          <SignIn id="mac-3" />
-        </Steps>
-
-        <Panel id="macos-updates" title={t('install.mac_update_h')} wide>
-          <p>{t('install.mac_update')}</p>
-        </Panel>
-        <p class="muted small section-note"><T k="install.mac_preview_note"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('install.mac_preview_note__a1')}</a></T></p>
+    <Panel id="macos-updates" title={t('install.mac_update_h')} wide>
+      <p>{t('install.mac_update')}</p>
+    </Panel>
+    <p class="muted small section-note"><T k="install.mac_preview_note"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('install.mac_preview_note__a1')}</a></T></p>
   </Band>
 
-<Icon name="wave" />
-
-  <Band id="linux" labelledby="linux-h" title={t('install.on_linux')} sub={t('download.x86_64_with_glibc_2')} tonal body>
-        <Steps>
-          <Step id="linux-1" title={t('install.linux_step1_h')}>
-            <p><T k="install.linux_step1"><code data-name="linux-x64-appimage" slot="code1">TMPlayer-&lt;version&gt;-x86_64.AppImage</code><a href={l('/download/#linux')} slot="a1">{t('install.linux_step1__a1')}</a></T></p>
-          </Step>
-          <Step id="linux-2" title={t('install.linux_step2_h')}>
-            <p>{t('install.linux_step2_where')}</p>
-            <pre class="code"><code>cd ~/Downloads
+  <Band wave id="linux" labelledby="linux-h" title={t('install.on_linux')} sub={t('download.x86_64_with_glibc_2')} tonal body>
+    <Steps>
+      <Step id="linux-1" title={t('install.linux_step1_h')}>
+        <p><T k="install.linux_step1"><code data-name="linux-x64-appimage" slot="code1">TMPlayer-&lt;version&gt;-x86_64.AppImage</code><a href={l('/download/#linux')} slot="a1">{t('install.linux_step1__a1')}</a></T></p>
+      </Step>
+      <Step id="linux-2" title={t('install.linux_step2_h')}>
+        <p>{t('install.linux_step2_where')}</p>
+        <pre class="code"><code>cd ~/Downloads
 chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
 ./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
-            <p><T k="install.or_tick_in_the_file"><em slot="em1">{t('install.or_tick_in_the_file__em1')}</em></T></p>
-          </Step>
-          <SignIn id="linux-3" />
-        </Steps>
+        <p><T k="install.or_tick_in_the_file"><em slot="em1">{t('install.or_tick_in_the_file__em1')}</em></T></p>
+      </Step>
+      <SignIn id="linux-3" />
+    </Steps>
 
-        <h3 class="alt-head">{t('install.other_ways')}</h3>
-        <div class="formats">
-          <Way title={t('download.arch_linux')}>
-            <p><T k="install.arch_note"><a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener" slot="a1"><code>desktop/packaging/aur</code></a><code slot="code1">makepkg -si</code><code slot="code2">tmplayer</code></T></p>
-          </Way>
-          <Way title={t('install.tarball_h')}>
-            <p><T k="install.tarball"><code data-name="linux-x64-tarball" slot="code1">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code><code slot="code2">bin/TMPlayer</code></T></p>
-          </Way>
-          <Way title={t('install.moving_from_the_deb_rpm')}>
-            <p><T k="install.these_are_no_longer_published"><code slot="code1">sudo apt remove tmplayer</code><code slot="code2">sudo dnf remove tmplayer</code><code slot="code3">flatpak uninstall io.github.dracu_lah.TMPlayer</code><a href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md#moving-from-a-format-that-is-no-longer-published" slot="a1">{t('install.these_are_no_longer_published__a1')}</a></T></p>
-          </Way>
-        </div>
-        <p class="muted small section-note">{t('install.the_arch_package_adds_a')}</p>
+    <h3 class="alt-head">{t('install.other_ways')}</h3>
+    <div class="formats">
+      <Way title={t('download.arch_linux')}>
+        <p><T k="install.arch_note"><a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener" slot="a1"><code>desktop/packaging/aur</code></a><code slot="code1">makepkg -si</code><code slot="code2">tmplayer</code></T></p>
+      </Way>
+      <Way title={t('install.tarball_h')}>
+        <p><T k="install.tarball"><code data-name="linux-x64-tarball" slot="code1">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code><code slot="code2">bin/TMPlayer</code></T></p>
+      </Way>
+      <Way title={t('install.moving_from_the_deb_rpm')}>
+        <p><T k="install.these_are_no_longer_published"><code slot="code1">sudo apt remove tmplayer</code><code slot="code2">sudo dnf remove tmplayer</code><code slot="code3">flatpak uninstall io.github.dracu_lah.TMPlayer</code><a href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md#moving-from-a-format-that-is-no-longer-published" slot="a1">{t('install.these_are_no_longer_published__a1')}</a></T></p>
+      </Way>
+    </div>
+    <p class="muted small section-note">{t('install.the_arch_package_adds_a')}</p>
   </Band>
 
-<Icon name="wave-flip" />
+  <Band wave id="shortcuts" labelledby="shortcuts-h" title={t('install.on_the_desktop_in_the')} sub={t('install.how_to_keep_it_one')} body>
+    <div class="two-col">
+      <Panel title="Windows">
+        <p><T k="install.win_pin"><em slot="em1">{t('install.win_pin__em1')}</em></T></p>
+      </Panel>
+      <Panel title={t('install.linux_the_arch_package')}>
+        <p>{t('install.it_is_in_the_app')}</p>
+        <p><strong>GNOME:</strong> <T k="install.right_click_it_in_activities"><em slot="em1">{t('install.right_click_it_in_activities__em1')}</em><strong slot="strong2">{t('install.right_click_it_in_activities__strong2')}</strong><em slot="em2">{t('install.right_click_it_in_activities__em2')}</em></T></p>
+      </Panel>
+    </div>
 
-  <Band id="shortcuts" labelledby="shortcuts-h" title={t('install.on_the_desktop_in_the')} sub={t('install.how_to_keep_it_one')} body>
-        <div class="two-col">
-          <Panel title="Windows">
-            <p><T k="install.win_pin"><em slot="em1">{t('install.win_pin__em1')}</em></T></p>
-          </Panel>
-          <Panel title={t('install.linux_the_arch_package')}>
-            <p>{t('install.it_is_in_the_app')}</p>
-            <p><strong>GNOME:</strong> <T k="install.right_click_it_in_activities"><em slot="em1">{t('install.right_click_it_in_activities__em1')}</em><strong slot="strong2">{t('install.right_click_it_in_activities__strong2')}</strong><em slot="em2">{t('install.right_click_it_in_activities__em2')}</em></T></p>
-          </Panel>
-        </div>
-
-        <Panel title={t('install.linux_appimage_in_the_app')} wide>
-          <p>{t('install.a_single_file_has_no')}</p>
-          <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
+    <Panel title={t('install.linux_appimage_in_the_app')} wide>
+      <p>{t('install.a_single_file_has_no')}</p>
+      <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
 mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
@@ -270,38 +258,34 @@ EOF
 
 chmod +x ~/.local/share/applications/tmplayer.desktop
 update-desktop-database ~/.local/share/applications</code></pre>
-          <p>{t('install.then_pin_it_as_above')}</p>
-          <p><T k="install.prefer_clicking_and_do_all"><a href="https://flathub.org/apps/it.mijorus.gearlever" rel="noopener" slot="a1">{t('install.prefer_clicking_and_do_all__a1')}</a><a href="https://github.com/TheAssassin/AppImageLauncher" rel="noopener" slot="a2">{t('install.prefer_clicking_and_do_all__a2')}</a></T></p>
-        </Panel>
+      <p>{t('install.then_pin_it_as_above')}</p>
+      <p><T k="install.prefer_clicking_and_do_all"><a href="https://flathub.org/apps/it.mijorus.gearlever" rel="noopener" slot="a1">{t('install.prefer_clicking_and_do_all__a1')}</a><a href="https://github.com/TheAssassin/AppImageLauncher" rel="noopener" slot="a2">{t('install.prefer_clicking_and_do_all__a2')}</a></T></p>
+    </Panel>
 
-        <Panel title={t('install.linux_an_icon_on_the')} wide>
-          <p>{t('install.copy_the_launcher_made_above')}</p>
-          <pre class="code"><code>cp ~/.local/share/applications/tmplayer.desktop ~/Desktop/
+    <Panel title={t('install.linux_an_icon_on_the')} wide>
+      <p>{t('install.copy_the_launcher_made_above')}</p>
+      <pre class="code"><code>cp ~/.local/share/applications/tmplayer.desktop ~/Desktop/
 chmod +x ~/Desktop/tmplayer.desktop
 gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
-          <p><T k="install.for_the_arch_package_copy"><code slot="code1">/usr/share/applications/io.github.dracu_lah.TMPlayer.desktop</code></T></p>
-          <p><T k="install.gnome_needs_the_desktop_icons"><em slot="em1">{t('install.gnome_needs_the_desktop_icons__em1')}</em></T></p>
-        </Panel>
+      <p><T k="install.for_the_arch_package_copy"><code slot="code1">/usr/share/applications/io.github.dracu_lah.TMPlayer.desktop</code></T></p>
+      <p><T k="install.gnome_needs_the_desktop_icons"><em slot="em1">{t('install.gnome_needs_the_desktop_icons__em1')}</em></T></p>
+    </Panel>
   </Band>
 
-<Icon name="wave" />
+  <Band wave labelledby="trouble-h" title={t('install.if_it_goes_wrong')} sub={t('install.the_fixes_for_nearly_every')} tonal>
+    <div class="faq" data-reveal>
+      <FaqItem q={t('install.the_television_says_the_app')}>{t('install.unknown_sources_is_set_per')}</FaqItem>
+      <FaqItem q={t('install.adb_connect_refuses_the_connection')}>{t('install.turn_on_network_debugging_use')}</FaqItem>
+      <FaqItem q={t('install.the_qr_code_will_not')}>{t('install.stand_closer_and_hold_the')}</FaqItem>
+      <FaqItem q={t('install.windows_shows_no_run_anyway')}><T k="install.click_first_a_work_computer"><em slot="em1">{t('install.click_first_a_work_computer__em1')}</em></T></FaqItem>
+      <FaqItem q={t('install.the_appimage_does_nothing_when')}><T k="install.usually_fuse_is_missing_install"><code slot="code1">libfuse2t64</code><code slot="code2">libfuse2</code><code slot="code3">./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code></T></FaqItem>
+      <FaqItem q={t('install.the_window_is_blank_or')}><T k="install.on_sway_i3_hyprland_and"><code slot="code1">_JAVA_AWT_WM_NONREPARENTING=1</code></T></FaqItem>
+    </div>
 
-  <Band labelledby="trouble-h" title={t('install.if_it_goes_wrong')} sub={t('install.the_fixes_for_nearly_every')} tonal>
-      <div class="faq" data-reveal>
-        <FaqItem q={t('install.the_television_says_the_app')}>{t('install.unknown_sources_is_set_per')}</FaqItem>
-        <FaqItem q={t('install.adb_connect_refuses_the_connection')}>{t('install.turn_on_network_debugging_use')}</FaqItem>
-        <FaqItem q={t('install.the_qr_code_will_not')}>{t('install.stand_closer_and_hold_the')}</FaqItem>
-        <FaqItem q={t('install.windows_shows_no_run_anyway')}><T k="install.click_first_a_work_computer"><em slot="em1">{t('install.click_first_a_work_computer__em1')}</em></T></FaqItem>
-        <FaqItem q={t('install.the_appimage_does_nothing_when')}><T k="install.usually_fuse_is_missing_install"><code slot="code1">libfuse2t64</code><code slot="code2">libfuse2</code><code slot="code3">./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code></T></FaqItem>
-        <FaqItem q={t('install.the_window_is_blank_or')}><T k="install.on_sway_i3_hyprland_and"><code slot="code1">_JAVA_AWT_WM_NONREPARENTING=1</code></T></FaqItem>
-      </div>
-
-      <p class="muted small section-note" data-reveal><T k="install.still_stuck_with_your_device"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('install.still_stuck_with_your_device__a1')}</a></T></p>
+    <p class="muted small section-note" data-reveal><T k="install.still_stuck_with_your_device"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('install.still_stuck_with_your_device__a1')}</a></T></p>
   </Band>
 
-<Icon name="wave-flip" />
-
-  <StarCard lede={t('install.if_these_steps_got_your')} />
+  <StarCard wave lede={t('install.if_these_steps_got_your')} />
 
 </main>
 

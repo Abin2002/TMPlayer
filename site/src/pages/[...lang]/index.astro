@@ -10,6 +10,7 @@ import Footer from '../../components/Footer.astro';
 import ToTop from '../../components/ToTop.astro';
 import T from '../../components/T.astro';
 import Icon from '../../components/Icon.astro';
+import Band from '../../components/Band.astro';
 import LinkCard from '../../components/LinkCard.astro';
 import Device from '../../components/Device.astro';
 import Shot from '../../components/Shot.astro';
@@ -233,58 +234,34 @@ const ld2 = {
   </section>
 
   <!-- A hand drawn wave, in the spirit of Material's shape work, marking the change of tone. -->
-  <Icon name="wave" />
+    <Band wave id="what" title={t('home.a_player_for_the_account')} sub={t('home.tmplayer_signs_in_as_you')} tonal>
+    <Cards>
+      <LinkCard href={l('/features/')} icon="play-card" title={t('home.what_it_does')} body={t('home.streams_as_it_downloads_plays')} go={t('home.the_full_list')} />
 
-  <section class="band band-tonal" id="what" aria-labelledby="what-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="what-h">{t('home.a_player_for_the_account')}</h2>
-          <p class="section-sub">{t('home.tmplayer_signs_in_as_you')}</p>
-        </div>
-      </div>
+      <LinkCard href={l('/android-tv/')} icon="tv-card" title={t('home.on_android_tv')} body={t('home.a_ten_foot_layout_for')} go={t('home.made_for_the_television')} />
 
-      <Cards>
-        <LinkCard href={l('/features/')} icon="play-card" title={t('home.what_it_does')} body={t('home.streams_as_it_downloads_plays')} go={t('home.the_full_list')} />
+      <LinkCard href={l('/faq/')} icon="question-card" title={t('home.what_it_is_not')} body={t('home.not_a_media_service_messages')} go={t('home.questions_and_limits')} />
+    </Cards>
+  </Band>
 
-        <LinkCard href={l('/android-tv/')} icon="tv-card" title={t('home.on_android_tv')} body={t('home.a_ten_foot_layout_for')} go={t('home.made_for_the_television')} />
-
-        <LinkCard href={l('/faq/')} icon="question-card" title={t('home.what_it_is_not')} body={t('home.not_a_media_service_messages')} go={t('home.questions_and_limits')} />
-      </Cards>
-    </div>
-  </section>
-
-  <Icon name="wave-flip" />
-
-  <section class="band" id="start" aria-labelledby="start-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="start-h">{t('home.set_up_in_three_steps')}</h2>
-          <p class="section-sub">{t('home.you_do_it_once_then')}</p>
-        </div>
-      </div>
-
-      <div class="section-body" data-reveal>
-        <Steps>
-          <Step title={t('home.get_the_file')}>
-            <p>{t('home.get_the_file_all')}</p>
-            <p><a href={l('/download/')}>{t('home.go_to_the_download_page')}</a></p>
-          </Step>
-          <Step title={t('home.install_it')}>
-            <p>{t('home.install_it_each')}</p>
-            <p><a href={l('/install/')}>{t('home.read_the_install_steps')}</a></p>
-          </Step>
-          <Step title={t('home.scan_the_qr_code')}>
-            <p>{t('home.sign_in_with_telegram_s')}</p>
-            <p><a href={l('/faq/')}>{t('home.what_that_does_and_does')}</a></p>
-            <Shot src="/screenshots/tv-sign-in.webp" light="/screenshots/tv-sign-in-light.webp" alt={t('home.sign_in_qr_alt')} width="960" height="480" frame="step-shot" />
-          </Step>
-        </Steps>
-        <p class="steps-cta"><a class="btn btn-filled" href={l('/download/')}>{t('common.download')}</a></p>
-      </div>
-    </div>
-  </section>
+    <Band wave id="start" title={t('home.set_up_in_three_steps')} sub={t('home.you_do_it_once_then')} body>
+    <Steps>
+      <Step title={t('home.get_the_file')}>
+        <p>{t('home.get_the_file_all')}</p>
+        <p><a href={l('/download/')}>{t('home.go_to_the_download_page')}</a></p>
+      </Step>
+      <Step title={t('home.install_it')}>
+        <p>{t('home.install_it_each')}</p>
+        <p><a href={l('/install/')}>{t('home.read_the_install_steps')}</a></p>
+      </Step>
+      <Step title={t('home.scan_the_qr_code')}>
+        <p>{t('home.sign_in_with_telegram_s')}</p>
+        <p><a href={l('/faq/')}>{t('home.what_that_does_and_does')}</a></p>
+        <Shot src="/screenshots/tv-sign-in.webp" light="/screenshots/tv-sign-in-light.webp" alt={t('home.sign_in_qr_alt')} width="960" height="480" frame="step-shot" />
+      </Step>
+    </Steps>
+    <p class="steps-cta"><a class="btn btn-filled" href={l('/download/')}>{t('common.download')}</a></p>
+  </Band>
 
   <Icon name="wave" />
 

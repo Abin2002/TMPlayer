@@ -7,16 +7,18 @@
 // The heading and the lede are the page's own. The "actions" slot replaces the star and fork
 // buttons, and the "stats" slot adds to the line of counts. `codes` adds the QR codes, which are
 // for a reader on a computer who would rather pay from their phone (on a phone they are hidden,
-// since nobody scans their own screen); `talk` adds the Telegram and discussion links.
+// since nobody scans their own screen); `talk` adds the Telegram and discussion links. `wave`
+// draws the wave that leads into the card, as on a Band.
 import Icon from './Icon.astro';
 import SponsorOffer from './SponsorOffer.astro';
 import QrCode from './QrCode.astro';
 import { text } from '../i18n/t';
 
-interface Props { id?: string; tonal?: boolean; title?: string; lede: string; codes?: boolean; talk?: boolean }
+interface Props { id?: string; tonal?: boolean; wave?: boolean; title?: string; lede: string; codes?: boolean; talk?: boolean }
 const t = (k: string) => text(Astro.locals.lang, k);
-const { id, tonal = false, title = t('features.star_it_if_it_helped'), lede, codes = false, talk = false } = Astro.props;
+const { id, tonal = false, wave = false, title = t('features.star_it_if_it_helped'), lede, codes = false, talk = false } = Astro.props;
 ---
+{wave && <Icon name={tonal ? 'wave' : 'wave-flip'} />}
 <section class:list={['band', { 'band-tonal': tonal }]} id={id} aria-labelledby="support-h">
   <div class="wrap">
     <div class="support" data-reveal>

@@ -63,9 +63,7 @@ const questions = [
     </div>
   </section>
 
-  <Icon name="wave" />
-
-  <Band id="faq" labelledby="faq-h" tonal title={t('faq.common_questions')} sub={t('faq.ten_short_questions_open_the')}>
+    <Band wave id="faq" labelledby="faq-h" tonal title={t('faq.common_questions')} sub={t('faq.ten_short_questions_open_the')}>
     {/* A real accordion, built from native details and summary, so it opens with a keyboard, is
         announced as a disclosure, and works with JavaScript off. The height animation lives on
         the inner .faq-body, since details itself cannot be transitioned. */}
@@ -76,9 +74,7 @@ const questions = [
     </div>
   </Band>
 
-  <Icon name="wave-flip" />
-
-  <Band id="about" labelledby="about-h" title={t('faq.what_it_is_and_what')} sub={t('faq.a_player_pointed_at_an')}>
+    <Band wave id="about" labelledby="about-h" title={t('faq.what_it_is_and_what')} sub={t('faq.a_player_pointed_at_an')}>
     <div class="two-col" data-reveal>
       <Panel kind="yes" title={t('faq.what_it_is')}>
         <li><T k="faq.a_player_for_telegram_account"><strong slot="strong1">{t('faq.a_player_for_telegram_account__strong1')}</strong></T></li>
@@ -95,9 +91,7 @@ const questions = [
     <p class="muted small section-note" data-reveal><T k="faq.the_lists_what_stays_on"><a href="/privacy/" slot="a1">{t('faq.the_lists_what_stays_on__a1')}</a><a href="/legal/" slot="a2">{t('faq.the_lists_what_stays_on__a2')}</a></T></p>
   </Band>
 
-  <Icon name="wave" />
-
-  <StarCard tonal lede={t('faq.no_money_no_account_no')} />
+    <StarCard wave tonal lede={t('faq.no_money_no_account_no')} />
 
 </main>
 
