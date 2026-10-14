@@ -32,6 +32,10 @@ Testing: emulators only, never the Mi TV stick. Both AVDs (`tmplayer_phone_api36
 signed in to Telegram in the debug build; keep it with `adb install -r`. Windows CI builds carry no API keys,
 so sign in and playback on Windows are untested.
 
+Open after 1.26.0: the desktop neither exits nor answers SIGTERM when startup fails (found 2026-10-14
+with the ChatListViewModel crash fixed in 1ac3cc4; that crash no longer triggers it). The Windows MSI
+check (signed in Home, dark theme, uninstall) runs last, on a CI build at or after 1ac3cc4.
+
 On hold: F-Droid needs a decision on the Telegram API key, and nothing about F-Droid goes in the app, site or
 README until then. `/signing` says the SignPath application is pending; update it when it is approved.
 
