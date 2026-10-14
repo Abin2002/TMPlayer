@@ -21,6 +21,20 @@ removed in the commit that added this file), the listing plan artifact
    push, and report in at most five lines. Then wait. Do not start the next CP in the same session.
 5. If a CP turns out bigger than one session, split it (CP07a, CP07b) in this file and stop at the split.
 
+## Next release
+
+1.26.0, not before 2026-10-17 (release cadence guard: 1.25.0 shipped 2026-10-10). Notes are a "- " list in
+the annotated tag (`docs/RELEASING.md`); tag a commit CI has passed so the release skips the unit tests. The
+store changelog is `fastlane/metadata/android/en-US/changelogs/12600.txt`. Pre-release work (device pass on
+the emulators, desktop AppImage and MSI, screenshots and site copy, translations) ran on 2026-10-14.
+
+Testing: emulators only, never the Mi TV stick. Both AVDs (`tmplayer_phone_api36`, `tmplayer_tv_api36`) are
+signed in to Telegram in the debug build; keep it with `adb install -r`. Windows CI builds carry no API keys,
+so sign in and playback on Windows are untested.
+
+On hold: F-Droid needs a decision on the Telegram API key, and nothing about F-Droid goes in the app, site or
+README until then. `/signing` says the SignPath application is pending; update it when it is approved.
+
 ## Status board
 
 Tick `[x]` and add the commit or date. `U` items are yours, `CP` items are Claude's. `[-]` is set aside.
@@ -111,7 +125,7 @@ Tick `[x]` and add the commit or date. `U` items are yours, `CP` items are Claud
 - [-] U28 Closed test for 14 days
 - [-] U29 Production, then opt in to Android TV
 
-**Phase H. Player declutter and support asks (planned 2026-10-06, design: docs/design/2026-10-06-player-declutter-and-support-asks-plan.md)**
+**Phase H. Player declutter and support asks (planned 2026-10-06; its design file was removed once Phase H shipped, see git history)**
 - [x] CP37 Android player declutter (693edbc, phone and TV; phone row is subtitles, audio, speed, rotate, with Lock, PiP and Picture shape in the overflow, Start over is an offer on the resume, TV row is subtitles, audio, speed, More, with Picture shape in More; checked on the phone and TV emulators with the promo build, D-pad walk with no dead focus, unit tests green. Still pending for a real device: double tap and pinch gestures, the first-run hint, the resume offer over a real resume, and the other locales still carry the unused back_seconds, forward_seconds and playback_speed_now keys (kept in en.json because CatalogTest fails otherwise; drop them when the locales are synced). Left as is: the two subtitle Look renderers, since touch and D-pad each use one. CP40 still owes the TV More episode lines)
 - [x] CP38 Desktop player declutter: bar, main menu, shortcut sheet (e07f7cb; the NextUpCard and Countdown sheet were already exclusive, no cut; Picture shape moved into Playback options; unused en.json strings kept until langsync prunes the locales)
 - [x] CP39 Support asks v2: positive moments, three asks at most, thank-you state, tmplayer.org/support (45d6037, ladder, counters, triggers and the site page done; ladder unit tested, phone rungs 1 to 3 on the emulator, desktop render test, site at 390 and 1440; TV and the phone thank-you state not shot on an emulator, none was free; the site page is English only, like legal)
@@ -640,7 +654,7 @@ on screen; no "movies" or "series" wording, no "S02E04" example.
 **STOP**
 
 ### CP37 Android player declutter
-**Design:** sections 2 to 4 of `docs/design/2026-10-06-player-declutter-and-support-asks-plan.md` (decisions D1, D2
+**Design:** sections 2 to 4 of `docs/design/2026-10-06-player-declutter-and-support-asks-plan.md`, in git history (decisions D1, D2
 default to the recommendations unless you say otherwise). Phone first, then TV.
 **Do:** remove phone centre seek buttons, row Lock, PiP and Scale (Scale and Lock and PiP into the overflow),
 overflow Speed and Start over; route `gesture_hud` through `PlayerFeedback`; one renderer for the subtitle Look
