@@ -1,0 +1,10 @@
+---
+// One numbered install step. The id is the anchor the HowTo JSON-LD points each step at
+// (/fire-tv/#fire-1 and on), so it must not change.
+interface Props { id: string; title: string }
+const { id, title } = Astro.props;
+---
+<li id={id}>
+  <h3>{title}</h3>
+  <slot />
+</li>

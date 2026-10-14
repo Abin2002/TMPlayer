@@ -1,0 +1,17 @@
+---
+// One side of "will it run on yours": a ticked list of what works or a crossed list of what does
+// not. The list items come in the slot.
+import Icon from '../Icon.astro';
+
+interface Props { kind: 'yes' | 'no'; title: string }
+const { kind, title } = Astro.props;
+const yes = kind === 'yes';
+---
+<div class="panel">
+  <h3> <span class:list={['panel-icon', yes ? 'icon-yes' : 'icon-no']} aria-hidden="true">
+      <Icon name={yes ? 'tick-panel' : 'cross-panel'} />
+    </span> {title}</h3>
+  <ul class={yes ? 'ticks' : 'crosses'}>
+    <slot />
+  </ul>
+</div>

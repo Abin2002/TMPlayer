@@ -1,0 +1,17 @@
+---
+// One band of the page: the wave-edged section with its heading and optional subtitle, and the
+// band's content in the slot. Tonal bands alternate with plain ones down the page.
+interface Props { id?: string; tonal?: boolean; headId: string; title: string; sub?: string }
+const { id, tonal = false, headId, title, sub } = Astro.props;
+---
+<section class:list={['band', { 'band-tonal': tonal }]} id={id} aria-labelledby={headId}>
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <div class="section-title">
+        <h2 id={headId}>{title}</h2>
+        {sub && <p class="section-sub">{sub}</p>}
+      </div>
+    </div>
+    <slot />
+  </div>
+</section>

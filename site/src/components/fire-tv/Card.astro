@@ -1,0 +1,9 @@
+---
+// A plain text card: a heading and one paragraph, the paragraph in the slot.
+interface Props { title: string }
+const { title } = Astro.props;
+---
+<div class="card">
+  <h3>{title}</h3>
+  <p><slot /></p>
+</div>
