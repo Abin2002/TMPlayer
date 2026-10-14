@@ -182,6 +182,14 @@ object KidsLock {
     /** Videos, wherever they came from: Home's rows, search across chats. */
     fun media(items: List<MediaItem>, allowed: Set<Long>?): List<MediaItem> = filter(items, allowed) { it.chatId }
 
+    /**
+     * The starred chats the lock lets through: what the Favourites tab lists, so its badge, its
+     * counts and Clear all say the same number. A chat starred before the lock went on stays
+     * starred, unseen, for when it comes off.
+     */
+    fun favourites(favourites: Set<Long>, allowed: Set<Long>?): Set<Long> =
+        if (allowed == null) favourites else favourites.filterTo(LinkedHashSet()) { it in allowed }
+
     /** Continue watching, downloads and the other records of a video. */
     fun records(records: List<ResumeRecord>, allowed: Set<Long>?): List<ResumeRecord> = filter(records, allowed) { it.chatId }
 

@@ -319,9 +319,18 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         }
     }
 
-    /** Unstars every chat at once, which is the only way back from a tab full of them. */
-    suspend fun clearFavorites() {
-        prefs.edit { it.remove(FAVORITES) }
+    /**
+     * Unstars every chat at once, which is the only way back from a tab full of them. Under the
+     * kids lock ([allowed] not null) only the favourites it shows go; the hidden ones stay.
+     */
+    suspend fun clearFavorites(allowed: Set<Long>? = null) {
+        prefs.edit { prefs ->
+            if (allowed == null) {
+                prefs.remove(FAVORITES)
+            } else {
+                prefs[FAVORITES] = prefs[FAVORITES].orEmpty().filterTo(HashSet()) { it.toLongOrNull() !in allowed }
+            }
+        }
     }
 
     // ---- what opens on launch ---------------------------------------------------------------

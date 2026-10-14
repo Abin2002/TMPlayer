@@ -296,7 +296,10 @@ fun SettingsScreen(
     val history by settings.continueWatching.collectAsStateWithLifecycle(initialValue = emptyList())
     val watchedStore = remember { WatchedStore(context) }
     val watchedList by watchedStore.history.collectAsStateWithLifecycle(initialValue = emptyList())
-    val favorites by settings.favorites.collectAsStateWithLifecycle(initialValue = emptySet())
+    // Only those the kids lock shows, as the Favourites tab counts them.
+    val storedFavorites by settings.favorites.collectAsStateWithLifecycle(initialValue = emptySet())
+    val allowedChats by com.tmplayer.data.ChatGate.allowed.collectAsStateWithLifecycle()
+    val favorites = remember(storedFavorites, allowedChats) { com.tmplayer.data.KidsLock.favourites(storedFavorites, allowedChats) }
     val defaultsHidden by settings.hideDefaultGroups.collectAsStateWithLifecycle(initialValue = false)
     val liveFolders by Td.folders.collectAsStateWithLifecycle()
     val folders = accountFolders ?: liveFolders
@@ -1796,7 +1799,7 @@ fun SettingsScreen(
                 prompt = null
                 scope.launch {
                     val count = favorites.size
-                    settings.clearFavorites()
+                    settings.clearFavorites(allowedChats)
                     toast(s.settingsFavouritesCleared(count))
                 }
             },

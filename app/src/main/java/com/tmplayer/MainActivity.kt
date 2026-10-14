@@ -363,7 +363,11 @@ private fun Root() {
     }
 
     val overviewSeen by settings.overviewSeen.collectAsStateWithLifecycle(initialValue = true)
-    val favorites by settings.favorites.collectAsStateWithLifecycle(initialValue = emptySet())
+    // The favourites the kids lock lets through, as the Favourites tab lists them, so every count
+    // of them (the badge, Clear all) says the same number.
+    val storedFavorites by settings.favorites.collectAsStateWithLifecycle(initialValue = emptySet())
+    val allowedChats by com.tmplayer.data.ChatGate.allowed.collectAsStateWithLifecycle()
+    val favorites = remember(storedFavorites, allowedChats) { com.tmplayer.data.KidsLock.favourites(storedFavorites, allowedChats) }
     val watchProgress by settings.watchProgress.collectAsStateWithLifecycle(initialValue = emptyMap())
     val continueWatching by settings.continueWatching.collectAsStateWithLifecycle(initialValue = emptyList())
     val watchedVideos by watchedStore.watched.collectAsStateWithLifecycle(initialValue = emptyMap())
@@ -1131,7 +1135,7 @@ private fun Root() {
                     onClearFavorites = {
                         scope.launch {
                             val count = favorites.size
-                            settings.clearFavorites()
+                            settings.clearFavorites(allowedChats)
                             toast(
                                 L.mainFavouritesCleared(count = count),
                             )

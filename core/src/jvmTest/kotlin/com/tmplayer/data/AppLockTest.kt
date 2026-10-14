@@ -178,6 +178,25 @@ class AppLockTest {
     }
 
     @Test
+    fun `favourites are counted as the Favourites tab lists them`() {
+        val starred = setOf(1L, 2L)
+        assertEquals(starred, KidsLock.favourites(starred, allowed = null))
+        // Two starred, one of them hidden by the lock: the badge says 1, not 2.
+        assertEquals(setOf(2L), KidsLock.favourites(starred, setOf(2L, 3L)))
+        assertTrue(KidsLock.favourites(starred, emptySet()).isEmpty())
+    }
+
+    @Test
+    fun `clearing favourites under the lock keeps the hidden ones`() = runBlocking {
+        settings.toggleFavorite(1L)
+        settings.toggleFavorite(2L)
+        settings.clearFavorites(allowed = setOf(2L))
+        assertEquals(setOf(1L), settings.favorites.first())
+        settings.clearFavorites()
+        assertTrue(settings.favorites.first().isEmpty())
+    }
+
+    @Test
     fun `a lock without a PIN is not in force`() = runBlocking {
         settings.setKidsChats(setOf(5L))
         settings.setKidsLock(true)

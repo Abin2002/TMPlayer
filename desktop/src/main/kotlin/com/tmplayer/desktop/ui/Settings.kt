@@ -155,7 +155,10 @@ fun SettingsPage(
     val trackPrefs by settings.trackPreferences.collectAsState(initial = TrackPreferences())
     val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
     val history by settings.continueWatching.collectAsState(initial = emptyList())
-    val favourites by settings.favorites.collectAsState(initial = emptySet())
+    // Only those the kids lock shows, as the Favourites section counts them.
+    val storedFavourites by settings.favorites.collectAsState(initial = emptySet())
+    val allowedChats by com.tmplayer.data.ChatGate.allowed.collectAsState()
+    val favourites = remember(storedFavourites, allowedChats) { com.tmplayer.data.KidsLock.favourites(storedFavourites, allowedChats) }
     val watchedList by state.watched.history.collectAsState(initial = emptyList())
     var confirmClearWatched by remember { mutableStateOf(false) }
     val folders by com.tmplayer.data.Td.folders.collectAsState()
@@ -398,7 +401,7 @@ fun SettingsPage(
                         ) {
                             scope.launch {
                                 val count = favourites.size
-                                settings.clearFavorites()
+                                settings.clearFavorites(allowedChats)
                                 toast(s.settingsFavouritesCleared(count))
                             }
                         }
