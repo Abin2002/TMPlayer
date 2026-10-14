@@ -191,6 +191,7 @@ class PromoCaptureActivity : ComponentActivity() {
         }
         PromoGroups.demo = groupsDemo
 
+        PromoShowOverride.key = intent.getStringExtra("show")?.lowercase() ?: "harbour lines"
         val start = intent.getStringExtra("screen") ?: "chats"
         if (start == "signin") {
             // The number field takes focus the moment it appears, which is right in the app and
@@ -666,7 +667,7 @@ private fun promoMedia(): List<MediaItem> = PromoMeta.library.cinema
 /**
  * `--es variant series-open`: the chat with the demo shows in it, every file on its own as the real
  * grid lists them, and the first show's page open over it (a bottom sheet on the phone, a page on
- * the TV).
+ * the TV). `--es show "skybound academy"` opens that show's page instead of Harbour Lines'.
  */
 private class PromoSeries(
     val files: List<MediaItem>,
@@ -688,7 +689,7 @@ private fun promoSeries(variant: String): PromoSeries? {
     var open by remember { mutableStateOf(true) }
     return PromoSeries(
         files = media,
-        opened = arranged.firstNotNullOfOrNull { (it as? ShelfEntry.Show)?.series?.takeIf { s -> s.key == "harbour lines" } }
+        opened = arranged.firstNotNullOfOrNull { (it as? ShelfEntry.Show)?.series?.takeIf { s -> s.key == PromoShowOverride.key } }
             ?.takeIf { open },
         close = { open = false },
     )
@@ -772,6 +773,11 @@ private val PROMO_FRESH_SHOWS = setOf("harbour lines", "skybound academy")
  * with the films after them.
  */
 private fun promoSeriesMedia(): List<MediaItem> = PromoMeta.library.let { it.anime + it.nature + it.cinema }
+
+/** The show `--es variant series-open` opens, by its key; `--es show` sets it. */
+private object PromoShowOverride {
+    var key = "harbour lines"
+}
 
 /** Where the demo viewer is: see [PromoCatalog.Library]. */
 private val PROMO_WATCH: SeriesWatch
