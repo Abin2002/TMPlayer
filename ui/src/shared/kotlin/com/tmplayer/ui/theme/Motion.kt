@@ -45,6 +45,15 @@ object Motion {
     /** The first advance waits longer, so a viewer who has just arrived can read the first item. */
     const val HeroFirstAdvanceMs = 12_000L
 
-    /** A tween of [durationMillis] on [Standard]. */
-    fun <T> standard(durationMillis: Int = Normal): TweenSpec<T> = tween(durationMillis, easing = Standard)
+    /**
+     * The "Reduce motion" setting (CP68), set by the app from the stored choice: every tween made
+     * by [standard] (pictures fading in, panels opening) lands at once, and the loading shimmer
+     * stands still. Focus and press scaling stay, since they are how a remote shows where it is.
+     */
+    @Volatile
+    var reduced: Boolean = false
+
+    /** A tween of [durationMillis] on [Standard], or none at all under [reduced]. */
+    fun <T> standard(durationMillis: Int = Normal): TweenSpec<T> =
+        tween(if (reduced) 0 else durationMillis, easing = Standard)
 }

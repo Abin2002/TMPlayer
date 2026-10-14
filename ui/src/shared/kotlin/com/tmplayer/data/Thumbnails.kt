@@ -47,10 +47,34 @@ object Thumbnails {
 
     /** Called once at start-up, before anything has been cached. */
     fun sizeFor(memoryClassMb: Int) {
-        val bytes = (memoryClassMb * 1024 * 1024 / CACHE_HEAP_FRACTION)
-            .coerceIn(MIN_CACHE_BYTES, MAX_CACHE_BYTES)
-        cache = newCache(bytes)
+        memoryClass = memoryClassMb
+        cache = newCache(budget())
     }
+
+    @Volatile
+    private var memoryClass = 0
+
+    /**
+     * The "Lighter pictures" setting (CP68): half the usual share of the heap for pictures, and
+     * thumbnails, posters and stills decoded at [lighter] widths. Set from the stored choice; a
+     * change empties the cache, since what is in it was decoded at the other size.
+     */
+    @Volatile
+    var light: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            cache = newCache(budget())
+        }
+
+    private fun budget(): Int {
+        if (memoryClass <= 0) return if (light) CACHE_BYTES / 2 else CACHE_BYTES
+        val fraction = if (light) CACHE_HEAP_FRACTION * 2 else CACHE_HEAP_FRACTION
+        return (memoryClass * 1024 * 1024 / fraction).coerceIn(MIN_CACHE_BYTES, MAX_CACHE_BYTES)
+    }
+
+    /** A decode width under [light]: three fifths, and never below what a small tile needs. */
+    fun lighter(maxWidth: Int): Int = if (light) (maxWidth * 3 / 5).coerceAtLeast(LIGHT_MIN_WIDTH).coerceAtMost(maxWidth) else maxWidth
 
     /** Hands the pictures back: all of them, or half when the system is only asking politely. */
     fun trim(everything: Boolean) {
@@ -72,7 +96,7 @@ object Thumbnails {
 
         val path = withContext(Dispatchers.IO) { downloadThumbnail(fileId) } ?: return null
         return withContext(Dispatchers.IO) {
-            runCatching { decodeImageFile(path, MAX_THUMBNAIL_WIDTH) }.getOrNull()?.also { cache.put(key, it) }
+            runCatching { decodeImageFile(path, lighter(MAX_THUMBNAIL_WIDTH)) }.getOrNull()?.also { cache.put(key, it) }
         }
     }
 
@@ -111,13 +135,14 @@ object Thumbnails {
     }
 
     /** A poster already decoded, for the first frame. See [online]. */
-    fun peekOnline(url: String, maxWidth: Int): ImageBitmap? = cache.get("online:$maxWidth:$url")
+    fun peekOnline(url: String, maxWidth: Int): ImageBitmap? = cache.get("online:${lighter(maxWidth)}:$url")
 
     /**
      * A poster from the online metadata providers: [fetch] puts it on the disk (or finds it there),
      * and it is decoded here at [maxWidth] and kept beside the thumbnails, under the same budget.
      */
-    suspend fun online(url: String, maxWidth: Int, fetch: suspend () -> java.io.File?): ImageBitmap? {
+    suspend fun online(url: String, wanted: Int, fetch: suspend () -> java.io.File?): ImageBitmap? {
+        val maxWidth = lighter(wanted)
         val key = "online:$maxWidth:$url"
         cache.get(key)?.let { return it }
         return withContext(Dispatchers.IO) {
@@ -176,6 +201,9 @@ object Thumbnails {
 
     /** Card art is never larger than ~400 px wide; decoding full size would waste heap. */
     private const val MAX_THUMBNAIL_WIDTH = 400
+
+    /** The narrowest a picture is decoded at under [light]. */
+    private const val LIGHT_MIN_WIDTH = 160
     private const val THUMBNAIL_PRIORITY = 4
     private const val DOWNLOAD_TIMEOUT_MS = 20_000L
 }

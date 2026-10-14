@@ -121,7 +121,8 @@ private fun Picture(bitmap: ImageBitmap, mini: ImageBitmap?, frame: Float) {
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 filterQuality = FilterQuality.Low,
-                modifier = Modifier.fillMaxSize().blur(LETTERBOX_BLUR),
+                // Lighter pictures (CP68) skip the blur: the stretched preview is soft enough.
+                modifier = if (Thumbnails.light) Modifier.fillMaxSize() else Modifier.fillMaxSize().blur(LETTERBOX_BLUR),
             )
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = LETTERBOX_DIM)))
             Image(

@@ -62,6 +62,13 @@ class App : Application() {
                 AppLocales.apply(this@App, saved)
             }
         }
+        // Lighter pictures and Reduce motion (CP68), from the stored choice and whenever it changes.
+        // Before the promo return, so the fixture shows a screen as a low-end device draws it.
+        backgroundScope.launch {
+            val store = SettingsStore(this@App)
+            launch { store.lighterPictures.collect { Thumbnails.light = it } }
+            launch { store.reduceMotion.collect { com.tmplayer.ui.theme.Motion.reduced = it } }
+        }
         // The setup's pictures are this app's drawables, which the shared :ui code cannot name.
         SetupImages.drawable = ::setupDrawable
         // The PIN's waits run on time since boot, deep sleep included, which no date setting moves.
@@ -171,6 +178,11 @@ class App : Application() {
         // The bitmap cache is the only thing in this process holding memory it can give back
         // without losing anything; everything else is either TDLib's or on screen.
         Thumbnails.trim(level)
+        // The system running short while the app is in front is the struggle the one-time hint
+        // is for (CP68); the shell decides whether there is anything to offer.
+        if (level == TRIM_MEMORY_RUNNING_LOW || level == TRIM_MEMORY_RUNNING_CRITICAL) {
+            com.tmplayer.data.DeviceFitHint.raise()
+        }
     }
 
     companion object {
@@ -211,5 +223,5 @@ private fun setupDrawable(choice: SetupChoice, tv: Boolean, dark: Boolean): Int 
         dark -> R.drawable.setup_posters_off_dark
         else -> R.drawable.setup_posters_off
     }
-    SetupChoice.KeepWhilePlaying, SetupChoice.LowStorage -> 0
+    SetupChoice.KeepWhilePlaying, SetupChoice.LowStorage, SetupChoice.ApplyRecommended, SetupChoice.NotNow -> 0
 }

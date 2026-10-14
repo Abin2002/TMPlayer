@@ -101,6 +101,14 @@ fun main(args: Array<String>) {
         Background.scope.launch {
             settings.language.collect { saved -> Translator.select(saved, listOf(Locale.getDefault().toLanguageTag())) }
         }
+        // Lighter pictures and Reduce motion (CP68) have no rows on a computer, but a backup made
+        // on a phone can carry them, and they mean the same here.
+        Background.scope.launch { settings.lighterPictures.collect { com.tmplayer.data.Thumbnails.light = it } }
+        Background.scope.launch { settings.reduceMotion.collect { com.tmplayer.ui.theme.Motion.reduced = it } }
+        // `-Dtmplayer.lowend=true`: the low-end verdict, short of storage, for checking the card and the step.
+        if (System.getProperty("tmplayer.lowend") == "true") {
+            com.tmplayer.data.DeviceFitOverride.forced = com.tmplayer.data.DeviceFit(shortOfMemory = false, shortOfStorage = true)
+        }
         Background.scope.launch {
             Td.awaitAuthorizedSession()
             DesktopServices.downloads.restore()

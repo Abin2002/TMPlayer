@@ -84,6 +84,13 @@ class Shimmer internal constructor(
  */
 @Composable
 fun rememberShimmer(): Shimmer {
+    val base = Tone.surface
+    val band = Tone.surfaceHigh
+    // Reduce motion (CP68): the placeholders stand still, the band parked off to the side.
+    if (com.tmplayer.ui.theme.Motion.reduced) {
+        val still = remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+        return remember(base, band) { Shimmer(still, listOf(base, base, base)) }
+    }
     val transition = rememberInfiniteTransition(label = "shimmer")
     val progress = transition.animateFloat(
         initialValue = 0f,
@@ -94,8 +101,6 @@ fun rememberShimmer(): Shimmer {
         ),
         label = "sweep",
     )
-    val base = Tone.surface
-    val band = Tone.surfaceHigh
     val colors = listOf(base, band, base)
     return remember(progress, base, band) { Shimmer(progress, colors) }
 }
