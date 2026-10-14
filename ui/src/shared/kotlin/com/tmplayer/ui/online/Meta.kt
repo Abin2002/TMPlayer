@@ -18,7 +18,9 @@ import androidx.compose.ui.layout.ContentScale
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.Thumbnails
 import com.tmplayer.i18n.Translator
+import com.tmplayer.online.MetaEpisode
 import com.tmplayer.online.MetaInfo
+import com.tmplayer.online.MetaKind
 import com.tmplayer.online.MetaQuery
 import com.tmplayer.online.MetaResult
 import com.tmplayer.online.MetaWords
@@ -65,6 +67,21 @@ fun rememberMeta(fileName: String, caption: String?, showOnly: Boolean = false):
 @Composable
 fun rememberMeta(item: MediaItem, showOnly: Boolean = false): MetaInfo? =
     rememberMeta(item.nameForParsing, item.caption, showOnly)
+
+/**
+ * The provider's episode list for [season] of the show [meta], for the names in a series list:
+ * null while lookups are off, for a film, before the answer arrives, or when nobody could be
+ * asked. Shares [OnlineMetadata.season]'s memory and cache with the detail page's episode guide.
+ */
+@Composable
+fun rememberSeasonEpisodes(meta: MetaInfo?, season: Int): List<MetaEpisode>? {
+    val online = OnlineMetadata.current ?: return null
+    if (meta == null || meta.kind != MetaKind.Show) return null
+    val listed by produceState(online.peekSeason(meta, season), meta, season) {
+        if (value == null) value = withContext(Dispatchers.IO) { online.season(meta, season) }
+    }
+    return listed
+}
 
 /** The picture at [url], once it is on the disk and decoded; nothing until then. */
 @Composable

@@ -150,6 +150,11 @@ fun EpisodesPanel(
     var currentFocused by remember { mutableStateOf(false) }
     val progress = watch.progress(series)
     val next = progress.next
+    // The episodes' names, as the series page shows them, once lookups have them.
+    val names = com.tmplayer.ui.online.rememberSeasonEpisodes(
+        com.tmplayer.ui.online.rememberMeta(series.cover, showOnly = true),
+        shown.number,
+    )
 
     BoxWithConstraints(modifier) {
         val wide = maxWidth >= WIDE_FROM
@@ -212,6 +217,7 @@ fun EpisodesPanel(
                         onCopy = actions.onPlay,
                         current = isPlaying,
                         holdOk = true,
+                        name = com.tmplayer.online.EpisodeNames.listName(episode.season, episode.episode, names),
                         modifier = Modifier.padding(pad).secondaryClick { actions.onToggleWatched(chosen) },
                         lineModifier = if (isPlaying) {
                             Modifier.focusRequester(currentFocus).onFocusChanged { currentFocused = it.isFocused }

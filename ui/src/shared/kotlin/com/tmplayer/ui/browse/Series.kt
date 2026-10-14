@@ -117,6 +117,8 @@ import com.tmplayer.ui.online.rememberMetaExtras
 import com.tmplayer.ui.online.rememberTrailerLauncher
 import com.tmplayer.ui.online.MetaPicture
 import com.tmplayer.ui.online.rememberMeta
+import com.tmplayer.ui.online.rememberSeasonEpisodes
+import com.tmplayer.online.EpisodeNames
 import com.tmplayer.ui.components.WatchedBadge
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
@@ -379,6 +381,11 @@ fun EpisodeRow(
     holdOk: Boolean = false,
     /** Hung on the row itself rather than on the copies under it, for focus to land on. */
     lineModifier: Modifier = Modifier,
+    /**
+     * The episode's name from TMDB or TVmaze ([com.tmplayer.online.EpisodeNames.listName]), or
+     * null for the plain "Episode 5". The S1 E5 line above it stays either way.
+     */
+    name: String? = null,
 ) {
     val tv = !isTouch()
     val shape = RoundedCornerShape(Corner.Medium)
@@ -388,7 +395,7 @@ fun EpisodeRow(
         .background(if (current) Tone.accent.copy(alpha = 0.14f) else Tone.surface)
         .border(1.dp, if (current) Tone.accent.copy(alpha = 0.5f) else Tone.outline, shape)
     if (episode.copies.size <= 1 || onCopy == null) {
-        EpisodeLine(episode, chosen, point, finished, upNext, onClick, card.then(lineModifier), onLongClick, current, holdOk)
+        EpisodeLine(episode, chosen, point, finished, upNext, onClick, card.then(lineModifier), onLongClick, current, holdOk, name)
         return
     }
     // DOWN from the row goes to the chip of the copy it plays, not to whichever chip sits nearest
@@ -396,7 +403,7 @@ fun EpisodeRow(
     val chips = remember(episode.copies.size) { List(episode.copies.size) { FocusRequester() } }
     val landing = chips[episode.copies.indexOfFirst { it.id == chosen.id }.coerceAtLeast(0)]
     Column(card) {
-        EpisodeLine(episode, chosen, point, finished, upNext, onClick, lineModifier.focusProperties { down = landing }, onLongClick, current, holdOk)
+        EpisodeLine(episode, chosen, point, finished, upNext, onClick, lineModifier.focusProperties { down = landing }, onLongClick, current, holdOk, name)
         Row(
             Modifier
                 .fillMaxWidth()
@@ -476,6 +483,7 @@ private fun EpisodeLine(
     onLongClick: (() -> Unit)?,
     current: Boolean = false,
     holdOk: Boolean = false,
+    name: String? = null,
 ) {
     val s = LocalStrings.current
     val tv = !isTouch()
@@ -553,11 +561,12 @@ private fun EpisodeLine(
                 }
             }
             Text(
-                s.seriesEpisode(episode.episode),
+                name ?: s.seriesEpisode(episode.episode),
                 style = if (tv) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
                 color = Tone.text,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 item.title,
@@ -685,6 +694,7 @@ fun SeriesPanel(
 
     val meta = rememberMeta(series.cover, showOnly = true)
     val extras = rememberMetaExtras(meta)
+    val names = rememberSeasonEpisodes(meta, shown.number)
     val trailers = rememberTrailerLauncher()
     val target = next ?: series.episodes.first()
     val art = next?.item ?: target.item
@@ -913,6 +923,7 @@ fun SeriesPanel(
                     onCopy = onPlay,
                     modifier = Modifier.padding(pad).widthIn(max = EPISODES_MAX),
                     lineModifier = if (next != null && episode.sameAs(next)) Modifier.focusRequester(upNextFocus) else Modifier,
+                    name = EpisodeNames.listName(episode.season, episode.episode, names),
                 )
             }
             // The cast and "More like this" after the episodes: composed only once scrolled to.

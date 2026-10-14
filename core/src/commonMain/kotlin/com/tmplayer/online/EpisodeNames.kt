@@ -36,6 +36,38 @@ object EpisodeNames {
     }
 
     /**
+     * The name a series list gives episode [number] of [season], from the provider's list for that
+     * season ([listed], as [OnlineMetadata.season] answers it), or null when the provider has none
+     * worth showing: then the row keeps its own "Episode 5". A placeholder the provider writes for
+     * an episode nobody has named yet ("Episode 5", "Épisode 5", "الحلقة 5") is not a name.
+     */
+    fun listName(season: Int, number: Int, listed: List<MetaEpisode>?): String? =
+        listed
+            ?.firstOrNull { it.season == season && it.number == number }
+            ?.name
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() && !placeholder(it, number) }
+
+    /**
+     * Whether [name] only numbers the episode: [number] and at most one short word round it,
+     * in any script. "Chapter 3" and "3" are; "The 4th Floor" and "Pilot" are not.
+     */
+    fun placeholder(name: String, number: Int): Boolean {
+        val digits = DIGITS.findAll(name).map { it.value.toIntOrNull() }.toList()
+        if (digits.isEmpty()) return false
+        if (digits.any { it != number }) return false
+        val words = name.replace(DIGITS, " ").split(SEPARATORS).filter { it.isNotBlank() }
+        // One word, or a few single characters as Chinese writes it: "第 5 集".
+        return (words.size <= 1 || words.all { it.length == 1 }) && words.sumOf { it.length } <= PLACEHOLDER_WORD
+    }
+
+    private val DIGITS = Regex("""\p{Nd}+""")
+    private val SEPARATORS = Regex("""[\s\p{P}\p{S}]+""")
+
+    /** The longest word a placeholder carries: "エピソード", "Episódio", "Episodio". */
+    private const val PLACEHOLDER_WORD = 10
+
+    /**
      * The question for one episode: the one the detail panel asks for the same file where that
      * names the same episode, so the answer is shared, else one built from the series view's own
      * numbering, which covers a bare "E5" the file name alone does not give away.
