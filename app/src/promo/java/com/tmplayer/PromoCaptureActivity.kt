@@ -876,14 +876,13 @@ private fun ComponentActivity.promoChannels() {
     val context = applicationContext
     val library = PromoMeta.library
     // The demo videos' pictures are this build's drawables, not Telegram thumbnails: each card's
-    // picture is written out from the video's own frame, found by its name. The course's lessons
-    // carry none in the library (the in-app tiles show the generated cover), but a real upload's
-    // thumbnail is what the launcher would get, so they wear the course's demo frame here.
+    // picture is written out from the video's own frame, found by its name. The videos the library
+    // keeps without a picture (the in-app tiles show the generated cover there) wear a demo frame
+    // that suits them, as a real upload's thumbnail would be what the launcher gets.
     val frames = java.io.File(context.cacheDir, "promo-channel-art").apply { mkdirs() }
     com.tmplayer.data.TvChannelsPublisher.fixtureArt = { art ->
         val item = library.all.firstOrNull { it.nameForParsing == art.name && it.caption == art.caption }
-        val bytes = item?.miniThumbnail
-            ?: item?.takeIf { it.chatId == PromoCatalog.STUDY }?.let { PromoMeta.pictures.bytes("demo_tutorial") }
+        val bytes = item?.miniThumbnail ?: item?.let { PromoMeta.pictures.bytes(promoChannelFrame(it)) }
         bytes?.let {
             java.io.File(frames, "${art.key.hashCode().toUInt()}.jpg").apply { if (!isFile) writeBytes(it) }
         }
@@ -919,6 +918,15 @@ private fun ComponentActivity.promoChannels() {
             }
         }
     }.start()
+}
+
+/** A demo frame for a video the library keeps without a picture, for its home screen card. */
+private fun promoChannelFrame(item: MediaItem): String = when {
+    item.chatId == PromoCatalog.STUDY -> "demo_tutorial"
+    "Kestrel" in item.fileName -> "demo_coast"
+    "Tiffin" in item.fileName -> "demo_kitchen"
+    "ladakh" in item.fileName -> "demo_forest"
+    else -> "demo_workshop"
 }
 
 /** `tv` or `tablet` answers the Fire OS question as that device would; anything else leaves it. */

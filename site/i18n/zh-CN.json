@@ -361,7 +361,7 @@
     "tour_tv_home_row": "星标聊天里最近新增的内容，排成一行，标着 TMPlayer 的名字。",
     "tour_tv_home_card": "选中的卡片会显示标题、时长和所在聊天。按 OK 播放，或打开剧集页面。",
     "tour_tv_home_posters": "开启在线信息查询后，电影和剧集会显示海报；其他视频显示自己的缩略图。",
-    "tv_home_screen_alt": "Android TV 主屏幕上的一排 TMPlayer 卡片，是最近加入星标聊天的演示电影和剧集，选中的是 The Quiet Orbit。"
+    "tv_home_screen_alt": "Android TV 主屏幕上的一排 TMPlayer 卡片，是最近加入星标聊天的演示电影和剧集，选中的是 Saltwater Lanterns。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "下载适用于 Android TV、手机、Windows 和 Linux 的 TMPlayer",

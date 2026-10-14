@@ -361,7 +361,7 @@
     "tour_tv_home_row": "スターを付けたチャットに最近追加されたものを、TMPlayer の名前の下に1列で。",
     "tour_tv_home_card": "選択中のカードには、タイトル、再生時間、チャットが表示されます。OK で再生、シリーズならそのページを開きます。",
     "tour_tv_home_posters": "オンライン情報の取得がオンなら、映画やシリーズはポスター付き。ほかの動画は自身のサムネイルで表示されます。",
-    "tv_home_screen_alt": "Android TV のホーム画面。スター付きチャットに最近追加されたデモの映画とシリーズが TMPlayer の列に並び、The Quiet Orbit が選択されています。"
+    "tv_home_screen_alt": "Android TV のホーム画面。スター付きチャットに最近追加されたデモの映画とシリーズが TMPlayer の列に並び、Saltwater Lanterns が選択されています。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV、スマートフォン、Windows、Linux向けTMPlayerをダウンロード",
