@@ -329,9 +329,10 @@
           </div>
           <div class="format">
             <h3 data-i18n="install.from_a_computer">Da un computer</h3>
-            <p data-i18n="install.tv_from_computer">Attiva <em>Debug di rete</em> nelle Opzioni sviluppatore della TV, poi, sulla stessa rete wifi:</p>
+            <p data-i18n="install.tv_from_computer_ip">Attiva <em>Debug di rete</em> nelle Opzioni sviluppatore della TV e trova l'indirizzo IP della TV nelle impostazioni di rete. Poi, su un computer nella stessa rete wifi, nella cartella dell'APK, esegui questi comandi con quell'indirizzo al posto di <code>&lt;tv-ip&gt;</code>:</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
+            <p data-i18n="install.accept_the_debugging_prompt">Accetta la richiesta di debug che compare sulla televisione la prima volta.</p>
           </div>
         </div>
       </div>
@@ -389,7 +390,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.win_step2_h">Incolla questa riga e premi Invio</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p data-i18n="install.win_step2">Scarica il programma di installazione da GitHub, lo verifica con il checksum pubblicato e installa TMPlayer per il tuo utente, senza avvisi di Windows.</p>
+            <p data-i18n="install.win_step2_paste">Fai clic sulla riga per copiarla, poi incollala in PowerShell con Ctrl+V o con un clic destro.</p>
+            <p data-i18n="install.win_step2_done">Scarica il programma di installazione da GitHub, lo verifica con il checksum pubblicato e installa TMPlayer per il tuo utente, senza avvisi di Windows. Ci vogliono un paio di minuti. Quando dice che TMPlayer è installato, chiudi la finestra. Se invece si ferma con un errore in rosso, usa <a href="#windows-installer">il programma di installazione</a> qui sotto.</p>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.win_step3_h">Aprilo e accedi</h3>
@@ -400,7 +402,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
         <div class="panel panel-prose panel-wide" id="windows-installer">
           <h3 data-i18n="install.win_msi_h">Preferisci un programma di installazione?</h3>
-          <p data-i18n="install.win_msi">Scarica <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> dalla <a href="/it/download/#windows">pagina di download</a> e aprilo. Non ha ancora la firma del codice, quindi Windows potrebbe dire <em>Il PC è stato protetto da Windows</em>: fai clic su <em>Ulteriori informazioni</em>, poi su <em>Esegui comunque</em>.</p>
+          <p data-i18n="install.win_msi">Scarica <code data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</code> dalla <a href="/it/download/#windows">pagina di download</a> e aprilo. Non ha ancora la firma del codice, quindi Windows potrebbe dire <em>Il PC è stato protetto da Windows</em>: fai clic su <em>Ulteriori informazioni</em>, poi su <em>Esegui comunque</em>.</p>
         </div>
         <p class="muted small section-note" data-i18n="install.win_zip_note">Usavi il vecchio zip portatile? Elimina la sua cartella, poi installa come sopra. Accesso e impostazioni restano.</p>
       </div>
@@ -461,12 +463,14 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <ol class="steps">
           <li id="linux-1">
             <h3 data-i18n="install.linux_step1_h">Scarica l'AppImage</h3>
-            <p data-i18n="install.linux_step1">Prendi <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> dalla <a href="/it/download/#linux">pagina di download</a>. Un solo file, per qualsiasi distribuzione.</p>
+            <p data-i18n="install.linux_step1">Prendi <code data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</code> dalla <a href="/it/download/#linux">pagina di download</a>. Un solo file, per qualsiasi distribuzione.</p>
           </li>
           <li id="linux-2">
             <h3 data-i18n="install.linux_step2_h">Rendilo eseguibile e aprilo</h3>
-            <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
-./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
+            <p data-i18n="install.linux_step2_where">In un terminale, nella cartella dove l'hai salvato:</p>
+            <pre class="code"><code>cd ~/Downloads
+chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
+./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p data-i18n="install.or_tick_in_the_file">Oppure seleziona <em>Consenti l'esecuzione del file come programma</em> nelle proprietà del file e fai doppio clic.</p>
           </li>
           <li id="linux-3">
@@ -483,7 +487,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           </div>
           <div class="format">
             <h3 data-i18n="install.tarball_h">La cartella semplice</h3>
-            <p data-i18n="install.tarball">Estrai <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> dove vuoi e avvia <code>bin/TMPlayer</code> al suo interno. Non si aggiorna da solo: TMPlayer ti avvisa quando esce una nuova versione.</p>
+            <p data-i18n="install.tarball">Estrai <code data-name="linux-x64-tarball">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> dove vuoi e avvia <code>bin/TMPlayer</code> al suo interno. Non si aggiorna da solo: TMPlayer ti avvisa quando esce una nuova versione.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">Passare da deb, rpm o Flatpak</h3>
@@ -523,7 +527,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <h3 data-i18n="install.linux_appimage_in_the_app">Linux: AppImage, nel menu delle app</h3>
           <p data-i18n="install.a_single_file_has_no">Un file singolo non ha una voce di menu, quindi creane una. Questi comandi spostano l'AppImage al suo posto, scaricano l'icona e scrivono un launcher:</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
-mv ~/Downloads/TMPlayer-&lt;version&gt;-x86_64.AppImage ~/Applications/TMPlayer.AppImage
+mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
 
@@ -603,7 +607,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
             <span class="faq-q" data-i18n="install.the_appimage_does_nothing_when">L'AppImage non fa nulla quando la apro</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15.5a1 1 0 0 1-.71-.29l-5-5a1 1 0 0 1 1.42-1.42L12 13.09l4.29-4.3a1 1 0 1 1 1.42 1.42l-5 5a1 1 0 0 1-.71.29Z"/></svg>
           </summary>
-          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">Di solito manca FUSE. Installa <code>libfuse2t64</code> (Ubuntu 24.04 e successive) oppure <code>libfuse2</code> (22.04), oppure evita FUSE con <code>./TMPlayer-&lt;version&gt;-x86_64.AppImage --appimage-extract-and-run</code>.</p></div>
+          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">Di solito manca FUSE. Installa <code>libfuse2t64</code> (Ubuntu 24.04 e successive) oppure <code>libfuse2</code> (22.04), oppure evita FUSE con <code>./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code>.</p></div>
         </details>
         <details class="faq-item" name="trouble">
           <summary>
@@ -694,7 +698,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK universale", "kind_windows_installer": "Programma di installazione per Windows", "kind_windows_zip": "Zip per Windows", "kind_linux_tarball": "Tarball per Linux", "kind_mac_dmg": "DMG per macOS", "kind_checksums": "Checksum", "os_note_ios_only": "Non esiste una versione per iPhone o iPad. I file qui sotto sono per telefoni Android, Android TV e computer.", "download_for": "Scarica per {os}", "os_note_mac_preview": "La versione per macOS è un'anteprima per i Mac con Apple Silicon (M1 e successivi) e macOS 26 o successivo. Non funziona sui Mac Intel.", "os_note_mac": "Non esiste una versione per macOS. Tutto ciò che segue riguarda Android, Windows e Linux.", "downloads_one": "{count} download", "downloads_other": "{count} download", "not_in_release": "Non in {version}", "on_github": "Su GitHub", "download_file": "Scarica {file}", "download_version_mac": "Scarica {version} per Mac con Apple Silicon", "download_version_for": "Scarica {version} per {os}", "download_version_other_os": "Scarica {version} per Android, Windows o Linux", "install_version_for": "Installa {version} per {os}", "download_version": "Scarica {version}", "latest": "Ultima", "no_files_yet": "Questa versione non ha ancora file allegati. La build potrebbe essere ancora in corso.", "open_on_github": "Apri {version} su GitHub", "release": "Versione", "unavailable": "Non disponibile", "fail_downloads": "I download ci sono ancora: ogni pulsante qui sotto apre {link}, dove i file sono elencati per nome.", "fail_link": "l'ultima versione su GitHub", "go_to_downloads": "Vai ai download", "not_released": "Non ancora pubblicata", "no_release": "Non è ancora stata pubblicata nessuna versione. Puoi comunque compilare l'app dal codice sorgente.", "build_instructions": "Leggi le istruzioni di compilazione su GitHub", "view_project": "Vedi il progetto su GitHub", "fail_browser": "Questo browser non riesce a caricare l'elenco delle versioni.", "fail_rate": "GitHub sta limitando questa rete. La sua API pubblica consente 60 richieste all'ora per indirizzo, e questo le ha esaurite.", "fail_timeout": "GitHub non ha risposto in tempo.", "fail_load": "Non è stato possibile caricare da GitHub l'elenco delle versioni.", "theme_to_dark": "Passa al tema scuro", "theme_to_light": "Passa al tema chiaro", "menu_close": "Chiudi il menu", "menu": "Menu"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK universale", "kind_windows_installer": "Programma di installazione per Windows", "kind_windows_zip": "Zip per Windows", "kind_linux_tarball": "Tarball per Linux", "kind_mac_dmg": "DMG per macOS", "kind_checksums": "Checksum", "os_note_ios_only": "Non esiste una versione per iPhone o iPad. I file qui sotto sono per telefoni Android, Android TV e computer.", "download_for": "Scarica per {os}", "os_note_mac_preview": "La versione per macOS è un'anteprima per i Mac con Apple Silicon (M1 e successivi) e macOS 26 o successivo. Non funziona sui Mac Intel.", "os_note_mac": "Non esiste una versione per macOS. Tutto ciò che segue riguarda Android, Windows e Linux.", "downloads_one": "{count} download", "downloads_other": "{count} download", "not_in_release": "Non in {version}", "on_github": "Su GitHub", "download_file": "Scarica {file}", "download_version_mac": "Scarica {version} per Mac con Apple Silicon", "download_version_for": "Scarica {version} per {os}", "download_version_other_os": "Scarica {version} per Android, Windows o Linux", "install_version_for": "Installa {version} per {os}", "download_version": "Scarica {version}", "latest": "Ultima", "no_files_yet": "Questa versione non ha ancora file allegati. La build potrebbe essere ancora in corso.", "open_on_github": "Apri {version} su GitHub", "release": "Versione", "unavailable": "Non disponibile", "fail_downloads": "I download ci sono ancora: ogni pulsante qui sotto apre {link}, dove i file sono elencati per nome.", "fail_link": "l'ultima versione su GitHub", "go_to_downloads": "Vai ai download", "not_released": "Non ancora pubblicata", "no_release": "Non è ancora stata pubblicata nessuna versione. Puoi comunque compilare l'app dal codice sorgente.", "build_instructions": "Leggi le istruzioni di compilazione su GitHub", "view_project": "Vedi il progetto su GitHub", "fail_browser": "Questo browser non riesce a caricare l'elenco delle versioni.", "fail_rate": "GitHub sta limitando questa rete. La sua API pubblica consente 60 richieste all'ora per indirizzo, e questo le ha esaurite.", "fail_timeout": "GitHub non ha risposto in tempo.", "fail_load": "Non è stato possibile caricare da GitHub l'elenco delle versioni.", "theme_to_dark": "Passa al tema scuro", "theme_to_light": "Passa al tema chiaro", "menu_close": "Chiudi il menu", "menu": "Menu", "sha_expected": "Per {file}, il risultato dovrebbe essere:", "copy_command": "Copia", "copied": "Copiato", "copy_failed": "Il browser non ha permesso di copiare. Il testo è selezionato: copialo da lì."}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

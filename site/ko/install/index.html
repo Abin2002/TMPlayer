@@ -329,9 +329,10 @@
           </div>
           <div class="format">
             <h3 data-i18n="install.from_a_computer">컴퓨터로</h3>
-            <p data-i18n="install.tv_from_computer">TV의 개발자 옵션에서 <em>네트워크 디버깅</em>을 켜고, 같은 wifi에서 다음을 실행하세요.</p>
+            <p data-i18n="install.tv_from_computer_ip">TV의 개발자 옵션에서 <em>네트워크 디버깅</em>을 켜고, 네트워크 설정에서 TV의 IP 주소를 확인하세요. 그런 다음 같은 wifi에 연결된 컴퓨터에서, APK가 있는 폴더에서 <code>&lt;tv-ip&gt;</code> 자리에 그 주소를 넣어 다음을 실행하세요.</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
+            <p data-i18n="install.accept_the_debugging_prompt">처음에 TV에 나타나는 디버깅 확인을 수락하세요.</p>
           </div>
         </div>
       </div>
@@ -389,7 +390,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.win_step2_h">이 한 줄을 붙여 넣고 Enter</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p data-i18n="install.win_step2">GitHub에서 설치 프로그램을 받아 공개된 체크섬과 대조한 뒤 내 사용자 계정에 TMPlayer를 설치해요. Windows 경고도 없어요.</p>
+            <p data-i18n="install.win_step2_paste">줄을 클릭해 복사한 뒤, Ctrl+V나 마우스 오른쪽 클릭으로 PowerShell에 붙여 넣으세요.</p>
+            <p data-i18n="install.win_step2_done">GitHub에서 설치 프로그램을 받아 공개된 체크섬과 대조한 뒤 내 사용자 계정에 TMPlayer를 설치해요. Windows 경고도 없어요. 1~2분 걸려요. TMPlayer가 설치되었다고 나오면 창을 닫으세요. 대신 빨간 오류로 멈추면 아래의 <a href="#windows-installer">설치 프로그램</a>을 쓰세요.</p>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.win_step3_h">열고 로그인</h3>
@@ -400,7 +402,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
         <div class="panel panel-prose panel-wide" id="windows-installer">
           <h3 data-i18n="install.win_msi_h">설치 프로그램이 더 편하다면</h3>
-          <p data-i18n="install.win_msi"><a href="/ko/download/#windows">다운로드 페이지</a>에서 <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code>를 받아 여세요. 아직 코드 서명이 없어서 Windows가 <em>Windows가 PC를 보호했습니다</em>라고 표시할 수 있어요. <em>추가 정보</em>, <em>실행</em> 순서로 클릭하세요.</p>
+          <p data-i18n="install.win_msi"><a href="/ko/download/#windows">다운로드 페이지</a>에서 <code data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</code>를 받아 여세요. 아직 코드 서명이 없어서 Windows가 <em>Windows가 PC를 보호했습니다</em>라고 표시할 수 있어요. <em>추가 정보</em>, <em>실행</em> 순서로 클릭하세요.</p>
         </div>
         <p class="muted small section-note" data-i18n="install.win_zip_note">예전 포터블 zip을 쓰셨나요? 그 폴더를 지우고 위와 같이 설치하세요. 로그인과 설정은 그대로 유지돼요.</p>
       </div>
@@ -461,12 +463,14 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <ol class="steps">
           <li id="linux-1">
             <h3 data-i18n="install.linux_step1_h">AppImage 다운로드</h3>
-            <p data-i18n="install.linux_step1"><a href="/ko/download/#linux">다운로드 페이지</a>에서 <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code>를 받으세요. 어느 배포판에서나 쓰는 파일 하나예요.</p>
+            <p data-i18n="install.linux_step1"><a href="/ko/download/#linux">다운로드 페이지</a>에서 <code data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</code>를 받으세요. 어느 배포판에서나 쓰는 파일 하나예요.</p>
           </li>
           <li id="linux-2">
             <h3 data-i18n="install.linux_step2_h">실행 권한을 주고 열기</h3>
-            <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
-./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
+            <p data-i18n="install.linux_step2_where">터미널에서, 파일을 저장한 폴더에서:</p>
+            <pre class="code"><code>cd ~/Downloads
+chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
+./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p data-i18n="install.or_tick_in_the_file">또는 파일 속성에서 <em>프로그램으로 실행 허용</em>를 체크하고 더블클릭하세요.</p>
           </li>
           <li id="linux-3">
@@ -483,7 +487,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           </div>
           <div class="format">
             <h3 data-i18n="install.tarball_h">일반 폴더</h3>
-            <p data-i18n="install.tarball"><code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code>를 원하는 곳에 풀고 안의 <code>bin/TMPlayer</code>를 실행하세요. 스스로 업데이트되지는 않지만, 새 버전이 나오면 TMPlayer가 알려 줘요.</p>
+            <p data-i18n="install.tarball"><code data-name="linux-x64-tarball">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code>를 원하는 곳에 풀고 안의 <code>bin/TMPlayer</code>를 실행하세요. 스스로 업데이트되지는 않지만, 새 버전이 나오면 TMPlayer가 알려 줘요.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">deb, rpm, Flatpak에서 옮겨 올 때</h3>
@@ -523,7 +527,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <h3 data-i18n="install.linux_appimage_in_the_app">Linux: AppImage를 앱 메뉴에</h3>
           <p data-i18n="install.a_single_file_has_no">파일 하나만으로는 메뉴 항목이 없으니 직접 만들어야 해요. 아래 명령어가 AppImage를 제자리로 옮기고, 아이콘을 받고, 런처를 만들어 줘요.</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
-mv ~/Downloads/TMPlayer-&lt;version&gt;-x86_64.AppImage ~/Applications/TMPlayer.AppImage
+mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
 
@@ -603,7 +607,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
             <span class="faq-q" data-i18n="install.the_appimage_does_nothing_when">AppImage를 열어도 아무 일도 안 일어나요</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15.5a1 1 0 0 1-.71-.29l-5-5a1 1 0 0 1 1.42-1.42L12 13.09l4.29-4.3a1 1 0 1 1 1.42 1.42l-5 5a1 1 0 0 1-.71.29Z"/></svg>
           </summary>
-          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">대개 FUSE가 없어서예요. <code>libfuse2t64</code>(Ubuntu 24.04 이상) 또는 <code>libfuse2</code>(22.04)를 설치하거나, <code>./TMPlayer-&lt;version&gt;-x86_64.AppImage --appimage-extract-and-run</code>로 FUSE 없이 실행하세요.</p></div>
+          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">대개 FUSE가 없어서예요. <code>libfuse2t64</code>(Ubuntu 24.04 이상) 또는 <code>libfuse2</code>(22.04)를 설치하거나, <code>./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code>로 FUSE 없이 실행하세요.</p></div>
         </details>
         <details class="faq-item" name="trouble">
           <summary>
@@ -694,7 +698,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "범용 APK", "kind_windows_installer": "Windows 설치 파일", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "체크섬", "os_note_ios_only": "iPhone이나 iPad 버전은 없어요. 아래 파일은 Android 휴대폰, Android TV, 컴퓨터용이에요.", "download_for": "{os}용 다운로드", "os_note_mac_preview": "macOS 버전은 Apple 실리콘(M1 이상)을 탑재하고 macOS 26 이상을 쓰는 Mac용 미리보기예요. Intel Mac에서는 실행되지 않아요.", "os_note_mac": "macOS 버전은 없어요. 아래 내용은 모두 Android, Windows, Linux용이에요.", "downloads_one": "{count}회 다운로드", "downloads_other": "{count}회 다운로드", "not_in_release": "{version}에는 없음", "on_github": "GitHub에서 보기", "download_file": "{file} 다운로드", "download_version_mac": "Apple 실리콘 Mac용 {version} 다운로드", "download_version_for": "{os}용 {version} 다운로드", "download_version_other_os": "Android, Windows, Linux용 {version} 다운로드", "install_version_for": "{os}용 {version} 설치", "download_version": "{version} 다운로드", "latest": "최신", "no_files_yet": "이 릴리스에는 아직 첨부된 파일이 없어요. 빌드가 아직 진행 중일 수 있어요.", "open_on_github": "GitHub에서 {version} 열기", "release": "릴리스", "unavailable": "사용할 수 없음", "fail_downloads": "다운로드는 그대로 있어요. 아래 버튼은 모두 {link}를 열고, 거기서 파일 이름으로 찾을 수 있어요.", "fail_link": "GitHub의 최신 릴리스", "go_to_downloads": "다운로드로 가기", "not_released": "아직 출시되지 않았어요", "no_release": "아직 게시된 릴리스가 없어요. 소스에서 직접 앱을 빌드할 수는 있어요.", "build_instructions": "GitHub에서 빌드 방법 보기", "view_project": "GitHub에서 프로젝트 보기", "fail_browser": "이 브라우저는 릴리스 목록을 불러올 수 없어요.", "fail_rate": "GitHub가 이 네트워크의 요청을 제한하고 있어요. 공개 API는 주소당 시간당 60회까지 허용하는데 모두 사용했어요.", "fail_timeout": "GitHub가 제시간에 응답하지 않았어요.", "fail_load": "GitHub에서 릴리스 목록을 불러오지 못했어요.", "theme_to_dark": "다크 테마로 전환", "theme_to_light": "라이트 테마로 전환", "menu_close": "메뉴 닫기", "menu": "메뉴"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "범용 APK", "kind_windows_installer": "Windows 설치 파일", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "체크섬", "os_note_ios_only": "iPhone이나 iPad 버전은 없어요. 아래 파일은 Android 휴대폰, Android TV, 컴퓨터용이에요.", "download_for": "{os}용 다운로드", "os_note_mac_preview": "macOS 버전은 Apple 실리콘(M1 이상)을 탑재하고 macOS 26 이상을 쓰는 Mac용 미리보기예요. Intel Mac에서는 실행되지 않아요.", "os_note_mac": "macOS 버전은 없어요. 아래 내용은 모두 Android, Windows, Linux용이에요.", "downloads_one": "{count}회 다운로드", "downloads_other": "{count}회 다운로드", "not_in_release": "{version}에는 없음", "on_github": "GitHub에서 보기", "download_file": "{file} 다운로드", "download_version_mac": "Apple 실리콘 Mac용 {version} 다운로드", "download_version_for": "{os}용 {version} 다운로드", "download_version_other_os": "Android, Windows, Linux용 {version} 다운로드", "install_version_for": "{os}용 {version} 설치", "download_version": "{version} 다운로드", "latest": "최신", "no_files_yet": "이 릴리스에는 아직 첨부된 파일이 없어요. 빌드가 아직 진행 중일 수 있어요.", "open_on_github": "GitHub에서 {version} 열기", "release": "릴리스", "unavailable": "사용할 수 없음", "fail_downloads": "다운로드는 그대로 있어요. 아래 버튼은 모두 {link}를 열고, 거기서 파일 이름으로 찾을 수 있어요.", "fail_link": "GitHub의 최신 릴리스", "go_to_downloads": "다운로드로 가기", "not_released": "아직 출시되지 않았어요", "no_release": "아직 게시된 릴리스가 없어요. 소스에서 직접 앱을 빌드할 수는 있어요.", "build_instructions": "GitHub에서 빌드 방법 보기", "view_project": "GitHub에서 프로젝트 보기", "fail_browser": "이 브라우저는 릴리스 목록을 불러올 수 없어요.", "fail_rate": "GitHub가 이 네트워크의 요청을 제한하고 있어요. 공개 API는 주소당 시간당 60회까지 허용하는데 모두 사용했어요.", "fail_timeout": "GitHub가 제시간에 응답하지 않았어요.", "fail_load": "GitHub에서 릴리스 목록을 불러오지 못했어요.", "theme_to_dark": "다크 테마로 전환", "theme_to_light": "라이트 테마로 전환", "menu_close": "메뉴 닫기", "menu": "메뉴", "sha_expected": "{file}의 결과는 다음과 같아야 해요:", "copy_command": "복사", "copied": "복사됨", "copy_failed": "브라우저가 복사를 허용하지 않았어요. 텍스트가 선택되어 있으니 거기서 복사하세요."}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

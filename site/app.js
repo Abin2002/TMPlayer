@@ -1165,3 +1165,178 @@ var tmT = (function () {
   });
 
 })();
+
+
+/* File names in commands and instructions. A release's files carry the version in their names, so
+   the markup can only say TMPlayer-<version>-x86_64.AppImage, and a reader who copies that line
+   gets a shell error, or a stray file made by the < and >. An element marked
+   data-name="linux-x64-appimage" (a key of the assets in latest.json) gets the real name from the
+   update feed on this site, which costs no GitHub request; data-sha="..." shows that file's
+   SHA-256 to compare against. Without the feed the placeholder stays, as before. */
+(function () {
+  'use strict';
+
+  var names = document.querySelectorAll('[data-name]');
+  var sums = document.querySelectorAll('[data-sha]');
+  if ((!names.length && !sums.length) || !window.fetch) { return; }
+
+  fetch('/latest.json', { cache: 'no-cache' }).then(function (response) {
+    if (!response.ok) { throw new Error(String(response.status)); }
+    return response.json();
+  }).then(function (feed) {
+    var assets = (feed && feed.assets) || {};
+    function fileOf(kind) {
+      var asset = assets[kind];
+      if (!asset || !asset.url) { return null; }
+      var name = String(asset.url).split('/').pop();
+      // Only a plain file name goes into the page, never a path or anything else.
+      return /^[\w.+-]+$/.test(name) ? name : null;
+    }
+    Array.prototype.forEach.call(names, function (node) {
+      var name = fileOf(node.getAttribute('data-name'));
+      if (name) { node.textContent = name; }
+    });
+    Array.prototype.forEach.call(sums, function (node) {
+      var kind = node.getAttribute('data-sha');
+      var name = fileOf(kind);
+      var sha = assets[kind] && assets[kind].sha256;
+      if (!name || !/^[0-9a-f]{64}$/i.test(sha || '')) { return; }
+      node.textContent = tmT('sha_expected', 'For {file}, the result should be:', { file: name }) + ' ';
+      var code = document.createElement('code');
+      code.className = 'sha';
+      code.textContent = sha.toLowerCase();
+      node.appendChild(code);
+      node.hidden = false;
+    });
+  }).catch(function () {});
+})();
+
+/* Copy buttons on the command blocks (the PowerShell line, adb, chmod and the rest), and on any
+   button marked data-copy="text" (the link on the support page). A command block copies when
+   clicked anywhere, unless the reader has just selected part of it to copy by hand; the icon turns
+   to a tick for a moment, and a polite live region says Copied to a screen reader, since a changed
+   label alone is not read out. When the browser refuses, the text is left selected and the reader
+   is told to copy it by hand, rather than the click silently doing nothing. Added here, so with
+   scripting off the block stays plain text to select. */
+(function () {
+  'use strict';
+
+  var blocks = document.querySelectorAll('pre.abi-cmd, pre.code');
+  var links = document.querySelectorAll('button[data-copy]');
+  if (!blocks.length && !links.length) { return; }
+  var COPY = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 2h9a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1V5a3 3 0 0 1 3-3Zm0 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H9ZM6 8H5v12h10v-1H9a3 3 0 0 1-3-3V8Z"/></svg>';
+  var TICK = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20.7 5.3a1 1 0 0 1 0 1.4l-11 11a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4L9 15.6 19.3 5.3a1 1 0 0 1 1.4 0Z"/></svg>';
+  var label = tmT('copy_command', 'Copy');
+  var done = tmT('copied', 'Copied');
+  var refused = tmT('copy_failed', 'Your browser did not allow copying. The text is selected: copy it from there.');
+
+  var live = document.createElement('p');
+  live.className = 'sr-only';
+  live.setAttribute('aria-live', 'polite');
+  document.body.appendChild(live);
+  var liveTimer = null;
+  function say(text) {
+    // Emptied first, so the same words twice in a row are still read out.
+    live.textContent = '';
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(function () { live.textContent = text; }, 60);
+  }
+
+  // The clipboard API first; where it is missing or refused (an old browser, a page not served
+  // over HTTPS, a permission prompt dismissed), the older select and copy way.
+  function write(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).catch(function () { return fallback(text); });
+    }
+    return fallback(text);
+  }
+
+  function fallback(text) {
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(area);
+      if (ok) { resolve(); } else { reject(); }
+    });
+  }
+
+  function selectAll(node) {
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(node);
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } catch (e) {}
+  }
+
+  Array.prototype.forEach.call(blocks, function (pre) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'copy-btn';
+    button.setAttribute('aria-label', label);
+    button.title = label;
+    button.innerHTML = COPY;
+    pre.classList.add('copyable');
+    pre.appendChild(button);
+    var timer = null;
+
+    function copy() {
+      var code = pre.querySelector('code') || pre;
+      var text = code.textContent.replace(/\s+$/, '');
+      write(text).then(function () {
+        button.innerHTML = TICK;
+        button.classList.add('copied');
+        button.setAttribute('aria-label', done);
+        button.title = done;
+        say(done);
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          button.innerHTML = COPY;
+          button.classList.remove('copied');
+          button.setAttribute('aria-label', label);
+          button.title = label;
+        }, 1800);
+      }, function () {
+        selectAll(code);
+        button.title = refused;
+        say(refused);
+      });
+    }
+
+    button.addEventListener('click', function (event) {
+      event.stopPropagation();
+      copy();
+    });
+    pre.addEventListener('click', function () {
+      var selection = window.getSelection && window.getSelection();
+      if (selection && !selection.isCollapsed && pre.contains(selection.anchorNode)) { return; }
+      copy();
+    });
+  });
+
+  // A text button: its words change to Copied for a moment, and back.
+  Array.prototype.forEach.call(links, function (button) {
+    var words = button.querySelector('[data-copy-label]') || button;
+    var idle = words.textContent;
+    var timer = null;
+    button.addEventListener('click', function () {
+      var text = button.getAttribute('data-copy');
+      write(text).then(function () {
+        words.textContent = done;
+        say(done);
+        clearTimeout(timer);
+        timer = setTimeout(function () { words.textContent = idle; }, 1800);
+      }, function () {
+        window.prompt(refused, text);
+      });
+    });
+  });
+})();

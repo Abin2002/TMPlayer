@@ -355,7 +355,7 @@
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">Your computer</span>
             </div>
             <div class="callout">
-              <p data-i18n="download.win_cmd">Recommended: open <em>PowerShell</em> and paste this line. It installs the latest version for your user and checks it against the published checksum, with no SmartScreen warning.</p>
+              <p data-i18n="download.win_cmd_steps">Recommended: click the line below to copy it, open <em>Start</em>, type <em>PowerShell</em> and press Enter, then paste it there and press Enter. It installs the latest version for your user and checks it against the published checksum, with no SmartScreen warning. <a href="/install/#windows">Step by step</a></p>
               <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
             </div>
             <ul class="abi-list">
@@ -435,7 +435,7 @@
                   <p class="abi-note" data-i18n="download.a_pkgbuild_lives_in_it">A PKGBUILD lives in <code>desktop/packaging/aur</code>. It builds from the <code>linux-x64.tar.xz</code> on each release. The AppImage also runs on Arch.</p>
                 </div>
                 <div class="abi-get">
-                  <a class="dl" href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><span data-i18n="download.the_recipe">The recipe</span></a>
+                  <a class="dl" href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><span data-i18n="download.arch_pkgbuild_link">The PKGBUILD</span></a>
                 </div>
               </li>
             </ul>
@@ -448,7 +448,7 @@
           <p data-i18n="download.no_iphone_or_ipad">There is no iPhone or iPad version.</p>
         </div>
 
-        <p class="muted small section-note" data-i18n="download.the_shows_each_file_s">The <a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">release page</a> shows each file's SHA-256 beside it. Check a download with <code>sha256sum</code>, or <code>Get-FileHash</code> on Windows.</p>
+        <p class="muted small section-note" data-i18n="download.checksum_note">The <a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">release page</a> shows each file's SHA-256 beside it. Check a download with <code>sha256sum</code>, or <code>Get-FileHash</code> on Windows: <a href="/security/#verify">the exact commands</a>.</p>
 
         <details id="release-notes-wrap" hidden>
           <summary data-i18n="download.release_notes">Release notes</summary>

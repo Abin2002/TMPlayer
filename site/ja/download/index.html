@@ -356,7 +356,7 @@
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">お使いのパソコン</span>
             </div>
             <div class="callout">
-              <p data-i18n="download.win_cmd">おすすめ：<em>PowerShell</em>を開いてこの1行を貼り付けます。最新版をあなたのユーザーにインストールし、公開されているチェックサムで確認します。SmartScreenの警告は出ません。</p>
+              <p data-i18n="download.win_cmd_steps">おすすめ：下の行をクリックしてコピーし、<em>スタート</em>を開いて<em>PowerShell</em>と入力して Enter を押し、そこに貼り付けて Enter を押します。最新版をあなたのユーザーにインストールし、公開されているチェックサムで確認します。SmartScreenの警告は出ません。<a href="/ja/install/#windows">手順を見る</a></p>
               <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
             </div>
             <ul class="abi-list">
@@ -436,7 +436,7 @@
                   <p class="abi-note" data-i18n="download.a_pkgbuild_lives_in_it">PKGBUILDは<code>desktop/packaging/aur</code>にあります。リリースごとに<code>linux-x64.tar.xz</code>からビルドします。AppImageもArchで動きます。</p>
                 </div>
                 <div class="abi-get">
-                  <a class="dl" href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><span data-i18n="download.the_recipe">ビルドレシピ</span></a>
+                  <a class="dl" href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><span data-i18n="download.arch_pkgbuild_link">PKGBUILD</span></a>
                 </div>
               </li>
             </ul>
@@ -449,7 +449,7 @@
           <p data-i18n="download.no_iphone_or_ipad">iPhone版とiPad版はありません。</p>
         </div>
 
-        <p class="muted small section-note" data-i18n="download.the_shows_each_file_s"><a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">リリースページ</a>には、各ファイルのSHA-256が並んで表示されます。ダウンロードしたファイルは<code>sha256sum</code>で確認できます。Windowsでは<code>Get-FileHash</code>を使います。</p>
+        <p class="muted small section-note" data-i18n="download.checksum_note"><a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">リリースページ</a>には、各ファイルのSHA-256が並んで表示されます。ダウンロードしたファイルは<code>sha256sum</code>で確認できます。Windowsでは<code>Get-FileHash</code>を使います：<a href="/security/#verify">具体的なコマンド</a>。</p>
 
         <details id="release-notes-wrap" hidden>
           <summary data-i18n="download.release_notes">リリースノート</summary>
@@ -604,7 +604,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "ユニバーサルAPK", "kind_windows_installer": "Windowsインストーラー", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "チェックサム", "os_note_ios_only": "iPhone版とiPad版はありません。以下のファイルはAndroidスマホ、Android TV、パソコン向けです。", "download_for": "{os}版をダウンロード", "os_note_mac_preview": "macOS版はプレビュー版で、Appleシリコン（M1以降）搭載、macOS 26以降のMac向けです。Intel搭載のMacでは動きません。", "os_note_mac": "macOS版はありません。以下はすべて、Android、Windows、Linux向けです。", "downloads_one": "{count}回ダウンロード", "downloads_other": "{count}回ダウンロード", "not_in_release": "{version}には含まれていません", "on_github": "GitHubで見る", "download_file": "{file}をダウンロード", "download_version_mac": "Appleシリコン搭載Mac向け{version}をダウンロード", "download_version_for": "{os}向け{version}をダウンロード", "download_version_other_os": "Android、Windows、Linux向け{version}をダウンロード", "install_version_for": "{os} 用 {version} をインストール", "download_version": "{version}をダウンロード", "latest": "最新", "no_files_yet": "このリリースには、まだファイルが添付されていません。ビルドがまだ実行中かもしれません。", "open_on_github": "GitHubで{version}を開く", "release": "リリース", "unavailable": "利用不可", "fail_downloads": "ダウンロードは引き続き利用できます。下のボタンはすべて{link}を開き、ファイルが名前順に並んでいます。", "fail_link": "GitHubの最新リリース", "go_to_downloads": "ダウンロードへ", "not_released": "まだリリースされていません", "no_release": "まだリリースは公開されていません。ソースコードからアプリをビルドすることはできます。", "build_instructions": "GitHubでビルド手順を見る", "view_project": "GitHubでプロジェクトを見る", "fail_browser": "このブラウザーではリリース一覧を読み込めません。", "fail_rate": "GitHubがこのネットワークからのアクセスを制限しています。公開APIは1アドレスにつき1時間あたり60リクエストまでで、その上限に達しました。", "fail_timeout": "GitHubから時間内に応答がありませんでした。", "fail_load": "GitHubからリリース一覧を読み込めませんでした。", "theme_to_dark": "ダークテーマに切り替え", "theme_to_light": "ライトテーマに切り替え", "menu_close": "メニューを閉じる", "menu": "メニュー"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "ユニバーサルAPK", "kind_windows_installer": "Windowsインストーラー", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "チェックサム", "os_note_ios_only": "iPhone版とiPad版はありません。以下のファイルはAndroidスマホ、Android TV、パソコン向けです。", "download_for": "{os}版をダウンロード", "os_note_mac_preview": "macOS版はプレビュー版で、Appleシリコン（M1以降）搭載、macOS 26以降のMac向けです。Intel搭載のMacでは動きません。", "os_note_mac": "macOS版はありません。以下はすべて、Android、Windows、Linux向けです。", "downloads_one": "{count}回ダウンロード", "downloads_other": "{count}回ダウンロード", "not_in_release": "{version}には含まれていません", "on_github": "GitHubで見る", "download_file": "{file}をダウンロード", "download_version_mac": "Appleシリコン搭載Mac向け{version}をダウンロード", "download_version_for": "{os}向け{version}をダウンロード", "download_version_other_os": "Android、Windows、Linux向け{version}をダウンロード", "install_version_for": "{os} 用 {version} をインストール", "download_version": "{version}をダウンロード", "latest": "最新", "no_files_yet": "このリリースには、まだファイルが添付されていません。ビルドがまだ実行中かもしれません。", "open_on_github": "GitHubで{version}を開く", "release": "リリース", "unavailable": "利用不可", "fail_downloads": "ダウンロードは引き続き利用できます。下のボタンはすべて{link}を開き、ファイルが名前順に並んでいます。", "fail_link": "GitHubの最新リリース", "go_to_downloads": "ダウンロードへ", "not_released": "まだリリースされていません", "no_release": "まだリリースは公開されていません。ソースコードからアプリをビルドすることはできます。", "build_instructions": "GitHubでビルド手順を見る", "view_project": "GitHubでプロジェクトを見る", "fail_browser": "このブラウザーではリリース一覧を読み込めません。", "fail_rate": "GitHubがこのネットワークからのアクセスを制限しています。公開APIは1アドレスにつき1時間あたり60リクエストまでで、その上限に達しました。", "fail_timeout": "GitHubから時間内に応答がありませんでした。", "fail_load": "GitHubからリリース一覧を読み込めませんでした。", "theme_to_dark": "ダークテーマに切り替え", "theme_to_light": "ライトテーマに切り替え", "menu_close": "メニューを閉じる", "menu": "メニュー", "sha_expected": "{file} の場合、結果は次のとおりです：", "copy_command": "コピー", "copied": "コピーしました", "copy_failed": "ブラウザーがコピーを許可しませんでした。テキストを選択してあるので、そこからコピーしてください。"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

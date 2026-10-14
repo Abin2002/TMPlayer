@@ -356,7 +356,7 @@
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">你的电脑</span>
             </div>
             <div class="callout">
-              <p data-i18n="download.win_cmd">推荐：打开 <em>PowerShell</em> 并粘贴这一行。它会为你的账户安装最新版本，并与发布的校验和核对，不会出现 SmartScreen 警告。</p>
+              <p data-i18n="download.win_cmd_steps">推荐：点击下面这一行复制它，打开 <em>开始</em>，输入 <em>PowerShell</em> 并按回车，然后粘贴进去再按回车。它会为你的账户安装最新版本，并与发布的校验和核对，不会出现 SmartScreen 警告。<a href="/zh/install/#windows">分步说明</a></p>
               <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
             </div>
             <ul class="abi-list">
@@ -436,7 +436,7 @@
                   <p class="abi-note" data-i18n="download.a_pkgbuild_lives_in_it">PKGBUILD 位于 <code>desktop/packaging/aur</code>。每次发布时都会根据 <code>linux-x64.tar.xz</code> 构建。AppImage 也能在 Arch 上运行。</p>
                 </div>
                 <div class="abi-get">
-                  <a class="dl" href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><span data-i18n="download.the_recipe">构建脚本</span></a>
+                  <a class="dl" href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><span data-i18n="download.arch_pkgbuild_link">PKGBUILD</span></a>
                 </div>
               </li>
             </ul>
@@ -449,7 +449,7 @@
           <p data-i18n="download.no_iphone_or_ipad">没有 iPhone 或 iPad 版本。</p>
         </div>
 
-        <p class="muted small section-note" data-i18n="download.the_shows_each_file_s"><a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">发布页面</a> 会在每个文件旁显示其 SHA-256。可用 <code>sha256sum</code> 校验下载的文件，Windows 上用 <code>Get-FileHash</code>。</p>
+        <p class="muted small section-note" data-i18n="download.checksum_note"><a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">发布页面</a> 会在每个文件旁显示其 SHA-256。可用 <code>sha256sum</code> 校验下载的文件，Windows 上用 <code>Get-FileHash</code>：<a href="/security/#verify">具体命令</a>。</p>
 
         <details id="release-notes-wrap" hidden>
           <summary data-i18n="download.release_notes">版本说明</summary>
@@ -604,7 +604,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安装程序", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "校验和", "os_note_ios_only": "没有 iPhone 或 iPad 版本。下面的文件适用于 Android 手机、Android TV 和电脑。", "download_for": "下载 {os} 版", "os_note_mac_preview": "macOS 版是预览版，适用于搭载 Apple 芯片（M1 及更新）、运行 macOS 26 或更高版本的 Mac。它不能在 Intel Mac 上运行。", "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。", "downloads_one": "{count} 次下载", "downloads_other": "{count} 次下载", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下载 {file}", "download_version_mac": "下载适用于 Apple 芯片 Mac 的 {version}", "download_version_for": "下载适用于 {os} 的 {version}", "download_version_other_os": "下载适用于 Android、Windows 或 Linux 的 {version}", "install_version_for": "为 {os} 安装 {version}", "download_version": "下载 {version}", "latest": "最新", "no_files_yet": "此版本尚未附带任何文件。构建可能仍在进行中。", "open_on_github": "在 GitHub 上打开 {version}", "release": "版本", "unavailable": "不可用", "fail_downloads": "下载仍然可用：下方每个按钮都会打开{link}，那里按名称列出了所有文件。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下载", "not_released": "尚未发布", "no_release": "尚未发布任何版本。你仍然可以从源代码构建应用。", "build_instructions": "阅读 GitHub 上的构建说明", "view_project": "在 GitHub 上查看项目", "fail_browser": "此浏览器无法加载版本列表。", "fail_rate": "GitHub 正在限制此网络的请求频率。其公开 API 每个地址每小时允许 60 次请求，而这个地址已经用完了。", "fail_timeout": "GitHub 未能及时响应。", "fail_load": "无法从 GitHub 加载版本列表。", "theme_to_dark": "切换到深色主题", "theme_to_light": "切换到浅色主题", "menu_close": "关闭菜单", "menu": "菜单"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安装程序", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "校验和", "os_note_ios_only": "没有 iPhone 或 iPad 版本。下面的文件适用于 Android 手机、Android TV 和电脑。", "download_for": "下载 {os} 版", "os_note_mac_preview": "macOS 版是预览版，适用于搭载 Apple 芯片（M1 及更新）、运行 macOS 26 或更高版本的 Mac。它不能在 Intel Mac 上运行。", "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。", "downloads_one": "{count} 次下载", "downloads_other": "{count} 次下载", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下载 {file}", "download_version_mac": "下载适用于 Apple 芯片 Mac 的 {version}", "download_version_for": "下载适用于 {os} 的 {version}", "download_version_other_os": "下载适用于 Android、Windows 或 Linux 的 {version}", "install_version_for": "为 {os} 安装 {version}", "download_version": "下载 {version}", "latest": "最新", "no_files_yet": "此版本尚未附带任何文件。构建可能仍在进行中。", "open_on_github": "在 GitHub 上打开 {version}", "release": "版本", "unavailable": "不可用", "fail_downloads": "下载仍然可用：下方每个按钮都会打开{link}，那里按名称列出了所有文件。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下载", "not_released": "尚未发布", "no_release": "尚未发布任何版本。你仍然可以从源代码构建应用。", "build_instructions": "阅读 GitHub 上的构建说明", "view_project": "在 GitHub 上查看项目", "fail_browser": "此浏览器无法加载版本列表。", "fail_rate": "GitHub 正在限制此网络的请求频率。其公开 API 每个地址每小时允许 60 次请求，而这个地址已经用完了。", "fail_timeout": "GitHub 未能及时响应。", "fail_load": "无法从 GitHub 加载版本列表。", "theme_to_dark": "切换到深色主题", "theme_to_light": "切换到浅色主题", "menu_close": "关闭菜单", "menu": "菜单", "sha_expected": "对于 {file}，结果应为：", "copy_command": "复制", "copied": "已复制", "copy_failed": "浏览器不允许复制。文字已选中，请从那里复制。"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

@@ -175,10 +175,8 @@ jobs:
             exit 1
           fi
           cp "$SRC" "dist/TMPlayer-$VERSION-universal.apk"
-          # The same file under a name that never changes, so tmplayer.org/apk can redirect to
-          # releases/latest/download/TMPlayer.apk and a remote's Downloader app gets a short URL.
-          # No "universal" in it, so the updater and the site's file list pass it by.
-          cp "$SRC" "dist/TMPlayer.apk"
+          # tmplayer.org/apk, the short address a remote's Downloader app is given, is pointed at
+          # this file by the publish job (site/vercel.json), so no second copy of the APK goes up.
 
           # R8 renames every class, so a crash report from a released APK is unreadable without
           # the mapping for that exact build. It is generated once and then gone, so it is kept
@@ -401,7 +399,6 @@ jobs:
           # instead of publishing a short one. The site and the Android updater match these names.
           for f in \
             "TMPlayer-$VERSION-universal.apk" \
-            "TMPlayer.apk" \
             "TMPlayer-$VERSION-windows-x64.msi" \
             "TMPlayer-$VERSION-macos-arm64.dmg" \
             "TMPlayer-$VERSION-x86_64.AppImage" \
@@ -415,7 +412,7 @@ jobs:
           # And nothing else: a file the list above does not name would go up unannounced.
           for path in dist/*; do
             case "${path#dist/}" in
-              "TMPlayer-$VERSION-universal.apk" | "TMPlayer.apk" | "TMPlayer-$VERSION-windows-x64.msi" | \
+              "TMPlayer-$VERSION-universal.apk" | "TMPlayer-$VERSION-windows-x64.msi" | \
                 "TMPlayer-$VERSION-macos-arm64.dmg" | \
                 "TMPlayer-$VERSION-x86_64.AppImage" | "TMPlayer-$VERSION-x86_64.AppImage.zsync" | \
                 "TMPlayer-$VERSION-linux-x64.tar.xz") ;;
@@ -566,10 +563,13 @@ jobs:
               MESSAGE="site: the changelog names $VERSION"
             else
               cp "$RUNNER_TEMP/latest.json" site/latest.json
+              # tmplayer.org/apk follows the newest release's APK, named in full: a release
+              # carries one APK, whose name has the version in it.
+              python3 scripts/point-apk-redirect.py "$VERSION"
               MESSAGE="site: the update feed names $VERSION"
             fi
             python3 scripts/build-changelog.py
-            git add site/latest.json site/changelog site/sitemap.xml
+            git add site/latest.json site/vercel.json site/changelog site/sitemap.xml
             if git diff --cached --quiet; then
               echo "The site already names $VERSION."
               exit 0

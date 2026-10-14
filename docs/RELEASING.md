@@ -31,16 +31,28 @@ device, and a hand-rolled number is easy to get wrong.
 
 ## What a release carries
 
-One GitHub release holds the Android APK and the desktop app for Windows and Linux, and nothing
-more than people install or the licence needs. The desktop installers are built on a Windows
-runner and a Linux runner, because the Compose packager only makes installers for the system it
-runs on. For a tag `v<v>` the assets are:
+One GitHub release holds the Android APK and the desktop app for Windows, Linux and macOS, and
+nothing more than people install or the licence needs. The desktop installers are built on a
+Windows, a Linux and an Apple Silicon macOS 26 runner, because the Compose packager only makes
+installers for the system it runs on. For a tag `v<v>` the assets are:
 
 | Asset | Built on |
 | --- | --- |
 | `TMPlayer-<v>-universal.apk` | Linux, signed with the release key |
 | `TMPlayer-<v>-windows-x64.msi` | Windows, unsigned |
+| `TMPlayer-<v>-macos-arm64.dmg` | macOS 26 on Apple Silicon, signed ad hoc (not notarized), from 1.26.0 |
 | `TMPlayer-<v>-x86_64.AppImage`, `TMPlayer-<v>-linux-x64.tar.xz` | Linux, wrapped from the app folder by `desktop/packaging/linux/package.sh`; the tarball is what the AUR PKGBUILD builds from |
+| `TMPlayer-<v>-x86_64.AppImage.zsync` | Linux, beside the AppImage: not a download, it lets an installed AppImage fetch only what changed |
+
+Releases up to 1.25.0 also carried `TMPlayer.apk`, the same APK under a fixed name for the
+`tmplayer.org/apk` short link. That link now points at the versioned APK: the publish job runs
+`scripts/point-apk-redirect.py <v>` and commits `site/vercel.json` with the update feed, so a
+release carries one APK.
+
+The macOS build bundles Homebrew's libraries, so its corresponding source is a second archive,
+`mediamp-corresponding-source-0.5.0-macos.tar.gz` from `scripts/build-mediamp-source.sh --macos`.
+It is attached by hand to the first release with a DMG, after which `MAC_TAG` in `release.yml`
+names that release, exactly as `TAG` does for the Linux and Windows archive.
 
 Nothing else is attached. GitHub adds the source archives of the tagged tree by itself and shows
 each file's SHA-256 beside it, so there is no checksum file. The release notes link to the
@@ -60,7 +72,7 @@ records if a crash from that build may need decoding later.
 
 These names are what the website matches on: `site/app.js` reads the release list from the GitHub
 API and finds each file by the end of its name (`universal.apk`, `windows-x64.msi`, `.AppImage`,
-and so on), because the version in the middle rules out GitHub's fixed `latest/download/<name>`
+`macos-arm64.dmg` and so on), because the version in the middle rules out GitHub's fixed `latest/download/<name>`
 links. Renaming an asset means updating the `KINDS` table in `site/app.js` in the same change, or
 the download page falls back to linking the release page for that row.
 
