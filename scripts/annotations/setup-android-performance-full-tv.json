@@ -1,0 +1,26 @@
+{
+  "source": "tvt-perf-full.png",
+  "output": "app/src/main/res/drawable-nodpi/setup_performance_full_tv.webp",
+  "crop": [
+    462,
+    160,
+    536,
+    536
+  ],
+  "width": 480,
+  "marks": [
+    {
+      "type": "arrow",
+      "from": [
+        950,
+        680
+      ],
+      "to": [
+        915,
+        450
+      ],
+      "bend": 0.25,
+      "seed": 48
+    }
+  ]
+}

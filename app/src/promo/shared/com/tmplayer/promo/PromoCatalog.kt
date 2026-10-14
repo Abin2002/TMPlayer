@@ -121,7 +121,7 @@ object PromoCatalog {
     fun film(slug: String): Film = films.first { it.slug == slug }
 
     /** The film's frame for a Telegram thumbnail: its backdrop, as a channel's would be a still. */
-    fun filmItems(pictures: Pictures, chatId: Long, list: List<Film>, firstId: Long, newest: Int): List<MediaItem> {
+    fun filmItems(pictures: Pictures, chatId: Long, list: List<Film>, firstId: Long, newest: Int, posterThumbnails: Boolean = false): List<MediaItem> {
         var id = firstId
         var date = newest
         return list.flatMap { film ->
@@ -135,7 +135,7 @@ object PromoCatalog {
                     durationSec = film.durationSec,
                     mimeType = if (copy.fileName.endsWith(".mp4")) "video/mp4" else "video/x-matroska",
                     thumbnailFileId = 0,
-                    miniThumbnail = if (film.art) pictures.bytes(film.backdrop) else null,
+                    miniThumbnail = if (film.art) pictures.bytes(if (posterThumbnails) film.poster else film.backdrop) else null,
                     date = date--,
                     fileName = copy.fileName,
                     width = copy.width,
@@ -307,8 +307,16 @@ object PromoCatalog {
      * week by week with new episodes since, a course two lessons in, a few titles put aside for
      * later, and three starred chats.
      */
-    class Library(pictures: Pictures) {
-        val cinema = filmItems(pictures, CINEMA, films, firstId = 1_000, newest = 9_000) +
+    class Library(
+        pictures: Pictures,
+        /**
+         * The films posted with their posters as the file's thumbnail, as many film channels post
+         * them, so a wide tile shows the upright poster whole over a soft fill of itself. For the
+         * setup's Performance pictures (CP69), where Lighter pictures drops that fill's blur.
+         */
+        posterThumbnails: Boolean = false,
+    ) {
+        val cinema = filmItems(pictures, CINEMA, films, firstId = 1_000, newest = 9_000, posterThumbnails = posterThumbnails) +
             episodeItems(pictures, CINEMA, harbourLines, firstId = 1_100, newest = 8_950)
         val anime = episodeItems(pictures, ANIME, skybound, firstId = 1_200, newest = 8_800)
         val study = courseItems(pictures, STUDY, firstId = 1_300, newest = 8_600)

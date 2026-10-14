@@ -145,6 +145,9 @@ class PromoCaptureActivity : ComponentActivity() {
         if (intent.getBooleanExtra("watchnext", false)) promoWatchNext()
         // `--ez meta true` turns posters and overviews on over a canned TMDB and AniList, and
         // `--es metakey none|refused|own` sets the TMDB key's state. See [PromoMeta].
+        // `--ez poster_thumbs true` gives the films their posters as thumbnails, so Home's wide
+        // tiles show letterboxed art over its blurred fill (the setup's Performance pictures).
+        PromoMeta.posterThumbnails = intent.getBooleanExtra("poster_thumbs", false)
         PromoMeta.install(applicationContext, intent.getBooleanExtra("meta", false), intent.getStringExtra("metakey"))
         // `--ez channels true` writes Home's rows over the demo library into TMPlayer's channels on
         // the Android TV home screen, through the real planner and writer, so the launcher's
@@ -233,6 +236,23 @@ class PromoCaptureActivity : ComponentActivity() {
                 store.setReduceMotion(false)
             }
         }
+        // `--ez lighter true` is the setup's "Lighter" answer (CP69): Lighter pictures and Reduce
+        // motion on, thumbnails while seeking off; `--ez lighter false` is "Full quality". Set here
+        // and on the picture cache at once, so the first frame is already drawn the chosen way.
+        if (intent.hasExtra("lighter")) {
+            val lighter = intent.getBooleanExtra("lighter", false)
+            runBlocking {
+                val store = SettingsStore(applicationContext)
+                store.setLighterPictures(lighter)
+                store.setReduceMotion(lighter)
+                store.setTrickplay(!lighter)
+            }
+            com.tmplayer.data.Thumbnails.light = lighter
+            com.tmplayer.ui.theme.Motion.reduced = lighter
+        }
+        // `--ez downloads_demo true` fills Downloads with a few demo videos, so the screen's list
+        // can be captured with something in it. See [promoDownloads].
+        if (intent.getBooleanExtra("downloads_demo", false)) promoDownloads()
         PromoShowOverride.key = intent.getStringExtra("show")?.lowercase() ?: "harbour lines"
         // `--es variant search` with `--es query "..."`: what the chat's search found for it.
         PromoSearch.query = intent.getStringExtra("query") ?: PromoSearch.query
@@ -928,6 +948,33 @@ private fun ComponentActivity.promoWatchNext() {
         com.tmplayer.data.WatchNextPublisher.apply(context, changes)
     }.start()
 }
+
+/**
+ * See `--ez downloads_demo true` above: four demo videos recorded as downloads, each over a sparse
+ * file of its full size in this build's own cache, so the rows read as whole downloads without the
+ * gigabytes ever being written. Anything recorded before is dropped first.
+ */
+private fun ComponentActivity.promoDownloads() {
+    val dir = java.io.File(cacheDir, "promo-downloads").apply { deleteRecursively(); mkdirs() }
+    runBlocking {
+        val store = SettingsStore(applicationContext)
+        store.downloadsNow().forEach { store.forgetDownload(it.chatId, it.messageId) }
+        PROMO_DOWNLOADS.mapNotNull { part -> PromoMeta.library.all.firstOrNull { part in it.fileName } }
+            .forEachIndexed { index, item ->
+                val file = java.io.File(dir, item.fileName)
+                java.io.RandomAccessFile(file, "rw").use { it.setLength(item.sizeBytes) }
+                // A record needs a file id; the demo videos have none, never having been in TDLib.
+                store.noteDownload(item.copy(fileId = PROMO_DOWNLOAD_IDS + index), PromoCatalog.chatTitle(item.chatId), file.path)
+            }
+    }
+}
+
+/**
+ * The demo videos [promoDownloads] keeps, by a part of each file name: two anime episodes and two
+ * lessons, small enough together to sit inside the emulator's free space as the panel draws it.
+ */
+private val PROMO_DOWNLOADS = listOf("Skybound Academy - 04", "Skybound Academy - 03", "Lesson 04", "Lesson 03")
+private const val PROMO_DOWNLOAD_IDS = 900_000
 
 /** See `--ez channels true` above. Honours the setting, so it writes nothing while that is off. */
 private fun ComponentActivity.promoChannels() {

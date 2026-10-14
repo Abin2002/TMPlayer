@@ -91,7 +91,9 @@ class PromoPlayerActivity : FragmentActivity(), TrackPickerHost {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val tv = intent.getBooleanExtra("tv", false)
-        if (tv) FormFactor.override(true)
+        // `--ez tv false` answers "phone" even on a television, for the phone-shaped captures taken
+        // on the TV emulator with `wm size`; without the extra the hardware decides.
+        if (intent.hasExtra("tv")) FormFactor.override(tv)
         promoLanguage(intent.getStringExtra("lang"))
         PromoOnline.install(applicationContext, intent.getStringExtra("online"))
         setContentView(R.layout.activity_player)

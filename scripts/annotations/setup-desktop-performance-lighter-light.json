@@ -1,0 +1,26 @@
+{
+  "source": "desktop/setup-raw-performance-lighter-light.png",
+  "output": "ui/src/jvmMain/resources/onboarding/performance-lighter-light.webp",
+  "crop": [
+    445,
+    120,
+    430,
+    430
+  ],
+  "width": 430,
+  "marks": [
+    {
+      "type": "arrow",
+      "from": [
+        850,
+        535
+      ],
+      "to": [
+        805,
+        380
+      ],
+      "bend": 0.25,
+      "seed": 49
+    }
+  ]
+}

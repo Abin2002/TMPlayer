@@ -1,0 +1,43 @@
+{
+  "source": "tvt-chatgrid.png",
+  "output": "app/src/main/res/drawable-nodpi/tour_controls_tv.webp",
+  "crop": [
+    0,
+    0,
+    1920,
+    1080
+  ],
+  "width": 1280,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        478,
+        472,
+        428,
+        308
+      ],
+      "seed": 90
+    },
+    {
+      "type": "circle",
+      "box": [
+        80,
+        185,
+        290,
+        520
+      ],
+      "seed": 91
+    },
+    {
+      "type": "circle",
+      "box": [
+        486,
+        70,
+        160,
+        48
+      ],
+      "seed": 92
+    }
+  ]
+}
