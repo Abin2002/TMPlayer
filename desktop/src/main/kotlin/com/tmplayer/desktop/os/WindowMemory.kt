@@ -72,11 +72,19 @@ object WindowGeometry {
      * Checks [saved] against the screens attached now ([screens], usable areas). A position whose
      * title bar no longer lands on any screen (a monitor unplugged since) is dropped, which means
      * centred; a size larger than the screen it opens on is shrunk to fit; a size below the minimum
-     * is raised to it. Fullscreen comes back as maximised: opening straight into fullscreen
+     * is raised to it; with nothing [saved], the default size is fitted the same way. Fullscreen comes back as maximised: opening straight into fullscreen
      * surprises more than it helps, and the player puts it back when a video starts.
      */
     fun restore(saved: SavedWindow?, screens: List<Bounds>): RestoredWindow {
-        if (saved == null) return RestoredWindow(null, null, DEFAULT_WIDTH, DEFAULT_HEIGHT, SavedPlacement.Floating)
+        if (saved == null) {
+            // The first run fits the default to the screen too: on a 1280x800 laptop the usable
+            // area under the taskbar is shorter than 800, and Windows then puts the top of a
+            // centred window, its buttons included, above the screen.
+            val first = screens.firstOrNull()
+            val width = if (first == null) DEFAULT_WIDTH else min(DEFAULT_WIDTH, max(first.width, MIN_WIDTH))
+            val height = if (first == null) DEFAULT_HEIGHT else min(DEFAULT_HEIGHT, max(first.height, MIN_HEIGHT))
+            return RestoredWindow(null, null, width, height, SavedPlacement.Floating)
+        }
         var width = max(saved.width, MIN_WIDTH)
         var height = max(saved.height, MIN_HEIGHT)
         var x = saved.x

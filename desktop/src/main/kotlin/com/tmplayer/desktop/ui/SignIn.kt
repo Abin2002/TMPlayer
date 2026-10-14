@@ -69,7 +69,9 @@ fun SignInScreen(auth: AuthState) {
     LaunchedEffect(auth) {
         if (auth == AuthState.ChooseMethod) Td.chooseSignInMethod(SignInMethod.Qr)
     }
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    // No page header here, so the empty ground moves the window where the app draws its own
+    // title bar; the fields and buttons on it still take their clicks.
+    Box(Modifier.fillMaxSize().windowDrag(), contentAlignment = Alignment.Center) {
         Column(
             Modifier
                 .widthIn(max = 460.dp)

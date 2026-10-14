@@ -155,21 +155,24 @@ fun DesktopShell(
                     // until the PIN is given. Closing the window is the way out.
                     val askOnOpen = signedIn && appLock?.onOpen == true && !appUnlocked
                     if (askOnOpen) {
-                        PinPad(
-                            settings = state.settings,
-                            purpose = PinPurpose.Check,
-                            title = LocalStrings.current.lockEnterForApp,
-                            onDone = {
-                                com.tmplayer.data.AppLockSession.unlock()
-                                state.settingsUnlocked = true
-                            },
-                            onCancel = null,
-                        )
+                        Box(Modifier.fillMaxSize().windowDrag()) {
+                            PinPad(
+                                settings = state.settings,
+                                purpose = PinPurpose.Check,
+                                title = LocalStrings.current.lockEnterForApp,
+                                onDone = {
+                                    com.tmplayer.data.AppLockSession.unlock()
+                                    state.settingsUnlocked = true
+                                },
+                                onCancel = null,
+                            )
+                        }
                     } else if (signedIn) {
                         Browse(state, player)
                     }
                     when (Onboarding.entry(signedIn, seen)) {
-                        Entry.Tour -> Surface(Modifier.fillMaxSize(), color = Tone.background) {
+                        // No page header on the tour either: its ground moves the window.
+                        Entry.Tour -> Surface(Modifier.fillMaxSize().windowDrag(), color = Tone.background) {
                             OnboardingTour(state.settings, onDone = done, firstRun = !signedIn)
                         }
                         Entry.SignIn -> SignInScreen(auth)

@@ -26,6 +26,14 @@ class WindowGeometryTest {
     }
 
     @Test
+    fun `nothing saved on a 1280x800 screen fits under the taskbar`() {
+        // A 1280x800 screen with a 48 px taskbar: the usable area is 752 tall.
+        val small = Bounds(0, 0, 1280, 752)
+        val r = WindowGeometry.restore(null, listOf(small))
+        assertEquals(RestoredWindow(null, null, 1280, 752, SavedPlacement.Floating), r)
+    }
+
+    @Test
     fun `a position on an attached screen is kept`() {
         val saved = SavedWindow(2100, 120, 1400, 900, SavedPlacement.Floating)
         val r = WindowGeometry.restore(saved, listOf(laptop, rightMonitor))
