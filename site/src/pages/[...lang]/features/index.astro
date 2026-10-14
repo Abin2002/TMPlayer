@@ -1,5 +1,6 @@
 ---
-// The stored theme, applied before the first paint. With no stored choice nothing is set and the stylesheet follows prefers-color-scheme, which is the system theme.
+// The features page. Base applies the stored theme before the first paint; with no stored choice
+// nothing is set and the stylesheet follows prefers-color-scheme, which is the system theme.
 
 import Base from '../../../layouts/Base.astro';
 import BgArt from '../../../components/BgArt.astro';
@@ -9,6 +10,14 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import SectionHead from '../../../components/features/SectionHead.astro';
+import TickPanel from '../../../components/features/TickPanel.astro';
+import GalleryShot from '../../../components/features/GalleryShot.astro';
+import TourShot from '../../../components/features/TourShot.astro';
+import StarSupport from '../../../components/features/StarSupport.astro';
+import NextCard from '../../../components/features/NextCard.astro';
+import type { Shot } from '../../../components/features/GalleryShot.astro';
+import type { Point } from '../../../components/features/TourShot.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -37,12 +46,125 @@ const ld0 = {
     }
   ]
 };
+
+// What it does: two panels each, for the apps and for the desktop.
+const watching = [
+  'features.skipping_ahead_re_aims_the', 'features.mkv_mp4_avi_and_ts',
+  'features.with_a_continue_watching_row', 'features.the_previous_one_is_cleared',
+  'features.downloads_you_choose', 'features.skips_intros_and_credits',
+  'features.bookmarks_and_a_b_repeat', 'features.subtitles_found_online',
+  'features.the_same_library_drawn_for',
+];
+const browsing = [
+  'features.chats_filter_down_to_playable', 'features.home_and_series_pages',
+  'features.topics_tabs_one_tile', 'features.watch_later_new_episodes',
+  'features.tv_home_channels', 'features.posters_and_overviews',
+  'features.the_next_one_starts_after', 'features.typos_missing_accents_and_one',
+  'features.with_your_remote_s_microphone', 'features.pin_kids_lock_backup',
+  'features.from_github_on_android_windows',
+];
+const desktopWindow = [
+  'features.or_with_a_phone_number', 'features.home_history_favourites_downloads_sidebar',
+  'features.to_play_restart_download_or', 'features.your_downloads_folder_unless_you',
+  'features.size_and_position_a_second',
+];
+const desktopPlayer = [
+  'features.mkv_mp4_avi_ts_image', 'features.and_seeks_without_waiting',
+  'features.offers_the_next_episode_and', 'features.while_a_video_plays',
+  'features.the_linux_desktop_s_media',
+];
+
+// The demo screenshots. Every one but the desktop player and the launcher row is a light/dark pair.
+const shots = {
+  phoneChats: { device: 'phone', src: '/screenshots/phone-chats.webp', light: '/screenshots/phone-chats-light.webp', alt: 'features.tmplayer_on_a_phone_listing', width: 1080, height: 2400 },
+  phoneGrid: { device: 'phone', src: '/screenshots/phone-grid.webp', light: '/screenshots/phone-grid-light.webp', alt: 'features.a_dense_grid_of_demo', width: 1080, height: 2400 },
+  tvChats: { device: 'tv', src: '/screenshots/tv-chats.webp', light: '/screenshots/tv-chats-light.webp', alt: 'features.the_same_chat_list_on', width: 1920, height: 1080 },
+  tvHome: { device: 'tv', src: '/screenshots/tv-home.webp', light: '/screenshots/tv-home-light.webp', alt: 'features.tv_home_rows_alt', width: 1920, height: 1080 },
+  tvSettings: { device: 'tv', src: '/screenshots/tv-settings.webp', light: '/screenshots/tv-settings-light.webp', alt: 'features.tmplayer_settings_on_a_television', width: 1920, height: 1080 },
+  desktopGrid: { device: 'desktop', src: '/screenshots/desktop-grid.webp', light: '/screenshots/desktop-grid-light.webp', alt: 'features.the_tmplayer_desktop_app_on', width: 1920, height: 1200 },
+  desktopPlayer: { device: 'desktop', src: '/screenshots/desktop-player.webp', alt: 'features.the_tmplayer_desktop_player_over', width: 1920, height: 1200 },
+  // The launcher's row only, cropped by scripts/annotate-shot.py (tv-home-screen.json). The
+  // launcher has no light theme, so one picture serves both.
+  tvLauncher: { device: 'frame', src: '/screenshots/tv-home-screen.webp', alt: 'features.tv_home_screen_alt', width: 1440, height: 420 },
+} satisfies Record<string, Shot>;
+
+// What it looks like: each shot with its caption key.
+const gallery: [Shot, string][] = [
+  [shots.phoneChats, 'features.every_chat_and_channel_you'],
+  [shots.phoneGrid, 'features.posters_with_the_year_size'],
+  [shots.tvChats, 'features.a_rail_for_the_remote'],
+  [shots.tvHome, 'features.home_rows_caption'],
+  [shots.tvSettings, 'features.hide_small_clips_autoplay_the'],
+  [shots.desktopGrid, 'features.a_sidebar_and_a_grid'],
+  [shots.desktopPlayer, 'features.played_through_mpv_with_the'],
+];
+
+// A closer look: the same demo screenshots, with numbered marks laid over them in CSS so the
+// marks stay sharp and the notes stay translatable. Each mark's --x and --y are percentages of
+// the screenshot itself, measured on the 1920 wide file, so they hold at any size. Point N is
+// mark N and line N of the list.
+const tour: { id: string; shot: Shot; title: string; lede: string; points: Point[] }[] = [
+  {
+    id: 'tour-player', shot: shots.desktopPlayer,
+    title: 'features.the_player_watching_while_it', lede: 'features.a_video_starts_while_it',
+    points: [
+      { x: '60%', y: '90.2%', note: 'features.the_lighter_part_of_the' },
+      { x: '7%', y: '95.2%', note: 'features.subtitles_audio_track_speed_and' },
+      { x: '93.2%', y: '95.2%', note: 'features.volume_the_mini_player_in' },
+    ],
+  },
+  {
+    id: 'tour-library', shot: shots.desktopGrid,
+    title: 'features.browsing_a_chat_on_windows', lede: 'features.every_video_in_a_chat',
+    points: [
+      { x: '13%', y: '27%', note: 'features.home_history_favourites_and_downloads' },
+      { x: '13%', y: '47.3%', note: 'features.your_chats_split_the_way' },
+      { x: '33.5%', y: '53.2%', note: 'features.each_poster_gives_the_running' },
+      { x: '80%', y: '5.9%', note: 'features.search_inside_the_chat_you' },
+    ],
+  },
+  {
+    id: 'tour-tv', shot: shots.tvChats,
+    title: 'features.made_for_a_remote_on', lede: 'features.big_cards_you_can_read',
+    points: [
+      { x: '17%', y: '27.8%', note: 'features.a_rail_down_the_left' },
+      { x: '38.3%', y: '34%', note: 'features.sort_a_to_z_or' },
+      { x: '93.8%', y: '17.5%', note: 'features.search_by_voice_with_your' },
+      { x: '37%', y: '63%', note: 'features.hold_ok_on_a_chat' },
+    ],
+  },
+  {
+    id: 'tour-tv-home', shot: shots.tvLauncher,
+    title: 'features.tour_tv_home_title', lede: 'features.tour_tv_home_text',
+    points: [
+      { x: '27%', y: '11.6%', note: 'features.tour_tv_home_row' },
+      { x: '24%', y: '73.8%', note: 'features.tour_tv_home_card' },
+      { x: '82.4%', y: '19.1%', note: 'features.tour_tv_home_posters' },
+    ],
+  },
+  {
+    id: 'tour-settings', shot: shots.tvSettings,
+    title: 'features.settings_a_few_short_pages', lede: 'features.changes_save_as_you_make',
+    points: [
+      { x: '51%', y: '40.8%', note: 'features.autoplay_of_the_next_episode' },
+      { x: '33%', y: '54.9%', note: 'features.subtitle_size_a_box_behind' },
+      { x: '45%', y: '69%', note: 'features.which_videos_show_such_as' },
+      { x: '40%', y: '80.5%', note: 'features.how_much_space_is_free' },
+    ],
+  },
+];
+
+const next = [
+  { href: '/download/', title: 'common.download', body: 'features.the_latest_release_and_its', go: 'home.get_it' },
+  { href: '/install/', title: 'features.how_to_install', body: 'features.steps_for_tv_phone_windows', go: 'features.read_the_steps' },
+  { href: '/android-tv/', title: 'home.on_android_tv', body: 'features.the_ten_foot_layout_and', go: 'features.for_the_television' },
+];
 ---
 <Base page="features" title={t('features.tmplayer_features_stream_telegram_videos')} description={t('features.stream_telegram_videos_while_they')}>
   <Fragment slot="head">
     <JsonLd data={ld0} />
   </Fragment>
-<!-- Decorative background art, hidden from assistive technology and still under reduced motion. -->
+{/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />
 
 <Header page="features" />
@@ -72,48 +194,10 @@ const ld0 = {
 
   <section class="band band-tonal" id="does" aria-labelledby="does-h">
     <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="does-h">{t('home.what_it_does')}</h2>
-          <p class="section-sub">{t('features.built_for_a_remote_a')}</p>
-        </div>
-      </div>
-
+      <SectionHead id="does-h" title="home.what_it_does" sub="features.built_for_a_remote_a" />
       <div class="two-col" data-reveal>
-        <div class="panel">
-          <h3> <span class="panel-icon icon-play" aria-hidden="true">
-              <Icon name="play-card" />
-            </span> {t('features.watching')}</h3>
-          <ul class="ticks">
-            <li><T k="features.skipping_ahead_re_aims_the"><strong slot="strong1">{t('features.skipping_ahead_re_aims_the__strong1')}</strong></T></li>
-            <li><T k="features.mkv_mp4_avi_and_ts"><strong slot="strong1">{t('features.mkv_mp4_avi_and_ts__strong1')}</strong></T></li>
-            <li><T k="features.with_a_continue_watching_row"><strong slot="strong1">{t('features.with_a_continue_watching_row__strong1')}</strong></T></li>
-            <li><T k="features.the_previous_one_is_cleared"><strong slot="strong1">{t('features.the_previous_one_is_cleared__strong1')}</strong></T></li>
-            <li><T k="features.downloads_you_choose"><strong slot="strong1">{t('features.downloads_you_choose__strong1')}</strong></T></li>
-            <li><T k="features.skips_intros_and_credits"><strong slot="strong1">{t('features.skips_intros_and_credits__strong1')}</strong></T></li>
-            <li><T k="features.bookmarks_and_a_b_repeat"><strong slot="strong1">{t('features.bookmarks_and_a_b_repeat__strong1')}</strong></T></li>
-            <li><T k="features.subtitles_found_online"><strong slot="strong1">{t('features.subtitles_found_online__strong1')}</strong></T></li>
-            <li><T k="features.the_same_library_drawn_for"><strong slot="strong1">{t('features.the_same_library_drawn_for__strong1')}</strong></T></li>
-          </ul>
-        </div>
-        <div class="panel">
-          <h3> <span class="panel-icon icon-browse" aria-hidden="true">
-              <Icon name="search-panel" />
-            </span> {t('features.browsing')}</h3>
-          <ul class="ticks">
-            <li><T k="features.chats_filter_down_to_playable"><strong slot="strong1">{t('features.chats_filter_down_to_playable__strong1')}</strong></T></li>
-            <li><T k="features.home_and_series_pages"><strong slot="strong1">{t('features.home_and_series_pages__strong1')}</strong></T></li>
-            <li><T k="features.topics_tabs_one_tile"><strong slot="strong1">{t('features.topics_tabs_one_tile__strong1')}</strong></T></li>
-            <li><T k="features.watch_later_new_episodes"><strong slot="strong1">{t('features.watch_later_new_episodes__strong1')}</strong></T></li>
-            <li><T k="features.tv_home_channels"><strong slot="strong1">{t('features.tv_home_channels__strong1')}</strong></T></li>
-            <li><T k="features.posters_and_overviews"><strong slot="strong1">{t('features.posters_and_overviews__strong1')}</strong></T></li>
-            <li><T k="features.the_next_one_starts_after"><strong slot="strong1">{t('features.the_next_one_starts_after__strong1')}</strong></T></li>
-            <li><T k="features.typos_missing_accents_and_one"><strong slot="strong1">{t('features.typos_missing_accents_and_one__strong1')}</strong></T></li>
-            <li><T k="features.with_your_remote_s_microphone"><strong slot="strong1">{t('features.with_your_remote_s_microphone__strong1')}</strong></T></li>
-            <li><T k="features.pin_kids_lock_backup"><strong slot="strong1">{t('features.pin_kids_lock_backup__strong1')}</strong></T></li>
-            <li><T k="features.from_github_on_android_windows"><strong slot="strong1">{t('features.from_github_on_android_windows__strong1')}</strong></T></li>
-          </ul>
-        </div>
+        <TickPanel icon="play-card" tone="play" title="features.watching" items={watching} />
+        <TickPanel icon="search-panel" tone="browse" title="features.browsing" items={browsing} />
       </div>
     </div>
   </section>
@@ -122,259 +206,20 @@ const ld0 = {
 
   <section class="band" id="screens" aria-labelledby="shots-h">
     <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="shots-h">{t('features.what_it_looks_like')}</h2>
-          <p class="section-sub">{t('features.four_screens_in_the_order')}</p>
-          <p class="section-sub"><T k="features.demo_artwork_photos_from_unsplash"><a href="https://github.com/dracu-lah/TMPlayer/blob/main/docs/promo-art/CREDITS.md" rel="noopener" slot="a1">{t('features.demo_artwork_photos_from_unsplash__a1')}</a></T></p>
-        </div>
-      </div>
-
+      <SectionHead id="shots-h" title="features.what_it_looks_like" sub="features.four_screens_in_the_order">
+        <p class="section-sub"><T k="features.demo_artwork_photos_from_unsplash"><a href="https://github.com/dracu-lah/TMPlayer/blob/main/docs/promo-art/CREDITS.md" rel="noopener" slot="a1">{t('features.demo_artwork_photos_from_unsplash__a1')}</a></T></p>
+      </SectionHead>
       <div class="shots">
-        <figure class="shot" data-reveal>
-          <div class="device device-phone">
-            <div class="screen">
-              <!-- The source carries the light file and the img carries the dark one, so a browser
-                   downloads exactly one of the two; app.js rewrites the source's media attribute
-                   when the reader presses the toggle. -->
-              <picture>
-                <source data-theme-src srcset="/screenshots/phone-chats-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/phone-chats.webp" alt={t('features.tmplayer_on_a_phone_listing')} width="1080" height="2400" loading="lazy" decoding="async">
-              </picture>
-            </div>
-          </div>
-          <figcaption><T k="features.every_chat_and_channel_you"><b slot="b1">{t('features.every_chat_and_channel_you__b1')}</b></T></figcaption>
-        </figure>
-
-        <figure class="shot" data-reveal>
-          <div class="device device-phone">
-            <div class="screen">
-              <picture>
-                <source data-theme-src srcset="/screenshots/phone-grid-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/phone-grid.webp" alt={t('features.a_dense_grid_of_demo')} width="1080" height="2400" loading="lazy" decoding="async">
-              </picture>
-            </div>
-          </div>
-          <figcaption><T k="features.posters_with_the_year_size"><b slot="b1">{t('features.posters_with_the_year_size__b1')}</b></T></figcaption>
-        </figure>
-
-        <figure class="shot" data-reveal>
-          <div class="device device-tv">
-            <div class="screen">
-              <picture>
-                <source data-theme-src srcset="/screenshots/tv-chats-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-chats.webp" alt={t('features.the_same_chat_list_on')} width="1920" height="1080" loading="lazy" decoding="async">
-              </picture>
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption><T k="features.a_rail_for_the_remote"><b slot="b1">{t('features.a_rail_for_the_remote__b1')}</b></T></figcaption>
-        </figure>
-
-        <figure class="shot" data-reveal>
-          <div class="device device-tv">
-            <div class="screen">
-              <picture>
-                <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-home.webp" alt={t('features.tv_home_rows_alt')} width="1920" height="1080" loading="lazy" decoding="async">
-              </picture>
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption><T k="features.home_rows_caption"><b slot="b1">{t('features.home_rows_caption__b1')}</b></T></figcaption>
-        </figure>
-
-        <figure class="shot" data-reveal>
-          <div class="device device-tv">
-            <div class="screen">
-              <picture>
-                <source data-theme-src srcset="/screenshots/tv-settings-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-settings.webp" alt={t('features.tmplayer_settings_on_a_television')} width="1920" height="1080" loading="lazy" decoding="async">
-              </picture>
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption><T k="features.hide_small_clips_autoplay_the"><b slot="b1">{t('features.hide_small_clips_autoplay_the__b1')}</b></T></figcaption>
-        </figure>
-
-        <figure class="shot" data-reveal>
-          <div class="device device-tv device-desktop">
-            <div class="screen">
-              <picture>
-                <source data-theme-src srcset="/screenshots/desktop-grid-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/desktop-grid.webp" alt={t('features.the_tmplayer_desktop_app_on')} width="1920" height="1200" loading="lazy" decoding="async">
-              </picture>
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption><T k="features.a_sidebar_and_a_grid"><b slot="b1">{t('features.a_sidebar_and_a_grid__b1')}</b></T></figcaption>
-        </figure>
-
-        <figure class="shot" data-reveal>
-          <div class="device device-tv device-desktop">
-            <div class="screen">
-              <img src="/screenshots/desktop-player.webp" alt={t('features.the_tmplayer_desktop_player_over')} width="1920" height="1200" loading="lazy" decoding="async">
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption><T k="features.played_through_mpv_with_the"><b slot="b1">{t('features.played_through_mpv_with_the__b1')}</b></T></figcaption>
-        </figure>
+        {gallery.map(([shot, caption]) => <GalleryShot shot={shot} caption={caption} />)}
       </div>
     </div>
   </section>
 
-  <!-- A closer look: the same demo screenshots, with numbered marks laid over them in CSS so the
-       marks stay sharp and the notes stay translatable. Each mark's --x and --y are percentages
-       of the screenshot itself, measured on the 1920 wide file, so they hold at any size. -->
   <section class="band" id="tour" aria-labelledby="tour-h">
     <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="tour-h">{t('features.a_closer_look')}</h2>
-          <p class="section-sub">{t('features.five_screens_with_their_parts')}</p>
-        </div>
-      </div>
-
+      <SectionHead id="tour-h" title="features.a_closer_look" sub="features.five_screens_with_their_parts" />
       <div class="shots tour">
-        <figure class="shot tour-shot" id="tour-player" data-reveal>
-          <div class="device device-tv device-desktop">
-            <div class="screen">
-              <img src="/screenshots/desktop-player.webp" alt={t('features.the_tmplayer_desktop_player_over')} width="1920" height="1200" loading="lazy" decoding="async">
-              <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 60%; --y: 90.2%"></span>
-                <span style="--x: 7%; --y: 95.2%"></span>
-                <span style="--x: 93.2%; --y: 95.2%"></span>
-              </div>
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption>
-            <h3>{t('features.the_player_watching_while_it')}</h3>
-            <p>{t('features.a_video_starts_while_it')}</p>
-            <ol class="tour-list">
-              <li>{t('features.the_lighter_part_of_the')}</li>
-              <li>{t('features.subtitles_audio_track_speed_and')}</li>
-              <li>{t('features.volume_the_mini_player_in')}</li>
-            </ol>
-          </figcaption>
-        </figure>
-
-        <figure class="shot tour-shot" id="tour-library" data-reveal>
-          <div class="device device-tv device-desktop">
-            <div class="screen">
-              <picture>
-                <source data-theme-src srcset="/screenshots/desktop-grid-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/desktop-grid.webp" alt={t('features.the_tmplayer_desktop_app_on')} width="1920" height="1200" loading="lazy" decoding="async">
-              </picture>
-              <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 13%; --y: 27%"></span>
-                <span style="--x: 13%; --y: 47.3%"></span>
-                <span style="--x: 33.5%; --y: 53.2%"></span>
-                <span style="--x: 80%; --y: 5.9%"></span>
-              </div>
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption>
-            <h3>{t('features.browsing_a_chat_on_windows')}</h3>
-            <p>{t('features.every_video_in_a_chat')}</p>
-            <ol class="tour-list">
-              <li>{t('features.home_history_favourites_and_downloads')}</li>
-              <li>{t('features.your_chats_split_the_way')}</li>
-              <li>{t('features.each_poster_gives_the_running')}</li>
-              <li>{t('features.search_inside_the_chat_you')}</li>
-            </ol>
-          </figcaption>
-        </figure>
-
-        <figure class="shot tour-shot" id="tour-tv" data-reveal>
-          <div class="device device-tv">
-            <div class="screen">
-              <picture>
-                <source data-theme-src srcset="/screenshots/tv-chats-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-chats.webp" alt={t('features.the_same_chat_list_on')} width="1920" height="1080" loading="lazy" decoding="async">
-              </picture>
-              <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 17%; --y: 27.8%"></span>
-                <span style="--x: 38.3%; --y: 34%"></span>
-                <span style="--x: 93.8%; --y: 17.5%"></span>
-                <span style="--x: 37%; --y: 63%"></span>
-              </div>
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption>
-            <h3>{t('features.made_for_a_remote_on')}</h3>
-            <p>{t('features.big_cards_you_can_read')}</p>
-            <ol class="tour-list">
-              <li>{t('features.a_rail_down_the_left')}</li>
-              <li>{t('features.sort_a_to_z_or')}</li>
-              <li>{t('features.search_by_voice_with_your')}</li>
-              <li>{t('features.hold_ok_on_a_chat')}</li>
-            </ol>
-          </figcaption>
-        </figure>
-
-        <figure class="shot tour-shot" id="tour-tv-home" data-reveal>
-          <!-- The launcher's row only, cropped by scripts/annotate-shot.py (tv-home-screen.json). The
-               launcher has no light theme, so one picture serves both. -->
-          <div class="frame">
-            <div class="screen">
-              <img src="/screenshots/tv-home-screen.webp" alt={t('features.tv_home_screen_alt')} width="1440" height="420" loading="lazy" decoding="async">
-              <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 27%; --y: 11.6%"></span>
-                <span style="--x: 24%; --y: 73.8%"></span>
-                <span style="--x: 82.4%; --y: 19.1%"></span>
-              </div>
-            </div>
-          </div>
-          <figcaption>
-            <h3>{t('features.tour_tv_home_title')}</h3>
-            <p>{t('features.tour_tv_home_text')}</p>
-            <ol class="tour-list">
-              <li>{t('features.tour_tv_home_row')}</li>
-              <li>{t('features.tour_tv_home_card')}</li>
-              <li>{t('features.tour_tv_home_posters')}</li>
-            </ol>
-          </figcaption>
-        </figure>
-
-        <figure class="shot tour-shot" id="tour-settings" data-reveal>
-          <div class="device device-tv">
-            <div class="screen">
-              <picture>
-                <source data-theme-src srcset="/screenshots/tv-settings-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-settings.webp" alt={t('features.tmplayer_settings_on_a_television')} width="1920" height="1080" loading="lazy" decoding="async">
-              </picture>
-              <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 51%; --y: 40.8%"></span>
-                <span style="--x: 33%; --y: 54.9%"></span>
-                <span style="--x: 45%; --y: 69%"></span>
-                <span style="--x: 40%; --y: 80.5%"></span>
-              </div>
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption>
-            <h3>{t('features.settings_a_few_short_pages')}</h3>
-            <p>{t('features.changes_save_as_you_make')}</p>
-            <ol class="tour-list">
-              <li>{t('features.autoplay_of_the_next_episode')}</li>
-              <li>{t('features.subtitle_size_a_box_behind')}</li>
-              <li>{t('features.which_videos_show_such_as')}</li>
-              <li>{t('features.how_much_space_is_free')}</li>
-            </ol>
-          </figcaption>
-        </figure>
+        {tour.map((s) => <TourShot {...s} />)}
       </div>
     </div>
   </section>
@@ -383,38 +228,10 @@ const ld0 = {
 
   <section class="band band-tonal" id="desktop" aria-labelledby="desktop-h">
     <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="desktop-h">{t('features.on_windows_and_linux')}</h2>
-          <p class="section-sub">{t('features.the_same_account_library_and')}</p>
-        </div>
-      </div>
-
+      <SectionHead id="desktop-h" title="features.on_windows_and_linux" sub="features.the_same_account_library_and" />
       <div class="two-col" data-reveal>
-        <div class="panel">
-          <h3> <span class="panel-icon icon-browse" aria-hidden="true">
-              <Icon name="monitor-panel" />
-            </span> {t('features.the_window')}</h3>
-          <ul class="ticks">
-            <li><T k="features.or_with_a_phone_number"><strong slot="strong1">{t('features.or_with_a_phone_number__strong1')}</strong></T></li>
-            <li><T k="features.home_history_favourites_downloads_sidebar"><strong slot="strong1">{t('features.home_history_favourites_downloads_sidebar__strong1')}</strong></T></li>
-            <li><T k="features.to_play_restart_download_or"><strong slot="strong1">{t('features.to_play_restart_download_or__strong1')}</strong></T></li>
-            <li><T k="features.your_downloads_folder_unless_you"><strong slot="strong1">{t('features.your_downloads_folder_unless_you__strong1')}</strong></T></li>
-            <li><T k="features.size_and_position_a_second"><strong slot="strong1">{t('features.size_and_position_a_second__strong1')}</strong></T></li>
-          </ul>
-        </div>
-        <div class="panel">
-          <h3> <span class="panel-icon icon-play" aria-hidden="true">
-              <Icon name="play-card" />
-            </span> {t('features.the_player')}</h3>
-          <ul class="ticks">
-            <li><T k="features.mkv_mp4_avi_ts_image"><strong slot="strong1">{t('features.mkv_mp4_avi_ts_image__strong1')}</strong></T></li>
-            <li><T k="features.and_seeks_without_waiting"><strong slot="strong1">{t('features.and_seeks_without_waiting__strong1')}</strong></T></li>
-            <li><T k="features.offers_the_next_episode_and"><strong slot="strong1">{t('features.offers_the_next_episode_and__strong1')}</strong></T></li>
-            <li><T k="features.while_a_video_plays"><strong slot="strong1">{t('features.while_a_video_plays__strong1')}</strong></T></li>
-            <li><T k="features.the_linux_desktop_s_media"><strong slot="strong1">{t('features.the_linux_desktop_s_media__strong1')}</strong></T></li>
-          </ul>
-        </div>
+        <TickPanel icon="monitor-panel" tone="browse" title="features.the_window" items={desktopWindow} />
+        <TickPanel icon="play-card" tone="play" title="features.the_player" items={desktopPlayer} />
       </div>
     </div>
   </section>
@@ -423,13 +240,7 @@ const ld0 = {
 
   <section class="band" id="keys" aria-labelledby="keys-h">
     <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="keys-h">{t('features.desktop_keyboard_shortcuts')}</h2>
-          <p class="section-sub">{t('features.youtube_s_keys_plus_the')}</p>
-        </div>
-      </div>
-
+      <SectionHead id="keys-h" title="features.desktop_keyboard_shortcuts" sub="features.youtube_s_keys_plus_the" />
       <div class="keys-wrap" data-reveal>
         <table class="keys">
           <thead>
@@ -465,60 +276,15 @@ const ld0 = {
 
 <Icon name="wave" />
 
-  <section class="band band-tonal" aria-labelledby="support-h">
-    <div class="wrap">
-      <div class="support" data-reveal>
-        <h2 id="support-h">{t('features.star_it_if_it_helped')}</h2>
-        <p>{t('features.every_feature_here_started_as')}</p>
-        <div class="support-actions">
-          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
-          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/fork" rel="noopener"> <Icon name="fork-btn" /> {t('home.fork_the_repository')}</a>
-        </div>
-        <p class="support-stats">
-          <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
-          <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
-          <span>{t('home.gpl_3_0_and_free')}</span>
-        </p>
-
-        <!-- The coffee and sponsor links, the same block and words as on the download page, so a
-             reader who got something from this page has the offer where they finished reading. -->
-        <div class="support-more" id="sponsor">
-          <h3>{t('home.support_tmplayer')}</h3>
-          <p>{t('home.support_no_ads')}</p>
-          <div class="support-actions support-give">
-            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
-            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+  <StarSupport title="features.star_it_if_it_helped" body="features.every_feature_here_started_as" />
 
 <Icon name="wave-flip" />
 
   <section class="band" aria-labelledby="next-h">
     <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="next-h">{t('features.where_to_next')}</h2>
-        </div>
-      </div>
+      <SectionHead id="next-h" title="features.where_to_next" />
       <div class="card-grid card-grid-3" data-reveal>
-        <a class="card" href={l('/download/')}>
-          <h3>{t('common.download')}</h3>
-          <p>{t('features.the_latest_release_and_its')}</p>
-          <span class="card-go">{t('home.get_it')} <Icon name="arrow-right-sm" /></span>
-        </a>
-        <a class="card" href={l('/install/')}>
-          <h3>{t('features.how_to_install')}</h3>
-          <p>{t('features.steps_for_tv_phone_windows')}</p>
-          <span class="card-go">{t('features.read_the_steps')} <Icon name="arrow-right-sm" /></span>
-        </a>
-        <a class="card" href={l('/android-tv/')}>
-          <h3>{t('home.on_android_tv')}</h3>
-          <p>{t('features.the_ten_foot_layout_and')}</p>
-          <span class="card-go">{t('features.for_the_television')} <Icon name="arrow-right-sm" /></span>
-        </a>
+        {next.map((c) => <NextCard {...c} />)}
       </div>
     </div>
   </section>

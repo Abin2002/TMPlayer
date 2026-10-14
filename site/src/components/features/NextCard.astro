@@ -1,0 +1,16 @@
+---
+// A "where to next" card: a whole-card link with a title, a line and a go label.
+import Icon from '../Icon.astro';
+import { text } from '../../i18n/t';
+import { l as link } from '../../i18n/links';
+
+interface Props { href: string; title: string; body: string; go: string }
+const { href, title, body, go } = Astro.props;
+const lang = Astro.locals.lang;
+const t = (k: string) => text(lang, k);
+---
+<a class="card" href={link(lang, href)}>
+  <h3>{t(title)}</h3>
+  <p>{t(body)}</p>
+  <span class="card-go">{t(go)} <Icon name="arrow-right-sm" /></span>
+</a>
