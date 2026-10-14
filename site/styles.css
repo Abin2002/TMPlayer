@@ -1406,8 +1406,12 @@ kbd {
     width: 21%;
     min-width: 68px;
   }
-  .device-phone { padding: 4px; border-radius: 22px; }
-  .device-phone .screen { --screen-radius: 18px; }
+  /* Squarer corners at this size: the same 22px on a phone a fifth as wide read as a pebble.
+     These are a flagship's near square corners, an S Ultra rather than a rounded handset. */
+  .device-phone { padding: 4px; border-radius: 12px; }
+  .device-phone .screen { --screen-radius: 8px; }
+  .showcase .device-phone { border-radius: 8px; padding: 3px; }
+  .showcase .device-phone .screen { --screen-radius: 5px; }
   .device-phone::before, .device-phone::after { width: 4px; }
   .device-phone::before { left: -4px; }
   .device-phone::after { right: -4px; }
@@ -2017,8 +2021,9 @@ a.card:active,
 @media (max-width: 560px) {
   body { font-size: 16.5px; }
   .frame { padding: 6px; border-radius: var(--shape-l); }
-  .shot .device-phone { padding: 5px; border-radius: 30px; }
-  .shot .device-phone .screen { --screen-radius: 25px; }
+  /* Near square corners, as a flagship's: rounder read as a toy at this width. */
+  .shot .device-phone { padding: 5px; border-radius: 16px; }
+  .shot .device-phone .screen { --screen-radius: 12px; }
   .device-tv .screen { --bezel: 4px; }
   .abi { padding: 18px; }
   .abi-get { width: 100%; justify-content: space-between; }

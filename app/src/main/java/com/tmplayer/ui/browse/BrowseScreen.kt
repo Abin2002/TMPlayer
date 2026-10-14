@@ -166,8 +166,6 @@ import com.tmplayer.ui.online.LocalOnlineArt
 import com.tmplayer.ui.online.OnlineArt
 import androidx.compose.runtime.CompositionLocalProvider
 import com.tmplayer.ui.components.CoverArt
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.snap
 import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -1462,23 +1460,14 @@ private fun NavRail(
     // Inset either side, the icon and its gap, a count badge, and the column's end padding.
     val itemRoom = with(LocalDensity.current) { widest.toDp() } + RAIL_INSET * 2 + 22.dp + 12.dp + 20.dp + 12.dp
     val railRoom = itemRoom.coerceIn(180.dp, RAIL_WIDE)
-    // Folded to its icons while the remote is in the content, which then has the width the labels
-    // took; open again the moment focus comes back to the rail. The selected destination keeps
-    // its tint either way, so where the viewer is never goes with the labels.
-    var railFocused by remember { mutableStateOf(false) }
-    val reducedMotion = rememberReducedMotion()
-    val width by animateDpAsState(
-        targetValue = if (railFocused) railRoom else RAIL_FOLDED,
-        animationSpec = if (reducedMotion) snap() else Motion.standard(Motion.Normal),
-        label = "railWidth",
-    )
-    // 0 folded, 1 open: how much of the labels to show while the width moves between the two.
-    val reveal = ((width - RAIL_FOLDED) / (railRoom - RAIL_FOLDED)).coerceIn(0f, 1f)
+    // Always open: a television has the width for the labels, and a rail that folded to its icons
+    // whenever the remote left it only moved the whole page sideways on every visit.
+    val width = railRoom
+    val reveal = 1f
     Column(
         Modifier
             .width(width + Tv.SafeH - RAIL_INSET)
             .fillMaxHeight()
-            .onFocusChanged { railFocused = it.hasFocus }
             .keepsVerticalFocus()
             .background(Tone.surface)
             // The rail is the leftmost thing on the screen, so it alone decides whether the app
@@ -2973,8 +2962,6 @@ private val RAIL_WIDE = 240.dp
 
 /** The size of a rail item's icon. */
 private val RAIL_ICON = 22.dp
-/** The rail folded to its icons: the item inset either side of the icon, and the column's end padding. */
-private val RAIL_FOLDED = RAIL_INSET * 2 + RAIL_ICON + 12.dp
 
 /** Enough for a version name, and never enough to eat the item's own label. */
 private val RAIL_BADGE_MAX = 64.dp
