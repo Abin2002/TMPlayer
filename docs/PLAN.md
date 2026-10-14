@@ -159,6 +159,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [ ] CP62 AniList and Simkl progress sync (later, user 2026-10-13: anything needing keys or accounts waits; needs U30)
 - [ ] CP63 UI refresh in the style of Nuvio: home hero, poster rows, detail and series pages, player chrome, on phone, TV and desktop (spec: docs/design/2026-10-13-nuvio-style-ui.md)
 - [x] CP64 Desktop Home that feels like a desktop app: wide hero with text on the left, row arrows and sideways wheel scrolling, hover lift with a play button, See all pages, cards that scale with the window, keyboard moves (user, 2026-10-14)
+- [x] CP65 Android TV home screen channels: Recently added as the default channel, Watch later and New episodes to add from the launcher, real posters and thumbnails, cleared on sign out and by the kids lock, a Settings switch on TV (15aeada, 80a3344)
 
 ## Standing rules
 
