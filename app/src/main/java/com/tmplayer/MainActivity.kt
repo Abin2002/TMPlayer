@@ -561,8 +561,10 @@ private fun Root() {
                 chatsViewModel.reset()
                 // Another account's starred chats must not stay on Home behind a sign out.
                 homeViewModel.refresh()
-                // Nor on the TV home screen, where the app's channels show them.
-                App.backgroundScope.launch { TvChannelsPublisher.removeAll(context.applicationContext) }
+                // Nor on the TV home screen, where the app's channels show them. The cards go and
+                // the channels stay: an empty channel is not shown, and a new one would need the
+                // viewer to add it again in the launcher's own settings.
+                App.backgroundScope.launch { TvChannelsPublisher.clearPrograms(context.applicationContext) }
             }
         }
     }

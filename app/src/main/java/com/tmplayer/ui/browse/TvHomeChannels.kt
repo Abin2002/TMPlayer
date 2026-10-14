@@ -50,8 +50,8 @@ object HomeLaunch {
  * - Asks Home for Recently added (or the single starred chat's row) as soon as the viewer is signed
  *   in, so the channel fills even when Home itself is not opened.
  * - Writes a couple of seconds after the rows settle, so a Home filling row by row is one write.
- * - Takes every card out when the kids lock goes on, then puts back what the lock allows; takes the
- *   channels away when the setting is turned off.
+ * - Takes every card out when the kids lock goes on, then puts back what the lock allows; empties the
+ *   channels when the setting is turned off.
  *
  * @param enabled the Settings switch; null until it has been read, which does nothing either way.
  */
@@ -72,8 +72,11 @@ fun TvHomeChannels(
     val art by model.art.collectAsStateWithLifecycle()
     val starred = remember(chats, favourites) { HomeRows.favouriteChats(chats, favourites) }
 
+    // Off empties the channels rather than deleting them. The launcher hides an empty channel, and
+    // keeps the place the viewer gave it: Android lets an app's first channel onto the home screen
+    // without asking, but a channel made again after a delete waits in the launcher's settings.
     LaunchedEffect(enabled) {
-        if (enabled == false) App.backgroundScope.launch { TvChannelsPublisher.removeAll(context) }
+        if (enabled == false) App.backgroundScope.launch { TvChannelsPublisher.clearPrograms(context) }
     }
 
     // What the default channel is drawn from, asked for whether or not Home is on screen. Both are

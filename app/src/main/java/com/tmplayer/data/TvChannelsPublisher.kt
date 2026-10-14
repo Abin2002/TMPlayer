@@ -101,7 +101,11 @@ object TvChannelsPublisher {
         }
     }
 
-    /** Takes every card out of the channels and leaves the channels: the kids lock went on. */
+    /**
+     * Takes every card out of the channels and leaves the channels, which the launcher then hides:
+     * the kids lock went on, the setting was turned off, or the viewer signed out. The channels are
+     * never deleted, since one made again would no longer be let onto the home screen by itself.
+     */
     suspend fun clearPrograms(context: Context) {
         if (!supported(context)) return
         withContext(Dispatchers.IO) {
@@ -112,21 +116,6 @@ object TvChannelsPublisher {
                     }
                     pruneArt(context, emptySet())
                 }.onFailure { Log.w(TAG, "channels not cleared", it) }
-            }
-        }
-    }
-
-    /** Removes the channels themselves, cards and all: a sign out, or the setting turned off. */
-    suspend fun removeAll(context: Context) {
-        if (!supported(context)) return
-        withContext(Dispatchers.IO) {
-            lock.withLock {
-                runCatching {
-                    ownChannels(context).values.forEach { channel ->
-                        context.contentResolver.delete(TvContract.buildChannelUri(channel.id), null, null)
-                    }
-                    pruneArt(context, emptySet())
-                }.onFailure { Log.w(TAG, "channels not removed", it) }
             }
         }
     }
