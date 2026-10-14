@@ -3,19 +3,19 @@
 // translatable. Each point carries its mark's position and its note together, so mark N and line N
 // of the list can never drift apart. --x and --y are percentages of the screenshot itself,
 // measured on the full size file, so they hold at any size.
-import Device from './Device.astro';
-import Screenshot from './Screenshot.astro';
-import type { Shot } from './GalleryShot.astro';
+import Device from '../Device.astro';
+import Shot from '../Shot.astro';
+import type { Screen } from './GalleryShot.astro';
 import { text } from '../../i18n/t';
 
 export interface Point { x: string; y: string; note: string }
-interface Props { id: string; shot: Shot; title: string; lede: string; points: Point[] }
+interface Props { id: string; shot: Screen; title: string; lede: string; points: Point[] }
 const { id, shot, title, lede, points } = Astro.props;
 const t = (k: string) => text(Astro.locals.lang, k);
 ---
 <figure class="shot tour-shot" id={id} data-reveal>
   <Device kind={shot.device}>
-    <Screenshot src={shot.src} light={shot.light} alt={t(shot.alt)} width={shot.width} height={shot.height} />
+    <Shot src={shot.src} light={shot.light} alt={t(shot.alt)} width={shot.width} height={shot.height} />
     <div class="tour-marks" aria-hidden="true">
       {points.map((p) => <span style={`--x: ${p.x}; --y: ${p.y}`}></span>)}
     </div>

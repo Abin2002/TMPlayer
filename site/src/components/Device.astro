@@ -2,7 +2,8 @@
 // A drawn device around a screenshot: a phone, a television on its stand, a desktop monitor (the
 // television's frame with the desktop proportions), or a plain frame for a cropped shot. The
 // default slot goes inside the screen.
-interface Props { kind: 'phone' | 'tv' | 'desktop' | 'frame' }
+export type DeviceKind = 'phone' | 'tv' | 'desktop' | 'frame';
+interface Props { kind: DeviceKind }
 const { kind } = Astro.props;
 const cls = {
   phone: 'device device-phone',

@@ -2,25 +2,20 @@
 // A screenshot in its device with a caption whose bold lead comes in as the {b1} slot, kept under
 // the caption's own key with `__b1`.
 import T from '../T.astro';
-import Device from './Device.astro';
-import Screenshot from './Screenshot.astro';
+import DeviceShot from '../DeviceShot.astro';
+import type { DeviceKind } from '../Device.astro';
 import { text } from '../../i18n/t';
 
-export interface Shot {
-  device: 'phone' | 'tv' | 'desktop' | 'frame';
+export interface Screen {
+  device: DeviceKind;
   src: string;
   light?: string;
   alt: string;
   width: number;
   height: number;
 }
-interface Props { shot: Shot; caption: string }
+interface Props { shot: Screen; caption: string }
 const { shot, caption } = Astro.props;
 const t = (k: string) => text(Astro.locals.lang, k);
 ---
-<figure class="shot" data-reveal>
-  <Device kind={shot.device}>
-    <Screenshot src={shot.src} light={shot.light} alt={t(shot.alt)} width={shot.width} height={shot.height} />
-  </Device>
-  <figcaption><T k={caption}><b slot="b1">{t(`${caption}__b1`)}</b></T></figcaption>
-</figure>
+<DeviceShot device={shot.device} shot={{ src: shot.src, light: shot.light, alt: t(shot.alt), width: shot.width, height: shot.height }}><T k={caption}><b slot="b1">{t(`${caption}__b1`)}</b></T></DeviceShot>

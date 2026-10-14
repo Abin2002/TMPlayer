@@ -12,7 +12,7 @@ import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
 import Cards from '../../../components/Cards.astro';
 import Card from '../../../components/Card.astro';
-import TvShot from '../../../components/android-tv/TvShot.astro';
+import DeviceShot from '../../../components/DeviceShot.astro';
 import Panel from '../../../components/Panel.astro';
 import StarCard from '../../../components/StarCard.astro';
 import { langPaths } from '../../../i18n/paths';
@@ -87,8 +87,8 @@ const features = [
 
   <Band labelledby="tvshots-h" title={t('android_tv.the_ten_foot_layout')} sub={t('android_tv.the_app_on_a_television')}>
     <div class="shots">
-      <TvShot src="/screenshots/tv-chats.webp" light="/screenshots/tv-chats-light.webp" alt={t('android_tv.the_tmplayer_chat_list_on')}><T k="android_tv.categories_on_the_rail_chats"><b slot="b1">{t('android_tv.categories_on_the_rail_chats__b1')}</b></T></TvShot>
-      <TvShot src="/screenshots/tv-grid.webp" light="/screenshots/tv-grid-light.webp" alt={t('android_tv.videos_from_a_telegram_chat')}><T k="android_tv.running_time_and_size_on"><b slot="b1">{t('android_tv.running_time_and_size_on__b1')}</b></T></TvShot>
+      <DeviceShot device="tv" shot={{ src: '/screenshots/tv-chats.webp', light: '/screenshots/tv-chats-light.webp', alt: t('android_tv.the_tmplayer_chat_list_on'), width: 1920, height: 1080 }}><T k="android_tv.categories_on_the_rail_chats"><b slot="b1">{t('android_tv.categories_on_the_rail_chats__b1')}</b></T></DeviceShot>
+      <DeviceShot device="tv" shot={{ src: '/screenshots/tv-grid.webp', light: '/screenshots/tv-grid-light.webp', alt: t('android_tv.videos_from_a_telegram_chat'), width: 1920, height: 1080 }}><T k="android_tv.running_time_and_size_on"><b slot="b1">{t('android_tv.running_time_and_size_on__b1')}</b></T></DeviceShot>
     </div>
   </Band>
 

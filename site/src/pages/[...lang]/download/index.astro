@@ -10,6 +10,7 @@ import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
+import Shot from '../../../components/Shot.astro';
 import Platform from '../../../components/download/Platform.astro';
 import AbiRow from '../../../components/download/AbiRow.astro';
 import Panel from '../../../components/Panel.astro';
@@ -127,7 +128,7 @@ const ld0 = {
             </AbiRow>
             <a slot="foot" href={l('/install/#android')}>{t('download.how_to_install_on_a')}</a>
             <Fragment slot="after">
-            <p class="platform-badges"><a class="store-badge" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener"><img src="/badges/obtainium.png" width="161" height="48" alt={t('download.add_to_obtainium')} loading="lazy" decoding="async"></a></p>
+            <p class="platform-badges"><a class="store-badge" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener"><Shot src="/badges/obtainium.png" width="161" height="48" alt={t('download.add_to_obtainium')} /></a></p>
             <p class="platform-note"><T k="download.kao_note"><a href="https://keepandroidopen.org/" target="_blank" rel="noopener" slot="a1">{t('download.kao_note__a1')}</a></T></p>
             </Fragment>
           </Platform>

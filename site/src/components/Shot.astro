@@ -1,6 +1,7 @@
 ---
-// Every <img> on the site, so none goes out without its alt, width and height. Below the fold
-// (the default) it loads lazily; `lazy={false}` is for the header's mark and the hero.
+// Every content <img> on the site, so none goes out without its alt, width and height. Below the
+// fold (the default) it loads lazily; `lazy={false}` is for the hero. The headers' brand mark stays
+// a plain <img>: its alt is empty, and through the spread it would come out as a bare `alt`.
 //
 // With a `light` file it is a light/dark pair: the source carries the light file and the img the
 // dark one, so a browser downloads exactly one of the two; app.js rewrites the source's media

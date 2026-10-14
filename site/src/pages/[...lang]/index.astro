@@ -11,6 +11,8 @@ import ToTop from '../../components/ToTop.astro';
 import T from '../../components/T.astro';
 import Icon from '../../components/Icon.astro';
 import LinkCard from '../../components/LinkCard.astro';
+import Device from '../../components/Device.astro';
+import Shot from '../../components/Shot.astro';
 import Cards from '../../components/Cards.astro';
 import Step from '../../components/Step.astro';
 import Steps from '../../components/Steps.astro';
@@ -201,24 +203,12 @@ const ld2 = {
            show's page on the phone, for a different title, so the two frames show more of the
            demo library rather than the same pictures twice. -->
       <figure class="showcase">
-        <div class="device device-tv">
-          <div class="screen">
-            <picture>
-              <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-              <img src="/screenshots/tv-home.webp" alt={t('home.tv_home_hero_alt')} width="1920" height="1080" fetchpriority="high" decoding="async">
-            </picture>
-          </div>
-          <div class="stand"></div>
-          <div class="foot"></div>
-        </div>
-        <div class="device device-phone">
-          <div class="screen">
-            <picture>
-              <source data-theme-src srcset="/screenshots/phone-show-light.webp" media="(prefers-color-scheme: light)">
-              <img src="/screenshots/phone-show.webp" alt={t('home.phone_show_page_alt')} width="1080" height="2400" decoding="async">
-            </picture>
-          </div>
-        </div>
+        <Device kind="tv">
+          <Shot src="/screenshots/tv-home.webp" light="/screenshots/tv-home-light.webp" alt={t('home.tv_home_hero_alt')} width="1920" height="1080" fetchpriority="high" lazy={false} />
+        </Device>
+        <Device kind="phone">
+          <Shot src="/screenshots/phone-show.webp" light="/screenshots/phone-show-light.webp" alt={t('home.phone_show_page_alt')} width="1080" height="2400" lazy={false} />
+        </Device>
       </figure>
 
       <dl class="spec">
@@ -288,10 +278,7 @@ const ld2 = {
           <Step title={t('home.scan_the_qr_code')}>
             <p>{t('home.sign_in_with_telegram_s')}</p>
             <p><a href={l('/faq/')}>{t('home.what_that_does_and_does')}</a></p>
-            <picture class="step-shot">
-              <source data-theme-src srcset="/screenshots/tv-sign-in-light.webp" media="(prefers-color-scheme: light)">
-              <img src="/screenshots/tv-sign-in.webp" alt={t('home.sign_in_qr_alt')} width="960" height="480" loading="lazy" decoding="async">
-            </picture>
+            <Shot src="/screenshots/tv-sign-in.webp" light="/screenshots/tv-sign-in-light.webp" alt={t('home.sign_in_qr_alt')} width="960" height="480" frame="step-shot" />
           </Step>
         </Steps>
         <p class="steps-cta"><a class="btn btn-filled" href={l('/download/')}>{t('common.download')}</a></p>

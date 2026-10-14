@@ -17,7 +17,7 @@ import GalleryShot from '../../../components/features/GalleryShot.astro';
 import TourShot from '../../../components/features/TourShot.astro';
 import StarCard from '../../../components/StarCard.astro';
 import LinkCard from '../../../components/LinkCard.astro';
-import type { Shot } from '../../../components/features/GalleryShot.astro';
+import type { Screen } from '../../../components/features/GalleryShot.astro';
 import type { Point } from '../../../components/features/TourShot.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
@@ -87,10 +87,10 @@ const shots = {
   // The launcher's row only, cropped by scripts/annotate-shot.py (tv-home-screen.json). The
   // launcher has no light theme, so one picture serves both.
   tvLauncher: { device: 'frame', src: '/screenshots/tv-home-screen.webp', alt: 'features.tv_home_screen_alt', width: 1440, height: 420 },
-} satisfies Record<string, Shot>;
+} satisfies Record<string, Screen>;
 
 // What it looks like: each shot with its caption key.
-const gallery: [Shot, string][] = [
+const gallery: [Screen, string][] = [
   [shots.phoneChats, 'features.every_chat_and_channel_you'],
   [shots.phoneGrid, 'features.posters_with_the_year_size'],
   [shots.tvChats, 'features.a_rail_for_the_remote'],
@@ -104,7 +104,7 @@ const gallery: [Shot, string][] = [
 // marks stay sharp and the notes stay translatable. Each mark's --x and --y are percentages of
 // the screenshot itself, measured on the 1920 wide file, so they hold at any size. Point N is
 // mark N and line N of the list.
-const tour: { id: string; shot: Shot; title: string; lede: string; points: Point[] }[] = [
+const tour: { id: string; shot: Screen; title: string; lede: string; points: Point[] }[] = [
   {
     id: 'tour-player', shot: shots.desktopPlayer,
     title: 'features.the_player_watching_while_it', lede: 'features.a_video_starts_while_it',
