@@ -1,0 +1,16 @@
+---
+// One scan code beside the support buttons. The codes show only on wide screens, where a phone
+// is the other device in the room; on a phone the buttons above do the same job.
+import Icon from '../Icon.astro';
+
+interface Props {
+  /** the QR icon, drawn inline as SVG */
+  icon: 'qr-sponsors' | 'qr-coffee';
+  caption: string;
+}
+const { icon, caption } = Astro.props;
+---
+<figure>
+  <Icon name={icon} />
+  <figcaption>{caption}</figcaption>
+</figure>

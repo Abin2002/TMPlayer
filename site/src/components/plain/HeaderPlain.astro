@@ -1,0 +1,13 @@
+---
+// The header of the English-only pages, the older inline markup they were written with: a 30px
+// brand image, no language picker, and the sun drawn as a single path. It differs from the shared
+// Header on purpose until AM08 brings the two together.
+import Icon from '../Icon.astro';
+---
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/" aria-label="TMPlayer home"><img class="brand-mark" src="/favicon.svg" width="30" height="30" alt=""><span class="brand-name">TMPlayer</span></a>
+    <nav class="nav-links" id="site-nav" aria-label="Primary"><a href="/">Home</a><a href="/features/">Features</a><a href="/download/">Download</a><a href="/install/">Install</a><a class="only-menu" href="/android-tv/">Android TV</a><a href="/faq/">Questions</a></nav><div class="nav"><a class="nav-icon" href="https://github.com/dracu-lah/TMPlayer" rel="noopener" aria-label="TMPlayer on GitHub"><Icon name="github" />
+        <span class="nav-icon-count is-loading" data-count="stars" data-count-skeleton aria-hidden="true"></span></a><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme"><Icon name="sun-path" /><Icon name="moon" /></button><button class="menu-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><Icon name="menu" /><Icon name="menu-close" /></button></div>
+  </div>
+</header>

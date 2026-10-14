@@ -1,0 +1,47 @@
+---
+// The footer of the English-only pages, in English and in the older inline markup. Pages written
+// before /signing/ existed never linked it, so the link is opt in. The links stay one per line:
+// the whitespace between them is part of the page's visible text.
+interface Props {
+  /** show the "Code Signing" link between Privacy and Lawful use */
+  signing?: boolean;
+}
+const { signing = false } = Astro.props;
+---
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p class="footer-brand">TMPlayer</p>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="/features/">Features</a>
+      <a href="/download/">Download</a>
+      <a href="/install/">Install</a>
+      <a href="/android-tv/">Android TV</a>
+      <a href="/faq/">Questions</a>
+      <a href="/changelog/">Changelog</a>
+      <a href="/fire-tv/">Fire TV</a>
+      <a href="/formats/">Formats</a>
+      <a href="/translate/">Translate</a>
+      <a href="/security/">Security</a>
+      <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener">Source</a>
+      <a href="/privacy/">Privacy</a>
+      {signing && <a href="/signing/">Code Signing</a>}
+      <a href="/legal/">Lawful use</a>
+      <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
+    </nav>
+    <nav class="footer-links footer-guides" aria-label="Guides">
+      <a href="/guides/telegram-videos-on-android-tv/">Telegram on Android TV</a>
+      <a href="/guides/telegram-videos-on-fire-tv/">Telegram on Fire TV</a>
+      <a href="/guides/telegram-on-tv-without-casting/">Telegram without casting</a>
+    </nav>
+    <nav class="footer-links footer-community" aria-label="Community">
+      <a href="https://t.me/tmplayerapp" rel="noopener">Telegram channel</a>
+      <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
+      <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener">Discussions</a>
+      <a href="https://github.com/sponsors/dracu-lah" rel="noopener">Sponsor</a>
+      <a href="https://buymeacoffee.com/nevil.dev" rel="noopener">Buy me a coffee</a>
+      <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
+    </nav>
+    <p class="footer-legal muted small">GPL-3.0, &copy; 2026 dracu-lah. Unofficial, not affiliated with Telegram. Use it only with content you own or may access.</p>
+  </div>
+</footer>
