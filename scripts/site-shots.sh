@@ -25,7 +25,7 @@ shoot() {  # side path size scheme
   local name; name=$(printf '%s' "$path" | tr '/' '_')
   local flags=()
   [ "$scheme" = dark ] && flags+=(--force-dark-mode)
-  chromium-browser --headless=new --disable-gpu --no-sandbox --hide-scrollbars --mute-audio \
+  timeout -k 5 60 chromium-browser --headless=new --disable-gpu --no-sandbox --hide-scrollbars --mute-audio \
     --no-first-run --disable-extensions --force-prefers-reduced-motion --user-data-dir="$(mktemp -d)" "${flags[@]}" \
     --window-size="$size" --virtual-time-budget=4000 \
     --screenshot="$out/${name}_${size}_${scheme}_${side}.png" "$base$path" >/dev/null 2>&1

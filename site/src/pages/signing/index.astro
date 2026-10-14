@@ -1,0 +1,110 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import JsonLd from '../../components/JsonLd.astro';
+import { ENGLISH } from '../../i18n/langs';
+
+Astro.locals.lang = ENGLISH;
+
+const ld0 = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://tmplayer.org/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Code signing",
+      "item": "https://tmplayer.org/signing/"
+    }
+  ]
+};
+---
+<Base path="/signing/" title="Code signing policy - TMPlayer" description="How TMPlayer releases are built by GitHub Actions from the tagged source and signed, and how to check a download's signature and SHA-256.">
+  <Fragment slot="head">
+    <JsonLd data={ld0} />
+  </Fragment>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/" aria-label="TMPlayer home"><img class="brand-mark" src="/favicon.svg" width="30" height="30" alt=""><span class="brand-name">TMPlayer</span></a>
+    <nav class="nav-links" id="site-nav" aria-label="Primary"><a href="/">Home</a><a href="/features/">Features</a><a href="/download/">Download</a><a href="/install/">Install</a><a class="only-menu" href="/android-tv/">Android TV</a><a href="/faq/">Questions</a></nav><div class="nav"><a class="nav-icon" href="https://github.com/dracu-lah/TMPlayer" rel="noopener" aria-label="TMPlayer on GitHub"><Icon name="github" />
+        <span class="nav-icon-count is-loading" data-count="stars" data-count-skeleton aria-hidden="true"></span></a><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme"><Icon name="sun-path" /><Icon name="moon" /></button><button class="menu-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><Icon name="menu" /><Icon name="menu-close" /></button></div>
+  </div>
+</header>
+<main id="main" class="policy-page">
+  <div class="wrap policy-wrap">
+    <p class="eyebrow">Effective 5 October 2026</p>
+    <h1>Code Signing Policy</h1>
+    <p class="policy-lede">This document outlines the code signing policy for TMPlayer binaries, detailing how we ensure the integrity and authenticity of our releases.</p>
+    <p class="policy-lede"><strong>Status:</strong> our application to the SignPath Foundation is pending. Until it is approved, the Windows installer is not code signed, and Windows SmartScreen may warn before it runs. The policy below is what applies once signing starts.</p>
+
+    <section>
+      <h2>Build Process</h2>
+      <p>All TMPlayer releases are built exclusively via automated Continuous Integration (CI) pipelines on GitHub Actions. No releases are built manually on developer machines. The CI pipeline pulls the source code directly from the repository, builds the artifacts, and prepares them for signing.</p>
+    </section>
+
+    <section>
+      <h2>Code Signing</h2>
+      <p>To ensure that users receive untampered binaries, we will digitally sign our Windows releases using a certificate provided by the <a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a>. The signing step will run in our automated CI pipeline and only for official release tags.</p>
+      <p>Android releases are signed with our own secure keystore, managed via GitHub Secrets.</p>
+    </section>
+
+    <section>
+      <h2>Access Control</h2>
+      <p>Only authorized maintainers (currently dracu-lah) have write access to the TMPlayer repository and the ability to push tags that trigger the release and signing pipeline. Branch protection rules are in place for the main branch to ensure all changes go through proper review.</p>
+    </section>
+
+    <section>
+      <h2>Verification</h2>
+      <p>Once signing starts, users can verify the signature of our Windows binaries by checking the digital signature properties in Windows Explorer. The certificate should be issued to our open source project via SignPath Foundation.</p>
+    </section>
+
+    <section>
+      <h2>Questions</h2>
+      <p>Email <a href="mailto:hello@tmplayer.org?subject=TMPlayer%20signing">hello@tmplayer.org</a> with a question about signing. For what the app and this website collect, see the <a href="/privacy/">privacy page</a>. Material changes to this page will update the effective date above.</p>
+    </section>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p class="footer-brand">TMPlayer</p>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="/features/">Features</a>
+      <a href="/download/">Download</a>
+      <a href="/install/">Install</a>
+      <a href="/android-tv/">Android TV</a>
+      <a href="/faq/">Questions</a>
+      <a href="/changelog/">Changelog</a>
+      <a href="/fire-tv/">Fire TV</a>
+      <a href="/formats/">Formats</a>
+      <a href="/translate/">Translate</a>
+      <a href="/security/">Security</a>
+      <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener">Source</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/signing/">Code Signing</a>
+      <a href="/legal/">Lawful use</a>
+      <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
+    </nav>
+    <nav class="footer-links footer-guides" aria-label="Guides">
+      <a href="/guides/telegram-videos-on-android-tv/">Telegram on Android TV</a>
+      <a href="/guides/telegram-videos-on-fire-tv/">Telegram on Fire TV</a>
+      <a href="/guides/telegram-on-tv-without-casting/">Telegram without casting</a>
+    </nav>
+    <nav class="footer-links footer-community" aria-label="Community">
+      <a href="https://t.me/tmplayerapp" rel="noopener">Telegram channel</a>
+      <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
+      <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener">Discussions</a>
+      <a href="https://github.com/sponsors/dracu-lah" rel="noopener">Sponsor</a>
+      <a href="https://buymeacoffee.com/nevil.dev" rel="noopener">Buy me a coffee</a>
+      <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
+    </nav>
+    <p class="footer-legal muted small">GPL-3.0, &copy; 2026 dracu-lah. Unofficial, not affiliated with Telegram. Use it only with content you own or may access.</p>
+  </div>
+</footer>
+</Base>

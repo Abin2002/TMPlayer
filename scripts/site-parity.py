@@ -330,7 +330,8 @@ def compare(old_base, new_base, url, rep):
         rep.add(url, "jsonld", "parses", str(e))
         ld2 = []
     if ld1 != ld2:
-        seq_diff(rep, url, "jsonld", ld1, ld2)
+        seq_diff(rep, url, "jsonld", [json.dumps(x, ensure_ascii=False) for x in ld1],
+                 [json.dumps(x, ensure_ascii=False) for x in ld2])
     def crumbs(lds):
         return any(d.get("@type") == "BreadcrumbList"
                    or any(g.get("@type") == "BreadcrumbList" for g in d.get("@graph", []))

@@ -1,0 +1,394 @@
+---
+// The page reads the release from the GitHub API, and every download button goes to github.com, which hands the file over from GitHub's asset host. Opening those connections early takes the DNS and TLS time off the first click.
+// The stored theme, applied before the first paint. With no stored choice nothing is set and the stylesheet follows prefers-color-scheme, which is the system theme.
+
+import Base from '../../../layouts/Base.astro';
+import BgArt from '../../../components/BgArt.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import ToTop from '../../../components/ToTop.astro';
+import T from '../../../components/T.astro';
+import Icon from '../../../components/Icon.astro';
+import JsonLd from '../../../components/JsonLd.astro';
+import { langPaths } from '../../../i18n/paths';
+import { text } from '../../../i18n/t';
+import { l as link } from '../../../i18n/links';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props;
+Astro.locals.lang = lang;
+const t = (k: string) => text(lang, k);
+const l = (href: string) => link(lang, href);
+
+const ld0 = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://tmplayer.org/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Download",
+      "item": "https://tmplayer.org/download/"
+    }
+  ]
+};
+---
+<Base page="download" title={t('download.download_tmplayer_for_android_tv')} description={t('download.download_tmplayer_free_the_apk')}>
+  <Fragment slot="preconnect">
+    <link rel="preconnect" href="https://api.github.com" crossorigin>
+    <link rel="preconnect" href="https://github.com">
+    <link rel="preconnect" href="https://release-assets.githubusercontent.com">
+    <link rel="dns-prefetch" href="https://objects.githubusercontent.com">
+  </Fragment>
+  <Fragment slot="head">
+    <JsonLd data={ld0} />
+  </Fragment>
+<!-- Decorative background art, hidden from assistive technology and still under reduced motion. -->
+<BgArt />
+
+<Header page="download" />
+
+<main id="main">
+
+  <section class="page-head">
+    <div class="wrap page-head-wrap">
+      <p class="crumbs"><T k="download.download"><a href={l('/')} slot="a1">{t('download.download__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></p>
+      <h1>{t('common.download')} <em>TMPlayer</em></h1>
+      <p class="page-lede">{t('download.for_android_tv_phones_windows')}</p>
+      <!--
+        The filled button is drawn by app.js once it knows which system this is, and only then:
+        with scripting off there is no guess to make, and the platform list below does the job.
+      -->
+      <div class="page-actions">
+        <a class="btn btn-filled" id="os-download" href="#platforms" hidden>
+          <Icon name="download-btn" />
+          <span id="os-download-label">{t('common.download')}</span>
+        </a>
+        <a class="btn btn-outline" href={l('/install/')}>{t('download.how_to_install_it')} <Icon name="arrow-right-sm" /></a>
+      </div>
+      <p class="os-note" id="os-note" role="status" hidden></p>
+      <nav class="platform-jump" aria-label={t('download.platforms')}>
+        <a href="#android">{t('download.android_phone')}</a>
+        <a href="#android-tv">Android TV</a>
+        <a href="#windows">Windows</a>
+        <a href="#macos" data-mac-jump hidden>macOS</a>
+        <a href="#linux">Linux</a>
+      </nav>
+    </div>
+  </section>
+
+<Icon name="wave" />
+
+  <section class="band band-tonal" id="download" aria-labelledby="download-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="download-h">{t('download.every_platform_one_release')}</h2>
+          <p class="section-sub"><T k="download.every_file_comes_from_one_github"><a href="https://about.signpath.io/" rel="noopener" slot="a1">{t('download.every_file_comes_from_one_github__a1')}</a><a href="/signing/" slot="a2">{t('download.every_file_comes_from_one_github__a2')}</a></T></p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <!--
+          The version line is drawn before GitHub has answered, in the shape the answer will take.
+          Every row below is already a working link to the latest release page. The file names
+          carry the version, so GitHub's latest/download/<name> form cannot be written into the
+          markup; app.js reads the release list instead and swaps in the file itself, its size and
+          its real name. With scripting off the rows stay as they are and still get you there.
+        -->
+        <div class="release-card release-strip" id="release-card" aria-busy="true">
+          <div class="release-head">
+            <div>
+              <p class="release-label">{t('download.latest_release')}</p>
+              <p class="release-version" id="release-version"><span class="skeleton sk-version js-only"></span><noscript><a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">On GitHub</a></noscript></p>
+            </div>
+            <p class="release-date" id="release-date"><span class="skeleton sk-date js-only"></span></p>
+          </div>
+          <div id="release-status" class="status" role="status" hidden></div>
+        </div>
+
+        <div class="platforms" id="platforms">
+
+          <article class="platform" id="android" data-os="android" aria-labelledby="android-h">
+            <div class="platform-head">
+              <span class="panel-icon icon-yes" aria-hidden="true">
+                <Icon name="phone-panel" />
+              </span>
+              <div class="platform-title">
+                <h3 id="android-h">{t('download.android_phone')}</h3>
+                <p class="platform-req">{t('download.android_8_0_and_above')}</p>
+              </div>
+              <span class="badge platform-yours" hidden>{t('download.your_device')}</span>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="apk-universal" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name"><T k="download.universal_apk"><span class="badge badge-quiet" slot="span1">{t('download.universal_apk__span1')}</span></T></p>
+                  <p class="abi-note">{t('download.one_file_for_every_phone')}</p>
+                  <p class="abi-file" data-file>{t('download.tmplayer_version_universal_apk')}</p>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><Icon name="download-sm" /><span>{t('common.download')}</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href={l('/install/#android')}>{t('download.how_to_install_on_a')}</a></p>
+            <p class="platform-badges"><a class="store-badge" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener"><img src="/badges/obtainium.png" width="161" height="48" alt={t('download.add_to_obtainium')} loading="lazy" decoding="async"></a></p>
+            <p class="platform-note"><T k="download.kao_note"><a href="https://keepandroidopen.org/" target="_blank" rel="noopener" slot="a1">{t('download.kao_note__a1')}</a></T></p>
+          </article>
+
+          <article class="platform" id="android-tv" data-os="android-tv" aria-labelledby="android-tv-h">
+            <div class="platform-head">
+              <span class="panel-icon icon-play" aria-hidden="true">
+                <Icon name="tv-card" />
+              </span>
+              <div class="platform-title">
+                <h3 id="android-tv-h">Android TV</h3>
+                <p class="platform-req">{t('download.android_tv_8_0_and')}</p>
+              </div>
+              <span class="badge platform-yours" hidden>{t('download.your_device')}</span>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="apk-universal" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name"><T k="download.universal_apk"><span class="badge badge-quiet" slot="span1">{t('download.universal_apk__span1')}</span></T></p>
+                  <p class="abi-note"><T k="download.tv_note"><code slot="code1">tmplayer.org/apk</code></T></p>
+                  <p class="abi-file" data-file>{t('download.tmplayer_version_universal_apk')}</p>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><Icon name="download-sm" /><span>{t('common.download')}</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href={l('/install/#android-tv')}>{t('download.how_to_install_on_a_2')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/android-tv/')}>{t('download.made_for_the_tv')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/fire-tv/')}>{t('download.fire_tv_guide')}</a></p>
+          </article>
+
+          <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
+            <div class="platform-head">
+              <span class="panel-icon icon-browse" aria-hidden="true">
+                <Icon name="windows-panel" />
+              </span>
+              <div class="platform-title">
+                <h3 id="windows-h">Windows</h3>
+                <p class="platform-req">{t('download.windows_10_and_11_64')}</p>
+              </div>
+              <span class="badge platform-yours" hidden>{t('download.your_computer')}</span>
+            </div>
+            <div class="callout">
+              <p><T k="download.win_cmd_steps"><em slot="em1">{t('download.win_cmd_steps__em1')}</em><em slot="em2">{t('download.win_cmd_steps__em2')}</em><a href={l('/install/#windows')} slot="a1">{t('download.win_cmd_steps__a1')}</a></T></p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="win-msi" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name">{t('download.win_msi_name')}</p>
+                  <p class="abi-note"><T k="download.win_msi_note"><em slot="em1">{t('download.win_msi_note__em1')}</em><em slot="em2">{t('download.win_msi_note__em2')}</em></T></p>
+                  <p class="abi-file" data-file>{t('download.tmplayer_version_windows_x64_msi')}</p>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><Icon name="download-sm" /><span>{t('common.download')}</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href={l('/install/#windows')}>{t('download.how_to_install_on_windows')}</a></p>
+          </article>
+
+          <!--
+            The macOS card arrives with the first release that has a DMG. The site deploys before
+            that release does, so the card starts hidden and app.js shows it only once the latest
+            release carries a macos-arm64.dmg: until then it would offer a file that does not exist.
+          -->
+          <article class="platform" id="macos" data-os="macos" aria-labelledby="macos-h" hidden>
+            <div class="platform-head">
+              <span class="panel-icon icon-play" aria-hidden="true">
+                <Icon name="laptop-panel" />
+              </span>
+              <div class="platform-title">
+                <h3 id="macos-h">macOS</h3>
+                <p class="platform-req">{t('download.macos_req')}</p>
+              </div>
+              <span class="badge platform-yours" hidden>{t('download.your_computer')}</span>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="mac-dmg" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name">DMG <span class="badge badge-quiet">{t('download.preview')}</span></p>
+                  <p class="abi-note"><T k="download.mac_dmg_note"><em slot="em1">{t('download.mac_dmg_note__em1')}</em><em slot="em2">{t('download.mac_dmg_note__em2')}</em><em slot="em3">{t('download.mac_dmg_note__em3')}</em><em slot="em4">{t('download.mac_dmg_note__em4')}</em></T></p>
+                  <p class="abi-file" data-file>{t('download.tmplayer_version_macos_arm64_dmg')}</p>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><Icon name="download-sm" /><span>{t('common.download')}</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href={l('/install/#macos')}>{t('download.how_to_install_on_macos')}</a></p>
+          </article>
+
+          <article class="platform" id="linux" data-os="linux" aria-labelledby="linux-h">
+            <div class="platform-head">
+              <span class="panel-icon icon-no" aria-hidden="true">
+                <Icon name="terminal-panel" />
+              </span>
+              <div class="platform-title">
+                <h3 id="linux-h">Linux</h3>
+                <p class="platform-req">{t('download.x86_64_with_glibc_2')}</p>
+              </div>
+              <span class="badge platform-yours" hidden>{t('download.your_computer')}</span>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="linux-appimage" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name">AppImage <span class="badge badge-quiet">{t('download.any_distribution')}</span></p>
+                  <p class="abi-note">{t('download.one_file_that_runs_on')}</p>
+                  <pre class="abi-cmd"><code>chmod +x <span data-file>TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><Icon name="download-sm" /><span>{t('common.download')}</span></a>
+                </div>
+              </li>
+              <li class="abi">
+                <div class="abi-text">
+                  <p class="abi-name">{t('download.arch_linux')}</p>
+                  <p class="abi-note"><T k="download.a_pkgbuild_lives_in_it"><code slot="code1">desktop/packaging/aur</code><code slot="code2">linux-x64.tar.xz</code></T></p>
+                </div>
+                <div class="abi-get">
+                  <a class="dl" href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><span>{t('download.arch_pkgbuild_link')}</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href={l('/install/#linux')}>{t('download.how_to_install_on_linux')}</a></p>
+          </article>
+
+        </div>
+
+        <div class="later">
+          <p>{t('download.no_iphone_or_ipad')}</p>
+        </div>
+
+        <p class="muted small section-note"><T k="download.checksum_note"><a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener" slot="a1">{t('download.checksum_note__a1')}</a><code slot="code1">sha256sum</code><code slot="code2">shasum -a 256</code><code slot="code3">Get-FileHash</code><a href="/security/#verify" slot="a2">{t('download.checksum_note__a2')}</a></T></p>
+
+        <details id="release-notes-wrap" hidden>
+          <summary>{t('download.release_notes')}</summary>
+          <pre class="notes" id="release-notes"></pre>
+        </details>
+
+        <section class="previous" id="previous-wrap" aria-labelledby="previous-h" hidden>
+          <h3 id="previous-h">{t('download.previous_releases')}</h3>
+          <ul class="previous-list" id="previous-list"></ul>
+          <p class="muted small"><a href="https://github.com/dracu-lah/TMPlayer/releases" rel="noopener">{t('download.all_releases_on_github')}</a></p>
+        </section>
+      </div>
+    </div>
+  </section>
+
+<Icon name="wave-flip" />
+
+  <section class="band" aria-labelledby="before-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="before-h">{t('download.before_you_open_the_file')}</h2>
+          <p class="section-sub">{t('download.worth_knowing_about_any_app')}</p>
+        </div>
+      </div>
+
+      <div class="two-col" data-reveal>
+        <div class="panel">
+          <h3> <span class="panel-icon icon-yes" aria-hidden="true">
+              <Icon name="tick-panel" />
+            </span> {t('download.what_you_are_getting')}</h3>
+          <ul class="ticks">
+            <li><T k="download.on_a_tv_stick_box"><strong slot="strong1">{t('download.on_a_tv_stick_box__strong1')}</strong></T></li>
+            <li><T k="download.with_the_same_library_and"><strong slot="strong1">{t('download.with_the_same_library_and__strong1')}</strong></T></li>
+            <li><T k="download.every_release_links_the_source"><strong slot="strong1">{t('download.every_release_links_the_source__strong1')}</strong></T></li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3> <span class="panel-icon icon-no" aria-hidden="true">
+              <Icon name="cross-panel" />
+            </span> {t('download.what_it_will_not_do')}</h3>
+          <ul class="crosses">
+            <li>{t('download.it_is_not_in_a')}</li>
+            <li>{t('download.it_comes_with_no_media')}</li>
+            <li>{t('download.no_store_updates_tmplayer_looks')}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<Icon name="wave" />
+
+  <section class="band band-tonal" aria-labelledby="support-h">
+    <div class="wrap">
+      <div class="support" data-reveal>
+        <h2 id="support-h">{t('features.star_it_if_it_helped')}</h2>
+        <p>{t('download.an_app_from_outside_the')}</p>
+        <div class="support-actions">
+          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
+          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/fork" rel="noopener"> <Icon name="fork-btn" /> {t('home.fork_the_repository')}</a>
+        </div>
+        <p class="support-stats">
+          <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
+          <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
+          <span>{t('home.gpl_3_0_and_free')}</span>
+        </p>
+
+        <!-- Support, under the star: the same two links and the same words as Settings and About in
+             the app. Both take any amount and unlock nothing: the app stays whole and free whether
+             or not anyone pays. The codes are for a reader on a computer who would rather pay from
+             their phone; on a phone they are hidden, since nobody scans their own screen. -->
+        <div class="support-more" id="sponsor">
+          <h3>{t('home.support_tmplayer')}</h3>
+          <p>{t('home.support_no_ads')}</p>
+          <div class="support-actions support-give">
+            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
+            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
+          </div>
+          <div class="support-codes">
+            <figure>
+              <Icon name="qr-sponsors" />
+              <figcaption>{t('home.scan_for_github_sponsors')}</figcaption>
+            </figure>
+            <figure>
+              <Icon name="qr-coffee" />
+              <figcaption>{t('home.scan_for_buy_me_a_coffee')}</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="support-more support-talk">
+          <h3>{t('home.come_and_talk')}</h3>
+          <p>{t('home.news_and_help_live_on')}</p>
+          <div class="support-actions">
+            <a class="btn btn-outline" href="https://t.me/tmplayerapp" rel="noopener"> <Icon name="telegram-btn" /> {t('home.telegram_channel')}</a>
+          </div>
+          <p class="support-stats">
+            <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
+            <span class="sep" aria-hidden="true">&middot;</span>
+            <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener">{t('home.github_discussions')}</a>
+            <span class="sep" aria-hidden="true">&middot;</span>
+            <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<ToTop />
+
+<Footer />
+</Base>

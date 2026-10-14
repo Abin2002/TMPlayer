@@ -1,0 +1,119 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import JsonLd from '../../components/JsonLd.astro';
+import { ENGLISH } from '../../i18n/langs';
+
+Astro.locals.lang = ENGLISH;
+
+const ld0 = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://tmplayer.org/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Lawful use",
+      "item": "https://tmplayer.org/legal/"
+    }
+  ]
+};
+---
+<Base path="/legal/" title="Lawful use and rights holders - TMPlayer" description="Lawful-use, rights-holder contact, and open-source information for TMPlayer.">
+  <Fragment slot="head">
+    <JsonLd data={ld0} />
+  </Fragment>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/" aria-label="TMPlayer home"><img class="brand-mark" src="/favicon.svg" width="30" height="30" alt=""><span class="brand-name">TMPlayer</span></a>
+    <nav class="nav-links" id="site-nav" aria-label="Primary"><a href="/">Home</a><a href="/features/">Features</a><a href="/download/">Download</a><a href="/install/">Install</a><a class="only-menu" href="/android-tv/">Android TV</a><a href="/faq/">Questions</a></nav><div class="nav"><a class="nav-icon" href="https://github.com/dracu-lah/TMPlayer" rel="noopener" aria-label="TMPlayer on GitHub"><Icon name="github" />
+        <span class="nav-icon-count is-loading" data-count="stars" data-count-skeleton aria-hidden="true"></span></a><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme"><Icon name="sun-path" /><Icon name="moon" /></button><button class="menu-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><Icon name="menu" /><Icon name="menu-close" /></button></div>
+  </div>
+</header>
+<main id="main" class="policy-page">
+  <div class="wrap policy-wrap">
+    <p class="eyebrow">TMPlayer project information</p>
+    <h1>Lawful use</h1>
+    <p class="policy-lede">TMPlayer is a media player for videos already accessible through your own Telegram account. It does not provide media or access to channels.</p>
+
+    <section>
+      <h2>Bring your own authorized media</h2>
+      <p>Use TMPlayer only with content you own, content you have permission to view, or content otherwise available to you under applicable law. TMPlayer does not grant rights to any media shown through the app.</p>
+      <p>The app does not host, upload, sell, index, recommend, or discover media or Telegram channels, apart from Telegram's own sponsored messages. It does not bypass Telegram permissions, paywalls, encryption, or digital access controls.</p>
+    </section>
+
+    <section>
+      <h2>Rights-holder contact</h2>
+      <p>If you believe a specific image, file, or statement published on the TMPlayer website or GitHub repository infringes your rights, email <a href="mailto:hello@tmplayer.org?subject=TMPlayer%20rights%20request">hello@tmplayer.org</a>. Identify the exact URL or repository path, the work concerned, and how you are authorized to act. Reports about media inside a Telegram chat should be directed to Telegram or the party that posted it, because TMPlayer does not possess that media.</p>
+    </section>
+
+    <section>
+      <h2>Open-source licence</h2>
+      <p>TMPlayer is distributed under the <a href="https://github.com/dracu-lah/TMPlayer/blob/main/LICENSE" rel="noopener">GNU General Public License version 3</a>. Corresponding source and third-party notices are published with releases and in the source repository.</p>
+    </section>
+
+    <section>
+      <h2>Sponsored messages</h2>
+      <p>TMPlayer has no ads of its own. Telegram's API terms require third party clients to show the sponsored messages Telegram serves in large public channels, so you may see those. Telegram chooses them, not TMPlayer.</p>
+    </section>
+
+    <section>
+      <h2>Terms of use</h2>
+      <p>TMPlayer is free software, provided "as is", without warranty of any kind, express or implied, to the extent permitted by applicable law. The full terms are sections 15 and 16 of the <a href="https://github.com/dracu-lah/TMPlayer/blob/main/LICENSE" rel="noopener">GPL-3.0</a>: the authors are not liable for any damages arising from its use.</p>
+      <p>Your use of Telegram through TMPlayer remains governed by <a href="https://telegram.org/tos" rel="noopener">Telegram's Terms of Service</a>. TMPlayer itself follows the <a href="https://core.telegram.org/api/terms" rel="noopener">Telegram API Terms of Service</a>.</p>
+    </section>
+
+    <section>
+      <h2>Names and services</h2>
+      <p>TMPlayer is an unofficial app that uses the Telegram API. It is not made by, affiliated with, endorsed by, or connected to Telegram FZ-LLC. Telegram and other names belong to their respective owners.</p>
+    </section>
+
+    <section>
+      <h2>Credits</h2>
+      <p>The player mark comes from <a href="https://www.svgrepo.com" rel="noopener">SVG Repo</a>. This site is set in Poppins, under the SIL Open Font License, and serves the font from this domain. The artwork of the made-up films and shows in the screenshots is cut from photos on Unsplash, used under the <a href="https://unsplash.com/license" rel="noopener">Unsplash License</a>; each photographer is credited in <a href="https://github.com/dracu-lah/TMPlayer/blob/main/docs/promo-art/CREDITS.md" rel="noopener">the repository</a>.</p>
+    </section>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p class="footer-brand">TMPlayer</p>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="/features/">Features</a>
+      <a href="/download/">Download</a>
+      <a href="/install/">Install</a>
+      <a href="/android-tv/">Android TV</a>
+      <a href="/faq/">Questions</a>
+      <a href="/changelog/">Changelog</a>
+      <a href="/fire-tv/">Fire TV</a>
+      <a href="/formats/">Formats</a>
+      <a href="/translate/">Translate</a>
+      <a href="/security/">Security</a>
+      <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener">Source</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/legal/">Lawful use</a>
+      <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
+    </nav>
+    <nav class="footer-links footer-guides" aria-label="Guides">
+      <a href="/guides/telegram-videos-on-android-tv/">Telegram on Android TV</a>
+      <a href="/guides/telegram-videos-on-fire-tv/">Telegram on Fire TV</a>
+      <a href="/guides/telegram-on-tv-without-casting/">Telegram without casting</a>
+    </nav>
+    <nav class="footer-links footer-community" aria-label="Community">
+      <a href="https://t.me/tmplayerapp" rel="noopener">Telegram channel</a>
+      <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
+      <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener">Discussions</a>
+      <a href="https://github.com/sponsors/dracu-lah" rel="noopener">Sponsor</a>
+      <a href="https://buymeacoffee.com/nevil.dev" rel="noopener">Buy me a coffee</a>
+      <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
+    </nav>
+    <p class="footer-legal muted small">GPL-3.0, &copy; 2026 dracu-lah. Unofficial, not affiliated with Telegram. Use it only with content you own or may access.</p>
+  </div>
+</footer>
+</Base>

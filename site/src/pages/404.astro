@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { ENGLISH } from '../i18n/langs';
+
+Astro.locals.lang = ENGLISH;
+---
+<Base title="Page not found - TMPlayer" description="This page does not exist on tmplayer.org. Download TMPlayer, the free Telegram video player, or go to the home page." notFound notice={false}>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/" aria-label="TMPlayer home"><img class="brand-mark" src="/favicon.svg" width="30" height="30" alt=""><span class="brand-name">TMPlayer</span></a>
+    <nav class="nav-links" id="site-nav" aria-label="Primary"><a href="/">Home</a><a href="/features/">Features</a><a href="/download/">Download</a><a href="/install/">Install</a><a class="only-menu" href="/android-tv/">Android TV</a><a href="/faq/">Questions</a></nav><div class="nav"><a class="nav-icon" href="https://github.com/dracu-lah/TMPlayer" rel="noopener" aria-label="TMPlayer on GitHub"><Icon name="github" />
+        <span class="nav-icon-count is-loading" data-count="stars" data-count-skeleton aria-hidden="true"></span></a><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme"><Icon name="sun-path" /><Icon name="moon" /></button><button class="menu-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><Icon name="menu" /><Icon name="menu-close" /></button></div>
+  </div>
+</header>
+<main id="main" class="policy-page">
+  <div class="wrap policy-wrap">
+    <p class="eyebrow">404</p>
+    <h1>Page not found</h1>
+    <p class="policy-lede">This address does not lead anywhere on tmplayer.org. The page may have moved, or the link may have a typo.</p>
+    <div class="page-actions" style="justify-content: flex-start; margin: 24px 0 8px;">
+      <a class="btn btn-filled" href="/download/">Download TMPlayer</a>
+      <a class="btn btn-outline" href="/">Go to the home page</a>
+    </div>
+    <section>
+      <h2>Looking for one of these?</h2>
+      <ul>
+        <li><a href="/install/">How to install</a> on a phone, a TV, Windows, a Mac or Linux</li>
+        <li><a href="/fire-tv/">Fire TV</a> and <a href="/android-tv/">Android TV</a></li>
+        <li><a href="/faq/">Questions</a> and <a href="/changelog/">what is new</a></li>
+      </ul>
+    </section>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p class="footer-brand">TMPlayer</p>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="/features/">Features</a>
+      <a href="/download/">Download</a>
+      <a href="/install/">Install</a>
+      <a href="/android-tv/">Android TV</a>
+      <a href="/faq/">Questions</a>
+      <a href="/changelog/">Changelog</a>
+      <a href="/fire-tv/">Fire TV</a>
+      <a href="/formats/">Formats</a>
+      <a href="/translate/">Translate</a>
+      <a href="/security/">Security</a>
+      <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener">Source</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/signing/">Code Signing</a>
+      <a href="/legal/">Lawful use</a>
+      <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
+    </nav>
+    <nav class="footer-links footer-guides" aria-label="Guides">
+      <a href="/guides/telegram-videos-on-android-tv/">Telegram on Android TV</a>
+      <a href="/guides/telegram-videos-on-fire-tv/">Telegram on Fire TV</a>
+      <a href="/guides/telegram-on-tv-without-casting/">Telegram without casting</a>
+    </nav>
+    <nav class="footer-links footer-community" aria-label="Community">
+      <a href="https://t.me/tmplayerapp" rel="noopener">Telegram channel</a>
+      <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
+      <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener">Discussions</a>
+      <a href="https://github.com/sponsors/dracu-lah" rel="noopener">Sponsor</a>
+      <a href="https://buymeacoffee.com/nevil.dev" rel="noopener">Buy me a coffee</a>
+      <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
+    </nav>
+    <p class="footer-legal muted small">GPL-3.0, &copy; 2026 dracu-lah. Unofficial, not affiliated with Telegram. Use it only with content you own or may access.</p>
+  </div>
+</footer>
+</Base>

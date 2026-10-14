@@ -246,6 +246,9 @@ def head_info(src, tree):
             if name == "description":
                 key = n.get("data-i18n-content")
                 props["description"] = ("t", key) if key else ("s", n.get("content"))
+            elif name == "og:title":
+                key = n.get("data-i18n-content")
+                props["socialTitle"] = ("t", key) if key else ("s", n.get("content"))
             elif name == "og:type":
                 props["ogType"] = n.get("content")
             elif name == "og:image:alt":
@@ -393,7 +396,9 @@ def convert(page_id, icons):
         attrs.append(f'page="{page_id}"')
     elif page_id != "404":
         attrs.append(f'path="/{page_dir}"')
-    for k in ("title", "description", "ogType", "imageAlt", "secureImage", "feed", "publishedTime", "notFound"):
+    if props.get("socialTitle") == props.get("title"):
+        props.pop("socialTitle", None)
+    for k in ("title", "socialTitle", "description", "ogType", "imageAlt", "secureImage", "feed", "publishedTime", "notFound"):
         if k in props:
             v = prop_src(props[k])
             if k == "ogType" and props[k] == "website":

@@ -1,0 +1,244 @@
+---
+// The stored theme, applied before the first paint. With no stored choice nothing is set and the stylesheet follows prefers-color-scheme, which is the system theme.
+
+import Base from '../../../../layouts/Base.astro';
+import BgArt from '../../../../components/BgArt.astro';
+import Header from '../../../../components/Header.astro';
+import Footer from '../../../../components/Footer.astro';
+import ToTop from '../../../../components/ToTop.astro';
+import T from '../../../../components/T.astro';
+import Icon from '../../../../components/Icon.astro';
+import JsonLd from '../../../../components/JsonLd.astro';
+import { langPaths } from '../../../../i18n/paths';
+import { text } from '../../../../i18n/t';
+import { l as link } from '../../../../i18n/links';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props;
+Astro.locals.lang = lang;
+const t = (k: string) => text(lang, k);
+const l = (href: string) => link(lang, href);
+
+const ld0 = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://tmplayer.org/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Telegram videos on Fire TV",
+      "item": "https://tmplayer.org/guides/telegram-videos-on-fire-tv/"
+    }
+  ]
+};
+
+const ld1 = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How to watch Telegram videos on Fire TV",
+  "description": "Watch the videos in your own Telegram chats on a Fire TV Stick, Fire TV Cube or Fire TV Edition television with TMPlayer, a free player you install with the Downloader app.",
+  "url": "https://tmplayer.org/guides/telegram-videos-on-fire-tv/",
+  "mainEntityOfPage": "https://tmplayer.org/guides/telegram-videos-on-fire-tv/",
+  "image": "https://tmplayer.org/og.png?v=4",
+  "inLanguage": "en",
+  "datePublished": "2026-10-06",
+  "dateModified": "2026-10-06",
+  "author": {
+    "@type": "Person",
+    "name": "dracu-lah",
+    "url": "https://nevil.dev"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "TMPlayer",
+    "url": "https://tmplayer.org/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://tmplayer.org/icon-512.png"
+    }
+  },
+  "about": {
+    "@type": "SoftwareApplication",
+    "name": "TMPlayer",
+    "url": "https://tmplayer.org/"
+  }
+};
+
+const ld2 = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to watch Telegram videos on Fire TV",
+  "description": "Watch the videos in your own Telegram chats on a Fire TV Stick, Fire TV Cube or Fire TV Edition television with TMPlayer, a free player you install with the Downloader app.",
+  "inLanguage": "en",
+  "totalTime": "PT10M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Check Fire OS",
+      "url": "https://tmplayer.org/guides/telegram-videos-on-fire-tv/#fire-1",
+      "text": "Fire OS 7 or newer, listed under Settings, My Fire TV, About."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Install TMPlayer with Downloader",
+      "url": "https://tmplayer.org/guides/telegram-videos-on-fire-tv/#fire-2",
+      "text": "Turn on Developer options, install Downloader, let it install apps, then type tmplayer.org/apk into it and install TMPlayer."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Sign in with a QR code",
+      "url": "https://tmplayer.org/guides/telegram-videos-on-fire-tv/#fire-3",
+      "text": "Open TMPlayer and scan the code: in Telegram on your phone, Settings, Devices, Link Desktop Device."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Press play",
+      "url": "https://tmplayer.org/guides/telegram-videos-on-fire-tv/#fire-4",
+      "text": "Pick a chat, pick a video and press OK. It plays while it downloads."
+    }
+  ]
+};
+---
+<Base page="guide_fire_tv" title={t('guide_fire_tv.how_to_watch_telegram_videos')} socialTitle={t('guide_fire_tv.how_to_watch_telegram_videos_2')} description={t('guide_fire_tv.watch_the_videos_in_your')} ogType="article">
+  <Fragment slot="head">
+    <JsonLd data={ld0} />
+    <JsonLd data={ld1} />
+    <JsonLd data={ld2} />
+  </Fragment>
+<!-- Decorative background art, hidden from assistive technology and still under reduced motion. -->
+<BgArt />
+
+<Header page="guide_fire_tv" />
+
+<main id="main">
+
+  <section class="page-head">
+    <div class="wrap page-head-wrap">
+      <p class="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span><span>{t('common.guides')}</span><span aria-hidden="true">/</span>Fire TV</p>
+      <h1><T k="guide_fire_tv.telegram_videos"><em slot="em1">{t('guide_fire_tv.telegram_videos__em1')}</em></T></h1>
+      <p class="page-lede">{t('guide_fire_tv.amazon_s_store_has_no')}</p>
+      <div class="page-actions">
+        <a class="btn btn-filled" href="#steps">{t('fire_tv.show_me_the_steps')} <Icon name="arrow-right-sm" /></a>
+        <a class="btn btn-outline" href={l('/fire-tv/')}>{t('guide_fire_tv.detailed_install_steps')} <Icon name="arrow-right-sm" /></a>
+      </div>
+    </div>
+  </section>
+<Icon name="wave" />
+  <section class="band band-tonal" id="fit" aria-labelledby="fit-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="fit-h">{t('guide_fire_tv.will_it_work_on_yours')}</h2>
+        </div>
+      </div>
+      <div class="two-col" data-reveal>
+        <div class="panel">
+          <h3><span class="panel-icon icon-yes" aria-hidden="true"><Icon name="tick-panel" /></span><span>{t('guide_fire_tv.works_on')}</span></h3>
+          <ul class="ticks">
+            <li>{t('fire_tv.fire_tv_stick_stick_4k')}</li>
+            <li>{t('guide_fire_tv.the_same_universal_apk_as')}</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3><span class="panel-icon icon-no" aria-hidden="true"><Icon name="cross-panel" /></span><span>{t('guide_fire_tv.does_not_work_on')}</span></h3>
+          <ul class="crosses">
+            <li>{t('guide_fire_tv.fire_os_6_and_older')}</li>
+            <li>{t('fire_tv.fire_tv_models_that_run')}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+<Icon name="wave-flip" />
+  <section class="band" id="steps" aria-labelledby="steps-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="steps-h">{t('guide_android_tv.four_steps')}</h2>
+          <p class="section-sub">{t('guide_fire_tv.about_ten_minutes_once_with')}</p>
+        </div>
+      </div>
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="fire-1">
+            <h3>{t('guide_fire_tv.check_fire_os')}</h3>
+            <p><T k="guide_fire_tv.open_fire_os_7_or"><em slot="em1">{t('guide_fire_tv.open_fire_os_7_or__em1')}</em><em slot="em2">{t('guide_fire_tv.open_fire_os_7_or__em2')}</em><em slot="em3">{t('guide_fire_tv.open_fire_os_7_or__em3')}</em></T></p>
+          </li>
+          <li id="fire-2">
+            <h3>{t('guide_fire_tv.install_tmplayer_with_downloader')}</h3>
+            <p><T k="guide_fire_tv.downloader_apk"><em slot="em1">{t('guide_fire_tv.downloader_apk__em1')}</em><em slot="em2">Downloader</em><code slot="code1">tmplayer.org/apk</code></T></p>
+            <p><T k="guide_fire_tv.walks_through_each_screen_and"><a href={l('/fire-tv/')} slot="a1">{t('guide_fire_tv.walks_through_each_screen_and__a1')}</a></T></p>
+          </li>
+          <li id="fire-3">
+            <h3>{t('guide_android_tv.sign_in_with_a_qr')}</h3>
+            <p><T k="guide_fire_tv.open_tmplayer_from_scan_the"><em slot="em1">{t('guide_fire_tv.open_tmplayer_from_scan_the__em1')}</em><em slot="em2">{t('guide_fire_tv.open_tmplayer_from_scan_the__em2')}</em><em slot="em3">{t('guide_fire_tv.open_tmplayer_from_scan_the__em3')}</em><em slot="em4">{t('guide_fire_tv.open_tmplayer_from_scan_the__em4')}</em></T></p>
+          </li>
+          <li id="fire-4">
+            <h3>{t('guide_fire_tv.press_play')}</h3>
+            <p>{t('guide_fire_tv.move_through_your_chats_with')}</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+<Icon name="wave" />
+  <section class="band band-tonal" id="tips" aria-labelledby="tips-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="tips-h">{t('guide_android_tv.worth_knowing')}</h2>
+        </div>
+      </div>
+      <div class="card-grid card-grid-3" data-reveal>
+        <div class="card">
+          <h3>{t('guide_fire_tv.keep_it_on_the_home')}</h3>
+          <p><T k="guide_fire_tv.apps_from_outside_the_store"><em slot="em1">{t('guide_fire_tv.apps_from_outside_the_store__em1')}</em><em slot="em2">{t('guide_fire_tv.apps_from_outside_the_store__em2')}</em></T></p>
+        </div>
+        <div class="card">
+          <h3>{t('fire_tv.updates_come_to_you')}</h3>
+          <p>{t('guide_fire_tv.tmplayer_checks_for_new_versions')}</p>
+        </div>
+        <div class="card">
+          <h3>{t('guide_fire_tv.low_memory_is_fine')}</h3>
+          <p>{t('guide_fire_tv.it_is_tested_on_a')}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+<Icon name="wave-flip" />
+  <section class="band" id="more" aria-labelledby="more-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="more-h">{t('guide_android_tv.more_help')}</h2>
+        </div>
+      </div>
+      <p class="muted small section-note" data-reveal><T k="guide_fire_tv.stuck_on_a_step_lists"><a href={l('/fire-tv/#trouble-h')} slot="a1">{t('guide_fire_tv.stuck_on_a_step_lists__a1')}</a><a href={l('/guides/telegram-videos-on-android-tv/')} slot="a2">{t('guide_fire_tv.stuck_on_a_step_lists__a2')}</a></T></p>
+
+      <div class="support support-slim" data-reveal>
+          <!-- The coffee and sponsor links, the same block and words as on the download page, so a
+               reader who got something from this page has the offer where they finished reading. -->
+          <div class="support-more support-more-solo" id="sponsor">
+            <h3>{t('home.support_tmplayer')}</h3>
+            <p>{t('home.support_no_ads')}</p>
+            <div class="support-actions support-give">
+              <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
+              <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
+            </div>
+          </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<ToTop />
+
+<Footer />
+</Base>

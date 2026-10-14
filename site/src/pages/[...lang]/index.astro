@@ -168,7 +168,7 @@ const ld2 = {
   <section class="hero" id="showcase" aria-labelledby="hero-h">
     <div class="wrap hero-wrap">
     <div class="hero-inner">
-      <p class="eyebrow"> <Icon name="eyebrow" /> {t('home.free_and_open_source_for')}</p>
+      <p class="eyebrow"> <Icon name="star-small" /> {t('home.free_and_open_source_for')}</p>
 
       <!-- The full stop is hung outside the measure. Centring counts it as a character
            the width of a comma, and at this size that is enough to push a short headline
@@ -183,10 +183,10 @@ const ld2 = {
       -->
       <a class="palette" id="hero-download" href={l('/download/')}>
         <span class="palette-icon" aria-hidden="true">
-          <Icon name="palette-icon" />
+          <Icon name="download" />
         </span>
         <span class="palette-text" id="hero-download-label">{t('home.download_tmplayer')}</span>
-        <span class="palette-go" aria-hidden="true">{t('home.get_it')} <Icon name="palette-go" /> </span>
+        <span class="palette-go" aria-hidden="true">{t('home.get_it')} <Icon name="arrow-right" /> </span>
       </a>
 
       <p class="hero-quiet"><T k="home.android_phones_and_tvs_windows"><a href={l('/install/')} slot="a1">{t('home.android_phones_and_tvs_windows__a1')}</a><span class="sep" aria-hidden="true" slot="span1">&middot;</span><a href={l('/download/')} slot="a2">{t('home.android_phones_and_tvs_windows__a2')}</a></T> </p>
@@ -218,19 +218,19 @@ const ld2 = {
 
       <dl class="spec">
         <div>
-          <dt> <Icon name="platform" /> {t('home.platform')}</dt>
+          <dt> <Icon name="spec-platform" /> {t('home.platform')}</dt>
           <dd>{t('home.android_8_0_and_above')}</dd>
         </div>
         <div>
-          <dt> <Icon name="sign-in" /> {t('home.sign_in')}</dt>
+          <dt> <Icon name="spec-sign-in" /> {t('home.sign_in')}</dt>
           <dd>{t('home.qr_code_your_own_account')}</dd>
         </div>
         <div>
-          <dt> <Icon name="tested-on" /> {t('home.tested_on')}</dt>
+          <dt> <Icon name="spec-tested-on" /> {t('home.tested_on')}</dt>
           <dd>{t('home.mi_tv_stick_with_1')}</dd>
         </div>
         <div>
-          <dt> <Icon name="costs" /> {t('home.costs')}</dt>
+          <dt> <Icon name="spec-costs" /> {t('home.costs')}</dt>
           <dd>{t('home.nothing_no_server_no_bot')}</dd>
         </div>
       </dl>
@@ -252,35 +252,35 @@ const ld2 = {
       <div class="card-grid card-grid-3" data-reveal>
         <a class="card" href={l('/features/')}>
           <span class="card-icon" aria-hidden="true">
-            <Icon name="card-icon" />
+            <Icon name="play-card" />
           </span>
           <h3>{t('home.what_it_does')}</h3>
           <p>{t('home.streams_as_it_downloads_plays')}</p>
-          <span class="card-go">{t('home.the_full_list')} <Icon name="card-go" /> </span>
+          <span class="card-go">{t('home.the_full_list')} <Icon name="arrow-right-sm" /> </span>
         </a>
 
         <a class="card" href={l('/android-tv/')}>
           <span class="card-icon" aria-hidden="true">
-            <Icon name="card-icon-2" />
+            <Icon name="tv-card" />
           </span>
           <h3>{t('home.on_android_tv')}</h3>
           <p>{t('home.a_ten_foot_layout_for')}</p>
-          <span class="card-go">{t('home.made_for_the_television')} <Icon name="card-go" /> </span>
+          <span class="card-go">{t('home.made_for_the_television')} <Icon name="arrow-right-sm" /> </span>
         </a>
 
         <a class="card" href={l('/faq/')}>
           <span class="card-icon" aria-hidden="true">
-            <Icon name="card-icon-3" />
+            <Icon name="question-card" />
           </span>
           <h3>{t('home.what_it_is_not')}</h3>
           <p>{t('home.not_a_media_service_messages')}</p>
-          <span class="card-go">{t('home.questions_and_limits')} <Icon name="card-go" /> </span>
+          <span class="card-go">{t('home.questions_and_limits')} <Icon name="arrow-right-sm" /> </span>
         </a>
       </div>
     </div>
   </section>
 
-  <Icon name="wave-2" />
+  <Icon name="wave-flip" />
 
   <section class="band" id="start" aria-labelledby="start-h">
     <div class="wrap">
@@ -332,9 +332,9 @@ const ld2 = {
         <p>{t('home.a_star_takes_one_click')}</p>
 
         <div class="support-actions">
-          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="btn-btn-filled" /> {t('home.star_on_github')}</a>
-          <a class="btn btn-outline" href="https://t.me/tmplayerapp" rel="noopener"> <Icon name="btn-btn-outline" /> {t('home.telegram_channel')}</a>
-          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener"> <Icon name="btn-btn-outline-2" /> {t('home.report_a_problem')}</a>
+          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
+          <a class="btn btn-outline" href="https://t.me/tmplayerapp" rel="noopener"> <Icon name="telegram-btn" /> {t('home.telegram_channel')}</a>
+          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener"> <Icon name="bug-btn" /> {t('home.report_a_problem')}</a>
         </div>
 
         <p class="support-stats">
@@ -349,8 +349,8 @@ const ld2 = {
           <h3>{t('home.support_tmplayer')}</h3>
           <p>{t('home.support_no_ads')}</p>
           <div class="support-actions support-give">
-            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="btn-btn-filled-2" /> {t('home.sponsor_on_github')}</a>
-            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="btn-btn-outline-3" /> {t('home.buy_me_a_coffee')}</a>
+            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
+            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
           </div>
         </div>
       </div>

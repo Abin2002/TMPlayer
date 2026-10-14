@@ -20,6 +20,8 @@ interface Props {
   path?: string;
   title: string;
   description: string;
+  /** og:title and twitter:title, when they differ from the <title> */
+  socialTitle?: string;
   ogType?: 'website' | 'article';
   /** og:image:alt and twitter:image:alt (the home page) */
   imageAlt?: string;
@@ -35,7 +37,7 @@ interface Props {
   notFound?: boolean;
 }
 const {
-  page, path, title, description, ogType = 'website', imageAlt, secureImage = false, feed = false,
+  page, path, title, socialTitle = title, description, ogType = 'website', imageAlt, secureImage = false, feed = false,
   publishedTime, notice = true, notFound = false,
 } = Astro.props;
 const lang = Astro.locals.lang;
@@ -78,7 +80,7 @@ const strings = lang.path ? jsStrings(lang) : {};
 {!notFound && <Fragment>
 <meta property="og:type" content={ogType}>
 <meta property="og:site_name" content="TMPlayer">
-<meta property="og:title" content={title}>
+<meta property="og:title" content={socialTitle}>
 <meta property="og:description" content={description}>
 <meta property="og:url" content={url}>
 <meta property="og:image" content={OG_IMAGE}>
@@ -91,7 +93,7 @@ const strings = lang.path ? jsStrings(lang) : {};
 {publishedTime && <meta property="article:published_time" content={publishedTime}>}
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content={title}>
+<meta name="twitter:title" content={socialTitle}>
 <meta name="twitter:description" content={description}>
 <meta name="twitter:image" content={OG_IMAGE}>
 {imageAlt && <meta name="twitter:image:alt" content={imageAlt}>}

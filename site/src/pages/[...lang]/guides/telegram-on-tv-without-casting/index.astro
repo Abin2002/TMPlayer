@@ -1,0 +1,203 @@
+---
+// The stored theme, applied before the first paint. With no stored choice nothing is set and the stylesheet follows prefers-color-scheme, which is the system theme.
+
+import Base from '../../../../layouts/Base.astro';
+import BgArt from '../../../../components/BgArt.astro';
+import Header from '../../../../components/Header.astro';
+import Footer from '../../../../components/Footer.astro';
+import ToTop from '../../../../components/ToTop.astro';
+import T from '../../../../components/T.astro';
+import Icon from '../../../../components/Icon.astro';
+import JsonLd from '../../../../components/JsonLd.astro';
+import { langPaths } from '../../../../i18n/paths';
+import { text } from '../../../../i18n/t';
+import { l as link } from '../../../../i18n/links';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props;
+Astro.locals.lang = lang;
+const t = (k: string) => text(lang, k);
+const l = (href: string) => link(lang, href);
+
+const ld0 = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://tmplayer.org/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Telegram on TV without casting",
+      "item": "https://tmplayer.org/guides/telegram-on-tv-without-casting/"
+    }
+  ]
+};
+
+const ld1 = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Telegram on your TV without casting",
+  "description": "Watch Telegram videos on a television without casting or mirroring your phone: a player on the TV itself signs in to your account and streams the videos in your chats.",
+  "url": "https://tmplayer.org/guides/telegram-on-tv-without-casting/",
+  "mainEntityOfPage": "https://tmplayer.org/guides/telegram-on-tv-without-casting/",
+  "image": "https://tmplayer.org/og.png?v=4",
+  "inLanguage": "en",
+  "datePublished": "2026-10-06",
+  "dateModified": "2026-10-14",
+  "author": {
+    "@type": "Person",
+    "name": "dracu-lah",
+    "url": "https://nevil.dev"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "TMPlayer",
+    "url": "https://tmplayer.org/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://tmplayer.org/icon-512.png"
+    }
+  },
+  "about": {
+    "@type": "SoftwareApplication",
+    "name": "TMPlayer",
+    "url": "https://tmplayer.org/"
+  }
+};
+---
+<Base page="guide_no_casting" title={t('guide_no_casting.telegram_on_your_tv_without')} socialTitle={t('guide_no_casting.telegram_on_your_tv_without_2')} description={t('guide_no_casting.watch_telegram_videos_on_a')} ogType="article">
+  <Fragment slot="head">
+    <JsonLd data={ld0} />
+    <JsonLd data={ld1} />
+  </Fragment>
+<!-- Decorative background art, hidden from assistive technology and still under reduced motion. -->
+<BgArt />
+
+<Header page="guide_no_casting" />
+
+<main id="main">
+
+  <section class="page-head">
+    <div class="wrap page-head-wrap">
+      <p class="crumbs"><T k="guide_no_casting.without_casting"><a href={l('/')} slot="a1">{t('guide_no_casting.without_casting__a1')}</a><span aria-hidden="true" slot="span1">/</span><span slot="span2">{t('guide_no_casting.without_casting__span2')}</span><span aria-hidden="true" slot="span3">/</span></T></p>
+      <h1><T k="guide_no_casting.telegram_on_the_tv"><em slot="em1">{t('guide_no_casting.telegram_on_the_tv__em1')}</em></T></h1>
+      <p class="page-lede">{t('guide_no_casting.mirroring_a_phone_onto_a')}</p>
+      <div class="page-actions">
+        <a class="btn btn-filled" href={l('/download/')}>{t('home.download_tmplayer')} <Icon name="arrow-right-sm" /></a>
+        <a class="btn btn-outline" href="#compare">{t('guide_no_casting.compare_the_options')} <Icon name="arrow-right-sm" /></a>
+      </div>
+    </div>
+  </section>
+<Icon name="wave" />
+  <section class="band band-tonal" id="compare" aria-labelledby="compare-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="compare-h">{t('guide_no_casting.the_ways_to_get_telegram')}</h2>
+        </div>
+      </div>
+      <div class="formats" data-reveal>
+        <div class="format">
+          <h3>{t('guide_no_casting.screen_mirroring_from_the_phone')}</h3>
+          <p>{t('guide_no_casting.works_with_most_tvs_but')}</p>
+        </div>
+        <div class="format">
+          <h3>{t('guide_no_casting.a_laptop_on_an_hdmi')}</h3>
+          <p>{t('guide_no_casting.telegram_desktop_plays_videos_fine')}</p>
+        </div>
+        <div class="format">
+          <h3>{t('guide_no_casting.downloading_and_copying_files')}</h3>
+          <p>{t('guide_no_casting.save_the_video_put_it')}</p>
+        </div>
+        <div class="format">
+          <h3>{t('guide_no_casting.a_player_on_the_tv')}</h3>
+          <p>{t('guide_no_casting.tmplayer_runs_on_the_android')}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+<Icon name="wave-flip" />
+  <section class="band" id="how" aria-labelledby="how-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="how-h">{t('guide_no_casting.how_tmplayer_does_it')}</h2>
+          <p class="section-sub">{t('guide_no_casting.no_casting_no_copies_no')}</p>
+        </div>
+      </div>
+      <div class="card-grid card-grid-3" data-reveal>
+        <div class="card">
+          <h3>{t('guide_no_casting.it_is_a_telegram_client')}</h3>
+          <p>{t('guide_no_casting.tmplayer_signs_in_with_telegram')}</p>
+        </div>
+        <div class="card">
+          <h3>{t('guide_no_casting.it_streams_as_it_downloads')}</h3>
+          <p>{t('guide_no_casting.a_video_starts_within_seconds')}</p>
+        </div>
+        <div class="card">
+          <h3>{t('guide_no_casting.it_is_built_for_the')}</h3>
+          <p>{t('guide_no_casting.a_ten_foot_layout_for')}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+<Icon name="wave" />
+  <section class="band band-tonal" id="devices" aria-labelledby="devices-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="devices-h">{t('guide_no_casting.which_tv_do_you_have')}</h2>
+        </div>
+      </div>
+      <div class="card-grid card-grid-3" data-reveal>
+        <div class="card">
+          <h3>{t('guide_no_casting.android_tv_or_google_tv')}</h3>
+          <p><T k="guide_no_casting.install_the_apk_and_sign"><a href={l('/guides/telegram-videos-on-android-tv/')} slot="a1">{t('guide_no_casting.install_the_apk_and_sign__a1')}</a></T></p>
+        </div>
+        <div class="card">
+          <h3>Fire TV</h3>
+          <p><T k="guide_no_casting.install_it_with_the_downloader"><a href={l('/guides/telegram-videos-on-fire-tv/')} slot="a1">{t('guide_no_casting.install_it_with_the_downloader__a1')}</a></T></p>
+        </div>
+        <div class="card">
+          <h3>{t('guide_no_casting.a_pc_next_to_the')}</h3>
+          <p><T k="guide_no_casting.tmplayer_also_runs_on_windows"><a href={l('/download/')} slot="a1">{t('guide_no_casting.tmplayer_also_runs_on_windows__a1')}</a></T></p>
+        </div>
+      </div>
+    </div>
+  </section>
+<Icon name="wave-flip" />
+  <section class="band" id="more" aria-labelledby="more-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="more-h">{t('guide_android_tv.more_help')}</h2>
+        </div>
+      </div>
+      <p class="muted small section-note" data-reveal><T k="guide_no_casting.tmplayer_does_not_provide_media"><a href={l('/faq/')} slot="a1">{t('guide_no_casting.tmplayer_does_not_provide_media__a1')}</a></T></p>
+
+      <div class="support support-slim" data-reveal>
+          <!-- The coffee and sponsor links, the same block and words as on the download page, so a
+               reader who got something from this page has the offer where they finished reading. -->
+          <div class="support-more support-more-solo" id="sponsor">
+            <h3>{t('home.support_tmplayer')}</h3>
+            <p>{t('home.support_no_ads')}</p>
+            <div class="support-actions support-give">
+              <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
+              <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
+            </div>
+          </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<ToTop />
+
+<Footer />
+</Base>
