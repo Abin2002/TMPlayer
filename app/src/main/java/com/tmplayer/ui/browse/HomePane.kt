@@ -141,7 +141,8 @@ internal fun HomePane(
     val touch = isTouch()
     val first = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
-    var openSeries by remember { mutableStateOf<Series?>(null) }
+    // Kept across a turn of the phone: the show is looked up again in the rows once they are back.
+    val opened = rememberOpenSeries { key, chatId -> HomeLaunch.find(key, chatId, rows) }
     val listState = rememberLazyListState()
     // A show's card on the TV home screen asked for its page: opened once the show is in the rows.
     val showAsk by HomeLaunch.show.collectAsState()
@@ -152,7 +153,7 @@ internal fun HomePane(
         val ask = showAsk ?: return@LaunchedEffect
         if (!windowFocused) return@LaunchedEffect
         val series = HomeLaunch.find(ask, rows) ?: return@LaunchedEffect
-        openSeries = series
+        opened.open(series)
         HomeLaunch.show.compareAndSet(ask, null)
     }
 
@@ -288,8 +289,8 @@ internal fun HomePane(
                                     )
                                 }
                             }
-                            is HomeRow.Chat -> ShelfRows(row.entries, watch, touch, isFirst, first, { row.title }, onPlay, onHoldMedia, start, end, upToSeeAll) { openSeries = it }
-                            is HomeRow.Recent -> ShelfRows(row.entries, watch, touch, isFirst, first, chatTitle, onPlay, onHoldMedia, start, end, upToSeeAll) { openSeries = it }
+                            is HomeRow.Chat -> ShelfRows(row.entries, watch, touch, isFirst, first, { row.title }, onPlay, onHoldMedia, start, end, upToSeeAll) { opened.open(it) }
+                            is HomeRow.Recent -> ShelfRows(row.entries, watch, touch, isFirst, first, chatTitle, onPlay, onHoldMedia, start, end, upToSeeAll) { opened.open(it) }
                         }
                     }
                 }
@@ -318,12 +319,12 @@ internal fun HomePane(
         if (!touch && firstReady) runCatching { first.requestFocus() }
     }
 
-    openSeries?.let { series ->
+    opened.series?.let { series ->
         SeriesOpened(
             series = series,
             watch = watch,
             onPlay = { onPlay(it, chatTitle(it.chatId)) },
-            onDismiss = { openSeries = null },
+            onDismiss = { opened.open(null) },
             onLongClick = { onHoldMedia(it, chatTitle(it.chatId)) },
             onDownload = onDownloadSeason,
         )

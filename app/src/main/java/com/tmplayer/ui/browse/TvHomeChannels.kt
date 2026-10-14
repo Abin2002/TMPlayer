@@ -29,6 +29,10 @@ object HomeLaunch {
 
     /** The show [ask] names among [rows], or null while it is not there (yet). */
     fun find(ask: TvChannels.Target.Show, rows: List<HomeRow>): com.tmplayer.data.Series? =
+        find(ask.seriesKey, ask.chatId, rows)
+
+    /** The show with [seriesKey] in [chatId] among [rows], or null while it is not there (yet). */
+    fun find(seriesKey: String, chatId: Long, rows: List<HomeRow>): com.tmplayer.data.Series? =
         rows.asSequence()
             .flatMap { row ->
                 when (row) {
@@ -39,7 +43,7 @@ object HomeLaunch {
             }
             .filterIsInstance<com.tmplayer.data.ShelfEntry.Show>()
             .map { it.series }
-            .firstOrNull { it.key == ask.seriesKey && it.cover.chatId == ask.chatId }
+            .firstOrNull { it.key == seriesKey && it.cover.chatId == chatId }
 }
 
 /**

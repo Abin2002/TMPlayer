@@ -727,8 +727,9 @@ fun SeriesPanel(
     val listed = ranges.getOrNull(rangeAt) ?: shown.episodes
     val list = rememberLazyListState()
     // Another season or range picked while the episodes fill the screen: back up to the picker,
-    // with the new list under it. Opening is its own case, below.
-    var opened by remember(series.key) { mutableStateOf(false) }
+    // with the new list under it. Opening is its own case, below. Saved, so a page brought back
+    // after the phone is turned keeps where it was scrolled to rather than opening again.
+    var opened by rememberSaveable(series.key) { mutableStateOf(false) }
     // Where the up-next episode sits in the list shown, or -1 when it is in another season or range.
     val upNextAt = if (next != null) listed.indexOfFirst { it.sameAs(next) } else -1
     val upNextFocus = remember(series.key) { FocusRequester() }

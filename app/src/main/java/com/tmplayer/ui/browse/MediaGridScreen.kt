@@ -370,8 +370,13 @@ fun MediaGridScreen(
 
     // Whichever video's page is open, and nothing while none is.
     var showingDetailsOf by remember(chatId) { mutableStateOf<MediaItem?>(null) }
-    /** The show whose seasons and episodes are open over the grid. */
-    var openSeries by remember(chatId) { mutableStateOf<com.tmplayer.data.Series?>(null) }
+    // The listing as last arranged, shows folded together: where an open show is looked up again
+    // after the phone is turned and the activity made anew.
+    var shelfShown by remember(chatId) { mutableStateOf<List<ShelfEntry>>(emptyList()) }
+    /** The show whose seasons and episodes are open over the grid, kept across a turn of the phone. */
+    val openSeries = rememberOpenSeries(chatId) { key, chat ->
+        shelfShown.firstNotNullOfOrNull { entry -> (entry as? ShelfEntry.Show)?.series?.takeIf { it.key == key && it.cover.chatId == chat } }
+    }
     // Whichever video a long press is asking about: the quick menu, which leads to the page.
     var heldMenuOf by remember(chatId) { mutableStateOf<MediaItem?>(null) }
 
@@ -487,6 +492,7 @@ fun MediaGridScreen(
                 }
             }
             LaunchedEffect(list.items) { listedItems = list.items }
+            LaunchedEffect(shelf) { shelfShown = shelf }
             // Online metadata is on by default, so the first grid says once where posters come
             // from (see OnlineMetaNotice); not while searching or ticking, when the listing is a pick.
             val metaNotice = grouping && metaNoticeShown()
@@ -600,7 +606,7 @@ fun MediaGridScreen(
                                                 series = shelved.series,
                                                 progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
                                                 fresh = remember(shelved.series, watch) { watch.newEpisodes(shelved.series) > 0 },
-                                                onClick = { openSeries = shelved.series },
+                                                onClick = { openSeries.open(shelved.series) },
                                                 dense = dense,
                                                 poster = true,
                                                 onFocused = { standingOn = shelved.series.cover },
@@ -664,7 +670,7 @@ fun MediaGridScreen(
                                             series = shelved.series,
                                             progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
                                             fresh = remember(shelved.series, watch) { watch.newEpisodes(shelved.series) > 0 },
-                                            onClick = { openSeries = shelved.series },
+                                            onClick = { openSeries.open(shelved.series) },
                                             onFocused = { standingOn = shelved.series.cover },
                                             modifier = focusOf(shelved),
                                         )
@@ -701,12 +707,12 @@ fun MediaGridScreen(
                     }
                 }
 
-                openSeries?.let { series ->
+                openSeries.series?.let { series ->
                     SeriesOpened(
                         series = series,
                         watch = watch,
                         onPlay = { onPlay(it) },
-                        onDismiss = { openSeries = null },
+                        onDismiss = { openSeries.open(null) },
                         onLongClick = { heldMenuOf = it },
                         onDownload = { request ->
                             scope.launch { queueSeason(context, settings, request) { chatTitle }?.let(onOfflineAction) }
