@@ -1,0 +1,370 @@
+---
+// The stored theme is applied before the first paint, so a reader who chose light does not get a black flash on the way in. Nothing here decides a default: with no stored choice the attribute is never set and the stylesheet follows prefers-color-scheme, which is the system theme.
+// The site's own shape, so a search engine can offer the five pages under the home page rather than the home page alone. Every entry here is a real page with its own copy on it.
+// Who publishes the site: the logo and the profiles Google may show beside the site name.
+
+import Base from '../../layouts/Base.astro';
+import BgArt from '../../components/BgArt.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ToTop from '../../components/ToTop.astro';
+import T from '../../components/T.astro';
+import Icon from '../../components/Icon.astro';
+import JsonLd from '../../components/JsonLd.astro';
+import LangCount from '../../components/LangCount.astro';
+import { langPaths } from '../../i18n/paths';
+import { text } from '../../i18n/t';
+import { l as link } from '../../i18n/links';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props;
+Astro.locals.lang = lang;
+const t = (k: string) => text(lang, k);
+const l = (href: string) => link(lang, href);
+
+const ld0 = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "TMPlayer",
+  "alternateName": "TMPlayer, a Telegram video player for Android TV, Android phones, Windows, macOS and Linux",
+  "description": "A free, open source Telegram video player for Android TV, Android phones, Windows, macOS and Linux that streams the videos in your own chats.",
+  "url": "https://tmplayer.org/",
+  "image": "https://tmplayer.org/og.png?v=4",
+  "screenshot": [
+    "https://tmplayer.org/screenshots/tv-chats.webp",
+    "https://tmplayer.org/screenshots/tv-home.webp",
+    "https://tmplayer.org/screenshots/tv-grid.webp",
+    "https://tmplayer.org/screenshots/phone-chats.webp",
+    "https://tmplayer.org/screenshots/phone-grid.webp",
+    "https://tmplayer.org/screenshots/phone-show.webp",
+    "https://tmplayer.org/screenshots/desktop-grid.webp",
+    "https://tmplayer.org/screenshots/desktop-player.webp"
+  ],
+  "applicationCategory": "MultimediaApplication",
+  "applicationSubCategory": "Video player",
+  "operatingSystem": "Android 8.0 and above (phones and Android TV), Windows 10 and 11 (64-bit), Linux (x86_64), macOS 26 and newer on Apple Silicon (a preview)",
+  "downloadUrl": "https://tmplayer.org/download/",
+  "installUrl": "https://tmplayer.org/install/",
+  "softwareHelp": "https://tmplayer.org/faq/",
+  "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+  "isAccessibleForFree": true,
+  "inLanguage": "en",
+  "featureList": [
+    "Sign in to your own Telegram account by scanning a QR code",
+    "Play videos straight from your chats and channels while they are still downloading",
+    "Seeking re-aims the download instead of waiting for it",
+    "Shows how much of the video has downloaded while the controls are up",
+    "Optional download-the-whole-video-first mode for slow connections",
+    "Plays MKV, MP4, AVI and TS with subtitles and multiple audio tracks",
+    "Plays the next episode automatically, with a countdown you can stop",
+    "Finds subtitles online through OpenSubtitles, and shifts subtitles or audio to match",
+    "Groups series by season on their own page, with posters and overviews you can switch off",
+    "Forgiving search that tolerates typos and missing accents",
+    "Runs on TV sticks with 1 GB of RAM, and on Android phones",
+    "Desktop app for Windows, macOS (Apple Silicon, a preview) and Linux, played through mpv, with YouTube style keyboard shortcuts"
+  ],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "dracu-lah",
+    "url": "https://nevil.dev",
+    "email": "hello@tmplayer.org",
+    "sameAs": [
+      "https://github.com/dracu-lah",
+      "https://nevil.dev"
+    ]
+  },
+  "codeRepository": "https://github.com/dracu-lah/TMPlayer"
+};
+
+const ld1 = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "TMPlayer",
+  "url": "https://tmplayer.org/",
+  "inLanguage": "en",
+  "hasPart": [
+    {
+      "@type": "WebPage",
+      "name": "Features",
+      "url": "https://tmplayer.org/features/"
+    },
+    {
+      "@type": "WebPage",
+      "name": "Download",
+      "url": "https://tmplayer.org/download/"
+    },
+    {
+      "@type": "WebPage",
+      "name": "How to install",
+      "url": "https://tmplayer.org/install/"
+    },
+    {
+      "@type": "WebPage",
+      "name": "Telegram video player for Android TV",
+      "url": "https://tmplayer.org/android-tv/"
+    },
+    {
+      "@type": "WebPage",
+      "name": "Questions",
+      "url": "https://tmplayer.org/faq/"
+    },
+    {
+      "@type": "WebPage",
+      "name": "Changelog",
+      "url": "https://tmplayer.org/changelog/"
+    }
+  ],
+  "publisher": {
+    "@id": "https://tmplayer.org/#org"
+  }
+};
+
+const ld2 = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://tmplayer.org/#org",
+  "name": "TMPlayer",
+  "url": "https://tmplayer.org/",
+  "logo": "https://tmplayer.org/icon-512.png",
+  "email": "hello@tmplayer.org",
+  "founder": {
+    "@type": "Person",
+    "name": "dracu-lah",
+    "url": "https://github.com/dracu-lah"
+  },
+  "sameAs": [
+    "https://github.com/dracu-lah/TMPlayer",
+    "https://t.me/tmplayerapp"
+  ]
+};
+---
+<Base page="home" title={t('home.tmplayer_free_unofficial_telegram_video')} description={t('home.stream_the_videos_in_your')} imageAlt={t('home.tmplayer_a_telegram_media_player')} secureImage feed>
+  <Fragment slot="head">
+    <JsonLd data={ld0} />
+    <JsonLd data={ld1} />
+    <JsonLd data={ld2} />
+  </Fragment>
+<!--
+  Background art, hand drawn here rather than borrowed: four soft shapes, one per accent, anchored
+  to the corners of the viewport and drifting very slowly. Decorative, hidden from assistive
+  technology, and completely still under prefers-reduced-motion.
+-->
+<BgArt />
+
+<Header page="home" brandSvg />
+
+<main id="main">
+
+  <!--
+    One opening section rather than two stacked bands. The sentence, the single control, the two
+    devices and the four facts are all the same idea: what this is, and what it looks like. They
+    used to be a full-height hero followed by a separate showcase band, which read as two arrivals.
+  -->
+  <section class="hero" id="showcase" aria-labelledby="hero-h">
+    <div class="wrap hero-wrap">
+    <div class="hero-inner">
+      <p class="eyebrow"> <Icon name="eyebrow" /> {t('home.free_and_open_source_for')}</p>
+
+      <!-- The full stop is hung outside the measure. Centring counts it as a character
+           the width of a comma, and at this size that is enough to push a short headline
+           visibly left of the middle. -->
+      <h1 id="hero-h"><T k="home.your_telegram_videos"><Icon name="h1-mark" slot="svg1" /><em slot="em1">{t('home.your_telegram_videos__em1')}</em></T><span class="stop">.</span></h1>
+      <p class="lede">{t('home.a_free_unofficial_telegram_video')}</p>
+
+      <!--
+        One primary control, shaped like a command box rather than a plain button: the leading icon
+        says what it does, the middle line is filled in from the GitHub release, and the pill on the
+        right is the thing you press. app.js writes the href and the label.
+      -->
+      <a class="palette" id="hero-download" href={l('/download/')}>
+        <span class="palette-icon" aria-hidden="true">
+          <Icon name="palette-icon" />
+        </span>
+        <span class="palette-text" id="hero-download-label">{t('home.download_tmplayer')}</span>
+        <span class="palette-go" aria-hidden="true">{t('home.get_it')} <Icon name="palette-go" /> </span>
+      </a>
+
+      <p class="hero-quiet"><T k="home.android_phones_and_tvs_windows"><a href={l('/install/')} slot="a1">{t('home.android_phones_and_tvs_windows__a1')}</a><span class="sep" aria-hidden="true" slot="span1">&middot;</span><a href={l('/download/')} slot="a2">{t('home.android_phones_and_tvs_windows__a2')}</a></T> </p>
+    </div>
+
+      <!-- Both frames are drawn in CSS around the real screenshots: Home on the television, and a
+           show's page on the phone, for a different title, so the two frames show more of the
+           demo library rather than the same pictures twice. -->
+      <figure class="showcase">
+        <div class="device device-tv">
+          <div class="screen">
+            <picture>
+              <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
+              <img src="/screenshots/tv-home.webp" alt={t('home.tv_home_hero_alt')} width="1920" height="1080" fetchpriority="high" decoding="async">
+            </picture>
+          </div>
+          <div class="stand"></div>
+          <div class="foot"></div>
+        </div>
+        <div class="device device-phone">
+          <div class="screen">
+            <picture>
+              <source data-theme-src srcset="/screenshots/phone-show-light.webp" media="(prefers-color-scheme: light)">
+              <img src="/screenshots/phone-show.webp" alt={t('home.phone_show_page_alt')} width="1080" height="2400" decoding="async">
+            </picture>
+          </div>
+        </div>
+      </figure>
+
+      <dl class="spec">
+        <div>
+          <dt> <Icon name="platform" /> {t('home.platform')}</dt>
+          <dd>{t('home.android_8_0_and_above')}</dd>
+        </div>
+        <div>
+          <dt> <Icon name="sign-in" /> {t('home.sign_in')}</dt>
+          <dd>{t('home.qr_code_your_own_account')}</dd>
+        </div>
+        <div>
+          <dt> <Icon name="tested-on" /> {t('home.tested_on')}</dt>
+          <dd>{t('home.mi_tv_stick_with_1')}</dd>
+        </div>
+        <div>
+          <dt> <Icon name="costs" /> {t('home.costs')}</dt>
+          <dd>{t('home.nothing_no_server_no_bot')}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- A hand drawn wave, in the spirit of Material's shape work, marking the change of tone. -->
+  <Icon name="wave" />
+
+  <section class="band band-tonal" id="what" aria-labelledby="what-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="what-h">{t('home.a_player_for_the_account')}</h2>
+          <p class="section-sub">{t('home.tmplayer_signs_in_as_you')}</p>
+        </div>
+      </div>
+
+      <div class="card-grid card-grid-3" data-reveal>
+        <a class="card" href={l('/features/')}>
+          <span class="card-icon" aria-hidden="true">
+            <Icon name="card-icon" />
+          </span>
+          <h3>{t('home.what_it_does')}</h3>
+          <p>{t('home.streams_as_it_downloads_plays')}</p>
+          <span class="card-go">{t('home.the_full_list')} <Icon name="card-go" /> </span>
+        </a>
+
+        <a class="card" href={l('/android-tv/')}>
+          <span class="card-icon" aria-hidden="true">
+            <Icon name="card-icon-2" />
+          </span>
+          <h3>{t('home.on_android_tv')}</h3>
+          <p>{t('home.a_ten_foot_layout_for')}</p>
+          <span class="card-go">{t('home.made_for_the_television')} <Icon name="card-go" /> </span>
+        </a>
+
+        <a class="card" href={l('/faq/')}>
+          <span class="card-icon" aria-hidden="true">
+            <Icon name="card-icon-3" />
+          </span>
+          <h3>{t('home.what_it_is_not')}</h3>
+          <p>{t('home.not_a_media_service_messages')}</p>
+          <span class="card-go">{t('home.questions_and_limits')} <Icon name="card-go" /> </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <Icon name="wave-2" />
+
+  <section class="band" id="start" aria-labelledby="start-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="start-h">{t('home.set_up_in_three_steps')}</h2>
+          <p class="section-sub">{t('home.you_do_it_once_then')}</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li>
+            <h3>{t('home.get_the_file')}</h3>
+            <p>{t('home.get_the_file_all')}</p>
+            <p><a href={l('/download/')}>{t('home.go_to_the_download_page')}</a></p>
+          </li>
+          <li>
+            <h3>{t('home.install_it')}</h3>
+            <p>{t('home.install_it_each')}</p>
+            <p><a href={l('/install/')}>{t('home.read_the_install_steps')}</a></p>
+          </li>
+          <li>
+            <h3>{t('home.scan_the_qr_code')}</h3>
+            <p>{t('home.sign_in_with_telegram_s')}</p>
+            <p><a href={l('/faq/')}>{t('home.what_that_does_and_does')}</a></p>
+            <picture class="step-shot">
+              <source data-theme-src srcset="/screenshots/tv-sign-in-light.webp" media="(prefers-color-scheme: light)">
+              <img src="/screenshots/tv-sign-in.webp" alt={t('home.sign_in_qr_alt')} width="960" height="480" loading="lazy" decoding="async">
+            </picture>
+          </li>
+        </ol>
+        <p class="steps-cta"><a class="btn btn-filled" href={l('/download/')}>{t('common.download')}</a></p>
+      </div>
+    </div>
+  </section>
+
+  <Icon name="wave" />
+
+  <!--
+    The support band. A sideloaded APK asks a stranger for a lot of trust, and the only evidence
+    it can offer is that other people already gave it. So the star goes here, at full size, with
+    the real figure next to it rather than a badge nobody can read.
+  -->
+  <section class="band band-tonal" id="support" aria-labelledby="support-h">
+    <div class="wrap">
+      <div class="support" data-reveal>
+        <h2 id="support-h">{t('home.if_it_earned_its_place')}</h2>
+        <p>{t('home.a_star_takes_one_click')}</p>
+
+        <div class="support-actions">
+          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="btn-btn-filled" /> {t('home.star_on_github')}</a>
+          <a class="btn btn-outline" href="https://t.me/tmplayerapp" rel="noopener"> <Icon name="btn-btn-outline" /> {t('home.telegram_channel')}</a>
+          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener"> <Icon name="btn-btn-outline-2" /> {t('home.report_a_problem')}</a>
+        </div>
+
+        <p class="support-stats">
+          <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
+          <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
+          <span>{t('home.gpl_3_0_and_free')}</span><LangCount />
+        </p>
+
+        <!-- The coffee and sponsor links, the same block and words as on the download page, so a
+             reader who got something from this page has the offer where they finished reading. -->
+        <div class="support-more" id="sponsor">
+          <h3>{t('home.support_tmplayer')}</h3>
+          <p>{t('home.support_no_ads')}</p>
+          <div class="support-actions support-give">
+            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="btn-btn-filled-2" /> {t('home.sponsor_on_github')}</a>
+            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="btn-btn-outline-3" /> {t('home.buy_me_a_coffee')}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!--
+  Back to top. A real button, so it is in the tab order and announces itself; app.js gives it the
+  class that fades it in past the first screen and takes it away again at the foot of the page, so
+  it never covers the legal text a reader has just scrolled to.
+-->
+<ToTop />
+
+<Footer home />
+</Base>

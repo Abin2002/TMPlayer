@@ -9,4 +9,6 @@ export default defineConfig({
   compressHTML: false,
   outDir: 'dist',
   devToolbar: { enabled: false },
+  // styles.css is served as written; minifying it would be the one change nobody asked for.
+  vite: { build: { cssMinify: false } },
 });

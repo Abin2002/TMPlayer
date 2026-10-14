@@ -1,0 +1,141 @@
+---
+// Every page's <html>, <head> and the parts of <body> around the page's own markup.
+//
+// The head carries what CLAUDE.md's SEO checklist asks of every page: title, description,
+// canonical, robots, author, Open Graph with the image's type and size, og:locale, the four
+// twitter: tags, the icons and the manifest. On a localized page it adds the hreflang alternates
+// with x-default, og:locale:alternate and the tm-langs block app.js reads for the language
+// suggestion. Page-specific extras (preconnects, JSON-LD) go in the "head" slot.
+import cssUrl from '../styles/styles.css?url';
+import appUrl from '../scripts/app.js?url';
+import KaoNotice from '../components/KaoNotice.astro';
+import { buildString, jsStrings, published, text } from '../i18n/t';
+import { pageUrl } from '../i18n/links';
+import { ORIGIN, type PageId } from '../i18n/langs';
+
+interface Props {
+  /** a localized page: canonical, alternates and the picker follow from it */
+  page?: PageId;
+  /** an English-only page's path, such as /privacy/ */
+  path?: string;
+  title: string;
+  description: string;
+  ogType?: 'website' | 'article';
+  /** og:image:alt and twitter:image:alt (the home page) */
+  imageAlt?: string;
+  /** og:image:secure_url (the home page) */
+  secureImage?: boolean;
+  /** the RSS link to the changelog feed */
+  feed?: boolean;
+  /** article:published_time (release pages) */
+  publishedTime?: string;
+  /** the Keep Android Open bar; every page but the 404 has it */
+  notice?: boolean;
+  /** the 404 page: noindex, no canonical and no social tags */
+  notFound?: boolean;
+}
+const {
+  page, path, title, description, ogType = 'website', imageAlt, secureImage = false, feed = false,
+  publishedTime, notice = true, notFound = false,
+} = Astro.props;
+const lang = Astro.locals.lang;
+const url = ORIGIN + (page !== undefined ? pageUrl(lang, page) : path);
+const OG_IMAGE = `${ORIGIN}/og.png?v=4`;
+const localized = page !== undefined && published.length > 1;
+const langsInfo = localized && {
+  current: lang.hreflang,
+  langs: published.map((o) => ({
+    code: o.hreflang, tag: o.tag, name: o.name, dir: o.dir ?? 'ltr', href: pageUrl(o, page!),
+    suggest: buildString(o, 'build.suggest').replace('{language}', o.name),
+    go: buildString(o, 'build.suggest_go').replace('{language}', o.name),
+    dismiss: buildString(o, 'build.suggest_dismiss'),
+  })),
+};
+const json = (v: unknown) => JSON.stringify(v).replace(/<\//g, '<\\/');
+const strings = lang.path ? jsStrings(lang) : {};
+---
+<!DOCTYPE html>
+<html lang={lang.tag} dir={lang.dir}>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<meta name="description" content={description}>
+{notFound ? <meta name="robots" content="noindex"> : <Fragment>
+<link rel="canonical" href={url}>
+{localized && <Fragment>
+{published.map((o) => <link rel="alternate" hreflang={o.hreflang} href={ORIGIN + pageUrl(o, page!)}>)}
+<link rel="alternate" hreflang="x-default" href={ORIGIN + pageUrl(published[0], page!)}>
+{published.filter((o) => o !== lang).map((o) => <meta property="og:locale:alternate" content={o.og}>)}
+<script type="application/json" id="tm-langs" set:html={json(langsInfo)} is:inline></script>
+</Fragment>}
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="author" content="dracu-lah">
+</Fragment>}
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0C0E" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+{!notFound && <Fragment>
+<meta property="og:type" content={ogType}>
+<meta property="og:site_name" content="TMPlayer">
+<meta property="og:title" content={title}>
+<meta property="og:description" content={description}>
+<meta property="og:url" content={url}>
+<meta property="og:image" content={OG_IMAGE}>
+{secureImage && <meta property="og:image:secure_url" content={OG_IMAGE}>}
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+{imageAlt && <meta property="og:image:alt" content={imageAlt}>}
+<meta property="og:locale" content={lang.og}>
+{publishedTime && <meta property="article:published_time" content={publishedTime}>}
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content={title}>
+<meta name="twitter:description" content={description}>
+<meta name="twitter:image" content={OG_IMAGE}>
+{imageAlt && <meta name="twitter:image:alt" content={imageAlt}>}
+</Fragment>}
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+{!notFound && <Fragment>
+<link rel="icon" href="/icon-512.png" type="image/png" sizes="512x512">
+<link rel="apple-touch-icon" href="/icon-512.png">
+<link rel="manifest" href="/site.webmanifest">
+</Fragment>}
+<link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/poppins-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href={cssUrl}>
+{feed && <link rel="alternate" type="application/rss+xml" title="TMPlayer releases" href="/changelog/feed.xml">}
+<slot name="preconnect" />
+
+<script is:inline>
+(function () {
+  /* Scripting is on, so the header can collapse into a menu. Without this class the
+     stylesheet leaves the links where they are, which is the version that still works. */
+  document.documentElement.className += ' js';
+  try {
+    var t = localStorage.getItem('tm-theme');
+    if (t === 'light' || t === 'dark') { document.documentElement.setAttribute('data-theme', t); }
+    // The Keep Android Open notice, once closed, stays closed without a flash on the next page.
+    if (localStorage.getItem('tm-kao-closed')) { document.documentElement.className += ' kao-off'; }
+  } catch (e) {}
+})();
+</script>
+<slot name="head" />
+</head>
+<body>
+<a class="skip" href="#main">{text(lang, 'common.skip_to_content')}</a>
+{notice && <KaoNotice />}
+<slot />
+{Object.keys(strings).length > 0 && <script type="application/json" id="tm-strings" set:html={json(strings)} is:inline></script>}
+<script is:inline src={appUrl}></script>
+<!--
+  Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and
+  records no identifier that follows a reader between visits: it counts page views and where they
+  came from, and nothing more. Enabled per project in the Vercel dashboard; with it switched off
+  this path simply 404s and the page carries on. The privacy page names it.
+-->
+<script is:inline defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>

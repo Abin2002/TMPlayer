@@ -1,0 +1,49 @@
+---
+// The site footer of the localized pages. The home page leaves out the link to itself and names
+// the code signing page.
+import T from './T.astro';
+import { text } from '../i18n/t';
+import { l } from '../i18n/links';
+
+interface Props { home?: boolean }
+const { home = false } = Astro.props;
+const lang = Astro.locals.lang;
+const t = (k: string) => text(lang, k);
+---
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p class="footer-brand">TMPlayer</p>
+    <nav class="footer-links" aria-label={t('common.footer')}>
+      {!home && <a href={l(lang, '/')}><T k="common.home" /></a>}
+      <a href={l(lang, '/features/')}><T k="common.features" /></a>
+      <a href={l(lang, '/download/')}><T k="common.download" /></a>
+      <a href={l(lang, '/install/')}><T k="common.install" /></a>
+      <a href={l(lang, '/android-tv/')}>Android TV</a>
+      <a href={l(lang, '/faq/')}><T k="common.questions" /></a>
+      <a href="/changelog/"><T k="common.changelog" /></a>
+      <a href={l(lang, '/fire-tv/')}>Fire TV</a>
+      <a href={l(lang, '/formats/')}><T k="common.formats" /></a>
+      <a href={l(lang, '/translate/')}><T k="common.translate" /></a>
+      <a href="/security/"><T k="common.security" /></a>
+      <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener"><T k="common.source" /></a>
+      <a href="/privacy/"><T k="common.privacy" /></a>
+      {home && <a href="/signing/"><T k="common.code_signing" /></a>}
+      <a href="/legal/"><T k="common.lawful_use" /></a>
+      <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
+    </nav>
+    <nav class="footer-links footer-guides" aria-label={t('common.guides')}>
+      <a href={l(lang, '/guides/telegram-videos-on-android-tv/')}><T k="common.telegram_on_android_tv" /></a>
+      <a href={l(lang, '/guides/telegram-videos-on-fire-tv/')}><T k="common.telegram_on_fire_tv" /></a>
+      <a href={l(lang, '/guides/telegram-on-tv-without-casting/')}><T k="common.telegram_without_casting" /></a>
+    </nav>
+    <nav class="footer-links footer-community" aria-label={t('common.community')}>
+      <a href="https://t.me/tmplayerapp" rel="noopener"><T k="home.telegram_channel" /></a>
+      <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
+      <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener"><T k="common.discussions" /></a>
+      <a href="https://github.com/sponsors/dracu-lah" rel="noopener"><T k="common.sponsor" /></a>
+      <a href="https://buymeacoffee.com/nevil.dev" rel="noopener"><T k="home.buy_me_a_coffee" /></a>
+      <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
+    </nav>
+    <p class="footer-legal muted small"><T k="common.gpl_3_0_2026_dracu" /></p>
+  </div>
+</footer>
