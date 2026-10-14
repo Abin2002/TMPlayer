@@ -29,7 +29,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
@@ -37,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -72,6 +76,8 @@ fun TourScreen(
     val copy = s.tourCopy(page, form)
     val badges = TourBadges.of(page, form)
     val next = remember { FocusRequester() }
+    // Which page has Next focused, so the first focus can be asked for until it lands.
+    var focusedOn by remember { mutableStateOf<TourPage?>(null) }
 
     val forward: () -> Unit = { if (!state.next()) onDone() }
     val backward: () -> Unit = { if (!state.back()) onBackFromFirst() }
@@ -116,7 +122,9 @@ fun TourScreen(
                 SetupButton(
                     if (state.isLast) s.setupStart else s.setupNext,
                     primary = true,
-                    modifier = Modifier.focusRequester(next),
+                    modifier = Modifier
+                        .focusRequester(next)
+                        .onFocusChanged { if (it.isFocused) focusedOn = page },
                     onClick = forward,
                 )
             }
@@ -164,7 +172,8 @@ fun TourScreen(
             repeat(FOCUS_TRIES) {
                 withFrameNanos { }
                 if (it > 0) delay(FOCUS_RETRY_MS)
-                if (runCatching { next.requestFocus() }.isSuccess) return@LaunchedEffect
+                if (focusedOn == page) return@LaunchedEffect
+                runCatching { next.requestFocus() }
             }
         }
     }

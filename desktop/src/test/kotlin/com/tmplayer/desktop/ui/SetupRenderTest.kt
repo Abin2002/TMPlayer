@@ -37,7 +37,11 @@ import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.ui.nav.BackStack
 import com.tmplayer.ui.nav.LocalBackStack
 import com.tmplayer.ui.onboarding.SetupScreen
+import com.tmplayer.ui.onboarding.SetupAndTour
 import com.tmplayer.ui.onboarding.SetupState
+import com.tmplayer.ui.onboarding.Tour
+import com.tmplayer.ui.onboarding.TourProgress
+import com.tmplayer.ui.onboarding.TourScreen
 import com.tmplayer.ui.onboarding.SetupStep
 import com.tmplayer.ui.theme.TmMaterialTheme
 import com.tmplayer.ui.theme.Tone
@@ -133,7 +137,7 @@ class SetupRenderTest {
     fun walkedFromTheKeyboard() = runComposeUiTest {
         val online = MetaFixture.install("on")
         val back = BackStack()
-        val setup = SetupState(all)
+        val setup = SetupState(listOf(SetupStep.Library, SetupStep.Posters, SetupStep.Storage))
         var done = false
         setContent {
             CompositionLocalProvider(LocalBackStack provides back) {
@@ -277,6 +281,92 @@ class SetupRenderTest {
         waitForIdle()
         assertFalse(online.settings.value.enabled)
         assertTrue("chosen, not a stale default", online.settings.value.offByChoice)
+    }
+
+    /** CP69: Lighter turns the three lighter rows on together, Save mobile data turns on both its settings. */
+    @Test
+    fun performanceAndMobileDataApply() = runComposeUiTest {
+        MetaFixture.install("on")
+        setContent {
+            TmMaterialTheme(dark = true) {
+                Box(Modifier.size(1280.dp, 800.dp)) {
+                    SetupScreen(settings, remember { SetupState(listOf(SetupStep.Performance, SetupStep.MobileData)) }, onDone = {})
+                }
+            }
+        }
+        onNode(hasText("Lighter") and hasClickAction()).performClick()
+        waitForIdle()
+        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.lighterPictures.first() && settings.reduceMotion.first() } }
+        assertFalse(runBlocking { settings.trickplay.first() })
+        onNode(hasText("Save mobile data") and hasClickAction()).performClick()
+        waitForIdle()
+        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.saveMobileData.first() && settings.wifiOnlyDownloads.first() } }
+    }
+
+    /** CP69: every tour page light and dark, in Arabic and the pseudo-locale, and narrow. */
+    @Test
+    fun tourEveryPage() {
+        val pages = Tour.pages(com.tmplayer.data.DeviceForm.Desktop)
+        for ((i, page) in pages.withIndex()) {
+            for (dark in listOf(true, false)) {
+                save("tour-${page.imageName}-${if (dark) "dark" else "light"}.png", render(dark) {
+                    TourScreen(remember { TourProgress(pages, start = i) }, onDone = {}, before = 4, total = 4 + pages.size)
+                })
+            }
+        }
+        Translator.use("ar")
+        save("tour-ar-videos.png", render(true, rtl = true) { TourScreen(remember { TourProgress(pages) }, onDone = {}) })
+        Translator.use(Languages.PSEUDO)
+        save("tour-xa-settings.png", render(true) { TourScreen(remember { TourProgress(pages, start = pages.lastIndex) }, onDone = {}) })
+        Translator.use(Languages.ENGLISH)
+        save("tour-narrow.png", render(true, width = 520, height = 900) { TourScreen(remember { TourProgress(pages) }, onDone = {}) })
+    }
+
+    /** CP69: from the keyboard the tour starts on Next, Enter walks it, Start watching ends it. */
+    @Test
+    fun tourFromTheKeyboard() = runComposeUiTest {
+        val pages = Tour.pages(com.tmplayer.data.DeviceForm.Desktop)
+        val tour = TourProgress(pages)
+        var done = false
+        setContent {
+            TmMaterialTheme(dark = true) {
+                Box(Modifier.size(1280.dp, 800.dp)) { TourScreen(tour, onDone = { done = true }) }
+            }
+        }
+        for (i in pages.indices) {
+            val label = if (i == pages.lastIndex) "Start watching" else "Next"
+            waitUntil(timeoutMillis = WRITE_MS) {
+                onAllNodes(hasText(label) and hasClickAction() and isFocused()).fetchSemanticsNodes().isNotEmpty()
+            }
+            onNode(isFocused()).performKeyInput { pressKey(Key.Enter) }
+            waitForIdle()
+        }
+        assertTrue(done)
+    }
+
+    /** CP69: the setup hands over to the tour, whose Skip all ends both, and Back returns to the setup. */
+    @Test
+    fun setupThenTour() = runComposeUiTest {
+        MetaFixture.install("on")
+        var done = false
+        setContent {
+            TmMaterialTheme(dark = true) {
+                Box(Modifier.size(1280.dp, 800.dp)) {
+                    SetupAndTour(settings, listOf(SetupStep.Storage), onDone = { done = true })
+                }
+            }
+        }
+        onNode(hasText("Skip") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Next") and hasClickAction()).assertExists()
+        onNode(hasText("Back") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Keep what plays") and hasClickAction()).assertExists()
+        onNode(hasText("Skip") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Skip all") and hasClickAction()).performClick()
+        waitForIdle()
+        assertTrue(done)
     }
 
     @Test

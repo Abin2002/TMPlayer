@@ -199,9 +199,12 @@ class SetupTest {
     }
 
     @Test
-    fun `screenshots for library and posters, a drawing for storage`() {
+    fun `screenshots for library, posters and performance, drawings for storage and mobile data`() {
         assertEquals(
-            setOf(SetupChoice.Everything, SetupChoice.OnlyFolders, SetupChoice.PostersOn, SetupChoice.PostersOff),
+            setOf(
+                SetupChoice.Everything, SetupChoice.OnlyFolders, SetupChoice.PostersOn, SetupChoice.PostersOff,
+                SetupChoice.FullQuality, SetupChoice.Lighter,
+            ),
             SetupChoice.entries.filter { it.screenshot }.toSet(),
         )
     }

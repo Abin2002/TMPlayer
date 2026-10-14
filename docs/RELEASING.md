@@ -100,8 +100,13 @@ gh secret set KEY_PASSWORD       # from keystore.properties
 base64 -w0 release.keystore | gh secret set KEYSTORE_BASE64
 ```
 
-Two more are optional, and a release without them only lacks the feature: `SENTRY_DSN` (opted-in
-crash reports) and `OPENSUBTITLES_API_KEY` (online subtitles, on every platform).
+Three more are optional, and a release without them only lacks the feature: `SENTRY_DSN` (opted-in
+crash reports), `OPENSUBTITLES_API_KEY` (online subtitles, on every platform) and `SENTRY_AUTH_TOKEN`.
+The last is a Sentry organization token (scope `org:ci`, made under Settings, Auth Tokens); with it
+the release build uploads its R8 mapping to Sentry under the UUID it writes into the APK, so a
+crash report's stack trace reads as the source does. Without it the reports arrive minified.
+`sentry-cli login` stores the same kind of token in `~/.sentryclirc`; to upload from a local
+release build, `export SENTRY_AUTH_TOKEN=...` first.
 
 GitHub secrets are write-only: once set, nobody can read them back through the UI or API.
 Gate the `release` environment behind required reviewers in repository settings so that only

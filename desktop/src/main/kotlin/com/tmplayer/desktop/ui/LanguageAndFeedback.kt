@@ -231,6 +231,7 @@ fun ShellNotices(state: ShellState, modifier: Modifier = Modifier) {
     if (whatsNew.showing && !playing && !state.updatePopup) WhatsNewPopup(onClose = { whatsNew.showing = false })
     // The quick tour, offered once to an install signed in before it existed (CP69), behind the
     // other notices. Taking it opens the tour over the window (Shell.kt).
+    val s = LocalStrings.current
     val tour by state.settings.tourState.collectAsState(initial = SettingsStore.TourState.Done)
     if (tour == SettingsStore.TourState.Never && language == null && !whatsNew.showing && !playing && !state.updatePopup) {
         val scope = rememberCoroutineScope()

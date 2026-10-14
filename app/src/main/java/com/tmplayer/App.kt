@@ -227,5 +227,7 @@ private fun setupDrawable(choice: SetupChoice, tv: Boolean, dark: Boolean): Int 
         dark -> R.drawable.setup_posters_off_dark
         else -> R.drawable.setup_posters_off
     }
-    SetupChoice.KeepWhilePlaying, SetupChoice.LowStorage, SetupChoice.ApplyRecommended, SetupChoice.NotNow -> 0
+    SetupChoice.KeepWhilePlaying, SetupChoice.LowStorage, SetupChoice.SaveData, SetupChoice.NoLimits,
+    SetupChoice.ApplyRecommended, SetupChoice.NotNow -> 0
+    SetupChoice.FullQuality, SetupChoice.Lighter -> 0
 }
