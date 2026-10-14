@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "Politica di firma del codice",
     "the_installer_is_not_code_signed": "L'installer non ha ancora la firma del codice, quindi SmartScreen potrebbe avvisarti la prima volta. Clicca {em1}, poi {em2}.",
     "the_installer_is_not_code_signed__em1": "Ulteriori informazioni",
-    "the_installer_is_not_code_signed__em2": "Esegui comunque"
+    "the_installer_is_not_code_signed__em2": "Esegui comunque",
+    "or_skip_the_warning_open": "Oppure evita l'avviso: apri {em1} e incolla questo. Scarica lo stesso programma di installazione da GitHub, lo verifica con il checksum pubblicato e lo avvia.",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "Come installare TMPlayer su Android TV, Windows e Linux",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "Sei ancora bloccato? {a1} con il tuo dispositivo, la sua versione e cosa diceva lo schermo.",
     "still_stuck_with_your_device__a1": "Apri una issue",
     "if_these_steps_got_your": "Se questi passaggi hanno portato i tuoi video sullo schermo, una stella aiuta la prossima persona a trovarlo.",
-    "install_the_tmplayer_telegram_video": "Installa il lettore video Telegram TMPlayer: installa l'APK su Android TV o su un telefono, supera SmartScreen su Windows, oppure avvia l'AppImage su Linux."
+    "install_the_tmplayer_telegram_video": "Installa il lettore video Telegram TMPlayer: installa l'APK su Android TV o su un telefono, supera SmartScreen su Windows, oppure avvia l'AppImage su Linux.",
+    "to_skip_that_step_install": "Per saltare questo passaggio, installa da {em1}: incolla la riga qui sotto. Scarica lo stesso programma di installazione da GitHub, lo verifica con il checksum pubblicato e lo avvia, e Windows non lo blocca.",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: lettore video Telegram non ufficiale per Android TV e Google TV",

@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "Chính sách ký mã",
     "the_installer_is_not_code_signed": "Trình cài đặt chưa được ký mã, nên SmartScreen có thể cảnh báo bạn ở lần đầu. Bấm {em1}, rồi {em2}.",
     "the_installer_is_not_code_signed__em1": "Thông tin khác",
-    "the_installer_is_not_code_signed__em2": "Vẫn chạy"
+    "the_installer_is_not_code_signed__em2": "Vẫn chạy",
+    "or_skip_the_warning_open": "Hoặc bỏ qua cảnh báo: mở {em1} và dán lệnh này. Lệnh tải cùng trình cài đặt từ GitHub, đối chiếu với mã kiểm tra đã công bố rồi chạy nó.",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "Cách cài TMPlayer trên Android TV, Windows và Linux",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "Vẫn bị kẹt? {a1} kèm thiết bị của bạn, phiên bản của nó và nội dung màn hình đã báo.",
     "still_stuck_with_your_device__a1": "Mở một issue",
     "if_these_steps_got_your": "Nếu các bước này đã đưa video lên màn hình của bạn, một ngôi sao sẽ giúp người sau tìm thấy nó.",
-    "install_the_tmplayer_telegram_video": "Cài trình phát video Telegram TMPlayer: cài APK thủ công trên Android TV hoặc điện thoại, vượt qua SmartScreen trên Windows, hoặc chạy AppImage trên Linux."
+    "install_the_tmplayer_telegram_video": "Cài trình phát video Telegram TMPlayer: cài APK thủ công trên Android TV hoặc điện thoại, vượt qua SmartScreen trên Windows, hoặc chạy AppImage trên Linux.",
+    "to_skip_that_step_install": "Để bỏ qua bước này, hãy cài từ {em1}: dán dòng bên dưới. Dòng lệnh tải cùng trình cài đặt từ GitHub, đối chiếu với mã kiểm tra đã công bố rồi chạy, và Windows không chặn nó.",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: trình phát video Telegram không chính thức cho Android TV và Google TV",

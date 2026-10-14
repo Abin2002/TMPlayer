@@ -347,6 +347,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.get_past_smartscreen">通過 SmartScreen</h3>
             <p data-i18n="install.the_build_is_not_signed">這個版本尚未簽署，所以 Windows 會顯示 <em>Windows 已保護您的電腦</em>。請按 <em>其他資訊</em>，然後按 <em>仍要執行</em>。</p>
+            <p data-i18n="install.to_skip_that_step_install">想略過這一步，可以改用 <em>PowerShell</em> 安裝：貼上下面這一行。它會從 GitHub 下載同一個安裝程式，用公布的校驗和核對後執行，Windows 不會攔截。</p>
+            <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.install_and_open_it">安裝並開啟</h3>

@@ -347,6 +347,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.get_past_smartscreen">SmartScreen മറികടക്കുക</h3>
             <p data-i18n="install.the_build_is_not_signed">ബിൽഡ് ഇതുവരെ സൈൻ ചെയ്തിട്ടില്ല, അതിനാൽ Windows <em>Windows protected your PC</em> എന്ന് പറയും. <em>More info</em> ക്ലിക്ക് ചെയ്ത്, പിന്നെ <em>Run anyway</em>.</p>
+            <p data-i18n="install.to_skip_that_step_install">ഈ ഘട്ടം ഒഴിവാക്കാൻ പകരം <em>PowerShell</em>-ൽ നിന്ന് ഇൻസ്റ്റാൾ ചെയ്യുക: താഴെയുള്ള വരി പേസ്റ്റ് ചെയ്യുക. ഇത് GitHub-ൽ നിന്ന് അതേ ഇൻസ്റ്റാളർ ഡൗൺലോഡ് ചെയ്ത്, പ്രസിദ്ധീകരിച്ച ചെക്ക്സവുമായി ഒത്തുനോക്കി പ്രവർത്തിപ്പിക്കുന്നു, Windows അത് തടയില്ല.</p>
+            <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.install_and_open_it">ഇൻസ്റ്റാൾ ചെയ്ത് തുറക്കുക</h3>

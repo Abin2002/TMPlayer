@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "سياسة توقيع الشيفرة",
     "the_installer_is_not_code_signed": "المثبّت ليس موقّعًا رقميًا بعد، لذا قد يحذّرك SmartScreen في المرة الأولى. انقر على {em1}، ثم {em2}.",
     "the_installer_is_not_code_signed__em1": "More info",
-    "the_installer_is_not_code_signed__em2": "Run anyway"
+    "the_installer_is_not_code_signed__em2": "Run anyway",
+    "or_skip_the_warning_open": "أو تجاوز التحذير: افتح {em1} والصق هذا. يُنزّل المثبّت نفسه من GitHub، ويتحقق منه بالمجموع المنشور، ثم يشغّله.",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "كيفية تثبيت TMPlayer على Android TV وWindows وLinux",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "ما زلت عالقًا؟ {a1} واذكر جهازك وإصداره وما ظهر على الشاشة.",
     "still_stuck_with_your_device__a1": "افتح بلاغًا",
     "if_these_steps_got_your": "إن ساعدتك هذه الخطوات على مشاهدة مقاطعك على الشاشة، فنجمة منك تساعد الشخص التالي على إيجاد التطبيق.",
-    "install_the_tmplayer_telegram_video": "ثبّت مشغّل فيديو Telegram المسمى TMPlayer: ثبّت ملف APK يدويًا على Android TV أو الهاتف، وتجاوز SmartScreen على Windows، أو شغّل AppImage على Linux."
+    "install_the_tmplayer_telegram_video": "ثبّت مشغّل فيديو Telegram المسمى TMPlayer: ثبّت ملف APK يدويًا على Android TV أو الهاتف، وتجاوز SmartScreen على Windows، أو شغّل AppImage على Linux.",
+    "to_skip_that_step_install": "لتتجاوز هذه الخطوة، ثبّت من {em1} بدلًا من ذلك: الصق السطر أدناه. يُنزّل المثبّت نفسه من GitHub، ويتحقق منه بالمجموع المنشور، ثم يشغّله، ولا يوقفه Windows.",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: مشغّل فيديو غير رسمي لـ Telegram على Android TV وGoogle TV",

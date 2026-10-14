@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "Code Signing Policy",
     "the_installer_is_not_code_signed": "Installer belum ditandatangani, jadi SmartScreen mungkin memberi peringatan saat pertama kali. Klik {em1}, lalu {em2}.",
     "the_installer_is_not_code_signed__em1": "Informasi selengkapnya",
-    "the_installer_is_not_code_signed__em2": "Tetap jalankan"
+    "the_installer_is_not_code_signed__em2": "Tetap jalankan",
+    "or_skip_the_warning_open": "Atau lewati peringatannya: buka {em1} lalu tempel ini. Perintah ini mengunduh penginstal yang sama dari GitHub, mencocokkannya dengan checksum yang dipublikasikan, lalu menjalankannya.",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "Cara memasang TMPlayer di Android TV, Windows, dan Linux",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "Masih macet? {a1} dengan menyebut perangkat, versinya, dan apa yang tertulis di layar.",
     "still_stuck_with_your_device__a1": "Buka issue",
     "if_these_steps_got_your": "Kalau langkah-langkah ini berhasil memunculkan videomu, bintang membantu orang berikutnya menemukannya.",
-    "install_the_tmplayer_telegram_video": "Pasang pemutar video Telegram TMPlayer: pasang APK secara manual di Android TV atau HP, lewati SmartScreen di Windows, atau jalankan AppImage di Linux."
+    "install_the_tmplayer_telegram_video": "Pasang pemutar video Telegram TMPlayer: pasang APK secara manual di Android TV atau HP, lewati SmartScreen di Windows, atau jalankan AppImage di Linux.",
+    "to_skip_that_step_install": "Untuk melewati langkah ini, instal dari {em1}: tempel baris di bawah. Baris ini mengunduh penginstal yang sama dari GitHub, mencocokkannya dengan checksum yang dipublikasikan lalu menjalankannya, dan Windows tidak menghentikannya.",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: pemutar video Telegram tidak resmi untuk Android TV dan Google TV",

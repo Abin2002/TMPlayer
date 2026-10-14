@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "Code-Signing-Richtlinie",
     "the_installer_is_not_code_signed": "Der Installer ist noch nicht codesigniert, deshalb warnt SmartScreen beim ersten Mal womöglich. Klicke auf {em1}, dann auf {em2}.",
     "the_installer_is_not_code_signed__em1": "Weitere Informationen",
-    "the_installer_is_not_code_signed__em2": "Trotzdem ausführen"
+    "the_installer_is_not_code_signed__em2": "Trotzdem ausführen",
+    "or_skip_the_warning_open": "Oder ohne Warnung: Öffne {em1} und füge das ein. Es lädt dasselbe Installationsprogramm von GitHub, prüft es gegen die veröffentlichte Prüfsumme und startet es.",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "So installierst du TMPlayer auf Android TV, Windows und Linux",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "Immer noch Probleme? {a1} mit deinem Gerät, seiner Version und dem, was der Bildschirm gemeldet hat.",
     "still_stuck_with_your_device__a1": "Öffne ein Issue",
     "if_these_steps_got_your": "Wenn dich diese Schritte zu deinen Videos auf den Bildschirm gebracht haben, hilft ein Stern der nächsten Person, es zu finden.",
-    "install_the_tmplayer_telegram_video": "Installiere den TMPlayer-Telegram-Videoplayer: die APK per Sideload auf Android TV oder einem Smartphone, SmartScreen unter Windows umgehen oder das AppImage unter Linux starten."
+    "install_the_tmplayer_telegram_video": "Installiere den TMPlayer-Telegram-Videoplayer: die APK per Sideload auf Android TV oder einem Smartphone, SmartScreen unter Windows umgehen oder das AppImage unter Linux starten.",
+    "to_skip_that_step_install": "Um diesen Schritt zu überspringen, installiere stattdessen über {em1}: Füge die Zeile unten ein. Sie lädt dasselbe Installationsprogramm von GitHub, prüft es gegen die veröffentlichte Prüfsumme und startet es, und Windows hält es nicht auf.",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: inoffizieller Telegram-Videoplayer für Android TV und Google TV",

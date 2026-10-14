@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "程式碼簽署政策",
     "the_installer_is_not_code_signed": "安裝程式目前還沒有程式碼簽署，所以第一次執行時 SmartScreen 可能會發出警告。請按 {em1}，然後按 {em2}。",
     "the_installer_is_not_code_signed__em1": "其他資訊",
-    "the_installer_is_not_code_signed__em2": "仍要執行"
+    "the_installer_is_not_code_signed__em2": "仍要執行",
+    "or_skip_the_warning_open": "或者略過警告：開啟 {em1} 並貼上這一行。它會從 GitHub 下載同一個安裝程式，用公布的校驗和核對後執行。",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "如何在 Android TV、Windows 與 Linux 上安裝 TMPlayer",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "還是卡住了嗎？請{a1}，附上你的裝置、版本，以及畫面上顯示的內容。",
     "still_stuck_with_your_device__a1": "開一個 Issue",
     "if_these_steps_got_your": "如果照著這些步驟讓你的影片順利播出，請加個星，幫助下一個人找到它。",
-    "install_the_tmplayer_telegram_video": "安裝 TMPlayer Telegram 影片播放器：在 Android TV 或手機上側載 APK、在 Windows 上通過 SmartScreen，或在 Linux 上執行 AppImage。"
+    "install_the_tmplayer_telegram_video": "安裝 TMPlayer Telegram 影片播放器：在 Android TV 或手機上側載 APK、在 Windows 上通過 SmartScreen，或在 Linux 上執行 AppImage。",
+    "to_skip_that_step_install": "想略過這一步，可以改用 {em1} 安裝：貼上下面這一行。它會從 GitHub 下載同一個安裝程式，用公布的校驗和核對後執行，Windows 不會攔截。",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer：支援 Android TV 與 Google TV 的非官方 Telegram 影片播放器",

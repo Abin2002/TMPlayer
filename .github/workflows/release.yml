@@ -563,3 +563,47 @@ jobs:
           OUT="$(python3 scripts/post-release-telegram.py --version "$VERSION" --notes "$NOTES")"
           echo "$OUT"
           echo "Telegram: $OUT" >> "$GITHUB_STEP_SUMMARY"
+
+  # The new version for winget (`winget install TMPlayer.TMPlayer`), as a pull request to
+  # microsoft/winget-pkgs. Windows marks a file a browser downloads, and SmartScreen stops the
+  # unsigned MSI on that mark; winget fetches the installer itself, so no mark and no warning.
+  #
+  # The pull request comes from the WINGET_TOKEN owner's fork of winget-pkgs (a classic token with
+  # public_repo; the fork has to exist). Winget's bots validate and merge it, usually within a day,
+  # and until then winget offers the previous version. Like the Telegram post it cannot fail the
+  # release: the files are already up. A fork without the secret, and a tag for a version older
+  # than the one the site names, skip it.
+  winget:
+    name: Submit to winget
+    needs: [version, publish]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check that this is the newest release and there is a token
+        id: gate
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ needs.version.outputs.name }}"
+          if [ -z "$WINGET_TOKEN" ]; then
+            echo "WINGET_TOKEN is not set; not submitting $VERSION to winget."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          LATEST="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)"
+          if [ "$LATEST" != "$GITHUB_REF_NAME" ]; then
+            echo "The latest release is $LATEST, not $GITHUB_REF_NAME; winget keeps the newer one."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "go=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open the winget-pkgs pull request
+        if: steps.gate.outputs.go == 'true'
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: TMPlayer.TMPlayer
+          installers-regex: '-windows-x64\.msi$'
+          release-tag: ${{ github.ref_name }}
+          token: ${{ secrets.WINGET_TOKEN }}

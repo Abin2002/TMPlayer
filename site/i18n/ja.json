@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "コード署名ポリシー",
     "the_installer_is_not_code_signed": "インストーラーはまだコード署名されていないため、初回はSmartScreenが警告を表示することがあります。{em1}をクリックし、{em2}をクリックしてください。",
     "the_installer_is_not_code_signed__em1": "詳細情報",
-    "the_installer_is_not_code_signed__em2": "実行"
+    "the_installer_is_not_code_signed__em2": "実行",
+    "or_skip_the_warning_open": "または警告を避ける方法：{em1}を開いてこれを貼り付けます。GitHubから同じインストーラーをダウンロードし、公開されているチェックサムで確認してから実行します。",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "Android TV、Windows、LinuxにTMPlayerをインストールする方法",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "解決しない場合は、お使いの端末、そのバージョン、画面に表示された内容を添えて{a1}してください。",
     "still_stuck_with_your_device__a1": "issueを作成",
     "if_these_steps_got_your": "この手順で動画が再生できたなら、スターが次の人の助けになります。",
-    "install_the_tmplayer_telegram_video": "TMPlayer Telegram動画プレーヤーをインストール: Android TVやスマートフォンではAPKをサイドロード、WindowsではSmartScreenを通過、LinuxではAppImageを実行します。"
+    "install_the_tmplayer_telegram_video": "TMPlayer Telegram動画プレーヤーをインストール: Android TVやスマートフォンではAPKをサイドロード、WindowsではSmartScreenを通過、LinuxではAppImageを実行します。",
+    "to_skip_that_step_install": "この手順を省くには、代わりに{em1}からインストールします。下の行を貼り付けてください。GitHubから同じインストーラーをダウンロードし、公開されているチェックサムで確認して実行するので、Windowsに止められません。",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: Android TVとGoogle TV向けの非公式Telegram動画プレーヤー",

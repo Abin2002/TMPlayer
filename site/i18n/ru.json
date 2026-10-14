@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "политика подписи кода",
     "the_installer_is_not_code_signed": "Установщик пока не подписан, поэтому при первом запуске SmartScreen может показать предупреждение. Нажмите {em1}, затем {em2}.",
     "the_installer_is_not_code_signed__em1": "Подробнее",
-    "the_installer_is_not_code_signed__em2": "Выполнить в любом случае"
+    "the_installer_is_not_code_signed__em2": "Выполнить в любом случае",
+    "or_skip_the_warning_open": "Или без предупреждения: откройте {em1} и вставьте это. Команда скачает тот же установщик с GitHub, сверит его с опубликованной контрольной суммой и запустит.",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "Как установить TMPlayer на Android TV, в Windows и Linux",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "Всё равно не получается? {a1}, указав устройство, его версию и что было написано на экране.",
     "still_stuck_with_your_device__a1": "Создайте issue",
     "if_these_steps_got_your": "Если эти шаги вывели ваши видео на экран, звезда поможет следующему человеку найти приложение.",
-    "install_the_tmplayer_telegram_video": "Установите видеоплеер TMPlayer для Telegram: установите APK вручную на Android TV или телефон, пройдите SmartScreen в Windows или запустите AppImage в Linux."
+    "install_the_tmplayer_telegram_video": "Установите видеоплеер TMPlayer для Telegram: установите APK вручную на Android TV или телефон, пройдите SmartScreen в Windows или запустите AppImage в Linux.",
+    "to_skip_that_step_install": "Чтобы пропустить этот шаг, установите через {em1}: вставьте строку ниже. Она скачает тот же установщик с GitHub, сверит его с опубликованной контрольной суммой и запустит, и Windows его не остановит.",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: неофициальный видеоплеер для Telegram на Android TV и Google TV",

@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "कोड साइनिंग पॉलिसी",
     "the_installer_is_not_code_signed": "इंस्टॉलर अभी कोड साइन नहीं है, इसलिए पहली बार SmartScreen चेतावनी दिखा सकता है। {em1} पर क्लिक करें, फिर {em2}।",
     "the_installer_is_not_code_signed__em1": "अधिक जानकारी",
-    "the_installer_is_not_code_signed__em2": "फिर भी चलाएँ"
+    "the_installer_is_not_code_signed__em2": "फिर भी चलाएँ",
+    "or_skip_the_warning_open": "या चेतावनी से बचें: {em1} खोलें और इसे पेस्ट करें। यह GitHub से वही इंस्टॉलर डाउनलोड करता है, प्रकाशित चेकसम से जाँचता है और चलाता है।",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "Android TV, Windows और Linux पर TMPlayer कैसे इंस्टॉल करें",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "अब भी अटके हैं? अपने डिवाइस, उसके वर्शन और स्क्रीन पर लिखे संदेश के साथ {a1}।",
     "still_stuck_with_your_device__a1": "इश्यू खोलें",
     "if_these_steps_got_your": "अगर इन चरणों से आपके वीडियो स्क्रीन पर आ गए, तो एक स्टार अगले व्यक्ति को इसे ढूँढने में मदद करता है।",
-    "install_the_tmplayer_telegram_video": "TMPlayer Telegram वीडियो प्लेयर इंस्टॉल करें: Android TV या फ़ोन पर APK साइडलोड करें, Windows पर SmartScreen पार करें, या Linux पर AppImage चलाएँ।"
+    "install_the_tmplayer_telegram_video": "TMPlayer Telegram वीडियो प्लेयर इंस्टॉल करें: Android TV या फ़ोन पर APK साइडलोड करें, Windows पर SmartScreen पार करें, या Linux पर AppImage चलाएँ।",
+    "to_skip_that_step_install": "इस चरण से बचने के लिए {em1} से इंस्टॉल करें: नीचे की पंक्ति पेस्ट करें। यह GitHub से वही इंस्टॉलर डाउनलोड करती है, प्रकाशित चेकसम से जाँचकर चलाती है, और Windows उसे नहीं रोकता।",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: Android TV और Google TV के लिए अनौपचारिक Telegram वीडियो प्लेयर",

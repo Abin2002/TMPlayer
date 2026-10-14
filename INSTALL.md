@@ -176,6 +176,16 @@ The release page shows each file's SHA-256 beside it. Check a download with `sha
 Installing a newer MSI later upgrades the app in place; your sign-in, history and downloads live in
 your user profile and are kept. Remove it under **Settings, Apps, Installed apps**.
 
+**Without the SmartScreen step.** Windows warns about an unsigned file only when a browser
+downloaded it. Paste this into PowerShell instead and it fetches the same MSI from the GitHub
+release, checks its SHA-256 against the one tmplayer.org publishes, and installs it for your user:
+
+```powershell
+irm https://tmplayer.org/install.ps1 | iex
+```
+
+The script is [site/install.ps1](site/install.ps1) in this repository; read it before you run it.
+
 ## Linux
 
 64-bit x86 only for now, and a 2024 or newer system (glibc 2.38): Ubuntu 24.04, Debian 13, Linux

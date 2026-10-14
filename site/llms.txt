@@ -14,7 +14,7 @@ Key facts:
 - [Home](https://tmplayer.org/): what TMPlayer is, with screenshots of the TV, phone and desktop apps
 - [Features](https://tmplayer.org/features/): streaming while downloading, instant seeking, subtitles, the TV and desktop layouts, keyboard shortcuts
 - [Download](https://tmplayer.org/download/): the APK for Android TV and phones, the Windows installer and the Linux AppImage
-- [How to install](https://tmplayer.org/install/): sideloading on Android TV, Windows SmartScreen, running the AppImage
+- [How to install](https://tmplayer.org/install/): sideloading on Android TV, Windows SmartScreen or the PowerShell one-liner (`irm https://tmplayer.org/install.ps1 | iex`), running the AppImage
 - [Android TV](https://tmplayer.org/android-tv/): watching Telegram videos on Android TV and Google TV
 - [Fire TV](https://tmplayer.org/fire-tv/): installing on a Fire TV Stick, Cube or Fire TV Edition TV
 - [Formats](https://tmplayer.org/formats/): the containers, codecs and subtitle formats it plays

@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "politique de signature du code",
     "the_installer_is_not_code_signed": "L'installateur n'a pas encore de signature de code, donc SmartScreen peut vous avertir la première fois. Cliquez sur {em1}, puis sur {em2}.",
     "the_installer_is_not_code_signed__em1": "Informations complémentaires",
-    "the_installer_is_not_code_signed__em2": "Exécuter quand même"
+    "the_installer_is_not_code_signed__em2": "Exécuter quand même",
+    "or_skip_the_warning_open": "Ou évitez l'avertissement : ouvrez {em1} et collez ceci. Il télécharge le même installateur depuis GitHub, le vérifie avec la somme de contrôle publiée et le lance.",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "Comment installer TMPlayer sur Android TV, Windows et Linux",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "Toujours bloqué ? {a1} en indiquant votre appareil, sa version et ce que l'écran affichait.",
     "still_stuck_with_your_device__a1": "Ouvrez un ticket",
     "if_these_steps_got_your": "Si ces étapes ont fait apparaître vos vidéos à l'écran, une étoile aide la prochaine personne à le trouver.",
-    "install_the_tmplayer_telegram_video": "Installez le lecteur vidéo Telegram TMPlayer : installation hors boutique de l'APK sur Android TV ou un téléphone, passage de SmartScreen sur Windows, ou AppImage sur Linux."
+    "install_the_tmplayer_telegram_video": "Installez le lecteur vidéo Telegram TMPlayer : installation hors boutique de l'APK sur Android TV ou un téléphone, passage de SmartScreen sur Windows, ou AppImage sur Linux.",
+    "to_skip_that_step_install": "Pour sauter cette étape, installez plutôt depuis {em1} : collez la ligne ci-dessous. Elle télécharge le même installateur depuis GitHub, le vérifie avec la somme de contrôle publiée et le lance, et Windows ne le bloque pas.",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer : lecteur vidéo Telegram non officiel pour Android TV et Google TV",

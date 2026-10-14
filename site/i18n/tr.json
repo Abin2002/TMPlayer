@@ -424,7 +424,9 @@
     "every_file_comes_from_one_github__a2": "Kod İmzalama Politikası",
     "the_installer_is_not_code_signed": "Yükleyici henüz kod imzalı değil, bu yüzden SmartScreen ilk seferde seni uyarabilir. {em1} üzerine tıkla, sonra {em2}.",
     "the_installer_is_not_code_signed__em1": "Daha fazla bilgi",
-    "the_installer_is_not_code_signed__em2": "Yine de çalıştır"
+    "the_installer_is_not_code_signed__em2": "Yine de çalıştır",
+    "or_skip_the_warning_open": "Ya da uyarıyı atlayın: {em1} açıp şunu yapıştırın. Aynı yükleyiciyi GitHub'dan indirir, yayımlanan sağlama toplamıyla karşılaştırır ve çalıştırır.",
+    "or_skip_the_warning_open__em1": "PowerShell"
   },
   "install": {
     "how_to_install_tmplayer_on": "TMPlayer Android TV, Windows ve Linux'a nasıl kurulur",
@@ -530,7 +532,9 @@
     "still_stuck_with_your_device": "Hâlâ takıldın mı? Cihazını, sürümünü ve ekranda yazanı belirterek {a1}.",
     "still_stuck_with_your_device__a1": "issue aç",
     "if_these_steps_got_your": "Bu adımlar videolarını ekrana getirdiyse, yıldız bir sonraki kişinin bunu bulmasına yardım eder.",
-    "install_the_tmplayer_telegram_video": "TMPlayer Telegram video oynatıcıyı kur: APK'yı Android TV'ye ya da telefona yan yükle, Windows'ta SmartScreen'i geç ya da Linux'ta AppImage'ı çalıştır."
+    "install_the_tmplayer_telegram_video": "TMPlayer Telegram video oynatıcıyı kur: APK'yı Android TV'ye ya da telefona yan yükle, Windows'ta SmartScreen'i geç ya da Linux'ta AppImage'ı çalıştır.",
+    "to_skip_that_step_install": "Bu adımı atlamak için {em1} üzerinden kurun: aşağıdaki satırı yapıştırın. Aynı yükleyiciyi GitHub'dan indirir, yayımlanan sağlama toplamıyla karşılaştırıp çalıştırır ve Windows onu durdurmaz.",
+    "to_skip_that_step_install__em1": "PowerShell"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: Android TV ve Google TV için resmi olmayan Telegram video oynatıcı",
