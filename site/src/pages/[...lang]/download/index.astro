@@ -9,6 +9,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
 import Shot from '../../../components/Shot.astro';
 import Platform from '../../../components/download/Platform.astro';
@@ -27,24 +28,6 @@ const l = (href: string) => link(lang, href);
 
 const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
 
-const ld0 = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "https://tmplayer.org/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Download",
-      "item": "https://tmplayer.org/download/"
-    }
-  ]
-};
 ---
 <Base page="download" title={t('download.download_tmplayer_for_android_tv')} description={t('download.download_tmplayer_free_the_apk')}>
   {/*
@@ -59,7 +42,7 @@ const ld0 = {
     <link rel="dns-prefetch" href="https://objects.githubusercontent.com">
   </Fragment>
   <Fragment slot="head">
-    <JsonLd data={ld0} />
+    <JsonLd data={breadcrumb(['Download', '/download/'])} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />

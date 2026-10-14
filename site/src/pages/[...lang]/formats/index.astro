@@ -7,6 +7,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
 import Card from '../../../components/Card.astro';
 import Cards from '../../../components/Cards.astro';
@@ -24,24 +25,6 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const breadcrumbLd = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "https://tmplayer.org/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Formats",
-      "item": "https://tmplayer.org/formats/"
-    }
-  ]
-};
 
 // The kinds of message that show up in a chat's list, as title and text keys.
 const listed = [
@@ -52,7 +35,7 @@ const listed = [
 ---
 <Base page="formats" title={t('formats.supported_formats_what_tmplayer_plays')} description={t('formats.the_containers_video_and_audio')}>
   <Fragment slot="head">
-    <JsonLd data={breadcrumbLd} />
+    <JsonLd data={breadcrumb(['Formats', '/formats/'])} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />

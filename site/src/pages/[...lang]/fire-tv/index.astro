@@ -9,6 +9,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
 import Cards from '../../../components/Cards.astro';
 import Steps from '../../../components/Steps.astro';
@@ -28,14 +29,6 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const breadcrumbs = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://tmplayer.org/" },
-    { "@type": "ListItem", "position": 2, "name": "Fire TV", "item": "https://tmplayer.org/fire-tv/" }
-  ]
-};
 
 // The install as a HowTo, in English for every language. Each step's url is the anchor of the
 // matching <Step> below, so the ids fire-1 to fire-5 stay as they are.
@@ -88,7 +81,7 @@ const howTo = {
 ---
 <Base page="fire_tv" title={t('fire_tv.how_to_install_tmplayer_on')} description={t('fire_tv.install_the_tmplayer_telegram_video')}>
   <Fragment slot="head">
-    <JsonLd data={breadcrumbs} />
+    <JsonLd data={breadcrumb(['Fire TV', '/fire-tv/'])} />
     <JsonLd data={howTo} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}

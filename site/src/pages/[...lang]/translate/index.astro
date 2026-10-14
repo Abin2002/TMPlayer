@@ -9,6 +9,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
 import Cards from '../../../components/Cards.astro';
 import Step from '../../../components/Step.astro';
@@ -25,14 +26,6 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const breadcrumb = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://tmplayer.org/" },
-    { "@type": "ListItem", "position": 2, "name": "Translate", "item": "https://tmplayer.org/translate/" }
-  ]
-};
 
 const webPage = {
   "@context": "https://schema.org",
@@ -45,7 +38,7 @@ const webPage = {
 ---
 <Base page="translate" title={t('translate.help_translate_tmplayer_tmplayer')} socialTitle={t('translate.help_translate_tmplayer')} description={t('translate.tmplayer_speaks_21_languages_on')} ogType="article">
   <Fragment slot="head">
-    <JsonLd data={breadcrumb} />
+    <JsonLd data={breadcrumb(['Translate', '/translate/'])} />
     <JsonLd data={webPage} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}

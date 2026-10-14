@@ -5,13 +5,13 @@ import HeaderPlain from '../../components/plain/HeaderPlain.astro';
 import FooterPlain from '../../components/plain/FooterPlain.astro';
 import PolicyPage from '../../components/plain/PolicyPage.astro';
 import PolicySection from '../../components/plain/PolicySection.astro';
-import { breadcrumb } from '../../components/plain/breadcrumb';
+import { breadcrumb } from '../../components/breadcrumb';
 import { ENGLISH } from '../../i18n/langs';
 
 Astro.locals.lang = ENGLISH;
 ---
 <Base path="/signing/" title="Code signing policy - TMPlayer" description="How TMPlayer releases are built by GitHub Actions from the tagged source and signed, and how to check a download's signature and SHA-256.">
-  <JsonLd slot="head" data={breadcrumb('Code signing', '/signing/')} />
+  <JsonLd slot="head" data={breadcrumb(['Code signing', '/signing/'])} />
   <HeaderPlain />
   <PolicyPage eyebrow="Effective 5 October 2026" title="Code Signing Policy">
     <p class="policy-lede">This document outlines the code signing policy for TMPlayer binaries, detailing how we ensure the integrity and authenticity of our releases.</p>

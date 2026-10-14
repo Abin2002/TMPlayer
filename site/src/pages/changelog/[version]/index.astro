@@ -2,9 +2,9 @@
 // One page per release, so a search for "TMPlayer 1.25.0" lands on its notes.
 import Shell from '../../../components/changelog/Shell.astro';
 import SponsorOffer from '../../../components/SponsorOffer.astro';
-import RssIcon from '../../../components/changelog/RssIcon.astro';
-import Wave from '../../../components/changelog/Wave.astro';
+import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
 import { ENGLISH } from '../../../i18n/langs';
 import { PAGE_URL, SITE, hasMac, humanDate, notesHtml, releaseUrl, releases, summary, type Release } from '../../../lib/releases';
 
@@ -22,15 +22,6 @@ Astro.locals.lang = ENGLISH;
 const v = r.version;
 const url = releaseUrl(v);
 const description = summary(r);
-const crumbs = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
-    { '@type': 'ListItem', position: 2, name: 'Changelog', item: PAGE_URL },
-    { '@type': 'ListItem', position: 3, name: `TMPlayer ${v}`, item: url },
-  ],
-};
 const post = {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
@@ -61,7 +52,7 @@ const get = latest
 ---
 <Shell path={`/changelog/${v}/`} title={`TMPlayer ${v} release notes: what's new`} description={description} ogType="article" publishedTime={r.iso}>
   <Fragment slot="head">
-    <JsonLd data={crumbs} />
+    <JsonLd data={breadcrumb(['Changelog', PAGE_URL], [`TMPlayer ${v}`, url])} />
     <JsonLd data={post} />
   </Fragment>
 
@@ -73,7 +64,7 @@ const get = latest
     </div>
   </section>
 
-<Wave />
+<Icon name="wave" />
 
   <section class="band band-tonal" aria-label="Release notes">
     <div class="wrap">
@@ -90,7 +81,7 @@ const get = latest
         <div class="page-actions">
           <a class="btn btn-filled" href="/download/">{latest ? 'Download TMPlayer' : 'Download the latest'}</a>
           <a class="btn btn-outline" href={r.url} rel="noopener">The files on GitHub</a>
-          <a class="btn btn-outline" href="/changelog/feed.xml" type="application/rss+xml"><RssIcon /> Follow by RSS</a>
+          <a class="btn btn-outline" href="/changelog/feed.xml" type="application/rss+xml"><Icon name="rss" /> Follow by RSS</a>
         </div>
       </div>
 <SponsorOffer release lede={`Glad ${v} reached you.`} />

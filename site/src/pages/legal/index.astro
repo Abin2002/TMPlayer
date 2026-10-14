@@ -5,13 +5,13 @@ import HeaderPlain from '../../components/plain/HeaderPlain.astro';
 import FooterPlain from '../../components/plain/FooterPlain.astro';
 import PolicyPage from '../../components/plain/PolicyPage.astro';
 import PolicySection from '../../components/plain/PolicySection.astro';
-import { breadcrumb } from '../../components/plain/breadcrumb';
+import { breadcrumb } from '../../components/breadcrumb';
 import { ENGLISH } from '../../i18n/langs';
 
 Astro.locals.lang = ENGLISH;
 ---
 <Base path="/legal/" title="Lawful use and rights holders - TMPlayer" description="Lawful-use, rights-holder contact, and open-source information for TMPlayer.">
-  <JsonLd slot="head" data={breadcrumb('Lawful use', '/legal/')} />
+  <JsonLd slot="head" data={breadcrumb(['Lawful use', '/legal/'])} />
   <HeaderPlain />
   <PolicyPage eyebrow="TMPlayer project information" title="Lawful use">
     <p class="policy-lede">TMPlayer is a media player for videos already accessible through your own Telegram account. It does not provide media or access to channels.</p>

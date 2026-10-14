@@ -9,6 +9,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
 import Cards from '../../../components/Cards.astro';
 import Card from '../../../components/Card.astro';
@@ -25,14 +26,6 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const breadcrumbs = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://tmplayer.org/" },
-    { "@type": "ListItem", "position": 2, "name": "Android TV", "item": "https://tmplayer.org/android-tv/" }
-  ]
-};
 
 const shot = (name: string, alt: string, light = true) => ({
   src: `/screenshots/${name}.webp`,
@@ -54,7 +47,7 @@ const features = [
 ---
 <Base page="android_tv" title={t('android_tv.tmplayer_unofficial_telegram_video_player')} description={t('android_tv.watch_telegram_videos_on_android')}>
   <Fragment slot="head">
-    <JsonLd data={breadcrumbs} />
+    <JsonLd data={breadcrumb(['Android TV', '/android-tv/'])} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />

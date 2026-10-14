@@ -7,6 +7,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
 import FaqItem from '../../../components/FaqItem.astro';
 import Panel from '../../../components/Panel.astro';
@@ -22,24 +23,6 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const breadcrumbLd = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "https://tmplayer.org/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Questions",
-      "item": "https://tmplayer.org/faq/"
-    }
-  ]
-};
 
 // The questions, in the order of the FAQPage JSON-LD. An answer with `href` links its {a1} words.
 // The security page is English only, so its link is not moved into the language.
@@ -58,7 +41,7 @@ const questions = [
 ---
 <Base page="faq" title={t('faq.tmplayer_faq_unofficial_telegram_video')} description={t('faq.answers_about_tmplayer_streaming_without')}>
   <Fragment slot="head">
-    <JsonLd data={breadcrumbLd} />
+    <JsonLd data={breadcrumb(['Questions', '/faq/'])} />
     <JsonLd data={faqLd} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}

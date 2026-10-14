@@ -9,7 +9,7 @@ import Icon from '../../components/Icon.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import HeaderPlain from '../../components/plain/HeaderPlain.astro';
 import FooterPlain from '../../components/plain/FooterPlain.astro';
-import { breadcrumb } from '../../components/plain/breadcrumb';
+import { breadcrumb } from '../../components/breadcrumb';
 import Band from '../../components/Band.astro';
 import Cards from '../../components/Cards.astro';
 import Steps from '../../components/Steps.astro';
@@ -22,7 +22,7 @@ import { ENGLISH } from '../../i18n/langs';
 Astro.locals.lang = ENGLISH;
 ---
 <Base path="/security/" title="Is TMPlayer safe? Open source, built in public, checkable" description="TMPlayer is open source under GPL-3.0, built by GitHub Actions from the tagged source, with a SHA-256 for every file. How to check a download, and how to report a problem.">
-  <JsonLd slot="head" data={breadcrumb('Security', '/security/')} />
+  <JsonLd slot="head" data={breadcrumb(['Security', '/security/'])} />
   {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
   <BgArt />
   <HeaderPlain variant="security" />
