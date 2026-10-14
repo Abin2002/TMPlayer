@@ -23,12 +23,14 @@ shoot() {  # side path size scheme
   local side=$1 path=$2 size=$3 scheme=$4 base
   [ "$side" = old ] && base=$old || base=$new
   local name; name=$(printf '%s' "$path" | tr '/' '_')
-  local flags=()
+  local flags=() profile
+  profile=$(mktemp -d)
   [ "$scheme" = dark ] && flags+=(--force-dark-mode)
   timeout -k 5 60 chromium-browser --headless=new --disable-gpu --no-sandbox --hide-scrollbars --mute-audio \
-    --no-first-run --disable-extensions --force-prefers-reduced-motion --user-data-dir="$(mktemp -d)" "${flags[@]}" \
+    --no-first-run --disable-extensions --force-prefers-reduced-motion --user-data-dir="$profile" "${flags[@]}" \
     --window-size="$size" --virtual-time-budget=4000 \
     --screenshot="$out/${name}_${size}_${scheme}_${side}.png" "$base$path" >/dev/null 2>&1
+  rm -rf "$profile"  # a Chromium profile is tens of megabytes; hundreds of shots fill /tmp
 }
 export -f shoot; export old new out
 for p in "$@"; do for s in 390,3200 1440,2400; do for c in light dark; do for side in old new; do
