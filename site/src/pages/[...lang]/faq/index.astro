@@ -1,6 +1,4 @@
 ---
-// The stored theme, applied before the first paint. With no stored choice nothing is set and the stylesheet follows prefers-color-scheme, which is the system theme.
-
 import Base from '../../../layouts/Base.astro';
 import BgArt from '../../../components/BgArt.astro';
 import Header from '../../../components/Header.astro';
@@ -9,6 +7,11 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import Band from '../../../components/faq/Band.astro';
+import FaqItem from '../../../components/faq/FaqItem.astro';
+import ListPanel from '../../../components/faq/ListPanel.astro';
+import SponsorOffer from '../../../components/faq/SponsorOffer.astro';
+import { faqLd } from '../../../components/faq/ld';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -19,7 +22,7 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const ld0 = {
+const breadcrumbLd = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
@@ -38,99 +41,27 @@ const ld0 = {
   ]
 };
 
-const ld1 = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "Do I have to wait for the video to download?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "No. It starts in seconds and downloads while you watch. If your connection cannot keep up, a setting in the app will fetch the whole video first instead."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Is there a server or a bot involved?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Neither. The app talks to Telegram directly through Telegram's official library. No media or account data passes through any TMPlayer server."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Which file do I download?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Android TV or phone: the universal APK. Windows: one line in PowerShell, or the MSI installer. Mac with Apple Silicon: the DMG. Linux: the AppImage, or the PKGBUILD on Arch. The download page shows yours first."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Is there a Windows, macOS or Linux version?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Yes: Windows 10 and 11, 64-bit Linux and, as a preview, Macs with Apple Silicon running macOS 26 or newer, all from the same release and played through mpv. There is no iPhone or iPad version."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Can I read my messages on it?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "No. It only ever shows the videos in your chats. You cannot read, reply or send anything from it."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Does TMPlayer provide any media of its own?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "No. It hosts, uploads, sells and recommends nothing. It shows the videos that are already in the chats and channels you have joined, and nothing else."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "How much storage does it need?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "One video at a time. The previous one is cleared when you start a new one, so an 8 GB TV stick is enough."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Which video formats does it play?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "MKV, MP4, AVI and TS, with embedded subtitles including image-based ones, and multiple audio tracks you can switch during playback."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "How does it update if it is not in the Play Store?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "It checks GitHub and asks before installing a newer release, on Android, Windows and Linux. On a Mac it tells you and opens the release page."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Is TMPlayer affiliated with Telegram?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "No. It is an unofficial, independent app, not affiliated with, endorsed by or connected to Telegram FZ-LLC. It uses TDLib, Telegram's own open source client library."
-      }
-    }
-  ]
-};
+// The questions, in the order of the FAQPage JSON-LD. An answer with `href` links its {a1} words.
+// The security page is English only, so its link is not moved into the language.
+const questions = [
+  { q: 'faq.do_i_have_to_wait', a: 'faq.no_it_starts_in_seconds' },
+  { q: 'faq.is_there_a_server_or', a: 'faq.neither_the_app_talks_to', href: '/security/' },
+  { q: 'faq.which_file_do_i_download', a: 'faq.which_file_answer', href: l('/download/') },
+  { q: 'faq.is_there_a_windows_macos_linux', a: 'faq.yes_for_windows_10_11_macos', href: l('/download/'), id: 'desktop' },
+  { q: 'faq.can_i_read_my_messages', a: 'faq.no_it_only_ever_shows' },
+  { q: 'faq.does_tmplayer_provide_any_media', a: 'faq.no_it_hosts_uploads_sells' },
+  { q: 'faq.how_much_storage_does_it', a: 'faq.one_video_at_a_time' },
+  { q: 'faq.which_video_formats_does_it', a: 'faq.mkv_mp4_avi_and_ts', href: l('/formats/') },
+  { q: 'faq.how_does_it_update_if', a: 'faq.it_checks_github_and_asks' },
+  { q: 'faq.is_tmplayer_affiliated_with_telegram', a: 'faq.no_it_is_an_unofficial' },
+];
 ---
 <Base page="faq" title={t('faq.tmplayer_faq_unofficial_telegram_video')} description={t('faq.answers_about_tmplayer_streaming_without')}>
   <Fragment slot="head">
-    <JsonLd data={ld0} />
-    <JsonLd data={ld1} />
+    <JsonLd data={breadcrumbLd} />
+    <JsonLd data={faqLd} />
   </Fragment>
-<!-- Decorative background art, hidden from assistive technology and still under reduced motion. -->
+{/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />
 
 <Header page="faq" />
@@ -149,163 +80,55 @@ const ld1 = {
     </div>
   </section>
 
-<Icon name="wave" />
+  <Icon name="wave" />
 
-  <section class="band band-tonal" id="faq" aria-labelledby="faq-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="faq-h">{t('faq.common_questions')}</h2>
-          <p class="section-sub">{t('faq.ten_short_questions_open_the')}</p>
-        </div>
-      </div>
-
-      <!-- A real accordion, built from native details and summary, so it opens with a keyboard, is
-           announced as a disclosure, and works with JavaScript off. The height animation lives on
-           the inner .faq-body, since details itself cannot be transitioned. -->
-      <div class="faq" data-reveal>
-        <details class="faq-item" name="faq">
-          <summary>
-            <span class="faq-q">{t('faq.do_i_have_to_wait')}</span>
-            <Icon name="faq-chevron" />
-          </summary>
-          <div class="faq-body"><p>{t('faq.no_it_starts_in_seconds')}</p></div>
-        </details>
-        <details class="faq-item" name="faq">
-          <summary>
-            <span class="faq-q">{t('faq.is_there_a_server_or')}</span>
-            <Icon name="faq-chevron" />
-          </summary>
-          <div class="faq-body"><p><T k="faq.neither_the_app_talks_to"><a href="/security/" slot="a1">{t('faq.neither_the_app_talks_to__a1')}</a></T></p></div>
-        </details>
-        <details class="faq-item" name="faq">
-          <summary>
-            <span class="faq-q">{t('faq.which_file_do_i_download')}</span>
-            <Icon name="faq-chevron" />
-          </summary>
-          <div class="faq-body"><p><T k="faq.which_file_answer"><a href={l('/download/')} slot="a1">{t('faq.which_file_answer__a1')}</a></T></p></div>
-        </details>
-        <details class="faq-item" name="faq" id="desktop">
-          <summary>
-            <span class="faq-q">{t('faq.is_there_a_windows_macos_linux')}</span>
-            <Icon name="faq-chevron" />
-          </summary>
-          <div class="faq-body"><p><T k="faq.yes_for_windows_10_11_macos"><a href={l('/download/')} slot="a1">{t('faq.yes_for_windows_10_11_macos__a1')}</a></T></p></div>
-        </details>
-        <details class="faq-item" name="faq">
-          <summary>
-            <span class="faq-q">{t('faq.can_i_read_my_messages')}</span>
-            <Icon name="faq-chevron" />
-          </summary>
-          <div class="faq-body"><p>{t('faq.no_it_only_ever_shows')}</p></div>
-        </details>
-        <details class="faq-item" name="faq">
-          <summary>
-            <span class="faq-q">{t('faq.does_tmplayer_provide_any_media')}</span>
-            <Icon name="faq-chevron" />
-          </summary>
-          <div class="faq-body"><p>{t('faq.no_it_hosts_uploads_sells')}</p></div>
-        </details>
-        <details class="faq-item" name="faq">
-          <summary>
-            <span class="faq-q">{t('faq.how_much_storage_does_it')}</span>
-            <Icon name="faq-chevron" />
-          </summary>
-          <div class="faq-body"><p>{t('faq.one_video_at_a_time')}</p></div>
-        </details>
-        <details class="faq-item" name="faq">
-          <summary>
-            <span class="faq-q">{t('faq.which_video_formats_does_it')}</span>
-            <Icon name="faq-chevron" />
-          </summary>
-          <div class="faq-body"><p><T k="faq.mkv_mp4_avi_and_ts"><a href={l('/formats/')} slot="a1">{t('faq.mkv_mp4_avi_and_ts__a1')}</a></T></p></div>
-        </details>
-        <details class="faq-item" name="faq">
-          <summary>
-            <span class="faq-q">{t('faq.how_does_it_update_if')}</span>
-            <Icon name="faq-chevron" />
-          </summary>
-          <div class="faq-body"><p>{t('faq.it_checks_github_and_asks')}</p></div>
-        </details>
-        <details class="faq-item" name="faq">
-          <summary>
-            <span class="faq-q">{t('faq.is_tmplayer_affiliated_with_telegram')}</span>
-            <Icon name="faq-chevron" />
-          </summary>
-          <div class="faq-body"><p>{t('faq.no_it_is_an_unofficial')}</p></div>
-        </details>
-      </div>
+  <Band id="faq" labelledby="faq-h" tonal title={t('faq.common_questions')} sub={t('faq.ten_short_questions_open_the')}>
+    {/* A real accordion, built from native details and summary, so it opens with a keyboard, is
+        announced as a disclosure, and works with JavaScript off. The height animation lives on
+        the inner .faq-body, since details itself cannot be transitioned. */}
+    <div class="faq" data-reveal>
+      {questions.map((item) => <FaqItem {...item} />)}
     </div>
-  </section>
+  </Band>
 
-<Icon name="wave-flip" />
+  <Icon name="wave-flip" />
 
-  <section class="band" id="about" aria-labelledby="about-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="about-h">{t('faq.what_it_is_and_what')}</h2>
-          <p class="section-sub">{t('faq.a_player_pointed_at_an')}</p>
-        </div>
-      </div>
-
-      <div class="two-col" data-reveal>
-        <div class="panel">
-          <h3> <span class="panel-icon icon-yes" aria-hidden="true">
-              <Icon name="tick-panel" />
-            </span> {t('faq.what_it_is')}</h3>
-          <ul class="ticks">
-            <li><T k="faq.a_player_for_telegram_account"><strong slot="strong1">{t('faq.a_player_for_telegram_account__strong1')}</strong></T></li>
-            <li><T k="faq.a_way_to_watch_videos"><strong slot="strong1">{t('faq.a_way_to_watch_videos__strong1')}</strong></T></li>
-            <li>{t('faq.free_and_open_source_you')}</li>
-          </ul>
-        </div>
-        <div class="panel">
-          <h3> <span class="panel-icon icon-no" aria-hidden="true">
-              <Icon name="cross-panel" />
-            </span> {t('home.what_it_is_not')}</h3>
-          <ul class="crosses">
-            <li>{t('faq.not_a_media_service_or')}</li>
-            <li>{t('faq.not_a_telegram_app_you')}</li>
-            <li>{t('faq.not_affiliated_with_telegram_fz')}</li>
-          </ul>
-        </div>
-      </div>
-
-      <p class="muted small section-note" data-reveal><T k="faq.the_lists_what_stays_on"><a href="/privacy/" slot="a1">{t('faq.the_lists_what_stays_on__a1')}</a><a href="/legal/" slot="a2">{t('faq.the_lists_what_stays_on__a2')}</a></T></p>
+  <Band id="about" labelledby="about-h" title={t('faq.what_it_is_and_what')} sub={t('faq.a_player_pointed_at_an')}>
+    <div class="two-col" data-reveal>
+      <ListPanel kind="yes" title={t('faq.what_it_is')}>
+        <li><T k="faq.a_player_for_telegram_account"><strong slot="strong1">{t('faq.a_player_for_telegram_account__strong1')}</strong></T></li>
+        <li><T k="faq.a_way_to_watch_videos"><strong slot="strong1">{t('faq.a_way_to_watch_videos__strong1')}</strong></T></li>
+        <li>{t('faq.free_and_open_source_you')}</li>
+      </ListPanel>
+      <ListPanel kind="no" title={t('home.what_it_is_not')}>
+        <li>{t('faq.not_a_media_service_or')}</li>
+        <li>{t('faq.not_a_telegram_app_you')}</li>
+        <li>{t('faq.not_affiliated_with_telegram_fz')}</li>
+      </ListPanel>
     </div>
-  </section>
 
-<Icon name="wave" />
+    <p class="muted small section-note" data-reveal><T k="faq.the_lists_what_stays_on"><a href="/privacy/" slot="a1">{t('faq.the_lists_what_stays_on__a1')}</a><a href="/legal/" slot="a2">{t('faq.the_lists_what_stays_on__a2')}</a></T></p>
+  </Band>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
-    <div class="wrap">
-      <div class="support" data-reveal>
-        <h2 id="support-h">{t('features.star_it_if_it_helped')}</h2>
-        <p>{t('faq.no_money_no_account_no')}</p>
-        <div class="support-actions">
-          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
-          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/fork" rel="noopener"> <Icon name="fork-btn" /> {t('home.fork_the_repository')}</a>
-        </div>
-        <p class="support-stats">
-          <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
-          <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
-          <span>{t('home.gpl_3_0_and_free')}</span>
-        </p>
+  <Icon name="wave" />
 
-        <!-- The coffee and sponsor links, the same block and words as on the download page, so a
-             reader who got something from this page has the offer where they finished reading. -->
-        <div class="support-more" id="sponsor">
-          <h3>{t('home.support_tmplayer')}</h3>
-          <p>{t('home.support_no_ads')}</p>
-          <div class="support-actions support-give">
-            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
-            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
-          </div>
-        </div>
+  <Band labelledby="support-h" tonal>
+    <div class="support" data-reveal>
+      <h2 id="support-h">{t('features.star_it_if_it_helped')}</h2>
+      <p>{t('faq.no_money_no_account_no')}</p>
+      <div class="support-actions">
+        <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
+        <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/fork" rel="noopener"> <Icon name="fork-btn" /> {t('home.fork_the_repository')}</a>
       </div>
+      <p class="support-stats">
+        <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
+        <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
+        <span>{t('home.gpl_3_0_and_free')}</span>
+      </p>
+
+      <SponsorOffer />
     </div>
-  </section>
+  </Band>
 
 </main>
 
