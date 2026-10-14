@@ -1064,7 +1064,9 @@
     "kind_mac_dmg": "macOS DMG",
     "os_note_ios_only": "iPhone이나 iPad 버전은 없어요. 아래 파일은 Android 휴대폰, Android TV, 컴퓨터용이에요.",
     "os_note_mac_preview": "macOS 버전은 Apple 실리콘(M1 이상)을 탑재하고 macOS 26 이상을 쓰는 Mac용 미리보기예요. Intel Mac에서는 실행되지 않아요.",
-    "download_version_mac": "Apple 실리콘 Mac용 {version} 다운로드"
+    "download_version_mac": "Apple 실리콘 Mac용 {version} 다운로드",
+    "copy_command": "복사",
+    "copied": "복사됨"
   },
   "build": {
     "language": "언어",

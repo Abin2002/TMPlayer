@@ -1064,7 +1064,9 @@
     "kind_mac_dmg": "macOS DMG",
     "os_note_ios_only": "没有 iPhone 或 iPad 版本。下面的文件适用于 Android 手机、Android TV 和电脑。",
     "os_note_mac_preview": "macOS 版是预览版，适用于搭载 Apple 芯片（M1 及更新）、运行 macOS 26 或更高版本的 Mac。它不能在 Intel Mac 上运行。",
-    "download_version_mac": "下载适用于 Apple 芯片 Mac 的 {version}"
+    "download_version_mac": "下载适用于 Apple 芯片 Mac 的 {version}",
+    "copy_command": "复制",
+    "copied": "已复制"
   },
   "build": {
     "language": "语言",

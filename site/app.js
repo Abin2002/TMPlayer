@@ -1165,3 +1165,83 @@ var tmT = (function () {
   });
 
 })();
+
+/* Copy buttons on the command blocks (the PowerShell line, adb, chmod and the rest). The whole
+   block copies when clicked, unless the reader has just selected part of it to copy by hand;
+   the icon turns to a tick for a moment, and the button's label says Copied to a screen reader.
+   Added here, so with scripting off the block stays plain text to select. */
+(function () {
+  'use strict';
+
+  var blocks = document.querySelectorAll('pre.abi-cmd, pre.code');
+  if (!blocks.length) { return; }
+  var COPY = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 2h9a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1V5a3 3 0 0 1 3-3Zm0 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H9ZM6 8H5v12h10v-1H9a3 3 0 0 1-3-3V8Z"/></svg>';
+  var TICK = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M20.7 5.3a1 1 0 0 1 0 1.4l-11 11a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4L9 15.6 19.3 5.3a1 1 0 0 1 1.4 0Z"/></svg>';
+  var label = tmT('copy_command', 'Copy');
+  var done = tmT('copied', 'Copied');
+
+  // The clipboard API first; where it is missing or refused (an old browser, a page not served
+  // over HTTPS, a permission prompt dismissed), the older select and copy way.
+  function write(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).catch(function () { return fallback(text); });
+    }
+    return fallback(text);
+  }
+
+  function fallback(text) {
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(area);
+      if (ok) { resolve(); } else { reject(); }
+    });
+  }
+
+  Array.prototype.forEach.call(blocks, function (pre) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'copy-btn';
+    button.setAttribute('aria-label', label);
+    button.title = label;
+    button.innerHTML = COPY;
+    pre.classList.add('copyable');
+    pre.appendChild(button);
+    var timer = null;
+
+    function copy() {
+      var code = pre.querySelector('code');
+      var text = (code ? code.textContent : pre.textContent).replace(/\s+$/, '');
+      write(text).then(function () {
+        button.innerHTML = TICK;
+        button.classList.add('copied');
+        button.setAttribute('aria-label', done);
+        button.title = done;
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          button.innerHTML = COPY;
+          button.classList.remove('copied');
+          button.setAttribute('aria-label', label);
+          button.title = label;
+        }, 1800);
+      }, function () {});
+    }
+
+    button.addEventListener('click', function (event) {
+      event.stopPropagation();
+      copy();
+    });
+    pre.addEventListener('click', function () {
+      var selection = window.getSelection && window.getSelection();
+      if (selection && !selection.isCollapsed && pre.contains(selection.anchorNode)) { return; }
+      copy();
+    });
+  });
+})();

@@ -1064,7 +1064,9 @@
     "theme_to_dark": "Switch to dark theme",
     "theme_to_light": "Switch to light theme",
     "menu_close": "Close menu",
-    "menu": "Menu"
+    "menu": "Menu",
+    "copy_command": "Copy",
+    "copied": "Copied"
   },
   "build": {
     "language": "Language",

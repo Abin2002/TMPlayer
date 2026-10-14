@@ -1064,7 +1064,9 @@
     "kind_mac_dmg": "DMG per macOS",
     "os_note_ios_only": "Non esiste una versione per iPhone o iPad. I file qui sotto sono per telefoni Android, Android TV e computer.",
     "os_note_mac_preview": "La versione per macOS è un'anteprima per i Mac con Apple Silicon (M1 e successivi) e macOS 26 o successivo. Non funziona sui Mac Intel.",
-    "download_version_mac": "Scarica {version} per Mac con Apple Silicon"
+    "download_version_mac": "Scarica {version} per Mac con Apple Silicon",
+    "copy_command": "Copia",
+    "copied": "Copiato"
   },
   "build": {
     "language": "Lingua",

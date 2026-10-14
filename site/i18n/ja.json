@@ -1064,7 +1064,9 @@
     "kind_mac_dmg": "macOS DMG",
     "os_note_ios_only": "iPhone版とiPad版はありません。以下のファイルはAndroidスマホ、Android TV、パソコン向けです。",
     "os_note_mac_preview": "macOS版はプレビュー版で、Appleシリコン（M1以降）搭載、macOS 26以降のMac向けです。Intel搭載のMacでは動きません。",
-    "download_version_mac": "Appleシリコン搭載Mac向け{version}をダウンロード"
+    "download_version_mac": "Appleシリコン搭載Mac向け{version}をダウンロード",
+    "copy_command": "コピー",
+    "copied": "コピーしました"
   },
   "build": {
     "language": "言語",

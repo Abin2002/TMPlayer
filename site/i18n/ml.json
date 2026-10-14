@@ -1064,7 +1064,9 @@
     "kind_mac_dmg": "macOS DMG",
     "os_note_ios_only": "iPhone, iPad പതിപ്പില്ല. താഴെയുള്ള ഫയലുകൾ Android ഫോണുകൾക്കും Android TV-ക്കും കമ്പ്യൂട്ടറുകൾക്കുമുള്ളതാണ്.",
     "os_note_mac_preview": "macOS പതിപ്പ് ഒരു പ്രിവ്യൂ ആണ്, Apple Silicon (M1 മുതൽ) ഉള്ള, macOS 26 അല്ലെങ്കിൽ പുതിയത് ഓടുന്ന Mac-കൾക്കായി. Intel Mac-കളിൽ ഇത് പ്രവർത്തിക്കില്ല.",
-    "download_version_mac": "Apple Silicon ഉള്ള Mac-കൾക്കായി {version} ഡൗൺലോഡ് ചെയ്യുക"
+    "download_version_mac": "Apple Silicon ഉള്ള Mac-കൾക്കായി {version} ഡൗൺലോഡ് ചെയ്യുക",
+    "copy_command": "പകർത്തുക",
+    "copied": "പകർത്തി"
   },
   "build": {
     "language": "ഭാഷ",

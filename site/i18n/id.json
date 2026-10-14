@@ -1064,7 +1064,9 @@
     "kind_mac_dmg": "DMG macOS",
     "os_note_ios_only": "Tidak ada versi iPhone atau iPad. File di bawah untuk ponsel Android, Android TV, dan komputer.",
     "os_note_mac_preview": "Versi macOS adalah pratinjau untuk Mac dengan Apple Silicon (M1 dan yang lebih baru) dan macOS 26 atau yang lebih baru. Versi ini tidak berjalan di Mac Intel.",
-    "download_version_mac": "Unduh {version} untuk Mac dengan Apple Silicon"
+    "download_version_mac": "Unduh {version} untuk Mac dengan Apple Silicon",
+    "copy_command": "Salin",
+    "copied": "Tersalin"
   },
   "build": {
     "language": "Bahasa",

@@ -1064,7 +1064,9 @@
     "kind_mac_dmg": "DMG для macOS",
     "os_note_ios_only": "Версии для iPhone и iPad нет. Файлы ниже для телефонов на Android, Android TV и компьютеров.",
     "os_note_mac_preview": "Версия для macOS предварительная: для Mac с Apple Silicon (M1 и новее) и macOS 26 или новее. На Mac с Intel она не работает.",
-    "download_version_mac": "Скачать {version} для Mac с Apple Silicon"
+    "download_version_mac": "Скачать {version} для Mac с Apple Silicon",
+    "copy_command": "Копировать",
+    "copied": "Скопировано"
   },
   "build": {
     "language": "Язык",

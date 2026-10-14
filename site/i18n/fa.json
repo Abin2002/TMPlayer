@@ -1064,7 +1064,9 @@
     "kind_mac_dmg": "DMG برای macOS",
     "os_note_ios_only": "نسخهٔ iPhone یا iPad وجود ندارد. فایل‌های پایین برای گوشی‌های Android، Android TV و رایانه‌ها هستند.",
     "os_note_mac_preview": "نسخهٔ macOS یک پیش‌نمایش است، برای مک‌های دارای Apple Silicon (M1 و جدیدتر) با macOS 26 یا جدیدتر. روی مک‌های Intel اجرا نمی‌شود.",
-    "download_version_mac": "دانلود {version} برای مک‌های دارای Apple Silicon"
+    "download_version_mac": "دانلود {version} برای مک‌های دارای Apple Silicon",
+    "copy_command": "کپی",
+    "copied": "کپی شد"
   },
   "build": {
     "language": "زبان",

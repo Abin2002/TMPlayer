@@ -2948,3 +2948,35 @@ a[lang="ar"] { font-family: "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif; 
   .hero .lede { margin-bottom: 14px; }
   .page-head { padding-top: 16px; }
 }
+
+/* Command blocks with a copy button (app.js): the button sits in the top right corner, which
+   is the end of the line in every language, since a command always reads left to right. */
+pre.copyable {
+  position: relative;
+  padding-right: 48px;
+  cursor: copy;
+}
+.copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-s);
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+}
+.copy-btn:hover { color: var(--on-surface); background: var(--surface-container-highest); }
+.copy-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.copy-btn.copied,
+.copy-btn.copied:hover { color: var(--on-primary); background: var(--primary); border-color: var(--primary); }
+/* The download cards' commands are one line: the button sits in its middle, a size smaller. */
+pre.abi-cmd.copyable { padding-right: 44px; min-height: 40px; display: flex; align-items: center; }
+.abi-cmd .copy-btn { top: 50%; right: 5px; width: 28px; height: 28px; transform: translateY(-50%); }
+@media (prefers-reduced-motion: reduce) { .copy-btn { transition: none; } }

@@ -1064,7 +1064,9 @@
     "kind_mac_dmg": "macOS DMG",
     "os_note_ios_only": "iPhone বা iPad সংস্করণ নেই। নিচের ফাইলগুলো Android ফোন, Android TV এবং কম্পিউটারের জন্য।",
     "os_note_mac_preview": "macOS সংস্করণটি একটি প্রিভিউ, Apple Silicon (M1 ও পরের) যুক্ত এবং macOS 26 বা নতুন Mac-এর জন্য। এটি Intel Mac-এ চলে না।",
-    "download_version_mac": "Apple Silicon যুক্ত Mac-এর জন্য {version} ডাউনলোড করুন"
+    "download_version_mac": "Apple Silicon যুক্ত Mac-এর জন্য {version} ডাউনলোড করুন",
+    "copy_command": "কপি করুন",
+    "copied": "কপি হয়েছে"
   },
   "build": {
     "language": "ভাষা",

@@ -1064,7 +1064,9 @@
     "kind_mac_dmg": "macOS DMG",
     "os_note_ios_only": "iPhone veya iPad sürümü yok. Aşağıdaki dosyalar Android telefonlar, Android TV ve bilgisayarlar için.",
     "os_note_mac_preview": "macOS sürümü, Apple Silicon'lu (M1 ve sonrası) ve macOS 26 veya daha yenisini çalıştıran Mac'ler için bir önizleme. Intel Mac'lerde çalışmaz.",
-    "download_version_mac": "{version} sürümünü Apple Silicon'lu Mac'ler için indir"
+    "download_version_mac": "{version} sürümünü Apple Silicon'lu Mac'ler için indir",
+    "copy_command": "Kopyala",
+    "copied": "Kopyalandı"
   },
   "build": {
     "language": "Dil",
