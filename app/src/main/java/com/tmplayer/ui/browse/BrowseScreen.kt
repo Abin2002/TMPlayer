@@ -1431,10 +1431,15 @@ private fun NavRail(
     // whenever the remote left it only moved the whole page sideways on every visit.
     val width = railRoom
     val reveal = 1f
+    // Left from the content lands on the destination being shown, not on whichever rail item
+    // happens to sit level with the focused tile (a group heading, Downloads), so the rail always
+    // opens where the viewer is.
+    val selectedFocus = remember { FocusRequester() }
     Column(
         Modifier
             .width(width + Tv.SafeH - RAIL_INSET)
             .fillMaxHeight()
+            .focusProperties { onEnter = { selectedFocus.requestFocus() } }
             .keepsVerticalFocus()
             .background(Tone.surface)
             // The rail is the leftmost thing on the screen, so it alone decides whether the app
@@ -1505,6 +1510,7 @@ private fun NavRail(
                                     badge = navBadge(entry.section, favoriteCount, unreadCount),
                                     selected = entry.section == selected,
                                     onClick = { onSelect(entry.section) },
+                                    modifier = if (entry.section == selected) Modifier.focusRequester(selectedFocus) else Modifier,
                                 )
                             }
                         }
@@ -1710,6 +1716,7 @@ private fun RailItem(
     // Amber for the update item, so it is the one thing on the rail that is not the app's own
     // blue and reads as "look at this" without a second glance.
     accent: Color = Tone.accent,
+    modifier: Modifier = Modifier,
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -1742,7 +1749,7 @@ private fun RailItem(
     )
 
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .padding(vertical = RAIL_GAP / 2)
             .height(RAIL_ROW)
