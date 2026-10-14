@@ -331,7 +331,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">APK همه‌کاره <span class="badge badge-quiet">از اینجا شروع کنید</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">همان فایل گوشی. با Downloader، Send files to TV یا <code>adb</code> به تلویزیون بفرستید.</p>
+                  <p class="abi-note" data-i18n="download.tv_note">همان فایل گوشی است. روی تلویزیون، <code>tmplayer.org/apk</code> را در برنامهٔ رایگان Downloader تایپ کنید.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -340,7 +340,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/fa/install/#android" data-i18n="download.how_to_install_on_a_2">نحوهٔ نصب روی تلویزیون</a><span class="sep" aria-hidden="true">&middot;</span><a href="/fa/android-tv/" data-i18n="download.made_for_the_tv">ساخته‌شده برای تلویزیون</a><span class="sep" aria-hidden="true">&middot;</span><a href="/fa/fire-tv/" data-i18n="download.fire_tv_guide">راهنمای Fire TV</a></p>
+            <p class="platform-foot"><a href="/fa/install/#android-tv" data-i18n="download.how_to_install_on_a_2">نحوهٔ نصب روی تلویزیون</a><span class="sep" aria-hidden="true">&middot;</span><a href="/fa/android-tv/" data-i18n="download.made_for_the_tv">ساخته‌شده برای تلویزیون</a><span class="sep" aria-hidden="true">&middot;</span><a href="/fa/fire-tv/" data-i18n="download.fire_tv_guide">راهنمای Fire TV</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -354,11 +354,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">رایانهٔ شما</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">پیشنهاد ما: <em>PowerShell</em> را باز کنید و این خط را بچسبانید. آخرین نسخه را برای حساب کاربری شما نصب می‌کند و آن را با checksum منتشرشده مقایسه می‌کند، بدون هشدار SmartScreen.</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">نصب‌کننده <span class="badge badge-quiet">از اینجا شروع کنید</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">یک مورد در منوی Start و یک میان‌بر روی دسکتاپ اضافه می‌کند. نیازی به دسترسی مدیر نیست.</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">نصب‌کننده را ترجیح می‌دهید؟</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">هنوز امضای کد ندارد، پس ممکن است SmartScreen هشدار دهد: روی <em>More info</em> و بعد <em>Run anyway</em> کلیک کنید.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -367,13 +371,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">نصب‌کننده هنوز امضای کد ندارد، پس ممکن است SmartScreen بار اول به شما هشدار دهد. روی <em>More info</em> کلیک کنید، سپس <em>Run anyway</em>.</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">یا از هشدار بگذرید: <em>PowerShell</em> را باز کنید و این را بچسبانید. همان نصب‌کننده را از GitHub دانلود می‌کند، با چک‌سام منتشرشده می‌سنجد و اجرا می‌کند.</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/fa/install/#windows" data-i18n="download.how_to_install_on_windows">نحوهٔ نصب روی Windows</a></p>
           </article>
 

@@ -331,7 +331,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">APK universal <span class="badge badge-quiet">Empieza aquí</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">El mismo archivo que el del teléfono. Envíalo a la TV con Downloader, Send files to TV o <code>adb</code>.</p>
+                  <p class="abi-note" data-i18n="download.tv_note">El mismo archivo que el del teléfono. En la TV, escribe <code>tmplayer.org/apk</code> en la app gratuita Downloader.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -340,7 +340,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/es/install/#android" data-i18n="download.how_to_install_on_a_2">Cómo instalarlo en una televisión</a><span class="sep" aria-hidden="true">&middot;</span><a href="/es/android-tv/" data-i18n="download.made_for_the_tv">Hecho para la TV</a><span class="sep" aria-hidden="true">&middot;</span><a href="/es/fire-tv/" data-i18n="download.fire_tv_guide">Guía para Fire TV</a></p>
+            <p class="platform-foot"><a href="/es/install/#android-tv" data-i18n="download.how_to_install_on_a_2">Cómo instalarlo en una televisión</a><span class="sep" aria-hidden="true">&middot;</span><a href="/es/android-tv/" data-i18n="download.made_for_the_tv">Hecho para la TV</a><span class="sep" aria-hidden="true">&middot;</span><a href="/es/fire-tv/" data-i18n="download.fire_tv_guide">Guía para Fire TV</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -354,11 +354,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">Tu computadora</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">Recomendado: abre <em>PowerShell</em> y pega esta línea. Instala la última versión para tu usuario y la compara con la suma de verificación publicada, sin aviso de SmartScreen.</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">Instalador <span class="badge badge-quiet">Empieza aquí</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">Agrega un acceso en el menú Inicio y otro en el escritorio. No necesita permisos de administrador.</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">¿Prefieres un instalador?</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">Aún no tiene firma de código, así que SmartScreen puede avisarte: haz clic en <em>Más información</em> y luego en <em>Ejecutar de todas formas</em>.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -367,13 +371,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">El instalador todavía no tiene firma de código, así que SmartScreen puede advertirte la primera vez. Haz clic en <em>Más información</em> y luego en <em>Ejecutar de todas formas</em>.</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">O evita la advertencia: abre <em>PowerShell</em> y pega esto. Descarga el mismo instalador desde GitHub, lo verifica con la suma publicada y lo ejecuta.</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/es/install/#windows" data-i18n="download.how_to_install_on_windows">Cómo instalarlo en Windows</a></p>
           </article>
 

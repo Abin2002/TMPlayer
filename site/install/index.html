@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title data-i18n="install.how_to_install_tmplayer_on">How to install TMPlayer on Android TV, Windows and Linux</title>
-<meta name="description" content="Install the TMPlayer Telegram video player: sideload the APK on Android TV or a phone, get past SmartScreen on Windows, or run the AppImage on Linux." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="description" content="Install the TMPlayer Telegram video player: Downloader and the remote on Android TV, the APK on a phone, one PowerShell line on Windows, the AppImage on Linux." data-i18n-content="install.description">
 <link rel="canonical" href="https://tmplayer.org/install/">
 <!-- i18n:head -->
 <link rel="alternate" hreflang="en" href="https://tmplayer.org/install/">
@@ -60,7 +60,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TMPlayer">
 <meta property="og:title" content="How to install TMPlayer on Android TV, Windows and Linux" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta property="og:description" content="Install the TMPlayer Telegram video player: sideload the APK on Android TV or a phone, get past SmartScreen on Windows, or run the AppImage on Linux." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta property="og:description" content="Install the TMPlayer Telegram video player: Downloader and the remote on Android TV, the APK on a phone, one PowerShell line on Windows, the AppImage on Linux." data-i18n-content="install.description">
 <meta property="og:url" content="https://tmplayer.org/install/">
 <meta property="og:image" content="https://tmplayer.org/og.png?v=4">
 <meta property="og:image:type" content="image/png">
@@ -70,7 +70,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="How to install TMPlayer on Android TV, Windows and Linux" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta name="twitter:description" content="Install the TMPlayer Telegram video player: sideload the APK on Android TV or a phone, get past SmartScreen on Windows, or run the AppImage on Linux." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="twitter:description" content="Install the TMPlayer Telegram video player: Downloader and the remote on Android TV, the APK on a phone, one PowerShell line on Windows, the AppImage on Linux." data-i18n-content="install.description">
 <meta name="twitter:image" content="https://tmplayer.org/og.png?v=4">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -122,45 +122,45 @@
 {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "How to install TMPlayer on Android TV or an Android phone",
-  "description": "Sideload the TMPlayer APK onto an Android TV, a TV stick or a phone, and sign in to your own Telegram account.",
-  "totalTime": "PT10M",
+  "name": "How to install TMPlayer on Android TV",
+  "description": "Install TMPlayer on an Android TV or Google TV with the free Downloader app and the remote, then sign in to your own Telegram account.",
+  "totalTime": "PT5M",
   "tool": [
     {
       "@type": "HowToTool",
-      "name": "An Android TV, TV stick or Android phone running Android 8.0 or above"
+      "name": "An Android TV or Google TV device running Android 8.0 or above"
     }
   ],
   "supply": [
     {
       "@type": "HowToSupply",
-      "name": "The TMPlayer universal APK"
+      "name": "The free Downloader app by AFTVnews"
     }
   ],
   "step": [
     {
       "@type": "HowToStep",
-      "name": "Allow apps from outside the store",
+      "name": "Install Downloader",
       "url": "https://tmplayer.org/install/#step-1",
-      "text": "On a television, open Settings, then Device Preferences, then About, and press Build seven times. Then turn on Unknown sources for whichever app you use to copy the file over. On a phone there is nothing to do yet: Android asks the first time you open the file."
+      "text": "On the TV, open the Play Store, search for Downloader and install the free app by AFTVnews."
     },
     {
       "@type": "HowToStep",
-      "name": "Get the file onto the device",
+      "name": "Type tmplayer.org/apk into Downloader",
       "url": "https://tmplayer.org/install/#step-2",
-      "text": "On a phone, tap the download link and open the file when it lands. On a television, use a free app such as Downloader or Send files to TV, pointed at the same link, or run adb connect and adb install from a computer on the same wifi."
+      "text": "Open Downloader, type tmplayer.org/apk into its address box and press Go. The latest TMPlayer APK starts downloading."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Allow the install",
+      "url": "https://tmplayer.org/install/#step-3",
+      "text": "When the TV asks, let Downloader install apps, then press Install. If there is no switch for it, press Build seven times under Settings, About, and try again."
     },
     {
       "@type": "HowToStep",
       "name": "Sign in",
-      "url": "https://tmplayer.org/install/#step-3",
-      "text": "A television shows a QR code: open Telegram on your phone, go to Settings, then Devices, then Link Desktop Device, and point the camera at the screen. A phone asks for your number instead."
-    },
-    {
-      "@type": "HowToStep",
-      "name": "Pick a chat and press play",
       "url": "https://tmplayer.org/install/#step-4",
-      "text": "Your chats open into grids or rows of their playable videos. Choose one and it starts in a few seconds while the rest downloads."
+      "text": "Open TMPlayer and scan its QR code with Telegram on your phone: Settings, Devices, Link Desktop Device."
     }
   ]
 }
@@ -274,14 +274,15 @@
       <h1 data-i18n="install.how_to_install_it">How to install it, <em>wherever you watch</em></h1>
       <p class="page-lede" data-i18n="install.on_a_tv_a_phone">On a TV, a phone, Windows or Linux. You only do it once.</p>
       <div class="page-actions">
-        <a class="btn btn-filled" href="/download/" data-i18n="install.get_the_file_first">
+        <a class="btn btn-filled" href="/download/" data-i18n="install.all_downloads">
           <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg>
-          Get the file first
+          All downloads
         </a>
         <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener" data-i18n="install.the_full_install_md">The full INSTALL.md <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5 12a1 1 0 0 1 1-1h10.6l-3.3-3.3a1 1 0 1 1 1.4-1.4l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4l3.3-3.3H6a1 1 0 0 1-1-1Z"/></svg></a>
       </div>
       <nav class="platform-jump" aria-label="Platforms" data-i18n-aria-label="download.platforms">
-        <a href="#android" data-i18n="install.android_tv_and_phone">Android TV and phone</a>
+        <a href="#android-tv">Android TV</a>
+        <a href="#android" data-i18n="download.android_phone">Android phone</a>
         <a href="#windows">Windows</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">Desktop and menu shortcuts</a>
@@ -291,54 +292,93 @@
 
 <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="android" aria-labelledby="install-h">
+  <section class="band band-tonal" id="android-tv" aria-labelledby="tv-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
-          <h2 id="install-h" data-i18n="install.on_android_tv_or_a">On Android TV or a phone: four steps</h2>
-          <p class="section-sub" data-i18n="install.this_is_how_any_app">This is how any app from outside the store gets onto an Android device.</p>
+          <h2 id="tv-h" data-i18n="install.tv_title">On Android TV or Google TV</h2>
+          <p class="section-sub" data-i18n="install.tv_sub">Android TV 8.0 or newer. All you need is the remote. On a Fire TV, <a href="/fire-tv/">follow the Fire TV guide</a>.</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="step-1">
-            <h3 data-i18n="install.allow_apps_from_outside_the">Allow apps from outside the store</h3>
-            <p data-i18n="install.on_a_tv_then_press">On a TV: <em>Settings</em>, <em>Device Preferences</em>, <em>About</em>, then press <em>Build</em> seven times. Turn on <em>Unknown sources</em> for the app that copies the file.</p>
-            <p data-i18n="install.on_a_phone_nothing_yet">On a phone: nothing yet. Android asks when you first open the file.</p>
+            <h3 data-i18n="install.tv_step1_h">Install Downloader</h3>
+            <p data-i18n="install.tv_step1">On the TV, open the Play Store, search for <em>Downloader</em> and install the free app by AFTVnews.</p>
           </li>
           <li id="step-2">
-            <h3 data-i18n="install.get_the_file_onto_the">Get the file onto the device</h3>
-            <p data-i18n="install.on_a_phone_and_open">On a phone, <a href="/download/">download the APK</a> and open it. On a TV, use the free Downloader or
+            <h3 data-i18n="install.tv_step2_h">Type this address into Downloader</h3>
+            <pre class="code"><code>tmplayer.org/apk</code></pre>
+            <p data-i18n="install.tv_step2">Press <em>Go</em>. The latest TMPlayer starts downloading straight away.</p>
+          </li>
+          <li id="step-3">
+            <h3 data-i18n="install.tv_step3_h">Allow the install</h3>
+            <p data-i18n="install.tv_step3">When the TV asks, let Downloader install apps, then press <em>Install</em>. No switch to allow it? Open <em>Settings</em>, then <em>About</em> (under <em>Device Preferences</em> or <em>System</em>), press <em>Build</em> seven times and try again.</p>
+          </li>
+          <li id="step-4">
+            <h3 data-i18n="home.sign_in">Sign in</h3>
+            <p data-i18n="install.tv_step4">Open TMPlayer and scan the QR code with Telegram on your phone: <em>Settings</em>, <em>Devices</em>, <em>Link Desktop Device</em>.</p>
+          </li>
+        </ol>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">Other ways</h3>
+        <div class="formats">
+          <div class="format">
+            <h3 data-i18n="install.from_a_phone">From a phone</h3>
+            <p data-i18n="install.tv_from_phone">Install
               <a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener">
                 <!-- Cast: a screen with the three arcs, drawn in the same 24 by 24 box and the same
                      stroke weight as every other glyph on the site. Nothing is fetched, and another
                      developer's store artwork is not ours to copy. -->
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a>,
-              apps, or <code>adb</code> on the same wifi:</p>
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a>
+              on the phone and on the TV, download the APK on the phone, then send it across.</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.from_a_computer">From a computer</h3>
+            <p data-i18n="install.tv_from_computer">Turn on <em>Network debugging</em> in the TV's Developer options, then, on the same wifi:</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
 adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
-            <p data-i18n="install.turn_on_network_debugging_in">Turn on network debugging in Developer options first.</p>
-            <p data-i18n="install.on_a_fire_tv_the">On a Fire TV the menus are named differently: <a href="/fire-tv/">follow the Fire TV guide</a>.</p>
-          </li>
-          <li id="step-3">
-            <h3 data-i18n="home.sign_in">Sign in</h3>
-            <p data-i18n="install.on_a_tv_scan_the">On a TV, scan the QR code: in Telegram on your phone, open <em>Settings</em>, <em>Devices</em>, <em>Link Desktop Device</em>.</p>
-            <p data-i18n="install.on_a_phone_enter_your">On a phone, enter your number instead. The QR code still works for an account on another phone.</p>
-          </li>
-          <li id="step-4">
-            <h3 data-i18n="install.pick_a_chat_and_press">Pick a chat and press play</h3>
-            <p data-i18n="install.your_chats_open_as_grids">Your chats open as grids of playable videos. Pick one and it starts in seconds.</p>
-          </li>
-        </ol>
-        <p class="muted small section-note" data-i18n="install.has_every_step_in_full"><a href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener">INSTALL.md</a> has every step in full, plus controls and troubleshooting.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="windows" aria-labelledby="windows-h">
+  <section class="band" id="android" aria-labelledby="phone-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="phone-h" data-i18n="install.phone_title">On an Android phone</h2>
+          <p class="section-sub" data-i18n="install.phone_sub">Android 8.0 or newer. It takes a minute.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="phone-1">
+            <h3 data-i18n="install.phone_step1_h">Download the APK</h3>
+            <p data-i18n="install.phone_step1">On the phone, open <a href="/download/">the download page</a> and tap the download button at the top.</p>
+          </li>
+          <li id="phone-2">
+            <h3 data-i18n="install.phone_step2_h">Open it and allow the install</h3>
+            <p data-i18n="install.phone_step2">Open the file when it finishes. The first time, Android asks to let your browser install apps: allow it, then tap <em>Install</em>.</p>
+          </li>
+          <li id="phone-3">
+            <h3 data-i18n="home.sign_in">Sign in</h3>
+            <p data-i18n="install.phone_step3">Open TMPlayer and enter your phone number. To sign in an account that lives on another phone, scan the QR code from that phone instead.</p>
+          </li>
+        </ol>
+        <p class="muted small section-note" data-i18n="install.phone_obtainium">Or add it to <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener">Obtainium</a>, which installs it from GitHub and keeps it up to date.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="windows" aria-labelledby="windows-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -350,50 +390,68 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="win-1">
-            <h3 data-i18n="install.download_the_installer">Download the installer</h3>
-            <p data-i18n="install.take_from_the_portable_zip">Take <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> from <a href="/download/#windows">the download page</a>. The portable zip is no longer published: if you used it, delete its folder and install the MSI. Your sign-in and settings live in your user profile, not in that folder, so they carry over.</p>
+            <h3 data-i18n="install.win_step1_h">Open PowerShell</h3>
+            <p data-i18n="install.win_step1">Open <em>Start</em>, type <em>PowerShell</em> and press Enter. A normal window is fine; it does not need to run as administrator.</p>
           </li>
           <li id="win-2">
-            <h3 data-i18n="install.get_past_smartscreen">Get past SmartScreen</h3>
-            <p data-i18n="install.the_build_is_not_signed">The build is not signed yet, so Windows says <em>Windows protected your PC</em>. Click <em>More info</em>, then <em>Run anyway</em>.</p>
-            <p data-i18n="install.to_skip_that_step_install">To skip that step, install from <em>PowerShell</em> instead: paste the line below. It downloads the same installer from GitHub, checks it against the published checksum and runs it, and Windows does not stop it.</p>
+            <h3 data-i18n="install.win_step2_h">Paste this line and press Enter</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            <p data-i18n="install.win_step2">It downloads the installer from GitHub, checks it against the published checksum and installs TMPlayer for your user, with no warning from Windows.</p>
           </li>
           <li id="win-3">
-            <h3 data-i18n="install.install_and_open_it">Install and open it</h3>
-            <p data-i18n="install.click_through_the_installer_tmplayer">Click through the installer. TMPlayer lands in the Start menu and on the desktop. A newer MSI upgrades it in place.</p>
-          </li>
-          <li id="win-4">
-            <h3 data-i18n="install.sign_in_with_the_qr">Sign in with the QR code</h3>
+            <h3 data-i18n="install.win_step3_h">Open it and sign in</h3>
+            <p data-i18n="install.win_step3">TMPlayer is now in the Start menu and on the desktop.</p>
             <p data-i18n="install.scan_the_qr_code_with">Scan the QR code with Telegram on your phone: <em>Settings</em>, <em>Devices</em>, <em>Link Desktop Device</em>. Or choose <em>Log in by phone number</em>.</p>
           </li>
         </ol>
+
+        <div class="panel panel-prose panel-wide" id="windows-installer">
+          <h3 data-i18n="install.win_msi_h">Prefer an installer?</h3>
+          <p data-i18n="install.win_msi">Download <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> from <a href="/download/#windows">the download page</a> and open it. It is not code signed yet, so Windows may say <em>Windows protected your PC</em>: click <em>More info</em>, then <em>Run anyway</em>.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.win_zip_note">Used the old portable zip? Delete its folder, then install as above. Your sign-in and settings carry over.</p>
       </div>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="linux-h" data-i18n="install.on_linux">On Linux</h2>
-          <p class="section-sub" data-i18n="install.64_bit_x86_with_glibc">64-bit x86, with glibc 2.38 or newer: Ubuntu 24.04, Debian 13, Fedora 39 and later. Then sign in with the QR code.</p>
+          <p class="section-sub" data-i18n="download.x86_64_with_glibc_2">x86_64, with glibc 2.38 or newer: Ubuntu 24.04, Debian 13, Fedora 39 and later</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
-        <div class="formats">
-          <div class="format">
-            <h3 data-i18n="install.appimage_on_any_distribution">AppImage, on any distribution</h3>
+        <ol class="steps">
+          <li id="linux-1">
+            <h3 data-i18n="install.linux_step1_h">Download the AppImage</h3>
+            <p data-i18n="install.linux_step1">Take <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> from <a href="/download/#linux">the download page</a>. One file, for any distribution.</p>
+          </li>
+          <li id="linux-2">
+            <h3 data-i18n="install.linux_step2_h">Make it executable and open it</h3>
             <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
 ./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
             <p data-i18n="install.or_tick_in_the_file">Or tick <em>Allow executing file as program</em> in the file's properties and double click it.</p>
-          </div>
+          </li>
+          <li id="linux-3">
+            <h3 data-i18n="home.sign_in">Sign in</h3>
+            <p data-i18n="install.scan_the_qr_code_with">Scan the QR code with Telegram on your phone: <em>Settings</em>, <em>Devices</em>, <em>Link Desktop Device</em>. Or choose <em>Log in by phone number</em>.</p>
+          </li>
+        </ol>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">Other ways</h3>
+        <div class="formats">
           <div class="format">
             <h3 data-i18n="download.arch_linux">Arch Linux</h3>
-            <p data-i18n="install.build_the_package_from_the">Build the package from the recipe in <a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a> with <code>makepkg -si</code>, or use the AppImage.</p>
+            <p data-i18n="install.arch_note">Build the package from the recipe in <a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a> with <code>makepkg -si</code>. It is not on the AUR: the <code>tmplayer</code> package there is a different app.</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.tarball_h">The plain folder</h3>
+            <p data-i18n="install.tarball">Unpack <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> anywhere and run <code>bin/TMPlayer</code> inside it. It does not update itself: TMPlayer tells you when a new version is out.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">Moving from the deb, rpm or Flatpak</h3>
@@ -405,9 +463,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -420,7 +478,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <div class="two-col">
           <div class="panel panel-prose">
             <h3>Windows</h3>
-            <p data-i18n="install.it_is_already_in_start"><strong>MSI install:</strong> it is already in Start and on the desktop. To pin it, right click it in Start and choose <em>Pin to taskbar</em>.</p>
+            <p data-i18n="install.win_pin">It is already in Start and on the desktop. To pin it, right click it in Start and choose <em>Pin to taskbar</em>.</p>
           </div>
           <div class="panel panel-prose">
             <h3 data-i18n="install.linux_the_arch_package">Linux: the Arch package</h3>
@@ -468,9 +526,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="trouble-h">
+  <section class="band" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -528,9 +586,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="support-h">
+  <section class="band band-tonal" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">Star it if it helped</h2>

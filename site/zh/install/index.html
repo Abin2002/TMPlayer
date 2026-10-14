@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title data-i18n="install.how_to_install_tmplayer_on">如何在 Android TV、Windows 和 Linux 上安装 TMPlayer</title>
-<meta name="description" content="安装 TMPlayer Telegram 视频播放器：在 Android TV 或手机上侧载 APK，在 Windows 上绕过 SmartScreen，或在 Linux 上运行 AppImage。" data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="description" content="安装 Telegram 视频播放器 TMPlayer：Android TV 上用 Downloader 和遥控器，手机上装 APK，Windows 上一行 PowerShell，Linux 上用 AppImage。" data-i18n-content="install.description">
 <link rel="canonical" href="https://tmplayer.org/zh/install/">
 <!-- i18n:head -->
 <link rel="alternate" hreflang="en" href="https://tmplayer.org/install/">
@@ -61,7 +61,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TMPlayer">
 <meta property="og:title" content="如何在 Android TV、Windows 和 Linux 上安装 TMPlayer" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta property="og:description" content="安装 TMPlayer Telegram 视频播放器：在 Android TV 或手机上侧载 APK，在 Windows 上绕过 SmartScreen，或在 Linux 上运行 AppImage。" data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta property="og:description" content="安装 Telegram 视频播放器 TMPlayer：Android TV 上用 Downloader 和遥控器，手机上装 APK，Windows 上一行 PowerShell，Linux 上用 AppImage。" data-i18n-content="install.description">
 <meta property="og:url" content="https://tmplayer.org/zh/install/">
 <meta property="og:image" content="https://tmplayer.org/og.png?v=4">
 <meta property="og:image:type" content="image/png">
@@ -71,7 +71,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="如何在 Android TV、Windows 和 Linux 上安装 TMPlayer" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta name="twitter:description" content="安装 TMPlayer Telegram 视频播放器：在 Android TV 或手机上侧载 APK，在 Windows 上绕过 SmartScreen，或在 Linux 上运行 AppImage。" data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="twitter:description" content="安装 Telegram 视频播放器 TMPlayer：Android TV 上用 Downloader 和遥控器，手机上装 APK，Windows 上一行 PowerShell，Linux 上用 AppImage。" data-i18n-content="install.description">
 <meta name="twitter:image" content="https://tmplayer.org/og.png?v=4">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -123,45 +123,45 @@
 {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "如何在 Android TV 或 Android 手机上安装 TMPlayer",
-  "description": "将 TMPlayer APK 侧载到 Android TV、电视棒或手机上，然后登录你自己的 Telegram 账号。",
-  "totalTime": "PT10M",
+  "name": "如何在 Android TV 上安装 TMPlayer",
+  "description": "用免费应用 Downloader 和遥控器在 Android TV 或 Google TV 上安装 TMPlayer，然后登录你自己的 Telegram 账号。",
+  "totalTime": "PT5M",
   "tool": [
     {
       "@type": "HowToTool",
-      "name": "运行 Android 8.0 或更高版本的 Android TV、电视棒或 Android 手机"
+      "name": "运行 Android 8.0 或更高版本的 Android TV 或 Google TV 设备"
     }
   ],
   "supply": [
     {
       "@type": "HowToSupply",
-      "name": "TMPlayer 通用 APK"
+      "name": "AFTVnews 出品的免费应用 Downloader"
     }
   ],
   "step": [
     {
       "@type": "HowToStep",
-      "name": "允许安装商店之外的应用",
+      "name": "安装 Downloader",
       "url": "https://tmplayer.org/zh/install/#step-1",
-      "text": "在电视上，打开“设置”，进入“设备偏好设置”，再进入“关于”，连按七次“版本号”。然后为你用来传输文件的应用开启“未知来源”。在手机上暂时无需操作：首次打开文件时 Android 会询问。"
+      "text": "在电视上打开 Play 商店，搜索 Downloader，安装 AFTVnews 出品的免费应用。"
     },
     {
       "@type": "HowToStep",
-      "name": "把文件传到设备上",
+      "name": "在 Downloader 中输入 tmplayer.org/apk",
       "url": "https://tmplayer.org/zh/install/#step-2",
-      "text": "在手机上，点击下载链接，文件下载完后打开即可。在电视上，使用 Downloader 或“Send files to TV”等免费应用，指向同一个链接，或在同一 Wi-Fi 下的电脑上运行 adb connect 和 adb install。"
+      "text": "打开 Downloader，在地址栏输入 tmplayer.org/apk 并按 Go。最新的 TMPlayer APK 会开始下载。"
+    },
+    {
+      "@type": "HowToStep",
+      "name": "允许安装",
+      "url": "https://tmplayer.org/zh/install/#step-3",
+      "text": "电视询问时，允许 Downloader 安装应用，然后按安装。如果没有这个开关，在设置、关于中按版本号七次，再试一次。"
     },
     {
       "@type": "HowToStep",
       "name": "登录",
-      "url": "https://tmplayer.org/zh/install/#step-3",
-      "text": "电视会显示一个二维码：在手机上打开 Telegram，依次进入“设置”、“设备”、“链接桌面设备”，然后用相机对准屏幕。手机则会要求输入你的手机号。"
-    },
-    {
-      "@type": "HowToStep",
-      "name": "选择聊天，按下播放",
       "url": "https://tmplayer.org/zh/install/#step-4",
-      "text": "你的聊天会显示为可播放视频的网格或行。选一个，几秒内就开始播放，其余部分继续下载。"
+      "text": "打开 TMPlayer，用手机上的 Telegram 扫描它的二维码：设置、设备、链接桌面设备。"
     }
   ]
 }
@@ -275,11 +275,12 @@
       <h1 data-i18n="install.how_to_install_it">如何安装，<em>无论你在哪里观看</em></h1>
       <p class="page-lede" data-i18n="install.on_a_tv_a_phone">适用于电视、手机、Windows 或 Linux。只需安装一次。</p>
       <div class="page-actions">
-        <a class="btn btn-filled" href="/zh/download/" data-i18n="install.get_the_file_first"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg> 先获取文件</a>
+        <a class="btn btn-filled" href="/zh/download/" data-i18n="install.all_downloads"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg> 全部下载</a>
         <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener" data-i18n="install.the_full_install_md">完整的 INSTALL.md <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5 12a1 1 0 0 1 1-1h10.6l-3.3-3.3a1 1 0 1 1 1.4-1.4l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4l3.3-3.3H6a1 1 0 0 1-1-1Z"/></svg></a>
       </div>
       <nav class="platform-jump" aria-label="平台" data-i18n-aria-label="download.platforms">
-        <a href="#android" data-i18n="install.android_tv_and_phone">Android TV 和手机</a>
+        <a href="#android-tv">Android TV</a>
+        <a href="#android" data-i18n="download.android_phone">Android 手机</a>
         <a href="#windows">Windows</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">桌面和菜单快捷方式</a>
@@ -289,48 +290,87 @@
 
 <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="android" aria-labelledby="install-h">
+  <section class="band band-tonal" id="android-tv" aria-labelledby="tv-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
-          <h2 id="install-h" data-i18n="install.on_android_tv_or_a">在 Android TV 或手机上：四个步骤</h2>
-          <p class="section-sub" data-i18n="install.this_is_how_any_app">这是任何商店之外的应用安装到 Android 设备上的方式。</p>
+          <h2 id="tv-h" data-i18n="install.tv_title">在 Android TV 或 Google TV 上</h2>
+          <p class="section-sub" data-i18n="install.tv_sub">Android TV 8.0 或更高版本。只需要遥控器。Fire TV 请<a href="/zh/fire-tv/">请参阅 Fire TV 指南</a>。</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="step-1">
-            <h3 data-i18n="install.allow_apps_from_outside_the">允许安装商店之外的应用</h3>
-            <p data-i18n="install.on_a_tv_then_press">在电视上：<em>设置</em>、<em>设备偏好设置</em>、<em>关于</em>，然后连按 <em>版本号</em> 七次。为用来传输文件的应用开启 <em>未知来源</em>。</p>
-            <p data-i18n="install.on_a_phone_nothing_yet">在手机上：暂时无需操作。首次打开文件时 Android 会询问。</p>
+            <h3 data-i18n="install.tv_step1_h">安装 Downloader</h3>
+            <p data-i18n="install.tv_step1">在电视上打开 Play 商店，搜索 <em>Downloader</em>，安装 AFTVnews 出品的免费应用。</p>
           </li>
           <li id="step-2">
-            <h3 data-i18n="install.get_the_file_onto_the">把文件传到设备上</h3>
-            <p data-i18n="install.on_a_phone_and_open">在手机上，<a href="/zh/download/">下载 APK</a>并打开它。在电视上，使用免费的 Downloader 或 <a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener"> <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a> 应用，或在同一 Wi-Fi 下使用 <code>adb</code>：</p>
-            <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
-            <p data-i18n="install.turn_on_network_debugging_in">请先在开发者选项中开启网络调试。</p>
-            <p data-i18n="install.on_a_fire_tv_the">Fire TV 上的菜单名称不同：<a href="/zh/fire-tv/">请参阅 Fire TV 指南</a>。</p>
+            <h3 data-i18n="install.tv_step2_h">在 Downloader 中输入这个地址</h3>
+            <pre class="code"><code>tmplayer.org/apk</code></pre>
+            <p data-i18n="install.tv_step2">按 <em>Go</em>。最新版 TMPlayer 会立即开始下载。</p>
           </li>
           <li id="step-3">
-            <h3 data-i18n="home.sign_in">登录</h3>
-            <p data-i18n="install.on_a_tv_scan_the">在电视上，扫描二维码：在手机上的 Telegram 中，打开 <em>设置</em>、<em>设备</em>、<em>链接桌面设备</em>。</p>
-            <p data-i18n="install.on_a_phone_enter_your">在手机上，改为输入你的手机号。二维码仍可用于另一部手机上的账号。</p>
+            <h3 data-i18n="install.tv_step3_h">允许安装</h3>
+            <p data-i18n="install.tv_step3">电视询问时，允许 Downloader 安装应用，然后按 <em>安装</em>。找不到允许的开关？打开 <em>设置</em>，再打开 <em>关于</em>（在 <em>设备偏好设置</em> 或 <em>系统</em> 下），按 <em>版本号</em> 七次后再试一次。</p>
           </li>
           <li id="step-4">
-            <h3 data-i18n="install.pick_a_chat_and_press">选择聊天，按下播放</h3>
-            <p data-i18n="install.your_chats_open_as_grids">你的聊天会显示为可播放视频的网格。选一个，几秒内就会开始播放。</p>
+            <h3 data-i18n="home.sign_in">登录</h3>
+            <p data-i18n="install.tv_step4">打开 TMPlayer，用手机上的 Telegram 扫描二维码：<em>设置</em>、<em>设备</em>、<em>链接桌面设备</em>。</p>
           </li>
         </ol>
-        <p class="muted small section-note" data-i18n="install.has_every_step_in_full"><a href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener">INSTALL.md</a> 包含每一个完整步骤，以及操作方式和故障排除。</p>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">其他方式</h3>
+        <div class="formats">
+          <div class="format">
+            <h3 data-i18n="install.from_a_phone">通过手机</h3>
+            <p data-i18n="install.tv_from_phone">在手机和电视上都安装 <a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener"> <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a>，在手机上下载 APK，然后发送到电视。</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.from_a_computer">通过电脑</h3>
+            <p data-i18n="install.tv_from_computer">在电视的开发者选项中打开 <em>网络调试</em>，然后在同一 wifi 下运行：</p>
+            <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
+adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="windows" aria-labelledby="windows-h">
+  <section class="band" id="android" aria-labelledby="phone-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="phone-h" data-i18n="install.phone_title">在 Android 手机上</h2>
+          <p class="section-sub" data-i18n="install.phone_sub">Android 8.0 或更高版本。一分钟就好。</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="phone-1">
+            <h3 data-i18n="install.phone_step1_h">下载 APK</h3>
+            <p data-i18n="install.phone_step1">在手机上打开<a href="/zh/download/">下载页面</a>，点按顶部的下载按钮。</p>
+          </li>
+          <li id="phone-2">
+            <h3 data-i18n="install.phone_step2_h">打开并允许安装</h3>
+            <p data-i18n="install.phone_step2">下载完成后打开文件。第一次时，Android 会询问是否允许浏览器安装应用：允许，然后点按 <em>安装</em>。</p>
+          </li>
+          <li id="phone-3">
+            <h3 data-i18n="home.sign_in">登录</h3>
+            <p data-i18n="install.phone_step3">打开 TMPlayer，输入你的手机号。如果账号在另一部手机上，请改用那部手机扫描二维码。</p>
+          </li>
+        </ol>
+        <p class="muted small section-note" data-i18n="install.phone_obtainium">也可以把它添加到 <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener">Obtainium</a>，它会直接从 GitHub 安装并保持更新。</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="windows" aria-labelledby="windows-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -342,50 +382,68 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="win-1">
-            <h3 data-i18n="install.download_the_installer">下载安装程序</h3>
-            <p data-i18n="install.take_from_the_portable_zip">从 <a href="/zh/download/#windows">下载页面</a> 获取 <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code>。便携版 zip 已不再发布：如果你用过它，请删除其文件夹并安装 MSI。你的登录信息和设置保存在用户配置文件中，而不在该文件夹里，所以会保留。</p>
+            <h3 data-i18n="install.win_step1_h">打开 PowerShell</h3>
+            <p data-i18n="install.win_step1">打开 <em>开始</em>，输入 <em>PowerShell</em> 并按回车。普通窗口即可，不需要以管理员身份运行。</p>
           </li>
           <li id="win-2">
-            <h3 data-i18n="install.get_past_smartscreen">绕过 SmartScreen</h3>
-            <p data-i18n="install.the_build_is_not_signed">该版本尚未签名，所以 Windows 会显示 <em>Windows 已保护你的电脑</em>。点击 <em>更多信息</em>，然后点击 <em>仍要运行</em>。</p>
-            <p data-i18n="install.to_skip_that_step_install">想跳过这一步，可以改用 <em>PowerShell</em> 安装：粘贴下面这一行。它会从 GitHub 下载同一个安装程序，用公布的校验和核对后运行，Windows 不会拦截。</p>
+            <h3 data-i18n="install.win_step2_h">粘贴这一行并按回车</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            <p data-i18n="install.win_step2">它会从 GitHub 下载安装程序，与发布的校验和核对，并为你的账户安装 TMPlayer，Windows 不会弹出警告。</p>
           </li>
           <li id="win-3">
-            <h3 data-i18n="install.install_and_open_it">安装并打开</h3>
-            <p data-i18n="install.click_through_the_installer_tmplayer">按提示完成安装。TMPlayer 会出现在“开始”菜单和桌面上。更新的 MSI 会原地升级。</p>
-          </li>
-          <li id="win-4">
-            <h3 data-i18n="install.sign_in_with_the_qr">用二维码登录</h3>
+            <h3 data-i18n="install.win_step3_h">打开并登录</h3>
+            <p data-i18n="install.win_step3">TMPlayer 现在已在开始菜单和桌面上。</p>
             <p data-i18n="install.scan_the_qr_code_with">用手机上的 Telegram 扫描二维码：<em>设置</em>、<em>设备</em>、<em>链接桌面设备</em>。或选择 <em>使用手机号登录</em>。</p>
           </li>
         </ol>
+
+        <div class="panel panel-prose panel-wide" id="windows-installer">
+          <h3 data-i18n="install.win_msi_h">更想用安装程序？</h3>
+          <p data-i18n="install.win_msi">从<a href="/zh/download/#windows">下载页面</a>下载 <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> 并打开。它还没有代码签名，所以 Windows 可能会显示 <em>Windows 已保护你的电脑</em>：点击 <em>更多信息</em>，再点击 <em>仍要运行</em>。</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.win_zip_note">用过旧的便携版 zip？删除它的文件夹，然后按上面的步骤安装。登录状态和设置都会保留。</p>
       </div>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="linux-h" data-i18n="install.on_linux">在 Linux 上</h2>
-          <p class="section-sub" data-i18n="install.64_bit_x86_with_glibc">64 位 x86，glibc 2.38 或更高：Ubuntu 24.04、Debian 13、Fedora 39 及更新版本。然后用二维码登录。</p>
+          <p class="section-sub" data-i18n="download.x86_64_with_glibc_2">x86_64，glibc 2.38 或更高：Ubuntu 24.04、Debian 13、Fedora 39 及更新版本</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
-        <div class="formats">
-          <div class="format">
-            <h3 data-i18n="install.appimage_on_any_distribution">AppImage，适用于任何发行版</h3>
+        <ol class="steps">
+          <li id="linux-1">
+            <h3 data-i18n="install.linux_step1_h">下载 AppImage</h3>
+            <p data-i18n="install.linux_step1">从<a href="/zh/download/#linux">下载页面</a>获取 <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code>。一个文件，适用于任何发行版。</p>
+          </li>
+          <li id="linux-2">
+            <h3 data-i18n="install.linux_step2_h">设为可执行并打开</h3>
             <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
 ./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
             <p data-i18n="install.or_tick_in_the_file">或者在文件属性中勾选 <em>允许作为程序执行文件</em>，然后双击它。</p>
-          </div>
+          </li>
+          <li id="linux-3">
+            <h3 data-i18n="home.sign_in">登录</h3>
+            <p data-i18n="install.scan_the_qr_code_with">用手机上的 Telegram 扫描二维码：<em>设置</em>、<em>设备</em>、<em>链接桌面设备</em>。或选择 <em>使用手机号登录</em>。</p>
+          </li>
+        </ol>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">其他方式</h3>
+        <div class="formats">
           <div class="format">
             <h3 data-i18n="download.arch_linux">Arch Linux</h3>
-            <p data-i18n="install.build_the_package_from_the">用 <a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a> 中的构建脚本和 <code>makepkg -si</code> 构建软件包，或直接使用 AppImage。</p>
+            <p data-i18n="install.arch_note">用 <a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a> 中的配方通过 <code>makepkg -si</code> 构建软件包。它不在 AUR 上：那里的 <code>tmplayer</code> 软件包是另一个应用。</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.tarball_h">普通文件夹</h3>
+            <p data-i18n="install.tarball">把 <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> 解压到任意位置，运行其中的 <code>bin/TMPlayer</code>。它不会自动更新：有新版本时 TMPlayer 会提醒你。</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">从 deb、rpm 或 Flatpak 迁移</h3>
@@ -397,9 +455,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -412,7 +470,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <div class="two-col">
           <div class="panel panel-prose">
             <h3>Windows</h3>
-            <p data-i18n="install.it_is_already_in_start"><strong>MSI 安装：</strong> 它已经在“开始”菜单和桌面上了。要固定它，请在“开始”中右键点击它，选择 <em>固定到任务栏</em>。</p>
+            <p data-i18n="install.win_pin">它已在开始菜单和桌面上。要固定它，在开始菜单中右键点击它并选择 <em>固定到任务栏</em>。</p>
           </div>
           <div class="panel panel-prose">
             <h3 data-i18n="install.linux_the_arch_package">Linux：Arch 软件包</h3>
@@ -460,9 +518,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="trouble-h">
+  <section class="band" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -520,9 +578,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="support-h">
+  <section class="band band-tonal" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">有帮助就点个星</h2>

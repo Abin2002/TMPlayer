@@ -330,7 +330,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">Universal APK <span class="badge badge-quiet">Start here</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">The same file as the phone's. Send it to the TV with Downloader, Send files to TV or <code>adb</code>.</p>
+                  <p class="abi-note" data-i18n="download.tv_note">The same file as the phone's. On the TV, type <code>tmplayer.org/apk</code> into the free Downloader app.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -339,7 +339,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/install/#android" data-i18n="download.how_to_install_on_a_2">How to install on a television</a><span class="sep" aria-hidden="true">&middot;</span><a href="/android-tv/" data-i18n="download.made_for_the_tv">Made for the TV</a><span class="sep" aria-hidden="true">&middot;</span><a href="/fire-tv/" data-i18n="download.fire_tv_guide">Fire TV guide</a></p>
+            <p class="platform-foot"><a href="/install/#android-tv" data-i18n="download.how_to_install_on_a_2">How to install on a television</a><span class="sep" aria-hidden="true">&middot;</span><a href="/android-tv/" data-i18n="download.made_for_the_tv">Made for the TV</a><span class="sep" aria-hidden="true">&middot;</span><a href="/fire-tv/" data-i18n="download.fire_tv_guide">Fire TV guide</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -353,11 +353,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">Your computer</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">Recommended: open <em>PowerShell</em> and paste this line. It installs the latest version for your user and checks it against the published checksum, with no SmartScreen warning.</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">Installer <span class="badge badge-quiet">Start here</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">Adds a Start menu entry and a desktop shortcut. No administrator needed.</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">Prefer an installer?</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">It is not code signed yet, so SmartScreen may warn you: click <em>More info</em>, then <em>Run anyway</em>.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -366,13 +370,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">The installer is not code signed yet, so SmartScreen may warn you the first time. Click <em>More info</em>, then <em>Run anyway</em>.</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">Or skip the warning: open <em>PowerShell</em> and paste this. It downloads the same installer from GitHub, checks it against the published checksum and runs it.</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/install/#windows" data-i18n="download.how_to_install_on_windows">How to install on Windows</a></p>
           </article>
 

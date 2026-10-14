@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title data-i18n="install.how_to_install_tmplayer_on">Android TV、Windows、LinuxにTMPlayerをインストールする方法</title>
-<meta name="description" content="TMPlayer Telegram動画プレーヤーをインストール: Android TVやスマートフォンではAPKをサイドロード、WindowsではSmartScreenを通過、LinuxではAppImageを実行します。" data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="description" content="Telegram動画プレーヤーTMPlayerのインストール方法。Android TVはDownloaderとリモコン、スマートフォンはAPK、WindowsはPowerShellの1行、LinuxはAppImage。" data-i18n-content="install.description">
 <link rel="canonical" href="https://tmplayer.org/ja/install/">
 <!-- i18n:head -->
 <link rel="alternate" hreflang="en" href="https://tmplayer.org/install/">
@@ -61,7 +61,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TMPlayer">
 <meta property="og:title" content="Android TV、Windows、LinuxにTMPlayerをインストールする方法" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta property="og:description" content="TMPlayer Telegram動画プレーヤーをインストール: Android TVやスマートフォンではAPKをサイドロード、WindowsではSmartScreenを通過、LinuxではAppImageを実行します。" data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta property="og:description" content="Telegram動画プレーヤーTMPlayerのインストール方法。Android TVはDownloaderとリモコン、スマートフォンはAPK、WindowsはPowerShellの1行、LinuxはAppImage。" data-i18n-content="install.description">
 <meta property="og:url" content="https://tmplayer.org/ja/install/">
 <meta property="og:image" content="https://tmplayer.org/og.png?v=4">
 <meta property="og:image:type" content="image/png">
@@ -71,7 +71,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Android TV、Windows、LinuxにTMPlayerをインストールする方法" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta name="twitter:description" content="TMPlayer Telegram動画プレーヤーをインストール: Android TVやスマートフォンではAPKをサイドロード、WindowsではSmartScreenを通過、LinuxではAppImageを実行します。" data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="twitter:description" content="Telegram動画プレーヤーTMPlayerのインストール方法。Android TVはDownloaderとリモコン、スマートフォンはAPK、WindowsはPowerShellの1行、LinuxはAppImage。" data-i18n-content="install.description">
 <meta name="twitter:image" content="https://tmplayer.org/og.png?v=4">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -123,45 +123,45 @@
 {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "Android TVまたはAndroidスマートフォンにTMPlayerをインストールする方法",
-  "description": "TMPlayerのAPKをAndroid TV、TVスティック、スマートフォンにサイドロードして、ご自身のTelegramアカウントにサインインします。",
-  "totalTime": "PT10M",
+  "name": "Android TVにTMPlayerをインストールする方法",
+  "description": "無料アプリDownloaderとリモコンでAndroid TVまたはGoogle TVにTMPlayerをインストールし、自分のTelegramアカウントでサインインします。",
+  "totalTime": "PT5M",
   "tool": [
     {
       "@type": "HowToTool",
-      "name": "Android 8.0以降のAndroid TV、TVスティック、またはAndroidスマートフォン"
+      "name": "Android 8.0以降のAndroid TVまたはGoogle TVデバイス"
     }
   ],
   "supply": [
     {
       "@type": "HowToSupply",
-      "name": "TMPlayerユニバーサルAPK"
+      "name": "AFTVnewsの無料アプリDownloader"
     }
   ],
   "step": [
     {
       "@type": "HowToStep",
-      "name": "ストア以外からのアプリを許可する",
+      "name": "Downloaderをインストール",
       "url": "https://tmplayer.org/ja/install/#step-1",
-      "text": "テレビでは、「設定」、「デバイス設定」、「概要」の順に開き、「ビルド」を7回押します。そのあと、ファイルのコピーに使うアプリで「提供元不明のアプリ」を有効にします。スマートフォンでは今のところ操作は不要です。ファイルを初めて開くときにAndroidが確認します。"
+      "text": "テレビでPlayストアを開き、Downloaderを検索して、AFTVnewsの無料アプリをインストールします。"
     },
     {
       "@type": "HowToStep",
-      "name": "ファイルを端末に入れる",
+      "name": "Downloaderにtmplayer.org/apkと入力",
       "url": "https://tmplayer.org/ja/install/#step-2",
-      "text": "スマートフォンでは、ダウンロードリンクをタップし、ダウンロードが終わったらファイルを開きます。テレビでは、同じリンクを指定してDownloaderや「Send files to TV」などの無料アプリを使うか、同じWi-Fiにつないだパソコンからadb connectとadb installを実行します。"
+      "text": "Downloaderを開き、アドレス欄にtmplayer.org/apkと入力してGoを押します。最新のTMPlayerのAPKがダウンロードされます。"
+    },
+    {
+      "@type": "HowToStep",
+      "name": "インストールを許可",
+      "url": "https://tmplayer.org/ja/install/#step-3",
+      "text": "テレビに聞かれたら、Downloaderにアプリのインストールを許可してインストールを押します。スイッチがない場合は、設定、概要でビルドを7回押してからもう一度試してください。"
     },
     {
       "@type": "HowToStep",
       "name": "サインイン",
-      "url": "https://tmplayer.org/ja/install/#step-3",
-      "text": "テレビにQRコードが表示されます。スマートフォンでTelegramを開き、「設定」、「デバイス」、「デスクトップデバイスをリンク」の順に進んで、画面にカメラを向けます。スマートフォンでは、代わりに電話番号を入力します。"
-    },
-    {
-      "@type": "HowToStep",
-      "name": "チャットを選んで再生",
       "url": "https://tmplayer.org/ja/install/#step-4",
-      "text": "チャットを開くと、再生できる動画がグリッドまたは行で並びます。1つ選ぶと数秒で始まり、残りはバックグラウンドでダウンロードされます。"
+      "text": "TMPlayerを開き、スマートフォンのTelegramでQRコードを読み取ります。設定、デバイス、デスクトップデバイスをリンクの順です。"
     }
   ]
 }
@@ -275,11 +275,12 @@
       <h1 data-i18n="install.how_to_install_it">インストール方法、<em>どこで見る場合でも</em></h1>
       <p class="page-lede" data-i18n="install.on_a_tv_a_phone">テレビ、スマートフォン、Windows、Linuxに対応。必要なのは最初の1回だけです。</p>
       <div class="page-actions">
-        <a class="btn btn-filled" href="/ja/download/" data-i18n="install.get_the_file_first"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg> まずファイルを入手</a>
+        <a class="btn btn-filled" href="/ja/download/" data-i18n="install.all_downloads"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg> すべてのダウンロード</a>
         <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener" data-i18n="install.the_full_install_md">INSTALL.mdの全文 <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5 12a1 1 0 0 1 1-1h10.6l-3.3-3.3a1 1 0 1 1 1.4-1.4l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4l3.3-3.3H6a1 1 0 0 1-1-1Z"/></svg></a>
       </div>
       <nav class="platform-jump" aria-label="対応環境" data-i18n-aria-label="download.platforms">
-        <a href="#android" data-i18n="install.android_tv_and_phone">Android TVとスマートフォン</a>
+        <a href="#android-tv">Android TV</a>
+        <a href="#android" data-i18n="download.android_phone">Androidスマートフォン</a>
         <a href="#windows">Windows</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">デスクトップとメニューのショートカット</a>
@@ -289,48 +290,87 @@
 
 <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="android" aria-labelledby="install-h">
+  <section class="band band-tonal" id="android-tv" aria-labelledby="tv-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
-          <h2 id="install-h" data-i18n="install.on_android_tv_or_a">Android TVまたはスマートフォンで: 4ステップ</h2>
-          <p class="section-sub" data-i18n="install.this_is_how_any_app">ストア以外のアプリをAndroid端末に入れるときは、どれもこの手順です。</p>
+          <h2 id="tv-h" data-i18n="install.tv_title">Android TV・Google TVの場合</h2>
+          <p class="section-sub" data-i18n="install.tv_sub">Android TV 8.0以降。リモコンだけで済みます。Fire TVの場合は<a href="/ja/fire-tv/">Fire TVガイドをご覧ください</a>。</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="step-1">
-            <h3 data-i18n="install.allow_apps_from_outside_the">ストア以外からのアプリを許可する</h3>
-            <p data-i18n="install.on_a_tv_then_press">テレビでは、<em>設定</em>、<em>デバイス設定</em>、<em>概要</em>の順に開き、<em>ビルド</em>を7回押します。ファイルをコピーするアプリで<em>提供元不明のアプリ</em>を有効にします。</p>
-            <p data-i18n="install.on_a_phone_nothing_yet">スマートフォンでは、今のところ何もする必要はありません。ファイルを初めて開くときにAndroidが確認します。</p>
+            <h3 data-i18n="install.tv_step1_h">Downloaderをインストール</h3>
+            <p data-i18n="install.tv_step1">テレビでPlayストアを開き、<em>Downloader</em>を検索して、AFTVnewsの無料アプリをインストールします。</p>
           </li>
           <li id="step-2">
-            <h3 data-i18n="install.get_the_file_onto_the">ファイルを端末に入れる</h3>
-            <p data-i18n="install.on_a_phone_and_open">スマートフォンでは、<a href="/ja/download/">APKをダウンロード</a>してファイルを開きます。テレビでは、無料のDownloaderか<a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener"> <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a>のアプリを使うか、同じWi-Fiで<code>adb</code>を使います。</p>
-            <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
-            <p data-i18n="install.turn_on_network_debugging_in">先に、開発者向けオプションでネットワークデバッグを有効にしてください。</p>
-            <p data-i18n="install.on_a_fire_tv_the">Fire TVでは、メニューの名前が異なります。<a href="/ja/fire-tv/">Fire TVガイドをご覧ください</a>。</p>
+            <h3 data-i18n="install.tv_step2_h">Downloaderにこのアドレスを入力</h3>
+            <pre class="code"><code>tmplayer.org/apk</code></pre>
+            <p data-i18n="install.tv_step2"><em>Go</em>を押します。最新のTMPlayerがすぐにダウンロードされます。</p>
           </li>
           <li id="step-3">
-            <h3 data-i18n="home.sign_in">サインイン</h3>
-            <p data-i18n="install.on_a_tv_scan_the">テレビでは、QRコードを読み取ります。スマートフォンのTelegramで、<em>設定</em>、<em>デバイス</em>、<em>デスクトップデバイスをリンク</em>の順に開きます。</p>
-            <p data-i18n="install.on_a_phone_enter_your">スマートフォンでは、代わりに電話番号を入力します。別のスマートフォンのアカウントには、QRコードも使えます。</p>
+            <h3 data-i18n="install.tv_step3_h">インストールを許可</h3>
+            <p data-i18n="install.tv_step3">テレビに聞かれたら、Downloaderにアプリのインストールを許可して<em>インストール</em>を押します。許可のスイッチが見当たらない場合は、<em>設定</em>、<em>概要</em>（<em>デバイス設定</em>または<em>システム</em>の中）を開き、<em>ビルド</em>を7回押してからもう一度試してください。</p>
           </li>
           <li id="step-4">
-            <h3 data-i18n="install.pick_a_chat_and_press">チャットを選んで再生</h3>
-            <p data-i18n="install.your_chats_open_as_grids">チャットを開くと、再生できる動画がグリッドで並びます。1つ選ぶと数秒で始まります。</p>
+            <h3 data-i18n="home.sign_in">サインイン</h3>
+            <p data-i18n="install.tv_step4">TMPlayerを開き、スマートフォンのTelegramでQRコードを読み取ります。<em>設定</em>、<em>デバイス</em>、<em>デスクトップデバイスをリンク</em>の順です。</p>
           </li>
         </ol>
-        <p class="muted small section-note" data-i18n="install.has_every_step_in_full"><a href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener">INSTALL.md</a> には、すべての手順に加えて、操作方法とトラブルシューティングが載っています。</p>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">ほかの方法</h3>
+        <div class="formats">
+          <div class="format">
+            <h3 data-i18n="install.from_a_phone">スマートフォンから</h3>
+            <p data-i18n="install.tv_from_phone">スマートフォンとテレビの両方に<a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener"> <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a>をインストールし、スマートフォンでAPKをダウンロードしてテレビに送ります。</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.from_a_computer">パソコンから</h3>
+            <p data-i18n="install.tv_from_computer">テレビの開発者向けオプションで<em>ネットワーク デバッグ</em>をオンにし、同じWi-Fiで次を実行します。</p>
+            <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
+adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="windows" aria-labelledby="windows-h">
+  <section class="band" id="android" aria-labelledby="phone-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="phone-h" data-i18n="install.phone_title">Androidスマートフォンの場合</h2>
+          <p class="section-sub" data-i18n="install.phone_sub">Android 8.0以降。1分で終わります。</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="phone-1">
+            <h3 data-i18n="install.phone_step1_h">APKをダウンロード</h3>
+            <p data-i18n="install.phone_step1">スマートフォンで<a href="/ja/download/">ダウンロードページ</a>を開き、上部のダウンロードボタンをタップします。</p>
+          </li>
+          <li id="phone-2">
+            <h3 data-i18n="install.phone_step2_h">開いてインストールを許可</h3>
+            <p data-i18n="install.phone_step2">ダウンロードが終わったらファイルを開きます。初回はブラウザにアプリのインストールを許可するか聞かれるので、許可して<em>インストール</em>をタップします。</p>
+          </li>
+          <li id="phone-3">
+            <h3 data-i18n="home.sign_in">サインイン</h3>
+            <p data-i18n="install.phone_step3">TMPlayerを開いて電話番号を入力します。別のスマートフォンにあるアカウントなら、そのスマートフォンでQRコードを読み取ってください。</p>
+          </li>
+        </ol>
+        <p class="muted small section-note" data-i18n="install.phone_obtainium">または<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener">Obtainium</a>に追加すると、GitHubからインストールして最新の状態に保ってくれます。</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="windows" aria-labelledby="windows-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -342,50 +382,68 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="win-1">
-            <h3 data-i18n="install.download_the_installer">インストーラーをダウンロード</h3>
-            <p data-i18n="install.take_from_the_portable_zip"><a href="/ja/download/#windows">ダウンロードページ</a>から<code>TMPlayer-&lt;version&gt;-windows-x64.msi</code>を入手してください。ポータブルzipの配布は終了しました。使っていた場合は、そのフォルダーを削除してMSIをインストールしてください。サインインと設定はそのフォルダーではなくユーザープロファイルに保存されているので、そのまま引き継がれます。</p>
+            <h3 data-i18n="install.win_step1_h">PowerShellを開く</h3>
+            <p data-i18n="install.win_step1"><em>スタート</em>を開き、<em>PowerShell</em>と入力してEnterを押します。通常のウィンドウで十分で、管理者として実行する必要はありません。</p>
           </li>
           <li id="win-2">
-            <h3 data-i18n="install.get_past_smartscreen">SmartScreenを通過する</h3>
-            <p data-i18n="install.the_build_is_not_signed">このビルドはまだ署名されていないため、Windowsに<em>Windows によって PC が保護されました</em>と表示されます。<em>詳細情報</em>をクリックし、<em>実行</em>をクリックしてください。</p>
-            <p data-i18n="install.to_skip_that_step_install">この手順を省くには、代わりに<em>PowerShell</em>からインストールします。下の行を貼り付けてください。GitHubから同じインストーラーをダウンロードし、公開されているチェックサムで確認して実行するので、Windowsに止められません。</p>
+            <h3 data-i18n="install.win_step2_h">この1行を貼り付けてEnter</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            <p data-i18n="install.win_step2">GitHubからインストーラーをダウンロードし、公開されているチェックサムで確認して、あなたのユーザーにTMPlayerをインストールします。Windowsの警告は出ません。</p>
           </li>
           <li id="win-3">
-            <h3 data-i18n="install.install_and_open_it">インストールして開く</h3>
-            <p data-i18n="install.click_through_the_installer_tmplayer">インストーラーの案内に従って進めてください。TMPlayerはスタートメニューとデスクトップに追加されます。新しいMSIを実行すると、その場で更新されます。</p>
-          </li>
-          <li id="win-4">
-            <h3 data-i18n="install.sign_in_with_the_qr">QRコードでサインイン</h3>
+            <h3 data-i18n="install.win_step3_h">開いてサインイン</h3>
+            <p data-i18n="install.win_step3">TMPlayerがスタートメニューとデスクトップに追加されました。</p>
             <p data-i18n="install.scan_the_qr_code_with">スマートフォンのTelegramでQRコードを読み取ります。<em>設定</em>、<em>デバイス</em>、<em>デスクトップデバイスをリンク</em>の順です。または<em>電話番号でログイン</em>を選びます。</p>
           </li>
         </ol>
+
+        <div class="panel panel-prose panel-wide" id="windows-installer">
+          <h3 data-i18n="install.win_msi_h">インストーラーを使いたい場合</h3>
+          <p data-i18n="install.win_msi"><a href="/ja/download/#windows">ダウンロードページ</a>から<code>TMPlayer-&lt;version&gt;-windows-x64.msi</code>をダウンロードして開きます。まだコード署名がないため、Windowsに<em>Windows によって PC が保護されました</em>と表示されることがあります。<em>詳細情報</em>、<em>実行</em>の順にクリックしてください。</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.win_zip_note">以前のポータブル版zipを使っていましたか？そのフォルダーを削除して、上の手順でインストールしてください。サインインと設定は引き継がれます。</p>
       </div>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="linux-h" data-i18n="install.on_linux">Linuxの場合</h2>
-          <p class="section-sub" data-i18n="install.64_bit_x86_with_glibc">64ビットx86、glibc 2.38以降: Ubuntu 24.04、Debian 13、Fedora 39以降。そのあとQRコードでサインインします。</p>
+          <p class="section-sub" data-i18n="download.x86_64_with_glibc_2">x86_64、glibc 2.38以降: Ubuntu 24.04、Debian 13、Fedora 39以降</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
-        <div class="formats">
-          <div class="format">
-            <h3 data-i18n="install.appimage_on_any_distribution">AppImage(どのディストリビューションでも)</h3>
+        <ol class="steps">
+          <li id="linux-1">
+            <h3 data-i18n="install.linux_step1_h">AppImageをダウンロード</h3>
+            <p data-i18n="install.linux_step1"><a href="/ja/download/#linux">ダウンロードページ</a>から<code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code>を入手します。どのディストリビューションでも使える1ファイルです。</p>
+          </li>
+          <li id="linux-2">
+            <h3 data-i18n="install.linux_step2_h">実行可能にして開く</h3>
             <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
 ./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
             <p data-i18n="install.or_tick_in_the_file">または、ファイルのプロパティで<em>ファイルをプログラムとして実行可能にする</em>にチェックを入れて、ダブルクリックします。</p>
-          </div>
+          </li>
+          <li id="linux-3">
+            <h3 data-i18n="home.sign_in">サインイン</h3>
+            <p data-i18n="install.scan_the_qr_code_with">スマートフォンのTelegramでQRコードを読み取ります。<em>設定</em>、<em>デバイス</em>、<em>デスクトップデバイスをリンク</em>の順です。または<em>電話番号でログイン</em>を選びます。</p>
+          </li>
+        </ol>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">ほかの方法</h3>
+        <div class="formats">
           <div class="format">
             <h3 data-i18n="download.arch_linux">Arch Linux</h3>
-            <p data-i18n="install.build_the_package_from_the"><a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a>のレシピから<code>makepkg -si</code>でパッケージをビルドするか、AppImageを使ってください。</p>
+            <p data-i18n="install.arch_note"><a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a>のレシピから<code>makepkg -si</code>でパッケージをビルドします。AURにはありません。AURの<code>tmplayer</code>パッケージは別のアプリです。</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.tarball_h">そのままのフォルダー</h3>
+            <p data-i18n="install.tarball"><code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code>を好きな場所に展開し、中の<code>bin/TMPlayer</code>を実行します。自動更新はされませんが、新しいバージョンが出るとTMPlayerが知らせます。</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">deb、rpm、Flatpakからの移行</h3>
@@ -397,9 +455,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -412,7 +470,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <div class="two-col">
           <div class="panel panel-prose">
             <h3>Windows</h3>
-            <p data-i18n="install.it_is_already_in_start"><strong>MSIでインストールした場合:</strong>スタートとデスクトップにすでに追加されています。固定するには、スタートで右クリックして<em>タスクバーにピン留めする</em>を選びます。</p>
+            <p data-i18n="install.win_pin">すでにスタートとデスクトップにあります。ピン留めするには、スタートで右クリックして<em>タスクバーにピン留めする</em>を選びます。</p>
           </div>
           <div class="panel panel-prose">
             <h3 data-i18n="install.linux_the_arch_package">Linux: Archのパッケージ</h3>
@@ -460,9 +518,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="trouble-h">
+  <section class="band" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -520,9 +578,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="support-h">
+  <section class="band band-tonal" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">役に立ったらスターをお願いします</h2>

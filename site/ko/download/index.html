@@ -331,7 +331,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">범용 APK <span class="badge badge-quiet">여기서 시작</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">휴대폰과 같은 파일이에요. Downloader, Send files to TV, 또는 <code>adb</code>로 TV에 보내세요.</p>
+                  <p class="abi-note" data-i18n="download.tv_note">휴대폰용과 같은 파일이에요. TV에서는 무료 앱 Downloader에 <code>tmplayer.org/apk</code>를 입력하세요.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -340,7 +340,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/ko/install/#android" data-i18n="download.how_to_install_on_a_2">TV에 설치하는 방법</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ko/android-tv/" data-i18n="download.made_for_the_tv">TV를 위해 만들었어요</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ko/fire-tv/" data-i18n="download.fire_tv_guide">Fire TV 가이드</a></p>
+            <p class="platform-foot"><a href="/ko/install/#android-tv" data-i18n="download.how_to_install_on_a_2">TV에 설치하는 방법</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ko/android-tv/" data-i18n="download.made_for_the_tv">TV를 위해 만들었어요</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ko/fire-tv/" data-i18n="download.fire_tv_guide">Fire TV 가이드</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -354,11 +354,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">내 컴퓨터</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">추천: <em>PowerShell</em>을 열고 이 한 줄을 붙여 넣으세요. 최신 버전을 내 사용자 계정에 설치하고 공개된 체크섬과 대조해요. SmartScreen 경고도 없어요.</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">설치 파일 <span class="badge badge-quiet">여기서 시작</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">시작 메뉴 항목과 바탕 화면 바로가기를 추가해요. 관리자 권한이 필요 없어요.</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">설치 프로그램이 더 편하다면</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">아직 코드 서명이 없어서 SmartScreen이 경고할 수 있어요. <em>추가 정보</em>, <em>실행</em> 순서로 클릭하세요.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -367,13 +371,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">설치 파일이 아직 코드 서명되지 않아서 처음 실행할 때 SmartScreen이 경고할 수 있어요. <em>추가 정보</em>를 누른 다음 <em>실행</em>을 누르세요.</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">또는 경고 없이 설치하기: <em>PowerShell</em>을 열고 이것을 붙여 넣으세요. GitHub에서 같은 설치 프로그램을 받아 공개된 체크섬으로 확인한 뒤 실행합니다.</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/ko/install/#windows" data-i18n="download.how_to_install_on_windows">Windows에 설치하는 방법</a></p>
           </article>
 

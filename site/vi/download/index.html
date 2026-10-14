@@ -331,7 +331,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">APK chung <span class="badge badge-quiet">Bắt đầu từ đây</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">Cùng tệp với điện thoại. Gửi sang TV bằng Downloader, Send files to TV hoặc <code>adb</code>.</p>
+                  <p class="abi-note" data-i18n="download.tv_note">Cùng tệp với bản cho điện thoại. Trên TV, gõ <code>tmplayer.org/apk</code> vào ứng dụng miễn phí Downloader.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -340,7 +340,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/vi/install/#android" data-i18n="download.how_to_install_on_a_2">Cách cài trên TV</a><span class="sep" aria-hidden="true">&middot;</span><a href="/vi/android-tv/" data-i18n="download.made_for_the_tv">Làm riêng cho TV</a><span class="sep" aria-hidden="true">&middot;</span><a href="/vi/fire-tv/" data-i18n="download.fire_tv_guide">Hướng dẫn Fire TV</a></p>
+            <p class="platform-foot"><a href="/vi/install/#android-tv" data-i18n="download.how_to_install_on_a_2">Cách cài trên TV</a><span class="sep" aria-hidden="true">&middot;</span><a href="/vi/android-tv/" data-i18n="download.made_for_the_tv">Làm riêng cho TV</a><span class="sep" aria-hidden="true">&middot;</span><a href="/vi/fire-tv/" data-i18n="download.fire_tv_guide">Hướng dẫn Fire TV</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -354,11 +354,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">Máy tính của bạn</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">Khuyên dùng: mở <em>PowerShell</em> và dán dòng này. Nó cài bản mới nhất cho tài khoản của bạn và đối chiếu với mã kiểm tra đã công bố, không có cảnh báo SmartScreen.</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">Trình cài đặt <span class="badge badge-quiet">Bắt đầu từ đây</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">Thêm một mục vào menu Start và một lối tắt ngoài màn hình nền. Không cần quyền quản trị.</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">Thích dùng trình cài đặt hơn?</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">Trình cài đặt chưa được ký mã, nên SmartScreen có thể cảnh báo: bấm <em>Thông tin khác</em>, rồi <em>Vẫn chạy</em>.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -367,13 +371,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">Trình cài đặt chưa được ký mã, nên SmartScreen có thể cảnh báo bạn ở lần đầu. Bấm <em>Thông tin khác</em>, rồi <em>Vẫn chạy</em>.</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">Hoặc bỏ qua cảnh báo: mở <em>PowerShell</em> và dán lệnh này. Lệnh tải cùng trình cài đặt từ GitHub, đối chiếu với mã kiểm tra đã công bố rồi chạy nó.</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/vi/install/#windows" data-i18n="download.how_to_install_on_windows">Cách cài trên Windows</a></p>
           </article>
 

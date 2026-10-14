@@ -331,7 +331,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">APK universel <span class="badge badge-quiet">Commencez ici</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">Le même fichier que pour le téléphone. Envoyez-le à la TV avec Downloader, Send files to TV ou <code>adb</code>.</p>
+                  <p class="abi-note" data-i18n="download.tv_note">Le même fichier que pour le téléphone. Sur la TV, tapez <code>tmplayer.org/apk</code> dans l'application gratuite Downloader.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -340,7 +340,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/fr/install/#android" data-i18n="download.how_to_install_on_a_2">Comment l'installer sur une télévision</a><span class="sep" aria-hidden="true">&middot;</span><a href="/fr/android-tv/" data-i18n="download.made_for_the_tv">Conçu pour la TV</a><span class="sep" aria-hidden="true">&middot;</span><a href="/fr/fire-tv/" data-i18n="download.fire_tv_guide">Guide Fire TV</a></p>
+            <p class="platform-foot"><a href="/fr/install/#android-tv" data-i18n="download.how_to_install_on_a_2">Comment l'installer sur une télévision</a><span class="sep" aria-hidden="true">&middot;</span><a href="/fr/android-tv/" data-i18n="download.made_for_the_tv">Conçu pour la TV</a><span class="sep" aria-hidden="true">&middot;</span><a href="/fr/fire-tv/" data-i18n="download.fire_tv_guide">Guide Fire TV</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -354,11 +354,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">Votre ordinateur</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">Recommandé : ouvrez <em>PowerShell</em> et collez cette ligne. Elle installe la dernière version pour votre compte et la vérifie avec la somme de contrôle publiée, sans avertissement SmartScreen.</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">Installateur <span class="badge badge-quiet">Commencez ici</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">Ajoute une entrée au menu Démarrer et un raccourci sur le bureau. Aucun droit d'administrateur requis.</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">Vous préférez un installateur ?</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">Il n'est pas encore signé, donc SmartScreen peut vous avertir : cliquez sur <em>Informations complémentaires</em>, puis sur <em>Exécuter quand même</em>.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -367,13 +371,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">L'installateur n'a pas encore de signature de code, donc SmartScreen peut vous avertir la première fois. Cliquez sur <em>Informations complémentaires</em>, puis sur <em>Exécuter quand même</em>.</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">Ou évitez l'avertissement : ouvrez <em>PowerShell</em> et collez ceci. Il télécharge le même installateur depuis GitHub, le vérifie avec la somme de contrôle publiée et le lance.</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/fr/install/#windows" data-i18n="download.how_to_install_on_windows">Comment l'installer sur Windows</a></p>
           </article>
 

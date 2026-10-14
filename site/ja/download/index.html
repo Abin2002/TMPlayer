@@ -331,7 +331,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">ユニバーサルAPK <span class="badge badge-quiet">まずはこちら</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">スマートフォンと同じファイルです。Downloader、Send files to TV、または<code>adb</code>でテレビに送ってください。</p>
+                  <p class="abi-note" data-i18n="download.tv_note">スマートフォンと同じファイルです。テレビでは、無料アプリDownloaderに<code>tmplayer.org/apk</code>と入力します。</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -340,7 +340,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/ja/install/#android" data-i18n="download.how_to_install_on_a_2">テレビへのインストール方法</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ja/android-tv/" data-i18n="download.made_for_the_tv">テレビ向けに設計</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ja/fire-tv/" data-i18n="download.fire_tv_guide">Fire TVガイド</a></p>
+            <p class="platform-foot"><a href="/ja/install/#android-tv" data-i18n="download.how_to_install_on_a_2">テレビへのインストール方法</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ja/android-tv/" data-i18n="download.made_for_the_tv">テレビ向けに設計</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ja/fire-tv/" data-i18n="download.fire_tv_guide">Fire TVガイド</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -354,11 +354,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">お使いのパソコン</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">おすすめ：<em>PowerShell</em>を開いてこの1行を貼り付けます。最新版をあなたのユーザーにインストールし、公開されているチェックサムで確認します。SmartScreenの警告は出ません。</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">インストーラー <span class="badge badge-quiet">まずはこちら</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">スタートメニューとデスクトップにショートカットを追加します。管理者権限は不要です。</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">インストーラーを使いたい場合</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">まだコード署名がないため、SmartScreenが警告することがあります。<em>詳細情報</em>、<em>実行</em>の順にクリックしてください。</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -367,13 +371,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">インストーラーはまだコード署名されていないため、初回はSmartScreenが警告を表示することがあります。<em>詳細情報</em>をクリックし、<em>実行</em>をクリックしてください。</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">または警告を避ける方法：<em>PowerShell</em>を開いてこれを貼り付けます。GitHubから同じインストーラーをダウンロードし、公開されているチェックサムで確認してから実行します。</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/ja/install/#windows" data-i18n="download.how_to_install_on_windows">Windowsへのインストール方法</a></p>
           </article>
 

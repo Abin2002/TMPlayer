@@ -331,7 +331,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">通用 APK <span class="badge badge-quiet">從這裡開始</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">與手機相同的檔案。可用 Downloader、Send files to TV 或 <code>adb</code> 傳到電視。</p>
+                  <p class="abi-note" data-i18n="download.tv_note">和手機用的是同一個檔案。在電視上，把 <code>tmplayer.org/apk</code> 輸入免費應用程式 Downloader。</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -340,7 +340,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/zh-tw/install/#android" data-i18n="download.how_to_install_on_a_2">如何在電視上安裝</a><span class="sep" aria-hidden="true">&middot;</span><a href="/zh-tw/android-tv/" data-i18n="download.made_for_the_tv">為電視量身打造</a><span class="sep" aria-hidden="true">&middot;</span><a href="/zh-tw/fire-tv/" data-i18n="download.fire_tv_guide">Fire TV 教學</a></p>
+            <p class="platform-foot"><a href="/zh-tw/install/#android-tv" data-i18n="download.how_to_install_on_a_2">如何在電視上安裝</a><span class="sep" aria-hidden="true">&middot;</span><a href="/zh-tw/android-tv/" data-i18n="download.made_for_the_tv">為電視量身打造</a><span class="sep" aria-hidden="true">&middot;</span><a href="/zh-tw/fire-tv/" data-i18n="download.fire_tv_guide">Fire TV 教學</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -354,11 +354,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">你的電腦</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">建議：開啟 <em>PowerShell</em> 並貼上這一行。它會為您的帳戶安裝最新版本，並與公布的校驗碼比對，不會出現 SmartScreen 警告。</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">安裝程式 <span class="badge badge-quiet">從這裡開始</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">會加入開始功能表項目與桌面捷徑。不需要系統管理員權限。</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">比較想用安裝程式？</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">它還沒有程式碼簽章，所以 SmartScreen 可能會警告：按一下 <em>其他資訊</em>，再按 <em>仍要執行</em>。</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -367,13 +371,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">安裝程式目前還沒有程式碼簽署，所以第一次執行時 SmartScreen 可能會發出警告。請按 <em>其他資訊</em>，然後按 <em>仍要執行</em>。</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">或者略過警告：開啟 <em>PowerShell</em> 並貼上這一行。它會從 GitHub 下載同一個安裝程式，用公布的校驗和核對後執行。</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/zh-tw/install/#windows" data-i18n="download.how_to_install_on_windows">如何在 Windows 上安裝</a></p>
           </article>
 

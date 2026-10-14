@@ -331,7 +331,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">Універсальний APK <span class="badge badge-quiet">Почніть звідси</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">Той самий файл, що й для телефона. Надішліть його на телевізор через Downloader, Send files to TV або <code>adb</code>.</p>
+                  <p class="abi-note" data-i18n="download.tv_note">Той самий файл, що й для телефона. На телевізорі введіть <code>tmplayer.org/apk</code> у безкоштовному застосунку Downloader.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -340,7 +340,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/uk/install/#android" data-i18n="download.how_to_install_on_a_2">Як установити на телевізор</a><span class="sep" aria-hidden="true">&middot;</span><a href="/uk/android-tv/" data-i18n="download.made_for_the_tv">Створено для телевізора</a><span class="sep" aria-hidden="true">&middot;</span><a href="/uk/fire-tv/" data-i18n="download.fire_tv_guide">Посібник для Fire TV</a></p>
+            <p class="platform-foot"><a href="/uk/install/#android-tv" data-i18n="download.how_to_install_on_a_2">Як установити на телевізор</a><span class="sep" aria-hidden="true">&middot;</span><a href="/uk/android-tv/" data-i18n="download.made_for_the_tv">Створено для телевізора</a><span class="sep" aria-hidden="true">&middot;</span><a href="/uk/fire-tv/" data-i18n="download.fire_tv_guide">Посібник для Fire TV</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -354,11 +354,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">Ваш комп’ютер</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">Радимо: відкрийте <em>PowerShell</em> і вставте цей рядок. Він установить останню версію для вашого користувача й звірить її з опублікованою контрольною сумою, без попередження SmartScreen.</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">Інсталятор <span class="badge badge-quiet">Почніть звідси</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">Додає пункт у меню «Пуск» і ярлик на робочому столі. Права адміністратора не потрібні.</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">Волієте інсталятор?</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">Він поки не підписаний, тож SmartScreen може попередити: натисніть <em>Додаткові відомості</em>, потім <em>Усе одно виконати</em>.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -367,13 +371,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">Інсталятор ще не підписано, тому під час першого запуску SmartScreen може показати попередження. Натисніть <em>Додаткові відомості</em>, потім <em>Усе одно виконати</em>.</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">Або без попередження: відкрийте <em>PowerShell</em> і вставте це. Команда завантажить той самий інсталятор із GitHub, звірить його з опублікованою контрольною сумою й запустить.</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/uk/install/#windows" data-i18n="download.how_to_install_on_windows">Як установити на Windows</a></p>
           </article>
 

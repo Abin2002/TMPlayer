@@ -331,7 +331,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">യൂണിവേഴ്സൽ APK <span class="badge badge-quiet">ഇവിടെ തുടങ്ങുക</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">ഫോണിലേതിന്റെ അതേ ഫയൽ തന്നെ. Downloader, Send files to TV അല്ലെങ്കിൽ <code>adb</code> ഉപയോഗിച്ച് ടിവിയിലേക്ക് അയയ്ക്കുക.</p>
+                  <p class="abi-note" data-i18n="download.tv_note">ഫോണിനുള്ള അതേ ഫയൽ. TV-യിൽ, സൗജന്യ Downloader ആപ്പിൽ <code>tmplayer.org/apk</code> ടൈപ്പ് ചെയ്യുക.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -340,7 +340,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/ml/install/#android" data-i18n="download.how_to_install_on_a_2">ടെലിവിഷനിൽ ഇൻസ്റ്റാൾ ചെയ്യുന്ന വിധം</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ml/android-tv/" data-i18n="download.made_for_the_tv">ടിവിക്കായി നിർമ്മിച്ചത്</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ml/fire-tv/" data-i18n="download.fire_tv_guide">Fire TV ഗൈഡ്</a></p>
+            <p class="platform-foot"><a href="/ml/install/#android-tv" data-i18n="download.how_to_install_on_a_2">ടെലിവിഷനിൽ ഇൻസ്റ്റാൾ ചെയ്യുന്ന വിധം</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ml/android-tv/" data-i18n="download.made_for_the_tv">ടിവിക്കായി നിർമ്മിച്ചത്</a><span class="sep" aria-hidden="true">&middot;</span><a href="/ml/fire-tv/" data-i18n="download.fire_tv_guide">Fire TV ഗൈഡ്</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -354,11 +354,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">നിങ്ങളുടെ കമ്പ്യൂട്ടർ</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">ശുപാർശ: <em>PowerShell</em> തുറന്ന് ഈ വരി പേസ്റ്റ് ചെയ്യുക. ഇത് നിങ്ങളുടെ യൂസറിനായി ഏറ്റവും പുതിയ പതിപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുകയും പ്രസിദ്ധീകരിച്ച checksum-മായി ഒത്തുനോക്കുകയും ചെയ്യും, SmartScreen മുന്നറിയിപ്പില്ലാതെ.</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">ഇൻസ്റ്റാളർ <span class="badge badge-quiet">ഇവിടെ തുടങ്ങുക</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">ഒരു Start മെനു എൻട്രിയും ഡെസ്ക്ടോപ്പ് ഷോർട്ട്കട്ടും ചേർക്കുന്നു. അഡ്മിനിസ്ട്രേറ്റർ ആവശ്യമില്ല.</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">ഇൻസ്റ്റാളർ ആണോ ഇഷ്ടം?</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">ഇതിന് ഇതുവരെ കോഡ് സൈനിങ് ഇല്ല, അതിനാൽ SmartScreen മുന്നറിയിപ്പ് നൽകിയേക്കാം: <em>More info</em> ക്ലിക്ക് ചെയ്യുക, പിന്നെ <em>Run anyway</em>.</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -367,13 +371,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">ഇൻസ്റ്റാളർ ഇതുവരെ കോഡ് സൈൻ ചെയ്തിട്ടില്ല, അതിനാൽ ആദ്യതവണ SmartScreen മുന്നറിയിപ്പ് നൽകിയേക്കാം. <em>More info</em> ക്ലിക്ക് ചെയ്ത്, പിന്നെ <em>Run anyway</em>.</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">അല്ലെങ്കിൽ മുന്നറിയിപ്പ് ഒഴിവാക്കാം: <em>PowerShell</em> തുറന്ന് ഇത് പേസ്റ്റ് ചെയ്യുക. ഇത് GitHub-ൽ നിന്ന് അതേ ഇൻസ്റ്റാളർ ഡൗൺലോഡ് ചെയ്ത്, പ്രസിദ്ധീകരിച്ച ചെക്ക്സവുമായി ഒത്തുനോക്കി, പ്രവർത്തിപ്പിക്കുന്നു.</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/ml/install/#windows" data-i18n="download.how_to_install_on_windows">Windows-ൽ ഇൻസ്റ്റാൾ ചെയ്യുന്ന വിധം</a></p>
           </article>
 

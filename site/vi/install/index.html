@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title data-i18n="install.how_to_install_tmplayer_on">Cách cài TMPlayer trên Android TV, Windows và Linux</title>
-<meta name="description" content="Cài trình phát video Telegram TMPlayer: cài APK thủ công trên Android TV hoặc điện thoại, vượt qua SmartScreen trên Windows, hoặc chạy AppImage trên Linux." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="description" content="Cài TMPlayer, trình phát video Telegram: Downloader và điều khiển trên Android TV, APK trên điện thoại, một dòng PowerShell trên Windows, AppImage trên Linux." data-i18n-content="install.description">
 <link rel="canonical" href="https://tmplayer.org/vi/install/">
 <!-- i18n:head -->
 <link rel="alternate" hreflang="en" href="https://tmplayer.org/install/">
@@ -61,7 +61,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TMPlayer">
 <meta property="og:title" content="Cách cài TMPlayer trên Android TV, Windows và Linux" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta property="og:description" content="Cài trình phát video Telegram TMPlayer: cài APK thủ công trên Android TV hoặc điện thoại, vượt qua SmartScreen trên Windows, hoặc chạy AppImage trên Linux." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta property="og:description" content="Cài TMPlayer, trình phát video Telegram: Downloader và điều khiển trên Android TV, APK trên điện thoại, một dòng PowerShell trên Windows, AppImage trên Linux." data-i18n-content="install.description">
 <meta property="og:url" content="https://tmplayer.org/vi/install/">
 <meta property="og:image" content="https://tmplayer.org/og.png?v=4">
 <meta property="og:image:type" content="image/png">
@@ -71,7 +71,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Cách cài TMPlayer trên Android TV, Windows và Linux" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta name="twitter:description" content="Cài trình phát video Telegram TMPlayer: cài APK thủ công trên Android TV hoặc điện thoại, vượt qua SmartScreen trên Windows, hoặc chạy AppImage trên Linux." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="twitter:description" content="Cài TMPlayer, trình phát video Telegram: Downloader và điều khiển trên Android TV, APK trên điện thoại, một dòng PowerShell trên Windows, AppImage trên Linux." data-i18n-content="install.description">
 <meta name="twitter:image" content="https://tmplayer.org/og.png?v=4">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -123,45 +123,45 @@
 {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "Cách cài TMPlayer trên Android TV hoặc điện thoại Android",
-  "description": "Cài APK TMPlayer thủ công lên Android TV, TV stick hoặc điện thoại, rồi đăng nhập vào tài khoản Telegram của bạn.",
-  "totalTime": "PT10M",
+  "name": "Cách cài TMPlayer trên Android TV",
+  "description": "Cài TMPlayer trên Android TV hoặc Google TV bằng ứng dụng miễn phí Downloader và điều khiển từ xa, rồi đăng nhập tài khoản Telegram của chính bạn.",
+  "totalTime": "PT5M",
   "tool": [
     {
       "@type": "HowToTool",
-      "name": "Android TV, TV stick hoặc điện thoại Android chạy Android 8.0 trở lên"
+      "name": "Thiết bị Android TV hoặc Google TV chạy Android 8.0 trở lên"
     }
   ],
   "supply": [
     {
       "@type": "HowToSupply",
-      "name": "APK chung của TMPlayer"
+      "name": "Ứng dụng miễn phí Downloader của AFTVnews"
     }
   ],
   "step": [
     {
       "@type": "HowToStep",
-      "name": "Cho phép cài ứng dụng từ ngoài cửa hàng",
+      "name": "Cài Downloader",
       "url": "https://tmplayer.org/vi/install/#step-1",
-      "text": "Trên TV, mở Cài đặt, rồi Tùy chọn thiết bị, rồi Giới thiệu, và bấm Bản dựng bảy lần. Sau đó bật Nguồn không xác định cho ứng dụng bạn dùng để chép tệp sang. Trên điện thoại chưa cần làm gì: Android sẽ hỏi ở lần đầu bạn mở tệp."
+      "text": "Trên TV, mở Play Store, tìm Downloader và cài ứng dụng miễn phí của AFTVnews."
     },
     {
       "@type": "HowToStep",
-      "name": "Đưa tệp vào thiết bị",
+      "name": "Gõ tmplayer.org/apk vào Downloader",
       "url": "https://tmplayer.org/vi/install/#step-2",
-      "text": "Trên điện thoại, chạm vào liên kết tải và mở tệp khi tải xong. Trên TV, dùng một ứng dụng miễn phí như Downloader hoặc Send files to TV, trỏ đến cùng liên kết đó, hoặc chạy adb connect và adb install từ máy tính cùng mạng Wi-Fi."
+      "text": "Mở Downloader, gõ tmplayer.org/apk vào ô địa chỉ và bấm Go. APK TMPlayer mới nhất bắt đầu tải về."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Cho phép cài đặt",
+      "url": "https://tmplayer.org/vi/install/#step-3",
+      "text": "Khi TV hỏi, cho phép Downloader cài ứng dụng rồi bấm Cài đặt. Nếu không có nút cho phép, bấm Bản dựng bảy lần trong Cài đặt, Giới thiệu rồi thử lại."
     },
     {
       "@type": "HowToStep",
       "name": "Đăng nhập",
-      "url": "https://tmplayer.org/vi/install/#step-3",
-      "text": "TV hiện một mã QR: mở Telegram trên điện thoại, vào Cài đặt, rồi Thiết bị, rồi Liên kết thiết bị máy tính, và hướng camera vào màn hình. Điện thoại thì sẽ hỏi số điện thoại của bạn."
-    },
-    {
-      "@type": "HowToStep",
-      "name": "Chọn một cuộc trò chuyện và bấm phát",
       "url": "https://tmplayer.org/vi/install/#step-4",
-      "text": "Các cuộc trò chuyện mở ra thành lưới hoặc hàng video có thể phát. Chọn một video và nó bắt đầu sau vài giây trong khi phần còn lại vẫn đang tải."
+      "text": "Mở TMPlayer và quét mã QR của nó bằng Telegram trên điện thoại: Cài đặt, Thiết bị, Liên kết thiết bị máy tính."
     }
   ]
 }
@@ -275,11 +275,12 @@
       <h1 data-i18n="install.how_to_install_it">Cách cài đặt, <em>dù bạn xem ở đâu</em></h1>
       <p class="page-lede" data-i18n="install.on_a_tv_a_phone">Trên TV, điện thoại, Windows hoặc Linux. Bạn chỉ làm một lần.</p>
       <div class="page-actions">
-        <a class="btn btn-filled" href="/vi/download/" data-i18n="install.get_the_file_first"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg> Tải tệp trước</a>
+        <a class="btn btn-filled" href="/vi/download/" data-i18n="install.all_downloads"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg> Tất cả bản tải về</a>
         <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener" data-i18n="install.the_full_install_md">Toàn bộ INSTALL.md <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5 12a1 1 0 0 1 1-1h10.6l-3.3-3.3a1 1 0 1 1 1.4-1.4l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4l3.3-3.3H6a1 1 0 0 1-1-1Z"/></svg></a>
       </div>
       <nav class="platform-jump" aria-label="Nền tảng" data-i18n-aria-label="download.platforms">
-        <a href="#android" data-i18n="install.android_tv_and_phone">Android TV và điện thoại</a>
+        <a href="#android-tv">Android TV</a>
+        <a href="#android" data-i18n="download.android_phone">Điện thoại Android</a>
         <a href="#windows">Windows</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">Lối tắt trên màn hình nền và menu</a>
@@ -289,48 +290,87 @@
 
 <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="android" aria-labelledby="install-h">
+  <section class="band band-tonal" id="android-tv" aria-labelledby="tv-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
-          <h2 id="install-h" data-i18n="install.on_android_tv_or_a">Trên Android TV hoặc điện thoại: bốn bước</h2>
-          <p class="section-sub" data-i18n="install.this_is_how_any_app">Mọi ứng dụng từ ngoài cửa hàng đều được cài lên thiết bị Android theo cách này.</p>
+          <h2 id="tv-h" data-i18n="install.tv_title">Trên Android TV hoặc Google TV</h2>
+          <p class="section-sub" data-i18n="install.tv_sub">Android TV 8.0 trở lên. Chỉ cần điều khiển từ xa. Với Fire TV, <a href="/vi/fire-tv/">làm theo hướng dẫn Fire TV</a>.</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="step-1">
-            <h3 data-i18n="install.allow_apps_from_outside_the">Cho phép cài ứng dụng từ ngoài cửa hàng</h3>
-            <p data-i18n="install.on_a_tv_then_press">Trên TV: <em>Cài đặt</em>, <em>Tùy chọn thiết bị</em>, <em>Giới thiệu</em>, rồi bấm <em>Bản dựng</em> bảy lần. Bật <em>Nguồn không xác định</em> cho ứng dụng dùng để chép tệp.</p>
-            <p data-i18n="install.on_a_phone_nothing_yet">Trên điện thoại: chưa cần làm gì. Android sẽ hỏi khi bạn mở tệp lần đầu.</p>
+            <h3 data-i18n="install.tv_step1_h">Cài Downloader</h3>
+            <p data-i18n="install.tv_step1">Trên TV, mở Play Store, tìm <em>Downloader</em> và cài ứng dụng miễn phí của AFTVnews.</p>
           </li>
           <li id="step-2">
-            <h3 data-i18n="install.get_the_file_onto_the">Đưa tệp vào thiết bị</h3>
-            <p data-i18n="install.on_a_phone_and_open">Trên điện thoại, <a href="/vi/download/">tải APK</a> và mở nó. Trên TV, dùng Downloader miễn phí hoặc <a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener"> <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a>, hoặc <code>adb</code> cùng mạng Wi-Fi:</p>
-            <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
-            <p data-i18n="install.turn_on_network_debugging_in">Trước tiên hãy bật gỡ lỗi qua mạng trong Tùy chọn nhà phát triển.</p>
-            <p data-i18n="install.on_a_fire_tv_the">Trên Fire TV, tên các menu khác đi: <a href="/vi/fire-tv/">làm theo hướng dẫn Fire TV</a>.</p>
+            <h3 data-i18n="install.tv_step2_h">Gõ địa chỉ này vào Downloader</h3>
+            <pre class="code"><code>tmplayer.org/apk</code></pre>
+            <p data-i18n="install.tv_step2">Bấm <em>Go</em>. Bản TMPlayer mới nhất bắt đầu tải về ngay.</p>
           </li>
           <li id="step-3">
-            <h3 data-i18n="home.sign_in">Đăng nhập</h3>
-            <p data-i18n="install.on_a_tv_scan_the">Trên TV, quét mã QR: trong Telegram trên điện thoại, mở <em>Cài đặt</em>, <em>Thiết bị</em>, <em>Liên kết thiết bị máy tính</em>.</p>
-            <p data-i18n="install.on_a_phone_enter_your">Trên điện thoại, hãy nhập số điện thoại của bạn. Mã QR vẫn dùng được cho tài khoản trên một điện thoại khác.</p>
+            <h3 data-i18n="install.tv_step3_h">Cho phép cài đặt</h3>
+            <p data-i18n="install.tv_step3">Khi TV hỏi, cho phép Downloader cài ứng dụng, rồi bấm <em>Cài đặt</em>. Không thấy nút cho phép? Mở <em>Cài đặt</em>, rồi <em>Giới thiệu</em> (trong <em>Tùy chọn thiết bị</em> hoặc <em>Hệ thống</em>), bấm <em>Bản dựng</em> bảy lần rồi thử lại.</p>
           </li>
           <li id="step-4">
-            <h3 data-i18n="install.pick_a_chat_and_press">Chọn một cuộc trò chuyện và bấm phát</h3>
-            <p data-i18n="install.your_chats_open_as_grids">Các cuộc trò chuyện mở ra thành lưới video có thể phát. Chọn một video và nó bắt đầu sau vài giây.</p>
+            <h3 data-i18n="home.sign_in">Đăng nhập</h3>
+            <p data-i18n="install.tv_step4">Mở TMPlayer và quét mã QR bằng Telegram trên điện thoại: <em>Cài đặt</em>, <em>Thiết bị</em>, <em>Liên kết thiết bị máy tính</em>.</p>
           </li>
         </ol>
-        <p class="muted small section-note" data-i18n="install.has_every_step_in_full"><a href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener">INSTALL.md</a> có đầy đủ từng bước, cùng phần điều khiển và cách khắc phục sự cố.</p>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">Cách khác</h3>
+        <div class="formats">
+          <div class="format">
+            <h3 data-i18n="install.from_a_phone">Từ điện thoại</h3>
+            <p data-i18n="install.tv_from_phone">Cài <a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener"> <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a> trên điện thoại và TV, tải APK về điện thoại rồi gửi sang TV.</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.from_a_computer">Từ máy tính</h3>
+            <p data-i18n="install.tv_from_computer">Bật <em>Gỡ lỗi mạng</em> trong Tùy chọn nhà phát triển của TV, rồi trên cùng mạng wifi:</p>
+            <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
+adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="windows" aria-labelledby="windows-h">
+  <section class="band" id="android" aria-labelledby="phone-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="phone-h" data-i18n="install.phone_title">Trên điện thoại Android</h2>
+          <p class="section-sub" data-i18n="install.phone_sub">Android 8.0 trở lên. Chỉ mất một phút.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="phone-1">
+            <h3 data-i18n="install.phone_step1_h">Tải APK</h3>
+            <p data-i18n="install.phone_step1">Trên điện thoại, mở <a href="/vi/download/">trang tải về</a> và chạm nút tải về ở trên cùng.</p>
+          </li>
+          <li id="phone-2">
+            <h3 data-i18n="install.phone_step2_h">Mở tệp và cho phép cài đặt</h3>
+            <p data-i18n="install.phone_step2">Mở tệp khi tải xong. Lần đầu, Android hỏi có cho trình duyệt cài ứng dụng không: cho phép, rồi chạm <em>Cài đặt</em>.</p>
+          </li>
+          <li id="phone-3">
+            <h3 data-i18n="home.sign_in">Đăng nhập</h3>
+            <p data-i18n="install.phone_step3">Mở TMPlayer và nhập số điện thoại. Với tài khoản nằm trên một điện thoại khác, hãy quét mã QR từ điện thoại đó.</p>
+          </li>
+        </ol>
+        <p class="muted small section-note" data-i18n="install.phone_obtainium">Hoặc thêm vào <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener">Obtainium</a>, ứng dụng cài trực tiếp từ GitHub và tự cập nhật.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="windows" aria-labelledby="windows-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -342,50 +382,68 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="win-1">
-            <h3 data-i18n="install.download_the_installer">Tải trình cài đặt</h3>
-            <p data-i18n="install.take_from_the_portable_zip">Lấy <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> từ <a href="/vi/download/#windows">trang tải về</a>. Tệp zip portable không còn được phát hành: nếu bạn từng dùng, hãy xóa thư mục của nó và cài bản MSI. Thông tin đăng nhập và cài đặt của bạn nằm trong hồ sơ người dùng chứ không phải thư mục đó, nên vẫn được giữ lại.</p>
+            <h3 data-i18n="install.win_step1_h">Mở PowerShell</h3>
+            <p data-i18n="install.win_step1">Mở <em>Start</em>, gõ <em>PowerShell</em> và nhấn Enter. Cửa sổ thường là đủ; không cần chạy với quyền quản trị.</p>
           </li>
           <li id="win-2">
-            <h3 data-i18n="install.get_past_smartscreen">Vượt qua SmartScreen</h3>
-            <p data-i18n="install.the_build_is_not_signed">Bản dựng chưa được ký, nên Windows báo <em>Windows đã bảo vệ PC của bạn</em>. Bấm <em>Thông tin khác</em>, rồi <em>Vẫn chạy</em>.</p>
-            <p data-i18n="install.to_skip_that_step_install">Để bỏ qua bước này, hãy cài từ <em>PowerShell</em>: dán dòng bên dưới. Dòng lệnh tải cùng trình cài đặt từ GitHub, đối chiếu với mã kiểm tra đã công bố rồi chạy, và Windows không chặn nó.</p>
+            <h3 data-i18n="install.win_step2_h">Dán dòng này và nhấn Enter</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            <p data-i18n="install.win_step2">Nó tải trình cài đặt từ GitHub, đối chiếu với mã kiểm tra đã công bố và cài TMPlayer cho tài khoản của bạn, Windows không cảnh báo gì.</p>
           </li>
           <li id="win-3">
-            <h3 data-i18n="install.install_and_open_it">Cài đặt và mở</h3>
-            <p data-i18n="install.click_through_the_installer_tmplayer">Bấm tiếp qua trình cài đặt. TMPlayer sẽ có trong menu Start và trên màn hình nền. Bản MSI mới hơn sẽ nâng cấp tại chỗ.</p>
-          </li>
-          <li id="win-4">
-            <h3 data-i18n="install.sign_in_with_the_qr">Đăng nhập bằng mã QR</h3>
+            <h3 data-i18n="install.win_step3_h">Mở và đăng nhập</h3>
+            <p data-i18n="install.win_step3">TMPlayer đã có trong menu Start và trên màn hình nền.</p>
             <p data-i18n="install.scan_the_qr_code_with">Quét mã QR bằng Telegram trên điện thoại: <em>Cài đặt</em>, <em>Thiết bị</em>, <em>Liên kết thiết bị máy tính</em>. Hoặc chọn <em>Đăng nhập bằng số điện thoại</em>.</p>
           </li>
         </ol>
+
+        <div class="panel panel-prose panel-wide" id="windows-installer">
+          <h3 data-i18n="install.win_msi_h">Thích dùng trình cài đặt hơn?</h3>
+          <p data-i18n="install.win_msi">Tải <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> từ <a href="/vi/download/#windows">trang tải về</a> rồi mở. Trình cài đặt chưa được ký mã, nên Windows có thể báo <em>Windows đã bảo vệ PC của bạn</em>: bấm <em>Thông tin khác</em>, rồi <em>Vẫn chạy</em>.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.win_zip_note">Từng dùng bản zip di động cũ? Xóa thư mục của nó rồi cài như trên. Đăng nhập và cài đặt vẫn được giữ.</p>
       </div>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="linux-h" data-i18n="install.on_linux">Trên Linux</h2>
-          <p class="section-sub" data-i18n="install.64_bit_x86_with_glibc">x86 64 bit, với glibc 2.38 trở lên: Ubuntu 24.04, Debian 13, Fedora 39 trở lên. Sau đó đăng nhập bằng mã QR.</p>
+          <p class="section-sub" data-i18n="download.x86_64_with_glibc_2">x86_64, với glibc 2.38 trở lên: Ubuntu 24.04, Debian 13, Fedora 39 trở lên</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
-        <div class="formats">
-          <div class="format">
-            <h3 data-i18n="install.appimage_on_any_distribution">AppImage, trên mọi bản phân phối</h3>
+        <ol class="steps">
+          <li id="linux-1">
+            <h3 data-i18n="install.linux_step1_h">Tải AppImage</h3>
+            <p data-i18n="install.linux_step1">Lấy <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> từ <a href="/vi/download/#linux">trang tải về</a>. Một tệp, cho mọi bản phân phối.</p>
+          </li>
+          <li id="linux-2">
+            <h3 data-i18n="install.linux_step2_h">Cho phép thực thi rồi mở</h3>
             <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
 ./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
             <p data-i18n="install.or_tick_in_the_file">Hoặc đánh dấu <em>Cho phép thực thi tệp như một chương trình</em> trong thuộc tính của tệp rồi nhấp đúp.</p>
-          </div>
+          </li>
+          <li id="linux-3">
+            <h3 data-i18n="home.sign_in">Đăng nhập</h3>
+            <p data-i18n="install.scan_the_qr_code_with">Quét mã QR bằng Telegram trên điện thoại: <em>Cài đặt</em>, <em>Thiết bị</em>, <em>Liên kết thiết bị máy tính</em>. Hoặc chọn <em>Đăng nhập bằng số điện thoại</em>.</p>
+          </li>
+        </ol>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">Cách khác</h3>
+        <div class="formats">
           <div class="format">
             <h3 data-i18n="download.arch_linux">Arch Linux</h3>
-            <p data-i18n="install.build_the_package_from_the">Dựng gói từ công thức trong <a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a> bằng <code>makepkg -si</code>, hoặc dùng AppImage.</p>
+            <p data-i18n="install.arch_note">Dựng gói từ công thức trong <a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a> bằng <code>makepkg -si</code>. Gói này không có trên AUR: gói <code>tmplayer</code> ở đó là một ứng dụng khác.</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.tarball_h">Thư mục thuần</h3>
+            <p data-i18n="install.tarball">Giải nén <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> ở đâu cũng được rồi chạy <code>bin/TMPlayer</code> bên trong. Bản này không tự cập nhật: TMPlayer sẽ báo khi có phiên bản mới.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">Chuyển từ deb, rpm hoặc Flatpak</h3>
@@ -397,9 +455,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -412,7 +470,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <div class="two-col">
           <div class="panel panel-prose">
             <h3>Windows</h3>
-            <p data-i18n="install.it_is_already_in_start"><strong>Cài bằng MSI:</strong> nó đã có trong Start và trên màn hình nền. Để ghim, bấm chuột phải vào nó trong Start và chọn <em>Ghim vào thanh tác vụ</em>.</p>
+            <p data-i18n="install.win_pin">Ứng dụng đã có trong Start và trên màn hình nền. Để ghim, nhấp chuột phải vào nó trong Start và chọn <em>Ghim vào thanh tác vụ</em>.</p>
           </div>
           <div class="panel panel-prose">
             <h3 data-i18n="install.linux_the_arch_package">Linux: gói Arch</h3>
@@ -460,9 +518,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="trouble-h">
+  <section class="band" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -520,9 +578,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="support-h">
+  <section class="band band-tonal" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">Hãy gắn sao nếu nó có ích</h2>

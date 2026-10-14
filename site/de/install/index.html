@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title data-i18n="install.how_to_install_tmplayer_on">So installierst du TMPlayer auf Android TV, Windows und Linux</title>
-<meta name="description" content="Installiere den TMPlayer-Telegram-Videoplayer: die APK per Sideload auf Android TV oder einem Smartphone, SmartScreen unter Windows umgehen oder das AppImage unter Linux starten." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="description" content="TMPlayer installieren, den Telegram-Videoplayer: Downloader und Fernbedienung auf Android TV, die APK auf dem Smartphone, eine PowerShell-Zeile unter Windows, das AppImage unter Linux." data-i18n-content="install.description">
 <link rel="canonical" href="https://tmplayer.org/de/install/">
 <!-- i18n:head -->
 <link rel="alternate" hreflang="en" href="https://tmplayer.org/install/">
@@ -61,7 +61,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TMPlayer">
 <meta property="og:title" content="So installierst du TMPlayer auf Android TV, Windows und Linux" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta property="og:description" content="Installiere den TMPlayer-Telegram-Videoplayer: die APK per Sideload auf Android TV oder einem Smartphone, SmartScreen unter Windows umgehen oder das AppImage unter Linux starten." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta property="og:description" content="TMPlayer installieren, den Telegram-Videoplayer: Downloader und Fernbedienung auf Android TV, die APK auf dem Smartphone, eine PowerShell-Zeile unter Windows, das AppImage unter Linux." data-i18n-content="install.description">
 <meta property="og:url" content="https://tmplayer.org/de/install/">
 <meta property="og:image" content="https://tmplayer.org/og.png?v=4">
 <meta property="og:image:type" content="image/png">
@@ -71,7 +71,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="So installierst du TMPlayer auf Android TV, Windows und Linux" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta name="twitter:description" content="Installiere den TMPlayer-Telegram-Videoplayer: die APK per Sideload auf Android TV oder einem Smartphone, SmartScreen unter Windows umgehen oder das AppImage unter Linux starten." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="twitter:description" content="TMPlayer installieren, den Telegram-Videoplayer: Downloader und Fernbedienung auf Android TV, die APK auf dem Smartphone, eine PowerShell-Zeile unter Windows, das AppImage unter Linux." data-i18n-content="install.description">
 <meta name="twitter:image" content="https://tmplayer.org/og.png?v=4">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -123,45 +123,45 @@
 {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "So installierst du TMPlayer auf Android TV oder einem Android-Smartphone",
-  "description": "Installiere die TMPlayer-APK per Sideload auf einem Android TV, einem TV-Stick oder einem Smartphone und melde dich bei deinem eigenen Telegram-Konto an.",
-  "totalTime": "PT10M",
+  "name": "So installierst du TMPlayer auf Android TV",
+  "description": "Installiere TMPlayer auf einem Android TV oder Google TV mit der kostenlosen App Downloader und der Fernbedienung und melde dich dann mit deinem eigenen Telegram-Konto an.",
+  "totalTime": "PT5M",
   "tool": [
     {
       "@type": "HowToTool",
-      "name": "Ein Android TV, TV-Stick oder Android-Smartphone mit Android 8.0 oder neuer"
+      "name": "Ein Android-TV- oder Google-TV-Gerät mit Android 8.0 oder neuer"
     }
   ],
   "supply": [
     {
       "@type": "HowToSupply",
-      "name": "Die universelle TMPlayer-APK"
+      "name": "Die kostenlose App Downloader von AFTVnews"
     }
   ],
   "step": [
     {
       "@type": "HowToStep",
-      "name": "Apps von außerhalb des Stores erlauben",
+      "name": "Downloader installieren",
       "url": "https://tmplayer.org/de/install/#step-1",
-      "text": "Öffne auf dem Fernseher Einstellungen, dann Geräteeinstellungen, dann Info, und drücke siebenmal auf Build. Aktiviere dann Unbekannte Quellen für die App, mit der du die Datei übertragen willst. Auf dem Smartphone musst du noch nichts tun: Android fragt beim ersten Öffnen der Datei."
+      "text": "Öffne auf dem TV den Play Store, suche nach Downloader und installiere die kostenlose App von AFTVnews."
     },
     {
       "@type": "HowToStep",
-      "name": "Die Datei aufs Gerät bringen",
+      "name": "tmplayer.org/apk in Downloader eintippen",
       "url": "https://tmplayer.org/de/install/#step-2",
-      "text": "Tippe auf dem Smartphone auf den Download-Link und öffne die Datei, sobald sie da ist. Nutze auf dem Fernseher eine kostenlose App wie Downloader oder Send files to TV mit demselben Link, oder führe adb connect und adb install von einem Computer im selben WLAN aus."
+      "text": "Öffne Downloader, tippe tmplayer.org/apk in die Adresszeile und drücke Go. Die neueste TMPlayer-APK wird heruntergeladen."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Installation erlauben",
+      "url": "https://tmplayer.org/de/install/#step-3",
+      "text": "Wenn der TV fragt, erlaube Downloader, Apps zu installieren, und drücke Installieren. Fehlt der Schalter, drücke unter Einstellungen, Info siebenmal auf Build und versuche es erneut."
     },
     {
       "@type": "HowToStep",
       "name": "Anmelden",
-      "url": "https://tmplayer.org/de/install/#step-3",
-      "text": "Der Fernseher zeigt einen QR-Code: Öffne Telegram auf deinem Smartphone, gehe zu Einstellungen, dann Geräte, dann Desktop-Gerät verknüpfen, und richte die Kamera auf den Bildschirm. Ein Smartphone fragt stattdessen nach deiner Nummer."
-    },
-    {
-      "@type": "HowToStep",
-      "name": "Chat wählen und Play drücken",
       "url": "https://tmplayer.org/de/install/#step-4",
-      "text": "Deine Chats öffnen sich als Raster oder Reihen mit ihren abspielbaren Videos. Wähle eins, und es startet in wenigen Sekunden, während der Rest lädt."
+      "text": "Öffne TMPlayer und scanne seinen QR-Code mit Telegram auf deinem Smartphone: Einstellungen, Geräte, Desktop-Gerät verknüpfen."
     }
   ]
 }
@@ -275,11 +275,12 @@
       <h1 data-i18n="install.how_to_install_it">So installierst du es, <em>wo auch immer du schaust</em></h1>
       <p class="page-lede" data-i18n="install.on_a_tv_a_phone">Auf einem TV, Smartphone, unter Windows oder Linux. Du machst es nur einmal.</p>
       <div class="page-actions">
-        <a class="btn btn-filled" href="/de/download/" data-i18n="install.get_the_file_first"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg> Zuerst die Datei holen</a>
+        <a class="btn btn-filled" href="/de/download/" data-i18n="install.all_downloads"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg> Alle Downloads</a>
         <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener" data-i18n="install.the_full_install_md">Die vollständige INSTALL.md <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5 12a1 1 0 0 1 1-1h10.6l-3.3-3.3a1 1 0 1 1 1.4-1.4l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4l3.3-3.3H6a1 1 0 0 1-1-1Z"/></svg></a>
       </div>
       <nav class="platform-jump" aria-label="Plattformen" data-i18n-aria-label="download.platforms">
-        <a href="#android" data-i18n="install.android_tv_and_phone">Android TV und Smartphone</a>
+        <a href="#android-tv">Android TV</a>
+        <a href="#android" data-i18n="download.android_phone">Android-Smartphone</a>
         <a href="#windows">Windows</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">Desktop- und Menü-Verknüpfungen</a>
@@ -289,48 +290,87 @@
 
 <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="android" aria-labelledby="install-h">
+  <section class="band band-tonal" id="android-tv" aria-labelledby="tv-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
-          <h2 id="install-h" data-i18n="install.on_android_tv_or_a">Auf Android TV oder einem Smartphone: vier Schritte</h2>
-          <p class="section-sub" data-i18n="install.this_is_how_any_app">So kommt jede App von außerhalb des Stores auf ein Android-Gerät.</p>
+          <h2 id="tv-h" data-i18n="install.tv_title">Auf Android TV oder Google TV</h2>
+          <p class="section-sub" data-i18n="install.tv_sub">Android TV 8.0 oder neuer. Du brauchst nur die Fernbedienung. Auf einem Fire TV: <a href="/de/fire-tv/">folge der Fire-TV-Anleitung</a>.</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="step-1">
-            <h3 data-i18n="install.allow_apps_from_outside_the">Apps von außerhalb des Stores erlauben</h3>
-            <p data-i18n="install.on_a_tv_then_press">Auf einem TV: <em>Einstellungen</em>, <em>Geräteeinstellungen</em>, <em>Info</em>, dann siebenmal auf <em>Build</em> drücken. Aktiviere <em>Unbekannte Quellen</em> für die App, die die Datei überträgt.</p>
-            <p data-i18n="install.on_a_phone_nothing_yet">Auf einem Smartphone: noch nichts. Android fragt, wenn du die Datei zum ersten Mal öffnest.</p>
+            <h3 data-i18n="install.tv_step1_h">Downloader installieren</h3>
+            <p data-i18n="install.tv_step1">Öffne auf dem TV den Play Store, suche nach <em>Downloader</em> und installiere die kostenlose App von AFTVnews.</p>
           </li>
           <li id="step-2">
-            <h3 data-i18n="install.get_the_file_onto_the">Die Datei aufs Gerät bringen</h3>
-            <p data-i18n="install.on_a_phone_and_open">Auf einem Smartphone <a href="/de/download/">lädst du die APK herunter</a> und öffne sie. Auf einem TV nimmst du die kostenlose App Downloader oder <a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener"> <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a>, oder <code>adb</code> im selben WLAN:</p>
-            <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
-            <p data-i18n="install.turn_on_network_debugging_in">Aktiviere vorher in den Entwickleroptionen das Netzwerk-Debugging.</p>
-            <p data-i18n="install.on_a_fire_tv_the">Auf einem Fire TV heißen die Menüs anders: <a href="/de/fire-tv/">folge der Fire-TV-Anleitung</a>.</p>
+            <h3 data-i18n="install.tv_step2_h">Diese Adresse in Downloader eintippen</h3>
+            <pre class="code"><code>tmplayer.org/apk</code></pre>
+            <p data-i18n="install.tv_step2">Drücke <em>Go</em>. Die neueste Version von TMPlayer wird sofort heruntergeladen.</p>
           </li>
           <li id="step-3">
-            <h3 data-i18n="home.sign_in">Anmelden</h3>
-            <p data-i18n="install.on_a_tv_scan_the">Scanne auf einem TV den QR-Code: Öffne in Telegram auf deinem Smartphone <em>Einstellungen</em>, <em>Geräte</em>, <em>Desktop-Gerät verknüpfen</em>.</p>
-            <p data-i18n="install.on_a_phone_enter_your">Auf einem Smartphone gibst du stattdessen deine Nummer ein. Der QR-Code funktioniert weiterhin für ein Konto auf einem anderen Smartphone.</p>
+            <h3 data-i18n="install.tv_step3_h">Installation erlauben</h3>
+            <p data-i18n="install.tv_step3">Wenn der TV fragt, erlaube Downloader, Apps zu installieren, und drücke <em>Installieren</em>. Kein Schalter dafür da? Öffne <em>Einstellungen</em>, dann <em>Info</em> (unter <em>Geräteeinstellungen</em> oder <em>System</em>), drücke siebenmal auf <em>Build</em> und versuche es erneut.</p>
           </li>
           <li id="step-4">
-            <h3 data-i18n="install.pick_a_chat_and_press">Chat wählen und Play drücken</h3>
-            <p data-i18n="install.your_chats_open_as_grids">Deine Chats öffnen sich als Raster mit abspielbaren Videos. Wähle eins, und es startet in Sekunden.</p>
+            <h3 data-i18n="home.sign_in">Anmelden</h3>
+            <p data-i18n="install.tv_step4">Öffne TMPlayer und scanne den QR-Code mit Telegram auf deinem Smartphone: <em>Einstellungen</em>, <em>Geräte</em>, <em>Desktop-Gerät verknüpfen</em>.</p>
           </li>
         </ol>
-        <p class="muted small section-note" data-i18n="install.has_every_step_in_full"><a href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener">INSTALL.md</a> enthält jeden Schritt ausführlich, dazu Steuerung und Fehlerbehebung.</p>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">Andere Wege</h3>
+        <div class="formats">
+          <div class="format">
+            <h3 data-i18n="install.from_a_phone">Vom Smartphone</h3>
+            <p data-i18n="install.tv_from_phone">Installiere <a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener"> <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a> auf dem Smartphone und dem TV, lade die APK auf dem Smartphone herunter und schicke sie hinüber.</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.from_a_computer">Vom Computer</h3>
+            <p data-i18n="install.tv_from_computer">Schalte in den Entwickleroptionen des TV <em>Netzwerk-Debugging</em> ein, dann im selben WLAN:</p>
+            <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
+adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="windows" aria-labelledby="windows-h">
+  <section class="band" id="android" aria-labelledby="phone-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="phone-h" data-i18n="install.phone_title">Auf einem Android-Smartphone</h2>
+          <p class="section-sub" data-i18n="install.phone_sub">Android 8.0 oder neuer. Es dauert eine Minute.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="phone-1">
+            <h3 data-i18n="install.phone_step1_h">Die APK herunterladen</h3>
+            <p data-i18n="install.phone_step1">Öffne auf dem Smartphone <a href="/de/download/">die Download-Seite</a> und tippe oben auf den Download-Button.</p>
+          </li>
+          <li id="phone-2">
+            <h3 data-i18n="install.phone_step2_h">Öffnen und Installation erlauben</h3>
+            <p data-i18n="install.phone_step2">Öffne die Datei, wenn sie fertig ist. Beim ersten Mal fragt Android, ob dein Browser Apps installieren darf: Erlaube es und tippe auf <em>Installieren</em>.</p>
+          </li>
+          <li id="phone-3">
+            <h3 data-i18n="home.sign_in">Anmelden</h3>
+            <p data-i18n="install.phone_step3">Öffne TMPlayer und gib deine Telefonnummer ein. Für ein Konto auf einem anderen Smartphone scanne stattdessen den QR-Code mit diesem Smartphone.</p>
+          </li>
+        </ol>
+        <p class="muted small section-note" data-i18n="install.phone_obtainium">Oder füge es zu <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener">Obtainium</a> hinzu, das es von GitHub installiert und aktuell hält.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="windows" aria-labelledby="windows-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -342,50 +382,68 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="win-1">
-            <h3 data-i18n="install.download_the_installer">Installer herunterladen</h3>
-            <p data-i18n="install.take_from_the_portable_zip">Nimm <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> von <a href="/de/download/#windows">der Download-Seite</a>. Das portable Zip wird nicht mehr veröffentlicht: Wenn du es genutzt hast, lösche seinen Ordner und installiere die MSI. Deine Anmeldung und Einstellungen liegen in deinem Benutzerprofil, nicht in diesem Ordner, und bleiben daher erhalten.</p>
+            <h3 data-i18n="install.win_step1_h">PowerShell öffnen</h3>
+            <p data-i18n="install.win_step1">Öffne <em>Start</em>, tippe <em>PowerShell</em> und drücke die Eingabetaste. Ein normales Fenster reicht; es muss nicht als Administrator laufen.</p>
           </li>
           <li id="win-2">
-            <h3 data-i18n="install.get_past_smartscreen">SmartScreen umgehen</h3>
-            <p data-i18n="install.the_build_is_not_signed">Der Build ist noch nicht signiert, deshalb meldet Windows <em>Der Computer wurde durch Windows geschützt</em>. Klicke auf <em>Weitere Informationen</em>, dann auf <em>Trotzdem ausführen</em>.</p>
-            <p data-i18n="install.to_skip_that_step_install">Um diesen Schritt zu überspringen, installiere stattdessen über <em>PowerShell</em>: Füge die Zeile unten ein. Sie lädt dasselbe Installationsprogramm von GitHub, prüft es gegen die veröffentlichte Prüfsumme und startet es, und Windows hält es nicht auf.</p>
+            <h3 data-i18n="install.win_step2_h">Diese Zeile einfügen und Eingabe drücken</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            <p data-i18n="install.win_step2">Sie lädt das Installationsprogramm von GitHub, prüft es gegen die veröffentlichte Prüfsumme und installiert TMPlayer für deinen Benutzer, ohne Warnung von Windows.</p>
           </li>
           <li id="win-3">
-            <h3 data-i18n="install.install_and_open_it">Installieren und öffnen</h3>
-            <p data-i18n="install.click_through_the_installer_tmplayer">Klicke dich durch den Installer. TMPlayer landet im Startmenü und auf dem Desktop. Eine neuere MSI aktualisiert es direkt.</p>
-          </li>
-          <li id="win-4">
-            <h3 data-i18n="install.sign_in_with_the_qr">Mit dem QR-Code anmelden</h3>
+            <h3 data-i18n="install.win_step3_h">Öffnen und anmelden</h3>
+            <p data-i18n="install.win_step3">TMPlayer ist jetzt im Startmenü und auf dem Desktop.</p>
             <p data-i18n="install.scan_the_qr_code_with">Scanne den QR-Code mit Telegram auf deinem Smartphone: <em>Einstellungen</em>, <em>Geräte</em>, <em>Desktop-Gerät verknüpfen</em>. Oder wähle <em>Mit Telefonnummer anmelden</em>.</p>
           </li>
         </ol>
+
+        <div class="panel panel-prose panel-wide" id="windows-installer">
+          <h3 data-i18n="install.win_msi_h">Lieber ein Installationsprogramm?</h3>
+          <p data-i18n="install.win_msi">Lade <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> von <a href="/de/download/#windows">der Download-Seite</a> herunter und öffne es. Es ist noch nicht codesigniert, daher kann Windows <em>Der Computer wurde durch Windows geschützt</em> melden: Klicke auf <em>Weitere Informationen</em>, dann auf <em>Trotzdem ausführen</em>.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.win_zip_note">Du hast die alte portable ZIP genutzt? Lösche ihren Ordner und installiere wie oben. Anmeldung und Einstellungen bleiben erhalten.</p>
       </div>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="linux-h" data-i18n="install.on_linux">Unter Linux</h2>
-          <p class="section-sub" data-i18n="install.64_bit_x86_with_glibc">64-Bit-x86, mit glibc 2.38 oder neuer: Ubuntu 24.04, Debian 13, Fedora 39 und neuer. Melde dich dann mit dem QR-Code an.</p>
+          <p class="section-sub" data-i18n="download.x86_64_with_glibc_2">x86_64, mit glibc 2.38 oder neuer: Ubuntu 24.04, Debian 13, Fedora 39 und neuer</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
-        <div class="formats">
-          <div class="format">
-            <h3 data-i18n="install.appimage_on_any_distribution">AppImage, auf jeder Distribution</h3>
+        <ol class="steps">
+          <li id="linux-1">
+            <h3 data-i18n="install.linux_step1_h">Das AppImage herunterladen</h3>
+            <p data-i18n="install.linux_step1">Hol dir <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> von <a href="/de/download/#linux">der Download-Seite</a>. Eine Datei für jede Distribution.</p>
+          </li>
+          <li id="linux-2">
+            <h3 data-i18n="install.linux_step2_h">Ausführbar machen und öffnen</h3>
             <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
 ./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
             <p data-i18n="install.or_tick_in_the_file">Oder setze in den Eigenschaften der Datei den Haken bei <em>Datei als Programm ausführen</em> und klicke doppelt darauf.</p>
-          </div>
+          </li>
+          <li id="linux-3">
+            <h3 data-i18n="home.sign_in">Anmelden</h3>
+            <p data-i18n="install.scan_the_qr_code_with">Scanne den QR-Code mit Telegram auf deinem Smartphone: <em>Einstellungen</em>, <em>Geräte</em>, <em>Desktop-Gerät verknüpfen</em>. Oder wähle <em>Mit Telefonnummer anmelden</em>.</p>
+          </li>
+        </ol>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">Andere Wege</h3>
+        <div class="formats">
           <div class="format">
             <h3 data-i18n="download.arch_linux">Arch Linux</h3>
-            <p data-i18n="install.build_the_package_from_the">Baue das Paket aus dem Rezept in <a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a> mit <code>makepkg -si</code>, oder nimm das AppImage.</p>
+            <p data-i18n="install.arch_note">Baue das Paket aus dem Rezept in <a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a> mit <code>makepkg -si</code>. Es ist nicht im AUR: Das Paket <code>tmplayer</code> dort ist eine andere App.</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.tarball_h">Der einfache Ordner</h3>
+            <p data-i18n="install.tarball">Entpacke <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> an einen beliebigen Ort und starte darin <code>bin/TMPlayer</code>. Er aktualisiert sich nicht selbst: TMPlayer sagt dir, wenn eine neue Version da ist.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">Umstieg von deb, rpm oder Flatpak</h3>
@@ -397,9 +455,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -412,7 +470,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <div class="two-col">
           <div class="panel panel-prose">
             <h3>Windows</h3>
-            <p data-i18n="install.it_is_already_in_start"><strong>MSI-Installation:</strong> Es ist schon im Startmenü und auf dem Desktop. Zum Anheften klickst du im Startmenü mit rechts darauf und wählst <em>An Taskleiste anheften</em>.</p>
+            <p data-i18n="install.win_pin">Es ist schon im Startmenü und auf dem Desktop. Zum Anheften klicke es im Startmenü mit rechts an und wähle <em>An Taskleiste anheften</em>.</p>
           </div>
           <div class="panel panel-prose">
             <h3 data-i18n="install.linux_the_arch_package">Linux: das Arch-Paket</h3>
@@ -460,9 +518,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="trouble-h">
+  <section class="band" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -520,9 +578,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="support-h">
+  <section class="band band-tonal" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">Gib ihm einen Stern, wenn es geholfen hat</h2>

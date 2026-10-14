@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title data-i18n="install.how_to_install_tmplayer_on">Як установити TMPlayer на Android TV, Windows і Linux</title>
-<meta name="description" content="Установіть відеоплеєр TMPlayer для Telegram: встановіть APK вручну на Android TV чи телефон, обійдіть SmartScreen у Windows або запустіть AppImage на Linux." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="description" content="Установіть TMPlayer, відеоплеєр для Telegram: Downloader і пульт на Android TV, APK на телефоні, один рядок PowerShell у Windows, AppImage у Linux." data-i18n-content="install.description">
 <link rel="canonical" href="https://tmplayer.org/uk/install/">
 <!-- i18n:head -->
 <link rel="alternate" hreflang="en" href="https://tmplayer.org/install/">
@@ -61,7 +61,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TMPlayer">
 <meta property="og:title" content="Як установити TMPlayer на Android TV, Windows і Linux" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta property="og:description" content="Установіть відеоплеєр TMPlayer для Telegram: встановіть APK вручну на Android TV чи телефон, обійдіть SmartScreen у Windows або запустіть AppImage на Linux." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta property="og:description" content="Установіть TMPlayer, відеоплеєр для Telegram: Downloader і пульт на Android TV, APK на телефоні, один рядок PowerShell у Windows, AppImage у Linux." data-i18n-content="install.description">
 <meta property="og:url" content="https://tmplayer.org/uk/install/">
 <meta property="og:image" content="https://tmplayer.org/og.png?v=4">
 <meta property="og:image:type" content="image/png">
@@ -71,7 +71,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Як установити TMPlayer на Android TV, Windows і Linux" data-i18n-content="install.how_to_install_tmplayer_on">
-<meta name="twitter:description" content="Установіть відеоплеєр TMPlayer для Telegram: встановіть APK вручну на Android TV чи телефон, обійдіть SmartScreen у Windows або запустіть AppImage на Linux." data-i18n-content="install.install_the_tmplayer_telegram_video">
+<meta name="twitter:description" content="Установіть TMPlayer, відеоплеєр для Telegram: Downloader і пульт на Android TV, APK на телефоні, один рядок PowerShell у Windows, AppImage у Linux." data-i18n-content="install.description">
 <meta name="twitter:image" content="https://tmplayer.org/og.png?v=4">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -123,45 +123,45 @@
 {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  "name": "Як установити TMPlayer на Android TV або телефон Android",
-  "description": "Встановіть APK TMPlayer вручну на Android TV, ТВ-приставку або телефон і увійдіть у свій обліковий запис Telegram.",
-  "totalTime": "PT10M",
+  "name": "Як установити TMPlayer на Android TV",
+  "description": "Установіть TMPlayer на Android TV або Google TV за допомогою безкоштовного застосунку Downloader і пульта, а потім увійдіть у свій обліковий запис Telegram.",
+  "totalTime": "PT5M",
   "tool": [
     {
       "@type": "HowToTool",
-      "name": "Android TV, ТВ-приставка або телефон Android з Android 8.0 чи новішим"
+      "name": "Пристрій Android TV або Google TV з Android 8.0 або новішим"
     }
   ],
   "supply": [
     {
       "@type": "HowToSupply",
-      "name": "Універсальний APK TMPlayer"
+      "name": "Безкоштовний застосунок Downloader від AFTVnews"
     }
   ],
   "step": [
     {
       "@type": "HowToStep",
-      "name": "Дозвольте застосунки не з магазину",
+      "name": "Установіть Downloader",
       "url": "https://tmplayer.org/uk/install/#step-1",
-      "text": "На телевізорі відкрийте Налаштування, потім Параметри пристрою, потім Про пристрій і сім разів натисніть Збірка. Потім увімкніть Невідомі джерела для застосунку, яким ви копіюєте файл. На телефоні поки нічого робити не треба: Android запитає, коли ви вперше відкриєте файл."
+      "text": "На телевізорі відкрийте Play Market, знайдіть Downloader і встановіть безкоштовний застосунок від AFTVnews."
     },
     {
       "@type": "HowToStep",
-      "name": "Отримайте файл на пристрої",
+      "name": "Введіть tmplayer.org/apk у Downloader",
       "url": "https://tmplayer.org/uk/install/#step-2",
-      "text": "На телефоні торкніться посилання для завантаження й відкрийте файл, коли він з’явиться. На телевізорі скористайтеся безкоштовним застосунком, як-от Downloader або Send files to TV, з тим самим посиланням, або виконайте adb connect і adb install з комп’ютера в тій самій мережі Wi-Fi."
+      "text": "Відкрийте Downloader, введіть tmplayer.org/apk в адресний рядок і натисніть Go. Почнеться завантаження останнього APK TMPlayer."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Дозвольте встановлення",
+      "url": "https://tmplayer.org/uk/install/#step-3",
+      "text": "Коли телевізор запитає, дозвольте Downloader установлювати застосунки й натисніть «Установити». Якщо перемикача немає, натисніть «Збірка» сім разів у Налаштування, Про пристрій і спробуйте знову."
     },
     {
       "@type": "HowToStep",
       "name": "Вхід",
-      "url": "https://tmplayer.org/uk/install/#step-3",
-      "text": "Телевізор показує QR-код: відкрийте Telegram на телефоні, перейдіть у Налаштування, потім Пристрої, потім Під’єднати пристрій і наведіть камеру на екран. Телефон натомість запитає ваш номер."
-    },
-    {
-      "@type": "HowToStep",
-      "name": "Виберіть чат і натисніть відтворення",
       "url": "https://tmplayer.org/uk/install/#step-4",
-      "text": "Ваші чати відкриваються сітками або рядами відео, які можна відтворити. Виберіть одне, і воно запуститься за кілька секунд, поки решта завантажується."
+      "text": "Відкрийте TMPlayer і скануйте його QR-код у Telegram на телефоні: Налаштування, Пристрої, Під’єднати пристрій."
     }
   ]
 }
@@ -275,11 +275,12 @@
       <h1 data-i18n="install.how_to_install_it">Як установити, <em>де б ви не дивилися</em></h1>
       <p class="page-lede" data-i18n="install.on_a_tv_a_phone">На телевізорі, телефоні, Windows чи Linux. Робити це треба лише раз.</p>
       <div class="page-actions">
-        <a class="btn btn-filled" href="/uk/download/" data-i18n="install.get_the_file_first"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg> Спершу отримайте файл</a>
+        <a class="btn btn-filled" href="/uk/download/" data-i18n="install.all_downloads"> <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg> Усі завантаження</a>
         <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener" data-i18n="install.the_full_install_md">Повний INSTALL.md <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5 12a1 1 0 0 1 1-1h10.6l-3.3-3.3a1 1 0 1 1 1.4-1.4l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4l3.3-3.3H6a1 1 0 0 1-1-1Z"/></svg></a>
       </div>
       <nav class="platform-jump" aria-label="Платформи" data-i18n-aria-label="download.platforms">
-        <a href="#android" data-i18n="install.android_tv_and_phone">Android TV і телефон</a>
+        <a href="#android-tv">Android TV</a>
+        <a href="#android" data-i18n="download.android_phone">Телефон Android</a>
         <a href="#windows">Windows</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">Ярлики на робочому столі та в меню</a>
@@ -289,48 +290,87 @@
 
 <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="android" aria-labelledby="install-h">
+  <section class="band band-tonal" id="android-tv" aria-labelledby="tv-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
-          <h2 id="install-h" data-i18n="install.on_android_tv_or_a">На Android TV або телефоні: чотири кроки</h2>
-          <p class="section-sub" data-i18n="install.this_is_how_any_app">Так будь-який застосунок не з магазину потрапляє на пристрій Android.</p>
+          <h2 id="tv-h" data-i18n="install.tv_title">На Android TV або Google TV</h2>
+          <p class="section-sub" data-i18n="install.tv_sub">Android TV 8.0 або новіший. Потрібен лише пульт. На Fire TV <a href="/uk/fire-tv/">скористайтеся посібником для Fire TV</a>.</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="step-1">
-            <h3 data-i18n="install.allow_apps_from_outside_the">Дозвольте застосунки не з магазину</h3>
-            <p data-i18n="install.on_a_tv_then_press">На телевізорі: <em>Налаштування</em>, <em>Параметри пристрою</em>, <em>Про пристрій</em>, потім сім разів натисніть <em>Збірка</em>. Увімкніть <em>Невідомі джерела</em> для застосунку, яким копіюєте файл.</p>
-            <p data-i18n="install.on_a_phone_nothing_yet">На телефоні: поки нічого. Android запитає, коли ви вперше відкриєте файл.</p>
+            <h3 data-i18n="install.tv_step1_h">Установіть Downloader</h3>
+            <p data-i18n="install.tv_step1">На телевізорі відкрийте Play Market, знайдіть <em>Downloader</em> і встановіть безкоштовний застосунок від AFTVnews.</p>
           </li>
           <li id="step-2">
-            <h3 data-i18n="install.get_the_file_onto_the">Отримайте файл на пристрої</h3>
-            <p data-i18n="install.on_a_phone_and_open">На телефоні <a href="/uk/download/">завантажте APK</a> і відкрийте його. На телевізорі скористайтеся безкоштовними Downloader або <a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener"> <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a>, застосунками, чи <code>adb</code> в тій самій мережі Wi-Fi:</p>
-            <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
-            <p data-i18n="install.turn_on_network_debugging_in">Спершу ввімкніть налагодження через мережу в параметрах розробника.</p>
-            <p data-i18n="install.on_a_fire_tv_the">На Fire TV меню названо інакше: <a href="/uk/fire-tv/">скористайтеся посібником для Fire TV</a>.</p>
+            <h3 data-i18n="install.tv_step2_h">Введіть цю адресу в Downloader</h3>
+            <pre class="code"><code>tmplayer.org/apk</code></pre>
+            <p data-i18n="install.tv_step2">Натисніть <em>Go</em>. Остання версія TMPlayer одразу почне завантажуватися.</p>
           </li>
           <li id="step-3">
-            <h3 data-i18n="home.sign_in">Вхід</h3>
-            <p data-i18n="install.on_a_tv_scan_the">На телевізорі скануйте QR-код: у Telegram на телефоні відкрийте <em>Налаштування</em>, <em>Пристрої</em>, <em>Під’єднати пристрій</em>.</p>
-            <p data-i18n="install.on_a_phone_enter_your">На телефоні натомість уведіть свій номер. QR-код усе одно працює для облікового запису на іншому телефоні.</p>
+            <h3 data-i18n="install.tv_step3_h">Дозвольте встановлення</h3>
+            <p data-i18n="install.tv_step3">Коли телевізор запитає, дозвольте Downloader установлювати застосунки й натисніть <em>Установити</em>. Немає перемикача? Відкрийте <em>Налаштування</em>, потім <em>Про пристрій</em> (у розділі <em>Параметри пристрою</em> або <em>Система</em>), натисніть <em>Збірка</em> сім разів і спробуйте знову.</p>
           </li>
           <li id="step-4">
-            <h3 data-i18n="install.pick_a_chat_and_press">Виберіть чат і натисніть відтворення</h3>
-            <p data-i18n="install.your_chats_open_as_grids">Ваші чати відкриваються сітками відео, які можна відтворити. Виберіть одне, і воно запуститься за секунди.</p>
+            <h3 data-i18n="home.sign_in">Вхід</h3>
+            <p data-i18n="install.tv_step4">Відкрийте TMPlayer і скануйте QR-код у Telegram на телефоні: <em>Налаштування</em>, <em>Пристрої</em>, <em>Під’єднати пристрій</em>.</p>
           </li>
         </ol>
-        <p class="muted small section-note" data-i18n="install.has_every_step_in_full"><a href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener">INSTALL.md</a> містить кожен крок повністю, а також керування й усунення несправностей.</p>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">Інші способи</h3>
+        <div class="formats">
+          <div class="format">
+            <h3 data-i18n="install.from_a_phone">З телефона</h3>
+            <p data-i18n="install.tv_from_phone">Установіть <a class="inline-link" href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" target="_blank" rel="noopener"> <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v-2h7V6H3v2H1V6a2 2 0 0 1 2-2Zm-2 16a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-4a1 1 0 0 1 0-2 3 3 0 0 1 3 3 1 1 0 1 1-2 0 1 1 0 0 0-1-1Zm0-4a1 1 0 0 1 0-2 7 7 0 0 1 7 7 1 1 0 1 1-2 0 5 5 0 0 0-5-5Z"/></svg>Send files to TV</a> на телефон і на телевізор, завантажте APK на телефон і надішліть його на телевізор.</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.from_a_computer">З комп'ютера</h3>
+            <p data-i18n="install.tv_from_computer">Увімкніть <em>Налагодження через мережу</em> у параметрах розробника телевізора, а потім у тій самій мережі wifi:</p>
+            <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
+adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="windows" aria-labelledby="windows-h">
+  <section class="band" id="android" aria-labelledby="phone-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="phone-h" data-i18n="install.phone_title">На телефоні Android</h2>
+          <p class="section-sub" data-i18n="install.phone_sub">Android 8.0 або новіший. Це займе хвилину.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="phone-1">
+            <h3 data-i18n="install.phone_step1_h">Завантажте APK</h3>
+            <p data-i18n="install.phone_step1">На телефоні відкрийте <a href="/uk/download/">сторінку завантаження</a> і торкніться кнопки завантаження вгорі.</p>
+          </li>
+          <li id="phone-2">
+            <h3 data-i18n="install.phone_step2_h">Відкрийте його й дозвольте встановлення</h3>
+            <p data-i18n="install.phone_step2">Відкрийте файл, коли він завантажиться. Першого разу Android попросить дозволити браузеру встановлювати застосунки: дозвольте й торкніться <em>Установити</em>.</p>
+          </li>
+          <li id="phone-3">
+            <h3 data-i18n="home.sign_in">Вхід</h3>
+            <p data-i18n="install.phone_step3">Відкрийте TMPlayer і введіть номер телефона. Для облікового запису, що є на іншому телефоні, натомість скануйте QR-код тим телефоном.</p>
+          </li>
+        </ol>
+        <p class="muted small section-note" data-i18n="install.phone_obtainium">Або додайте його до <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener">Obtainium</a>: він установлює застосунок прямо з GitHub і оновлює його.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="windows" aria-labelledby="windows-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -342,50 +382,68 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
       <div class="section-body" data-reveal>
         <ol class="steps">
           <li id="win-1">
-            <h3 data-i18n="install.download_the_installer">Завантажте інсталятор</h3>
-            <p data-i18n="install.take_from_the_portable_zip">Візьміть <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> зі <a href="/uk/download/#windows">сторінки завантаження</a>. Портативний zip більше не публікується: якщо ви ним користувалися, видаліть його теку й установіть MSI. Ваш вхід і налаштування зберігаються у вашому профілі користувача, а не в тій теці, тож вони збережуться.</p>
+            <h3 data-i18n="install.win_step1_h">Відкрийте PowerShell</h3>
+            <p data-i18n="install.win_step1">Відкрийте <em>Пуск</em>, введіть <em>PowerShell</em> і натисніть Enter. Досить звичайного вікна; запускати від імені адміністратора не треба.</p>
           </li>
           <li id="win-2">
-            <h3 data-i18n="install.get_past_smartscreen">Обійдіть SmartScreen</h3>
-            <p data-i18n="install.the_build_is_not_signed">Збірку ще не підписано, тому Windows показує <em>Windows захистила ваш ПК</em>. Натисніть <em>Додаткові відомості</em>, потім <em>Усе одно виконати</em>.</p>
-            <p data-i18n="install.to_skip_that_step_install">Щоб пропустити цей крок, установіть через <em>PowerShell</em>: вставте рядок нижче. Він завантажить той самий інсталятор із GitHub, звірить його з опублікованою контрольною сумою й запустить, і Windows його не зупинить.</p>
+            <h3 data-i18n="install.win_step2_h">Вставте цей рядок і натисніть Enter</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            <p data-i18n="install.win_step2">Він завантажує інсталятор із GitHub, звіряє його з опублікованою контрольною сумою й установлює TMPlayer для вашого користувача, без попереджень Windows.</p>
           </li>
           <li id="win-3">
-            <h3 data-i18n="install.install_and_open_it">Установіть і відкрийте</h3>
-            <p data-i18n="install.click_through_the_installer_tmplayer">Пройдіть кроки інсталятора. TMPlayer з’явиться в меню «Пуск» і на робочому столі. Новіший MSI оновлює його на місці.</p>
-          </li>
-          <li id="win-4">
-            <h3 data-i18n="install.sign_in_with_the_qr">Увійдіть за QR-кодом</h3>
+            <h3 data-i18n="install.win_step3_h">Відкрийте його й увійдіть</h3>
+            <p data-i18n="install.win_step3">TMPlayer тепер у меню «Пуск» і на робочому столі.</p>
             <p data-i18n="install.scan_the_qr_code_with">Скануйте QR-код у Telegram на телефоні: <em>Налаштування</em>, <em>Пристрої</em>, <em>Під’єднати пристрій</em>. Або виберіть <em>Увійти за номером телефона</em>.</p>
           </li>
         </ol>
+
+        <div class="panel panel-prose panel-wide" id="windows-installer">
+          <h3 data-i18n="install.win_msi_h">Волієте інсталятор?</h3>
+          <p data-i18n="install.win_msi">Завантажте <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> зі <a href="/uk/download/#windows">сторінки завантаження</a> і відкрийте його. Він поки не підписаний, тож Windows може показати <em>Windows захистила ваш ПК</em>: натисніть <em>Додаткові відомості</em>, потім <em>Усе одно виконати</em>.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.win_zip_note">Користувалися старим портативним zip? Видаліть його теку й установіть, як описано вище. Вхід і налаштування збережуться.</p>
       </div>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="linux-h" data-i18n="install.on_linux">На Linux</h2>
-          <p class="section-sub" data-i18n="install.64_bit_x86_with_glibc">64-бітний x86, з glibc 2.38 або новішою: Ubuntu 24.04, Debian 13, Fedora 39 і новіші. Потім увійдіть за QR-кодом.</p>
+          <p class="section-sub" data-i18n="download.x86_64_with_glibc_2">x86_64, з glibc 2.38 або новішою: Ubuntu 24.04, Debian 13, Fedora 39 і новіші</p>
         </div>
       </div>
 
       <div class="section-body" data-reveal>
-        <div class="formats">
-          <div class="format">
-            <h3 data-i18n="install.appimage_on_any_distribution">AppImage, у будь-якому дистрибутиві</h3>
+        <ol class="steps">
+          <li id="linux-1">
+            <h3 data-i18n="install.linux_step1_h">Завантажте AppImage</h3>
+            <p data-i18n="install.linux_step1">Візьміть <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> зі <a href="/uk/download/#linux">сторінки завантаження</a>. Один файл для будь-якого дистрибутива.</p>
+          </li>
+          <li id="linux-2">
+            <h3 data-i18n="install.linux_step2_h">Зробіть його виконуваним і відкрийте</h3>
             <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
 ./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
             <p data-i18n="install.or_tick_in_the_file">Або позначте <em>Дозволити виконувати файл як програму</em> у властивостях файлу й двічі клацніть його.</p>
-          </div>
+          </li>
+          <li id="linux-3">
+            <h3 data-i18n="home.sign_in">Вхід</h3>
+            <p data-i18n="install.scan_the_qr_code_with">Скануйте QR-код у Telegram на телефоні: <em>Налаштування</em>, <em>Пристрої</em>, <em>Під’єднати пристрій</em>. Або виберіть <em>Увійти за номером телефона</em>.</p>
+          </li>
+        </ol>
+
+        <h3 class="alt-head" data-i18n="install.other_ways">Інші способи</h3>
+        <div class="formats">
           <div class="format">
             <h3 data-i18n="download.arch_linux">Arch Linux</h3>
-            <p data-i18n="install.build_the_package_from_the">Зберіть пакет за рецептом у <a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a> командою <code>makepkg -si</code> або скористайтеся AppImage.</p>
+            <p data-i18n="install.arch_note">Зберіть пакет за рецептом із <a href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" rel="noopener"><code>desktop/packaging/aur</code></a> командою <code>makepkg -si</code>. В AUR його немає: пакет <code>tmplayer</code> там зовсім інший застосунок.</p>
+          </div>
+          <div class="format">
+            <h3 data-i18n="install.tarball_h">Звичайна тека</h3>
+            <p data-i18n="install.tarball">Розпакуйте <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> куди завгодно й запустіть усередині <code>bin/TMPlayer</code>. Сама вона не оновлюється: TMPlayer повідомить, коли вийде нова версія.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">Перехід із deb, rpm або Flatpak</h3>
@@ -397,9 +455,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -412,7 +470,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <div class="two-col">
           <div class="panel panel-prose">
             <h3>Windows</h3>
-            <p data-i18n="install.it_is_already_in_start"><strong>Установлення через MSI:</strong> він уже є в меню «Пуск» і на робочому столі. Щоб закріпити, клацніть його правою кнопкою в «Пуску» й виберіть <em>Закріпити на панелі завдань</em>.</p>
+            <p data-i18n="install.win_pin">Він уже в меню «Пуск» і на робочому столі. Щоб закріпити, клацніть його правою кнопкою в «Пуску» й виберіть <em>Закріпити на панелі завдань</em>.</p>
           </div>
           <div class="panel panel-prose">
             <h3 data-i18n="install.linux_the_arch_package">Linux: пакет для Arch</h3>
@@ -460,9 +518,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="trouble-h">
+  <section class="band" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -520,9 +578,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="support-h">
+  <section class="band band-tonal" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">Поставте зірку, якщо допомогло</h2>

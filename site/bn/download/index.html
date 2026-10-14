@@ -331,7 +331,7 @@
               <li class="abi" data-asset="apk-universal" data-primary>
                 <div class="abi-text">
                   <p class="abi-name" data-i18n="download.universal_apk">ইউনিভার্সাল APK <span class="badge badge-quiet">এখান থেকে শুরু করুন</span></p>
-                  <p class="abi-note" data-i18n="download.the_same_file_as_the">ফোনের মতো একই ফাইল। Downloader, Send files to TV বা <code>adb</code> দিয়ে টিভিতে পাঠান।</p>
+                  <p class="abi-note" data-i18n="download.tv_note">ফোনের ফাইলটাই। TV-তে বিনামূল্যের Downloader অ্যাপে <code>tmplayer.org/apk</code> টাইপ করুন।</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_universal_apk">TMPlayer-&lt;version&gt;-universal.apk</p>
                 </div>
                 <div class="abi-get">
@@ -340,7 +340,7 @@
                 </div>
               </li>
             </ul>
-            <p class="platform-foot"><a href="/bn/install/#android" data-i18n="download.how_to_install_on_a_2">টিভিতে ইনস্টল করার নিয়ম</a><span class="sep" aria-hidden="true">&middot;</span><a href="/bn/android-tv/" data-i18n="download.made_for_the_tv">টিভির জন্য তৈরি</a><span class="sep" aria-hidden="true">&middot;</span><a href="/bn/fire-tv/" data-i18n="download.fire_tv_guide">Fire TV গাইড</a></p>
+            <p class="platform-foot"><a href="/bn/install/#android-tv" data-i18n="download.how_to_install_on_a_2">টিভিতে ইনস্টল করার নিয়ম</a><span class="sep" aria-hidden="true">&middot;</span><a href="/bn/android-tv/" data-i18n="download.made_for_the_tv">টিভির জন্য তৈরি</a><span class="sep" aria-hidden="true">&middot;</span><a href="/bn/fire-tv/" data-i18n="download.fire_tv_guide">Fire TV গাইড</a></p>
           </article>
 
           <article class="platform" id="windows" data-os="windows" aria-labelledby="windows-h">
@@ -354,11 +354,15 @@
               </div>
               <span class="badge platform-yours" hidden data-i18n="download.your_computer">আপনার কম্পিউটার</span>
             </div>
+            <div class="callout">
+              <p data-i18n="download.win_cmd">প্রস্তাবিত: <em>PowerShell</em> খুলে এই লাইনটি পেস্ট করুন। এটি আপনার ইউজারের জন্য সর্বশেষ সংস্করণ ইনস্টল করে এবং প্রকাশিত checksum-এর সঙ্গে মিলিয়ে দেখে, SmartScreen-এর সতর্কবার্তা ছাড়াই।</p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
             <ul class="abi-list">
               <li class="abi" data-asset="win-msi" data-primary>
                 <div class="abi-text">
-                  <p class="abi-name" data-i18n="download.installer">ইনস্টলার <span class="badge badge-quiet">এখান থেকে শুরু করুন</span></p>
-                  <p class="abi-note" data-i18n="download.adds_a_start_menu_entry">Start মেনুতে একটি এন্ট্রি ও ডেস্কটপে একটি শর্টকাট যোগ করে। অ্যাডমিনিস্ট্রেটর লাগে না।</p>
+                  <p class="abi-name" data-i18n="download.win_msi_name">ইনস্টলার পছন্দ?</p>
+                  <p class="abi-note" data-i18n="download.win_msi_note">এতে এখনো কোড সাইনিং নেই, তাই SmartScreen সতর্ক করতে পারে: <em>More info</em>-এ ক্লিক করুন, তারপর <em>Run anyway</em>-এ।</p>
                   <p class="abi-file" data-file data-i18n="download.tmplayer_version_windows_x64_msi">TMPlayer-&lt;version&gt;-windows-x64.msi</p>
                 </div>
                 <div class="abi-get">
@@ -367,13 +371,6 @@
                 </div>
               </li>
             </ul>
-            <div class="callout callout-warn">
-              <p data-i18n="download.the_installer_is_not_code_signed">ইনস্টলারটি এখনো কোড সাইন করা নয়, তাই প্রথমবার SmartScreen সতর্ক করতে পারে। <em>More info</em> ক্লিক করুন, তারপর <em>Run anyway</em>।</p>
-            </div>
-            <div class="callout">
-              <p data-i18n="download.or_skip_the_warning_open">অথবা সতর্কবার্তা এড়িয়ে যান: <em>PowerShell</em> খুলে এটি পেস্ট করুন। এটি GitHub থেকে একই ইনস্টলার নামায়, প্রকাশিত চেকসামের সঙ্গে মিলিয়ে দেখে, তারপর চালায়।</p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
             <p class="platform-foot"><a href="/bn/install/#windows" data-i18n="download.how_to_install_on_windows">Windows-এ ইনস্টল করার নিয়ম</a></p>
           </article>
 
