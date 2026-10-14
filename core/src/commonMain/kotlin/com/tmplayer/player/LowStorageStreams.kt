@@ -41,12 +41,12 @@ object LowStorageStreams {
      * leaves on disk, so call it only for a request that is about to be made.
      */
     @Synchronized
-    fun plan(fileId: Int, offset: Long, size: Long): LowStorageWindow.Request? {
+    fun plan(fileId: Int, offset: Long, size: Long, roll: Boolean = false): LowStorageWindow.Request? {
         val state = files[fileId] ?: return null
         // The download queue shares this file in TDLib: it is the viewer's now, and not ours to
         // delete or to cut short.
         if (OfflineDownloads.isDownloading(fileId)) return null
-        val request = LowStorageWindow.plan(state.ranges, offset, size, state.window)
+        val request = LowStorageWindow.plan(state.ranges, offset, size, state.window, roll)
         state.ranges = request.ranges
         return request
     }

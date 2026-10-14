@@ -220,9 +220,10 @@ class DownloadWindowTest {
     }
 
     @Test
-    fun `a window that reaches the end of the film asks for the rest`() {
+    fun `a window that reaches the end of the film asks for the rest, and no more`() {
         val request = LowStorageWindow.plan(emptyList(), film - 50 * mb, film, w)
-        assertEquals(0, request.limit)
+        // Never 0: TDLib reads that as no limit and, past the end, fetches the film from the start.
+        assertEquals(50 * mb, request.limit)
         assertEquals(listOf(r(film - 50 * mb, film)), request.ranges)
     }
 
@@ -255,7 +256,7 @@ class DownloadWindowTest {
         assertTrue(from <= position - LowStorageWindow.BACK_BYTES)
         assertTrue(position - from < LowStorageWindow.BACK_BYTES + LowStorageWindow.ALIGN_BYTES)
         assertEquals(0, from % LowStorageWindow.ALIGN_BYTES)
-        val request = LowStorageWindow.plan(listOf(r(0, w)), from, film, w)
+        val request = LowStorageWindow.plan(listOf(r(0, w)), from, film, w, roll = true)
         assertTrue(request.deleteFirst)
         assertEquals(listOf(r(from, from + w)), request.ranges)
         assertTrue(LowStorageWindow.bytes(request.ranges) <= w)
@@ -310,7 +311,7 @@ class DownloadWindowTest {
         val tail = film - 3 * mb
         val request = LowStorageWindow.plan(listOf(r(0, w)), tail, film, w)
         assertFalse(request.deleteFirst)
-        assertEquals(0, request.limit)
+        assertEquals(3 * mb, request.limit)
         assertEquals(w + 3 * mb, LowStorageWindow.bytes(request.ranges))
     }
 
@@ -321,7 +322,7 @@ class DownloadWindowTest {
         var position = 0L
         while (position < film) {
             if (LowStorageWindow.shouldRoll(position, ranges, film)) {
-                val request = LowStorageWindow.plan(ranges, LowStorageWindow.rollStart(position), film, w)
+                val request = LowStorageWindow.plan(ranges, LowStorageWindow.rollStart(position), film, w, roll = true)
                 assertTrue(request.deleteFirst)
                 ranges = request.ranges
                 rolls++
@@ -331,6 +332,29 @@ class DownloadWindowTest {
         }
         // Each roll moves on by the window less its margin and the back buffer.
         assertTrue(rolls in 19..22)
+    }
+
+    @Test
+    fun `a seek back inside what is on disk keeps it, after the index at the far end was read`() {
+        // Seen on the TV emulator with an MP4 whose index sits at the end: the head window and the
+        // index are on disk, and a seek to 135 MB, inside the head, used to delete them both and
+        // fetch the same bytes again.
+        val held = listOf(r(0, w), r(film - 10 * mb, film))
+        val request = LowStorageWindow.plan(held, 135 * mb, film, w)
+        assertFalse(request.deleteFirst)
+        // Grown only as far as the budget allows, and the reading position stays readable.
+        assertTrue(LowStorageWindow.bytes(request.ranges) <= w + LowStorageWindow.SLACK_BYTES)
+        assertEquals(w + LowStorageWindow.SLACK_BYTES - 10 * mb, request.limit + 135 * mb)
+        // And once reading nears that end, the window rolls on in the ordinary way.
+        assertTrue(LowStorageWindow.shouldRoll(135 * mb + request.limit - 1 * mb, request.ranges, film))
+    }
+
+    @Test
+    fun `a seek inside what is on disk with no room left to grow still deletes`() {
+        // Right at the end of a full window there is nothing to read before a roll would be due.
+        val held = listOf(r(0, w + LowStorageWindow.SLACK_BYTES))
+        val request = LowStorageWindow.plan(held, w + LowStorageWindow.SLACK_BYTES - 2 * mb, film, w)
+        assertTrue(request.deleteFirst)
     }
 
     @Test

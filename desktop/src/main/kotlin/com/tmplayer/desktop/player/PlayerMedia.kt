@@ -222,7 +222,12 @@ class TelegramPlayerMedia(
             bytes = bytes,
             uri = "tdfile/$fileId/" + name.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "video" },
             prefetchTail = TailPrefetch.wanted(name, item.mimeType),
-            onClose = { stopDownload(fileId) },
+            // The mode is taken back only once the bytes are closed, so no late read can ask TDLib
+            // for the rest of the film unbounded.
+            onClose = {
+                stopDownload(fileId)
+                if (lowStorageFileId == fileId) LowStorageStreams.revoke(fileId)
+            },
         )
     }
 
@@ -235,6 +240,8 @@ class TelegramPlayerMedia(
      * being watched: one the viewer downloaded, or is downloading, keeps every byte.
      */
     private suspend fun startLowStorageIfOn(fileId: Int): Boolean {
+        // Whatever an earlier open of this file decided does not carry over.
+        LowStorageStreams.revoke(fileId)
         if (item.chatId == 0L) return false
         val settings = DesktopServices.settings
         if (!runCatching { settings.lowStorageModeNow() }.getOrDefault(false)) return false
@@ -433,8 +440,6 @@ class TelegramPlayerMedia(
     }.getOrNull()
 
     override fun release() {
-        if (lowStorageFileId != 0) LowStorageStreams.revoke(lowStorageFileId)
-        lowStorageFileId = 0
         watcher?.cancel()
         openedFromDisk?.let(ActiveStreams::closed)
         openedFromDisk = null

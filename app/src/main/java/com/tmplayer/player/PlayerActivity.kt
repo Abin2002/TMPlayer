@@ -2227,6 +2227,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * @return whether the mode applies to this video.
      */
     private suspend fun startLowStorageIfOn(availability: LocalFileAvailability): Boolean {
+        // Whatever an earlier player of this file decided does not carry over.
+        LowStorageStreams.revoke(fileId)
         if (availability == LocalFileAvailability.Complete || !hasMessage()) return false
         if (!runCatching { settings.lowStorageModeNow() }.getOrDefault(false)) return false
         if (runCatching { settings.isKeptDownload(chatId, messageId) }.getOrDefault(true)) return false
@@ -4474,7 +4476,6 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         trickplay = null
         holdFile(0)
         stopDownload()
-        if (lowStorageFileId != 0) LowStorageStreams.revoke(lowStorageFileId)
         trimCache()
         // Released before the player it wraps, or it is left holding a released instance.
         mediaSession?.release()
@@ -4485,6 +4486,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         player?.removeListener(playerListener)
         player?.release()
         player = null
+        // Only once the player, and the reads it had waiting, are gone: a read that asked TDLib
+        // again after [stopDownload] would otherwise have asked for the rest of the film unbounded.
+        // That late request is stopped here too.
+        if (lowStorageFileId != 0) {
+            LowStorageStreams.revoke(lowStorageFileId)
+            stopDownload()
+        }
         super.onDestroy()
     }
 

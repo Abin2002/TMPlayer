@@ -110,7 +110,9 @@ object LowStorageWindow {
     /**
      * What one download request should be.
      *
-     * @property limit for TDLib's `downloadFile`; 0 means to the end of the file.
+     * @property limit for TDLib's `downloadFile`. Never 0, which TDLib reads as "no limit": having
+     *   reached the end of the file it carries on from the start until it has the lot, which on a
+     *   TV emulator filled 332 MB of a 369 MB film after a seek into its last third.
      * @property deleteFirst the file has to be deleted before the request goes out.
      * @property ranges what is on disk once it has, to be kept for the next request.
      */
@@ -151,18 +153,33 @@ object LowStorageWindow {
     /**
      * The request for a download from [offset] of a file of [size] bytes, given what is already on
      * disk. It asks for [window] bytes, or the rest of the file when that is closer, and deletes
-     * first when keeping what is there would take the disk past the window and its slack.
+     * first when keeping what is there would take the disk past the window and its slack, or when
+     * it is a [roll].
      */
-    fun plan(ranges: List<Range>, offset: Long, size: Long, window: Long): Request {
+    fun plan(ranges: List<Range>, offset: Long, size: Long, window: Long, roll: Boolean = false): Request {
         val end = if (size > 0) minOf(size, offset + window) else offset + window
-        val limit = if (size > 0 && end >= size) 0L else end - offset
+        val limit = (end - offset).coerceAtLeast(1)
         val wanted = Range(offset, end)
         val kept = merge(ranges + wanted)
-        return if (bytes(kept) > window + SLACK_BYTES) {
-            Request(limit, deleteFirst = true, ranges = listOf(wanted))
-        } else {
-            Request(limit, deleteFirst = false, ranges = kept)
+        val budget = window + SLACK_BYTES
+        // A roll always starts afresh: keeping the window it moves on from is what it is there to stop.
+        if (roll) return Request(limit, deleteFirst = true, ranges = listOf(wanted))
+        if (bytes(kept) <= budget) return Request(limit, deleteFirst = false, ranges = kept)
+
+        // A request from inside what is already on disk, such as the jump back from a Matroska or
+        // MP4 index at the far end: deleting would throw away the very bytes about to be read. It
+        // grows that stretch only as far as the budget allows instead, and the window rolls on
+        // from there in the ordinary way once reading nears its end.
+        val held = merge(ranges)
+        val here = held.firstOrNull { offset >= it.start && offset < it.end }
+        if (here != null) {
+            val spare = (budget - bytes(held)).coerceAtLeast(0)
+            val shortEnd = if (size > 0) minOf(size, here.end + spare) else here.end + spare
+            if (shortEnd - offset > ROLL_MARGIN_BYTES) {
+                return Request(shortEnd - offset, deleteFirst = false, ranges = merge(held + Range(offset, shortEnd)))
+            }
         }
+        return Request(limit, deleteFirst = true, ranges = listOf(wanted))
     }
 
     /**

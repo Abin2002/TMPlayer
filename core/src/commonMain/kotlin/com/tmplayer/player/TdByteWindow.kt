@@ -376,10 +376,10 @@ class TdByteWindow(private val td: TdlClient) {
      * reference into a minute of blank screen followed by "Telegram stopped sending", which
      * says nothing a viewer can act on.
      */
-    suspend fun requestDownloadFrom(offset: Long) {
+    suspend fun requestDownloadFrom(offset: Long, roll: Boolean = false) {
         // In Low storage mode the request is bounded to the window, and one that would leave more
         // than the window on disk deletes the file first: a roll, or a seek far from what is here.
-        val bounded = LowStorageStreams.plan(fileId, offset, size)
+        val bounded = LowStorageStreams.plan(fileId, offset, size, roll)
         if (bounded?.deleteFirst == true) deleteForLowStorage(offset)
         val result = td.downloadFile(
             fileId = fileId,
@@ -405,7 +405,7 @@ class TdByteWindow(private val td: TdlClient) {
         if (!LowStorageStreams.rollDue(fileId, target, size)) return@withLock
         val from = LowStorageWindow.rollStart(target)
         Logger.i(TAG, "Low storage: rolling file $fileId on at $target, from $from")
-        requestDownloadFrom(from)
+        requestDownloadFrom(from, roll = true)
     }
 
     /**
