@@ -209,6 +209,9 @@ android {
     // The promo fixture's demo library, plain Kotlin that the desktop's promo render test compiles
     // too, so every platform's screenshots show the same chats and titles.
     sourceSets.getByName("promo").java.srcDir("src/promo/shared")
+    // The promo build's own name, so it is told apart from the real one on a launcher; with
+    // `-PpromoShots` the real name, since the home screen channel shots carry it over the row.
+    sourceSets.getByName("promo").res.srcDir(if (project.hasProperty("promoShots")) "src/promo/shots-label" else "src/promo/label")
 
     if (fdroidBuild) {
         sourceSets.getByName("release").manifest.srcFile("src/fdroid/AndroidManifest.xml")

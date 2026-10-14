@@ -69,6 +69,14 @@ object TvChannelsPublisher {
     private var supportedCache: Boolean? = null
 
     /**
+     * The promo build's demo pictures, which live in its resources rather than in TDLib: a file for
+     * a card's [TvChannels.Art], tried after the poster and before Telegram's thumbnail. Null, and
+     * so never consulted, in every other build.
+     */
+    @Volatile
+    internal var fixtureArt: ((TvChannels.Art) -> File?)? = null
+
+    /**
      * Whether this device has a home screen that shows channels: a television with the TV
      * provider, and not a Fire TV, whose launcher reads neither channels nor "Play next".
      */
@@ -307,6 +315,9 @@ object TvChannelsPublisher {
     private suspend fun resolveArt(context: Context, art: TvChannels.Art): Pair<String, Int>? {
         if (art.posterWanted) {
             poster(context, art)?.let { return it to TvContract.PreviewPrograms.ASPECT_RATIO_2_3 }
+        }
+        fixtureArt?.invoke(art)?.let { file ->
+            return copyIn(context, file, "f_${sha1(art.key)}.jpg")?.let { it to TvContract.PreviewPrograms.ASPECT_RATIO_16_9 }
         }
         val path = Thumbnails.file(art.thumbnailFileId) ?: return null
         val name = "t_${Integer.toHexString(art.thumbnailFileId)}.jpg"

@@ -145,6 +145,11 @@ class PromoCaptureActivity : ComponentActivity() {
         // `--ez meta true` turns posters and overviews on over a canned TMDB and AniList, and
         // `--es metakey none|refused|own` sets the TMDB key's state. See [PromoMeta].
         PromoMeta.install(applicationContext, intent.getBooleanExtra("meta", false), intent.getStringExtra("metakey"))
+        // `--ez channels true` writes Home's rows over the demo library into TMPlayer's channels on
+        // the Android TV home screen, through the real planner and writer, so the launcher's
+        // "Recently added" row can be checked and captured without a Telegram account. Add
+        // `--ez meta true` first for the films' and shows' posters.
+        if (intent.getBooleanExtra("channels", false)) promoChannels()
         // `--es orient land` turns a phone sideways, for the landscape check every phone screen gets.
         requestedOrientation = if (tv || intent.getStringExtra("orient") == "land") {
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -212,6 +217,8 @@ class PromoCaptureActivity : ComponentActivity() {
         PromoGroups.demo = groupsDemo
 
         PromoShowOverride.key = intent.getStringExtra("show")?.lowercase() ?: "harbour lines"
+        // `--es variant search` with `--es query "..."`: what the chat's search found for it.
+        PromoSearch.query = intent.getStringExtra("query") ?: PromoSearch.query
         val start = intent.getStringExtra("screen") ?: "chats"
         if (start == "signin") {
             // The number field takes focus the moment it appears, which is right in the app and
@@ -270,6 +277,14 @@ class PromoCaptureActivity : ComponentActivity() {
                         // an empty number field says the same thing and hides nothing.
                         "signin" -> LoginScreen(
                             state = AuthState.Phone(),
+                            onSubmitPassword = {},
+                            submitError = null,
+                        )
+                        // `--es screen signin-qr`: the QR pane, over a link that is not a login.
+                        // Its token is the words "TMPlayer demo, not a login" in base64, so the
+                        // code on the site opens nothing for anybody who scans it.
+                        "signin-qr" -> LoginScreen(
+                            state = AuthState.Qr(PROMO_QR_LINK),
                             onSubmitPassword = {},
                             submitError = null,
                         )
@@ -415,6 +430,17 @@ class PromoCaptureActivity : ComponentActivity() {
             }
         }
     }
+}
+
+private const val PROMO_QR_LINK = "tg://login?token=VE1QbGF5ZXIgZGVtbywgbm90IGEgbG9naW4"
+
+/** The query `--es variant search` shows, and its results. */
+private object PromoSearch {
+    @Volatile
+    var query = "harbor lines"
+
+    /** Cinema Lounge's videos matched as the chat's search would, every file on its own. */
+    fun results(): List<MediaItem> = Fuzzy.rank(promoMedia(), query) { it.searchText }
 }
 
 private val PROMO_FOLDERS = listOf(ChatFolderSummary(1, "Films"), ChatFolderSummary(2, "Family"))
@@ -639,7 +665,8 @@ private fun detailVariant(variant: String, media: List<MediaItem>): MediaItem? =
 
 @Composable
 private fun TvMediaScreen(variant: String) {
-    val media = promoMedia()
+    val searching = variant == "search"
+    val media = if (searching) remember { PromoSearch.results() } else promoMedia()
     val series = promoSeries(variant)
     var held by remember { mutableStateOf(detailVariant(variant, media)) }
     val first = remember { FocusRequester() }
@@ -651,7 +678,7 @@ private fun TvMediaScreen(variant: String) {
             chatPhotoFileId = 0,
             chatMiniThumbnail = cinemaAvatar(),
             isFavorite = true,
-            query = "",
+            query = if (searching) PromoSearch.query else "",
             onQuery = {},
             onSubmit = {},
             onToggleFavorite = {},
@@ -675,7 +702,7 @@ private fun TvMediaScreen(variant: String) {
             ) {}
             return@Column
         }
-        PromoShelfGrid(series?.files ?: media, onHold = { held = it }, first = first)
+        PromoShelfGrid(series?.files ?: media, onHold = { held = it }, first = first, grouping = !searching)
     }
     series?.Opened()
     held?.let { PromoDetail(it) { held = null } }
@@ -722,7 +749,13 @@ private fun promoSeries(variant: String): PromoSeries? {
  * same cards, with the demo viewer's watch state on them. Only the view model is left out.
  */
 @Composable
-private fun PromoShelfGrid(items: List<MediaItem>, onHold: (MediaItem) -> Unit, first: FocusRequester? = null) {
+private fun PromoShelfGrid(
+    items: List<MediaItem>,
+    onHold: (MediaItem) -> Unit,
+    first: FocusRequester? = null,
+    // Off while a search is showing, as the real grid lists every file a search finds on its own.
+    grouping: Boolean = true,
+) {
     val s = com.tmplayer.ui.i18n.LocalStrings.current
     val touch = !FormFactor.isTv(androidx.compose.ui.platform.LocalContext.current)
     val edge = if (touch) com.tmplayer.ui.browse.TOUCH_EDGE else Tv.SafeH
@@ -730,7 +763,7 @@ private fun PromoShelfGrid(items: List<MediaItem>, onHold: (MediaItem) -> Unit, 
     val progress = remember(items) {
         items.mapNotNull { item -> watch.point(item)?.let { SettingsStore.progressKey(item.chatId, item.messageId) to it } }.toMap()
     }
-    val shelved = remember(items) { com.tmplayer.ui.browse.arrangeShelf(items, progress, grouping = true, layout = CardLayout.Grid) }
+    val shelved = remember(items) { com.tmplayer.ui.browse.arrangeShelf(items, progress, grouping = grouping, layout = CardLayout.Grid) }
     val feed = remember(shelved) { shelved.shelf.map { com.tmplayer.data.MediaFeedEntry.Media(it) } }
     var openSeries by remember { mutableStateOf<Series?>(null) }
     androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -835,6 +868,51 @@ private fun ComponentActivity.promoWatchNext() {
             com.tmplayer.data.WatchNext.changesFor(episode(4), 1_265_000, 2_634_000, now, episode(5), enabled, supported)
         android.util.Log.i("TMPlayerPromo", "Watch Next changes: $changes")
         com.tmplayer.data.WatchNextPublisher.apply(context, changes)
+    }.start()
+}
+
+/** See `--ez channels true` above. Honours the setting, so it writes nothing while that is off. */
+private fun ComponentActivity.promoChannels() {
+    val context = applicationContext
+    val library = PromoMeta.library
+    // The demo videos' pictures are this build's drawables, not Telegram thumbnails: each card's
+    // picture is written out from the video's own frame, found by its name.
+    val frames = java.io.File(context.cacheDir, "promo-channel-art").apply { mkdirs() }
+    com.tmplayer.data.TvChannelsPublisher.fixtureArt = { art ->
+        library.all.firstOrNull { it.nameForParsing == art.name && it.caption == art.caption }?.miniThumbnail?.let { bytes ->
+            java.io.File(frames, "${art.key.hashCode().toUInt()}.jpg").apply { if (!isFile) writeBytes(bytes) }
+        }
+    }
+    Thread {
+        if (!runBlocking { SettingsStore(context).tvChannelsNow() }) return@Thread
+        val chats = PromoCatalog.chats.map { ChatSummary(it.id, it.title, null, 0, it.kind) }
+        val starred = HomeRows.favouriteChats(chats, library.favourites)
+        val rows = HomeRows.build(
+            library.continueWatching,
+            starred,
+            library.byChat.filterKeys { it in library.favourites },
+            library.all,
+            watchLater = library.watchLater,
+            fresh = library.newEpisodes,
+        )
+        val plan = com.tmplayer.data.TvChannels.plan(
+            rows = rows,
+            starred = starred.size,
+            allowed = null,
+            chatTitle = PromoCatalog::chatTitle,
+            progress = { chat, message -> library.all.firstOrNull { it.chatId == chat && it.messageId == message }?.let(library::point) },
+            art = library.art,
+        ).orEmpty()
+        android.util.Log.i("TMPlayerPromo", "channel cards: ${plan.size}")
+        runBlocking {
+            com.tmplayer.data.TvChannelsPublisher.publish(context, plan) { channel ->
+                when (channel) {
+                    com.tmplayer.data.TvChannels.Channel.Recent -> L.homeChannelRecent
+                    com.tmplayer.data.TvChannels.Channel.WatchLater -> L.homeRowWatchLater
+                    com.tmplayer.data.TvChannels.Channel.NewEpisodes -> L.homeRowNewEpisodes
+                }
+            }
+        }
     }.start()
 }
 
