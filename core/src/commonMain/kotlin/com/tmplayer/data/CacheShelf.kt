@@ -1,5 +1,7 @@
 package com.tmplayer.data
 
+import com.tmplayer.player.LowStorageWindow
+
 /**
  * What playing a video is allowed to leave behind, and what has to go before the next one arrives.
  *
@@ -73,7 +75,16 @@ object CacheShelf {
          * is, and [reclaimBytes] what is sitting in downloads the viewer could delete by hand, so
          * the message can point somewhere rather than just refusing.
          */
-        data class NotEnoughSpace(val shortfallBytes: Long, val reclaimBytes: Long) : Plan
+        data class NotEnoughSpace(
+            val shortfallBytes: Long,
+            val reclaimBytes: Long,
+            /**
+             * Low storage mode is off, and with it on the video would stream: the refusal asks
+             * whether to switch rather than only refusing. Never true for a download, which keeps
+             * the whole file whatever the mode.
+             */
+            val fitsInLowStorage: Boolean = false,
+        ) : Plan
     }
 
     /**
@@ -87,6 +98,10 @@ object CacheShelf {
      * @param keptBytes what the viewer's own downloads take. Not evictable, and quoted only so a
      *   refusal can say where the space went.
      * @param freeBytes free space on the volume TDLib writes to
+     * @param lowStorage Low storage mode is on and applies to this video, which then needs room for
+     *   its rolling window only ([LowStorageWindow.roomNeeded]), not for the whole file.
+     * @param streaming the video is being played, not downloaded to keep: only a stream can be
+     *   offered the mode, so only a stream's refusal says whether it would fit in it.
      */
     fun plan(
         targetFileId: Int,
@@ -96,6 +111,8 @@ object CacheShelf {
         cached: List<Held>,
         keptBytes: Long = 0,
         freeBytes: Long,
+        lowStorage: Boolean = false,
+        streaming: Boolean = false,
     ): Plan {
         if (alreadyCached) return Plan.Proceed
 
@@ -115,14 +132,21 @@ object CacheShelf {
             return if (doomed.isEmpty()) Plan.Proceed else Plan.Evict(doomed.map { it.fileId }, reclaim)
         }
 
-        val needed = (targetSizeBytes - targetPartialBytes).coerceAtLeast(0) + HEADROOM_BYTES
         val available = freeBytes + reclaim
+        val remaining = (targetSizeBytes - targetPartialBytes).coerceAtLeast(0)
+        // In Low storage mode a stream holds a window of the video, sized to the room there is.
+        val windowNeeded = LowStorageWindow.roomNeeded(
+            remainingBytes = remaining,
+            windowBytes = LowStorageWindow.windowBytes(available, HEADROOM_BYTES),
+        ) + HEADROOM_BYTES
+        val needed = if (lowStorage) windowNeeded else remaining + HEADROOM_BYTES
         if (available < needed) {
             // Short even with the cache emptied. Nothing is deleted for a play that cannot happen:
             // giving up last night's video and failing anyway is the worst of both.
             return Plan.NotEnoughSpace(
                 shortfallBytes = needed - available,
                 reclaimBytes = keptBytes,
+                fitsInLowStorage = !lowStorage && streaming && available >= windowNeeded,
             )
         }
 

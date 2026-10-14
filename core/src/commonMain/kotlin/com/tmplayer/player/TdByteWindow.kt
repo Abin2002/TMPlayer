@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.EOFException
 import java.io.File
@@ -101,6 +103,23 @@ class TdByteWindow(private val td: TdlClient) {
      */
     private val revision = MutableStateFlow(0L)
 
+    /**
+     * Whether this file streams in Low storage mode, as [LowStorageStreams] said at [watch]. Only
+     * a shortcut for the fast path; every decision asks [LowStorageStreams] again.
+     */
+    @Volatile
+    private var lowStorage = false
+
+    /**
+     * Up while a roll or a seek in Low storage mode is deleting the file: updates about the file
+     * being deleted say nothing true about the one coming next, so they are not absorbed.
+     */
+    @Volatile
+    private var deleting = false
+
+    /** One roll at a time, however many readers find it due together. */
+    private val rollLock = Mutex()
+
     /** Bytes `[start, end)` of the file, as TDLib last reported them. */
     private data class Window(val start: Long, val end: Long) {
         companion object {
@@ -116,6 +135,7 @@ class TdByteWindow(private val td: TdlClient) {
      */
     fun watch(fileId: Int) {
         this.fileId = fileId
+        lowStorage = LowStorageStreams.isRolling(fileId)
         stopWatching()
         val watcher = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         scope = watcher
@@ -152,6 +172,8 @@ class TdByteWindow(private val td: TdlClient) {
      */
     fun cachedAvailable(target: Long): Long? {
         if (localPath == null) return null
+        // A roll is due: the slow path performs it before this read is served.
+        if (lowStorage && LowStorageStreams.rollDue(fileId, target, size)) return null
         val known = window
         return DownloadWindow.availableAt(
             position = target,
@@ -168,7 +190,18 @@ class TdByteWindow(private val td: TdlClient) {
      */
     fun read(position: Long, buffer: ByteArray, offset: Int, length: Int): Int {
         val read = synchronized(this) {
-            openHandle().read(ByteBuffer.wrap(buffer, offset, length), position)
+            // Checked again under the lock that also guards the path and the window: between the
+            // caller's check and this line a roll or a seek may have deleted the file and a new
+            // one may stand at the path, holes and all. A read that lost that race is sent back
+            // to ask again rather than handed zeros.
+            val known = window
+            val fits = when {
+                completed -> (size - position).coerceAtLeast(0)
+                position >= known.start && position < known.end -> known.end - position
+                else -> 0L
+            }
+            if (fits <= 0) throw EOFException("Window moved away from $position of file $fileId")
+            openHandle().read(ByteBuffer.wrap(buffer, offset, minOf(length.toLong(), fits).toInt()), position)
         }
         if (read <= 0) {
             // TDLib reported the bytes but the file on disk is shorter: it was trimmed or
@@ -195,18 +228,10 @@ class TdByteWindow(private val td: TdlClient) {
 
     /** Records what a fresh [TdFile] tells us, so later reads can skip the round-trip. */
     private fun absorb(file: TdFile) {
+        if (deleting) return
         val path = file.local.path
         val diskFile = path.takeIf { it.isNotBlank() }?.let(::File)
         val usablePath = path.takeIf { diskFile?.isFile == true }
-        // TDLib moves a file when a download finishes (the partial name is renamed away), so
-        // the handle is dropped on any path change rather than reading a stale inode.
-        synchronized(this) {
-            if (usablePath != localPath) {
-                runCatching { handle?.close() }
-                handle = null
-                localPath = usablePath
-            }
-        }
         val availability = LocalFilePolicy.evaluate(
             downloadCompleted = file.local.isDownloadingCompleted,
             pathPresent = diskFile != null,
@@ -217,13 +242,25 @@ class TdByteWindow(private val td: TdlClient) {
         )
         downloading = file.local.isDownloadingActive
         downloadedTotal = file.local.downloadedSize
-        if (availability == LocalFileAvailability.Complete) {
-            completed = true
-            window = Window(0, size)
-        } else {
-            completed = false
-            val start = file.local.downloadOffset
-            window = Window(start, start + file.local.downloadedPrefixSize)
+        // The path and the window move together, under the lock [read] checks them with, so no
+        // read can pair a new file with an old window.
+        synchronized(this) {
+            // TDLib moves a file when a download finishes (the partial name is renamed away), and a
+            // deleted file comes back under a new name, so the handle is dropped on any path change
+            // rather than reading a stale inode.
+            if (usablePath != localPath) {
+                runCatching { handle?.close() }
+                handle = null
+                localPath = usablePath
+            }
+            if (availability == LocalFileAvailability.Complete) {
+                completed = true
+                window = Window(0, size)
+            } else {
+                completed = false
+                val start = file.local.downloadOffset
+                window = Window(start, start + file.local.downloadedPrefixSize)
+            }
         }
     }
 
@@ -243,6 +280,7 @@ class TdByteWindow(private val td: TdlClient) {
      * falls back to `getFile`.
      */
     suspend fun awaitBytesAt(target: Long): Long {
+        if (lowStorage) rollIfDue(target)
         // The collector may already have absorbed what this read needs.
         cachedAvailable(target)?.let { return it }
 
@@ -339,15 +377,54 @@ class TdByteWindow(private val td: TdlClient) {
      * says nothing a viewer can act on.
      */
     suspend fun requestDownloadFrom(offset: Long) {
+        // In Low storage mode the request is bounded to the window, and one that would leave more
+        // than the window on disk deletes the file first: a roll, or a seek far from what is here.
+        val bounded = LowStorageStreams.plan(fileId, offset, size)
+        if (bounded?.deleteFirst == true) deleteForLowStorage(offset)
         val result = td.downloadFile(
             fileId = fileId,
             priority = PLAYBACK_PRIORITY,
             offset = offset,
-            limit = 0,
+            limit = bounded?.limit ?: 0L,
             synchronous = false,
         )
-        val error = result.errorMessage ?: return
-        throw IOException(Failures.humanise(error))
+        val error = result.errorMessage
+        if (error != null) throw IOException(Failures.humanise(error))
+        // After a delete the window is empty, which the wait would read as a seek far ahead and
+        // move the download again. What TDLib says now is the new file, starting at [offset].
+        if (bounded?.deleteFirst == true) td.getFile(fileId).valueOrNull?.let(::absorb)
+    }
+
+    /**
+     * Rolls the Low storage window on when reading at [target] has nearly reached the end of it:
+     * a seek this source makes to itself, to just behind [target], through [requestDownloadFrom],
+     * which deletes the file first because keeping it would double what is on disk. Readers that
+     * find the roll due meanwhile wait here, and read only once TDLib reports the new file.
+     */
+    private suspend fun rollIfDue(target: Long) = rollLock.withLock {
+        if (!LowStorageStreams.rollDue(fileId, target, size)) return@withLock
+        val from = LowStorageWindow.rollStart(target)
+        Logger.i(TAG, "Low storage: rolling file $fileId on at $target, from $from")
+        requestDownloadFrom(from)
+    }
+
+    /**
+     * Deletes the file ahead of a request from [offset] in Low storage mode.
+     *
+     * The window is dropped first, under the lock reads take, so nothing is read from a file that
+     * is going; updates about it are ignored until TDLib has been asked for the next one.
+     */
+    private suspend fun deleteForLowStorage(offset: Long) {
+        synchronized(this) {
+            deleting = true
+            window = Window.EMPTY
+        }
+        try {
+            Logger.i(TAG, "Low storage: deleting file $fileId to restart at $offset")
+            runCatching { td.deleteFile(fileId) }
+        } finally {
+            deleting = false
+        }
     }
 
     /**

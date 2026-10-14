@@ -2,6 +2,7 @@ package com.tmplayer.data
 
 import com.tmplayer.data.CacheShelf.Held
 import com.tmplayer.data.CacheShelf.Plan
+import com.tmplayer.player.LowStorageWindow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -321,5 +322,110 @@ class CacheCeilingTest {
     @Test
     fun `an unreadable volume falls back to the cap rather than to nothing`() {
         assertEquals(CacheShelf.MAX_CEILING_BYTES, CacheShelf.ceiling(0))
+    }
+
+    // --- Low storage mode ---------------------------------------------------------------------
+
+    @Test
+    fun `with the mode off a film larger than the free space is refused, as before`() {
+        val plan = CacheShelf.plan(
+            targetFileId = TARGET,
+            targetSizeBytes = 4 * GB,
+            targetPartialBytes = 0,
+            alreadyCached = false,
+            cached = emptyList(),
+            freeBytes = 1 * GB,
+        )
+        assertTrue(plan is Plan.NotEnoughSpace)
+        assertEquals(4 * GB + CacheShelf.HEADROOM_BYTES - 1 * GB, (plan as Plan.NotEnoughSpace).shortfallBytes)
+        // Not a stream, so nothing to offer.
+        assertFalse(plan.fitsInLowStorage)
+    }
+
+    @Test
+    fun `with the mode off a stream that would fit in its window offers the mode`() {
+        val plan = CacheShelf.plan(
+            targetFileId = TARGET,
+            targetSizeBytes = 4 * GB,
+            targetPartialBytes = 0,
+            alreadyCached = false,
+            cached = emptyList(),
+            freeBytes = 1 * GB,
+            streaming = true,
+        )
+        assertTrue((plan as Plan.NotEnoughSpace).fitsInLowStorage)
+    }
+
+    @Test
+    fun `with the mode on a 4 GB film starts on 1 GB free`() {
+        val plan = CacheShelf.plan(
+            targetFileId = TARGET,
+            targetSizeBytes = 4 * GB,
+            targetPartialBytes = 0,
+            alreadyCached = false,
+            cached = emptyList(),
+            freeBytes = 1 * GB,
+            lowStorage = true,
+            streaming = true,
+        )
+        assertEquals(Plan.Proceed, plan)
+    }
+
+    @Test
+    fun `with the mode on the previous film still goes`() {
+        val plan = CacheShelf.plan(
+            targetFileId = TARGET,
+            targetSizeBytes = 4 * GB,
+            targetPartialBytes = 0,
+            alreadyCached = false,
+            cached = cache(2, 150 * MB),
+            freeBytes = 1 * GB,
+            lowStorage = true,
+            streaming = true,
+        )
+        assertEquals(Plan.Evict(listOf(2), 150 * MB), plan)
+    }
+
+    @Test
+    fun `with the mode on a disk too full even for the window is refused with no offer`() {
+        val plan = CacheShelf.plan(
+            targetFileId = TARGET,
+            targetSizeBytes = 4 * GB,
+            targetPartialBytes = 0,
+            alreadyCached = false,
+            cached = emptyList(),
+            freeBytes = 300 * MB,
+            lowStorage = true,
+            streaming = true,
+        )
+        assertTrue(plan is Plan.NotEnoughSpace)
+        assertFalse((plan as Plan.NotEnoughSpace).fitsInLowStorage)
+        val window = LowStorageWindow.MIN_WINDOW_BYTES + LowStorageWindow.BACK_BYTES
+        assertEquals(window + CacheShelf.HEADROOM_BYTES - 300 * MB, plan.shortfallBytes)
+    }
+
+    @Test
+    fun `with the mode off a disk too full even for the window offers nothing`() {
+        val plan = CacheShelf.plan(
+            targetFileId = TARGET,
+            targetSizeBytes = 4 * GB,
+            targetPartialBytes = 0,
+            alreadyCached = false,
+            cached = emptyList(),
+            freeBytes = 300 * MB,
+            streaming = true,
+        )
+        assertFalse((plan as Plan.NotEnoughSpace).fitsInLowStorage)
+    }
+
+    @Test
+    fun `a download in a batch still needs room for the whole file`() {
+        val batch = CacheShelf.planBatch(
+            candidates = listOf(CacheShelf.Candidate(fileId = TARGET, sizeBytes = 4 * GB)),
+            cached = emptyList(),
+            freeBytes = 1 * GB,
+        )
+        assertTrue(batch.outOfSpace)
+        assertTrue(batch.fits.isEmpty())
     }
 }

@@ -59,3 +59,128 @@ object DownloadWindow {
      */
     const val FORWARD_SLACK_BYTES = 4L * 1024 * 1024
 }
+
+/**
+ * The arithmetic of Low storage mode: a streamed video keeps only a bounded window of itself on
+ * the disk, so a film larger than the free space can still be watched.
+ *
+ * TDLib writes every downloaded byte to its file and only lets go of a whole file at once, but it
+ * downloads a range on request and leaves the rest of the file as holes, which the file system
+ * keeps sparse: after a delete and a fresh start at 509 MB, the file was 549 MB long and took 40 MB
+ * of disk (measured with `du` on the desktop's TDLib). So the window is bounded by asking for
+ * [WINDOW_BYTES] at a time instead of the rest of the file, and moved on by a roll: delete the
+ * file, ask again from just behind the read position. To the reader a roll is a seek it made to
+ * itself.
+ *
+ * The bytes on disk are tracked as the ranges asked for since the last delete, which can only
+ * overstate them: TDLib keeps a range it was moved away from, which is why a seek far away has to
+ * delete first, too.
+ *
+ * Pure, so the roll and the budget are tested without TDLib.
+ */
+object LowStorageWindow {
+
+    /** How much of a video is asked for at a time, and so roughly the most it holds on disk. */
+    const val WINDOW_BYTES = 200L * 1024 * 1024
+
+    /** The smallest window worth streaming through; below this every few seconds is a roll. */
+    const val MIN_WINDOW_BYTES = 32L * 1024 * 1024
+
+    /** Kept behind the read position at a roll, so a jump back of a few seconds needs no fetch. */
+    const val BACK_BYTES = 2L * 1024 * 1024
+
+    /** A roll restarts on a part boundary: Telegram hands files out in parts of this size. */
+    const val ALIGN_BYTES = 1024L * 1024
+
+    /** How close reading may get to the end of what was asked for before the window rolls on. */
+    const val ROLL_MARGIN_BYTES = 4L * 1024 * 1024
+
+    /**
+     * What the ranges on disk may add up to before a request has to delete first. A little over
+     * the window, so the few megabytes an extractor reads at the far end of a file (Matroska's
+     * index) do not cost the start of the film.
+     */
+    const val SLACK_BYTES = 16L * 1024 * 1024
+
+    /** One stretch of the file asked for, bytes `[start, end)`. */
+    data class Range(val start: Long, val end: Long) {
+        val length: Long get() = end - start
+    }
+
+    /**
+     * What one download request should be.
+     *
+     * @property limit for TDLib's `downloadFile`; 0 means to the end of the file.
+     * @property deleteFirst the file has to be deleted before the request goes out.
+     * @property ranges what is on disk once it has, to be kept for the next request.
+     */
+    data class Request(val limit: Long, val deleteFirst: Boolean, val ranges: List<Range>)
+
+    /**
+     * The window for a device with [freeBytes] free: [WINDOW_BYTES], less on a nearly full disk,
+     * leaving [headroomBytes] (the room check's headroom) and the back buffer alone.
+     */
+    fun windowBytes(freeBytes: Long, headroomBytes: Long): Long =
+        (freeBytes - headroomBytes - BACK_BYTES).coerceIn(MIN_WINDOW_BYTES, WINDOW_BYTES)
+
+    /**
+     * The room a stream of [remainingBytes] needs in this mode: the window and its back buffer,
+     * or the rest of the video when that is less.
+     */
+    fun roomNeeded(remainingBytes: Long, windowBytes: Long): Long =
+        minOf(remainingBytes.coerceAtLeast(0), windowBytes + BACK_BYTES)
+
+    /** Every byte the [ranges] cover, overlaps counted once. */
+    fun bytes(ranges: List<Range>): Long = merge(ranges).sumOf { it.length }
+
+    /** [ranges] sorted and with touching or overlapping ones joined. */
+    fun merge(ranges: List<Range>): List<Range> {
+        val sorted = ranges.filter { it.length > 0 }.sortedBy { it.start }
+        val out = mutableListOf<Range>()
+        for (r in sorted) {
+            val last = out.lastOrNull()
+            if (last != null && r.start <= last.end) {
+                out[out.lastIndex] = Range(last.start, maxOf(last.end, r.end))
+            } else {
+                out += r
+            }
+        }
+        return out
+    }
+
+    /**
+     * The request for a download from [offset] of a file of [size] bytes, given what is already on
+     * disk. It asks for [window] bytes, or the rest of the file when that is closer, and deletes
+     * first when keeping what is there would take the disk past the window and its slack.
+     */
+    fun plan(ranges: List<Range>, offset: Long, size: Long, window: Long): Request {
+        val end = if (size > 0) minOf(size, offset + window) else offset + window
+        val limit = if (size > 0 && end >= size) 0L else end - offset
+        val wanted = Range(offset, end)
+        val kept = merge(ranges + wanted)
+        return if (bytes(kept) > window + SLACK_BYTES) {
+            Request(limit, deleteFirst = true, ranges = listOf(wanted))
+        } else {
+            Request(limit, deleteFirst = false, ranges = kept)
+        }
+    }
+
+    /**
+     * Whether reading at [position] should roll the window on now.
+     *
+     * Only inside a range that stops short of the end of the file: a read outside every range is a
+     * seek, which the seek path already restarts, and a window that reaches the end has nowhere
+     * further to go.
+     */
+    fun shouldRoll(position: Long, ranges: List<Range>, size: Long): Boolean {
+        val here = merge(ranges).firstOrNull { position >= it.start && position < it.end } ?: return false
+        if (size > 0 && here.end >= size) return false
+        return position >= here.end - ROLL_MARGIN_BYTES
+    }
+
+    /** Where a roll at [position] asks TDLib to start: a little behind it, on a part boundary. */
+    fun rollStart(position: Long): Long {
+        val back = (position - BACK_BYTES).coerceAtLeast(0)
+        return back - back % ALIGN_BYTES
+    }
+}
