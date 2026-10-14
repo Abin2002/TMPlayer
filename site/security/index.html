@@ -218,7 +218,7 @@
           </li>
           <li id="build-2">
             <h3>Built by GitHub Actions from the tag</h3>
-            <p>A release starts as a version tag. GitHub's own servers then check out that tag and build the APK, the MSI, the AppImage and the Linux tarball from it. The recipe is public: <a href="https://github.com/dracu-lah/TMPlayer/blob/main/.github/workflows/release.yml" rel="noopener"><code>release.yml</code></a>, and each run is listed on the repository's Actions tab.</p>
+            <p>A release starts as a version tag. GitHub's own servers then check out that tag and build the APK, the MSI, the macOS DMG, the AppImage and the Linux tarball from it. The recipe is public: <a href="https://github.com/dracu-lah/TMPlayer/blob/main/.github/workflows/release.yml" rel="noopener"><code>release.yml</code></a>, and each run is listed on the repository's Actions tab.</p>
           </li>
           <li id="build-3">
             <h3>The APK is signed there, with the project's key</h3>
@@ -251,9 +251,12 @@
       <div class="section-body" data-reveal>
         <div class="formats">
           <div class="format">
-            <h3>Linux</h3>
+            <h3>Linux and macOS</h3>
             <pre class="code"><code>sha256sum <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p class="sha-expect" data-sha="linux-x64-appimage" hidden></p>
+            <p>On a Mac, in Terminal:</p>
+            <pre class="code"><code>shasum -a 256 <span data-name="macos-arm64-dmg">TMPlayer-&lt;version&gt;-macos-arm64.dmg</span></code></pre>
+            <p class="sha-expect" data-sha="macos-arm64-dmg" hidden></p>
           </div>
           <div class="format">
             <h3>Windows, in PowerShell</h3>
@@ -270,7 +273,7 @@
         <div class="panel panel-prose panel-wide">
           <h3>Any file, where it was built (optional)</h3>
           <pre class="code"><code>gh attestation verify <span data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</span> --repo dracu-lah/TMPlayer</code></pre>
-          <p>Releases after 1.22.0 carry a build attestation for every file: a statement, signed through GitHub and Sigstore, that the file came out of the release workflow at that version's tag. The <a href="https://cli.github.com/" rel="noopener">GitHub CLI</a> checks it, and the command works the same for the APK, the AppImage and the tarball.</p>
+          <p>Releases after 1.22.0 carry a build attestation for every file: a statement, signed through GitHub and Sigstore, that the file came out of the release workflow at that version's tag. The <a href="https://cli.github.com/" rel="noopener">GitHub CLI</a> checks it, and the command works the same for the APK, the DMG, the AppImage and the tarball.</p>
         </div>
       </div>
     </div>
