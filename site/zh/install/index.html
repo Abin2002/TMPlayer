@@ -329,9 +329,10 @@
           </div>
           <div class="format">
             <h3 data-i18n="install.from_a_computer">通过电脑</h3>
-            <p data-i18n="install.tv_from_computer">在电视的开发者选项中打开 <em>网络调试</em>，然后在同一 wifi 下运行：</p>
+            <p data-i18n="install.tv_from_computer_ip">在电视的开发者选项中打开 <em>网络调试</em>，并在电视的网络设置中找到它的 IP 地址。然后在同一 wifi 下的电脑上，在存放 APK 的文件夹中运行下面的命令，把 <code>&lt;tv-ip&gt;</code> 换成这个地址：</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
+            <p data-i18n="install.accept_the_debugging_prompt">首次使用时，请接受电视上出现的调试提示。</p>
           </div>
         </div>
       </div>
@@ -389,7 +390,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.win_step2_h">粘贴这一行并按回车</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p data-i18n="install.win_step2">它会从 GitHub 下载安装程序，与发布的校验和核对，并为你的账户安装 TMPlayer，Windows 不会弹出警告。</p>
+            <p data-i18n="install.win_step2_paste">点击这一行即可复制，然后用 Ctrl+V 或右键粘贴到 PowerShell 中。</p>
+            <p data-i18n="install.win_step2_done">它会从 GitHub 下载安装程序，与发布的校验和核对，并为你的账户安装 TMPlayer，Windows 不会弹出警告。整个过程需要一两分钟。看到 TMPlayer 已安装的提示后，关闭窗口即可。如果停在一条红色错误上，请改用下面的<a href="#windows-installer">安装程序</a>。</p>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.win_step3_h">打开并登录</h3>
@@ -400,7 +402,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
         <div class="panel panel-prose panel-wide" id="windows-installer">
           <h3 data-i18n="install.win_msi_h">更想用安装程序？</h3>
-          <p data-i18n="install.win_msi">从<a href="/zh/download/#windows">下载页面</a>下载 <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> 并打开。它还没有代码签名，所以 Windows 可能会显示 <em>Windows 已保护你的电脑</em>：点击 <em>更多信息</em>，再点击 <em>仍要运行</em>。</p>
+          <p data-i18n="install.win_msi">从<a href="/zh/download/#windows">下载页面</a>下载 <code data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</code> 并打开。它还没有代码签名，所以 Windows 可能会显示 <em>Windows 已保护你的电脑</em>：点击 <em>更多信息</em>，再点击 <em>仍要运行</em>。</p>
         </div>
         <p class="muted small section-note" data-i18n="install.win_zip_note">用过旧的便携版 zip？删除它的文件夹，然后按上面的步骤安装。登录状态和设置都会保留。</p>
       </div>
@@ -461,12 +463,14 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <ol class="steps">
           <li id="linux-1">
             <h3 data-i18n="install.linux_step1_h">下载 AppImage</h3>
-            <p data-i18n="install.linux_step1">从<a href="/zh/download/#linux">下载页面</a>获取 <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code>。一个文件，适用于任何发行版。</p>
+            <p data-i18n="install.linux_step1">从<a href="/zh/download/#linux">下载页面</a>获取 <code data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</code>。一个文件，适用于任何发行版。</p>
           </li>
           <li id="linux-2">
             <h3 data-i18n="install.linux_step2_h">设为可执行并打开</h3>
-            <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
-./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
+            <p data-i18n="install.linux_step2_where">在终端中，进入你保存文件的文件夹：</p>
+            <pre class="code"><code>cd ~/Downloads
+chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
+./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p data-i18n="install.or_tick_in_the_file">或者在文件属性中勾选 <em>允许作为程序执行文件</em>，然后双击它。</p>
           </li>
           <li id="linux-3">
@@ -483,7 +487,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           </div>
           <div class="format">
             <h3 data-i18n="install.tarball_h">普通文件夹</h3>
-            <p data-i18n="install.tarball">把 <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> 解压到任意位置，运行其中的 <code>bin/TMPlayer</code>。它不会自动更新：有新版本时 TMPlayer 会提醒你。</p>
+            <p data-i18n="install.tarball">把 <code data-name="linux-x64-tarball">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> 解压到任意位置，运行其中的 <code>bin/TMPlayer</code>。它不会自动更新：有新版本时 TMPlayer 会提醒你。</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">从 deb、rpm 或 Flatpak 迁移</h3>
@@ -523,7 +527,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <h3 data-i18n="install.linux_appimage_in_the_app">Linux：AppImage，添加到应用菜单</h3>
           <p data-i18n="install.a_single_file_has_no">单个文件没有菜单项，所以需要自己创建。这些命令会把 AppImage 移到合适位置，获取图标并写入启动器：</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
-mv ~/Downloads/TMPlayer-&lt;version&gt;-x86_64.AppImage ~/Applications/TMPlayer.AppImage
+mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
 
@@ -603,7 +607,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
             <span class="faq-q" data-i18n="install.the_appimage_does_nothing_when">打开 AppImage 没有任何反应</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15.5a1 1 0 0 1-.71-.29l-5-5a1 1 0 0 1 1.42-1.42L12 13.09l4.29-4.3a1 1 0 1 1 1.42 1.42l-5 5a1 1 0 0 1-.71.29Z"/></svg>
           </summary>
-          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">通常是缺少 FUSE。请安装 <code>libfuse2t64</code>（Ubuntu 24.04 及更新版本）或 <code>libfuse2</code>（22.04），也可以用 <code>./TMPlayer-&lt;version&gt;-x86_64.AppImage --appimage-extract-and-run</code> 跳过 FUSE。</p></div>
+          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">通常是缺少 FUSE。请安装 <code>libfuse2t64</code>（Ubuntu 24.04 及更新版本）或 <code>libfuse2</code>（22.04），也可以用 <code>./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code> 跳过 FUSE。</p></div>
         </details>
         <details class="faq-item" name="trouble">
           <summary>
@@ -694,7 +698,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安装程序", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "校验和", "os_note_ios_only": "没有 iPhone 或 iPad 版本。下面的文件适用于 Android 手机、Android TV 和电脑。", "download_for": "下载 {os} 版", "os_note_mac_preview": "macOS 版是预览版，适用于搭载 Apple 芯片（M1 及更新）、运行 macOS 26 或更高版本的 Mac。它不能在 Intel Mac 上运行。", "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。", "downloads_one": "{count} 次下载", "downloads_other": "{count} 次下载", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下载 {file}", "download_version_mac": "下载适用于 Apple 芯片 Mac 的 {version}", "download_version_for": "下载适用于 {os} 的 {version}", "download_version_other_os": "下载适用于 Android、Windows 或 Linux 的 {version}", "install_version_for": "为 {os} 安装 {version}", "download_version": "下载 {version}", "latest": "最新", "no_files_yet": "此版本尚未附带任何文件。构建可能仍在进行中。", "open_on_github": "在 GitHub 上打开 {version}", "release": "版本", "unavailable": "不可用", "fail_downloads": "下载仍然可用：下方每个按钮都会打开{link}，那里按名称列出了所有文件。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下载", "not_released": "尚未发布", "no_release": "尚未发布任何版本。你仍然可以从源代码构建应用。", "build_instructions": "阅读 GitHub 上的构建说明", "view_project": "在 GitHub 上查看项目", "fail_browser": "此浏览器无法加载版本列表。", "fail_rate": "GitHub 正在限制此网络的请求频率。其公开 API 每个地址每小时允许 60 次请求，而这个地址已经用完了。", "fail_timeout": "GitHub 未能及时响应。", "fail_load": "无法从 GitHub 加载版本列表。", "theme_to_dark": "切换到深色主题", "theme_to_light": "切换到浅色主题", "menu_close": "关闭菜单", "menu": "菜单", "copy_command": "复制", "copied": "已复制"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安装程序", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "校验和", "os_note_ios_only": "没有 iPhone 或 iPad 版本。下面的文件适用于 Android 手机、Android TV 和电脑。", "download_for": "下载 {os} 版", "os_note_mac_preview": "macOS 版是预览版，适用于搭载 Apple 芯片（M1 及更新）、运行 macOS 26 或更高版本的 Mac。它不能在 Intel Mac 上运行。", "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。", "downloads_one": "{count} 次下载", "downloads_other": "{count} 次下载", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下载 {file}", "download_version_mac": "下载适用于 Apple 芯片 Mac 的 {version}", "download_version_for": "下载适用于 {os} 的 {version}", "download_version_other_os": "下载适用于 Android、Windows 或 Linux 的 {version}", "install_version_for": "为 {os} 安装 {version}", "download_version": "下载 {version}", "latest": "最新", "no_files_yet": "此版本尚未附带任何文件。构建可能仍在进行中。", "open_on_github": "在 GitHub 上打开 {version}", "release": "版本", "unavailable": "不可用", "fail_downloads": "下载仍然可用：下方每个按钮都会打开{link}，那里按名称列出了所有文件。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下载", "not_released": "尚未发布", "no_release": "尚未发布任何版本。你仍然可以从源代码构建应用。", "build_instructions": "阅读 GitHub 上的构建说明", "view_project": "在 GitHub 上查看项目", "fail_browser": "此浏览器无法加载版本列表。", "fail_rate": "GitHub 正在限制此网络的请求频率。其公开 API 每个地址每小时允许 60 次请求，而这个地址已经用完了。", "fail_timeout": "GitHub 未能及时响应。", "fail_load": "无法从 GitHub 加载版本列表。", "theme_to_dark": "切换到深色主题", "theme_to_light": "切换到浅色主题", "menu_close": "关闭菜单", "menu": "菜单", "sha_expected": "对于 {file}，结果应为：", "copy_command": "复制", "copied": "已复制", "copy_failed": "浏览器不允许复制。文字已选中，请从那里复制。"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

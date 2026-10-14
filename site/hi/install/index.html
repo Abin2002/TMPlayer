@@ -329,9 +329,10 @@
           </div>
           <div class="format">
             <h3 data-i18n="install.from_a_computer">कंप्यूटर से</h3>
-            <p data-i18n="install.tv_from_computer">TV के Developer options में <em>Network debugging</em> चालू करें, फिर उसी wifi पर:</p>
+            <p data-i18n="install.tv_from_computer_ip">TV के Developer options में <em>Network debugging</em> चालू करें और TV की network settings में उसका IP address देखें। फिर उसी wifi पर किसी कंप्यूटर में, APK वाले फ़ोल्डर में, <code>&lt;tv-ip&gt;</code> की जगह वह पता डालकर ये कमांड चलाएँ:</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
+            <p data-i18n="install.accept_the_debugging_prompt">पहली बार टीवी पर जो डीबगिंग संदेश आए, उसे स्वीकार करें।</p>
           </div>
         </div>
       </div>
@@ -389,7 +390,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.win_step2_h">यह लाइन पेस्ट करें और Enter दबाएँ</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p data-i18n="install.win_step2">यह GitHub से इंस्टॉलर डाउनलोड करती है, उसे प्रकाशित checksum से मिलाती है और आपके यूज़र के लिए TMPlayer इंस्टॉल करती है, Windows की किसी चेतावनी के बिना।</p>
+            <p data-i18n="install.win_step2_paste">लाइन पर क्लिक करके उसे कॉपी करें, फिर Ctrl+V या राइट क्लिक से PowerShell में पेस्ट करें।</p>
+            <p data-i18n="install.win_step2_done">यह GitHub से इंस्टॉलर डाउनलोड करती है, उसे प्रकाशित checksum से मिलाती है और आपके यूज़र के लिए TMPlayer इंस्टॉल करती है, Windows की किसी चेतावनी के बिना। इसमें एक दो मिनट लगते हैं। जब लिखा आए कि TMPlayer इंस्टॉल हो गया है, तो विंडो बंद कर दें। अगर इसकी जगह लाल error पर रुक जाए, तो नीचे दिया <a href="#windows-installer">इंस्टॉलर</a> इस्तेमाल करें।</p>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.win_step3_h">खोलें और साइन इन करें</h3>
@@ -400,7 +402,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
         <div class="panel panel-prose panel-wide" id="windows-installer">
           <h3 data-i18n="install.win_msi_h">इंस्टॉलर पसंद है?</h3>
-          <p data-i18n="install.win_msi"><a href="/hi/download/#windows">डाउनलोड पेज</a> से <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> डाउनलोड करें और खोलें। इस पर अभी कोड साइनिंग नहीं है, इसलिए Windows <em>Windows ने आपके PC की सुरक्षा की</em> दिखा सकता है: <em>अधिक जानकारी</em> पर क्लिक करें, फिर <em>फिर भी चलाएँ</em> पर।</p>
+          <p data-i18n="install.win_msi"><a href="/hi/download/#windows">डाउनलोड पेज</a> से <code data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</code> डाउनलोड करें और खोलें। इस पर अभी कोड साइनिंग नहीं है, इसलिए Windows <em>Windows ने आपके PC की सुरक्षा की</em> दिखा सकता है: <em>अधिक जानकारी</em> पर क्लिक करें, फिर <em>फिर भी चलाएँ</em> पर।</p>
         </div>
         <p class="muted small section-note" data-i18n="install.win_zip_note">पुराना पोर्टेबल zip इस्तेमाल करते थे? उसका फ़ोल्डर हटाएँ, फिर ऊपर बताए तरीके से इंस्टॉल करें। आपका साइन-इन और सेटिंग्स बनी रहती हैं।</p>
       </div>
@@ -461,12 +463,14 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <ol class="steps">
           <li id="linux-1">
             <h3 data-i18n="install.linux_step1_h">AppImage डाउनलोड करें</h3>
-            <p data-i18n="install.linux_step1"><a href="/hi/download/#linux">डाउनलोड पेज</a> से <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> लें। एक फ़ाइल, हर डिस्ट्रीब्यूशन के लिए।</p>
+            <p data-i18n="install.linux_step1"><a href="/hi/download/#linux">डाउनलोड पेज</a> से <code data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</code> लें। एक फ़ाइल, हर डिस्ट्रीब्यूशन के लिए।</p>
           </li>
           <li id="linux-2">
             <h3 data-i18n="install.linux_step2_h">इसे executable बनाएँ और खोलें</h3>
-            <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
-./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
+            <p data-i18n="install.linux_step2_where">टर्मिनल में, उस फ़ोल्डर में जहाँ आपने इसे सेव किया:</p>
+            <pre class="code"><code>cd ~/Downloads
+chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
+./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p data-i18n="install.or_tick_in_the_file">या फ़ाइल की प्रॉपर्टीज़ में <em>फ़ाइल को प्रोग्राम की तरह चलाने दें</em> पर टिक करें और उस पर डबल क्लिक करें।</p>
           </li>
           <li id="linux-3">
@@ -483,7 +487,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           </div>
           <div class="format">
             <h3 data-i18n="install.tarball_h">सादा फ़ोल्डर</h3>
-            <p data-i18n="install.tarball"><code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> को कहीं भी अनपैक करें और उसके अंदर <code>bin/TMPlayer</code> चलाएँ। यह खुद अपडेट नहीं होता: नया वर्शन आने पर TMPlayer आपको बताता है।</p>
+            <p data-i18n="install.tarball"><code data-name="linux-x64-tarball">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> को कहीं भी अनपैक करें और उसके अंदर <code>bin/TMPlayer</code> चलाएँ। यह खुद अपडेट नहीं होता: नया वर्शन आने पर TMPlayer आपको बताता है।</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">deb, rpm या Flatpak से बदलना</h3>
@@ -523,7 +527,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <h3 data-i18n="install.linux_appimage_in_the_app">Linux: AppImage, ऐप मेनू में</h3>
           <p data-i18n="install.a_single_file_has_no">अकेली फ़ाइल की कोई मेनू एंट्री नहीं होती, इसलिए एक बनाएँ। ये कमांड AppImage को सही जगह रखते हैं, आइकन लाते हैं और लॉन्चर लिखते हैं:</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
-mv ~/Downloads/TMPlayer-&lt;version&gt;-x86_64.AppImage ~/Applications/TMPlayer.AppImage
+mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
 
@@ -603,7 +607,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
             <span class="faq-q" data-i18n="install.the_appimage_does_nothing_when">AppImage खोलने पर कुछ नहीं होता</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15.5a1 1 0 0 1-.71-.29l-5-5a1 1 0 0 1 1.42-1.42L12 13.09l4.29-4.3a1 1 0 1 1 1.42 1.42l-5 5a1 1 0 0 1-.71.29Z"/></svg>
           </summary>
-          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">आम तौर पर FUSE नहीं होता। <code>libfuse2t64</code> (Ubuntu 24.04 और नए) या <code>libfuse2</code> (22.04) इंस्टॉल करें, या <code>./TMPlayer-&lt;version&gt;-x86_64.AppImage --appimage-extract-and-run</code> से FUSE छोड़ दें।</p></div>
+          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">आम तौर पर FUSE नहीं होता। <code>libfuse2t64</code> (Ubuntu 24.04 और नए) या <code>libfuse2</code> (22.04) इंस्टॉल करें, या <code>./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code> से FUSE छोड़ दें।</p></div>
         </details>
         <details class="faq-item" name="trouble">
           <summary>
@@ -694,7 +698,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "यूनिवर्सल APK", "kind_windows_installer": "Windows इंस्टॉलर", "kind_windows_zip": "Windows ज़िप", "kind_linux_tarball": "Linux टारबॉल", "kind_mac_dmg": "macOS DMG", "kind_checksums": "चेकसम", "os_note_ios_only": "iPhone या iPad संस्करण नहीं है। नीचे की फ़ाइलें Android फ़ोन, Android TV और कंप्यूटर के लिए हैं।", "download_for": "{os} के लिए डाउनलोड करें", "os_note_mac_preview": "macOS संस्करण एक प्रीव्यू है, Apple Silicon (M1 और बाद के) वाले और macOS 26 या नए Mac के लिए। यह Intel Mac पर नहीं चलता।", "os_note_mac": "macOS वर्शन नहीं है। नीचे सब कुछ Android, Windows और Linux के लिए है।", "downloads_one": "{count} डाउनलोड", "downloads_other": "{count} डाउनलोड", "not_in_release": "{version} में नहीं", "on_github": "GitHub पर", "download_file": "{file} डाउनलोड करें", "download_version_mac": "Apple Silicon वाले Mac के लिए {version} डाउनलोड करें", "download_version_for": "{os} के लिए {version} डाउनलोड करें", "download_version_other_os": "Android, Windows या Linux के लिए {version} डाउनलोड करें", "install_version_for": "{os} के लिए {version} इंस्टॉल करें", "download_version": "{version} डाउनलोड करें", "latest": "नवीनतम", "no_files_yet": "इस रिलीज़ में अभी कोई फ़ाइल नहीं जुड़ी है। हो सकता है बिल्ड अभी चल रहा हो।", "open_on_github": "GitHub पर {version} खोलें", "release": "रिलीज़", "unavailable": "उपलब्ध नहीं", "fail_downloads": "डाउनलोड अब भी मौजूद हैं: नीचे का हर बटन {link} खोलता है, जहाँ फ़ाइलें नाम से सूचीबद्ध हैं।", "fail_link": "GitHub पर नवीनतम रिलीज़", "go_to_downloads": "डाउनलोड पर जाएँ", "not_released": "अभी रिलीज़ नहीं हुआ", "no_release": "अभी कोई रिलीज़ प्रकाशित नहीं हुई है। आप फिर भी ऐप को सोर्स से बना सकते हैं।", "build_instructions": "GitHub पर बिल्ड निर्देश पढ़ें", "view_project": "GitHub पर प्रोजेक्ट देखें", "fail_browser": "यह ब्राउज़र रिलीज़ सूची लोड नहीं कर सकता।", "fail_rate": "GitHub इस नेटवर्क पर रेट लिमिट लगा रहा है। उसका सार्वजनिक API हर पते पर प्रति घंटे 60 अनुरोध देता है, और यह पता उन्हें पूरा कर चुका है।", "fail_timeout": "GitHub ने समय पर जवाब नहीं दिया।", "fail_load": "GitHub से रिलीज़ सूची लोड नहीं हो सकी।", "theme_to_dark": "डार्क थीम पर जाएँ", "theme_to_light": "लाइट थीम पर जाएँ", "menu_close": "मेनू बंद करें", "menu": "मेनू", "copy_command": "कॉपी करें", "copied": "कॉपी हो गया"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "यूनिवर्सल APK", "kind_windows_installer": "Windows इंस्टॉलर", "kind_windows_zip": "Windows ज़िप", "kind_linux_tarball": "Linux टारबॉल", "kind_mac_dmg": "macOS DMG", "kind_checksums": "चेकसम", "os_note_ios_only": "iPhone या iPad संस्करण नहीं है। नीचे की फ़ाइलें Android फ़ोन, Android TV और कंप्यूटर के लिए हैं।", "download_for": "{os} के लिए डाउनलोड करें", "os_note_mac_preview": "macOS संस्करण एक प्रीव्यू है, Apple Silicon (M1 और बाद के) वाले और macOS 26 या नए Mac के लिए। यह Intel Mac पर नहीं चलता।", "os_note_mac": "macOS वर्शन नहीं है। नीचे सब कुछ Android, Windows और Linux के लिए है।", "downloads_one": "{count} डाउनलोड", "downloads_other": "{count} डाउनलोड", "not_in_release": "{version} में नहीं", "on_github": "GitHub पर", "download_file": "{file} डाउनलोड करें", "download_version_mac": "Apple Silicon वाले Mac के लिए {version} डाउनलोड करें", "download_version_for": "{os} के लिए {version} डाउनलोड करें", "download_version_other_os": "Android, Windows या Linux के लिए {version} डाउनलोड करें", "install_version_for": "{os} के लिए {version} इंस्टॉल करें", "download_version": "{version} डाउनलोड करें", "latest": "नवीनतम", "no_files_yet": "इस रिलीज़ में अभी कोई फ़ाइल नहीं जुड़ी है। हो सकता है बिल्ड अभी चल रहा हो।", "open_on_github": "GitHub पर {version} खोलें", "release": "रिलीज़", "unavailable": "उपलब्ध नहीं", "fail_downloads": "डाउनलोड अब भी मौजूद हैं: नीचे का हर बटन {link} खोलता है, जहाँ फ़ाइलें नाम से सूचीबद्ध हैं।", "fail_link": "GitHub पर नवीनतम रिलीज़", "go_to_downloads": "डाउनलोड पर जाएँ", "not_released": "अभी रिलीज़ नहीं हुआ", "no_release": "अभी कोई रिलीज़ प्रकाशित नहीं हुई है। आप फिर भी ऐप को सोर्स से बना सकते हैं।", "build_instructions": "GitHub पर बिल्ड निर्देश पढ़ें", "view_project": "GitHub पर प्रोजेक्ट देखें", "fail_browser": "यह ब्राउज़र रिलीज़ सूची लोड नहीं कर सकता।", "fail_rate": "GitHub इस नेटवर्क पर रेट लिमिट लगा रहा है। उसका सार्वजनिक API हर पते पर प्रति घंटे 60 अनुरोध देता है, और यह पता उन्हें पूरा कर चुका है।", "fail_timeout": "GitHub ने समय पर जवाब नहीं दिया।", "fail_load": "GitHub से रिलीज़ सूची लोड नहीं हो सकी।", "theme_to_dark": "डार्क थीम पर जाएँ", "theme_to_light": "लाइट थीम पर जाएँ", "menu_close": "मेनू बंद करें", "menu": "मेनू", "sha_expected": "{file} के लिए नतीजा यह होना चाहिए:", "copy_command": "कॉपी करें", "copied": "कॉपी हो गया", "copy_failed": "आपके ब्राउज़र ने कॉपी करने नहीं दिया। टेक्स्ट चुना हुआ है: वहीं से कॉपी करें।"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

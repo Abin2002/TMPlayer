@@ -329,9 +329,10 @@
           </div>
           <div class="format">
             <h3 data-i18n="install.from_a_computer">Bilgisayardan</h3>
-            <p data-i18n="install.tv_from_computer">TV'nin Geliştirici seçeneklerinde <em>Ağ hata ayıklama</em> özelliğini aç, sonra aynı wifi ağında:</p>
+            <p data-i18n="install.tv_from_computer_ip">TV'nin Geliştirici seçeneklerinde <em>Ağ hata ayıklama</em> özelliğini aç ve TV'nin IP adresini ağ ayarlarında bul. Sonra aynı wifi ağındaki bir bilgisayarda, APK'nın bulunduğu klasörde, <code>&lt;tv-ip&gt;</code> yerine bu adresi yazarak şunları çalıştır:</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
+            <p data-i18n="install.accept_the_debugging_prompt">İlk seferde televizyonda çıkan hata ayıklama istemini kabul et.</p>
           </div>
         </div>
       </div>
@@ -389,7 +390,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.win_step2_h">Bu satırı yapıştır ve Enter'a bas</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p data-i18n="install.win_step2">Yükleyiciyi GitHub'dan indirir, yayımlanan sağlama toplamıyla karşılaştırır ve TMPlayer'ı kendi kullanıcın için kurar; Windows uyarı vermez.</p>
+            <p data-i18n="install.win_step2_paste">Kopyalamak için satıra tıkla, sonra Ctrl+V ya da sağ tıkla PowerShell'e yapıştır.</p>
+            <p data-i18n="install.win_step2_done">Yükleyiciyi GitHub'dan indirir, yayımlanan sağlama toplamıyla karşılaştırır ve TMPlayer'ı kendi kullanıcın için kurar; Windows uyarı vermez. Bir iki dakika sürer. TMPlayer'ın kurulduğunu söylediğinde pencereyi kapat. Bunun yerine kırmızı bir hatayla durursa aşağıdaki <a href="#windows-installer">yükleyiciyi</a> kullan.</p>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.win_step3_h">Aç ve giriş yap</h3>
@@ -400,7 +402,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
         <div class="panel panel-prose panel-wide" id="windows-installer">
           <h3 data-i18n="install.win_msi_h">Yükleyici mi tercih edersin?</h3>
-          <p data-i18n="install.win_msi"><code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> dosyasını <a href="/tr/download/#windows">indirme sayfasından</a> indir ve aç. Henüz kod imzası yok, bu yüzden Windows <em>Windows bilgisayarınızı korudu</em> diyebilir: <em>Daha fazla bilgi</em> ve ardından <em>Yine de çalıştır</em> seçeneğine tıkla.</p>
+          <p data-i18n="install.win_msi"><code data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</code> dosyasını <a href="/tr/download/#windows">indirme sayfasından</a> indir ve aç. Henüz kod imzası yok, bu yüzden Windows <em>Windows bilgisayarınızı korudu</em> diyebilir: <em>Daha fazla bilgi</em> ve ardından <em>Yine de çalıştır</em> seçeneğine tıkla.</p>
         </div>
         <p class="muted small section-note" data-i18n="install.win_zip_note">Eski taşınabilir zip'i mi kullanıyordun? Klasörünü sil ve yukarıdaki gibi kur. Girişin ve ayarların korunur.</p>
       </div>
@@ -461,12 +463,14 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <ol class="steps">
           <li id="linux-1">
             <h3 data-i18n="install.linux_step1_h">AppImage'ı indir</h3>
-            <p data-i18n="install.linux_step1"><code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> dosyasını <a href="/tr/download/#linux">indirme sayfasından</a> al. Her dağıtım için tek dosya.</p>
+            <p data-i18n="install.linux_step1"><code data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</code> dosyasını <a href="/tr/download/#linux">indirme sayfasından</a> al. Her dağıtım için tek dosya.</p>
           </li>
           <li id="linux-2">
             <h3 data-i18n="install.linux_step2_h">Çalıştırılabilir yap ve aç</h3>
-            <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
-./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
+            <p data-i18n="install.linux_step2_where">Bir terminalde, dosyayı kaydettiğin klasörde:</p>
+            <pre class="code"><code>cd ~/Downloads
+chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
+./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p data-i18n="install.or_tick_in_the_file">Ya da dosyanın özelliklerinde <em>Dosyayı program olarak çalıştırmaya izin ver</em> kutusunu işaretle ve çift tıkla.</p>
           </li>
           <li id="linux-3">
@@ -483,7 +487,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           </div>
           <div class="format">
             <h3 data-i18n="install.tarball_h">Düz klasör</h3>
-            <p data-i18n="install.tarball"><code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> dosyasını istediğin yere aç ve içindeki <code>bin/TMPlayer</code> dosyasını çalıştır. Kendini güncellemez: yeni sürüm çıkınca TMPlayer sana haber verir.</p>
+            <p data-i18n="install.tarball"><code data-name="linux-x64-tarball">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> dosyasını istediğin yere aç ve içindeki <code>bin/TMPlayer</code> dosyasını çalıştır. Kendini güncellemez: yeni sürüm çıkınca TMPlayer sana haber verir.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">deb, rpm ya da Flatpak'ten geçiş</h3>
@@ -523,7 +527,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <h3 data-i18n="install.linux_appimage_in_the_app">Linux: AppImage, uygulama menüsünde</h3>
           <p data-i18n="install.a_single_file_has_no">Tek bir dosyanın menü girişi yoktur, o yüzden bir tane yap. Bu komutlar AppImage'ı yerine taşır, simgeyi indirir ve bir başlatıcı yazar:</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
-mv ~/Downloads/TMPlayer-&lt;version&gt;-x86_64.AppImage ~/Applications/TMPlayer.AppImage
+mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
 
@@ -603,7 +607,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
             <span class="faq-q" data-i18n="install.the_appimage_does_nothing_when">AppImage açılınca hiçbir şey yapmıyor</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15.5a1 1 0 0 1-.71-.29l-5-5a1 1 0 0 1 1.42-1.42L12 13.09l4.29-4.3a1 1 0 1 1 1.42 1.42l-5 5a1 1 0 0 1-.71.29Z"/></svg>
           </summary>
-          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">Genelde FUSE eksiktir. <code>libfuse2t64</code> (Ubuntu 24.04 ve üzeri) ya da <code>libfuse2</code> (22.04) kur, ya da FUSE'u <code>./TMPlayer-&lt;version&gt;-x86_64.AppImage --appimage-extract-and-run</code> ile atla.</p></div>
+          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">Genelde FUSE eksiktir. <code>libfuse2t64</code> (Ubuntu 24.04 ve üzeri) ya da <code>libfuse2</code> (22.04) kur, ya da FUSE'u <code>./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code> ile atla.</p></div>
         </details>
         <details class="faq-item" name="trouble">
           <summary>
@@ -694,7 +698,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "Evrensel APK", "kind_windows_installer": "Windows yükleyicisi", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "Sağlama toplamları", "os_note_ios_only": "iPhone veya iPad sürümü yok. Aşağıdaki dosyalar Android telefonlar, Android TV ve bilgisayarlar için.", "download_for": "{os} için indir", "os_note_mac_preview": "macOS sürümü, Apple Silicon'lu (M1 ve sonrası) ve macOS 26 veya daha yenisini çalıştıran Mac'ler için bir önizleme. Intel Mac'lerde çalışmaz.", "os_note_mac": "macOS sürümü yok. Aşağıdakilerin hepsi Android, Windows ve Linux için.", "downloads_one": "{count} indirme", "downloads_other": "{count} indirme", "not_in_release": "{version} içinde yok", "on_github": "GitHub'da", "download_file": "{file} dosyasını indir", "download_version_mac": "{version} sürümünü Apple Silicon'lu Mac'ler için indir", "download_version_for": "{version} sürümünü {os} için indir", "download_version_other_os": "{version} sürümünü Android, Windows ya da Linux için indir", "install_version_for": "{os} için {version} sürümünü kur", "download_version": "{version} sürümünü indir", "latest": "En yeni", "no_files_yet": "Bu sürüme henüz dosya eklenmemiş. Derleme hâlâ sürüyor olabilir.", "open_on_github": "{version} sürümünü GitHub'da aç", "release": "Sürüm", "unavailable": "Kullanılamıyor", "fail_downloads": "İndirmeler hâlâ orada: aşağıdaki her düğme, dosyaların adlarıyla listelendiği {link} sayfasını açar.", "fail_link": "GitHub'daki son sürüm", "go_to_downloads": "İndirmelere git", "not_released": "Henüz yayımlanmadı", "no_release": "Henüz yayımlanmış bir sürüm yok. Uygulamayı yine de kaynaktan derleyebilirsin.", "build_instructions": "Derleme talimatlarını GitHub'da oku", "view_project": "Projeyi GitHub'da gör", "fail_browser": "Bu tarayıcı sürüm listesini yükleyemiyor.", "fail_rate": "GitHub bu ağı sınırlıyor. Herkese açık API'si adres başına saatte 60 isteğe izin verir ve bu adres hepsini kullandı.", "fail_timeout": "GitHub zamanında yanıt vermedi.", "fail_load": "Sürüm listesi GitHub'dan yüklenemedi.", "theme_to_dark": "Koyu temaya geç", "theme_to_light": "Açık temaya geç", "menu_close": "Menüyü kapat", "menu": "Menü", "copy_command": "Kopyala", "copied": "Kopyalandı"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "Evrensel APK", "kind_windows_installer": "Windows yükleyicisi", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "Sağlama toplamları", "os_note_ios_only": "iPhone veya iPad sürümü yok. Aşağıdaki dosyalar Android telefonlar, Android TV ve bilgisayarlar için.", "download_for": "{os} için indir", "os_note_mac_preview": "macOS sürümü, Apple Silicon'lu (M1 ve sonrası) ve macOS 26 veya daha yenisini çalıştıran Mac'ler için bir önizleme. Intel Mac'lerde çalışmaz.", "os_note_mac": "macOS sürümü yok. Aşağıdakilerin hepsi Android, Windows ve Linux için.", "downloads_one": "{count} indirme", "downloads_other": "{count} indirme", "not_in_release": "{version} içinde yok", "on_github": "GitHub'da", "download_file": "{file} dosyasını indir", "download_version_mac": "{version} sürümünü Apple Silicon'lu Mac'ler için indir", "download_version_for": "{version} sürümünü {os} için indir", "download_version_other_os": "{version} sürümünü Android, Windows ya da Linux için indir", "install_version_for": "{os} için {version} sürümünü kur", "download_version": "{version} sürümünü indir", "latest": "En yeni", "no_files_yet": "Bu sürüme henüz dosya eklenmemiş. Derleme hâlâ sürüyor olabilir.", "open_on_github": "{version} sürümünü GitHub'da aç", "release": "Sürüm", "unavailable": "Kullanılamıyor", "fail_downloads": "İndirmeler hâlâ orada: aşağıdaki her düğme, dosyaların adlarıyla listelendiği {link} sayfasını açar.", "fail_link": "GitHub'daki son sürüm", "go_to_downloads": "İndirmelere git", "not_released": "Henüz yayımlanmadı", "no_release": "Henüz yayımlanmış bir sürüm yok. Uygulamayı yine de kaynaktan derleyebilirsin.", "build_instructions": "Derleme talimatlarını GitHub'da oku", "view_project": "Projeyi GitHub'da gör", "fail_browser": "Bu tarayıcı sürüm listesini yükleyemiyor.", "fail_rate": "GitHub bu ağı sınırlıyor. Herkese açık API'si adres başına saatte 60 isteğe izin verir ve bu adres hepsini kullandı.", "fail_timeout": "GitHub zamanında yanıt vermedi.", "fail_load": "Sürüm listesi GitHub'dan yüklenemedi.", "theme_to_dark": "Koyu temaya geç", "theme_to_light": "Açık temaya geç", "menu_close": "Menüyü kapat", "menu": "Menü", "sha_expected": "{file} için sonuç şu olmalı:", "copy_command": "Kopyala", "copied": "Kopyalandı", "copy_failed": "Tarayıcın kopyalamaya izin vermedi. Metin seçili: oradan kopyala."}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

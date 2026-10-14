@@ -329,9 +329,10 @@
           </div>
           <div class="format">
             <h3 data-i18n="install.from_a_computer">من الكمبيوتر</h3>
-            <p data-i18n="install.tv_from_computer">فعّل <em>تصحيح الأخطاء عبر الشبكة</em> في خيارات المطوّرين على التلفاز، ثم على شبكة wifi نفسها:</p>
+            <p data-i18n="install.tv_from_computer_ip">فعّل <em>تصحيح الأخطاء عبر الشبكة</em> في خيارات المطوّرين على التلفاز، واعثر على عنوان IP للتلفاز في إعدادات الشبكة. ثم على حاسوب متصل بشبكة wifi نفسها، وفي المجلد الذي فيه ملف APK، شغّل هذه الأوامر واضعًا ذلك العنوان مكان <code>&lt;tv-ip&gt;</code>:</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
+            <p data-i18n="install.accept_the_debugging_prompt">وافق على طلب تصحيح الأخطاء الذي يظهر على التلفاز في المرة الأولى.</p>
           </div>
         </div>
       </div>
@@ -389,7 +390,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.win_step2_h">الصق هذا السطر واضغط Enter</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p data-i18n="install.win_step2">ينزّل المثبّت من GitHub ويطابقه مع المجموع الاختباري المنشور ويثبّت TMPlayer لحسابك، دون أي تحذير من Windows.</p>
+            <p data-i18n="install.win_step2_paste">انقر السطر لنسخه، ثم الصقه في PowerShell بالضغط على Ctrl+V أو بالنقر بزر الفأرة الأيمن.</p>
+            <p data-i18n="install.win_step2_done">ينزّل المثبّت من GitHub ويطابقه مع المجموع الاختباري المنشور ويثبّت TMPlayer لحسابك، دون أي تحذير من Windows. يستغرق دقيقة أو دقيقتين. حين يظهر أن TMPlayer قد ثُبّت، أغلق النافذة. وإن توقف بخطأ أحمر بدلًا من ذلك، فاستخدم <a href="#windows-installer">المثبّت</a> أدناه.</p>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.win_step3_h">افتحه وسجّل الدخول</h3>
@@ -400,7 +402,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
         <div class="panel panel-prose panel-wide" id="windows-installer">
           <h3 data-i18n="install.win_msi_h">تفضّل مثبّتًا؟</h3>
-          <p data-i18n="install.win_msi">نزّل <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> من <a href="/ar/download/#windows">صفحة التنزيل</a> وافتحه. ليس موقّعًا رقميًا بعد، لذا قد يعرض Windows رسالة <em>Windows protected your PC</em>: انقر <em>More info</em> ثم <em>Run anyway</em>.</p>
+          <p data-i18n="install.win_msi">نزّل <code data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</code> من <a href="/ar/download/#windows">صفحة التنزيل</a> وافتحه. ليس موقّعًا رقميًا بعد، لذا قد يعرض Windows رسالة <em>Windows protected your PC</em>: انقر <em>More info</em> ثم <em>Run anyway</em>.</p>
         </div>
         <p class="muted small section-note" data-i18n="install.win_zip_note">كنت تستخدم ملف zip المحمول القديم؟ احذف مجلده، ثم ثبّت كما هو موضّح أعلاه. يبقى تسجيل دخولك وإعداداتك.</p>
       </div>
@@ -461,12 +463,14 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <ol class="steps">
           <li id="linux-1">
             <h3 data-i18n="install.linux_step1_h">نزّل AppImage</h3>
-            <p data-i18n="install.linux_step1">خذ <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> من <a href="/ar/download/#linux">صفحة التنزيل</a>. ملف واحد لأي توزيعة.</p>
+            <p data-i18n="install.linux_step1">خذ <code data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</code> من <a href="/ar/download/#linux">صفحة التنزيل</a>. ملف واحد لأي توزيعة.</p>
           </li>
           <li id="linux-2">
             <h3 data-i18n="install.linux_step2_h">اجعله قابلًا للتنفيذ وافتحه</h3>
-            <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
-./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
+            <p data-i18n="install.linux_step2_where">في الطرفية، داخل المجلد الذي حفظته فيه:</p>
+            <pre class="code"><code>cd ~/Downloads
+chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
+./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p data-i18n="install.or_tick_in_the_file">أو فعّل خيار <em>السماح بتنفيذ الملف كبرنامج</em> في خصائص الملف، ثم انقر عليه نقرًا مزدوجًا.</p>
           </li>
           <li id="linux-3">
@@ -483,7 +487,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           </div>
           <div class="format">
             <h3 data-i18n="install.tarball_h">المجلد العادي</h3>
-            <p data-i18n="install.tarball">فكّ ضغط <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> في أي مكان وشغّل <code>bin/TMPlayer</code> داخله. لا يحدّث نفسه: يخبرك TMPlayer عند صدور إصدار جديد.</p>
+            <p data-i18n="install.tarball">فكّ ضغط <code data-name="linux-x64-tarball">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> في أي مكان وشغّل <code>bin/TMPlayer</code> داخله. لا يحدّث نفسه: يخبرك TMPlayer عند صدور إصدار جديد.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">الانتقال من deb أو rpm أو Flatpak</h3>
@@ -523,7 +527,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <h3 data-i18n="install.linux_appimage_in_the_app">Linux: AppImage في قائمة التطبيقات</h3>
           <p data-i18n="install.a_single_file_has_no">الملف المنفرد لا يملك عنصرًا في القائمة، لذا أنشئ له واحدًا. هذه الأوامر تنقل AppImage إلى مكانه، وتجلب الأيقونة، وتكتب ملف تشغيل:</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
-mv ~/Downloads/TMPlayer-&lt;version&gt;-x86_64.AppImage ~/Applications/TMPlayer.AppImage
+mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
 
@@ -603,7 +607,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
             <span class="faq-q" data-i18n="install.the_appimage_does_nothing_when">لا يحدث شيء عند فتح ملف AppImage</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15.5a1 1 0 0 1-.71-.29l-5-5a1 1 0 0 1 1.42-1.42L12 13.09l4.29-4.3a1 1 0 1 1 1.42 1.42l-5 5a1 1 0 0 1-.71.29Z"/></svg>
           </summary>
-          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">غالبًا ما تكون حزمة FUSE غير مثبتة. ثبّت <code>libfuse2t64</code> (في Ubuntu 24.04 وما بعده) أو <code>libfuse2</code> (في 22.04)، أو تجاوز FUSE باستخدام <code>./TMPlayer-&lt;version&gt;-x86_64.AppImage --appimage-extract-and-run</code>.</p></div>
+          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">غالبًا ما تكون حزمة FUSE غير مثبتة. ثبّت <code>libfuse2t64</code> (في Ubuntu 24.04 وما بعده) أو <code>libfuse2</code> (في 22.04)، أو تجاوز FUSE باستخدام <code>./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code>.</p></div>
         </details>
         <details class="faq-item" name="trouble">
           <summary>
@@ -694,7 +698,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "ملف APK شامل", "kind_windows_installer": "مثبّت Windows", "kind_windows_zip": "ملف zip لـ Windows", "kind_linux_tarball": "أرشيف tar لـ Linux", "kind_mac_dmg": "ملف DMG لـ macOS", "kind_checksums": "المجاميع الاختبارية", "os_note_ios_only": "لا توجد نسخة لـ iPhone أو iPad. الملفات أدناه لهواتف Android وAndroid TV والحواسيب.", "download_for": "التنزيل لـ {os}", "os_note_mac_preview": "نسخة macOS تجريبية، لأجهزة Mac بشريحة Apple Silicon (M1 وما بعدها) مع macOS 26 أو أحدث. لا تعمل على أجهزة Mac بمعالج Intel.", "os_note_mac": "لا يوجد إصدار لـ macOS. كل ما يلي مخصص لـ Android وWindows وLinux.", "downloads_one": "عدد التنزيلات: {count}", "downloads_other": "عدد التنزيلات: {count}", "not_in_release": "غير متوفر في {version}", "on_github": "على GitHub", "download_file": "تنزيل {file}", "download_version_mac": "تنزيل {version} لأجهزة Mac بشريحة Apple Silicon", "download_version_for": "تنزيل {version} لـ {os}", "download_version_other_os": "تنزيل {version} لـ Android أو Windows أو Linux", "install_version_for": "ثبّت {version} لنظام {os}", "download_version": "تنزيل {version}", "latest": "الأحدث", "no_files_yet": "لا توجد ملفات مرفقة بهذا الإصدار بعد. ربما لا يزال البناء جاريًا.", "open_on_github": "فتح {version} على GitHub", "release": "الإصدار", "unavailable": "غير متاح", "fail_downloads": "التنزيلات لا تزال متاحة: كل زر أدناه يفتح {link}، حيث تُسرد الملفات بأسمائها.", "fail_link": "أحدث إصدار على GitHub", "go_to_downloads": "انتقل إلى التنزيلات", "not_released": "لم يصدر بعد", "no_release": "لم يُنشر أي إصدار بعد. لا يزال بإمكانك بناء التطبيق من الشيفرة المصدرية.", "build_instructions": "اقرأ تعليمات البناء على GitHub", "view_project": "اعرض المشروع على GitHub", "fail_browser": "لا يستطيع هذا المتصفح تحميل قائمة الإصدارات.", "fail_rate": "يقيّد GitHub عدد الطلبات من هذه الشبكة. تسمح واجهته البرمجية العامة بـ 60 طلبًا في الساعة لكل عنوان، وقد استُنفدت لهذا العنوان.", "fail_timeout": "لم يستجب GitHub في الوقت المحدد.", "fail_load": "تعذر تحميل قائمة الإصدارات من GitHub.", "theme_to_dark": "التبديل إلى المظهر الداكن", "theme_to_light": "التبديل إلى المظهر الفاتح", "menu_close": "إغلاق القائمة", "menu": "القائمة", "copy_command": "نسخ", "copied": "تم النسخ"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "ملف APK شامل", "kind_windows_installer": "مثبّت Windows", "kind_windows_zip": "ملف zip لـ Windows", "kind_linux_tarball": "أرشيف tar لـ Linux", "kind_mac_dmg": "ملف DMG لـ macOS", "kind_checksums": "المجاميع الاختبارية", "os_note_ios_only": "لا توجد نسخة لـ iPhone أو iPad. الملفات أدناه لهواتف Android وAndroid TV والحواسيب.", "download_for": "التنزيل لـ {os}", "os_note_mac_preview": "نسخة macOS تجريبية، لأجهزة Mac بشريحة Apple Silicon (M1 وما بعدها) مع macOS 26 أو أحدث. لا تعمل على أجهزة Mac بمعالج Intel.", "os_note_mac": "لا يوجد إصدار لـ macOS. كل ما يلي مخصص لـ Android وWindows وLinux.", "downloads_one": "عدد التنزيلات: {count}", "downloads_other": "عدد التنزيلات: {count}", "not_in_release": "غير متوفر في {version}", "on_github": "على GitHub", "download_file": "تنزيل {file}", "download_version_mac": "تنزيل {version} لأجهزة Mac بشريحة Apple Silicon", "download_version_for": "تنزيل {version} لـ {os}", "download_version_other_os": "تنزيل {version} لـ Android أو Windows أو Linux", "install_version_for": "ثبّت {version} لنظام {os}", "download_version": "تنزيل {version}", "latest": "الأحدث", "no_files_yet": "لا توجد ملفات مرفقة بهذا الإصدار بعد. ربما لا يزال البناء جاريًا.", "open_on_github": "فتح {version} على GitHub", "release": "الإصدار", "unavailable": "غير متاح", "fail_downloads": "التنزيلات لا تزال متاحة: كل زر أدناه يفتح {link}، حيث تُسرد الملفات بأسمائها.", "fail_link": "أحدث إصدار على GitHub", "go_to_downloads": "انتقل إلى التنزيلات", "not_released": "لم يصدر بعد", "no_release": "لم يُنشر أي إصدار بعد. لا يزال بإمكانك بناء التطبيق من الشيفرة المصدرية.", "build_instructions": "اقرأ تعليمات البناء على GitHub", "view_project": "اعرض المشروع على GitHub", "fail_browser": "لا يستطيع هذا المتصفح تحميل قائمة الإصدارات.", "fail_rate": "يقيّد GitHub عدد الطلبات من هذه الشبكة. تسمح واجهته البرمجية العامة بـ 60 طلبًا في الساعة لكل عنوان، وقد استُنفدت لهذا العنوان.", "fail_timeout": "لم يستجب GitHub في الوقت المحدد.", "fail_load": "تعذر تحميل قائمة الإصدارات من GitHub.", "theme_to_dark": "التبديل إلى المظهر الداكن", "theme_to_light": "التبديل إلى المظهر الفاتح", "menu_close": "إغلاق القائمة", "menu": "القائمة", "sha_expected": "بالنسبة إلى {file}، يجب أن تكون النتيجة:", "copy_command": "نسخ", "copied": "تم النسخ", "copy_failed": "لم يسمح متصفحك بالنسخ. النص محدد: انسخه من هناك."}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

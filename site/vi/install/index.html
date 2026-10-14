@@ -329,9 +329,10 @@
           </div>
           <div class="format">
             <h3 data-i18n="install.from_a_computer">Từ máy tính</h3>
-            <p data-i18n="install.tv_from_computer">Bật <em>Gỡ lỗi mạng</em> trong Tùy chọn nhà phát triển của TV, rồi trên cùng mạng wifi:</p>
+            <p data-i18n="install.tv_from_computer_ip">Bật <em>Gỡ lỗi mạng</em> trong Tùy chọn nhà phát triển của TV và tìm địa chỉ IP của TV trong phần cài đặt mạng. Sau đó, trên một máy tính cùng mạng wifi, trong thư mục chứa APK, chạy các lệnh này với địa chỉ đó thay cho <code>&lt;tv-ip&gt;</code>:</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
+            <p data-i18n="install.accept_the_debugging_prompt">Chấp nhận lời nhắc gỡ lỗi xuất hiện trên TV ở lần đầu tiên.</p>
           </div>
         </div>
       </div>
@@ -389,7 +390,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.win_step2_h">Dán dòng này và nhấn Enter</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p data-i18n="install.win_step2">Nó tải trình cài đặt từ GitHub, đối chiếu với mã kiểm tra đã công bố và cài TMPlayer cho tài khoản của bạn, Windows không cảnh báo gì.</p>
+            <p data-i18n="install.win_step2_paste">Nhấp vào dòng để sao chép, rồi dán vào PowerShell bằng Ctrl+V hoặc nhấp chuột phải.</p>
+            <p data-i18n="install.win_step2_done">Nó tải trình cài đặt từ GitHub, đối chiếu với mã kiểm tra đã công bố và cài TMPlayer cho tài khoản của bạn, Windows không cảnh báo gì. Mất một hai phút. Khi nó báo TMPlayer đã được cài, hãy đóng cửa sổ. Nếu nó dừng với một lỗi màu đỏ, hãy dùng <a href="#windows-installer">trình cài đặt</a> bên dưới.</p>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.win_step3_h">Mở và đăng nhập</h3>
@@ -400,7 +402,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
         <div class="panel panel-prose panel-wide" id="windows-installer">
           <h3 data-i18n="install.win_msi_h">Thích dùng trình cài đặt hơn?</h3>
-          <p data-i18n="install.win_msi">Tải <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> từ <a href="/vi/download/#windows">trang tải về</a> rồi mở. Trình cài đặt chưa được ký mã, nên Windows có thể báo <em>Windows đã bảo vệ PC của bạn</em>: bấm <em>Thông tin khác</em>, rồi <em>Vẫn chạy</em>.</p>
+          <p data-i18n="install.win_msi">Tải <code data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</code> từ <a href="/vi/download/#windows">trang tải về</a> rồi mở. Trình cài đặt chưa được ký mã, nên Windows có thể báo <em>Windows đã bảo vệ PC của bạn</em>: bấm <em>Thông tin khác</em>, rồi <em>Vẫn chạy</em>.</p>
         </div>
         <p class="muted small section-note" data-i18n="install.win_zip_note">Từng dùng bản zip di động cũ? Xóa thư mục của nó rồi cài như trên. Đăng nhập và cài đặt vẫn được giữ.</p>
       </div>
@@ -461,12 +463,14 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <ol class="steps">
           <li id="linux-1">
             <h3 data-i18n="install.linux_step1_h">Tải AppImage</h3>
-            <p data-i18n="install.linux_step1">Lấy <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> từ <a href="/vi/download/#linux">trang tải về</a>. Một tệp, cho mọi bản phân phối.</p>
+            <p data-i18n="install.linux_step1">Lấy <code data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</code> từ <a href="/vi/download/#linux">trang tải về</a>. Một tệp, cho mọi bản phân phối.</p>
           </li>
           <li id="linux-2">
             <h3 data-i18n="install.linux_step2_h">Cho phép thực thi rồi mở</h3>
-            <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
-./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
+            <p data-i18n="install.linux_step2_where">Trong terminal, tại thư mục bạn đã lưu tệp:</p>
+            <pre class="code"><code>cd ~/Downloads
+chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
+./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p data-i18n="install.or_tick_in_the_file">Hoặc đánh dấu <em>Cho phép thực thi tệp như một chương trình</em> trong thuộc tính của tệp rồi nhấp đúp.</p>
           </li>
           <li id="linux-3">
@@ -483,7 +487,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           </div>
           <div class="format">
             <h3 data-i18n="install.tarball_h">Thư mục thuần</h3>
-            <p data-i18n="install.tarball">Giải nén <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> ở đâu cũng được rồi chạy <code>bin/TMPlayer</code> bên trong. Bản này không tự cập nhật: TMPlayer sẽ báo khi có phiên bản mới.</p>
+            <p data-i18n="install.tarball">Giải nén <code data-name="linux-x64-tarball">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> ở đâu cũng được rồi chạy <code>bin/TMPlayer</code> bên trong. Bản này không tự cập nhật: TMPlayer sẽ báo khi có phiên bản mới.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">Chuyển từ deb, rpm hoặc Flatpak</h3>
@@ -523,7 +527,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <h3 data-i18n="install.linux_appimage_in_the_app">Linux: AppImage, trong menu ứng dụng</h3>
           <p data-i18n="install.a_single_file_has_no">Một tệp đơn lẻ không có mục menu, nên hãy tự tạo. Các lệnh này chuyển AppImage vào đúng chỗ, tải biểu tượng và tạo một trình khởi chạy:</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
-mv ~/Downloads/TMPlayer-&lt;version&gt;-x86_64.AppImage ~/Applications/TMPlayer.AppImage
+mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
 
@@ -603,7 +607,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
             <span class="faq-q" data-i18n="install.the_appimage_does_nothing_when">AppImage không làm gì khi mở</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15.5a1 1 0 0 1-.71-.29l-5-5a1 1 0 0 1 1.42-1.42L12 13.09l4.29-4.3a1 1 0 1 1 1.42 1.42l-5 5a1 1 0 0 1-.71.29Z"/></svg>
           </summary>
-          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">Thường là do thiếu FUSE. Hãy cài <code>libfuse2t64</code> (Ubuntu 24.04 trở lên) hoặc <code>libfuse2</code> (22.04), hoặc bỏ qua FUSE bằng <code>./TMPlayer-&lt;version&gt;-x86_64.AppImage --appimage-extract-and-run</code>.</p></div>
+          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">Thường là do thiếu FUSE. Hãy cài <code>libfuse2t64</code> (Ubuntu 24.04 trở lên) hoặc <code>libfuse2</code> (22.04), hoặc bỏ qua FUSE bằng <code>./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code>.</p></div>
         </details>
         <details class="faq-item" name="trouble">
           <summary>
@@ -694,7 +698,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK chung", "kind_windows_installer": "Trình cài đặt Windows", "kind_windows_zip": "Tệp zip Windows", "kind_linux_tarball": "Tệp tarball Linux", "kind_mac_dmg": "DMG cho macOS", "kind_checksums": "Mã kiểm tra", "os_note_ios_only": "Không có bản cho iPhone hay iPad. Các tệp bên dưới dành cho điện thoại Android, Android TV và máy tính.", "download_for": "Tải cho {os}", "os_note_mac_preview": "Bản macOS là bản xem trước cho máy Mac dùng Apple Silicon (M1 trở lên) và macOS 26 trở lên. Bản này không chạy trên máy Mac dùng Intel.", "os_note_mac": "Không có bản cho macOS. Mọi thứ bên dưới dành cho Android, Windows và Linux.", "downloads_one": "{count} lượt tải", "downloads_other": "{count} lượt tải", "not_in_release": "Không có trong {version}", "on_github": "Trên GitHub", "download_file": "Tải {file}", "download_version_mac": "Tải {version} cho máy Mac dùng Apple Silicon", "download_version_for": "Tải {version} cho {os}", "download_version_other_os": "Tải {version} cho Android, Windows hoặc Linux", "install_version_for": "Cài {version} cho {os}", "download_version": "Tải {version}", "latest": "Mới nhất", "no_files_yet": "Bản phát hành này chưa có tệp đính kèm. Có thể bản dựng vẫn đang chạy.", "open_on_github": "Mở {version} trên GitHub", "release": "Bản phát hành", "unavailable": "Không khả dụng", "fail_downloads": "Các tệp tải về vẫn còn đó: mọi nút bên dưới đều mở {link}, nơi các tệp được liệt kê theo tên.", "fail_link": "bản phát hành mới nhất trên GitHub", "go_to_downloads": "Đến phần tải về", "not_released": "Chưa phát hành", "no_release": "Chưa có bản phát hành nào được công bố. Bạn vẫn có thể tự dựng ứng dụng từ mã nguồn.", "build_instructions": "Đọc hướng dẫn dựng trên GitHub", "view_project": "Xem dự án trên GitHub", "fail_browser": "Trình duyệt này không tải được danh sách bản phát hành.", "fail_rate": "GitHub đang giới hạn tốc độ của mạng này. API công khai của nó cho phép 60 yêu cầu mỗi giờ cho mỗi địa chỉ, và mạng này đã dùng hết.", "fail_timeout": "GitHub không phản hồi kịp thời.", "fail_load": "Không tải được danh sách bản phát hành từ GitHub.", "theme_to_dark": "Chuyển sang giao diện tối", "theme_to_light": "Chuyển sang giao diện sáng", "menu_close": "Đóng menu", "menu": "Menu", "copy_command": "Sao chép", "copied": "Đã sao chép"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK chung", "kind_windows_installer": "Trình cài đặt Windows", "kind_windows_zip": "Tệp zip Windows", "kind_linux_tarball": "Tệp tarball Linux", "kind_mac_dmg": "DMG cho macOS", "kind_checksums": "Mã kiểm tra", "os_note_ios_only": "Không có bản cho iPhone hay iPad. Các tệp bên dưới dành cho điện thoại Android, Android TV và máy tính.", "download_for": "Tải cho {os}", "os_note_mac_preview": "Bản macOS là bản xem trước cho máy Mac dùng Apple Silicon (M1 trở lên) và macOS 26 trở lên. Bản này không chạy trên máy Mac dùng Intel.", "os_note_mac": "Không có bản cho macOS. Mọi thứ bên dưới dành cho Android, Windows và Linux.", "downloads_one": "{count} lượt tải", "downloads_other": "{count} lượt tải", "not_in_release": "Không có trong {version}", "on_github": "Trên GitHub", "download_file": "Tải {file}", "download_version_mac": "Tải {version} cho máy Mac dùng Apple Silicon", "download_version_for": "Tải {version} cho {os}", "download_version_other_os": "Tải {version} cho Android, Windows hoặc Linux", "install_version_for": "Cài {version} cho {os}", "download_version": "Tải {version}", "latest": "Mới nhất", "no_files_yet": "Bản phát hành này chưa có tệp đính kèm. Có thể bản dựng vẫn đang chạy.", "open_on_github": "Mở {version} trên GitHub", "release": "Bản phát hành", "unavailable": "Không khả dụng", "fail_downloads": "Các tệp tải về vẫn còn đó: mọi nút bên dưới đều mở {link}, nơi các tệp được liệt kê theo tên.", "fail_link": "bản phát hành mới nhất trên GitHub", "go_to_downloads": "Đến phần tải về", "not_released": "Chưa phát hành", "no_release": "Chưa có bản phát hành nào được công bố. Bạn vẫn có thể tự dựng ứng dụng từ mã nguồn.", "build_instructions": "Đọc hướng dẫn dựng trên GitHub", "view_project": "Xem dự án trên GitHub", "fail_browser": "Trình duyệt này không tải được danh sách bản phát hành.", "fail_rate": "GitHub đang giới hạn tốc độ của mạng này. API công khai của nó cho phép 60 yêu cầu mỗi giờ cho mỗi địa chỉ, và mạng này đã dùng hết.", "fail_timeout": "GitHub không phản hồi kịp thời.", "fail_load": "Không tải được danh sách bản phát hành từ GitHub.", "theme_to_dark": "Chuyển sang giao diện tối", "theme_to_light": "Chuyển sang giao diện sáng", "menu_close": "Đóng menu", "menu": "Menu", "sha_expected": "Với {file}, kết quả phải là:", "copy_command": "Sao chép", "copied": "Đã sao chép", "copy_failed": "Trình duyệt không cho phép sao chép. Văn bản đã được chọn: hãy sao chép từ đó."}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

@@ -329,9 +329,10 @@
           </div>
           <div class="format">
             <h3 data-i18n="install.from_a_computer">С компьютера</h3>
-            <p data-i18n="install.tv_from_computer">Включите <em>Отладка по сети</em> в параметрах разработчика телевизора, затем в той же сети wifi:</p>
+            <p data-i18n="install.tv_from_computer_ip">Включите <em>Отладка по сети</em> в параметрах разработчика телевизора и найдите IP-адрес телевизора в его настройках сети. Затем на компьютере в той же сети wifi, в папке с APK, выполните эти команды, подставив этот адрес вместо <code>&lt;tv-ip&gt;</code>:</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
+            <p data-i18n="install.accept_the_debugging_prompt">Подтвердите запрос на отладку, который при первом подключении появится на телевизоре.</p>
           </div>
         </div>
       </div>
@@ -389,7 +390,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.win_step2_h">Вставьте эту строку и нажмите Enter</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p data-i18n="install.win_step2">Она скачивает установщик с GitHub, сверяет его с опубликованной контрольной суммой и устанавливает TMPlayer для вашего пользователя, без предупреждений Windows.</p>
+            <p data-i18n="install.win_step2_paste">Нажмите на строку, чтобы скопировать её, и вставьте в PowerShell сочетанием Ctrl+V или правым щелчком.</p>
+            <p data-i18n="install.win_step2_done">Она скачивает установщик с GitHub, сверяет его с опубликованной контрольной суммой и устанавливает TMPlayer для вашего пользователя, без предупреждений Windows. Это занимает минуту или две. Когда появится сообщение, что TMPlayer установлен, закройте окно. Если вместо этого появится красная ошибка, воспользуйтесь <a href="#windows-installer">установщиком</a> ниже.</p>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.win_step3_h">Откройте его и войдите</h3>
@@ -400,7 +402,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
         <div class="panel panel-prose panel-wide" id="windows-installer">
           <h3 data-i18n="install.win_msi_h">Предпочитаете установщик?</h3>
-          <p data-i18n="install.win_msi">Скачайте <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> со <a href="/ru/download/#windows">страницы загрузки</a> и откройте его. Он пока не подписан, поэтому Windows может показать <em>Windows защитила ваш компьютер</em>: нажмите <em>Подробнее</em>, затем <em>Выполнить в любом случае</em>.</p>
+          <p data-i18n="install.win_msi">Скачайте <code data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</code> со <a href="/ru/download/#windows">страницы загрузки</a> и откройте его. Он пока не подписан, поэтому Windows может показать <em>Windows защитила ваш компьютер</em>: нажмите <em>Подробнее</em>, затем <em>Выполнить в любом случае</em>.</p>
         </div>
         <p class="muted small section-note" data-i18n="install.win_zip_note">Пользовались старым портативным zip? Удалите его папку и установите, как описано выше. Вход и настройки сохранятся.</p>
       </div>
@@ -461,12 +463,14 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <ol class="steps">
           <li id="linux-1">
             <h3 data-i18n="install.linux_step1_h">Скачайте AppImage</h3>
-            <p data-i18n="install.linux_step1">Возьмите <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> со <a href="/ru/download/#linux">страницы загрузки</a>. Один файл для любого дистрибутива.</p>
+            <p data-i18n="install.linux_step1">Возьмите <code data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</code> со <a href="/ru/download/#linux">страницы загрузки</a>. Один файл для любого дистрибутива.</p>
           </li>
           <li id="linux-2">
             <h3 data-i18n="install.linux_step2_h">Сделайте его исполняемым и откройте</h3>
-            <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
-./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
+            <p data-i18n="install.linux_step2_where">В терминале, в папке, куда вы его сохранили:</p>
+            <pre class="code"><code>cd ~/Downloads
+chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
+./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p data-i18n="install.or_tick_in_the_file">Или отметьте <em>Разрешить выполнение файла как программы</em> в свойствах файла и дважды щёлкните по нему.</p>
           </li>
           <li id="linux-3">
@@ -483,7 +487,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           </div>
           <div class="format">
             <h3 data-i18n="install.tarball_h">Простая папка</h3>
-            <p data-i18n="install.tarball">Распакуйте <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> куда угодно и запустите внутри <code>bin/TMPlayer</code>. Сама она не обновляется: TMPlayer сообщит, когда выйдет новая версия.</p>
+            <p data-i18n="install.tarball">Распакуйте <code data-name="linux-x64-tarball">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> куда угодно и запустите внутри <code>bin/TMPlayer</code>. Сама она не обновляется: TMPlayer сообщит, когда выйдет новая версия.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">Переход с deb, rpm или Flatpak</h3>
@@ -523,7 +527,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <h3 data-i18n="install.linux_appimage_in_the_app">Linux: AppImage, в меню приложений</h3>
           <p data-i18n="install.a_single_file_has_no">У отдельного файла нет пункта в меню, поэтому создайте его. Эти команды перенесут AppImage на место, скачают значок и создадут ярлык запуска:</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
-mv ~/Downloads/TMPlayer-&lt;version&gt;-x86_64.AppImage ~/Applications/TMPlayer.AppImage
+mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
 
@@ -603,7 +607,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
             <span class="faq-q" data-i18n="install.the_appimage_does_nothing_when">AppImage ничего не делает при открытии</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15.5a1 1 0 0 1-.71-.29l-5-5a1 1 0 0 1 1.42-1.42L12 13.09l4.29-4.3a1 1 0 1 1 1.42 1.42l-5 5a1 1 0 0 1-.71.29Z"/></svg>
           </summary>
-          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">Обычно не хватает FUSE. Установите <code>libfuse2t64</code> (Ubuntu 24.04 и новее) или <code>libfuse2</code> (22.04), либо обойдитесь без FUSE с помощью <code>./TMPlayer-&lt;version&gt;-x86_64.AppImage --appimage-extract-and-run</code>.</p></div>
+          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">Обычно не хватает FUSE. Установите <code>libfuse2t64</code> (Ubuntu 24.04 и новее) или <code>libfuse2</code> (22.04), либо обойдитесь без FUSE с помощью <code>./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code>.</p></div>
         </details>
         <details class="faq-item" name="trouble">
           <summary>
@@ -694,7 +698,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "Универсальный APK", "kind_windows_installer": "Установщик для Windows", "kind_windows_zip": "Zip для Windows", "kind_linux_tarball": "Архив tar для Linux", "kind_mac_dmg": "DMG для macOS", "kind_checksums": "Контрольные суммы", "os_note_ios_only": "Версии для iPhone и iPad нет. Файлы ниже для телефонов на Android, Android TV и компьютеров.", "download_for": "Скачать для {os}", "os_note_mac_preview": "Версия для macOS предварительная: для Mac с Apple Silicon (M1 и новее) и macOS 26 или новее. На Mac с Intel она не работает.", "os_note_mac": "Версии для macOS нет. Всё ниже относится к Android, Windows и Linux.", "downloads_one": "Загрузок: {count}", "downloads_other": "Загрузок: {count}", "not_in_release": "Нет в {version}", "on_github": "На GitHub", "download_file": "Скачать {file}", "download_version_mac": "Скачать {version} для Mac с Apple Silicon", "download_version_for": "Скачать {version} для {os}", "download_version_other_os": "Скачать {version} для Android, Windows или Linux", "install_version_for": "Установить {version} для {os}", "download_version": "Скачать {version}", "latest": "Последний", "no_files_yet": "К этому релизу пока не прикреплены файлы. Возможно, сборка ещё идёт.", "open_on_github": "Открыть {version} на GitHub", "release": "Релиз", "unavailable": "Недоступно", "fail_downloads": "Загрузки на месте: каждая кнопка ниже открывает {link}, где файлы перечислены по именам.", "fail_link": "последний релиз на GitHub", "go_to_downloads": "Перейти к загрузкам", "not_released": "Ещё не выпущен", "no_release": "Ни одного релиза пока не опубликовано. Приложение всё равно можно собрать из исходного кода.", "build_instructions": "Читать инструкцию по сборке на GitHub", "view_project": "Открыть проект на GitHub", "fail_browser": "Этот браузер не может загрузить список релизов.", "fail_rate": "GitHub ограничивает запросы из этой сети. Его публичный API разрешает 60 запросов в час на адрес, и этот лимит исчерпан.", "fail_timeout": "GitHub не ответил вовремя.", "fail_load": "Не удалось загрузить список релизов с GitHub.", "theme_to_dark": "Включить тёмную тему", "theme_to_light": "Включить светлую тему", "menu_close": "Закрыть меню", "menu": "Меню", "copy_command": "Копировать", "copied": "Скопировано"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "Универсальный APK", "kind_windows_installer": "Установщик для Windows", "kind_windows_zip": "Zip для Windows", "kind_linux_tarball": "Архив tar для Linux", "kind_mac_dmg": "DMG для macOS", "kind_checksums": "Контрольные суммы", "os_note_ios_only": "Версии для iPhone и iPad нет. Файлы ниже для телефонов на Android, Android TV и компьютеров.", "download_for": "Скачать для {os}", "os_note_mac_preview": "Версия для macOS предварительная: для Mac с Apple Silicon (M1 и новее) и macOS 26 или новее. На Mac с Intel она не работает.", "os_note_mac": "Версии для macOS нет. Всё ниже относится к Android, Windows и Linux.", "downloads_one": "Загрузок: {count}", "downloads_other": "Загрузок: {count}", "not_in_release": "Нет в {version}", "on_github": "На GitHub", "download_file": "Скачать {file}", "download_version_mac": "Скачать {version} для Mac с Apple Silicon", "download_version_for": "Скачать {version} для {os}", "download_version_other_os": "Скачать {version} для Android, Windows или Linux", "install_version_for": "Установить {version} для {os}", "download_version": "Скачать {version}", "latest": "Последний", "no_files_yet": "К этому релизу пока не прикреплены файлы. Возможно, сборка ещё идёт.", "open_on_github": "Открыть {version} на GitHub", "release": "Релиз", "unavailable": "Недоступно", "fail_downloads": "Загрузки на месте: каждая кнопка ниже открывает {link}, где файлы перечислены по именам.", "fail_link": "последний релиз на GitHub", "go_to_downloads": "Перейти к загрузкам", "not_released": "Ещё не выпущен", "no_release": "Ни одного релиза пока не опубликовано. Приложение всё равно можно собрать из исходного кода.", "build_instructions": "Читать инструкцию по сборке на GitHub", "view_project": "Открыть проект на GitHub", "fail_browser": "Этот браузер не может загрузить список релизов.", "fail_rate": "GitHub ограничивает запросы из этой сети. Его публичный API разрешает 60 запросов в час на адрес, и этот лимит исчерпан.", "fail_timeout": "GitHub не ответил вовремя.", "fail_load": "Не удалось загрузить список релизов с GitHub.", "theme_to_dark": "Включить тёмную тему", "theme_to_light": "Включить светлую тему", "menu_close": "Закрыть меню", "menu": "Меню", "sha_expected": "Для {file} результат должен быть таким:", "copy_command": "Копировать", "copied": "Скопировано", "copy_failed": "Браузер не разрешил копирование. Текст выделен: скопируйте его оттуда."}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

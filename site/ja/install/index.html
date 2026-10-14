@@ -329,9 +329,10 @@
           </div>
           <div class="format">
             <h3 data-i18n="install.from_a_computer">パソコンから</h3>
-            <p data-i18n="install.tv_from_computer">テレビの開発者向けオプションで<em>ネットワーク デバッグ</em>をオンにし、同じWi-Fiで次を実行します。</p>
+            <p data-i18n="install.tv_from_computer_ip">テレビの開発者向けオプションで<em>ネットワーク デバッグ</em>をオンにし、ネットワーク設定でテレビの IP アドレスを確認します。次に、同じ Wi-Fi につないだパソコンで、APK を置いたフォルダーから、<code>&lt;tv-ip&gt;</code>をそのアドレスに置き換えて次を実行します。</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
+            <p data-i18n="install.accept_the_debugging_prompt">初回は、テレビに表示されるデバッグの確認を承認してください。</p>
           </div>
         </div>
       </div>
@@ -389,7 +390,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.win_step2_h">この1行を貼り付けてEnter</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p data-i18n="install.win_step2">GitHubからインストーラーをダウンロードし、公開されているチェックサムで確認して、あなたのユーザーにTMPlayerをインストールします。Windowsの警告は出ません。</p>
+            <p data-i18n="install.win_step2_paste">行をクリックしてコピーし、Ctrl+V または右クリックで PowerShell に貼り付けます。</p>
+            <p data-i18n="install.win_step2_done">GitHubからインストーラーをダウンロードし、公開されているチェックサムで確認して、あなたのユーザーにTMPlayerをインストールします。Windowsの警告は出ません。1、2分かかります。TMPlayer がインストールされたと表示されたら、ウィンドウを閉じてください。赤いエラーで止まった場合は、下の<a href="#windows-installer">インストーラー</a>を使ってください。</p>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.win_step3_h">開いてサインイン</h3>
@@ -400,7 +402,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
         <div class="panel panel-prose panel-wide" id="windows-installer">
           <h3 data-i18n="install.win_msi_h">インストーラーを使いたい場合</h3>
-          <p data-i18n="install.win_msi"><a href="/ja/download/#windows">ダウンロードページ</a>から<code>TMPlayer-&lt;version&gt;-windows-x64.msi</code>をダウンロードして開きます。まだコード署名がないため、Windowsに<em>Windows によって PC が保護されました</em>と表示されることがあります。<em>詳細情報</em>、<em>実行</em>の順にクリックしてください。</p>
+          <p data-i18n="install.win_msi"><a href="/ja/download/#windows">ダウンロードページ</a>から<code data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</code>をダウンロードして開きます。まだコード署名がないため、Windowsに<em>Windows によって PC が保護されました</em>と表示されることがあります。<em>詳細情報</em>、<em>実行</em>の順にクリックしてください。</p>
         </div>
         <p class="muted small section-note" data-i18n="install.win_zip_note">以前のポータブル版zipを使っていましたか？そのフォルダーを削除して、上の手順でインストールしてください。サインインと設定は引き継がれます。</p>
       </div>
@@ -461,12 +463,14 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <ol class="steps">
           <li id="linux-1">
             <h3 data-i18n="install.linux_step1_h">AppImageをダウンロード</h3>
-            <p data-i18n="install.linux_step1"><a href="/ja/download/#linux">ダウンロードページ</a>から<code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code>を入手します。どのディストリビューションでも使える1ファイルです。</p>
+            <p data-i18n="install.linux_step1"><a href="/ja/download/#linux">ダウンロードページ</a>から<code data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</code>を入手します。どのディストリビューションでも使える1ファイルです。</p>
           </li>
           <li id="linux-2">
             <h3 data-i18n="install.linux_step2_h">実行可能にして開く</h3>
-            <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
-./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
+            <p data-i18n="install.linux_step2_where">ターミナルで、保存したフォルダーに移動して実行します。</p>
+            <pre class="code"><code>cd ~/Downloads
+chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
+./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p data-i18n="install.or_tick_in_the_file">または、ファイルのプロパティで<em>ファイルをプログラムとして実行可能にする</em>にチェックを入れて、ダブルクリックします。</p>
           </li>
           <li id="linux-3">
@@ -483,7 +487,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           </div>
           <div class="format">
             <h3 data-i18n="install.tarball_h">そのままのフォルダー</h3>
-            <p data-i18n="install.tarball"><code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code>を好きな場所に展開し、中の<code>bin/TMPlayer</code>を実行します。自動更新はされませんが、新しいバージョンが出るとTMPlayerが知らせます。</p>
+            <p data-i18n="install.tarball"><code data-name="linux-x64-tarball">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code>を好きな場所に展開し、中の<code>bin/TMPlayer</code>を実行します。自動更新はされませんが、新しいバージョンが出るとTMPlayerが知らせます。</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">deb、rpm、Flatpakからの移行</h3>
@@ -523,7 +527,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <h3 data-i18n="install.linux_appimage_in_the_app">Linux: AppImageをアプリメニューに追加</h3>
           <p data-i18n="install.a_single_file_has_no">単体のファイルにはメニュー項目がないので、作成します。次のコマンドで、AppImageを所定の場所に移し、アイコンを取得して、ランチャーを作成します。</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
-mv ~/Downloads/TMPlayer-&lt;version&gt;-x86_64.AppImage ~/Applications/TMPlayer.AppImage
+mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
 
@@ -603,7 +607,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
             <span class="faq-q" data-i18n="install.the_appimage_does_nothing_when">AppImageを開いても何も起きない</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15.5a1 1 0 0 1-.71-.29l-5-5a1 1 0 0 1 1.42-1.42L12 13.09l4.29-4.3a1 1 0 1 1 1.42 1.42l-5 5a1 1 0 0 1-.71.29Z"/></svg>
           </summary>
-          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">たいていはFUSEがないのが原因です。<code>libfuse2t64</code>(Ubuntu 24.04以降)または<code>libfuse2</code>(22.04)をインストールするか、<code>./TMPlayer-&lt;version&gt;-x86_64.AppImage --appimage-extract-and-run</code>でFUSEを使わずに起動してください。</p></div>
+          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">たいていはFUSEがないのが原因です。<code>libfuse2t64</code>(Ubuntu 24.04以降)または<code>libfuse2</code>(22.04)をインストールするか、<code>./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code>でFUSEを使わずに起動してください。</p></div>
         </details>
         <details class="faq-item" name="trouble">
           <summary>
@@ -694,7 +698,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "ユニバーサルAPK", "kind_windows_installer": "Windowsインストーラー", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "チェックサム", "os_note_ios_only": "iPhone版とiPad版はありません。以下のファイルはAndroidスマホ、Android TV、パソコン向けです。", "download_for": "{os}版をダウンロード", "os_note_mac_preview": "macOS版はプレビュー版で、Appleシリコン（M1以降）搭載、macOS 26以降のMac向けです。Intel搭載のMacでは動きません。", "os_note_mac": "macOS版はありません。以下はすべて、Android、Windows、Linux向けです。", "downloads_one": "{count}回ダウンロード", "downloads_other": "{count}回ダウンロード", "not_in_release": "{version}には含まれていません", "on_github": "GitHubで見る", "download_file": "{file}をダウンロード", "download_version_mac": "Appleシリコン搭載Mac向け{version}をダウンロード", "download_version_for": "{os}向け{version}をダウンロード", "download_version_other_os": "Android、Windows、Linux向け{version}をダウンロード", "install_version_for": "{os} 用 {version} をインストール", "download_version": "{version}をダウンロード", "latest": "最新", "no_files_yet": "このリリースには、まだファイルが添付されていません。ビルドがまだ実行中かもしれません。", "open_on_github": "GitHubで{version}を開く", "release": "リリース", "unavailable": "利用不可", "fail_downloads": "ダウンロードは引き続き利用できます。下のボタンはすべて{link}を開き、ファイルが名前順に並んでいます。", "fail_link": "GitHubの最新リリース", "go_to_downloads": "ダウンロードへ", "not_released": "まだリリースされていません", "no_release": "まだリリースは公開されていません。ソースコードからアプリをビルドすることはできます。", "build_instructions": "GitHubでビルド手順を見る", "view_project": "GitHubでプロジェクトを見る", "fail_browser": "このブラウザーではリリース一覧を読み込めません。", "fail_rate": "GitHubがこのネットワークからのアクセスを制限しています。公開APIは1アドレスにつき1時間あたり60リクエストまでで、その上限に達しました。", "fail_timeout": "GitHubから時間内に応答がありませんでした。", "fail_load": "GitHubからリリース一覧を読み込めませんでした。", "theme_to_dark": "ダークテーマに切り替え", "theme_to_light": "ライトテーマに切り替え", "menu_close": "メニューを閉じる", "menu": "メニュー", "copy_command": "コピー", "copied": "コピーしました"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "ユニバーサルAPK", "kind_windows_installer": "Windowsインストーラー", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "チェックサム", "os_note_ios_only": "iPhone版とiPad版はありません。以下のファイルはAndroidスマホ、Android TV、パソコン向けです。", "download_for": "{os}版をダウンロード", "os_note_mac_preview": "macOS版はプレビュー版で、Appleシリコン（M1以降）搭載、macOS 26以降のMac向けです。Intel搭載のMacでは動きません。", "os_note_mac": "macOS版はありません。以下はすべて、Android、Windows、Linux向けです。", "downloads_one": "{count}回ダウンロード", "downloads_other": "{count}回ダウンロード", "not_in_release": "{version}には含まれていません", "on_github": "GitHubで見る", "download_file": "{file}をダウンロード", "download_version_mac": "Appleシリコン搭載Mac向け{version}をダウンロード", "download_version_for": "{os}向け{version}をダウンロード", "download_version_other_os": "Android、Windows、Linux向け{version}をダウンロード", "install_version_for": "{os} 用 {version} をインストール", "download_version": "{version}をダウンロード", "latest": "最新", "no_files_yet": "このリリースには、まだファイルが添付されていません。ビルドがまだ実行中かもしれません。", "open_on_github": "GitHubで{version}を開く", "release": "リリース", "unavailable": "利用不可", "fail_downloads": "ダウンロードは引き続き利用できます。下のボタンはすべて{link}を開き、ファイルが名前順に並んでいます。", "fail_link": "GitHubの最新リリース", "go_to_downloads": "ダウンロードへ", "not_released": "まだリリースされていません", "no_release": "まだリリースは公開されていません。ソースコードからアプリをビルドすることはできます。", "build_instructions": "GitHubでビルド手順を見る", "view_project": "GitHubでプロジェクトを見る", "fail_browser": "このブラウザーではリリース一覧を読み込めません。", "fail_rate": "GitHubがこのネットワークからのアクセスを制限しています。公開APIは1アドレスにつき1時間あたり60リクエストまでで、その上限に達しました。", "fail_timeout": "GitHubから時間内に応答がありませんでした。", "fail_load": "GitHubからリリース一覧を読み込めませんでした。", "theme_to_dark": "ダークテーマに切り替え", "theme_to_light": "ライトテーマに切り替え", "menu_close": "メニューを閉じる", "menu": "メニュー", "sha_expected": "{file} の場合、結果は次のとおりです：", "copy_command": "コピー", "copied": "コピーしました", "copy_failed": "ブラウザーがコピーを許可しませんでした。テキストを選択してあるので、そこからコピーしてください。"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

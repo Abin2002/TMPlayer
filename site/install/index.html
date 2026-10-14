@@ -337,9 +337,10 @@
           </div>
           <div class="format">
             <h3 data-i18n="install.from_a_computer">From a computer</h3>
-            <p data-i18n="install.tv_from_computer">Turn on <em>Network debugging</em> in the TV's Developer options, then, on the same wifi:</p>
+            <p data-i18n="install.tv_from_computer_ip">Turn on <em>Network debugging</em> in the TV's Developer options and find the TV's IP address in its network settings. Then, on a computer on the same wifi, in the folder with the APK, run these with that address in place of <code>&lt;tv-ip&gt;</code>:</p>
             <pre class="code"><code>adb connect &lt;tv-ip&gt;:5555
-adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
+adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
+            <p data-i18n="install.accept_the_debugging_prompt">Accept the debugging prompt that appears on the television the first time.</p>
           </div>
         </div>
       </div>
@@ -397,7 +398,8 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <li id="win-2">
             <h3 data-i18n="install.win_step2_h">Paste this line and press Enter</h3>
             <pre class="code"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            <p data-i18n="install.win_step2">It downloads the installer from GitHub, checks it against the published checksum and installs TMPlayer for your user, with no warning from Windows.</p>
+            <p data-i18n="install.win_step2_paste">Click the line to copy it, then paste it into PowerShell with Ctrl+V or a right click.</p>
+            <p data-i18n="install.win_step2_done">It downloads the installer from GitHub, checks it against the published checksum and installs TMPlayer for your user, with no warning from Windows. It takes a minute or two. When it says TMPlayer is installed, close the window. If it stops with a red error instead, use <a href="#windows-installer">the installer</a> below.</p>
           </li>
           <li id="win-3">
             <h3 data-i18n="install.win_step3_h">Open it and sign in</h3>
@@ -408,7 +410,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
         <div class="panel panel-prose panel-wide" id="windows-installer">
           <h3 data-i18n="install.win_msi_h">Prefer an installer?</h3>
-          <p data-i18n="install.win_msi">Download <code>TMPlayer-&lt;version&gt;-windows-x64.msi</code> from <a href="/download/#windows">the download page</a> and open it. It is not code signed yet, so Windows may say <em>Windows protected your PC</em>: click <em>More info</em>, then <em>Run anyway</em>.</p>
+          <p data-i18n="install.win_msi">Download <code data-name="windows-x64-msi">TMPlayer-&lt;version&gt;-windows-x64.msi</code> from <a href="/download/#windows">the download page</a> and open it. It is not code signed yet, so Windows may say <em>Windows protected your PC</em>: click <em>More info</em>, then <em>Run anyway</em>.</p>
         </div>
         <p class="muted small section-note" data-i18n="install.win_zip_note">Used the old portable zip? Delete its folder, then install as above. Your sign-in and settings carry over.</p>
       </div>
@@ -469,12 +471,14 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
         <ol class="steps">
           <li id="linux-1">
             <h3 data-i18n="install.linux_step1_h">Download the AppImage</h3>
-            <p data-i18n="install.linux_step1">Take <code>TMPlayer-&lt;version&gt;-x86_64.AppImage</code> from <a href="/download/#linux">the download page</a>. One file, for any distribution.</p>
+            <p data-i18n="install.linux_step1">Take <code data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</code> from <a href="/download/#linux">the download page</a>. One file, for any distribution.</p>
           </li>
           <li id="linux-2">
             <h3 data-i18n="install.linux_step2_h">Make it executable and open it</h3>
-            <pre class="code"><code>chmod +x TMPlayer-&lt;version&gt;-x86_64.AppImage
-./TMPlayer-&lt;version&gt;-x86_64.AppImage</code></pre>
+            <p data-i18n="install.linux_step2_where">In a terminal, in the folder you saved it to:</p>
+            <pre class="code"><code>cd ~/Downloads
+chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span>
+./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
             <p data-i18n="install.or_tick_in_the_file">Or tick <em>Allow executing file as program</em> in the file's properties and double click it.</p>
           </li>
           <li id="linux-3">
@@ -491,7 +495,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           </div>
           <div class="format">
             <h3 data-i18n="install.tarball_h">The plain folder</h3>
-            <p data-i18n="install.tarball">Unpack <code>TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> anywhere and run <code>bin/TMPlayer</code> inside it. It does not update itself: TMPlayer tells you when a new version is out.</p>
+            <p data-i18n="install.tarball">Unpack <code data-name="linux-x64-tarball">TMPlayer-&lt;version&gt;-linux-x64.tar.xz</code> anywhere and run <code>bin/TMPlayer</code> inside it. It does not update itself: TMPlayer tells you when a new version is out.</p>
           </div>
           <div class="format">
             <h3 data-i18n="install.moving_from_the_deb_rpm">Moving from the deb, rpm or Flatpak</h3>
@@ -531,7 +535,7 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
           <h3 data-i18n="install.linux_appimage_in_the_app">Linux: AppImage, in the app menu</h3>
           <p data-i18n="install.a_single_file_has_no">A single file has no menu entry, so make one. These commands move the AppImage into place, fetch the icon and write a launcher:</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
-mv ~/Downloads/TMPlayer-&lt;version&gt;-x86_64.AppImage ~/Applications/TMPlayer.AppImage
+mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
 curl -Lo ~/.local/share/icons/tmplayer.png https://tmplayer.org/icon-512.png
 
@@ -611,7 +615,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
             <span class="faq-q" data-i18n="install.the_appimage_does_nothing_when">The AppImage does nothing when opened</span>
             <svg class="faq-chevron" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 15.5a1 1 0 0 1-.71-.29l-5-5a1 1 0 0 1 1.42-1.42L12 13.09l4.29-4.3a1 1 0 1 1 1.42 1.42l-5 5a1 1 0 0 1-.71.29Z"/></svg>
           </summary>
-          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">Usually FUSE is missing. Install <code>libfuse2t64</code> (Ubuntu 24.04 and newer) or <code>libfuse2</code> (22.04), or skip FUSE with <code>./TMPlayer-&lt;version&gt;-x86_64.AppImage --appimage-extract-and-run</code>.</p></div>
+          <div class="faq-body"><p data-i18n="install.usually_fuse_is_missing_install">Usually FUSE is missing. Install <code>libfuse2t64</code> (Ubuntu 24.04 and newer) or <code>libfuse2</code> (22.04), or skip FUSE with <code>./<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> --appimage-extract-and-run</code>.</p></div>
         </details>
         <details class="faq-item" name="trouble">
           <summary>

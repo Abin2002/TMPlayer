@@ -961,6 +961,8 @@ summary {
   border: 1px solid var(--outline-variant);
   transition: background-color 0.2s var(--ease-standard), border-color 0.2s var(--ease-standard);
 }
+/* The arrow keeps its size: in a narrow row the flex box squeezed it down to a dot. */
+.dl svg { flex: none; }
 .dl:hover { background: var(--surface-bright); text-decoration: none; color: var(--on-surface); border-color: var(--outline); }
 .abi.pick .dl { background: var(--primary); color: var(--on-primary); }
 .abi.pick .dl:hover { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
@@ -2980,3 +2982,29 @@ pre.copyable {
 pre.abi-cmd.copyable { padding-right: 44px; min-height: 40px; display: flex; align-items: center; }
 .abi-cmd .copy-btn { top: 50%; right: 5px; width: 28px; height: 28px; transform: translateY(-50%); }
 @media (prefers-reduced-motion: reduce) { .copy-btn { transition: none; } }
+/* A finger needs a bigger target than a mouse pointer. */
+@media (pointer: coarse) {
+  pre.copyable { padding-right: 56px; }
+  .copy-btn { width: 40px; height: 40px; top: 4px; right: 4px; }
+  pre.abi-cmd.copyable { padding-right: 52px; min-height: 48px; }
+  .abi-cmd .copy-btn { width: 40px; height: 40px; right: 4px; }
+}
+
+/* Read out by a screen reader, not shown: the Copied announcement. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The expected SHA-256 under a checksum command (app.js, from latest.json). */
+.sha-expect { margin: -0.4rem 0 1rem; font-size: 0.86rem; color: var(--on-surface-variant); }
+.sha-expect + p { margin-top: 12px; }
+.sha-expect code.sha { display: block; margin-top: 4px; direction: ltr; text-align: left; overflow-wrap: anywhere; word-break: break-all; }
+button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointer; }
