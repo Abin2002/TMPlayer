@@ -1,0 +1,39 @@
+---
+// The star card that closes a content page, with the "Support TMPlayer" offer inside it. The
+// heading and the line above the buttons are the page's own; the rest uses the shared home.* keys
+// so it arrives translated.
+import Icon from '../Icon.astro';
+import { text } from '../../i18n/t';
+
+interface Props { title: string; body: string }
+const { title, body } = Astro.props;
+const t = (k: string) => text(Astro.locals.lang, k);
+---
+<section class="band band-tonal" aria-labelledby="support-h">
+  <div class="wrap">
+    <div class="support" data-reveal>
+      <h2 id="support-h">{t(title)}</h2>
+      <p>{t(body)}</p>
+      <div class="support-actions">
+        <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
+        <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/fork" rel="noopener"> <Icon name="fork-btn" /> {t('home.fork_the_repository')}</a>
+      </div>
+      <p class="support-stats">
+        <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
+        <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
+        <span>{t('home.gpl_3_0_and_free')}</span>
+      </p>
+
+      {/* The coffee and sponsor links, the same block and words as on the download page, so a
+          reader who got something from this page has the offer where they finished reading. */}
+      <div class="support-more" id="sponsor">
+        <h3>{t('home.support_tmplayer')}</h3>
+        <p>{t('home.support_no_ads')}</p>
+        <div class="support-actions support-give">
+          <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
+          <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

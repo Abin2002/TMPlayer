@@ -1,0 +1,16 @@
+---
+// One demo screenshot. With a `light` file it is a light/dark pair: the source carries the light
+// file and the img carries the dark one, so a browser downloads exactly one of the two; app.js
+// rewrites the source's media attribute when the reader presses the toggle. Without one, a single
+// picture serves both themes.
+interface Props { src: string; light?: string; alt: string; width: number; height: number }
+const { src, light, alt, width, height } = Astro.props;
+---
+{light ? (
+  <picture>
+    <source data-theme-src srcset={light} media="(prefers-color-scheme: light)">
+    <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async">
+  </picture>
+) : (
+  <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async">
+)}
