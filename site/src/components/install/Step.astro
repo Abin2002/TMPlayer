@@ -1,0 +1,9 @@
+---
+// One numbered step. The id is the anchor the HowTo JSON-LD and other pages link to (#step-1).
+interface Props { id: string; title: string }
+const { id, title } = Astro.props;
+---
+<li id={id}>
+            <h3>{title}</h3>
+            <slot />
+          </li>

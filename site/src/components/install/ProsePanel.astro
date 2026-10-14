@@ -1,0 +1,9 @@
+---
+// A panel of running text with its own heading; `wide` spans the whole band.
+interface Props { id?: string; title: string; wide?: boolean }
+const { id, title, wide = false } = Astro.props;
+---
+<div class:list={['panel', 'panel-prose', { 'panel-wide': wide }]} id={id}>
+          <h3>{title}</h3>
+          <slot />
+        </div>
