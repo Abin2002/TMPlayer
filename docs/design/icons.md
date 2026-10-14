@@ -56,7 +56,7 @@ state is carried by colour and background, as the sidebar pill already does.
 | `Delete` | Delete02 |  | Material Delete | Delete, remove. |
 | `Edit` | PencilEdit02 |  | Material Edit, PlayerIcons.Edit | Rename, edit. |
 | `Info` | InformationCircle |  | Material Info | Details, about. |
-| `Help` | HelpCircle |  | TmIcons.Help | The walkthrough, how this works. |
+| `Help` | HelpCircle |  | TmIcons.Help | Run the setup again, how this works. |
 | `Warning` | Alert02 |  | Material Warning | Something needs attention. |
 | `Lock` | SquareLock02 |  | Material Lock | Locked, private, the PIN. |
 | `Star` | Star (filled) |  | Material Star | A favourite that is set. |

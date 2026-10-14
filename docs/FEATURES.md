@@ -11,8 +11,10 @@ the streaming works, see [ARCHITECTURE.md](ARCHITECTURE.md).
 Settings, Devices, Link Desktop Device, point it at the screen. No typing an email address with a
 D-pad. On a phone the number comes first, with the country picker and the code boxes Telegram
 itself uses, and the QR route is there for an account that lives on another handset. Two-step
-verification works either way, and a two page walkthrough on first run says what TMPlayer is and
-how to get a first video in, replayable from Settings.
+verification works either way. Once signed in, a short setup asks up to three things, each with a
+picture of both answers and a Skip: which chats the sidebar lists (only for an account with
+folders), posters and details from TMDB, TVmaze and AniList, and Low storage mode. Settings can
+run it again.
 
 **Shows media, not messages.** Browse the chats and channels you already have, then see only their
 playable videos. Text messages never appear. Video documents are included too, so an `.mkv` sent
