@@ -4,42 +4,51 @@ TMPlayer is not in any store, and it never will be (it needs its own Telegram AP
 exist at all). Every build is on the [Releases](../../releases) page, and the
 [download page](https://tmplayer.org/download/) lists them by platform.
 
-- [Android TV and phones](#installing-tmplayer-on-an-android-tv-device): sideload the APK
-- [Windows](#windows): an MSI installer
-- [Linux](#linux): an AppImage, or the AUR recipe on Arch
+- [Android TV and Google TV](#on-android-tv-or-google-tv): the free Downloader app and the remote
+- [Android phones](#on-an-android-phone): download the APK and open it
+- [Windows](#windows): one line in PowerShell, or the MSI installer
+- [Linux](#linux): the AppImage, or the PKGBUILD on Arch
 - [Moving from the deb, rpm, Flatpak or Windows zip](#moving-from-a-format-that-is-no-longer-published)
 - [Desktop, menu and taskbar shortcuts](#putting-it-on-the-desktop-in-the-menu-and-on-the-taskbar)
 - [The desktop keyboard](#using-the-keyboard-and-mouse)
 
-# Installing TMPlayer on an Android TV device
+# Installing TMPlayer on Android
 
-The same APK installs on a phone: open the file and say yes when Android asks. The steps below are
-for a television, where there is no browser to open it from.
+## On Android TV or Google TV
 
-## 1. Download the APK
+All you need is the remote. On a Fire TV, follow the [Fire TV guide](https://tmplayer.org/fire-tv/)
+instead: its menus are named differently.
 
-Download `TMPlayer-<version>-universal.apk` from the Releases page. It contains the native code
-for every supported Android TV architecture, so the same file works on older sticks, newer 64-bit
-boxes and the Android TV emulator. If you are not sure, this is the file to take.
+1. **Install Downloader.** On the TV, open the Play Store, search for *Downloader* and install the
+   free app by AFTVnews.
+2. **Type `tmplayer.org/apk` into Downloader** and press **Go**. The latest TMPlayer starts
+   downloading straight away.
+3. **Allow the install.** When the TV asks, let Downloader install apps, then press **Install**.
+   No switch to allow it? Open **Settings → About** (under **Device Preferences** or **System**),
+   press **Build** seven times and try again.
+4. **Sign in.** Open TMPlayer; it is in the launcher's app row with a blue play-button icon. A QR
+   code appears within a few seconds. On your phone, open **Telegram → Settings → Devices → Link
+   Desktop Device** and point it at the TV. The code refreshes itself if it expires; just scan the
+   new one. If your account has two-step verification, type the password with the on-screen
+   keyboard. This is the only typing TMPlayer ever asks for.
 
-The release page shows each file's SHA-256 beside it. Compare it with `sha256sum` if you care
-to; a truncated transfer otherwise looks like a broken app.
+You land on your chat list. Open any chat to see only its playable videos, and press
+**OK** on one to start streaming.
 
-## 2. Turn on debugging (once)
+`tmplayer.org/apk` always points at the newest release's universal APK. It carries the native code
+for every supported architecture, so the same file works on older 32-bit sticks, newer 64-bit boxes
+and the Android TV emulator.
 
-On the TV:
+### Other ways onto a TV
 
-1. **Settings → Device Preferences → About**
-2. Click **Build** seven times until it says *You are now a developer*
-3. **Settings → Device Preferences → Developer options → USB debugging** → on
-4. Same screen: **Network debugging** (sometimes *ADB over network*) → on, and note the IP
+**From a phone.** Install [Send files to TV](https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv)
+on the phone and on the TV, download the APK on the phone, then send it across. A USB stick and a
+file manager on the TV work too.
 
-Also find the IP under **Settings → Network & Internet → your Wi-Fi** if it is not shown.
-
-## 3. Install
-
-From a computer on the same Wi-Fi, with [adb](https://developer.android.com/tools/adb)
-installed:
+**From a computer, with adb.** Turn on developer mode as in step 3, then turn on
+**Developer options → Network debugging** (sometimes *ADB over network*) and note the TV's IP
+(also under **Settings → Network & Internet → your Wi-Fi**). From a computer on the same Wi-Fi,
+with [adb](https://developer.android.com/tools/adb) installed:
 
 ```bash
 adb connect 192.168.1.42:5555          # your TV's IP
@@ -53,25 +62,24 @@ already there. Run `adb uninstall com.tmplayer` first.
 
 The original 1080p Mi TV Stick (`MiTV-AESP0`, Android TV 9) is supported. Its system is 32-bit
 ARM even though its processor is based on Cortex-A53; the universal APK carries 32-bit code for
-it. If its on-screen installer only says *App not installed*, use the ADB command
+it. If its on-screen installer only says *App not installed*, use the adb command
 above to get the real error. A signature mismatch, a version downgrade, too little free space
 to unpack the APK, or an incomplete copy are the usual causes, rather than Android 9 itself.
 
-No computer? Any sideload app works (Downloader by AFTVnews, Send Files to TV, a USB stick
-with a file manager). The APK is a normal Android package.
+The release page shows each file's SHA-256 beside it. Compare it with `sha256sum` if you care
+to; a truncated transfer otherwise looks like a broken app.
 
-## 4. First run
+## On an Android phone
 
-TMPlayer appears in the Android TV launcher's app row with a blue play-button icon.
+1. **Download the APK.** On the phone, open [tmplayer.org/download](https://tmplayer.org/download/)
+   and tap the download button at the top.
+2. **Open it and allow the install.** Open the file when it finishes. The first time, Android asks
+   to let your browser install apps: allow it, then tap **Install**.
+3. **Sign in.** Open TMPlayer and enter your phone number. To sign in an account that lives on
+   another phone, scan the QR code from that phone instead.
 
-1. Open it. A QR code appears within a few seconds.
-2. On your phone: **Telegram → Settings → Devices → Link Desktop Device**.
-3. Point the phone at the TV. The code refreshes itself if it expires; just scan the new one.
-4. If your account has two-step verification, type the password with the on-screen keyboard.
-   This is the only typing TMPlayer ever asks for.
-
-You land on your chat list. Open any chat to see only its playable videos, and press
-**OK** on one to start streaming.
+Or add it to [Obtainium](https://github.com/ImranR98/Obtainium), which installs it from GitHub and
+keeps it up to date.
 
 ## Using the remote
 
@@ -166,43 +174,55 @@ The release page shows each file's SHA-256 beside it. Check a download with `sha
 
 ## Windows
 
-1. Download `TMPlayer-<version>-windows-x64.msi`.
-2. Open it. The build is not signed yet, so SmartScreen says **Windows protected your PC**. Click
-   **More info**, then **Run anyway**.
-3. Click through the installer. It installs for your user only, into your own profile, so it does
-   not ask for an administrator password.
-4. Open TMPlayer from the Start menu or the desktop shortcut.
+1. Open **Start**, type **PowerShell** and press Enter. A normal window is fine; it does not need
+   to run as administrator.
+2. Paste this line and press Enter:
 
-Installing a newer MSI later upgrades the app in place; your sign-in, history and downloads live in
-your user profile and are kept. Remove it under **Settings, Apps, Installed apps**.
+   ```powershell
+   irm https://tmplayer.org/install.ps1 | iex
+   ```
 
-**Without the SmartScreen step.** Windows warns about an unsigned file only when a browser
-downloaded it. Paste this into PowerShell instead and it fetches the same MSI from the GitHub
-release, checks its SHA-256 against the one tmplayer.org publishes, and installs it for your user:
+   It downloads the MSI from the GitHub release, checks its SHA-256 against the one tmplayer.org
+   publishes, and installs it for your user. Windows shows no warning this way, because only a
+   file a browser downloaded gets SmartScreen's check. The script is
+   [site/install.ps1](site/install.ps1) in this repository; read it before you run it.
+3. Open TMPlayer from the Start menu or the desktop shortcut, and sign in (see
+   [First run on a computer](#first-run-on-a-computer)).
 
-```powershell
-irm https://tmplayer.org/install.ps1 | iex
-```
+**Prefer an installer?** Download `TMPlayer-<version>-windows-x64.msi` from the release and open
+it. It is not code signed yet, so SmartScreen says **Windows protected your PC**: click
+**More info**, then **Run anyway**. Then click through the installer.
 
-The script is [site/install.ps1](site/install.ps1) in this repository; read it before you run it.
+Either way it installs for your user only, into your own profile, so it never asks for an
+administrator password. A newer version installs over it in place; your sign-in, history and
+downloads live in your user profile and are kept. Remove it under **Settings, Apps, Installed
+apps**.
 
 ## Linux
 
 64-bit x86 only for now, and a 2024 or newer system (glibc 2.38): Ubuntu 24.04, Debian 13, Linux
 Mint 22, Fedora 39, openSUSE Tumbleweed, RHEL 10, Arch, or anything newer.
 
-**AppImage, on any distribution:**
+1. Download `TMPlayer-<version>-x86_64.AppImage`. One file, for any distribution.
+2. Make it executable and open it:
 
-```bash
-chmod +x TMPlayer-<version>-x86_64.AppImage
-./TMPlayer-<version>-x86_64.AppImage
-```
+   ```bash
+   chmod +x TMPlayer-<version>-x86_64.AppImage
+   ./TMPlayer-<version>-x86_64.AppImage
+   ```
 
-Or tick *Allow executing file as program* in the file's properties and double click it.
+   Or tick *Allow executing file as program* in the file's properties and double click it.
+3. Sign in (see [First run on a computer](#first-run-on-a-computer)). To put it in the app menu,
+   see [Putting the AppImage in the app menu](#linux-putting-the-appimage-in-the-app-menu).
 
-**Arch Linux.** A PKGBUILD for the AUR lives in [desktop/packaging/aur](desktop/packaging/aur): build it with
-`makepkg -si` from that folder. It builds from the release's `linux-x64.tar.xz`. The AppImage also
-runs on Arch as it is.
+Other ways:
+
+- **Arch Linux.** Build the package from the PKGBUILD in [desktop/packaging/aur](desktop/packaging/aur)
+  with `makepkg -si` from that folder. It builds from the release's `linux-x64.tar.xz`. It is not
+  on the AUR: the `tmplayer` package there is a different app. The AppImage also runs on Arch.
+- **The plain folder.** Unpack `TMPlayer-<version>-linux-x64.tar.xz` anywhere and run
+  `bin/TMPlayer` inside it. It does not update itself: TMPlayer tells you when a new version is
+  out, and you unpack the new one over it.
 
 To upgrade, the AppImage updates itself from inside the app (see below), or you replace the file
 by hand. Your sign-in and history live in your home directory and are kept.

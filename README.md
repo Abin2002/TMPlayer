@@ -47,7 +47,7 @@ No messages, no server, no account except yours.
 - **Android 8.0 and up**, TV and phone from the same APK. It was built and tested on an 8 GB TV
   stick with a gigabyte of RAM, so a cheap device is the target rather than an afterthought.
 - **Windows 10 and 11**, 64-bit, as an MSI installer.
-- **Linux**, 64-bit x86 with glibc 2.38 or newer, as an AppImage, with an AUR recipe in
+- **Linux**, 64-bit x86 with glibc 2.38 or newer, as an AppImage, with an Arch PKGBUILD in
   [desktop/packaging/aur](desktop/packaging/aur).
 
 Everything is on the same [GitHub release](../../releases), and
@@ -55,29 +55,33 @@ Everything is on the same [GitHub release](../../releases), and
 
 ## Install
 
-### Android TV and phones
+### Android TV and Google TV
 
-Grab the universal APK from [Releases](../../releases). The same file works on every supported
-architecture, so there is no CPU variant to identify.
+With just the remote: install the free **Downloader** app from the Play Store, type
+`tmplayer.org/apk` into it, press **Go**, and allow the install when the TV asks. On a Fire TV,
+follow the [Fire TV guide](https://tmplayer.org/fire-tv/). A phone with Send files to TV, or `adb`
+from a computer, work too; [INSTALL.md](INSTALL.md#other-ways-onto-a-tv) has both.
 
-On a phone, [Obtainium](https://github.com/ImranR98/Obtainium) can install it straight from the
-releases and keep it up to date:
+### Android phones
+
+Open [tmplayer.org/download](https://tmplayer.org/download/) on the phone, download the APK, open
+it and allow the install. [Obtainium](https://github.com/ImranR98/Obtainium) can also install it
+straight from the releases and keep it up to date:
 
 <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer"><img src="site/badges/obtainium.png" width="161" height="48" alt="Get it on Obtainium" /></a>
 
-On the TV, turn on Developer options (Settings, About, press *Build* seven times), enable network
-debugging, then:
-
-```bash
-adb connect <tv-ip>:5555
-adb install TMPlayer-<version>-universal.apk
-```
-
 ### Windows
 
-Download `TMPlayer-<version>-windows-x64.msi` and open it. The build is not signed yet, so
-SmartScreen says *Windows protected your PC*: click **More info**, then **Run anyway**. It installs
-for your user only, with a Start menu entry and a desktop shortcut.
+Open **PowerShell** and paste:
+
+```powershell
+irm https://tmplayer.org/install.ps1 | iex
+```
+
+It downloads the MSI from the release, checks it against the published SHA-256 and installs it for
+your user, with no SmartScreen warning. Prefer an installer? Download
+`TMPlayer-<version>-windows-x64.msi` and open it. It is not code signed yet, so SmartScreen says
+*Windows protected your PC*: click **More info**, then **Run anyway**.
 
 ### Linux
 
@@ -86,9 +90,9 @@ chmod +x TMPlayer-<version>-x86_64.AppImage
 ./TMPlayer-<version>-x86_64.AppImage
 ```
 
-Arch: build from [desktop/packaging/aur](desktop/packaging/aur), or use the AppImage. The deb, rpm,
-Flatpak and Windows portable zip are no longer published; [INSTALL.md](INSTALL.md#moving-from-a-format-that-is-no-longer-published)
-says how to move over.
+Arch: build the PKGBUILD in [desktop/packaging/aur](desktop/packaging/aur) (it is not on the AUR),
+or use the AppImage. The deb, rpm, Flatpak and Windows portable zip are no longer published;
+[INSTALL.md](INSTALL.md#moving-from-a-format-that-is-no-longer-published) says how to move over.
 
 [INSTALL.md](INSTALL.md) has the full steps for every platform, how to put the app on the desktop,
 in the app menu and on the taskbar, the remote, touch and keyboard references, and troubleshooting.
