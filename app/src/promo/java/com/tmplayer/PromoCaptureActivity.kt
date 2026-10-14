@@ -876,11 +876,16 @@ private fun ComponentActivity.promoChannels() {
     val context = applicationContext
     val library = PromoMeta.library
     // The demo videos' pictures are this build's drawables, not Telegram thumbnails: each card's
-    // picture is written out from the video's own frame, found by its name.
+    // picture is written out from the video's own frame, found by its name. The course's lessons
+    // carry none in the library (the in-app tiles show the generated cover), but a real upload's
+    // thumbnail is what the launcher would get, so they wear the course's demo frame here.
     val frames = java.io.File(context.cacheDir, "promo-channel-art").apply { mkdirs() }
     com.tmplayer.data.TvChannelsPublisher.fixtureArt = { art ->
-        library.all.firstOrNull { it.nameForParsing == art.name && it.caption == art.caption }?.miniThumbnail?.let { bytes ->
-            java.io.File(frames, "${art.key.hashCode().toUInt()}.jpg").apply { if (!isFile) writeBytes(bytes) }
+        val item = library.all.firstOrNull { it.nameForParsing == art.name && it.caption == art.caption }
+        val bytes = item?.miniThumbnail
+            ?: item?.takeIf { it.chatId == PromoCatalog.STUDY }?.let { PromoMeta.pictures.bytes("demo_tutorial") }
+        bytes?.let {
+            java.io.File(frames, "${art.key.hashCode().toUInt()}.jpg").apply { if (!isFile) writeBytes(it) }
         }
     }
     Thread {
