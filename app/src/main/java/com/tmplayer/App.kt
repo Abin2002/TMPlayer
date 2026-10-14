@@ -22,8 +22,8 @@ import com.tmplayer.data.configureForAndroid
 import com.tmplayer.data.WatchCache
 import com.tmplayer.data.WatchedStore
 import com.tmplayer.i18n.Translator
-import com.tmplayer.ui.onboarding.OnboardingImages
-import com.tmplayer.ui.onboarding.OnboardingPage
+import com.tmplayer.ui.onboarding.SetupChoice
+import com.tmplayer.ui.onboarding.SetupImages
 import com.tmplayer.online.MetadataCache
 import com.tmplayer.online.MetadataStore
 import com.tmplayer.online.OnlineMetadata
@@ -62,8 +62,8 @@ class App : Application() {
                 AppLocales.apply(this@App, saved)
             }
         }
-        // The tour's pictures are this app's drawables, which the shared :ui code cannot name.
-        OnboardingImages.drawable = ::onboardingDrawable
+        // The setup's pictures are this app's drawables, which the shared :ui code cannot name.
+        SetupImages.drawable = ::setupDrawable
         // The PIN's waits run on time since boot, deep sleep included, which no date setting moves.
         com.tmplayer.data.PinClock.source = { android.os.SystemClock.elapsedRealtime() }
         // The isolated screenshot fixture must never open TDLib or touch a Telegram account.
@@ -186,14 +186,30 @@ class App : Application() {
 }
 
 /**
- * The screenshot for a tour page: How it works shows the chat list. A television gets its dark
- * landscape shot; a phone gets the top of a phone screen, light or dark to match the theme.
+ * The picture of a setup answer: a cropped, marked shot of the part of the app it changes. A
+ * television gets its own (dark, as a television mostly is); a phone gets light or dark to match
+ * the theme. The storage step draws its own picture, so it has none.
  */
-private fun onboardingDrawable(page: OnboardingPage, tv: Boolean, dark: Boolean): Int = when (page) {
-    OnboardingPage.HowItWorks -> when {
-        tv -> R.drawable.overview_chats
-        dark -> R.drawable.overview_chats_touch_dark
-        else -> R.drawable.overview_chats_touch
+private fun setupDrawable(choice: SetupChoice, tv: Boolean, dark: Boolean): Int = when (choice) {
+    SetupChoice.Everything -> when {
+        tv -> R.drawable.setup_library_everything_tv
+        dark -> R.drawable.setup_library_everything_dark
+        else -> R.drawable.setup_library_everything
     }
-    OnboardingPage.Welcome -> 0
+    SetupChoice.OnlyFolders -> when {
+        tv -> R.drawable.setup_library_folders_tv
+        dark -> R.drawable.setup_library_folders_dark
+        else -> R.drawable.setup_library_folders
+    }
+    SetupChoice.PostersOn -> when {
+        tv -> R.drawable.setup_posters_on_tv
+        dark -> R.drawable.setup_posters_on_dark
+        else -> R.drawable.setup_posters_on
+    }
+    SetupChoice.PostersOff -> when {
+        tv -> R.drawable.setup_posters_off_tv
+        dark -> R.drawable.setup_posters_off_dark
+        else -> R.drawable.setup_posters_off
+    }
+    SetupChoice.KeepWhilePlaying, SetupChoice.LowStorage -> 0
 }

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.use
 import com.tmplayer.data.AuthState
 import com.tmplayer.data.ChatKind
+import com.tmplayer.data.ChatFolderSummary
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.DownloadRequest
 import com.tmplayer.data.DownloadRunner
@@ -62,10 +63,11 @@ import com.tmplayer.desktop.ui.ListSurface
 import com.tmplayer.i18n.Languages
 import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.icons.TmIcons
-import com.tmplayer.ui.onboarding.OnboardingPage
-import com.tmplayer.ui.onboarding.OnboardingTour
-import com.tmplayer.ui.onboarding.TourState
-import com.tmplayer.ui.onboarding.onboardingImageName
+import com.tmplayer.ui.onboarding.SetupChoice
+import com.tmplayer.ui.onboarding.SetupScreen
+import com.tmplayer.ui.onboarding.SetupState
+import com.tmplayer.ui.onboarding.SetupStep
+import com.tmplayer.ui.onboarding.setupImageName
 import com.tmplayer.ui.theme.TmMaterialTheme
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -96,8 +98,8 @@ import java.nio.file.Files
  * (the version is the one the sidebar shows beside the logo; without it, a shot says 1.0.0-dev).
  *
  * They become the README and site screenshots (`desktop-<shot>[-light].webp`) and the desktop
- * tour's pictures (`ui/src/jvmMain/resources/onboarding/`), each converted to WebP at quality 88 as
- * CLAUDE.md says. The sign in QR code encodes a made-up token that signs nobody in.
+ * setup's pictures (`ui/src/jvmMain/resources/onboarding/`, cropped and marked from the `setup-*`
+ * shots by `scripts/annotate-shot.py`), each converted to WebP at quality 88 as CLAUDE.md says. The sign in QR code encodes a made-up token that signs nobody in.
  */
 class PromoShots {
 
@@ -362,28 +364,78 @@ class PromoShots {
         }
     }
 
-    /** The tour as the desktop shows it before sign in, page by page; not shipped anywhere, only checked. */
+    /** The setup after sign in (CP67) as the desktop shows it, step by step; only checked, not shipped. */
     @Test
-    fun tour() {
-        for (page in OnboardingPage.entries) {
-            both("tour-${page.name.lowercase()}") {
-                OnboardingTour(settings, onDone = {}, firstRun = true, tour = remember { TourState(true, start = page.ordinal) })
+    fun setup() {
+        for (step in SetupStep.entries) {
+            both("setup-${step.name.lowercase()}") {
+                SetupScreen(settings, remember { SetupState(SetupStep.entries.toList(), start = step.ordinal) }, onDone = {})
             }
         }
     }
 
     /** The same in the en-XA pseudo-locale: longer, accented text, to see what a translation will do to it. */
     @Test
-    fun tourPseudo() {
+    fun setupPseudo() {
         Translator.use(Languages.PSEUDO)
         try {
-            for (page in OnboardingPage.entries) {
-                both("tour-xa-${page.name.lowercase()}", darkOnly = true) {
-                    OnboardingTour(settings, onDone = {}, firstRun = true, tour = remember { TourState(true, start = page.ordinal) })
+            for (step in SetupStep.entries) {
+                both("setup-xa-${step.name.lowercase()}", darkOnly = true) {
+                    SetupScreen(settings, remember { SetupState(SetupStep.entries.toList(), start = step.ordinal) }, onDone = {})
                 }
             }
         } finally {
             Translator.use(Languages.ENGLISH)
+        }
+    }
+
+    /**
+     * The raw shots the setup's library pictures are cut from: the side bar of an account with two
+     * folders, with Chats and Saved Messages, and with only the folders.
+     */
+    @Test
+    fun setupLibrary() {
+        for (hidden in listOf(false, true)) {
+            both(if (hidden) "setup-raw-library-folders" else "setup-raw-library-everything", before = {
+                shell.hideDefaultGroups = hidden
+                // Everything opens on Chats, with Chats and Saved Messages in view; only the folders
+                // opens on a folder, which is where that side bar starts.
+                shell.showChats(if (hidden) com.tmplayer.ui.browse.BrowseSection.Folder(1, "Films") else com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats))
+            }) {
+                Row(Modifier.fillMaxSize()) {
+                    Sidebar(shell, null, SETUP_FOLDERS)
+                    VerticalDivider(color = Tone.outline)
+                }
+            }
+        }
+        shell.hideDefaultGroups = false
+    }
+
+    /** The raw shots of the posters step: Cinema Lounge with posters looked up, and without. */
+    @Test
+    fun setupPosters() {
+        for (on in listOf(true, false)) {
+            if (on) installMeta()
+            try {
+                both(if (on) "setup-raw-posters-on" else "setup-raw-posters-off", before = { shell.showChats(shell.chatSection) }) {
+                    withSidebar {
+                        val arranged = remember { SeriesShelf.arrange(library.cinema) }
+                        val posters = if (on) arranged.filter(SeriesShelf::isPoster) else emptyList()
+                        val cells = (posters + arranged.filterNot { it in posters }).map {
+                            if (it is ShelfEntry.Show) it.series.cover else (it as ShelfEntry.File).item
+                        }
+                        VideoGrid(
+                            shell,
+                            cells,
+                            cinema.title,
+                            series = arranged.filterIsInstance<ShelfEntry.Show>().associate { it.series.cover.id to it.series },
+                            posters = posters.mapTo(HashSet()) { if (it is ShelfEntry.Show) it.series.cover.id else (it as ShelfEntry.File).item.id },
+                        )
+                    }
+                }
+            } finally {
+                com.tmplayer.online.OnlineMetadata.current = null
+            }
         }
     }
 
@@ -487,9 +539,12 @@ class PromoShots {
         /** Gradle runs the tests from the module directory. */
         val DEMO_DIR = File("../app/src/promo/res/drawable-nodpi")
 
+        /** The demo account's two Telegram folders, as the setup's library step pictures them. */
+        val SETUP_FOLDERS = listOf(ChatFolderSummary(1, "Films"), ChatFolderSummary(2, "Family"))
+
         init {
-            // The tour reads these names; keep the fixture's output and the classpath in step.
-            check(onboardingImageName(OnboardingPage.HowItWorks, dark = true) == "chats-dark.webp")
+            // The setup reads these names; keep the specs in scripts/annotations and the classpath in step.
+            check(setupImageName(SetupChoice.Everything, dark = true) == "library-everything-dark.webp")
         }
     }
 }

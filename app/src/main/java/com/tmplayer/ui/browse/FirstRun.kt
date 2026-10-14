@@ -42,7 +42,6 @@ import androidx.tv.material3.Text
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.online.MetaNotice
 import com.tmplayer.online.OnlineMetadata
-import com.tmplayer.ui.components.BottomCardInset
 import com.tmplayer.ui.components.PhonePad
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.TvConfirm
@@ -72,8 +71,7 @@ internal fun FirstVideoEmpty(step: DefaultGroups.FirstStep, onOpen: (BrowseSecti
         Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = if (touch) PhonePad.Side else 72.dp, vertical = 24.dp)
-            .padding(bottom = BottomCardInset.height),
+            .padding(horizontal = if (touch) PhonePad.Side else 72.dp, vertical = 24.dp),
         contentAlignment = Alignment.Center,
     ) {
         // With Telegram's default groups hidden and no folders there is nowhere to send the

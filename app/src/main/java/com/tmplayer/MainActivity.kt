@@ -11,14 +11,15 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -80,10 +81,10 @@ import com.tmplayer.data.Updates
 import com.tmplayer.data.release
 import com.tmplayer.data.updateScheduler
 import com.tmplayer.player.PlayerActivity
-import com.tmplayer.ui.components.BottomCardInset
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.LocalDarkTheme
 import com.tmplayer.ui.theme.Tone
+import com.tmplayer.ui.theme.Tv
 import com.tmplayer.ui.auth.LoginScreen
 import com.tmplayer.ui.browse.BrowseScreen
 import com.tmplayer.ui.browse.KeyPresses
@@ -106,9 +107,9 @@ import com.tmplayer.ui.components.UiState
 import com.tmplayer.ui.components.ConnectionNotice
 import com.tmplayer.ui.components.ConnectionStatus
 import com.tmplayer.ui.components.rememberToast
-import com.tmplayer.ui.onboarding.OnboardingScreen
-import com.tmplayer.ui.onboarding.FirstSignIn
-import com.tmplayer.ui.onboarding.FirstSignInCard
+import com.tmplayer.ui.onboarding.Setup
+import com.tmplayer.ui.onboarding.SetupScreen
+import com.tmplayer.ui.onboarding.SetupState
 import com.tmplayer.ui.browse.DefaultGroups
 import com.tmplayer.ui.update.UpdateDialog
 import com.tmplayer.ui.update.LinkQrDialog
@@ -363,7 +364,9 @@ private fun Root() {
         }
     }
 
-    val overviewSeen by settings.overviewSeen.collectAsStateWithLifecycle(initialValue = true)
+    // The setup after sign in (CP67), armed by a sign in screen. False until the store answers,
+    // which is right for everybody already signed in: they are never asked.
+    val setupPending by settings.setupPending.collectAsStateWithLifecycle(initialValue = false)
     // The favourites the kids lock lets through, as the Favourites tab lists them, so every count
     // of them (the badge, Clear all) says the same number.
     val storedFavorites by settings.favorites.collectAsStateWithLifecycle(initialValue = emptySet())
@@ -425,7 +428,7 @@ private fun Root() {
     // sign in screens and not over the player (another activity, which leaves this one stopped):
     // either way the wait starts again once the shell is in front.
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
-    val inShell = auth is AuthState.Ready && overviewSeen && lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
+    val inShell = auth is AuthState.Ready && !setupPending && lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
     LaunchedEffect(offeredUpdate, inShell) {
         val version = offeredUpdate ?: return@LaunchedEffect
         if (!inShell) return@LaunchedEffect
@@ -537,22 +540,16 @@ private fun Root() {
     val accountHeader by chatsViewModel.accountHeader.collectAsStateWithLifecycle()
     val chats = (chatsState as? UiState.Content)?.value?.chats.orEmpty()
 
-    // The one card after the first sign in (CP42): "Show everything" or "Only my folders". A sign
-    // in screen arms it; it is asked once the chat list (and with it the folder list) is in, only
-    // when the account has folders, and never again on this install. See FirstSignIn.
+    // A sign in screen arms the setup that follows it (CP67, see Setup).
     LaunchedEffect(auth) {
-        if (FirstSignIn.isSignInStep(auth)) {
-            runCatching { settings.armFirstSignInCard() }
+        if (Setup.isSignInStep(auth)) {
+            runCatching { settings.armSetup() }
             // A sign in screen means the account is gone, however it went: signed out here, or
             // from Telegram's Devices list, which is the way back from a forgotten PIN. The lock
             // was that account's.
             runCatching { settings.clearAppLock() }
         }
     }
-    val signInCardPending by settings.firstSignInCardPending.collectAsStateWithLifecycle(initialValue = false)
-    var signInCard by remember { mutableStateOf(false) }
-    // "Only my folders", from that card: the Settings switch's own prompt, favourites count and all.
-    var hideGroupsPrompt by remember { mutableStateOf(false) }
 
     LaunchedEffect(auth) {
         when (auth) {
@@ -909,44 +906,64 @@ private fun Root() {
                 autoOpened = false
                 autoOpenDecided = false
             }
-            if (!overviewSeen) {
-                // The tour first: what the app is (with the language and the posters choice), then
-                // how it works, then the sign in. How to work the player and the remote is told
-                // later, once, at the moment it is useful (the first-run hints).
-                OnboardingScreen(firstRun = true, onDone = { scope.launch { settings.markOverviewSeen() } })
-            } else {
-                LoginScreen(
-                    state = auth,
-                    submitError = signInError,
-                    onSubmitPassword = { password ->
-                        signInError = null
-                        scope.launch { signInError = Td.submitPassword(password) }
-                    },
-                    onStartOver = {
-                        signInError = null
-                        scope.launch { Td.restartSignIn() }
-                    },
-                    onChooseMethod = { method ->
-                        signInError = null
-                        scope.launch { Td.chooseSignInMethod(method) }
-                    },
-                    onSubmitPhoneNumber = { number ->
-                        signInError = null
-                        scope.launch { signInError = Td.submitPhoneNumber(number) }
-                    },
-                    onSubmitCode = { code ->
-                        signInError = null
-                        scope.launch { signInError = Td.submitCode(code) }
-                    },
-                    onCancelPhoneEntry = {
-                        signInError = null
-                        scope.launch { Td.cancelPhoneEntry() }
-                    },
-                    onResendCode = {
-                        signInError = null
-                        scope.launch { signInError = Td.resendCode() }
-                    },
-                )
+            // The sign in screens, with the line Telegram's API terms ask a third party client to
+            // show before sign in under them (the tour that carried it before sign in is gone,
+            // CP67). Put away while the keyboard is up, where the room is the field's.
+            @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+            androidx.compose.foundation.layout.Column(Modifier.fillMaxSize()) {
+                val keyboard = WindowInsets.isImeVisible
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .then(if (keyboard) Modifier else Modifier.consumeWindowInsets(WindowInsets.navigationBars)),
+                ) {
+                    LoginScreen(
+                        state = auth,
+                        submitError = signInError,
+                        onSubmitPassword = { password ->
+                            signInError = null
+                            scope.launch { signInError = Td.submitPassword(password) }
+                        },
+                        onStartOver = {
+                            signInError = null
+                            scope.launch { Td.restartSignIn() }
+                        },
+                        onChooseMethod = { method ->
+                            signInError = null
+                            scope.launch { Td.chooseSignInMethod(method) }
+                        },
+                        onSubmitPhoneNumber = { number ->
+                            signInError = null
+                            scope.launch { signInError = Td.submitPhoneNumber(number) }
+                        },
+                        onSubmitCode = { code ->
+                            signInError = null
+                            scope.launch { signInError = Td.submitCode(code) }
+                        },
+                        onCancelPhoneEntry = {
+                            signInError = null
+                            scope.launch { Td.cancelPhoneEntry() }
+                        },
+                        onResendCode = {
+                            signInError = null
+                            scope.launch { signInError = Td.resendCode() }
+                        },
+                    )
+                }
+                if (!keyboard) {
+                    androidx.compose.material3.Text(
+                        L.authUnofficial,
+                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
+                        color = Tone.muted,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 10.dp, bottom = if (FormFactor.isTv(context)) Tv.SafeV else 10.dp),
+                    )
+                }
             }
             ConnectionStatus(
                 notice = connectionNotice,
@@ -957,10 +974,29 @@ private fun Root() {
             return@Box
         }
 
-        // Asked for again from Settings. It covers the screen it is describing, which is the only
-        // place a walkthrough of this app makes sense.
-        if (!overviewSeen) {
-            OnboardingScreen(firstRun = false, onDone = { scope.launch { settings.markOverviewSeen() } })
+        // The setup after sign in (CP67), in place of the shell until it is done or skipped. It
+        // waits for the chat list, which brings the folder list with it, so it knows whether to
+        // ask about folders; a list slow to come is not waited on for ever.
+        if (setupPending) {
+            var waitedOut by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) {
+                delay(Setup.WAIT_FOR_CHATS_MS)
+                waitedOut = true
+            }
+            val chatsLoaded = chatsState is UiState.Content
+            if (Setup.decide(pending = true, chatsLoaded = chatsLoaded, waitedOut = waitedOut) == Setup.Decision.Wait) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { androidx.compose.material3.CircularProgressIndicator(color = Tone.accent) }
+                return@Box
+            }
+            val finish: () -> Unit = { scope.launch { runCatching { settings.markSetupDone() } } }
+            val steps = remember { Setup.steps(folders.size, posters = com.tmplayer.online.OnlineMetadata.current != null) }
+            if (steps.isEmpty()) {
+                LaunchedEffect(Unit) { finish() }
+                return@Box
+            }
+            val setup = remember(steps) { SetupState(steps) }
+            val unreachable = remember(favorites, chats) { DefaultGroups.unreachableFavorites(favorites, chats) }
+            SetupScreen(settings, setup, onDone = finish, unreachableFavourites = unreachable)
             return@Box
         }
 
@@ -1415,69 +1451,8 @@ private fun Root() {
             )
         }
         if (pickingLanguage) LanguageDialog(settings, onClose = { pickingLanguage = false })
-        // The first sign in card, beside the language card and under the same rule: in the shell,
-        // on the chat list, no update dialog up, and after the language card if both are due.
-        val chatsLoaded = chatsState is UiState.Content
-        LaunchedEffect(signInCardPending, chatsLoaded, folders.size, inShell) {
-            if (!inShell) return@LaunchedEffect
-            when (FirstSignIn.decide(signInCardPending, chatsLoaded, folders.size)) {
-                FirstSignIn.Decision.Wait -> Unit
-                // After the list has settled, as the support card waits, so it is not the first
-                // thing to move under the viewer's eyes.
-                FirstSignIn.Decision.Ask -> {
-                    delay(SIGN_IN_CARD_DELAY_MS)
-                    signInCard = true
-                }
-                // TDLib sends the folders before the chat list, but give a late one a moment:
-                // a folder arriving restarts this effect, which cancels the skip.
-                FirstSignIn.Decision.Skip -> {
-                    delay(FOLDERS_SETTLE_MS)
-                    runCatching { settings.markFirstSignInCardDone() }
-                }
-            }
-        }
-        if (signInCard && noticeLanguage == null && inShell && screen is Screen.Chats && !showUpdate) {
-            fun answered() {
-                signInCard = false
-                scope.launch { runCatching { settings.markFirstSignInCardDone() } }
-            }
-            val density = LocalDensity.current
-            FirstSignInCard(
-                onEverything = { answered() },
-                onOnlyFolders = {
-                    answered()
-                    hideGroupsPrompt = true
-                },
-                modifier = Modifier
-                    .align(if (FormFactor.isTv(context)) Alignment.BottomEnd else Alignment.BottomCenter)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .padding(if (FormFactor.isTv(context)) 40.dp else 16.dp)
-                    // The card and the gap under it, so Home's first-video text scrolls clear of it.
-                    .onSizeChanged { BottomCardInset.height = with(density) { it.height.toDp() } + 16.dp },
-            )
-            DisposableEffect(Unit) { onDispose { BottomCardInset.height = 0.dp } }
-        }
-        if (hideGroupsPrompt) {
-            val unreachable = remember(favorites, chats) { DefaultGroups.unreachableFavorites(favorites, chats) }
-            val words = DefaultGroups.prompt(unreachable.size, folders.size)
-            TvConfirm(
-                title = words.title,
-                message = words.message,
-                detail = words.detail,
-                confirmLabel = words.confirm,
-                onConfirm = {
-                    hideGroupsPrompt = false
-                    scope.launch {
-                        settings.setHideDefaultGroups(true, unstar = unreachable)
-                        toast(L.groupsHiddenToast)
-                    }
-                },
-                onDismiss = { hideGroupsPrompt = false },
-            )
-        }
-        // After the first sign in card rather than under it: both sit at the foot of the screen,
-        // and the card asks for an answer while the hint goes at the next key press.
-        if (FormFactor.isTv(context) && inShell && screen is Screen.Chats && !signInCardPending && !signInCard) {
+        // Only once the setup is done: inShell waits for it.
+        if (FormFactor.isTv(context) && inShell && screen is Screen.Chats) {
             TvBrowseHint(
                 keys = remoteKeys,
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp),
@@ -1494,7 +1469,7 @@ private fun Root() {
         }
         if (changelogQr) LinkQrDialog(WhatsNew.CHANGELOG, s.settingsQrChangelogPage, onClose = { changelogQr = false })
 
-        if (supportRung > 0 && noticeLanguage == null && !signInCard && (screen is Screen.Chats || screen is Screen.Downloads) && !showUpdate) {
+        if (supportRung > 0 && noticeLanguage == null && (screen is Screen.Chats || screen is Screen.Downloads) && !showUpdate) {
             val rung = supportRung
             SupportCard(
                 rung = rung,
@@ -1528,12 +1503,6 @@ private fun Root() {
 }
 
 private const val OFFLINE_SETTLE_MS = 750L
-
-/** How long an account that seems to have no folders is given before the first sign in card is skipped. */
-private const val FOLDERS_SETTLE_MS = 3_000L
-
-/** How long the chat list is up before the first sign in card slides in. */
-private const val SIGN_IN_CARD_DELAY_MS = 1_500L
 
 /** How long the chat list is up before the support card may slide in. */
 private const val SUPPORT_CARD_DELAY_MS = 4_000L

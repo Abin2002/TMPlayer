@@ -1302,7 +1302,7 @@ fun SettingsScreen(
                         modifier = if (Updates.enabled) Modifier else Modifier.focusRequester(landing),
                         subtitle = s.settingsWalkthroughBody,
                         icon = TmIcons.Help,
-                        onClick = { scope.launch { settings.replayOverview() } },
+                        onClick = { scope.launch { settings.replaySetup() } },
                     )
                 }
                 item {

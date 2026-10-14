@@ -1,0 +1,454 @@
+package com.tmplayer.ui.onboarding
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
+import com.tmplayer.data.DeviceForm
+import com.tmplayer.data.SettingsStore
+import com.tmplayer.online.OnlineMetadata
+import com.tmplayer.ui.components.deviceForm
+import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
+import com.tmplayer.ui.nav.BackHandler
+import com.tmplayer.ui.theme.Caution
+import com.tmplayer.ui.theme.Corner
+import com.tmplayer.ui.theme.Tone
+import com.tmplayer.ui.theme.Tv
+import com.tmplayer.ui.theme.focusRing
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+/**
+ * The setup after sign in ([Setup]), the same screen on the phone, the television and the desktop.
+ * Each step asks one thing with two answers side by side, each with a picture of what it looks
+ * like. Picking one applies it at once and moves on; Skip moves on and changes nothing; Skip all
+ * ends the setup; Back goes to the step before.
+ *
+ * A remote or a keyboard starts on the answer that is set now, which on a fresh sign in is the
+ * recommended one (every setting's default). Wide screens (a television, a desktop window, a phone
+ * on its side) put the words and buttons beside the answers; a phone held upright stacks them,
+ * with the buttons at the foot where a thumb is.
+ *
+ * [unreachableFavourites] are the starred chats "Only my folders" would leave out of reach
+ * (`DefaultGroups.unreachableFavorites`); the step says how many, as the Settings switch's prompt
+ * does, and picking it unstars them the same way.
+ */
+@Composable
+fun SetupScreen(
+    settings: SettingsStore,
+    state: SetupState,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+    unreachableFavourites: Set<Long> = emptySet(),
+) {
+    val s = LocalStrings.current
+    val scope = rememberCoroutineScope()
+    val online = OnlineMetadata.current
+    val onlyFolders by settings.hideDefaultGroups.collectAsState(initial = false)
+    val lowStorage by settings.lowStorageMode.collectAsState(initial = false)
+    val posters = online?.settings?.collectAsState()?.value?.enabled ?: true
+    val values = SetupValues(onlyFolders = onlyFolders, posters = posters, lowStorage = lowStorage)
+    val form = deviceForm()
+    val remote = form != DeviceForm.Phone
+
+    fun pick(choice: SetupChoice) {
+        scope.launch {
+            runCatching {
+                when (choice) {
+                    SetupChoice.Everything -> settings.setHideDefaultGroups(false)
+                    SetupChoice.OnlyFolders -> settings.setHideDefaultGroups(true, unstar = unreachableFavourites)
+                    SetupChoice.PostersOn -> online?.setEnabled(true)
+                    SetupChoice.PostersOff -> online?.setEnabled(false)
+                    SetupChoice.KeepWhilePlaying -> settings.setLowStorageMode(false)
+                    SetupChoice.LowStorage -> settings.setLowStorageMode(true)
+                }
+            }
+        }
+        if (!state.next()) onDone()
+    }
+
+    BackHandler { if (!state.back()) onDone() }
+
+    val step = state.step
+    val copy = s.setupCopy(step)
+    val focus = remember(step) { step.choices.associateWith { FocusRequester() } }
+    val holder = remember { FocusHolder() }
+    val note = if (step == SetupStep.Library && unreachableFavourites.isNotEmpty()) {
+        s.groupsPromptFavourites(unreachableFavourites.size)
+    } else {
+        null
+    }
+
+    val outer = when (form) {
+        DeviceForm.Tv -> Modifier.padding(horizontal = Tv.SafeH, vertical = Tv.SafeV)
+        DeviceForm.Desktop -> Modifier.padding(40.dp)
+        DeviceForm.Phone -> Modifier.windowInsetsPadding(WindowInsets.safeDrawing).padding(16.dp)
+    }
+    BoxWithConstraints(
+        modifier.fillMaxSize().background(Tone.background).then(outer),
+        contentAlignment = Alignment.Center,
+    ) {
+        val wide = maxWidth > maxHeight && maxWidth >= WIDE_FROM
+        val words: @Composable ColumnScope.() -> Unit = {
+            Text(s.setupStep(state.index + 1, state.steps.size), style = MaterialTheme.typography.labelLarge, color = Tone.accent)
+            Text(
+                copy.title,
+                style = if (form == DeviceForm.Phone) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
+                color = Tone.text,
+            )
+            Text(copy.body, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
+        }
+        val buttons: @Composable () -> Unit = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (!state.isFirst) SetupButton(s.setupBack, icon = true) { state.back() }
+                // Upright on a phone the skips sit at the end, under the thumb; beside the answers
+                // they follow the words.
+                if (!wide) Spacer(Modifier.weight(1f))
+                SetupButton(s.setupSkip) { if (!state.next()) onDone() }
+                if (state.canSkipAll) SetupButton(s.setupSkipAll) { onDone() }
+            }
+        }
+        if (wide) {
+            Row(
+                Modifier.widthIn(max = DESKTOP_MAX).fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(40.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    words()
+                    if (note != null) Note(note)
+                    Spacer(Modifier.height(8.dp))
+                    buttons()
+                    Text(s.setupLater, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+                }
+                BoxWithConstraints(Modifier.weight(1.3f).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                    // Two squares side by side, as large as the width allows and the height leaves
+                    // room for, with the answer's name and line under each.
+                    val side = min((maxWidth - GAP) / 2 - CARD_PAD * 2, maxHeight - LABELS - CARD_PAD * 2)
+                    Choices(step, values, focus, holder, side, ::pick)
+                }
+            }
+        } else {
+            Column(Modifier.widthIn(max = PHONE_MAX).fillMaxSize()) {
+                Column(
+                    Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    words()
+                    Spacer(Modifier.height(4.dp))
+                    Choices(step, values, focus, holder, side = null, onPick = ::pick)
+                    if (note != null) Note(note)
+                    Text(s.setupLater, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+                }
+                Spacer(Modifier.height(12.dp))
+                buttons()
+            }
+        }
+    }
+
+    // A remote or a keyboard starts each step on the answer that is set now, asked again over a
+    // few frames until one of the answers has it: a window not yet focused, or a list arriving
+    // under the setup, can refuse or take the first request.
+    if (remote) {
+        val now by rememberUpdatedState(values)
+        LaunchedEffect(step) {
+            repeat(FOCUS_TRIES) {
+                withFrameNanos { }
+                if (it > 0) delay(FOCUS_RETRY_MS)
+                if (holder.step == step) return@LaunchedEffect
+                runCatching { focus.getValue(now.current(step)).requestFocus() }
+            }
+        }
+    }
+}
+
+/** Which step has an answer focused, so the first focus can be asked for until it lands. */
+private class FocusHolder {
+    var step by mutableStateOf<SetupStep?>(null)
+}
+
+// Three seconds in all: a television cold start can take that long to give the window its focus.
+private const val FOCUS_TRIES = 40
+private const val FOCUS_RETRY_MS = 75L
+
+/** The two answers side by side. [side] is the picture's edge; null lets each take half the width. */
+@Composable
+private fun Choices(
+    step: SetupStep,
+    values: SetupValues,
+    focus: Map<SetupChoice, FocusRequester>,
+    holder: FocusHolder,
+    side: Dp?,
+    onPick: (SetupChoice) -> Unit,
+) {
+    // As tall as the taller card, so a longer line under one answer does not leave the other short.
+    Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(GAP), verticalAlignment = Alignment.Top) {
+        for (choice in step.choices) {
+            ChoiceCard(
+                choice = choice,
+                selected = values.current(step) == choice,
+                side = side,
+                modifier = (if (side == null) Modifier.weight(1f) else Modifier)
+                    .focusRequester(focus.getValue(choice))
+                    .onFocusChanged { if (it.isFocused) holder.step = step }
+                    .arrowsMoveFocus(),
+                onPick = { onPick(choice) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifier: Modifier, onPick: () -> Unit) {
+    val s = LocalStrings.current
+    val copy = s.choiceCopy(choice)
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val shape = RoundedCornerShape(Corner.Large)
+    val touch = deviceForm() == DeviceForm.Phone
+    Column(
+        modifier
+            .then(if (side != null) Modifier.width(side + CARD_PAD * 2) else Modifier)
+            .fillMaxHeight()
+            .clip(shape)
+            .background(if (focused) Tone.focusFill else Tone.surfaceHigh)
+            .focusRing(focused, shape)
+            .semantics { this.selected = selected }
+            .clickable(
+                interactionSource = interactions,
+                indication = if (touch) LocalIndication.current else null,
+                role = Role.Button,
+                onClick = onPick,
+            )
+            .padding(CARD_PAD),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            Modifier
+                .then(if (side != null) Modifier.size(side) else Modifier.fillMaxWidth().aspectRatio(1f))
+                .clip(RoundedCornerShape(Corner.Medium))
+                .background(Tone.background),
+        ) {
+            if (choice.screenshot) SetupShot(choice, Modifier.fillMaxSize()) else StorageArt(choice, Modifier.fillMaxSize())
+            if (selected) {
+                Icon(
+                    TmIcons.CheckCircle,
+                    contentDescription = null,
+                    tint = Tone.accent,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                        .size(26.dp)
+                        .background(Tone.background, CircleShape),
+                )
+            }
+        }
+        val onFill = if (focused) Tone.onFocusFill else Tone.text
+        Text(copy.title, style = MaterialTheme.typography.titleSmall, color = onFill, maxLines = 2)
+        Text(
+            copy.detail,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (focused) Tone.onFocusFill.copy(alpha = 0.85f) else Tone.muted,
+            maxLines = 4,
+        )
+        // Under the words rather than on the picture, which it would hide part of. The row is as
+        // tall as the taller card, so the two still line up.
+        if (choice.recommended) {
+            Text(
+                s.setupRecommended,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (focused) Tone.onFocusFill else Tone.accent,
+            )
+        }
+    }
+}
+
+/** Skip, Skip all and Back: quiet buttons that fill under the focus like the cards do. */
+@Composable
+private fun SetupButton(label: String, icon: Boolean = false, onClick: () -> Unit) {
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val touch = deviceForm() == DeviceForm.Phone
+    Row(
+        Modifier
+            .clip(CircleShape)
+            .background(if (focused) Tone.focusFill else Tone.surfaceHigh)
+            .focusRing(focused, CircleShape)
+            .clickable(
+                interactionSource = interactions,
+                indication = if (touch) LocalIndication.current else null,
+                role = Role.Button,
+                onClick = onClick,
+            )
+            .padding(horizontal = 18.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val color = if (focused) Tone.onFocusFill else Tone.text
+        if (icon) {
+            Icon(TmIcons.ArrowBack, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+        }
+        Text(label, style = MaterialTheme.typography.labelLarge, color = color)
+    }
+}
+
+@Composable
+private fun Note(text: String) {
+    Text(text, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+}
+
+/**
+ * The storage step's picture, drawn rather than shot, since a frame of the player says nothing
+ * about what is kept. Over a video's length (the bar), the part kept on the device is filled: up to
+ * where it is playing and a little ahead, or with Low storage mode only a short stretch around
+ * the playhead. Under it, how full the device gets. Follows the reading direction.
+ */
+@Composable
+private fun StorageArt(choice: SetupChoice, modifier: Modifier) {
+    val low = choice == SetupChoice.LowStorage
+    val accent = Tone.accent
+    val track = Tone.outline
+    val ground = Tone.background
+    val text = Tone.muted
+    Column(
+        modifier.padding(14.dp),
+        verticalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(TmIcons.Play, contentDescription = null, tint = text, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(8.dp))
+            Canvas(Modifier.weight(1f).height(26.dp).mirrored()) {
+                val h = size.height * 0.42f
+                val y = (size.height - h) / 2
+                val r = CornerRadius(h / 2, h / 2)
+                drawRoundRect(track, Offset(0f, y), Size(size.width, h), r)
+                val from = if (low) 0.34f else 0f
+                drawRoundRect(accent, Offset(size.width * from, y), Size(size.width * (0.62f - from), h), r)
+                val head = Offset(size.width * 0.48f, size.height / 2)
+                drawCircle(ground, radius = size.height * 0.42f, center = head)
+                drawCircle(accent, radius = size.height * 0.30f, center = head)
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(TmIcons.Download, contentDescription = null, tint = text, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(8.dp))
+            Canvas(Modifier.weight(1f).height(40.dp).mirrored()) {
+                val r = CornerRadius(size.height * 0.22f, size.height * 0.22f)
+                drawRoundRect(track, Offset.Zero, size, r)
+                val inset = size.height * 0.14f
+                val inner = Size(size.width - inset * 2, size.height - inset * 2)
+                drawRoundRect(ground, Offset(inset, inset), inner, r)
+                val used = if (low) 0.18f else 0.78f
+                drawRoundRect(
+                    if (low) accent else Caution,
+                    Offset(inset, inset),
+                    Size(inner.width * used, inner.height),
+                    r,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The arrow keys move between the answers and down to the buttons. A remote's D-pad does this on
+ * its own; a desktop window's arrow keys do not, and Tab alone is a poor way across two cards.
+ */
+@Composable
+private fun Modifier.arrowsMoveFocus(): Modifier {
+    val focusManager = LocalFocusManager.current
+    return onPreviewKeyEvent { event ->
+        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+        val direction = when (event.key) {
+            Key.DirectionLeft -> FocusDirection.Left
+            Key.DirectionRight -> FocusDirection.Right
+            Key.DirectionUp -> FocusDirection.Up
+            Key.DirectionDown -> FocusDirection.Down
+            else -> return@onPreviewKeyEvent false
+        }
+        focusManager.moveFocus(direction)
+        true
+    }
+}
+
+/** Flips a drawing for a right-to-left language, where the bar fills from the right. */
+@Composable
+private fun Modifier.mirrored(): Modifier =
+    if (LocalLayoutDirection.current == LayoutDirection.Rtl) graphicsLayer(scaleX = -1f) else this
+
+private val WIDE_FROM = 560.dp
+private val PHONE_MAX = 600.dp
+private val DESKTOP_MAX = 1120.dp
+private val GAP = 12.dp
+private val CARD_PAD = 8.dp
+
+/** The room under a picture for the answer's name, its line and "Recommended". */
+private val LABELS = 110.dp

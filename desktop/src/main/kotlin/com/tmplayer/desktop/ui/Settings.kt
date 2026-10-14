@@ -529,7 +529,7 @@ fun SettingsPage(
 
                 Group(s.settingsHelp)
                 Setting(s.settingsWalkthrough, s.settingsWalkthroughBody) {
-                    OutlinedButton(onClick = { scope.launch { settings.replayOverview() } }) { Text(s.commonShow) }
+                    OutlinedButton(onClick = { scope.launch { settings.replaySetup() } }) { Text(s.commonOpen) }
                 }
                 Setting(s.settingsWhatsNew, s.settingsWhatsNewDetail(WhatsNew.VERSION)) {
                     OutlinedButton(onClick = { whatsNew = true }) { Text(s.commonShow) }

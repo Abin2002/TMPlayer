@@ -33,6 +33,7 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
@@ -82,7 +83,9 @@ import com.tmplayer.ui.browse.browseSections
 import com.tmplayer.ui.browse.navGroups
 import com.tmplayer.ui.browse.DefaultGroups
 import com.tmplayer.ui.icons.TmIcons
-import com.tmplayer.ui.onboarding.FirstSignIn
+import com.tmplayer.ui.onboarding.Setup
+import com.tmplayer.ui.onboarding.SetupScreen
+import com.tmplayer.ui.onboarding.SetupState
 import com.tmplayer.ui.browse.rememberNavGroups
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.components.LocalToastHost
@@ -91,9 +94,6 @@ import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.nav.LocalBackStack
 import com.tmplayer.ui.theme.Tone
-import com.tmplayer.ui.onboarding.Entry
-import com.tmplayer.ui.onboarding.Onboarding
-import com.tmplayer.ui.onboarding.OnboardingTour
 import com.tmplayer.ui.lock.PinPad
 import com.tmplayer.ui.lock.PinPurpose
 
@@ -130,54 +130,41 @@ fun DesktopShell(
             color = Tone.background,
         ) {
             val auth by Td.auth.collectAsState()
-            // Null until the store has answered, so a first run does not flash the sign in screen.
-            val overviewSeen by state.settings.overviewSeen.collectAsState(initial = null)
-            val scope = rememberCoroutineScope()
             Box(Modifier.fillMaxSize()) {
-                val seen = overviewSeen
-                if (seen != null) {
-                    val signedIn = auth == AuthState.Ready
-                    // A sign in screen arms the one card after the first sign in (FirstSignIn).
-                    LaunchedEffect(auth) {
-                        if (FirstSignIn.isSignInStep(auth)) {
-                            runCatching { state.settings.armFirstSignInCard() }
-                            // The account is gone, however it went (signed out from Telegram's
-                            // Devices list is the way back from a forgotten PIN): so is its lock.
-                            runCatching { state.settings.clearAppLock() }
-                        }
+                val signedIn = auth == AuthState.Ready
+                // A sign in screen arms the setup that follows it (CP67, see Setup).
+                LaunchedEffect(auth) {
+                    if (Setup.isSignInStep(auth)) {
+                        runCatching { state.settings.armSetup() }
+                        // The account is gone, however it went (signed out from Telegram's
+                        // Devices list is the way back from a forgotten PIN): so is its lock.
+                        runCatching { state.settings.clearAppLock() }
                     }
-                    val appLock by state.settings.appLock.collectAsState(initial = null)
-                    val appUnlocked by com.tmplayer.data.AppLockSession.unlocked.collectAsState()
-                    val done: () -> Unit = { scope.launch { state.settings.markOverviewSeen() } }
-                    // Signed in, Browse stays composed under a tour Settings asked for, so the
-                    // chat list is where it was when the tour ends.
-                    // "Ask when the app opens" (CP57): the pad in place of the window's content
-                    // until the PIN is given. Closing the window is the way out.
-                    val askOnOpen = signedIn && appLock?.onOpen == true && !appUnlocked
-                    if (askOnOpen) {
-                        Box(Modifier.fillMaxSize().windowDrag()) {
-                            PinPad(
-                                settings = state.settings,
-                                purpose = PinPurpose.Check,
-                                title = LocalStrings.current.lockEnterForApp,
-                                onDone = {
-                                    com.tmplayer.data.AppLockSession.unlock()
-                                    state.settingsUnlocked = true
-                                },
-                                onCancel = null,
-                            )
-                        }
-                    } else if (signedIn) {
-                        Browse(state, player)
+                }
+                val appLock by state.settings.appLock.collectAsState(initial = null)
+                val appUnlocked by com.tmplayer.data.AppLockSession.unlocked.collectAsState()
+                // "Ask when the app opens" (CP57): the pad in place of the window's content
+                // until the PIN is given. Closing the window is the way out.
+                val askOnOpen = signedIn && appLock?.onOpen == true && !appUnlocked
+                if (askOnOpen) {
+                    Box(Modifier.fillMaxSize().windowDrag()) {
+                        PinPad(
+                            settings = state.settings,
+                            purpose = PinPurpose.Check,
+                            title = LocalStrings.current.lockEnterForApp,
+                            onDone = {
+                                com.tmplayer.data.AppLockSession.unlock()
+                                state.settingsUnlocked = true
+                            },
+                            onCancel = null,
+                        )
                     }
-                    when (Onboarding.entry(signedIn, seen)) {
-                        // No page header on the tour either: its ground moves the window.
-                        Entry.Tour -> Surface(Modifier.fillMaxSize().windowDrag(), color = Tone.background) {
-                            OnboardingTour(state.settings, onDone = done, firstRun = !signedIn)
-                        }
-                        Entry.SignIn -> SignInScreen(auth)
-                        Entry.App -> Unit
-                    }
+                } else if (signedIn) {
+                    // The setup after sign in sits over Browse (SetupOverlay), so the chat list
+                    // loads under it and is where it was when the setup ends.
+                    Browse(state, player)
+                } else {
+                    SignInScreen(auth)
                 }
                 SnackbarHost(toasts, Modifier.align(Alignment.BottomCenter).padding(16.dp))
             }
@@ -269,22 +256,8 @@ private fun Browse(state: ShellState, player: PlayerContent) {
     }
     val update = rememberNavUpdate(state)
     UpdatePopupTrigger(state, update)
-    // The one card after the first sign in, "Show everything" or "Only my folders" (FirstSignIn).
-    val signInCardPending by state.settings.firstSignInCardPending.collectAsState(initial = false)
-    var signInCard by remember { mutableStateOf(false) }
-    var hideGroupsPrompt by remember { mutableStateOf(false) }
+    val setupPending by state.settings.setupPending.collectAsState(initial = false)
     val chatsUi by chats.state.collectAsState()
-    LaunchedEffect(signInCardPending, chatsUi is UiState.Content, shellFolders.size) {
-        when (FirstSignIn.decide(signInCardPending, chatsUi is UiState.Content, shellFolders.size)) {
-            FirstSignIn.Decision.Wait -> Unit
-            FirstSignIn.Decision.Ask -> signInCard = true
-            // A folder that turns up late restarts this effect, which cancels the skip.
-            FirstSignIn.Decision.Skip -> {
-                delay(FOLDERS_SETTLE_MS)
-                runCatching { state.settings.markFirstSignInCardDone() }
-            }
-        }
-    }
     DownloadToasts(state)
     // Half watched entries that can no longer become a card are swept once per sign in, as on the
     // phone. Left alone they are invisible: the page skips them, so nothing can ever clear them.
@@ -357,47 +330,16 @@ private fun Browse(state: ShellState, player: PlayerContent) {
 
         UpdatePopupHost(state)
         LowStorageQuestionHost(state)
-        ShellNotices(state, Modifier.align(Alignment.BottomEnd).padding(24.dp))
-        if (signInCard && state.nowPlaying == null && !state.updatePopup) {
-            FirstSignInCard(
-                onEverything = {
-                    signInCard = false
-                    browseScope.launch { runCatching { state.settings.markFirstSignInCardDone() } }
-                },
-                onOnlyFolders = {
-                    signInCard = false
-                    hideGroupsPrompt = true
-                    browseScope.launch { runCatching { state.settings.markFirstSignInCardDone() } }
-                },
-                modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
-            )
+        // The language card and What's new wait for the setup, as on the phone.
+        if (!setupPending) ShellNotices(state, Modifier.align(Alignment.BottomEnd).padding(24.dp))
+        if (setupPending) {
+            SetupOverlay(state, chatsUi is UiState.Content, shellFolders.size, (chatsUi as? UiState.Content)?.value?.chats.orEmpty())
         }
-        if (hideGroupsPrompt) {
-            val favourites by state.settings.favorites.collectAsState(initial = emptySet())
-            val loaded = (chatsUi as? UiState.Content)?.value?.chats.orEmpty()
-            val unreachable = remember(favourites, loaded) { DefaultGroups.unreachableFavorites(favourites, loaded) }
-            val words = DefaultGroups.prompt(unreachable.size, shellFolders.size)
-            ConfirmDialog(
-                title = words.title,
-                message = words.message,
-                detail = words.detail,
-                confirmLabel = words.confirm,
-                onConfirm = {
-                    hideGroupsPrompt = false
-                    browseScope.launch {
-                        state.settings.setHideDefaultGroups(true, unstar = unreachable)
-                        toast(s.groupsHiddenToast)
-                    }
-                },
-                onDismiss = { hideGroupsPrompt = false },
-            )
-        }
-        if (SupportReminder.enabled) {
+        if (SupportReminder.enabled && !setupPending) {
             SupportCardHost(state, Modifier.align(Alignment.BottomEnd).padding(24.dp))
         }
 
         ConnectionBanner(connection, Modifier.align(Alignment.TopCenter).padding(top = 12.dp))
-
 
         // Over the page rather than instead of it, so the page keeps its scroll position and its
         // search, and closing the player is simply taking this away.
@@ -413,9 +355,6 @@ private fun Browse(state: ShellState, player: PlayerContent) {
 
 private val SIDEBAR_FROM = 1000.dp
 private const val HOUSEKEEPING_DELAY_MS = 20_000L
-
-/** How long an account that seems to have no folders is given before the first sign in card is skipped. */
-private const val FOLDERS_SETTLE_MS = 3_000L
 
 private fun Destination.icon(): ImageVector = when (this) {
     Destination.Home -> TmIcons.Home
@@ -635,5 +574,36 @@ private fun Rail(state: ShellState, update: NavUpdate?) {
                 ),
             )
         }
+    }
+}
+
+/**
+ * The setup after sign in (CP67) over the whole window, once the chat list is in (it brings the
+ * folder list with it) or after a wait for one that is slow to come. Browse is drawn under it, so
+ * the list is ready when the setup ends.
+ */
+@Composable
+private fun SetupOverlay(state: ShellState, chatsLoaded: Boolean, folderCount: Int, chats: List<com.tmplayer.data.ChatSummary>) {
+    val scope = rememberCoroutineScope()
+    var waitedOut by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(Setup.WAIT_FOR_CHATS_MS)
+        waitedOut = true
+    }
+    val finish: () -> Unit = { scope.launch { runCatching { state.settings.markSetupDone() } } }
+    Surface(Modifier.fillMaxSize().windowDrag(), color = Tone.background) {
+        if (Setup.decide(pending = true, chatsLoaded = chatsLoaded, waitedOut = waitedOut) == Setup.Decision.Wait) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Tone.accent) }
+            return@Surface
+        }
+        val steps = remember { Setup.steps(folderCount, posters = com.tmplayer.online.OnlineMetadata.current != null) }
+        if (steps.isEmpty()) {
+            LaunchedEffect(Unit) { finish() }
+            return@Surface
+        }
+        val setup = remember(steps) { SetupState(steps) }
+        val favourites by state.settings.favorites.collectAsState(initial = emptySet())
+        val unreachable = remember(favourites, chats) { DefaultGroups.unreachableFavorites(favourites, chats) }
+        SetupScreen(state.settings, setup, onDone = finish, unreachableFavourites = unreachable)
     }
 }

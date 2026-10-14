@@ -1,7 +1,6 @@
 package com.tmplayer.ui.onboarding
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -11,37 +10,37 @@ import com.tmplayer.data.decodeImage
 import com.tmplayer.ui.theme.LocalDarkTheme
 
 /**
- * The screenshot for a page on the desktop: a WebP on the classpath, `onboarding/<page>-<light|dark>.webp`,
- * taken by the desktop promo fixture (`TMPLAYER_PROMO=<dir> ./gradlew :desktop:test --tests '*PromoShots*'`)
- * from the real screens over made-up chats, so the tour shows the window the viewer is about to use.
+ * The picture of an answer on the desktop: a WebP on the classpath, `onboarding/<name>`, cropped
+ * and marked by `scripts/annotate-shot.py` from the desktop promo fixture's shots
+ * (`TMPLAYER_PROMO=<dir> ./gradlew :desktop:test --tests '*PromoShots*'`), so the setup shows the
+ * window the viewer is about to use.
  */
 @Composable
-fun OnboardingImage(page: OnboardingPage, modifier: Modifier = Modifier) {
+internal fun SetupShot(choice: SetupChoice, modifier: Modifier = Modifier) {
     val dark = LocalDarkTheme.current
-    val image = remember(page, dark) { load(page, dark) } ?: return
+    val image = remember(choice, dark) { load(choice, dark) } ?: return
     Image(
         bitmap = image,
         contentDescription = null,
-        contentScale = ContentScale.Fit,
-        modifier = modifier.aspectRatio(image.width.toFloat() / image.height).onboardingFrame(),
+        contentScale = ContentScale.Crop,
+        modifier = modifier,
     )
 }
 
-/**
- * The name of a page's picture on the classpath, for the fixture that writes it and the tour that
- * reads it. How it works shows the chat list, the promo fixture's `chats` shot.
- */
-fun onboardingImageName(page: OnboardingPage, dark: Boolean): String {
-    val shot = when (page) {
-        OnboardingPage.HowItWorks -> "chats"
-        else -> page.name.lowercase()
+/** The file name of an answer's picture, for the fixture that writes it and the setup that reads it. */
+fun setupImageName(choice: SetupChoice, dark: Boolean): String? {
+    val shot = when (choice) {
+        SetupChoice.Everything -> "library-everything"
+        SetupChoice.OnlyFolders -> "library-folders"
+        SetupChoice.PostersOn -> "posters-on"
+        SetupChoice.PostersOff -> "posters-off"
+        SetupChoice.KeepWhilePlaying, SetupChoice.LowStorage -> return null
     }
     return "$shot-${if (dark) "dark" else "light"}.webp"
 }
 
-private fun load(page: OnboardingPage, dark: Boolean): ImageBitmap? {
-    if (!page.illustrated) return null
-    val bytes = OnboardingPage::class.java.getResourceAsStream("/onboarding/${onboardingImageName(page, dark)}")
-        ?.use { it.readBytes() } ?: return null
+private fun load(choice: SetupChoice, dark: Boolean): ImageBitmap? {
+    val name = setupImageName(choice, dark) ?: return null
+    val bytes = SetupChoice::class.java.getResourceAsStream("/onboarding/$name")?.use { it.readBytes() } ?: return null
     return decodeImage(bytes)
 }

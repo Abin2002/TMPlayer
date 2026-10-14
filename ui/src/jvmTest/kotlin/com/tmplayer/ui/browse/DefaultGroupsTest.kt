@@ -1,11 +1,9 @@
 package com.tmplayer.ui.browse
 
-import com.tmplayer.data.AuthState
 import com.tmplayer.data.ChatFolderSummary
 import com.tmplayer.data.ChatKind
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.SettingsStore
-import com.tmplayer.ui.onboarding.FirstSignIn
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -127,36 +125,6 @@ class DefaultGroupsTest {
             assertEquals(setOf(1L), store.favorites.first())
             // The chip over Chats is kept while hidden, so it is the same one when Chats is back.
             assertEquals(ChatFilter.Channels, ChatFilter.decode(store.chatFilter.first()))
-        } finally {
-            dir.toFile().deleteRecursively()
-        }
-    }
-
-    @Test
-    fun `the first sign in card is armed by a sign in screen, asked with folders, skipped without`() = runBlocking {
-        assertTrue(FirstSignIn.isSignInStep(AuthState.Phone()))
-        assertTrue(FirstSignIn.isSignInStep(AuthState.Qr("tg://login")))
-        assertFalse(FirstSignIn.isSignInStep(AuthState.Ready))
-        assertFalse(FirstSignIn.isSignInStep(AuthState.Connecting))
-        assertEquals(FirstSignIn.Decision.Wait, FirstSignIn.decide(pending = false, chatsLoaded = true, folderCount = 2))
-        assertEquals(FirstSignIn.Decision.Wait, FirstSignIn.decide(pending = true, chatsLoaded = false, folderCount = 2))
-        assertEquals(FirstSignIn.Decision.Ask, FirstSignIn.decide(pending = true, chatsLoaded = true, folderCount = 2))
-        assertEquals(FirstSignIn.Decision.Skip, FirstSignIn.decide(pending = true, chatsLoaded = true, folderCount = 0))
-
-        val dir = Files.createTempDirectory("card")
-        try {
-            val store = SettingsStore(SettingsStore.openDataStore(dir.toFile().resolve(SettingsStore.FILE_NAME)))
-            assertFalse("never armed: somebody signed in before the card existed", store.firstSignInCardPending.first())
-            store.armFirstSignInCard()
-            assertTrue(store.firstSignInCardPending.first())
-            store.markFirstSignInCardDone()
-            assertFalse(store.firstSignInCardPending.first())
-            // Once per install: neither a second sign in screen nor a sign out arms it again.
-            store.armFirstSignInCard()
-            assertFalse(store.firstSignInCardPending.first())
-            store.clearEverything()
-            store.armFirstSignInCard()
-            assertFalse(store.firstSignInCardPending.first())
         } finally {
             dir.toFile().deleteRecursively()
         }

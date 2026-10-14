@@ -1101,7 +1101,7 @@ private fun metaNoticeShown(state: ShellState): Boolean {
 /**
  * The one-time invite for a viewer whose online metadata is off from an older version, when off
  * was the default (see [MetaNotice.shouldInvite]), the phone's and television's OnlineMetaInvite.
- * Not over the tour Settings can open over this page. Not now, Escape or a click outside all
+ * Not over the setup after sign in. Not now, Escape or a click outside all
  * answer it, and it is never asked again.
  */
 @Composable
@@ -1110,9 +1110,9 @@ internal fun MetaInviteDialog(state: ShellState) {
     val meta by online.settings.collectAsState()
     // Seen until the stores answer, so it never flashes up for somebody who already answered.
     val seen by state.settings.onlineMetaInviteSeen.collectAsState(initial = true)
-    val toured by state.settings.overviewSeen.collectAsState(initial = false)
+    val settingUp by state.settings.setupPending.collectAsState(initial = true)
     var answered by remember { mutableStateOf(false) }
-    if (answered || !toured || !MetaNotice.shouldInvite(meta, seen)) return
+    if (answered || settingUp || !MetaNotice.shouldInvite(meta, seen)) return
     val s = LocalStrings.current
     val scope = rememberCoroutineScope()
     fun answer(turnOn: Boolean) {

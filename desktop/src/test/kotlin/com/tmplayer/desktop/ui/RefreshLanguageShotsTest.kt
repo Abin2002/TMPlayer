@@ -238,8 +238,7 @@ class RefreshLanguageShotsTest {
                 }
             }
         }
-        // The invite asks only while posters are off from an older version and the tour was seen.
-        settings.markOverviewSeen()
+        // The invite asks only while posters are off from an older version and no setup is pending.
         MetaFixture.install("off")
         try {
             shot("invite") { Box(Modifier.fillMaxSize()) { VideoGrid(shell, clips, "Weekend Clips"); MetaInviteDialog(shell) } }

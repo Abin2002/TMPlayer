@@ -1,0 +1,184 @@
+package com.tmplayer.ui.onboarding
+
+import com.tmplayer.data.AuthState
+import com.tmplayer.data.SettingsStore
+import com.tmplayer.i18n.Languages
+import com.tmplayer.i18n.Translator
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.nio.file.Files
+
+/** The setup after sign in (CP67): who sees it, which steps, and how it is walked. */
+class SetupTest {
+
+    @Test
+    fun `an account with folders gets all three steps, in order`() {
+        assertEquals(
+            listOf(SetupStep.Library, SetupStep.Posters, SetupStep.Storage),
+            Setup.steps(folderCount = 2, posters = true, storage = true),
+        )
+    }
+
+    @Test
+    fun `no folders, no library step`() {
+        assertEquals(listOf(SetupStep.Posters, SetupStep.Storage), Setup.steps(folderCount = 0, posters = true, storage = true))
+    }
+
+    @Test
+    fun `a build without online lookups has no posters step`() {
+        assertEquals(listOf(SetupStep.Library, SetupStep.Storage), Setup.steps(folderCount = 1, posters = false, storage = true))
+        assertEquals(emptyList<SetupStep>(), Setup.steps(folderCount = 0, posters = false, storage = false))
+    }
+
+    @Test
+    fun `the storage step is on for every platform`() {
+        assertTrue(Setup.STORAGE_STEP)
+        assertTrue(SetupStep.Storage in Setup.steps(folderCount = 0, posters = false))
+    }
+
+    @Test
+    fun `it shows only when armed, and waits for the chat list or the time limit`() {
+        assertEquals(Setup.Decision.None, Setup.decide(pending = false, chatsLoaded = true))
+        assertEquals(Setup.Decision.None, Setup.decide(pending = false, chatsLoaded = false, waitedOut = true))
+        assertEquals(Setup.Decision.Wait, Setup.decide(pending = true, chatsLoaded = false))
+        assertEquals(Setup.Decision.Show, Setup.decide(pending = true, chatsLoaded = true))
+        assertEquals(Setup.Decision.Show, Setup.decide(pending = true, chatsLoaded = false, waitedOut = true))
+    }
+
+    @Test
+    fun `the sign in screens arm it, nothing else does`() {
+        assertTrue(Setup.isSignInStep(AuthState.ChooseMethod))
+        assertTrue(Setup.isSignInStep(AuthState.Phone()))
+        assertTrue(Setup.isSignInStep(AuthState.Qr("tg://login")))
+        assertFalse(Setup.isSignInStep(AuthState.Ready))
+        assertFalse(Setup.isSignInStep(AuthState.Connecting))
+    }
+
+    @Test
+    fun `who sees it`() = runBlocking {
+        // Somebody signed in before the setup existed, who went through the old tour: never asked.
+        val updated = store()
+        assertEquals(Setup.Decision.None, Setup.decide(updated.setupPending.first(), chatsLoaded = true))
+
+        // A fresh sign in: the sign in screen arms it, and it shows once the chats are in.
+        val fresh = store()
+        fresh.armSetup()
+        assertEquals(Setup.Decision.Show, Setup.decide(fresh.setupPending.first(), chatsLoaded = true))
+        // Skipped or finished: gone, and an app restart does not bring it back.
+        fresh.markSetupDone()
+        assertEquals(Setup.Decision.None, Setup.decide(fresh.setupPending.first(), chatsLoaded = true))
+
+        // Signed out and in again: asked again.
+        fresh.clearEverything()
+        fresh.armSetup()
+        assertEquals(Setup.Decision.Show, Setup.decide(fresh.setupPending.first(), chatsLoaded = true))
+
+        // Settings' "Run the setup again".
+        updated.replaySetup()
+        assertEquals(Setup.Decision.Show, Setup.decide(updated.setupPending.first(), chatsLoaded = true))
+    }
+
+    @Test
+    fun `Skip and picking walk on and finish after the last step`() {
+        val setup = SetupState(listOf(SetupStep.Library, SetupStep.Posters, SetupStep.Storage))
+        assertEquals(SetupStep.Library, setup.step)
+        assertTrue(setup.isFirst)
+        assertTrue(setup.canSkipAll)
+        assertTrue(setup.next())
+        assertEquals(SetupStep.Posters, setup.step)
+        assertTrue(setup.next())
+        assertEquals(SetupStep.Storage, setup.step)
+        assertTrue(setup.isLast)
+        assertFalse("Skip all says no more than Skip on the last step", setup.canSkipAll)
+        assertFalse("done", setup.next())
+        assertEquals(SetupStep.Storage, setup.step)
+    }
+
+    @Test
+    fun `Back goes to the step before, and leaves from the first`() {
+        val setup = SetupState(listOf(SetupStep.Posters, SetupStep.Storage), start = 1)
+        assertTrue(setup.back())
+        assertEquals(SetupStep.Posters, setup.step)
+        assertFalse(setup.back())
+        assertEquals(SetupStep.Posters, setup.step)
+    }
+
+    @Test
+    fun `a single step is first and last at once`() {
+        val setup = SetupState(listOf(SetupStep.Storage))
+        assertTrue(setup.isFirst && setup.isLast)
+        assertFalse(setup.canSkipAll)
+        assertFalse(setup.next())
+    }
+
+    @Test
+    fun `a start out of range is held to the steps`() {
+        assertEquals(SetupStep.Storage, SetupState(listOf(SetupStep.Posters, SetupStep.Storage), start = 9).step)
+    }
+
+    @Test
+    fun `each step has two answers, the recommended one first and every setting's default`() {
+        for (step in SetupStep.entries) {
+            assertEquals(2, step.choices.size)
+            assertTrue(step.choices.first().recommended)
+            assertFalse(step.choices.last().recommended)
+        }
+        val defaults = SetupValues(onlyFolders = false, posters = true, lowStorage = false)
+        for (step in SetupStep.entries) assertEquals(step.choices.first(), defaults.current(step))
+    }
+
+    @Test
+    fun `the answer a remote starts on is the one set now`() {
+        val set = SetupValues(onlyFolders = true, posters = false, lowStorage = true)
+        assertEquals(SetupChoice.OnlyFolders, set.current(SetupStep.Library))
+        assertEquals(SetupChoice.PostersOff, set.current(SetupStep.Posters))
+        assertEquals(SetupChoice.LowStorage, set.current(SetupStep.Storage))
+    }
+
+    @Test
+    fun `screenshots for library and posters, a drawing for storage`() {
+        assertEquals(
+            setOf(SetupChoice.Everything, SetupChoice.OnlyFolders, SetupChoice.PostersOn, SetupChoice.PostersOff),
+            SetupChoice.entries.filter { it.screenshot }.toSet(),
+        )
+    }
+
+    @Test
+    fun `every locale words every step and answer, none of them left in English`() {
+        val en = Translator.english()
+        for (language in Languages.all) {
+            val s = Translator.load(language.tag)
+            for (step in SetupStep.entries) {
+                val copy = s.setupCopy(step)
+                assertTrue(copy.title.isNotBlank() && copy.body.isNotBlank())
+                if (language.tag != Languages.ENGLISH) assertNotEquals("${language.tag} $step", en.setupCopy(step).body, copy.body)
+                for (choice in step.choices) {
+                    val words = s.choiceCopy(choice)
+                    assertTrue(words.title.isNotBlank() && words.detail.isNotBlank())
+                    if (language.tag != Languages.ENGLISH) assertNotEquals("${language.tag} $choice", en.choiceCopy(choice).detail, words.detail)
+                }
+            }
+            assertNotEquals(language.tag, s.setupStep(1, 3), s.setupStep(2, 3))
+        }
+    }
+
+    @Test
+    fun `the language picker lists the system first, then every language by its own name`() {
+        val choices = Onboarding.languages()
+        assertEquals("", choices.first().tag)
+        assertNull(choices.first().name)
+        assertEquals(Languages.all.map { it.tag }, choices.drop(1).map { it.tag })
+        assertEquals("Español (Latinoamérica)", choices.first { it.tag == "es-419" }.name)
+    }
+
+    private fun store(): SettingsStore {
+        val file = Files.createTempDirectory("tm-setup").resolve(SettingsStore.FILE_NAME).toFile()
+        return SettingsStore(SettingsStore.openDataStore(file))
+    }
+}

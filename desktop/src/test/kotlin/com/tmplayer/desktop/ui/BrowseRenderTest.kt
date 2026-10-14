@@ -150,17 +150,10 @@ class BrowseRenderTest {
         try {
             for (dark in listOf(true, false)) {
                 val theme = if (dark) "dark" else "light"
-                save("only-folders-card-$theme.png", render(dark = dark, folders = folders) {
-                    Box(Modifier.fillMaxSize()) {
-                        Column(Modifier.fillMaxSize()) {
-                            PageHeader(films.heading, films.blurb)
-                            chats.forEach { ChatRow(it, favourite = false, onOpen = {}, onStar = {}) }
-                        }
-                        FirstSignInCard(
-                            onEverything = {},
-                            onOnlyFolders = {},
-                            modifier = Modifier.align(androidx.compose.ui.Alignment.BottomEnd).padding(24.dp),
-                        )
+                save("only-folders-$theme.png", render(dark = dark, folders = folders) {
+                    Column(Modifier.fillMaxSize()) {
+                        PageHeader(films.heading, films.blurb)
+                        chats.forEach { ChatRow(it, favourite = false, onOpen = {}, onStar = {}) }
                     }
                 })
                 val words = com.tmplayer.ui.browse.DefaultGroups.prompt(unreachable = 2, folderCount = folders.size)

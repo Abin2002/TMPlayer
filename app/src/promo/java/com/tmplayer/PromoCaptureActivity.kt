@@ -76,8 +76,9 @@ import com.tmplayer.ui.browse.STILL_MORE_TO_SEARCH
 import com.tmplayer.ui.browse.FIRST_LOAD_TIP
 import com.tmplayer.data.SizeFilter
 import androidx.compose.foundation.layout.padding
-import com.tmplayer.ui.onboarding.OnboardingPage
-import com.tmplayer.ui.onboarding.OnboardingScreen
+import com.tmplayer.ui.onboarding.SetupScreen
+import com.tmplayer.ui.onboarding.SetupState
+import com.tmplayer.ui.onboarding.SetupStep
 import com.tmplayer.ui.settings.AboutScreen
 import com.tmplayer.ui.settings.SettingsPage
 import com.tmplayer.ui.settings.SettingsScreen
@@ -288,14 +289,19 @@ class PromoCaptureActivity : ComponentActivity() {
                             onSubmitPassword = {},
                             submitError = null,
                         )
-                        // The tour, from `--es page welcome|howitworks`.
-                        "overview" -> OnboardingScreen(
-                            firstRun = true,
-                            onDone = { screen = "chats" },
-                            start = OnboardingPage.entries.firstOrNull {
-                                it.name.equals(intent.getStringExtra("page"), ignoreCase = true)
-                            } ?: OnboardingPage.Welcome,
-                        )
+                        // The setup after sign in (CP67), which the fixture reaches without a sign in:
+                        // every step, as an account with folders gets them, opening on `--es step
+                        // library|posters|storage`. Finishing or Skip all goes to the chat list.
+                        "setup" -> {
+                            val steps = remember { SetupStep.entries.toList() }
+                            val setup = remember {
+                                SetupState(
+                                    steps,
+                                    start = steps.indexOfFirst { it.name.equals(intent.getStringExtra("step"), ignoreCase = true) }.coerceAtLeast(0),
+                                )
+                            }
+                            SetupScreen(SettingsStore(applicationContext), setup, onDone = { screen = "chats" })
+                        }
                         // A page of it from `--es page appearance|playback|subtitles|...`.
                         "settings" -> SettingsScreen(
                             chats = promoChats(),
@@ -388,16 +394,7 @@ class PromoCaptureActivity : ComponentActivity() {
                             onConfirm = { overlay = null },
                             onDismiss = { overlay = null },
                         )
-                        // The first sign in card over the chat list (CP42), and the "Only my folders"
-                        // prompt it leads to, counting the demo favourites in no folder.
-                        "signincard" -> com.tmplayer.ui.onboarding.FirstSignInCard(
-                            onEverything = { overlay = null },
-                            onOnlyFolders = { overlay = "hidegroups" },
-                            modifier = Modifier
-                                .align(if (tv) Alignment.BottomEnd else Alignment.BottomCenter)
-                                .windowInsetsPadding(WindowInsets.safeDrawing)
-                                .padding(if (tv) 40.dp else 16.dp),
-                        )
+                        // The Settings switch's "Only my folders" prompt, counting the demo favourites in no folder.
                         "hidegroups" -> {
                             val chats = promoChats()
                             val unreachable = com.tmplayer.ui.browse.DefaultGroups.unreachableFavorites(setOf(102L, 103L, 104L), chats)
