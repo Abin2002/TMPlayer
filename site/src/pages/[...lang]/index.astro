@@ -10,8 +10,16 @@ import Footer from '../../components/Footer.astro';
 import ToTop from '../../components/ToTop.astro';
 import T from '../../components/T.astro';
 import Icon from '../../components/Icon.astro';
+import Band from '../../components/Band.astro';
+import LinkCard from '../../components/LinkCard.astro';
+import Device from '../../components/Device.astro';
+import Shot from '../../components/Shot.astro';
+import Cards from '../../components/Cards.astro';
+import Step from '../../components/Step.astro';
+import Steps from '../../components/Steps.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import LangCount from '../../components/LangCount.astro';
+import StarCard from '../../components/StarCard.astro';
 import { langPaths } from '../../i18n/paths';
 import { text } from '../../i18n/t';
 import { l as link } from '../../i18n/links';
@@ -196,24 +204,12 @@ const ld2 = {
            show's page on the phone, for a different title, so the two frames show more of the
            demo library rather than the same pictures twice. -->
       <figure class="showcase">
-        <div class="device device-tv">
-          <div class="screen">
-            <picture>
-              <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
-              <img src="/screenshots/tv-home.webp" alt={t('home.tv_home_hero_alt')} width="1920" height="1080" fetchpriority="high" decoding="async">
-            </picture>
-          </div>
-          <div class="stand"></div>
-          <div class="foot"></div>
-        </div>
-        <div class="device device-phone">
-          <div class="screen">
-            <picture>
-              <source data-theme-src srcset="/screenshots/phone-show-light.webp" media="(prefers-color-scheme: light)">
-              <img src="/screenshots/phone-show.webp" alt={t('home.phone_show_page_alt')} width="1080" height="2400" decoding="async">
-            </picture>
-          </div>
-        </div>
+        <Device kind="tv">
+          <Shot src="/screenshots/tv-home.webp" light="/screenshots/tv-home-light.webp" alt={t('home.tv_home_hero_alt')} width="1920" height="1080" fetchpriority="high" lazy={false} />
+        </Device>
+        <Device kind="phone">
+          <Shot src="/screenshots/phone-show.webp" light="/screenshots/phone-show-light.webp" alt={t('home.phone_show_page_alt')} width="1080" height="2400" lazy={false} />
+        </Device>
       </figure>
 
       <dl class="spec">
@@ -238,85 +234,34 @@ const ld2 = {
   </section>
 
   <!-- A hand drawn wave, in the spirit of Material's shape work, marking the change of tone. -->
-  <Icon name="wave" />
+    <Band wave id="what" title={t('home.a_player_for_the_account')} sub={t('home.tmplayer_signs_in_as_you')} tonal>
+    <Cards>
+      <LinkCard href={l('/features/')} icon="play-card" title={t('home.what_it_does')} body={t('home.streams_as_it_downloads_plays')} go={t('home.the_full_list')} />
 
-  <section class="band band-tonal" id="what" aria-labelledby="what-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="what-h">{t('home.a_player_for_the_account')}</h2>
-          <p class="section-sub">{t('home.tmplayer_signs_in_as_you')}</p>
-        </div>
-      </div>
+      <LinkCard href={l('/android-tv/')} icon="tv-card" title={t('home.on_android_tv')} body={t('home.a_ten_foot_layout_for')} go={t('home.made_for_the_television')} />
 
-      <div class="card-grid card-grid-3" data-reveal>
-        <a class="card" href={l('/features/')}>
-          <span class="card-icon" aria-hidden="true">
-            <Icon name="play-card" />
-          </span>
-          <h3>{t('home.what_it_does')}</h3>
-          <p>{t('home.streams_as_it_downloads_plays')}</p>
-          <span class="card-go">{t('home.the_full_list')} <Icon name="arrow-right-sm" /> </span>
-        </a>
+      <LinkCard href={l('/faq/')} icon="question-card" title={t('home.what_it_is_not')} body={t('home.not_a_media_service_messages')} go={t('home.questions_and_limits')} />
+    </Cards>
+  </Band>
 
-        <a class="card" href={l('/android-tv/')}>
-          <span class="card-icon" aria-hidden="true">
-            <Icon name="tv-card" />
-          </span>
-          <h3>{t('home.on_android_tv')}</h3>
-          <p>{t('home.a_ten_foot_layout_for')}</p>
-          <span class="card-go">{t('home.made_for_the_television')} <Icon name="arrow-right-sm" /> </span>
-        </a>
-
-        <a class="card" href={l('/faq/')}>
-          <span class="card-icon" aria-hidden="true">
-            <Icon name="question-card" />
-          </span>
-          <h3>{t('home.what_it_is_not')}</h3>
-          <p>{t('home.not_a_media_service_messages')}</p>
-          <span class="card-go">{t('home.questions_and_limits')} <Icon name="arrow-right-sm" /> </span>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <Icon name="wave-flip" />
-
-  <section class="band" id="start" aria-labelledby="start-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="start-h">{t('home.set_up_in_three_steps')}</h2>
-          <p class="section-sub">{t('home.you_do_it_once_then')}</p>
-        </div>
-      </div>
-
-      <div class="section-body" data-reveal>
-        <ol class="steps">
-          <li>
-            <h3>{t('home.get_the_file')}</h3>
-            <p>{t('home.get_the_file_all')}</p>
-            <p><a href={l('/download/')}>{t('home.go_to_the_download_page')}</a></p>
-          </li>
-          <li>
-            <h3>{t('home.install_it')}</h3>
-            <p>{t('home.install_it_each')}</p>
-            <p><a href={l('/install/')}>{t('home.read_the_install_steps')}</a></p>
-          </li>
-          <li>
-            <h3>{t('home.scan_the_qr_code')}</h3>
-            <p>{t('home.sign_in_with_telegram_s')}</p>
-            <p><a href={l('/faq/')}>{t('home.what_that_does_and_does')}</a></p>
-            <picture class="step-shot">
-              <source data-theme-src srcset="/screenshots/tv-sign-in-light.webp" media="(prefers-color-scheme: light)">
-              <img src="/screenshots/tv-sign-in.webp" alt={t('home.sign_in_qr_alt')} width="960" height="480" loading="lazy" decoding="async">
-            </picture>
-          </li>
-        </ol>
-        <p class="steps-cta"><a class="btn btn-filled" href={l('/download/')}>{t('common.download')}</a></p>
-      </div>
-    </div>
-  </section>
+    <Band wave id="start" title={t('home.set_up_in_three_steps')} sub={t('home.you_do_it_once_then')} body>
+    <Steps>
+      <Step title={t('home.get_the_file')}>
+        <p>{t('home.get_the_file_all')}</p>
+        <p><a href={l('/download/')}>{t('home.go_to_the_download_page')}</a></p>
+      </Step>
+      <Step title={t('home.install_it')}>
+        <p>{t('home.install_it_each')}</p>
+        <p><a href={l('/install/')}>{t('home.read_the_install_steps')}</a></p>
+      </Step>
+      <Step title={t('home.scan_the_qr_code')}>
+        <p>{t('home.sign_in_with_telegram_s')}</p>
+        <p><a href={l('/faq/')}>{t('home.what_that_does_and_does')}</a></p>
+        <Shot src="/screenshots/tv-sign-in.webp" light="/screenshots/tv-sign-in-light.webp" alt={t('home.sign_in_qr_alt')} width="960" height="480" frame="step-shot" />
+      </Step>
+    </Steps>
+    <p class="steps-cta"><a class="btn btn-filled" href={l('/download/')}>{t('common.download')}</a></p>
+  </Band>
 
   <Icon name="wave" />
 
@@ -325,37 +270,14 @@ const ld2 = {
     it can offer is that other people already gave it. So the star goes here, at full size, with
     the real figure next to it rather than a badge nobody can read.
   -->
-  <section class="band band-tonal" id="support" aria-labelledby="support-h">
-    <div class="wrap">
-      <div class="support" data-reveal>
-        <h2 id="support-h">{t('home.if_it_earned_its_place')}</h2>
-        <p>{t('home.a_star_takes_one_click')}</p>
-
-        <div class="support-actions">
-          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
-          <a class="btn btn-outline" href="https://t.me/tmplayerapp" rel="noopener"> <Icon name="telegram-btn" /> {t('home.telegram_channel')}</a>
-          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener"> <Icon name="bug-btn" /> {t('home.report_a_problem')}</a>
-        </div>
-
-        <p class="support-stats">
-          <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
-          <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
-          <span>{t('home.gpl_3_0_and_free')}</span><LangCount />
-        </p>
-
-        <!-- The coffee and sponsor links, the same block and words as on the download page, so a
-             reader who got something from this page has the offer where they finished reading. -->
-        <div class="support-more" id="sponsor">
-          <h3>{t('home.support_tmplayer')}</h3>
-          <p>{t('home.support_no_ads')}</p>
-          <div class="support-actions support-give">
-            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
-            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
-          </div>
-        </div>
-      </div>
+  <StarCard id="support" tonal title={t('home.if_it_earned_its_place')} lede={t('home.a_star_takes_one_click')}>
+    <div class="support-actions" slot="actions">
+      <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
+      <a class="btn btn-outline" href="https://t.me/tmplayerapp" rel="noopener"> <Icon name="telegram-btn" /> {t('home.telegram_channel')}</a>
+      <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener"> <Icon name="bug-btn" /> {t('home.report_a_problem')}</a>
     </div>
-  </section>
+    <LangCount slot="stats" />
+  </StarCard>
 
 </main>
 

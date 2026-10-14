@@ -8,12 +8,15 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
-import Section from '../../../components/download/Section.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
+import Band from '../../../components/Band.astro';
+import Shot from '../../../components/Shot.astro';
 import Platform from '../../../components/download/Platform.astro';
 import AbiRow from '../../../components/download/AbiRow.astro';
-import Panel from '../../../components/download/Panel.astro';
-import StarCard from '../../../components/download/StarCard.astro';
+import Panel from '../../../components/Panel.astro';
+import StarCard from '../../../components/StarCard.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -26,24 +29,6 @@ const l = (href: string) => link(lang, href);
 
 const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
 
-const ld0 = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "https://tmplayer.org/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Download",
-      "item": "https://tmplayer.org/download/"
-    }
-  ]
-};
 ---
 <Base page="download" title={t('download.download_tmplayer_for_android_tv')} description={t('download.download_tmplayer_free_the_apk')}>
   {/*
@@ -58,7 +43,7 @@ const ld0 = {
     <link rel="dns-prefetch" href="https://objects.githubusercontent.com">
   </Fragment>
   <Fragment slot="head">
-    <JsonLd data={ld0} />
+    <JsonLd data={breadcrumb(['Download', '/download/'])} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />
@@ -67,36 +52,31 @@ const ld0 = {
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><T k="download.download"><a href={l('/')} slot="a1">{t('download.download__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></p>
-      <h1>{t('common.download')} <em>TMPlayer</em></h1>
-      <p class="page-lede">{t('download.for_android_tv_phones_windows')}</p>
+  <PageHead lede={t('download.for_android_tv_phones_windows')}>
+    <Fragment slot="crumbs"><T k="download.download"><a href={l('/')} slot="a1">{t('download.download__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
+    <Fragment slot="title">{t('common.download')}{' '}<em>TMPlayer</em></Fragment>
+    <Fragment slot="actions">
       {/*
         The filled button is drawn by app.js once it knows which system this is, and only then:
         with scripting off there is no guess to make, and the platform list below does the job.
       */}
-      <div class="page-actions">
-        <a class="btn btn-filled" id="os-download" href="#platforms" hidden>
-          <Icon name="download-btn" />
-          <span id="os-download-label">{t('common.download')}</span>
-        </a>
-        <a class="btn btn-outline" href={l('/install/')}>{t('download.how_to_install_it')} <Icon name="arrow-right-sm" /></a>
-      </div>
-      <p class="os-note" id="os-note" role="status" hidden></p>
-      <nav class="platform-jump" aria-label={t('download.platforms')}>
-        <a href="#android">{t('download.android_phone')}</a>
-        <a href="#android-tv">Android TV</a>
-        <a href="#windows">Windows</a>
-        <a href="#macos" data-mac-jump hidden>macOS</a>
-        <a href="#linux">Linux</a>
-      </nav>
-    </div>
-  </section>
+      <a class="btn btn-filled" id="os-download" href="#platforms" hidden>
+        <Icon name="download-btn" />
+        <span id="os-download-label">{t('common.download')}</span>
+      </a>
+      <a class="btn btn-outline" href={l('/install/')}>{t('download.how_to_install_it')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+    <p class="os-note" id="os-note" role="status" hidden></p>
+    <nav class="platform-jump" aria-label={t('download.platforms')}>
+      <a href="#android">{t('download.android_phone')}</a>
+      <a href="#android-tv">Android TV</a>
+      <a href="#windows">Windows</a>
+      <a href="#macos" data-mac-jump hidden>macOS</a>
+      <a href="#linux">Linux</a>
+    </nav>
+  </PageHead>
 
-<Icon name="wave" />
-
-  <Section id="download" h="download-h" title={t('download.every_platform_one_release')} tonal>
+  <Band wave id="download" labelledby="download-h" title={t('download.every_platform_one_release')} tonal body>
     <T slot="sub" k="download.every_file_comes_from_one_github"><a href="https://about.signpath.io/" rel="noopener" slot="a1">{t('download.every_file_comes_from_one_github__a1')}</a><a href="/signing/" slot="a2">{t('download.every_file_comes_from_one_github__a2')}</a></T>
 
         {/*
@@ -127,7 +107,7 @@ const ld0 = {
             </AbiRow>
             <a slot="foot" href={l('/install/#android')}>{t('download.how_to_install_on_a')}</a>
             <Fragment slot="after">
-            <p class="platform-badges"><a class="store-badge" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener"><img src="/badges/obtainium.png" width="161" height="48" alt={t('download.add_to_obtainium')} loading="lazy" decoding="async"></a></p>
+            <p class="platform-badges"><a class="store-badge" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener"><Shot src="/badges/obtainium.png" width="161" height="48" alt={t('download.add_to_obtainium')} /></a></p>
             <p class="platform-note"><T k="download.kao_note"><a href="https://keepandroidopen.org/" target="_blank" rel="noopener" slot="a1">{t('download.kao_note__a1')}</a></T></p>
             </Fragment>
           </Platform>
@@ -199,26 +179,22 @@ const ld0 = {
           <ul class="previous-list" id="previous-list"></ul>
           <p class="muted small"><a href="https://github.com/dracu-lah/TMPlayer/releases" rel="noopener">{t('download.all_releases_on_github')}</a></p>
         </section>
-  </Section>
+  </Band>
 
-<Icon name="wave-flip" />
+  <Band wave labelledby="before-h" title={t('download.before_you_open_the_file')} sub={t('download.worth_knowing_about_any_app')}>
+    <div class="two-col" data-reveal>
+      <Panel kind="yes" title={t('download.what_you_are_getting')}>
+          <li><T k="download.on_a_tv_stick_box"><strong slot="strong1">{t('download.on_a_tv_stick_box__strong1')}</strong></T></li>
+          <li><T k="download.with_the_same_library_and"><strong slot="strong1">{t('download.with_the_same_library_and__strong1')}</strong></T></li>
+          <li><T k="download.every_release_links_the_source"><strong slot="strong1">{t('download.every_release_links_the_source__strong1')}</strong></T></li>
+      </Panel>
+      <Panel kind="no" title={t('download.what_it_will_not_do')}>
+          {['download.it_is_not_in_a', 'download.it_comes_with_no_media', 'download.no_store_updates_tmplayer_looks'].map((k) => <li>{t(k)}</li>)}
+      </Panel>
+    </div>
+  </Band>
 
-  <Section h="before-h" title={t('download.before_you_open_the_file')} sub={t('download.worth_knowing_about_any_app')} body={false}>
-      <div class="two-col" data-reveal>
-        <Panel tone="yes" icon="tick-panel" title={t('download.what_you_are_getting')} list="ticks">
-            <li><T k="download.on_a_tv_stick_box"><strong slot="strong1">{t('download.on_a_tv_stick_box__strong1')}</strong></T></li>
-            <li><T k="download.with_the_same_library_and"><strong slot="strong1">{t('download.with_the_same_library_and__strong1')}</strong></T></li>
-            <li><T k="download.every_release_links_the_source"><strong slot="strong1">{t('download.every_release_links_the_source__strong1')}</strong></T></li>
-        </Panel>
-        <Panel tone="no" icon="cross-panel" title={t('download.what_it_will_not_do')} list="crosses">
-            {['download.it_is_not_in_a', 'download.it_comes_with_no_media', 'download.no_store_updates_tmplayer_looks'].map((k) => <li>{t(k)}</li>)}
-        </Panel>
-      </div>
-  </Section>
-
-<Icon name="wave" />
-
-  <StarCard tonal lede={t('download.an_app_from_outside_the')} codes talk />
+  <StarCard wave tonal lede={t('download.an_app_from_outside_the')} codes talk />
 
 </main>
 

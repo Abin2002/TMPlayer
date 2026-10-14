@@ -4,26 +4,19 @@
 import Base from '../../layouts/Base.astro';
 import Icon from '../../components/Icon.astro';
 import JsonLd from '../../components/JsonLd.astro';
+import { breadcrumb } from '../../components/breadcrumb';
 import HeaderPlain from '../../components/plain/HeaderPlain.astro';
 import FooterPlain from '../../components/plain/FooterPlain.astro';
-import QrCode from '../../components/support/QrCode.astro';
+import QrCode from '../../components/QrCode.astro';
 import ShareLinks from '../../components/support/ShareLinks.astro';
 import { ENGLISH } from '../../i18n/langs';
 
 Astro.locals.lang = ENGLISH;
 
-const breadcrumb = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://tmplayer.org/" },
-    { "@type": "ListItem", "position": 2, "name": "Support", "item": "https://tmplayer.org/support/" }
-  ]
-};
 ---
 <Base path="/support/" title="Support TMPlayer: sponsor, star or share it" description="Ways to support TMPlayer: sponsor it, buy a coffee, star it on GitHub or tell a friend. All voluntary, and nothing is locked behind it.">
   <Fragment slot="head">
-    <JsonLd data={breadcrumb} />
+    <JsonLd data={breadcrumb(['Support', '/support/'])} />
   </Fragment>
 
 <HeaderPlain />

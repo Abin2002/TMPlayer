@@ -2,6 +2,8 @@
 // guide as an Article, and for a guide with numbered steps a HowTo whose steps link to their
 // anchors on the page. JsonLd translates the text fields and moves the URLs into the language.
 
+import { breadcrumb } from '../breadcrumb';
+
 const ORIGIN = 'https://tmplayer.org';
 
 export interface GuideStep {
@@ -27,14 +29,7 @@ export interface Guide {
 export function guideLd(g: Guide): object[] {
   const url = ORIGIN + g.path;
   const blocks: object[] = [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${ORIGIN}/` },
-        { '@type': 'ListItem', position: 2, name: g.crumb, item: url },
-      ],
-    },
+    breadcrumb([g.crumb, g.path]),
     {
       '@context': 'https://schema.org',
       '@type': 'Article',

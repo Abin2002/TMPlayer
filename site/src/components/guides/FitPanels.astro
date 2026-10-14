@@ -1,22 +1,16 @@
 ---
 // What a reader needs (ticks) beside what they do not (crosses).
-import Icon from '../Icon.astro';
+import Panel from '../Panel.astro';
 
-interface Panel { title: string; items: string[] }
-interface Props { yes: Panel; no: Panel }
+interface Side { title: string; items: string[] }
+interface Props { yes: Side; no: Side }
 const { yes, no } = Astro.props;
 ---
 <div class="two-col" data-reveal>
-  <div class="panel">
-    <h3><span class="panel-icon icon-yes" aria-hidden="true"><Icon name="tick-panel" /></span><span>{yes.title}</span></h3>
-    <ul class="ticks">
-      {yes.items.map((item) => <li>{item}</li>)}
-    </ul>
-  </div>
-  <div class="panel">
-    <h3><span class="panel-icon icon-no" aria-hidden="true"><Icon name="cross-panel" /></span><span>{no.title}</span></h3>
-    <ul class="crosses">
-      {no.items.map((item) => <li>{item}</li>)}
-    </ul>
-  </div>
+  <Panel kind="yes" title={yes.title} compact>
+    {yes.items.map((item) => <li>{item}</li>)}
+  </Panel>
+  <Panel kind="no" title={no.title} compact>
+    {no.items.map((item) => <li>{item}</li>)}
+  </Panel>
 </div>

@@ -1,9 +1,0 @@
----
-// A prose panel; `wide` spans the whole band.
-interface Props { title: string; wide?: boolean }
-const { title, wide = false } = Astro.props;
----
-<div class={wide ? 'panel panel-prose panel-wide' : 'panel panel-prose'}>
-  <h3>{title}</h3>
-  <slot />
-</div>

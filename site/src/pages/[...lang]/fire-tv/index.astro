@@ -8,14 +8,18 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
-import Band from '../../../components/fire-tv/Band.astro';
-import FitPanel from '../../../components/fire-tv/FitPanel.astro';
-import Step from '../../../components/fire-tv/Step.astro';
-import Format from '../../../components/fire-tv/Format.astro';
-import Card from '../../../components/fire-tv/Card.astro';
-import FaqItem from '../../../components/fire-tv/FaqItem.astro';
-import SponsorOffer from '../../../components/fire-tv/SponsorOffer.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
+import Band from '../../../components/Band.astro';
+import Cards from '../../../components/Cards.astro';
+import Steps from '../../../components/Steps.astro';
+import Panel from '../../../components/Panel.astro';
+import Step from '../../../components/Step.astro';
+import Way from '../../../components/Way.astro';
+import Card from '../../../components/Card.astro';
+import FaqItem from '../../../components/FaqItem.astro';
+import SponsorOffer from '../../../components/SponsorOffer.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -26,14 +30,6 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const breadcrumbs = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://tmplayer.org/" },
-    { "@type": "ListItem", "position": 2, "name": "Fire TV", "item": "https://tmplayer.org/fire-tv/" }
-  ]
-};
 
 // The install as a HowTo, in English for every language. Each step's url is the anchor of the
 // matching <Step> below, so the ids fire-1 to fire-5 stay as they are.
@@ -86,7 +82,7 @@ const howTo = {
 ---
 <Base page="fire_tv" title={t('fire_tv.how_to_install_tmplayer_on')} description={t('fire_tv.install_the_tmplayer_telegram_video')}>
   <Fragment slot="head">
-    <JsonLd data={breadcrumbs} />
+    <JsonLd data={breadcrumb(['Fire TV', '/fire-tv/'])} />
     <JsonLd data={howTo} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
@@ -96,45 +92,38 @@ const howTo = {
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span>Fire TV</p>
-      <h1><T k="fire_tv.install_tmplayer"><em slot="em1">{t('fire_tv.install_tmplayer__em1')}</em></T></h1>
-      <p class="page-lede">{t('fire_tv.fire_tv_sticks_the_fire')}</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href="#steps"> <Icon name="download-btn" /> {t('fire_tv.show_me_the_steps')}</a>
-        <a class="btn btn-outline" href={l('/install/')}>{t('fire_tv.other_devices')} <Icon name="arrow-right-sm" /></a>
-      </div>
-      <nav class="platform-jump" aria-label={t('fire_tv.on_this_page')}>
-        <a href="#fit">{t('fire_tv.will_it_run')}</a>
-        <a href="#steps">{t('fire_tv.five_steps')}</a>
-        <a href="#other-ways">{t('fire_tv.with_a_computer_or_a')}</a>
-        <a href="#remote">{t('fire_tv.the_remote_and_updates')}</a>
-      </nav>
-    </div>
-  </section>
+  <PageHead lede={t('fire_tv.fire_tv_sticks_the_fire')}>
+    <Fragment slot="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span>Fire TV</Fragment>
+    <Fragment slot="title"><T k="fire_tv.install_tmplayer"><em slot="em1">{t('fire_tv.install_tmplayer__em1')}</em></T></Fragment>
+    <Fragment slot="actions">
+      <a class="btn btn-filled" href="#steps"> <Icon name="download-btn" /> {t('fire_tv.show_me_the_steps')}</a>
+      <a class="btn btn-outline" href={l('/install/')}>{t('fire_tv.other_devices')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+    <nav class="platform-jump" aria-label={t('fire_tv.on_this_page')}>
+      <a href="#fit">{t('fire_tv.will_it_run')}</a>
+      <a href="#steps">{t('fire_tv.five_steps')}</a>
+      <a href="#other-ways">{t('fire_tv.with_a_computer_or_a')}</a>
+      <a href="#remote">{t('fire_tv.the_remote_and_updates')}</a>
+    </nav>
+  </PageHead>
 
-  <Icon name="wave" />
-
-  <Band tonal id="fit" headId="fit-h" title={t('android_tv.will_it_run_on_yours')} sub={t('fire_tv.tmplayer_needs_android_8_0')}>
+    <Band wave tonal id="fit" labelledby="fit-h" title={t('android_tv.will_it_run_on_yours')} sub={t('fire_tv.tmplayer_needs_android_8_0')}>
     <div class="two-col" data-reveal>
-      <FitPanel kind="yes" title={t('android_tv.yes')}>
+      <Panel kind="yes" title={t('android_tv.yes')}>
         <li>{t('fire_tv.fire_tv_stick_stick_4k')}</li>
         <li>{t('fire_tv.the_one_universal_apk_the')}</li>
         <li>{t('fire_tv.the_tv_layout_the_remote')}</li>
-      </FitPanel>
-      <FitPanel kind="no" title={t('android_tv.no')}>
+      </Panel>
+      <Panel kind="no" title={t('android_tv.no')}>
         <li>{t('fire_tv.fire_os_6_and_older')}</li>
         <li>{t('fire_tv.fire_tv_models_that_run')}</li>
-      </FitPanel>
+      </Panel>
     </div>
   </Band>
 
-  <Icon name="wave-flip" />
-
-  <Band id="steps" headId="steps-h" title={t('fire_tv.five_steps_with_the_remote')} sub={t('fire_tv.no_computer_needed_amazon_s')}>
+    <Band wave id="steps" labelledby="steps-h" title={t('fire_tv.five_steps_with_the_remote')} sub={t('fire_tv.no_computer_needed_amazon_s')}>
     <div class="section-body" data-reveal>
-      <ol class="steps">
+      <Steps>
         <Step id="fire-1" title={t('fire_tv.turn_on_developer_options')}>
           <p><T k="fire_tv.open_and_press_ok_on"><em slot="em1">{t('fire_tv.open_and_press_ok_on__em1')}</em><em slot="em2">{t('fire_tv.open_and_press_ok_on__em2')}</em><em slot="em3">{t('fire_tv.open_and_press_ok_on__em3')}</em><em slot="em4">{t('fire_tv.open_and_press_ok_on__em4')}</em></T></p>
           <p><T k="fire_tv.if_is_already_listed_under"><em slot="em1">{t('fire_tv.if_is_already_listed_under__em1')}</em><em slot="em2">{t('fire_tv.if_is_already_listed_under__em2')}</em></T></p>
@@ -156,41 +145,35 @@ const howTo = {
           <p><T k="fire_tv.tmplayer_lands_under_the_icon"><em slot="em1">{t('fire_tv.tmplayer_lands_under_the_icon__em1')}</em><em slot="em2">{t('fire_tv.tmplayer_lands_under_the_icon__em2')}</em></T></p>
           <p><T k="fire_tv.open_it_and_scan_the"><em slot="em1">{t('fire_tv.open_it_and_scan_the__em1')}</em><em slot="em2">{t('fire_tv.open_it_and_scan_the__em2')}</em><em slot="em3">{t('fire_tv.open_it_and_scan_the__em3')}</em></T></p>
         </Step>
-      </ol>
+      </Steps>
     </div>
   </Band>
 
-  <Icon name="wave" />
-
-  <Band tonal id="other-ways" headId="other-h" title={t('fire_tv.or_with_a_computer_or')} sub={t('fire_tv.both_still_need_developer_options')}>
+    <Band wave tonal id="other-ways" labelledby="other-h" title={t('fire_tv.or_with_a_computer_or')} sub={t('fire_tv.both_still_need_developer_options')}>
     <div class="section-body" data-reveal>
       <div class="formats">
-        <Format title={t('fire_tv.adb_from_a_computer')}>
+        <Way title={t('fire_tv.adb_from_a_computer')}>
           <p><T k="fire_tv.turn_on_in_and_find"><em slot="em1">{t('fire_tv.turn_on_in_and_find__em1')}</em><em slot="em2">{t('fire_tv.turn_on_in_and_find__em2')}</em><em slot="em3">{t('fire_tv.turn_on_in_and_find__em3')}</em><em slot="em4">{t('fire_tv.turn_on_in_and_find__em4')}</em><em slot="em5">{t('fire_tv.turn_on_in_and_find__em5')}</em><em slot="em6">{t('fire_tv.turn_on_in_and_find__em6')}</em><a href={l('/download/#android-tv')} slot="a1">{t('fire_tv.turn_on_in_and_find__a1')}</a></T></p>
           <pre class="code"><code>adb connect &lt;fire-tv-ip&gt;:5555
 adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
           <p>{t('fire_tv.accept_the_debugging_prompt_that')}</p>
-        </Format>
-        <Format title={t('fire_tv.send_files_to_tv')}>
+        </Way>
+        <Way title={t('fire_tv.send_files_to_tv')}>
           <p><T k="fire_tv.install_on_your_phone_and"><a href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" rel="noopener" slot="a1">{t('fire_tv.install_on_your_phone_and__a1')}</a><em slot="em1">{t('fire_tv.install_on_your_phone_and__em1')}</em></T></p>
-        </Format>
+        </Way>
       </div>
     </div>
   </Band>
 
-  <Icon name="wave-flip" />
-
-  <Band id="remote" headId="remote-h" title={t('fire_tv.the_remote_and_keeping_it')} sub={t('fire_tv.everything_works_from_the_fire')}>
-    <div class="card-grid card-grid-3" data-reveal>
+    <Band wave id="remote" labelledby="remote-h" title={t('fire_tv.the_remote_and_keeping_it')} sub={t('fire_tv.everything_works_from_the_fire')}>
+    <Cards>
       <Card title={t('fire_tv.the_d_pad_does_it')}><T k="fire_tv.arrows_to_move_ok_to"><a href={l('/android-tv/')} slot="a1">{t('fire_tv.arrows_to_move_ok_to__a1')}</a></T></Card>
       <Card title={t('fire_tv.voice_search_where_fire_os')}>{t('fire_tv.tmplayer_s_own_search_can')}</Card>
       <Card title={t('fire_tv.updates_come_to_you')}>{t('fire_tv.tmplayer_checks_for_new_versions')}</Card>
-    </div>
+    </Cards>
   </Band>
 
-  <Icon name="wave" />
-
-  <Band tonal headId="trouble-h" title={t('install.if_it_goes_wrong')}>
+    <Band wave tonal labelledby="trouble-h" title={t('install.if_it_goes_wrong')}>
     <div class="faq" data-reveal>
       <FaqItem q={t('fire_tv.there_is_no_install_unknown')}>{t('fire_tv.developer_options_is_still_hidden')}</FaqItem>
       <FaqItem q={t('fire_tv.it_says_there_was_a')}>{t('fire_tv.usually_the_fire_os_version')}</FaqItem>
@@ -199,9 +182,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
 
     <p class="muted small section-note" data-reveal><T k="fire_tv.still_stuck_with_your_fire"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('fire_tv.still_stuck_with_your_fire__a1')}</a></T></p>
 
-    <div class="support support-slim" data-reveal>
-      <SponsorOffer solo />
-    </div>
+    <SponsorOffer slim />
   </Band>
 
 </main>

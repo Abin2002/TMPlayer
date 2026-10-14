@@ -9,14 +9,17 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
-import SectionHead from '../../../components/features/SectionHead.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
+import Band from '../../../components/Band.astro';
+import Cards from '../../../components/Cards.astro';
 import TickPanel from '../../../components/features/TickPanel.astro';
 import GalleryShot from '../../../components/features/GalleryShot.astro';
 import TourShot from '../../../components/features/TourShot.astro';
-import StarSupport from '../../../components/features/StarSupport.astro';
-import NextCard from '../../../components/features/NextCard.astro';
-import type { Shot } from '../../../components/features/GalleryShot.astro';
+import StarCard from '../../../components/StarCard.astro';
+import LinkCard from '../../../components/LinkCard.astro';
+import type { Screen } from '../../../components/features/GalleryShot.astro';
 import type { Point } from '../../../components/features/TourShot.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
@@ -28,24 +31,6 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const ld0 = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "https://tmplayer.org/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Features",
-      "item": "https://tmplayer.org/features/"
-    }
-  ]
-};
 
 // What it does: two panels each, for the apps and for the desktop.
 const watching = [
@@ -86,10 +71,10 @@ const shots = {
   // The launcher's row only, cropped by scripts/annotate-shot.py (tv-home-screen.json). The
   // launcher has no light theme, so one picture serves both.
   tvLauncher: { device: 'frame', src: '/screenshots/tv-home-screen.webp', alt: 'features.tv_home_screen_alt', width: 1440, height: 420 },
-} satisfies Record<string, Shot>;
+} satisfies Record<string, Screen>;
 
 // What it looks like: each shot with its caption key.
-const gallery: [Shot, string][] = [
+const gallery: [Screen, string][] = [
   [shots.phoneChats, 'features.every_chat_and_channel_you'],
   [shots.phoneGrid, 'features.posters_with_the_year_size'],
   [shots.tvChats, 'features.a_rail_for_the_remote'],
@@ -103,7 +88,7 @@ const gallery: [Shot, string][] = [
 // marks stay sharp and the notes stay translatable. Each mark's --x and --y are percentages of
 // the screenshot itself, measured on the 1920 wide file, so they hold at any size. Point N is
 // mark N and line N of the list.
-const tour: { id: string; shot: Shot; title: string; lede: string; points: Point[] }[] = [
+const tour: { id: string; shot: Screen; title: string; lede: string; points: Point[] }[] = [
   {
     id: 'tour-player', shot: shots.desktopPlayer,
     title: 'features.the_player_watching_while_it', lede: 'features.a_video_starts_while_it',
@@ -162,7 +147,7 @@ const next = [
 ---
 <Base page="features" title={t('features.tmplayer_features_stream_telegram_videos')} description={t('features.stream_telegram_videos_while_they')}>
   <Fragment slot="head">
-    <JsonLd data={ld0} />
+    <JsonLd data={breadcrumb(['Features', '/features/'])} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />
@@ -171,123 +156,89 @@ const next = [
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><T k="features.features"><a href={l('/')} slot="a1">{t('features.features__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></p>
-      <h1><T k="features.what_a_telegram_video_player"><em slot="em1">{t('features.what_a_telegram_video_player__em1')}</em></T></h1>
-      <p class="page-lede">{t('features.playing_a_file_is_the')}</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href={l('/download/')}> <Icon name="download-btn" /> {t('common.download')}</a>
-        <a class="btn btn-outline" href={l('/install/')}>{t('features.how_to_install')} <Icon name="arrow-right-sm" /></a>
-      </div>
-      <nav class="platform-jump" aria-label={t('features.on_this_page')}>
-        <a href="#does">{t('home.what_it_does')}</a>
-        <a href="#screens">{t('features.what_it_looks_like')}</a>
-        <a href="#tour">{t('features.a_closer_look')}</a>
-        <a href="#desktop">{t('features.jump_windows_and_linux')}</a>
-        <a href="#keys">{t('features.jump_keyboard_shortcuts')}</a>
-      </nav>
+  <PageHead lede={t('features.playing_a_file_is_the')}>
+    <Fragment slot="crumbs"><T k="features.features"><a href={l('/')} slot="a1">{t('features.features__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
+    <Fragment slot="title"><T k="features.what_a_telegram_video_player"><em slot="em1">{t('features.what_a_telegram_video_player__em1')}</em></T></Fragment>
+    <Fragment slot="actions">
+      <a class="btn btn-filled" href={l('/download/')}> <Icon name="download-btn" /> {t('common.download')}</a>
+      <a class="btn btn-outline" href={l('/install/')}>{t('features.how_to_install')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+    <nav class="platform-jump" aria-label={t('features.on_this_page')}>
+      <a href="#does">{t('home.what_it_does')}</a>
+      <a href="#screens">{t('features.what_it_looks_like')}</a>
+      <a href="#tour">{t('features.a_closer_look')}</a>
+      <a href="#desktop">{t('features.jump_windows_and_linux')}</a>
+      <a href="#keys">{t('features.jump_keyboard_shortcuts')}</a>
+    </nav>
+  </PageHead>
+
+  <Band wave id="does" title={t('home.what_it_does')} sub={t('features.built_for_a_remote_a')} tonal>
+    <div class="two-col" data-reveal>
+      <TickPanel icon="play-card" tone="play" title="features.watching" items={watching} />
+      <TickPanel icon="search-panel" tone="browse" title="features.browsing" items={browsing} />
     </div>
-  </section>
+  </Band>
 
-<Icon name="wave" />
-
-  <section class="band band-tonal" id="does" aria-labelledby="does-h">
-    <div class="wrap">
-      <SectionHead id="does-h" title="home.what_it_does" sub="features.built_for_a_remote_a" />
-      <div class="two-col" data-reveal>
-        <TickPanel icon="play-card" tone="play" title="features.watching" items={watching} />
-        <TickPanel icon="search-panel" tone="browse" title="features.browsing" items={browsing} />
-      </div>
+  <Band wave id="screens" labelledby="shots-h" title={t('features.what_it_looks_like')} sub={t('features.four_screens_in_the_order')}>
+    <p slot="head" class="section-sub"><T k="features.demo_artwork_photos_from_unsplash"><a href="https://github.com/dracu-lah/TMPlayer/blob/main/docs/promo-art/CREDITS.md" rel="noopener" slot="a1">{t('features.demo_artwork_photos_from_unsplash__a1')}</a></T></p>
+    <div class="shots">
+      {gallery.map(([shot, caption]) => <GalleryShot shot={shot} caption={caption} />)}
     </div>
-  </section>
+  </Band>
 
-<Icon name="wave-flip" />
-
-  <section class="band" id="screens" aria-labelledby="shots-h">
-    <div class="wrap">
-      <SectionHead id="shots-h" title="features.what_it_looks_like" sub="features.four_screens_in_the_order">
-        <p class="section-sub"><T k="features.demo_artwork_photos_from_unsplash"><a href="https://github.com/dracu-lah/TMPlayer/blob/main/docs/promo-art/CREDITS.md" rel="noopener" slot="a1">{t('features.demo_artwork_photos_from_unsplash__a1')}</a></T></p>
-      </SectionHead>
-      <div class="shots">
-        {gallery.map(([shot, caption]) => <GalleryShot shot={shot} caption={caption} />)}
-      </div>
+  <Band id="tour" title={t('features.a_closer_look')} sub={t('features.five_screens_with_their_parts')}>
+    <div class="shots tour">
+      {tour.map((s) => <TourShot {...s} />)}
     </div>
-  </section>
+  </Band>
 
-  <section class="band" id="tour" aria-labelledby="tour-h">
-    <div class="wrap">
-      <SectionHead id="tour-h" title="features.a_closer_look" sub="features.five_screens_with_their_parts" />
-      <div class="shots tour">
-        {tour.map((s) => <TourShot {...s} />)}
-      </div>
+  <Band wave id="desktop" title={t('features.on_windows_and_linux')} sub={t('features.the_same_account_library_and')} tonal>
+    <div class="two-col" data-reveal>
+      <TickPanel icon="monitor-panel" tone="browse" title="features.the_window" items={desktopWindow} />
+      <TickPanel icon="play-card" tone="play" title="features.the_player" items={desktopPlayer} />
     </div>
-  </section>
+  </Band>
 
-<Icon name="wave" />
-
-  <section class="band band-tonal" id="desktop" aria-labelledby="desktop-h">
-    <div class="wrap">
-      <SectionHead id="desktop-h" title="features.on_windows_and_linux" sub="features.the_same_account_library_and" />
-      <div class="two-col" data-reveal>
-        <TickPanel icon="monitor-panel" tone="browse" title="features.the_window" items={desktopWindow} />
-        <TickPanel icon="play-card" tone="play" title="features.the_player" items={desktopPlayer} />
-      </div>
+  <Band wave id="keys" title={t('features.desktop_keyboard_shortcuts')} sub={t('features.youtube_s_keys_plus_the')}>
+    <div class="keys-wrap" data-reveal>
+      <table class="keys">
+        <thead>
+          <tr><th scope="col">{t('features.to_do_this')}</th><th scope="col">{t('features.press')}</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">{t('features.play_or_pause')}</th><td><kbd>Space</kbd> <kbd>K</kbd>{t('features.or_click_the_picture')}</td></tr>
+          <tr><th scope="row">{t('features.back_or_forward_5_seconds')}</th><td><kbd>&larr;</kbd> <kbd>&rarr;</kbd></td></tr>
+          <tr><th scope="row">{t('features.back_or_forward_10_seconds')}</th><td><kbd>J</kbd> <kbd>L</kbd><T k="features.or_with_the_wheel"><kbd slot="kbd3">Shift</kbd></T></td></tr>
+          <tr><th scope="row">{t('features.back_or_forward_a_minute')}</th><td><kbd>Shift</kbd>+<kbd>&larr;</kbd> <kbd>Shift</kbd>+<kbd>&rarr;</kbd></td></tr>
+          <tr><th scope="row">{t('features.back_or_forward_5_minutes')}</th><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>&larr;</kbd> <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>&rarr;</kbd></td></tr>
+          <tr><th scope="row">{t('features.one_frame_back_or_forward')}</th><td><kbd>,</kbd> <kbd>.</kbd></td></tr>
+          <tr><th scope="row">{t('features.jump_to_a_tenth_of')}</th><td><kbd>0</kbd> <T k="features.to"><kbd slot="kbd2">9</kbd></T> <kbd>Home</kbd> <kbd>End</kbd></td></tr>
+          <tr><th scope="row">{t('features.volume')}</th><td><kbd>&uarr;</kbd> <kbd>&darr;</kbd>{t('features.or_the_wheel')}</td></tr>
+          <tr><th scope="row">{t('features.mute')}</th><td><kbd>M</kbd></td></tr>
+          <tr><th scope="row">{t('features.fullscreen')}</th><td><kbd>F</kbd> <kbd>F11</kbd> <kbd>Alt</kbd><T k="features.or_double_click_leaves_it"><kbd slot="kbd4">Enter</kbd><kbd slot="kbd5">Esc</kbd></T></td></tr>
+          <tr><th scope="row">{t('features.next_or_previous_subtitles_on')}</th><td><kbd>S</kbd> <kbd>Shift</kbd>+<kbd>S</kbd> <kbd>C</kbd></td></tr>
+          <tr><th scope="row">{t('features.next_or_previous_audio_track')}</th><td><kbd>A</kbd> <kbd>Shift</kbd>+<kbd>A</kbd></td></tr>
+          <tr><th scope="row">{t('features.faster_slower_normal_speed')}</th><td><kbd>]</kbd> <kbd>[</kbd> <kbd>Backspace</kbd></td></tr>
+          <tr><th scope="row">{t('features.next_or_previous_episode')}</th><td><kbd>Shift</kbd>+<kbd>N</kbd> <kbd>Shift</kbd>+<kbd>P</kbd>, <kbd>Page Down</kbd> <kbd>Page Up</kbd></td></tr>
+          <tr><th scope="row">{t('features.always_on_top')}</th><td><kbd>Ctrl</kbd>+<kbd>T</kbd></td></tr>
+          <tr><th scope="row">{t('features.mini_player_in_the_corner')}</th><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td></tr>
+          <tr><th scope="row">{t('features.every_shortcut')}</th><td><kbd>?</kbd></td></tr>
+          <tr><th scope="row">{t('features.playback_details')}</th><td><kbd>I</kbd></td></tr>
+          <tr><th scope="row">{t('features.back_to_the_grid')}</th><td><kbd>Esc</kbd> <kbd>Backspace</kbd>{t('features.or_the_mouse_s_back')}</td></tr>
+          <tr><th scope="row">{t('features.quit')}</th><td><kbd>Ctrl</kbd>+<kbd>Q</kbd></td></tr>
+        </tbody>
+      </table>
     </div>
-  </section>
+    <p class="muted small section-note" data-reveal><T k="features.right_click_the_picture_for"><kbd slot="kbd1">/</kbd><kbd slot="kbd2">Ctrl</kbd><kbd slot="kbd3">F</kbd><kbd slot="kbd4">Ctrl</kbd><kbd slot="kbd5">,</kbd></T></p>
+  </Band>
 
-<Icon name="wave-flip" />
+  <StarCard wave tonal lede={t('features.every_feature_here_started_as')} />
 
-  <section class="band" id="keys" aria-labelledby="keys-h">
-    <div class="wrap">
-      <SectionHead id="keys-h" title="features.desktop_keyboard_shortcuts" sub="features.youtube_s_keys_plus_the" />
-      <div class="keys-wrap" data-reveal>
-        <table class="keys">
-          <thead>
-            <tr><th scope="col">{t('features.to_do_this')}</th><th scope="col">{t('features.press')}</th></tr>
-          </thead>
-          <tbody>
-            <tr><th scope="row">{t('features.play_or_pause')}</th><td><kbd>Space</kbd> <kbd>K</kbd>{t('features.or_click_the_picture')}</td></tr>
-            <tr><th scope="row">{t('features.back_or_forward_5_seconds')}</th><td><kbd>&larr;</kbd> <kbd>&rarr;</kbd></td></tr>
-            <tr><th scope="row">{t('features.back_or_forward_10_seconds')}</th><td><kbd>J</kbd> <kbd>L</kbd><T k="features.or_with_the_wheel"><kbd slot="kbd3">Shift</kbd></T></td></tr>
-            <tr><th scope="row">{t('features.back_or_forward_a_minute')}</th><td><kbd>Shift</kbd>+<kbd>&larr;</kbd> <kbd>Shift</kbd>+<kbd>&rarr;</kbd></td></tr>
-            <tr><th scope="row">{t('features.back_or_forward_5_minutes')}</th><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>&larr;</kbd> <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>&rarr;</kbd></td></tr>
-            <tr><th scope="row">{t('features.one_frame_back_or_forward')}</th><td><kbd>,</kbd> <kbd>.</kbd></td></tr>
-            <tr><th scope="row">{t('features.jump_to_a_tenth_of')}</th><td><kbd>0</kbd> <T k="features.to"><kbd slot="kbd2">9</kbd></T> <kbd>Home</kbd> <kbd>End</kbd></td></tr>
-            <tr><th scope="row">{t('features.volume')}</th><td><kbd>&uarr;</kbd> <kbd>&darr;</kbd>{t('features.or_the_wheel')}</td></tr>
-            <tr><th scope="row">{t('features.mute')}</th><td><kbd>M</kbd></td></tr>
-            <tr><th scope="row">{t('features.fullscreen')}</th><td><kbd>F</kbd> <kbd>F11</kbd> <kbd>Alt</kbd><T k="features.or_double_click_leaves_it"><kbd slot="kbd4">Enter</kbd><kbd slot="kbd5">Esc</kbd></T></td></tr>
-            <tr><th scope="row">{t('features.next_or_previous_subtitles_on')}</th><td><kbd>S</kbd> <kbd>Shift</kbd>+<kbd>S</kbd> <kbd>C</kbd></td></tr>
-            <tr><th scope="row">{t('features.next_or_previous_audio_track')}</th><td><kbd>A</kbd> <kbd>Shift</kbd>+<kbd>A</kbd></td></tr>
-            <tr><th scope="row">{t('features.faster_slower_normal_speed')}</th><td><kbd>]</kbd> <kbd>[</kbd> <kbd>Backspace</kbd></td></tr>
-            <tr><th scope="row">{t('features.next_or_previous_episode')}</th><td><kbd>Shift</kbd>+<kbd>N</kbd> <kbd>Shift</kbd>+<kbd>P</kbd>, <kbd>Page Down</kbd> <kbd>Page Up</kbd></td></tr>
-            <tr><th scope="row">{t('features.always_on_top')}</th><td><kbd>Ctrl</kbd>+<kbd>T</kbd></td></tr>
-            <tr><th scope="row">{t('features.mini_player_in_the_corner')}</th><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td></tr>
-            <tr><th scope="row">{t('features.every_shortcut')}</th><td><kbd>?</kbd></td></tr>
-            <tr><th scope="row">{t('features.playback_details')}</th><td><kbd>I</kbd></td></tr>
-            <tr><th scope="row">{t('features.back_to_the_grid')}</th><td><kbd>Esc</kbd> <kbd>Backspace</kbd>{t('features.or_the_mouse_s_back')}</td></tr>
-            <tr><th scope="row">{t('features.quit')}</th><td><kbd>Ctrl</kbd>+<kbd>Q</kbd></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="muted small section-note" data-reveal><T k="features.right_click_the_picture_for"><kbd slot="kbd1">/</kbd><kbd slot="kbd2">Ctrl</kbd><kbd slot="kbd3">F</kbd><kbd slot="kbd4">Ctrl</kbd><kbd slot="kbd5">,</kbd></T></p>
-    </div>
-  </section>
-
-<Icon name="wave" />
-
-  <StarSupport title="features.star_it_if_it_helped" body="features.every_feature_here_started_as" />
-
-<Icon name="wave-flip" />
-
-  <section class="band" aria-labelledby="next-h">
-    <div class="wrap">
-      <SectionHead id="next-h" title="features.where_to_next" />
-      <div class="card-grid card-grid-3" data-reveal>
-        {next.map((c) => <NextCard {...c} />)}
-      </div>
-    </div>
-  </section>
+  <Band wave labelledby="next-h" title={t('features.where_to_next')}>
+    <Cards>
+      {next.map((c) => <LinkCard href={l(c.href)} title={t(c.title)} body={t(c.body)} go={t(c.go)} />)}
+    </Cards>
+  </Band>
 
 </main>
 

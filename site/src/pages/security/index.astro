@@ -6,67 +6,67 @@ import Base from '../../layouts/Base.astro';
 import BgArt from '../../components/BgArt.astro';
 import ToTop from '../../components/ToTop.astro';
 import Icon from '../../components/Icon.astro';
+import PageHead from '../../components/PageHead.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import HeaderPlain from '../../components/plain/HeaderPlain.astro';
 import FooterPlain from '../../components/plain/FooterPlain.astro';
-import { breadcrumb } from '../../components/plain/breadcrumb';
-import Band from '../../components/security/Band.astro';
-import Card from '../../components/security/Card.astro';
-import Step from '../../components/security/Step.astro';
-import Panel from '../../components/security/Panel.astro';
+import { breadcrumb } from '../../components/breadcrumb';
+import Band from '../../components/Band.astro';
+import Cards from '../../components/Cards.astro';
+import Steps from '../../components/Steps.astro';
+import Card from '../../components/Card.astro';
+import Step from '../../components/Step.astro';
+import Panel from '../../components/Panel.astro';
 import Command from '../../components/security/Command.astro';
 import { ENGLISH } from '../../i18n/langs';
 
 Astro.locals.lang = ENGLISH;
 ---
 <Base path="/security/" title="Is TMPlayer safe? Open source, built in public, checkable" description="TMPlayer is open source under GPL-3.0, built by GitHub Actions from the tagged source, with a SHA-256 for every file. How to check a download, and how to report a problem.">
-  <JsonLd slot="head" data={breadcrumb('Security', '/security/')} />
+  <JsonLd slot="head" data={breadcrumb(['Security', '/security/'])} />
   {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
   <BgArt />
   <HeaderPlain variant="security" />
 
   <main id="main">
-    <section class="page-head">
-      <div class="wrap page-head-wrap">
-        <p class="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span>Security</p>
-        <h1>Is TMPlayer <em>safe?</em></h1>
-        <p class="page-lede">Every line of it is public, every release is built by GitHub from that public source, and you can check the file you downloaded yourself. Here is how.</p>
-        <div class="page-actions">
-          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"><Icon name="code-btn" /> Read the source</a>
-          <a class="btn btn-outline" href="#report">Report a problem <Icon name="arrow-right-sm" /></a>
-        </div>
-        <nav class="platform-jump" aria-label="On this page">
-          <a href="#account">Your account</a>
-          <a href="#builds">How a release is made</a>
-          <a href="#verify">Check the file</a>
-          <a href="#warnings">Warnings you may see</a>
-          <a href="#report">Reporting</a>
-        </nav>
-      </div>
-    </section>
+    <PageHead lede="Every line of it is public, every release is built by GitHub from that public source, and you can check the file you downloaded yourself. Here is how.">
+      <Fragment slot="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span>Security</Fragment>
+      <Fragment slot="title">Is TMPlayer <em>safe?</em></Fragment>
+      <Fragment slot="actions">
+        <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"><Icon name="code-btn" /> Read the source</a>
+        <a class="btn btn-outline" href="#report">Report a problem <Icon name="arrow-right-sm" /></a>
+      </Fragment>
+      <nav class="platform-jump" aria-label="On this page">
+        <a href="#account">Your account</a>
+        <a href="#builds">How a release is made</a>
+        <a href="#verify">Check the file</a>
+        <a href="#warnings">Warnings you may see</a>
+        <a href="#report">Reporting</a>
+      </nav>
+    </PageHead>
 
-    <Band id="account" tonal title="Your Telegram account" sub="What the app does with your sign-in, and where it talks to.">
-      <div class="card-grid card-grid-3" data-reveal>
+    <Band wave id="account" tonal title="Your Telegram account" sub="What the app does with your sign-in, and where it talks to.">
+      <Cards>
         <Card title="Telegram's own library">Sign-in and every request go through TDLib, Telegram's official client library, straight to Telegram. You approve the sign-in from your phone, and it shows up in Telegram's list of devices, where you can end it.</Card>
         <Card title="The session stays on the device">There is no TMPlayer account and no TMPlayer server. Your session, settings and downloads live in the app's own storage on your TV, phone or computer.</Card>
         <Card title="No analytics in the app">No analytics, no advertising library, no tracking. On Android, crash reports go out only if you switch them on in Settings; they are off until then.</Card>
-      </div>
+      </Cards>
       <p class="muted small section-note" data-reveal>Besides Telegram, the app asks tmplayer.org for one small file naming the newest release, and GitHub for an update when you choose to install it. <a href="/privacy/">The privacy page</a> lists everything, including what a crash report holds.</p>
     </Band>
 
-    <Band id="builds" title="How a release is made" sub="In public, by a machine, from the source you can read.">
+    <Band wave id="builds" title="How a release is made" sub="In public, by a machine, from the source you can read.">
       <div class="section-body" data-reveal>
-        <ol class="steps">
-          <Step id="build-1" title="Open source, GPL-3.0">All of TMPlayer's code is on <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener">GitHub</a> under the GPL-3.0. Anyone can read it, build it and compare.</Step>
-          <Step id="build-2" title="Built by GitHub Actions from the tag">A release starts as a version tag. GitHub's own servers then check out that tag and build the APK, the MSI, the macOS DMG, the AppImage and the Linux tarball from it. The recipe is public: <a href="https://github.com/dracu-lah/TMPlayer/blob/main/.github/workflows/release.yml" rel="noopener"><code>release.yml</code></a>, and each run is listed on the repository's Actions tab.</Step>
-          <Step id="build-3" title="The APK is signed there, with the project's key">The signing key is a secret that only the release job can read, and it is deleted from the build machine as soon as the APK is signed. Android will only install an update over TMPlayer if it carries the same signature.</Step>
-          <Step id="build-4" title="Every file gets a SHA-256">The release page on GitHub shows the SHA-256 of each file. The same job writes <a href="/latest.json"><code>latest.json</code></a>, the update feed the app reads, with each package's size and SHA-256 taken from the published bytes.</Step>
-          <Step id="build-5" title="The app checks it before updating">When you press <em>Update now</em>, TMPlayer downloads the new package and compares its SHA-256 with the one in the feed. If they differ, it deletes the file and says the download was damaged. Nothing is installed until you press the button.</Step>
-        </ol>
+        <Steps>
+          <Step p id="build-1" title="Open source, GPL-3.0">All of TMPlayer's code is on <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener">GitHub</a> under the GPL-3.0. Anyone can read it, build it and compare.</Step>
+          <Step p id="build-2" title="Built by GitHub Actions from the tag">A release starts as a version tag. GitHub's own servers then check out that tag and build the APK, the MSI, the macOS DMG, the AppImage and the Linux tarball from it. The recipe is public: <a href="https://github.com/dracu-lah/TMPlayer/blob/main/.github/workflows/release.yml" rel="noopener"><code>release.yml</code></a>, and each run is listed on the repository's Actions tab.</Step>
+          <Step p id="build-3" title="The APK is signed there, with the project's key">The signing key is a secret that only the release job can read, and it is deleted from the build machine as soon as the APK is signed. Android will only install an update over TMPlayer if it carries the same signature.</Step>
+          <Step p id="build-4" title="Every file gets a SHA-256">The release page on GitHub shows the SHA-256 of each file. The same job writes <a href="/latest.json"><code>latest.json</code></a>, the update feed the app reads, with each package's size and SHA-256 taken from the published bytes.</Step>
+          <Step p id="build-5" title="The app checks it before updating">When you press <em>Update now</em>, TMPlayer downloads the new package and compares its SHA-256 with the one in the feed. If they differ, it deletes the file and says the download was damaged. Nothing is installed until you press the button.</Step>
+        </Steps>
       </div>
     </Band>
 
-    <Band id="verify" tonal title="Check the file yourself">
+    <Band wave id="verify" tonal title="Check the file yourself">
       <Fragment slot="sub">Compare the result with the SHA-256 beside the file on the <a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">release page</a>, or in <a href="/latest.json"><code>latest.json</code></a>. They should match letter for letter. Run each command in the folder the file was saved to, usually <code>Downloads</code>.</Fragment>
       <div class="section-body" data-reveal>
         <div class="formats">
@@ -93,7 +93,7 @@ Astro.locals.lang = ENGLISH;
       </div>
     </Band>
 
-    <Band id="warnings" title="Warnings you may see" sub="What they mean, honestly.">
+    <Band wave id="warnings" title="Warnings you may see" sub="What they mean, honestly.">
       <div class="section-body" data-reveal>
         <div class="two-col">
           <Panel title="Windows SmartScreen">
@@ -111,7 +111,7 @@ Astro.locals.lang = ENGLISH;
       </div>
     </Band>
 
-    <Band id="report" tonal>
+    <Band wave id="report" tonal>
       <div class="support" data-reveal>
         <h2 id="report-h">Found a security problem?</h2>
         <p>Please report it privately rather than in a public issue. You will get a reply within a week, and credit once it is fixed if you would like it.</p>

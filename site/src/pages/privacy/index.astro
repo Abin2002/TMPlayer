@@ -5,13 +5,13 @@ import HeaderPlain from '../../components/plain/HeaderPlain.astro';
 import FooterPlain from '../../components/plain/FooterPlain.astro';
 import PolicyPage from '../../components/plain/PolicyPage.astro';
 import PolicySection from '../../components/plain/PolicySection.astro';
-import { breadcrumb } from '../../components/plain/breadcrumb';
+import { breadcrumb } from '../../components/breadcrumb';
 import { ENGLISH } from '../../i18n/langs';
 
 Astro.locals.lang = ENGLISH;
 ---
 <Base path="/privacy/" title="Privacy policy - TMPlayer" description="What TMPlayer keeps on your phone, TV or computer, which services it contacts, what an opt-in crash report contains, and how to delete your data.">
-  <JsonLd slot="head" data={breadcrumb('Privacy', '/privacy/')} />
+  <JsonLd slot="head" data={breadcrumb(['Privacy', '/privacy/'])} />
   <HeaderPlain />
   <PolicyPage eyebrow="Effective 15 October 2026" title="Privacy">
     <p class="policy-lede">TMPlayer is an unofficial Telegram video player for Android phones, Android TV, Windows and Linux, with a macOS preview for Apple Silicon. It talks directly to Telegram from your device, using your own Telegram account. There is no TMPlayer account and no developer-operated backend.</p>

@@ -1,23 +1,16 @@
 ---
 // Every release, newest first, from src/data/releases.json (written by scripts/release-data.py).
 import Shell from '../../components/changelog/Shell.astro';
-import Give from '../../components/changelog/Give.astro';
-import RssIcon from '../../components/changelog/RssIcon.astro';
-import Wave from '../../components/changelog/Wave.astro';
+import PageHead from '../../components/PageHead.astro';
+import SponsorOffer from '../../components/SponsorOffer.astro';
+import Icon from '../../components/Icon.astro';
 import JsonLd from '../../components/JsonLd.astro';
+import { breadcrumb } from '../../components/breadcrumb';
 import { ENGLISH } from '../../i18n/langs';
-import { DESCRIPTION, PAGE_URL, REPO, SITE, humanDate, notesHtml, releaseUrl, releases } from '../../lib/releases';
+import { DESCRIPTION, PAGE_URL, REPO, humanDate, notesHtml, releaseUrl, releases } from '../../lib/releases';
 
 Astro.locals.lang = ENGLISH;
 
-const crumbs = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
-    { '@type': 'ListItem', position: 2, name: 'Changelog', item: PAGE_URL },
-  ],
-};
 const blog = {
   '@context': 'https://schema.org',
   '@type': 'Blog',
@@ -33,26 +26,23 @@ const oldest = releases.length ? releases[releases.length - 1].version : 'the fi
 ---
 <Shell path="/changelog/" title="TMPlayer changelog: every release" description={DESCRIPTION}>
   <Fragment slot="head">
-    <JsonLd data={crumbs} />
+    <JsonLd data={breadcrumb(['Changelog', PAGE_URL])} />
     <JsonLd data={blog} />
   </Fragment>
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span>Changelog</p>
-      <h1>Every <em>release</em></h1>
-      <p class="page-lede">What changed in each TMPlayer release, newest first. Installed copies offer each update, so this is where to find out what it brings.</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href="/download/">Download the latest</a>
-        <a class="btn btn-outline" href="/changelog/feed.xml" type="application/rss+xml">
-          <RssIcon />
-          Follow by RSS
-        </a>
-      </div>
-    </div>
-  </section>
+  <PageHead lede="What changed in each TMPlayer release, newest first. Installed copies offer each update, so this is where to find out what it brings.">
+    <Fragment slot="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span>Changelog</Fragment>
+    <Fragment slot="title">Every <em>release</em></Fragment>
+    <Fragment slot="actions">
+      <a class="btn btn-filled" href="/download/">Download the latest</a>
+      <a class="btn btn-outline" href="/changelog/feed.xml" type="application/rss+xml">
+        <Icon name="rss" />
+        Follow by RSS
+      </a>
+    </Fragment>
+  </PageHead>
 
-<Wave />
+<Icon name="wave" />
 
   <section class="band band-tonal" aria-label="Releases">
     <div class="wrap">
@@ -70,7 +60,7 @@ const oldest = releases.length ? releases[releases.length - 1].version : 'the fi
         </article>
 ))}
       </div>
-<Give lead="Every release on this page was made in spare time." />
+<SponsorOffer release lede="Every release on this page was made in spare time." />
       <p class="muted small section-note changelog-foot">Releases from before {oldest} are on <a href={`https://github.com/${REPO}/tags`} rel="noopener">GitHub as tags</a>. Every release links the source tree it was built from.</p>
     </div>
   </section>

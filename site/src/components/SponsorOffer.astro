@@ -1,0 +1,39 @@
+---
+// "Support TMPlayer": the coffee and sponsor links, in the same words as Settings and About in the
+// app. Both take any amount and unlock nothing: the app stays whole and free whether or not anyone
+// pays. Every content page carries the block, so a reader who got something from the page has the
+// offer where they finished reading.
+//
+// Inside a star card it is one more block of the card. `slim` makes it a support-slim card of its
+// own, for a page without a star card. `lede` replaces the line about ads, and the default slot goes
+// under the buttons (the download page's QR codes).
+//
+// `release` is the slim card on the changelog and the release pages, which are English only and
+// read by people who just got the update, the moment the offer makes the most sense. Its heading
+// is an h2 in the notes' style, it is not revealed on scroll, and its line is the page's `lede`
+// followed by the release sentence below.
+import Icon from './Icon.astro';
+import { text } from '../i18n/t';
+
+interface Props { slim?: boolean; release?: boolean; lede?: string }
+const { release = false, lede } = Astro.props;
+const slim = release || (Astro.props.slim ?? false);
+const t = (k: string) => text(Astro.locals.lang, k);
+const Card = slim ? 'div' : Fragment;
+const card = slim ? { class: 'support support-slim', 'data-reveal': release ? undefined : '' } : {};
+const H = release ? 'h2' : 'h3';
+const line = release
+  ? `${lede} There are no ads of our own and no paid tier, so a coffee or a monthly sponsorship is what pays for the time each release takes. It is voluntary and unlocks nothing.`
+  : lede ?? t('home.support_no_ads');
+---
+<Card {...card}>
+<div class:list={['support-more', { 'support-more-solo': slim }]} id="sponsor">
+  <H class={release ? 'release-notes-h' : undefined}>{t('home.support_tmplayer')}</H>
+  <p>{line}</p>
+  <div class="support-actions support-give">
+    <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
+    <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
+  </div>
+  <slot />
+</div>
+</Card>

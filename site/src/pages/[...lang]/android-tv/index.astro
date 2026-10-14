@@ -8,12 +8,15 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
-import Band from '../../../components/android-tv/Band.astro';
-import FeatureCard from '../../../components/android-tv/FeatureCard.astro';
-import TvShot from '../../../components/android-tv/TvShot.astro';
-import FitPanel from '../../../components/android-tv/FitPanel.astro';
-import SupportBand from '../../../components/android-tv/SupportBand.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
+import Band from '../../../components/Band.astro';
+import Cards from '../../../components/Cards.astro';
+import Card from '../../../components/Card.astro';
+import DeviceShot from '../../../components/DeviceShot.astro';
+import Panel from '../../../components/Panel.astro';
+import StarCard from '../../../components/StarCard.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -24,14 +27,6 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const breadcrumbs = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://tmplayer.org/" },
-    { "@type": "ListItem", "position": 2, "name": "Android TV", "item": "https://tmplayer.org/android-tv/" }
-  ]
-};
 
 const shot = (name: string, alt: string, light = true) => ({
   src: `/screenshots/${name}.webp`,
@@ -53,7 +48,7 @@ const features = [
 ---
 <Base page="android_tv" title={t('android_tv.tmplayer_unofficial_telegram_video_player')} description={t('android_tv.watch_telegram_videos_on_android')}>
   <Fragment slot="head">
-    <JsonLd data={breadcrumbs} />
+    <JsonLd data={breadcrumb(['Android TV', '/android-tv/'])} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />
@@ -62,56 +57,47 @@ const features = [
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span>Android TV</p>
-      <h1><T k="android_tv.a_telegram_video_player"><em slot="em1">{t('android_tv.a_telegram_video_player__em1')}</em></T></h1>
-      <p class="page-lede">{t('android_tv.designed_for_a_d_pad')}</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href={l('/download/#android-tv')}> <Icon name="download-btn" /> {t('android_tv.download_for_android_tv')}</a>
-        <a class="btn btn-outline" href={l('/install/#android-tv')}>{t('android_tv.sideload_it_in_four_steps')} <Icon name="arrow-right-sm" /></a>
-      </div>
-    </div>
-  </section>
+  <PageHead lede={t('android_tv.designed_for_a_d_pad')}>
+    <Fragment slot="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span>Android TV</Fragment>
+    <Fragment slot="title"><T k="android_tv.a_telegram_video_player"><em slot="em1">{t('android_tv.a_telegram_video_player__em1')}</em></T></Fragment>
+    <Fragment slot="actions">
+      <a class="btn btn-filled" href={l('/download/#android-tv')}> <Icon name="download-btn" /> {t('android_tv.download_for_android_tv')}</a>
+      <a class="btn btn-outline" href={l('/install/#android-tv')}>{t('android_tv.sideload_it_in_four_steps')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+  </PageHead>
 
-  <Icon name="wave" />
-
-  <Band tonal headId="tv-h" title={t('android_tv.what_changes_on_a_television')} sub={t('android_tv.same_account_same_apk_only')}>
-    <div class="card-grid card-grid-3" data-reveal>
-      {features.map((f) => <FeatureCard title={t(f.title)} body={t(f.body)} shot={f.shot} icon={f.icon} />)}
-    </div>
+    <Band wave tonal labelledby="tv-h" title={t('android_tv.what_changes_on_a_television')} sub={t('android_tv.same_account_same_apk_only')}>
+    <Cards>
+      {features.map((f) => <Card title={t(f.title)} body={t(f.body)} shot={f.shot} shotIcon={f.icon} />)}
+    </Cards>
   </Band>
 
-  <Icon name="wave-flip" />
-
-  <Band headId="tvshots-h" title={t('android_tv.the_ten_foot_layout')} sub={t('android_tv.the_app_on_a_television')}>
+    <Band wave labelledby="tvshots-h" title={t('android_tv.the_ten_foot_layout')} sub={t('android_tv.the_app_on_a_television')}>
     <div class="shots">
-      <TvShot src="/screenshots/tv-chats.webp" light="/screenshots/tv-chats-light.webp" alt={t('android_tv.the_tmplayer_chat_list_on')}><T k="android_tv.categories_on_the_rail_chats"><b slot="b1">{t('android_tv.categories_on_the_rail_chats__b1')}</b></T></TvShot>
-      <TvShot src="/screenshots/tv-grid.webp" light="/screenshots/tv-grid-light.webp" alt={t('android_tv.videos_from_a_telegram_chat')}><T k="android_tv.running_time_and_size_on"><b slot="b1">{t('android_tv.running_time_and_size_on__b1')}</b></T></TvShot>
+      <DeviceShot device="tv" shot={{ src: '/screenshots/tv-chats.webp', light: '/screenshots/tv-chats-light.webp', alt: t('android_tv.the_tmplayer_chat_list_on'), width: 1920, height: 1080 }}><T k="android_tv.categories_on_the_rail_chats"><b slot="b1">{t('android_tv.categories_on_the_rail_chats__b1')}</b></T></DeviceShot>
+      <DeviceShot device="tv" shot={{ src: '/screenshots/tv-grid.webp', light: '/screenshots/tv-grid-light.webp', alt: t('android_tv.videos_from_a_telegram_chat'), width: 1920, height: 1080 }}><T k="android_tv.running_time_and_size_on"><b slot="b1">{t('android_tv.running_time_and_size_on__b1')}</b></T></DeviceShot>
     </div>
   </Band>
 
-  <Icon name="wave" />
-
-  <Band tonal headId="tvfit-h" title={t('android_tv.will_it_run_on_yours')}>
+    <Band wave tonal labelledby="tvfit-h" title={t('android_tv.will_it_run_on_yours')}>
     <div class="two-col" data-reveal>
-      <FitPanel kind="yes" title={t('android_tv.yes')}>
+      <Panel kind="yes" title={t('android_tv.yes')}>
         <li>{t('android_tv.android_tv_and_google_tv')}</li>
         <li><T k="android_tv.sticks_with_fire_tv"><a href={l('/fire-tv/')} slot="a1">{t('android_tv.sticks_with_fire_tv__a1')}</a></T></li>
         <li>{t('android_tv.boxes_and_tvs_nvidia_shield')}</li>
         <li>{t('android_tv.32_bit_and_64_bit')}</li>
-      </FitPanel>
-      <FitPanel kind="no" title={t('android_tv.no')}>
+      </Panel>
+      <Panel kind="no" title={t('android_tv.no')}>
         <li>{t('android_tv.not_samsung_tizen_not_lg')}</li>
         <li>{t('android_tv.not_apple_tv_and_not')}</li>
         <li>{t('android_tv.not_a_device_where_sideloading')}</li>
-      </FitPanel>
+      </Panel>
     </div>
   </Band>
 
   <Icon name="wave-flip" />
 
-  <SupportBand lede={t('android_tv.a_tv_app_outside_the')} />
+  <StarCard tonal lede={t('android_tv.a_tv_app_outside_the')} />
 
 </main>
 
