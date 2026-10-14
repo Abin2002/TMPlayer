@@ -1,6 +1,7 @@
 package com.tmplayer.ui.browse
 
 import androidx.compose.animation.AnimatedVisibility
+import com.tmplayer.ui.components.chevronTowardsEnd
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -26,13 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.i18n.LocalStrings
@@ -62,7 +61,7 @@ fun NavGroupHeading(
     val s = LocalStrings.current
     // Folded, the chevron points along the line towards the heading's end: right, or left in a
     // right to left interface.
-    val folded = if (LocalLayoutDirection.current == LayoutDirection.Rtl) 90f else -90f
+    val folded = chevronTowardsEnd()
     val turn by animateFloatAsState(if (open) 0f else folded, label = "navGroupChevron")
     Row(
         modifier

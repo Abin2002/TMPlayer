@@ -1,6 +1,7 @@
 package com.tmplayer.ui.browse
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import com.tmplayer.ui.components.chevronTowardsEnd
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
@@ -1622,7 +1623,8 @@ private fun RailGroupHeading(
         animationSpec = tween(FOCUS_FADE_MS),
         label = "railHeadingForeground",
     )
-    val turn by animateFloatAsState(if (open) 0f else -90f, label = "railHeadingChevron")
+    // Folded, the chevron points along the line towards its end: left in a right-to-left interface.
+    val turn by animateFloatAsState(if (open) 0f else chevronTowardsEnd(), label = "railHeadingChevron")
     Row(
         Modifier
             .fillMaxWidth()
