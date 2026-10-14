@@ -247,26 +247,47 @@
 
       <div class="card-grid card-grid-3" data-reveal>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-home.webp" alt="TMPlayer&#x27;s Home on a television, with the rail of categories down the left." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.rail_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.a_rail_not_a_menu">Панель, а не меню</h3>
           <p data-i18n="android_tv.every_category_down_the_left">Кожна категорія ліворуч, за одне натискання.</p>
         </div>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-sign-in-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-sign-in.webp" alt="The sign-in screen on a television: a QR code to scan with Telegram on your phone, and the three steps beside it." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.sign_in_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.sign_in_without_typing">Вхід без введення тексту</h3>
           <p data-i18n="android_tv.scan_a_qr_code_with">Скануйте QR-код телефоном. Без введення стрілками.</p>
         </div>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-search-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-search.webp" alt="A search in a demo chat on a television, typed as harbor lines, finding every Harbour Lines episode." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.search_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.voice_search_from_the_remote">Голосовий пошук з пульта</h3>
           <p data-i18n="android_tv.typos_and_missing_accents_still">Помилки й відсутні діакритичні знаки не заважають знайти серію.</p>
         </div>
         <div class="card">
+          <span class="card-shot card-shot-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="56" height="56" focusable="false"><path fill="currentColor" d="M15 9H9v6h6V9Zm-2 4h-2v-2h2v2Zm8-2V9h-2V7a2 2 0 0 0-2-2h-2V3h-2v2h-2V3H9v2H7a2 2 0 0 0-2 2v2H3v2h2v2H3v2h2v2a2 2 0 0 0 2 2h2v2h2v-2h2v2h2v-2h2a2 2 0 0 0 2-2v-2h2v-2h-2v-2h2Zm-4 6H7V7h10v10Z"/></svg>
+          </span>
           <h3 data-i18n="android_tv.runs_on_a_1_gb">Працює на приставці з 1 ГБ</h3>
           <p data-i18n="android_tv.built_on_a_mi_tv">Створено на Mi TV Stick. Там працює плавно, і на Shield теж.</p>
         </div>
         <div class="card">
+          <span class="card-shot card-shot-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="56" height="56" focusable="false"><path fill="currentColor" d="M18 2h-8L4 8v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-6 6h-2V4h2v4Zm3 0h-2V4h2v4Zm3 0h-2V4h2v4Z"/></svg>
+          </span>
           <h3 data-i18n="android_tv.one_video_on_disk_at">Одне відео на диску одночасно</h3>
           <p data-i18n="android_tv.the_previous_video_is_cleared">Попереднє відео очищується, тож приставка на 8 ГБ ніколи не переповниться.</p>
         </div>
         <div class="card">
+          <picture class="card-shot card-shot-corner">
+            <img src="/screenshots/tv-next-episode.webp" alt="The player on a television with a card in the corner: next, S01E05, starting in 12 seconds, with a Play now button." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.next_episode_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.next_episode_on_its_own">Наступна серія сама</h3>
           <p data-i18n="android_tv.plays_the_next_episode_after">Вмикає наступну серію після зворотного відліку, який можна зупинити.</p>
         </div>
@@ -429,7 +450,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "Універсальний APK", "kind_windows_installer": "Інсталятор для Windows", "kind_windows_zip": "Архів zip для Windows", "kind_linux_tarball": "Архів tar для Linux", "kind_checksums": "Контрольні суми", "os_note_mac": "Версії для macOS немає. Усе нижче стосується Android, Windows і Linux.", "os_note_ios": "Версії для iPhone чи iPad немає. Усе нижче стосується Android, Windows і Linux.", "download_for": "Завантажити для {os}", "downloads_one": "{count} завантаження", "downloads_other": "{count} завантажень", "not_in_release": "Немає в {version}", "on_github": "На GitHub", "download_file": "Завантажити {file}", "download_version_for": "Завантажити {version} для {os}", "download_version_other_os": "Завантажити {version} для Android, Windows або Linux", "download_version": "Завантажити {version}", "latest": "Останній", "no_files_yet": "До цього випуску ще не додано файлів. Можливо, збірка ще триває.", "open_on_github": "Відкрити {version} на GitHub", "release": "Випуск", "unavailable": "Недоступно", "fail_downloads": "Завантаження нікуди не зникли: кожна кнопка нижче відкриває {link}, де файли перелічено за назвами.", "fail_link": "останній випуск на GitHub", "go_to_downloads": "Перейти до завантажень", "not_released": "Ще не випущено", "no_release": "Жодного випуску ще не опубліковано. Ви все одно можете зібрати застосунок із коду.", "build_instructions": "Прочитати інструкції зі збирання на GitHub", "view_project": "Переглянути проєкт на GitHub", "fail_browser": "Цей браузер не може завантажити список випусків.", "fail_rate": "GitHub обмежує швидкість запитів для цієї мережі. Його публічний API дозволяє 60 запитів на годину з однієї адреси, і ця вже їх вичерпала.", "fail_timeout": "GitHub не відповів вчасно.", "fail_load": "Не вдалося завантажити список випусків з GitHub.", "theme_to_dark": "Перемкнути на темну тему", "theme_to_light": "Перемкнути на світлу тему", "menu_close": "Закрити меню", "menu": "Меню"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "Універсальний APK", "kind_windows_installer": "Інсталятор для Windows", "kind_windows_zip": "Архів zip для Windows", "kind_linux_tarball": "Архів tar для Linux", "kind_checksums": "Контрольні суми", "os_note_mac": "Версії для macOS немає. Усе нижче стосується Android, Windows і Linux.", "os_note_ios": "Версії для iPhone чи iPad немає. Усе нижче стосується Android, Windows і Linux.", "download_for": "Завантажити для {os}", "downloads_one": "{count} завантаження", "downloads_other": "{count} завантажень", "not_in_release": "Немає в {version}", "on_github": "На GitHub", "download_file": "Завантажити {file}", "install_version_for": "Встановити {version} для {os}", "download_version_for": "Завантажити {version} для {os}", "download_version_other_os": "Завантажити {version} для Android, Windows або Linux", "download_version": "Завантажити {version}", "latest": "Останній", "no_files_yet": "До цього випуску ще не додано файлів. Можливо, збірка ще триває.", "open_on_github": "Відкрити {version} на GitHub", "release": "Випуск", "unavailable": "Недоступно", "fail_downloads": "Завантаження нікуди не зникли: кожна кнопка нижче відкриває {link}, де файли перелічено за назвами.", "fail_link": "останній випуск на GitHub", "go_to_downloads": "Перейти до завантажень", "not_released": "Ще не випущено", "no_release": "Жодного випуску ще не опубліковано. Ви все одно можете зібрати застосунок із коду.", "build_instructions": "Прочитати інструкції зі збирання на GitHub", "view_project": "Переглянути проєкт на GitHub", "fail_browser": "Цей браузер не може завантажити список випусків.", "fail_rate": "GitHub обмежує швидкість запитів для цієї мережі. Його публічний API дозволяє 60 запитів на годину з однієї адреси, і ця вже їх вичерпала.", "fail_timeout": "GitHub не відповів вчасно.", "fail_load": "Не вдалося завантажити список випусків з GitHub.", "theme_to_dark": "Перемкнути на темну тему", "theme_to_light": "Перемкнути на світлу тему", "menu_close": "Закрити меню", "menu": "Меню"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

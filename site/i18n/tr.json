@@ -1018,7 +1018,8 @@
     "theme_to_dark": "Koyu temaya geç",
     "theme_to_light": "Açık temaya geç",
     "menu_close": "Menüyü kapat",
-    "menu": "Menü"
+    "menu": "Menü",
+    "install_version_for": "{os} için {version} sürümünü kur"
   },
   "build": {
     "language": "Dil",

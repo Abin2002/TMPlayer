@@ -1018,7 +1018,8 @@
     "theme_to_dark": "Включить тёмную тему",
     "theme_to_light": "Включить светлую тему",
     "menu_close": "Закрыть меню",
-    "menu": "Меню"
+    "menu": "Меню",
+    "install_version_for": "Установить {version} для {os}"
   },
   "build": {
     "language": "Язык",

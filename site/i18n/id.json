@@ -1018,7 +1018,8 @@
     "theme_to_dark": "Beralih ke tema gelap",
     "theme_to_light": "Beralih ke tema terang",
     "menu_close": "Tutup menu",
-    "menu": "Menu"
+    "menu": "Menu",
+    "install_version_for": "Pasang {version} untuk {os}"
   },
   "build": {
     "language": "Bahasa",

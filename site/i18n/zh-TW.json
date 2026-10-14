@@ -1018,7 +1018,8 @@
     "theme_to_dark": "切換為深色主題",
     "theme_to_light": "切換為淺色主題",
     "menu_close": "關閉選單",
-    "menu": "選單"
+    "menu": "選單",
+    "install_version_for": "為 {os} 安裝 {version}"
   },
   "build": {
     "language": "語言",

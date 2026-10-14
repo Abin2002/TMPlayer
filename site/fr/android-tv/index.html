@@ -247,26 +247,47 @@
 
       <div class="card-grid card-grid-3" data-reveal>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-home.webp" alt="TMPlayer&#x27;s Home on a television, with the rail of categories down the left." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.rail_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.a_rail_not_a_menu">Un bandeau, pas un menu</h3>
           <p data-i18n="android_tv.every_category_down_the_left">Toutes les catégories à gauche, à un appui de distance.</p>
         </div>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-sign-in-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-sign-in.webp" alt="The sign-in screen on a television: a QR code to scan with Telegram on your phone, and the three steps beside it." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.sign_in_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.sign_in_without_typing">Connexion sans rien taper</h3>
           <p data-i18n="android_tv.scan_a_qr_code_with">Scannez un QR code avec votre téléphone. Pas besoin de taper avec les flèches.</p>
         </div>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-search-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-search.webp" alt="A search in a demo chat on a television, typed as harbor lines, finding every Harbour Lines episode." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.search_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.voice_search_from_the_remote">Recherche vocale depuis la télécommande</h3>
           <p data-i18n="android_tv.typos_and_missing_accents_still">Les fautes de frappe et les accents manquants trouvent quand même l'épisode.</p>
         </div>
         <div class="card">
+          <span class="card-shot card-shot-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="56" height="56" focusable="false"><path fill="currentColor" d="M15 9H9v6h6V9Zm-2 4h-2v-2h2v2Zm8-2V9h-2V7a2 2 0 0 0-2-2h-2V3h-2v2h-2V3H9v2H7a2 2 0 0 0-2 2v2H3v2h2v2H3v2h2v2a2 2 0 0 0 2 2h2v2h2v-2h2v2h2v-2h2a2 2 0 0 0 2-2v-2h2v-2h-2v-2h2Zm-4 6H7V7h10v10Z"/></svg>
+          </span>
           <h3 data-i18n="android_tv.runs_on_a_1_gb">Fonctionne sur une clé de 1 Go</h3>
           <p data-i18n="android_tv.built_on_a_mi_tv">Développé sur une Mi TV Stick. Fluide là-dessus, fluide sur une Shield.</p>
         </div>
         <div class="card">
+          <span class="card-shot card-shot-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="56" height="56" focusable="false"><path fill="currentColor" d="M18 2h-8L4 8v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-6 6h-2V4h2v4Zm3 0h-2V4h2v4Zm3 0h-2V4h2v4Z"/></svg>
+          </span>
           <h3 data-i18n="android_tv.one_video_on_disk_at">Une seule vidéo sur le disque à la fois</h3>
           <p data-i18n="android_tv.the_previous_video_is_cleared">La vidéo précédente est effacée, donc une clé de 8 Go ne se remplit jamais.</p>
         </div>
         <div class="card">
+          <picture class="card-shot card-shot-corner">
+            <img src="/screenshots/tv-next-episode.webp" alt="The player on a television with a card in the corner: next, S01E05, starting in 12 seconds, with a Play now button." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.next_episode_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.next_episode_on_its_own">Épisode suivant automatique</h3>
           <p data-i18n="android_tv.plays_the_next_episode_after">Lance l'épisode suivant après un compte à rebours que vous pouvez arrêter.</p>
         </div>
@@ -429,7 +450,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK universel", "kind_windows_installer": "Installateur Windows", "kind_windows_zip": "Zip Windows", "kind_linux_tarball": "Archive tar Linux", "kind_checksums": "Sommes de contrôle", "os_note_mac": "Il n'existe pas de version macOS. Tout ce qui suit concerne Android, Windows et Linux.", "os_note_ios": "Il n'existe pas de version pour iPhone ou iPad. Tout ce qui suit concerne Android, Windows et Linux.", "download_for": "Télécharger pour {os}", "downloads_one": "{count} téléchargement", "downloads_other": "{count} téléchargements", "not_in_release": "Absent de {version}", "on_github": "Sur GitHub", "download_file": "Télécharger {file}", "download_version_for": "Télécharger {version} pour {os}", "download_version_other_os": "Télécharger {version} pour Android, Windows ou Linux", "download_version": "Télécharger {version}", "latest": "Dernière", "no_files_yet": "Cette version n'a pas encore de fichiers joints. La compilation est peut-être toujours en cours.", "open_on_github": "Ouvrir {version} sur GitHub", "release": "Version", "unavailable": "Indisponible", "fail_downloads": "Les téléchargements sont toujours là : chaque bouton ci-dessous ouvre {link}, où les fichiers sont listés par nom.", "fail_link": "la dernière version sur GitHub", "go_to_downloads": "Aller aux téléchargements", "not_released": "Pas encore publiée", "no_release": "Aucune version n'a encore été publiée. Vous pouvez toujours compiler l'appli à partir des sources.", "build_instructions": "Lire les instructions de compilation sur GitHub", "view_project": "Voir le projet sur GitHub", "fail_browser": "Ce navigateur ne peut pas charger la liste des versions.", "fail_rate": "GitHub limite le débit de ce réseau. Son API publique autorise 60 requêtes par heure et par adresse, et celle-ci les a toutes utilisées.", "fail_timeout": "GitHub n'a pas répondu à temps.", "fail_load": "La liste des versions n'a pas pu être chargée depuis GitHub.", "theme_to_dark": "Passer au thème sombre", "theme_to_light": "Passer au thème clair", "menu_close": "Fermer le menu", "menu": "Menu"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK universel", "kind_windows_installer": "Installateur Windows", "kind_windows_zip": "Zip Windows", "kind_linux_tarball": "Archive tar Linux", "kind_checksums": "Sommes de contrôle", "os_note_mac": "Il n'existe pas de version macOS. Tout ce qui suit concerne Android, Windows et Linux.", "os_note_ios": "Il n'existe pas de version pour iPhone ou iPad. Tout ce qui suit concerne Android, Windows et Linux.", "download_for": "Télécharger pour {os}", "downloads_one": "{count} téléchargement", "downloads_other": "{count} téléchargements", "not_in_release": "Absent de {version}", "on_github": "Sur GitHub", "download_file": "Télécharger {file}", "install_version_for": "Installer {version} pour {os}", "download_version_for": "Télécharger {version} pour {os}", "download_version_other_os": "Télécharger {version} pour Android, Windows ou Linux", "download_version": "Télécharger {version}", "latest": "Dernière", "no_files_yet": "Cette version n'a pas encore de fichiers joints. La compilation est peut-être toujours en cours.", "open_on_github": "Ouvrir {version} sur GitHub", "release": "Version", "unavailable": "Indisponible", "fail_downloads": "Les téléchargements sont toujours là : chaque bouton ci-dessous ouvre {link}, où les fichiers sont listés par nom.", "fail_link": "la dernière version sur GitHub", "go_to_downloads": "Aller aux téléchargements", "not_released": "Pas encore publiée", "no_release": "Aucune version n'a encore été publiée. Vous pouvez toujours compiler l'appli à partir des sources.", "build_instructions": "Lire les instructions de compilation sur GitHub", "view_project": "Voir le projet sur GitHub", "fail_browser": "Ce navigateur ne peut pas charger la liste des versions.", "fail_rate": "GitHub limite le débit de ce réseau. Son API publique autorise 60 requêtes par heure et par adresse, et celle-ci les a toutes utilisées.", "fail_timeout": "GitHub n'a pas répondu à temps.", "fail_load": "La liste des versions n'a pas pu être chargée depuis GitHub.", "theme_to_dark": "Passer au thème sombre", "theme_to_light": "Passer au thème clair", "menu_close": "Fermer le menu", "menu": "Menu"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

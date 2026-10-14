@@ -1018,7 +1018,8 @@
     "theme_to_dark": "Chuyển sang giao diện tối",
     "theme_to_light": "Chuyển sang giao diện sáng",
     "menu_close": "Đóng menu",
-    "menu": "Menu"
+    "menu": "Menu",
+    "install_version_for": "Cài {version} cho {os}"
   },
   "build": {
     "language": "Ngôn ngữ",

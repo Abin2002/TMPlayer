@@ -43,6 +43,14 @@
       <image:loc>https://tmplayer.org/screenshots/phone-show-light.webp</image:loc>
       <image:title>A show's page in TMPlayer on a phone, in the light theme</image:title>
     </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-sign-in.webp</image:loc>
+      <image:title>Signing in to TMPlayer on Android TV by scanning a QR code with Telegram on a phone</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-sign-in-light.webp</image:loc>
+      <image:title>The TMPlayer QR sign-in on a television, in the light theme</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://tmplayer.org/es/</loc>
@@ -682,6 +690,10 @@
     <image:image>
       <image:loc>https://tmplayer.org/screenshots/desktop-player.webp</image:loc>
       <image:title>The TMPlayer desktop player on Windows and Linux</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-home-screen.webp</image:loc>
+      <image:title>A TMPlayer row of recently added films and shows on the Android TV home screen</image:title>
     </image:image>
   </url>
   <url>
@@ -2444,7 +2456,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -2454,6 +2466,34 @@
     <image:image>
       <image:loc>https://tmplayer.org/screenshots/tv-grid.webp</image:loc>
       <image:title>Playable videos in a Telegram chat, on Android TV</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-home.webp</image:loc>
+      <image:title>TMPlayer's Home on Android TV, with the rail of categories down the left</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-home-light.webp</image:loc>
+      <image:title>TMPlayer's Home on a television, in the light theme</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-sign-in.webp</image:loc>
+      <image:title>Signing in to TMPlayer on Android TV by scanning a QR code with Telegram on a phone</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-sign-in-light.webp</image:loc>
+      <image:title>The TMPlayer QR sign-in on a television, in the light theme</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-search.webp</image:loc>
+      <image:title>Search in a Telegram chat on Android TV finding every episode of a show despite a typo</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-search-light.webp</image:loc>
+      <image:title>Search in a chat on a television, in the light theme</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-next-episode.webp</image:loc>
+      <image:title>The next episode countdown in the TMPlayer player on Android TV</image:title>
     </image:image>
   </url>
   <url>
@@ -2480,7 +2520,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2508,7 +2548,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2536,7 +2576,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2564,7 +2604,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2592,7 +2632,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2620,7 +2660,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2648,7 +2688,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2676,7 +2716,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2704,7 +2744,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2732,7 +2772,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2760,7 +2800,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2788,7 +2828,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2816,7 +2856,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2844,7 +2884,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2872,7 +2912,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2900,7 +2940,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2928,7 +2968,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2956,7 +2996,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -2984,7 +3024,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -3012,7 +3052,7 @@
     <xhtml:link rel="alternate" hreflang="bn" href="https://tmplayer.org/bn/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="ml" href="https://tmplayer.org/ml/android-tv/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tmplayer.org/android-tv/"/>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

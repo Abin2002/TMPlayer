@@ -1018,7 +1018,8 @@
     "theme_to_dark": "切换到深色主题",
     "theme_to_light": "切换到浅色主题",
     "menu_close": "关闭菜单",
-    "menu": "菜单"
+    "menu": "菜单",
+    "install_version_for": "为 {os} 安装 {version}"
   },
   "build": {
     "language": "语言",

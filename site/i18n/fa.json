@@ -1018,7 +1018,8 @@
     "theme_to_dark": "تغییر به زمینهٔ تیره",
     "theme_to_light": "تغییر به زمینهٔ روشن",
     "menu_close": "بستن منو",
-    "menu": "منو"
+    "menu": "منو",
+    "install_version_for": "نصب {version} برای {os}"
   },
   "build": {
     "language": "زبان",

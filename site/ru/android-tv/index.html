@@ -247,26 +247,47 @@
 
       <div class="card-grid card-grid-3" data-reveal>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-home.webp" alt="TMPlayer&#x27;s Home on a television, with the rail of categories down the left." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.rail_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.a_rail_not_a_menu">Панель, а не меню</h3>
           <p data-i18n="android_tv.every_category_down_the_left">Все категории слева, на расстоянии одного нажатия.</p>
         </div>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-sign-in-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-sign-in.webp" alt="The sign-in screen on a television: a QR code to scan with Telegram on your phone, and the three steps beside it." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.sign_in_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.sign_in_without_typing">Вход без набора текста</h3>
           <p data-i18n="android_tv.scan_a_qr_code_with">Отсканируйте QR-код телефоном. Никакого набора стрелками.</p>
         </div>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-search-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-search.webp" alt="A search in a demo chat on a television, typed as harbor lines, finding every Harbour Lines episode." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.search_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.voice_search_from_the_remote">Голосовой поиск с пульта</h3>
           <p data-i18n="android_tv.typos_and_missing_accents_still">Опечатки и пропущенные диакритические знаки не помешают найти серию.</p>
         </div>
         <div class="card">
+          <span class="card-shot card-shot-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="56" height="56" focusable="false"><path fill="currentColor" d="M15 9H9v6h6V9Zm-2 4h-2v-2h2v2Zm8-2V9h-2V7a2 2 0 0 0-2-2h-2V3h-2v2h-2V3H9v2H7a2 2 0 0 0-2 2v2H3v2h2v2H3v2h2v2a2 2 0 0 0 2 2h2v2h2v-2h2v2h2v-2h2a2 2 0 0 0 2-2v-2h2v-2h-2v-2h2Zm-4 6H7V7h10v10Z"/></svg>
+          </span>
           <h3 data-i18n="android_tv.runs_on_a_1_gb">Работает на приставке с 1 ГБ</h3>
           <p data-i18n="android_tv.built_on_a_mi_tv">Создан на Mi TV Stick. Плавно работает там, плавно и на Shield.</p>
         </div>
         <div class="card">
+          <span class="card-shot card-shot-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="56" height="56" focusable="false"><path fill="currentColor" d="M18 2h-8L4 8v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-6 6h-2V4h2v4Zm3 0h-2V4h2v4Zm3 0h-2V4h2v4Z"/></svg>
+          </span>
           <h3 data-i18n="android_tv.one_video_on_disk_at">Одно видео на диске</h3>
           <p data-i18n="android_tv.the_previous_video_is_cleared">Предыдущее видео удаляется, поэтому приставка на 8 ГБ никогда не переполнится.</p>
         </div>
         <div class="card">
+          <picture class="card-shot card-shot-corner">
+            <img src="/screenshots/tv-next-episode.webp" alt="The player on a television with a card in the corner: next, S01E05, starting in 12 seconds, with a Play now button." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.next_episode_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.next_episode_on_its_own">Следующая серия сама</h3>
           <p data-i18n="android_tv.plays_the_next_episode_after">Включает следующую серию после обратного отсчёта, который можно остановить.</p>
         </div>
@@ -429,7 +450,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "Универсальный APK", "kind_windows_installer": "Установщик для Windows", "kind_windows_zip": "Zip для Windows", "kind_linux_tarball": "Архив tar для Linux", "kind_checksums": "Контрольные суммы", "os_note_mac": "Версии для macOS нет. Всё ниже относится к Android, Windows и Linux.", "os_note_ios": "Версии для iPhone и iPad нет. Всё ниже относится к Android, Windows и Linux.", "download_for": "Скачать для {os}", "downloads_one": "Загрузок: {count}", "downloads_other": "Загрузок: {count}", "not_in_release": "Нет в {version}", "on_github": "На GitHub", "download_file": "Скачать {file}", "download_version_for": "Скачать {version} для {os}", "download_version_other_os": "Скачать {version} для Android, Windows или Linux", "download_version": "Скачать {version}", "latest": "Последний", "no_files_yet": "К этому релизу пока не прикреплены файлы. Возможно, сборка ещё идёт.", "open_on_github": "Открыть {version} на GitHub", "release": "Релиз", "unavailable": "Недоступно", "fail_downloads": "Загрузки на месте: каждая кнопка ниже открывает {link}, где файлы перечислены по именам.", "fail_link": "последний релиз на GitHub", "go_to_downloads": "Перейти к загрузкам", "not_released": "Ещё не выпущен", "no_release": "Ни одного релиза пока не опубликовано. Приложение всё равно можно собрать из исходного кода.", "build_instructions": "Читать инструкцию по сборке на GitHub", "view_project": "Открыть проект на GitHub", "fail_browser": "Этот браузер не может загрузить список релизов.", "fail_rate": "GitHub ограничивает запросы из этой сети. Его публичный API разрешает 60 запросов в час на адрес, и этот лимит исчерпан.", "fail_timeout": "GitHub не ответил вовремя.", "fail_load": "Не удалось загрузить список релизов с GitHub.", "theme_to_dark": "Включить тёмную тему", "theme_to_light": "Включить светлую тему", "menu_close": "Закрыть меню", "menu": "Меню"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "Универсальный APK", "kind_windows_installer": "Установщик для Windows", "kind_windows_zip": "Zip для Windows", "kind_linux_tarball": "Архив tar для Linux", "kind_checksums": "Контрольные суммы", "os_note_mac": "Версии для macOS нет. Всё ниже относится к Android, Windows и Linux.", "os_note_ios": "Версии для iPhone и iPad нет. Всё ниже относится к Android, Windows и Linux.", "download_for": "Скачать для {os}", "downloads_one": "Загрузок: {count}", "downloads_other": "Загрузок: {count}", "not_in_release": "Нет в {version}", "on_github": "На GitHub", "download_file": "Скачать {file}", "install_version_for": "Установить {version} для {os}", "download_version_for": "Скачать {version} для {os}", "download_version_other_os": "Скачать {version} для Android, Windows или Linux", "download_version": "Скачать {version}", "latest": "Последний", "no_files_yet": "К этому релизу пока не прикреплены файлы. Возможно, сборка ещё идёт.", "open_on_github": "Открыть {version} на GitHub", "release": "Релиз", "unavailable": "Недоступно", "fail_downloads": "Загрузки на месте: каждая кнопка ниже открывает {link}, где файлы перечислены по именам.", "fail_link": "последний релиз на GitHub", "go_to_downloads": "Перейти к загрузкам", "not_released": "Ещё не выпущен", "no_release": "Ни одного релиза пока не опубликовано. Приложение всё равно можно собрать из исходного кода.", "build_instructions": "Читать инструкцию по сборке на GitHub", "view_project": "Открыть проект на GitHub", "fail_browser": "Этот браузер не может загрузить список релизов.", "fail_rate": "GitHub ограничивает запросы из этой сети. Его публичный API разрешает 60 запросов в час на адрес, и этот лимит исчерпан.", "fail_timeout": "GitHub не ответил вовремя.", "fail_load": "Не удалось загрузить список релизов с GitHub.", "theme_to_dark": "Включить тёмную тему", "theme_to_light": "Включить светлую тему", "menu_close": "Закрыть меню", "menu": "Меню"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

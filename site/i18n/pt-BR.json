@@ -1018,7 +1018,8 @@
     "theme_to_dark": "Mudar para o tema escuro",
     "theme_to_light": "Mudar para o tema claro",
     "menu_close": "Fechar menu",
-    "menu": "Menu"
+    "menu": "Menu",
+    "install_version_for": "Instalar {version} para {os}"
   },
   "build": {
     "language": "Idioma",

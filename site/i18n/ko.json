@@ -1018,7 +1018,8 @@
     "theme_to_dark": "다크 테마로 전환",
     "theme_to_light": "라이트 테마로 전환",
     "menu_close": "메뉴 닫기",
-    "menu": "메뉴"
+    "menu": "메뉴",
+    "install_version_for": "{os}용 {version} 설치"
   },
   "build": {
     "language": "언어",

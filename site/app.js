@@ -329,6 +329,21 @@ var tmT = (function () {
       }[os];
     }
 
+    /* Windows leads with the PowerShell command, which installs without the SmartScreen prompt the
+       unsigned MSI raises, so the button opens the steps rather than handing over the installer.
+       The download page scrolls to its Windows card; the home page goes to the install steps in
+       the reader's own language, through the page's own localized install link. */
+    if (os === 'windows') {
+      var install = document.querySelector('a[href$="/install/"]');
+      el.osBtn.href = '#windows';
+      el.osBtn.removeAttribute('title');
+      el.heroBtn.href = (install ? install.getAttribute('href') : '/install/') + '#windows';
+      el.heroBtn.removeAttribute('title');
+      el.heroLabel.textContent = tmT('install_version_for', 'Install {version} for {os}', { version: tag, os: NAMES[os] });
+      el.osLabel.textContent = el.heroLabel.textContent;
+      return;
+    }
+
     var asset = kindId ? findAsset(release, kindId) : null;
     if (asset) {
       el.osBtn.href = asset.browser_download_url;

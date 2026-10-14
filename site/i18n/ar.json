@@ -1018,7 +1018,8 @@
     "theme_to_dark": "التبديل إلى المظهر الداكن",
     "theme_to_light": "التبديل إلى المظهر الفاتح",
     "menu_close": "إغلاق القائمة",
-    "menu": "القائمة"
+    "menu": "القائمة",
+    "install_version_for": "ثبّت {version} لنظام {os}"
   },
   "build": {
     "language": "اللغة",

@@ -1018,7 +1018,8 @@
     "theme_to_dark": "ডার্ক থিমে যান",
     "theme_to_light": "লাইট থিমে যান",
     "menu_close": "মেনু বন্ধ করুন",
-    "menu": "মেনু"
+    "menu": "মেনু",
+    "install_version_for": "{os}-এর জন্য {version} ইনস্টল করুন"
   },
   "build": {
     "language": "ভাষা",

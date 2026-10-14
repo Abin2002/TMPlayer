@@ -1018,7 +1018,8 @@
     "theme_to_dark": "ダークテーマに切り替え",
     "theme_to_light": "ライトテーマに切り替え",
     "menu_close": "メニューを閉じる",
-    "menu": "メニュー"
+    "menu": "メニュー",
+    "install_version_for": "{os} 用 {version} をインストール"
   },
   "build": {
     "language": "言語",

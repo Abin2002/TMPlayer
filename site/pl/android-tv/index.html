@@ -247,26 +247,47 @@
 
       <div class="card-grid card-grid-3" data-reveal>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-home.webp" alt="TMPlayer&#x27;s Home on a television, with the rail of categories down the left." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.rail_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.a_rail_not_a_menu">Pasek, nie menu</h3>
           <p data-i18n="android_tv.every_category_down_the_left">Wszystkie kategorie po lewej, jedno naciśnięcie stąd.</p>
         </div>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-sign-in-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-sign-in.webp" alt="The sign-in screen on a television: a QR code to scan with Telegram on your phone, and the three steps beside it." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.sign_in_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.sign_in_without_typing">Logowanie bez pisania</h3>
           <p data-i18n="android_tv.scan_a_qr_code_with">Zeskanuj kod QR telefonem. Bez wpisywania strzałkami.</p>
         </div>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-search-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-search.webp" alt="A search in a demo chat on a television, typed as harbor lines, finding every Harbour Lines episode." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.search_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.voice_search_from_the_remote">Wyszukiwanie głosowe z pilota</h3>
           <p data-i18n="android_tv.typos_and_missing_accents_still">Literówki i brakujące znaki diakrytyczne nadal znajdą odcinek.</p>
         </div>
         <div class="card">
+          <span class="card-shot card-shot-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="56" height="56" focusable="false"><path fill="currentColor" d="M15 9H9v6h6V9Zm-2 4h-2v-2h2v2Zm8-2V9h-2V7a2 2 0 0 0-2-2h-2V3h-2v2h-2V3H9v2H7a2 2 0 0 0-2 2v2H3v2h2v2H3v2h2v2a2 2 0 0 0 2 2h2v2h2v-2h2v2h2v-2h2a2 2 0 0 0 2-2v-2h2v-2h-2v-2h2Zm-4 6H7V7h10v10Z"/></svg>
+          </span>
           <h3 data-i18n="android_tv.runs_on_a_1_gb">Działa na stiku z 1 GB</h3>
           <p data-i18n="android_tv.built_on_a_mi_tv">Tworzony na Mi TV Stick. Płynnie tam, płynnie na Shieldzie.</p>
         </div>
         <div class="card">
+          <span class="card-shot card-shot-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="56" height="56" focusable="false"><path fill="currentColor" d="M18 2h-8L4 8v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-6 6h-2V4h2v4Zm3 0h-2V4h2v4Zm3 0h-2V4h2v4Z"/></svg>
+          </span>
           <h3 data-i18n="android_tv.one_video_on_disk_at">Jedno wideo na dysku naraz</h3>
           <p data-i18n="android_tv.the_previous_video_is_cleared">Poprzednie wideo jest usuwane, więc stik z 8 GB nigdy się nie zapełni.</p>
         </div>
         <div class="card">
+          <picture class="card-shot card-shot-corner">
+            <img src="/screenshots/tv-next-episode.webp" alt="The player on a television with a card in the corner: next, S01E05, starting in 12 seconds, with a Play now button." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.next_episode_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.next_episode_on_its_own">Następny odcinek sam</h3>
           <p data-i18n="android_tv.plays_the_next_episode_after">Odtwarza następny odcinek po odliczaniu, które można zatrzymać.</p>
         </div>
@@ -429,7 +450,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "Uniwersalny APK", "kind_windows_installer": "Instalator Windows", "kind_windows_zip": "Archiwum zip dla Windows", "kind_linux_tarball": "Archiwum tar dla Linuxa", "kind_checksums": "Sumy kontrolne", "os_note_mac": "Nie ma wersji na macOS. Wszystko poniżej dotyczy Androida, Windows i Linuxa.", "os_note_ios": "Nie ma wersji na iPhone'a ani iPada. Wszystko poniżej dotyczy Androida, Windows i Linuxa.", "download_for": "Pobierz na {os}", "downloads_one": "{count} pobranie", "downloads_other": "Pobrań: {count}", "not_in_release": "Brak w {version}", "on_github": "Na GitHubie", "download_file": "Pobierz {file}", "download_version_for": "Pobierz {version} na {os}", "download_version_other_os": "Pobierz {version} na Androida, Windows lub Linuxa", "download_version": "Pobierz {version}", "latest": "Najnowsza", "no_files_yet": "To wydanie nie ma jeszcze załączonych plików. Kompilacja może jeszcze trwać.", "open_on_github": "Otwórz {version} na GitHubie", "release": "Wydanie", "unavailable": "Niedostępne", "fail_downloads": "Pliki nadal są dostępne: każdy przycisk poniżej otwiera {link}, gdzie pliki są wymienione z nazwy.", "fail_link": "najnowsze wydanie na GitHubie", "go_to_downloads": "Przejdź do pobierania", "not_released": "Jeszcze niewydane", "no_release": "Nie opublikowano jeszcze żadnego wydania. Nadal możesz zbudować aplikację ze źródeł.", "build_instructions": "Przeczytaj instrukcję budowania na GitHubie", "view_project": "Zobacz projekt na GitHubie", "fail_browser": "Ta przeglądarka nie może wczytać listy wydań.", "fail_rate": "GitHub ogranicza liczbę zapytań z tej sieci. Jego publiczne API pozwala na 60 zapytań na godzinę z jednego adresu, a ten adres je wykorzystał.", "fail_timeout": "GitHub nie odpowiedział na czas.", "fail_load": "Nie udało się wczytać listy wydań z GitHuba.", "theme_to_dark": "Przełącz na ciemny motyw", "theme_to_light": "Przełącz na jasny motyw", "menu_close": "Zamknij menu", "menu": "Menu"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "Uniwersalny APK", "kind_windows_installer": "Instalator Windows", "kind_windows_zip": "Archiwum zip dla Windows", "kind_linux_tarball": "Archiwum tar dla Linuxa", "kind_checksums": "Sumy kontrolne", "os_note_mac": "Nie ma wersji na macOS. Wszystko poniżej dotyczy Androida, Windows i Linuxa.", "os_note_ios": "Nie ma wersji na iPhone'a ani iPada. Wszystko poniżej dotyczy Androida, Windows i Linuxa.", "download_for": "Pobierz na {os}", "downloads_one": "{count} pobranie", "downloads_other": "Pobrań: {count}", "not_in_release": "Brak w {version}", "on_github": "Na GitHubie", "download_file": "Pobierz {file}", "install_version_for": "Zainstaluj {version} dla {os}", "download_version_for": "Pobierz {version} na {os}", "download_version_other_os": "Pobierz {version} na Androida, Windows lub Linuxa", "download_version": "Pobierz {version}", "latest": "Najnowsza", "no_files_yet": "To wydanie nie ma jeszcze załączonych plików. Kompilacja może jeszcze trwać.", "open_on_github": "Otwórz {version} na GitHubie", "release": "Wydanie", "unavailable": "Niedostępne", "fail_downloads": "Pliki nadal są dostępne: każdy przycisk poniżej otwiera {link}, gdzie pliki są wymienione z nazwy.", "fail_link": "najnowsze wydanie na GitHubie", "go_to_downloads": "Przejdź do pobierania", "not_released": "Jeszcze niewydane", "no_release": "Nie opublikowano jeszcze żadnego wydania. Nadal możesz zbudować aplikację ze źródeł.", "build_instructions": "Przeczytaj instrukcję budowania na GitHubie", "view_project": "Zobacz projekt na GitHubie", "fail_browser": "Ta przeglądarka nie może wczytać listy wydań.", "fail_rate": "GitHub ogranicza liczbę zapytań z tej sieci. Jego publiczne API pozwala na 60 zapytań na godzinę z jednego adresu, a ten adres je wykorzystał.", "fail_timeout": "GitHub nie odpowiedział na czas.", "fail_load": "Nie udało się wczytać listy wydań z GitHuba.", "theme_to_dark": "Przełącz na ciemny motyw", "theme_to_light": "Przełącz na jasny motyw", "menu_close": "Zamknij menu", "menu": "Menu"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

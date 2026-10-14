@@ -1018,7 +1018,8 @@
     "theme_to_dark": "ഡാർക്ക് തീമിലേക്ക് മാറുക",
     "theme_to_light": "ലൈറ്റ് തീമിലേക്ക് മാറുക",
     "menu_close": "മെനു അടയ്ക്കുക",
-    "menu": "മെനു"
+    "menu": "മെനു",
+    "install_version_for": "{os}-നായി {version} ഇൻസ്റ്റാൾ ചെയ്യുക"
   },
   "build": {
     "language": "ഭാഷ",

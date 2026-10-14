@@ -247,26 +247,47 @@
 
       <div class="card-grid card-grid-3" data-reveal>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-home-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-home.webp" alt="TMPlayer&#x27;s Home on a television, with the rail of categories down the left." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.rail_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.a_rail_not_a_menu">导航栏，而不是菜单</h3>
           <p data-i18n="android_tv.every_category_down_the_left">所有分类都在左侧，一键可达。</p>
         </div>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-sign-in-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-sign-in.webp" alt="The sign-in screen on a television: a QR code to scan with Telegram on your phone, and the three steps beside it." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.sign_in_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.sign_in_without_typing">无需打字即可登录</h3>
           <p data-i18n="android_tv.scan_a_qr_code_with">用手机扫描二维码。不用再用方向键打字。</p>
         </div>
         <div class="card">
+          <picture class="card-shot">
+            <source data-theme-src srcset="/screenshots/tv-search-light.webp" media="(prefers-color-scheme: light)">
+            <img src="/screenshots/tv-search.webp" alt="A search in a demo chat on a television, typed as harbor lines, finding every Harbour Lines episode." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.search_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.voice_search_from_the_remote">遥控器语音搜索</h3>
           <p data-i18n="android_tv.typos_and_missing_accents_still">打错字或漏掉重音符号，也能找到那一集。</p>
         </div>
         <div class="card">
+          <span class="card-shot card-shot-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="56" height="56" focusable="false"><path fill="currentColor" d="M15 9H9v6h6V9Zm-2 4h-2v-2h2v2Zm8-2V9h-2V7a2 2 0 0 0-2-2h-2V3h-2v2h-2V3H9v2H7a2 2 0 0 0-2 2v2H3v2h2v2H3v2h2v2a2 2 0 0 0 2 2h2v2h2v-2h2v2h2v-2h2a2 2 0 0 0 2-2v-2h2v-2h-2v-2h2Zm-4 6H7V7h10v10Z"/></svg>
+          </span>
           <h3 data-i18n="android_tv.runs_on_a_1_gb">可在 1 GB 内存的电视棒上运行</h3>
           <p data-i18n="android_tv.built_on_a_mi_tv">在 Mi TV Stick 上开发。在它上面流畅，在 Shield 上也一样流畅。</p>
         </div>
         <div class="card">
+          <span class="card-shot card-shot-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="56" height="56" focusable="false"><path fill="currentColor" d="M18 2h-8L4 8v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-6 6h-2V4h2v4Zm3 0h-2V4h2v4Zm3 0h-2V4h2v4Z"/></svg>
+          </span>
           <h3 data-i18n="android_tv.one_video_on_disk_at">磁盘上一次只存一个视频</h3>
           <p data-i18n="android_tv.the_previous_video_is_cleared">上一个视频会被清除，所以 8 GB 的电视棒永远不会被占满。</p>
         </div>
         <div class="card">
+          <picture class="card-shot card-shot-corner">
+            <img src="/screenshots/tv-next-episode.webp" alt="The player on a television with a card in the corner: next, S01E05, starting in 12 seconds, with a Play now button." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="android_tv.next_episode_shot_alt">
+          </picture>
           <h3 data-i18n="android_tv.next_episode_on_its_own">自动播放下一集</h3>
           <p data-i18n="android_tv.plays_the_next_episode_after">倒计时结束后播放下一集，你可以随时取消。</p>
         </div>
@@ -429,7 +450,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安装程序", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_checksums": "校验和", "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。", "os_note_ios": "没有 iPhone 或 iPad 版本。以下内容适用于 Android、Windows 和 Linux。", "download_for": "下载 {os} 版", "downloads_one": "{count} 次下载", "downloads_other": "{count} 次下载", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下载 {file}", "download_version_for": "下载适用于 {os} 的 {version}", "download_version_other_os": "下载适用于 Android、Windows 或 Linux 的 {version}", "download_version": "下载 {version}", "latest": "最新", "no_files_yet": "此版本尚未附带任何文件。构建可能仍在进行中。", "open_on_github": "在 GitHub 上打开 {version}", "release": "版本", "unavailable": "不可用", "fail_downloads": "下载仍然可用：下方每个按钮都会打开{link}，那里按名称列出了所有文件。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下载", "not_released": "尚未发布", "no_release": "尚未发布任何版本。你仍然可以从源代码构建应用。", "build_instructions": "阅读 GitHub 上的构建说明", "view_project": "在 GitHub 上查看项目", "fail_browser": "此浏览器无法加载版本列表。", "fail_rate": "GitHub 正在限制此网络的请求频率。其公开 API 每个地址每小时允许 60 次请求，而这个地址已经用完了。", "fail_timeout": "GitHub 未能及时响应。", "fail_load": "无法从 GitHub 加载版本列表。", "theme_to_dark": "切换到深色主题", "theme_to_light": "切换到浅色主题", "menu_close": "关闭菜单", "menu": "菜单"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安装程序", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_checksums": "校验和", "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。", "os_note_ios": "没有 iPhone 或 iPad 版本。以下内容适用于 Android、Windows 和 Linux。", "download_for": "下载 {os} 版", "downloads_one": "{count} 次下载", "downloads_other": "{count} 次下载", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下载 {file}", "install_version_for": "为 {os} 安装 {version}", "download_version_for": "下载适用于 {os} 的 {version}", "download_version_other_os": "下载适用于 Android、Windows 或 Linux 的 {version}", "download_version": "下载 {version}", "latest": "最新", "no_files_yet": "此版本尚未附带任何文件。构建可能仍在进行中。", "open_on_github": "在 GitHub 上打开 {version}", "release": "版本", "unavailable": "不可用", "fail_downloads": "下载仍然可用：下方每个按钮都会打开{link}，那里按名称列出了所有文件。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下载", "not_released": "尚未发布", "no_release": "尚未发布任何版本。你仍然可以从源代码构建应用。", "build_instructions": "阅读 GitHub 上的构建说明", "view_project": "在 GitHub 上查看项目", "fail_browser": "此浏览器无法加载版本列表。", "fail_rate": "GitHub 正在限制此网络的请求频率。其公开 API 每个地址每小时允许 60 次请求，而这个地址已经用完了。", "fail_timeout": "GitHub 未能及时响应。", "fail_load": "无法从 GitHub 加载版本列表。", "theme_to_dark": "切换到深色主题", "theme_to_light": "切换到浅色主题", "menu_close": "关闭菜单", "menu": "菜单"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and
