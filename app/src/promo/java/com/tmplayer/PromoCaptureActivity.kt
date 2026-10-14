@@ -381,11 +381,11 @@ class PromoCaptureActivity : ComponentActivity() {
                         )
                     }
                     if (confirming) {
+                        val s = com.tmplayer.ui.i18n.LocalStrings.current
                         TvConfirm(
-                            title = "Sign out of Telegram?",
-                            message = "You'll be signed out and taken back to the sign-in screen. The cache, your " +
-                                "favourites, your watched list and everything you were part-way through go with it.",
-                            confirmLabel = "Sign out",
+                            title = s.settingsSignOutTitle,
+                            message = s.settingsSignOutMessage,
+                            confirmLabel = s.settingsSignOutConfirm,
                             onConfirm = { confirming = false },
                             onDismiss = { confirming = false },
                         )
