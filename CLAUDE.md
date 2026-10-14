@@ -65,11 +65,14 @@ existing ones do. Check them whenever a page under `site/` is added or changed.
   `styles.css` and `app.js` keep a short cache because their names do not change between deploys,
   so do not raise it without adding a content hash to their URLs. Images, the manifest, the
   sitemap and the feed have their own entries; a new top-level asset type gets one too.
-- **Feature screenshots with markers.** When a feature is shown on a screenshot, the markers are
-  HTML overlays positioned in percent over the image (the feature tour on `/features/`), never
-  drawn into the image, so they stay sharp and get translated. Markers are numbered and matched by
-  a numbered list that carries the meaning; light and dark shots stay paired. Only demo-content
-  screenshots are used, never a real account.
+- **Feature screenshots with markers.** A shot that points at one thing is cropped to the part
+  that matters and zoomed, and its hand-drawn arrows, circles and underlines are drawn into the
+  image by `scripts/annotate-shot.py` from a spec in `scripts/annotations/`, so the site and the
+  app's onboarding share one look and a retaken shot is re-marked with one command (user,
+  2026-10-14). No words go into an image: labels stay HTML with `data-i18n` (or app strings) so
+  they get translated. The feature tour on `/features/` keeps its numbered HTML markers matched
+  by a numbered list. Light and dark shots stay paired. Only demo-content screenshots are used,
+  never a real account.
 - **Files for crawlers and machines.** `site/llms.txt` is a hand-written summary of the site for AI
   assistants: when a page is added, renamed or its claims change, update it too. The home page
   carries `Organization` JSON-LD (logo, `sameAs` profiles); a new official profile goes there.
