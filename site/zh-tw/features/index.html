@@ -274,7 +274,7 @@
             <li data-i18n="features.home_and_series_pages"><strong>把影集整理得井然有序。</strong> 首頁彙整所有聊天中接下來要看的內容，每部影集都有自己的頁面，各集依季分組。</li>
             <li data-i18n="features.topics_tabs_one_tile"><strong>讓熱鬧的聊天井然有序。</strong> 論壇主題變成分頁，一部影集只佔一格，同一部電影的多個副本合併成一張海報。</li>
             <li data-i18n="features.watch_later_new_episodes"><strong>幫你記住進度。</strong> 稍後觀看、你追的影集的新一集、一次下載整季，以及課程的學習進度。</li>
-            <li data-i18n="features.tv_home_channels"><strong>Shows up on the TV's home screen.</strong> What is new in your starred chats becomes a row of cards on the Android TV home screen, next to Play next, on launchers that show app rows. Switch it off in Settings.</li>
+            <li data-i18n="features.tv_home_channels"><strong>出現在電視主畫面上。</strong>星號聊天裡的新內容會在 Android TV 主畫面上排成一列卡片，位於「接著播放」旁邊，適用於顯示應用程式列的啟動器。可在設定中關閉。</li>
             <li data-i18n="features.posters_and_overviews"><strong>加上海報與簡介，可隨時關閉。</strong> 只用影片整理過的標題在 TMDB、TVmaze 與 AniList 上查詢，不使用其他任何資訊。</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>看得懂集數檔名。</strong> 下一集會在倒數後開始，倒數期間可取消。</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>容許你的輸入習慣。</strong> 打錯字、漏掉重音符號，甚至錯一個詞，仍然找得到影片。</li>
@@ -405,7 +405,7 @@
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="tour-h" data-i18n="features.a_closer_look">深入了解</h2>
-          <p class="section-sub" data-i18n="features.five_screens_with_their_parts">Five screens with their parts marked, numbered to match the notes beside them.</p>
+          <p class="section-sub" data-i18n="features.five_screens_with_their_parts">五個畫面，各部分都已標示，編號與旁邊的說明一一對應。</p>
         </div>
       </div>
 
@@ -493,26 +493,25 @@
         </figure>
 
         <figure class="shot tour-shot" id="tour-tv-home" data-reveal>
-          <div class="device device-tv">
+          <!-- The launcher's row only, cropped by scripts/annotate-shot.py (tv-home-screen.json). The
+               launcher has no light theme, so one picture serves both. -->
+          <div class="frame">
             <div class="screen">
-              <!-- The launcher has no light theme, so one picture serves both. -->
-              <img src="/screenshots/tv-home-screen.webp" alt="The Android TV home screen with a TMPlayer row of demo films and shows recently added to starred chats, The Quiet Orbit in focus." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_screen_alt">
+              <img src="/screenshots/tv-home-screen.webp" alt="Android TV 主畫面上的一排 TMPlayer 卡片，是最近加入星號聊天的示範電影和影集，選取的是 The Quiet Orbit。" width="1440" height="420" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_screen_alt">
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 22.6%; --y: 11.6%"></span>
-                <span style="--x: 19.8%; --y: 43.8%"></span>
-                <span style="--x: 91.6%; --y: 15.5%"></span>
+                <span style="--x: 27%; --y: 11.6%"></span>
+                <span style="--x: 22.5%; --y: 73.8%"></span>
+                <span style="--x: 91.6%; --y: 19.1%"></span>
               </div>
             </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
           </div>
           <figcaption>
-            <h3 data-i18n="features.tour_tv_home_title">On the TV's home screen</h3>
-            <p data-i18n="features.tour_tv_home_text">A row of cards from TMPlayer on the Android TV home screen, there before you open the app. Switch it off in Settings.</p>
+            <h3 data-i18n="features.tour_tv_home_title">在電視主畫面上</h3>
+            <p data-i18n="features.tour_tv_home_text">TMPlayer 在 Android TV 主畫面上的一排卡片，不用開啟應用程式就看得到。可以在設定中關閉。</p>
             <ol class="tour-list">
-              <li data-i18n="features.tour_tv_home_row">What was recently added to your starred chats, in a row under TMPlayer's name.</li>
-              <li data-i18n="features.tour_tv_home_card">The card in focus shows its title, running time and chat. OK plays it, or opens a show's page.</li>
-              <li data-i18n="features.tour_tv_home_posters">Films and shows wear their posters when online lookups are on; other videos show their own thumbnail.</li>
+              <li data-i18n="features.tour_tv_home_row">星號聊天中最近新增的內容，排成一列，標著 TMPlayer 的名稱。</li>
+              <li data-i18n="features.tour_tv_home_card">選取的卡片會顯示標題、片長和所在聊天。按 OK 播放，或開啟影集頁面。</li>
+              <li data-i18n="features.tour_tv_home_posters">開啟線上資訊查詢後，電影和影集會顯示海報；其他影片顯示自己的縮圖。</li>
             </ol>
           </figcaption>
         </figure>

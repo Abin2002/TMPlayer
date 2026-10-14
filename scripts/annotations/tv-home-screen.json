@@ -1,0 +1,24 @@
+{
+  "source": "tv-home-screen.png",
+  "output": "site/screenshots/tv-home-screen.webp",
+  "crop": [
+    0,
+    60,
+    1920,
+    560
+  ],
+  "width": 1440,
+  "marks": [
+    {
+      "type": "underline",
+      "from": [
+        104,
+        152
+      ],
+      "to": [
+        402,
+        150
+      ]
+    }
+  ]
+}

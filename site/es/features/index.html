@@ -274,7 +274,7 @@
             <li data-i18n="features.home_and_series_pages"><strong>Pone las series en orden.</strong> Inicio reúne qué ver a continuación de todos tus chats, y cada serie tiene su propia página, con los episodios agrupados por temporada.</li>
             <li data-i18n="features.topics_tabs_one_tile"><strong>Ordena un chat lleno.</strong> Los temas de un foro se vuelven pestañas, una serie es un solo mosaico y las copias de una película se juntan en un póster.</li>
             <li data-i18n="features.watch_later_new_episodes"><strong>Lleva la cuenta por ti.</strong> Ver más tarde, episodios nuevos de tus series, una temporada entera descargada de una vez y cuánto llevas de un curso.</li>
-            <li data-i18n="features.tv_home_channels"><strong>Shows up on the TV's home screen.</strong> What is new in your starred chats becomes a row of cards on the Android TV home screen, next to Play next, on launchers that show app rows. Switch it off in Settings.</li>
+            <li data-i18n="features.tv_home_channels"><strong>Aparece en la pantalla de inicio de la TV.</strong> Lo nuevo de tus chats destacados se convierte en una fila de tarjetas en la pantalla de inicio de Android TV, junto a Reproducir a continuación, en los launchers que muestran filas de apps. Se desactiva en Ajustes.</li>
             <li data-i18n="features.posters_and_overviews"><strong>Agrega pósters y sinopsis, a menos que los desactives.</strong> Se buscan en TMDB, TVmaze y AniList solo con el título limpio del video, y nada más.</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>Entiende los nombres de archivo de los episodios.</strong> El siguiente arranca tras una cuenta regresiva que puedes detener.</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>Perdona cómo escribes.</strong> Aunque haya errores de tipeo, falten acentos o una palabra esté mal, encuentra el video.</li>
@@ -405,7 +405,7 @@
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="tour-h" data-i18n="features.a_closer_look">Un vistazo más de cerca</h2>
-          <p class="section-sub" data-i18n="features.five_screens_with_their_parts">Five screens with their parts marked, numbered to match the notes beside them.</p>
+          <p class="section-sub" data-i18n="features.five_screens_with_their_parts">Cinco pantallas con sus partes marcadas y numeradas según las notas de al lado.</p>
         </div>
       </div>
 
@@ -493,26 +493,25 @@
         </figure>
 
         <figure class="shot tour-shot" id="tour-tv-home" data-reveal>
-          <div class="device device-tv">
+          <!-- The launcher's row only, cropped by scripts/annotate-shot.py (tv-home-screen.json). The
+               launcher has no light theme, so one picture serves both. -->
+          <div class="frame">
             <div class="screen">
-              <!-- The launcher has no light theme, so one picture serves both. -->
-              <img src="/screenshots/tv-home-screen.webp" alt="The Android TV home screen with a TMPlayer row of demo films and shows recently added to starred chats, The Quiet Orbit in focus." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_screen_alt">
+              <img src="/screenshots/tv-home-screen.webp" alt="La pantalla principal de Android TV con una fila de TMPlayer de películas y series de demostración agregadas a chats destacados, con The Quiet Orbit seleccionada." width="1440" height="420" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_screen_alt">
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 22.6%; --y: 11.6%"></span>
-                <span style="--x: 19.8%; --y: 43.8%"></span>
-                <span style="--x: 91.6%; --y: 15.5%"></span>
+                <span style="--x: 27%; --y: 11.6%"></span>
+                <span style="--x: 22.5%; --y: 73.8%"></span>
+                <span style="--x: 91.6%; --y: 19.1%"></span>
               </div>
             </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
           </div>
           <figcaption>
-            <h3 data-i18n="features.tour_tv_home_title">On the TV's home screen</h3>
-            <p data-i18n="features.tour_tv_home_text">A row of cards from TMPlayer on the Android TV home screen, there before you open the app. Switch it off in Settings.</p>
+            <h3 data-i18n="features.tour_tv_home_title">En la pantalla principal de la TV</h3>
+            <p data-i18n="features.tour_tv_home_text">Una fila de tarjetas de TMPlayer en la pantalla principal de Android TV, lista antes de abrir la app. Puedes desactivarla en Ajustes.</p>
             <ol class="tour-list">
-              <li data-i18n="features.tour_tv_home_row">What was recently added to your starred chats, in a row under TMPlayer's name.</li>
-              <li data-i18n="features.tour_tv_home_card">The card in focus shows its title, running time and chat. OK plays it, or opens a show's page.</li>
-              <li data-i18n="features.tour_tv_home_posters">Films and shows wear their posters when online lookups are on; other videos show their own thumbnail.</li>
+              <li data-i18n="features.tour_tv_home_row">Lo que se agregó hace poco a tus chats destacados, en una fila con el nombre de TMPlayer.</li>
+              <li data-i18n="features.tour_tv_home_card">La tarjeta seleccionada muestra el título, la duración y el chat. OK la reproduce o abre la página de la serie.</li>
+              <li data-i18n="features.tour_tv_home_posters">Las películas y series llevan su póster cuando la búsqueda en línea está activada; los demás videos muestran su propia miniatura.</li>
             </ol>
           </figcaption>
         </figure>

@@ -68,7 +68,7 @@ ACCENT = (255, 178, 36, 255)
 EDGE = (24, 16, 4, 170)
 SUPERSAMPLE = 2
 # Stroke as a share of the output width, and the edge's extra width on each side of it.
-STROKE = 0.0075
+STROKE = 0.0095
 EDGE_RATIO = 0.35
 
 

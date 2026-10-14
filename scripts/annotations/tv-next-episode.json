@@ -1,0 +1,8 @@
+{
+  "source": "tv-next-episode.png",
+  "output": "site/screenshots/tv-next-episode.webp",
+  "crop": [1080, 500, 840, 420],
+  "marks": [
+    {"type": "circle", "box": [1568, 630, 296, 222], "seed": 2}
+  ]
+}

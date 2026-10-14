@@ -15,7 +15,7 @@ Key facts:
 ## Pages
 
 - [Home](https://tmplayer.org/): what TMPlayer is, with screenshots of the TV, phone and desktop apps
-- [Features](https://tmplayer.org/features/): streaming while downloading, instant seeking, subtitles, Home and series pages, skip intro, bookmarks, the app lock, the TV and desktop layouts, keyboard shortcuts
+- [Features](https://tmplayer.org/features/): streaming while downloading, instant seeking, subtitles, Home and series pages, skip intro, bookmarks, the app lock, the TV and desktop layouts, a row of new videos on the Android TV home screen, keyboard shortcuts
 - [Download](https://tmplayer.org/download/): the APK for Android TV and phones, the Windows installer and the Linux AppImage
 - [How to install](https://tmplayer.org/install/): Android TV with the Downloader app and `tmplayer.org/apk`, Android phones, Windows with one PowerShell line (`irm https://tmplayer.org/install.ps1 | iex`) or the MSI installer, Linux with the AppImage
 - [Android TV](https://tmplayer.org/android-tv/): watching Telegram videos on Android TV and Google TV

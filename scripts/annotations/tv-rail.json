@@ -1,0 +1,23 @@
+{
+  "source": "tv-home-dark.webp",
+  "output": "site/screenshots/tv-rail.webp",
+  "crop": [
+    0,
+    0,
+    1200,
+    600
+  ],
+  "width": 960,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        84,
+        184,
+        310,
+        316
+      ],
+      "seed": 5
+    }
+  ]
+}

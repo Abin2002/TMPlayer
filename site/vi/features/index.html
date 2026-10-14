@@ -274,7 +274,7 @@
             <li data-i18n="features.home_and_series_pages"><strong>Sắp xếp phim bộ gọn gàng.</strong> Trang chủ gom những gì nên xem tiếp từ mọi cuộc trò chuyện, và mỗi bộ phim có trang riêng, với các tập được nhóm theo mùa.</li>
             <li data-i18n="features.topics_tabs_one_tile"><strong>Dọn gọn cuộc trò chuyện đông đúc.</strong> Các chủ đề diễn đàn thành thẻ, một phim bộ là một ô, và các bản sao của một phim gộp vào một áp phích.</li>
             <li data-i18n="features.watch_later_new_episodes"><strong>Theo dõi giúp bạn.</strong> Xem sau, tập mới của các phim bộ bạn theo dõi, tải cả một mùa một lần và tiến độ của bạn trong một khóa học.</li>
-            <li data-i18n="features.tv_home_channels"><strong>Shows up on the TV's home screen.</strong> What is new in your starred chats becomes a row of cards on the Android TV home screen, next to Play next, on launchers that show app rows. Switch it off in Settings.</li>
+            <li data-i18n="features.tv_home_channels"><strong>Hiện trên màn hình chính của TV.</strong> Nội dung mới trong các cuộc trò chuyện gắn sao thành một hàng thẻ trên màn hình chính Android TV, cạnh Phát tiếp theo, với các trình khởi chạy có hiển thị hàng ứng dụng. Có thể tắt trong Cài đặt.</li>
             <li data-i18n="features.posters_and_overviews"><strong>Thêm poster và phần giới thiệu, trừ khi bạn tắt đi.</strong> Được tra cứu trên TMDB, TVmaze và AniList chỉ bằng tiêu đề đã làm gọn của video, ngoài ra không gì khác.</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>Hiểu tên tệp của các tập phim.</strong> Tập tiếp theo bắt đầu sau một lần đếm ngược mà bạn có thể dừng.</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>Bỏ qua lỗi gõ phím.</strong> Gõ sai, thiếu dấu hay sai một từ vẫn tìm ra video.</li>
@@ -405,7 +405,7 @@
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="tour-h" data-i18n="features.a_closer_look">Xem kỹ hơn</h2>
-          <p class="section-sub" data-i18n="features.five_screens_with_their_parts">Five screens with their parts marked, numbered to match the notes beside them.</p>
+          <p class="section-sub" data-i18n="features.five_screens_with_their_parts">Năm màn hình với các phần được đánh dấu, đánh số khớp với ghi chú bên cạnh.</p>
         </div>
       </div>
 
@@ -493,26 +493,25 @@
         </figure>
 
         <figure class="shot tour-shot" id="tour-tv-home" data-reveal>
-          <div class="device device-tv">
+          <!-- The launcher's row only, cropped by scripts/annotate-shot.py (tv-home-screen.json). The
+               launcher has no light theme, so one picture serves both. -->
+          <div class="frame">
             <div class="screen">
-              <!-- The launcher has no light theme, so one picture serves both. -->
-              <img src="/screenshots/tv-home-screen.webp" alt="The Android TV home screen with a TMPlayer row of demo films and shows recently added to starred chats, The Quiet Orbit in focus." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_screen_alt">
+              <img src="/screenshots/tv-home-screen.webp" alt="Màn hình chính Android TV với một hàng TMPlayer gồm phim lẻ và phim bộ mẫu mới thêm vào các cuộc trò chuyện gắn sao, đang chọn The Quiet Orbit." width="1440" height="420" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_screen_alt">
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 22.6%; --y: 11.6%"></span>
-                <span style="--x: 19.8%; --y: 43.8%"></span>
-                <span style="--x: 91.6%; --y: 15.5%"></span>
+                <span style="--x: 27%; --y: 11.6%"></span>
+                <span style="--x: 22.5%; --y: 73.8%"></span>
+                <span style="--x: 91.6%; --y: 19.1%"></span>
               </div>
             </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
           </div>
           <figcaption>
-            <h3 data-i18n="features.tour_tv_home_title">On the TV's home screen</h3>
-            <p data-i18n="features.tour_tv_home_text">A row of cards from TMPlayer on the Android TV home screen, there before you open the app. Switch it off in Settings.</p>
+            <h3 data-i18n="features.tour_tv_home_title">Trên màn hình chính của TV</h3>
+            <p data-i18n="features.tour_tv_home_text">Một hàng thẻ từ TMPlayer trên màn hình chính Android TV, có sẵn trước khi bạn mở ứng dụng. Có thể tắt trong Cài đặt.</p>
             <ol class="tour-list">
-              <li data-i18n="features.tour_tv_home_row">What was recently added to your starred chats, in a row under TMPlayer's name.</li>
-              <li data-i18n="features.tour_tv_home_card">The card in focus shows its title, running time and chat. OK plays it, or opens a show's page.</li>
-              <li data-i18n="features.tour_tv_home_posters">Films and shows wear their posters when online lookups are on; other videos show their own thumbnail.</li>
+              <li data-i18n="features.tour_tv_home_row">Những gì mới thêm vào các cuộc trò chuyện gắn sao, trong một hàng dưới tên TMPlayer.</li>
+              <li data-i18n="features.tour_tv_home_card">Thẻ đang chọn hiện tiêu đề, thời lượng và cuộc trò chuyện. OK để phát, hoặc mở trang của phim bộ.</li>
+              <li data-i18n="features.tour_tv_home_posters">Phim lẻ và phim bộ có áp phích khi bật tra cứu trực tuyến; các video khác hiện hình thu nhỏ của chính nó.</li>
             </ol>
           </figcaption>
         </figure>

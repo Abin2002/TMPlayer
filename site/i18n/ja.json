@@ -61,7 +61,8 @@
     "tmplayer_a_telegram_media_player": "TMPlayer。テレビとスマートフォンで、ご自身のチャットにある動画を再生するTelegramメディアプレーヤー。",
     "tv_home_hero_alt": "テレビで表示した TMPlayer のホーム。続きから見られるデモの映画とシリーズが残り時間付きで並び、その下にスター付きチャットに最近追加されたポスターが並びます。",
     "phone_show_page_alt": "スマートフォンの TMPlayer に表示したシリーズのページ。デモのシリーズ Skybound Academy のアートワーク、あらすじ、第 2 話を再開するボタンがあります。",
-    "not_a_media_service_messages": "メディアサービスでもチャットアプリでもありません。メッセージが表示されることはありません。"
+    "not_a_media_service_messages": "メディアサービスでもチャットアプリでもありません。メッセージが表示されることはありません。",
+    "sign_in_qr_alt": "テレビに表示した TMPlayer のサインイン画面。スマホの Telegram で読み取る QR コード付き。"
   },
   "common": {
     "skip_to_content": "本文へスキップ",
@@ -325,7 +326,6 @@
     "posters_and_overviews": "{strong1}動画のタイトルを整えたものだけを使って、TMDB、TVmaze、AniListで検索します。",
     "posters_and_overviews__strong1": "ポスターとあらすじを追加します。オフにもできます。",
     "a_closer_look": "詳しく見る",
-    "four_screens_with_their_parts": "4つの画面の各部分に番号を付け、横の説明と対応させています。",
     "the_player_watching_while_it": "プレーヤー: ダウンロードしながら視聴",
     "a_video_starts_while_it": "動画はダウンロード中でも再生が始まり、コントロールにはダウンロードの進み具合が表示されます。",
     "the_lighter_part_of_the": "タイムバーの明るい部分が、ダウンロード済みの範囲です。その先へシークすると、ダウンロード位置も新しい場所へ移ります。",
@@ -353,7 +353,15 @@
     "demo_artwork_photos_from_unsplash__a1": "Unsplashの写真",
     "posters_with_the_year_size": "{b1}公開年、サイズ、解像度付きのポスター。押すと詳細が開き、そのまま再生もできます。",
     "posters_with_the_year_size__b1": "ステップ2: 動画を選ぶ",
-    "tv_home_channels": "<strong>テレビのホーム画面にも表示。</strong>スター付きチャットの新着が、アプリの行を表示するランチャーで、Android TV のホーム画面の「次に再生」の横にカードの行として並びます。設定でオフにできます。"
+    "tv_home_channels": "{strong1}スター付きチャットの新着が、アプリの行を表示するランチャーで、Android TV のホーム画面の「次に再生」の横にカードの行として並びます。設定でオフにできます。",
+    "tv_home_channels__strong1": "テレビのホーム画面にも表示。",
+    "five_screens_with_their_parts": "5つの画面の各部分に番号を付け、横の説明と対応させています。",
+    "tour_tv_home_title": "テレビのホーム画面に",
+    "tour_tv_home_text": "Android TV のホーム画面に並ぶ TMPlayer のカードの列。アプリを開く前から表示されます。設定でオフにできます。",
+    "tour_tv_home_row": "スターを付けたチャットに最近追加されたものを、TMPlayer の名前の下に1列で。",
+    "tour_tv_home_card": "選択中のカードには、タイトル、再生時間、チャットが表示されます。OK で再生、シリーズならそのページを開きます。",
+    "tour_tv_home_posters": "オンライン情報の取得がオンなら、映画やシリーズはポスター付き。ほかの動画は自身のサムネイルで表示されます。",
+    "tv_home_screen_alt": "Android TV のホーム画面。スター付きチャットに最近追加されたデモの映画とシリーズが TMPlayer の列に並び、The Quiet Orbit が選択されています。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV、スマートフォン、Windows、Linux向けTMPlayerをダウンロード",
@@ -587,7 +595,11 @@
     "a_tv_app_outside_the": "Playストア以外のテレビアプリは、口コミで広がります。スターが、いちばん簡単な広め方です。",
     "watch_telegram_videos_on_android": "Android TVとGoogle TVでTelegramの動画を見ましょう。TMPlayerは無料のオープンソースで、リモコン操作を第一にしたレイアウト、QRコードでのサインイン、RAM 1 GBのスティックでの快適な再生に対応しています。",
     "the_tmplayer_chat_list_on": "Android TV の TMPlayer チャット一覧。左側にナビゲーションレールがあります。",
-    "videos_from_a_telegram_chat": "Android TVに表示した、Telegramチャットの動画。再生時間とファイルサイズ付きのタイルのグリッドです。"
+    "videos_from_a_telegram_chat": "Android TVに表示した、Telegramチャットの動画。再生時間とファイルサイズ付きのタイルのグリッドです。",
+    "rail_shot_alt": "テレビで表示した TMPlayer のホーム。左にカテゴリのレールがあります。",
+    "sign_in_shot_alt": "テレビのサインイン画面。スマホの Telegram で読み取る QR コードと、その横に3つの手順。",
+    "search_shot_alt": "テレビのデモチャットで harbor lines と入力した検索。Harbour Lines の全エピソードが見つかります。",
+    "next_episode_shot_alt": "テレビのプレーヤー。隅のカードに次は S01E05、12秒後に開始と表示され、すぐ再生するボタンがあります。"
   },
   "fire_tv": {
     "how_to_install_tmplayer_on": "Fire TV StickとFire TV CubeにTMPlayerをインストールする方法",

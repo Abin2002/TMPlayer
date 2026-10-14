@@ -61,7 +61,8 @@
     "tmplayer_a_telegram_media_player": "TMPlayer, odtwarzacz multimediów z Telegrama dla wideo z twoich własnych czatów, na telewizorze i telefonie.",
     "tv_home_hero_alt": "Ekran Start TMPlayera na telewizorze: demonstracyjne filmy i seriale do dokończenia, każdy z pozostałym czasem, nad plakatami ostatnio dodanymi do czatów z gwiazdką.",
     "phone_show_page_alt": "Strona serialu w TMPlayerze na telefonie: demonstracyjny serial Skybound Academy z grafiką, opisem i przyciskiem wznowienia drugiego odcinka.",
-    "not_a_media_service_messages": "Nie jest serwisem z filmami ani komunikatorem. Twoje wiadomości nigdy się w nim nie pojawiają."
+    "not_a_media_service_messages": "Nie jest serwisem z filmami ani komunikatorem. Twoje wiadomości nigdy się w nim nie pojawiają.",
+    "sign_in_qr_alt": "Ekran logowania TMPlayera na telewizorze, z kodem QR do zeskanowania Telegramem na telefonie."
   },
   "common": {
     "skip_to_content": "Przejdź do treści",
@@ -325,7 +326,6 @@
     "posters_and_overviews": "{strong1} Wyszukiwane w TMDB, TVmaze i AniList tylko po oczyszczonym tytule wideo, niczym więcej.",
     "posters_and_overviews__strong1": "Dodaje plakaty i opisy, chyba że je wyłączysz.",
     "a_closer_look": "Z bliska",
-    "four_screens_with_their_parts": "Cztery ekrany z zaznaczonymi elementami, ponumerowanymi tak jak opisy obok.",
     "the_player_watching_while_it": "Odtwarzacz: oglądanie w trakcie pobierania",
     "a_video_starts_while_it": "Wideo startuje, gdy jeszcze się pobiera, a elementy sterowania pokazują, ile już pobrano.",
     "the_lighter_part_of_the": "Jaśniejsza część paska czasu to to, co już pobrano. Przewiń dalej, a pobieranie przeniesie się w nowe miejsce.",
@@ -353,7 +353,15 @@
     "demo_artwork_photos_from_unsplash__a1": "zdjęć w serwisie Unsplash",
     "posters_with_the_year_size": "{b1}Plakaty z rokiem, rozmiarem i rozdzielczością. Naciśnij jeden, by zobaczyć szczegóły, albo od razu go odtwórz.",
     "posters_with_the_year_size__b1": "Krok drugi: wybierz wideo",
-    "tv_home_channels": "<strong>Pojawia się na ekranie głównym telewizora.</strong> Nowości z czatów oznaczonych gwiazdką tworzą rząd kart na ekranie głównym Android TV, obok Odtwórz następne, w launcherach pokazujących rzędy aplikacji. Można to wyłączyć w Ustawieniach."
+    "tv_home_channels": "{strong1} Nowości z czatów oznaczonych gwiazdką tworzą rząd kart na ekranie głównym Android TV, obok Odtwórz następne, w launcherach pokazujących rzędy aplikacji. Można to wyłączyć w Ustawieniach.",
+    "tv_home_channels__strong1": "Pojawia się na ekranie głównym telewizora.",
+    "five_screens_with_their_parts": "Pięć ekranów z zaznaczonymi elementami, ponumerowanymi tak jak opisy obok.",
+    "tour_tv_home_title": "Na ekranie głównym telewizora",
+    "tour_tv_home_text": "Rząd kart z TMPlayera na ekranie głównym Android TV, gotowy, zanim otworzysz aplikację. Można go wyłączyć w Ustawieniach.",
+    "tour_tv_home_row": "To, co niedawno pojawiło się w Twoich ulubionych czatach, w rzędzie pod nazwą TMPlayer.",
+    "tour_tv_home_card": "Wybrana karta pokazuje tytuł, czas trwania i czat. OK ją odtwarza albo otwiera stronę serialu.",
+    "tour_tv_home_posters": "Filmy i seriale mają plakaty, gdy wyszukiwanie online jest włączone; inne wideo pokazują własną miniaturę.",
+    "tv_home_screen_alt": "Ekran główny Android TV z rzędem TMPlayera z demonstracyjnymi filmami i serialami dodanymi do ulubionych czatów, wybrany The Quiet Orbit."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Pobierz TMPlayera na Android TV, telefony, Windows i Linuxa",
@@ -587,7 +595,11 @@
     "a_tv_app_outside_the": "Aplikacja na telewizor spoza Sklepu Play żyje z polecania. Gwiazdka to najprostszy sposób, żeby ją rozpowszechnić.",
     "watch_telegram_videos_on_android": "Oglądaj wideo z Telegrama na Android TV i Google TV. TMPlayer jest darmowy i open source, z układem dla pilota, logowaniem kodem QR i płynnym odtwarzaniem na stikach z 1 GB.",
     "the_tmplayer_chat_list_on": "Lista czatów TMPlayer na Android TV, z paskiem nawigacji po lewej.",
-    "videos_from_a_telegram_chat": "Wideo z czatu w Telegramie pokazane na Android TV jako siatka kafelków z czasem trwania i rozmiarem plików."
+    "videos_from_a_telegram_chat": "Wideo z czatu w Telegramie pokazane na Android TV jako siatka kafelków z czasem trwania i rozmiarem plików.",
+    "rail_shot_alt": "Strona główna TMPlayera na telewizorze, z paskiem kategorii po lewej.",
+    "sign_in_shot_alt": "Ekran logowania na telewizorze: kod QR do zeskanowania Telegramem na telefonie i obok trzy kroki.",
+    "search_shot_alt": "Wyszukiwanie w demonstracyjnym czacie na telewizorze, wpisane jako harbor lines, znajduje każdy odcinek Harbour Lines.",
+    "next_episode_shot_alt": "Odtwarzacz na telewizorze z kartą w rogu: następny S01E05, start za 12 sekund, z przyciskiem, by odtworzyć od razu."
   },
   "fire_tv": {
     "how_to_install_tmplayer_on": "Jak zainstalować TMPlayera na Fire TV Stick i Fire TV Cube",

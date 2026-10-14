@@ -274,7 +274,7 @@
             <li data-i18n="features.home_and_series_pages"><strong>سریال‌ها را مرتب می‌کند.</strong> صفحهٔ خانه آنچه را باید بعداً تماشا کنید از همهٔ چت‌ها جمع می‌کند، و هر سریال صفحهٔ خودش را دارد، با قسمت‌هایی که بر اساس فصل دسته‌بندی شده‌اند.</li>
             <li data-i18n="features.topics_tabs_one_tile"><strong>گفتگوی شلوغ را مرتب می‌کند.</strong> موضوع‌های انجمن زبانه می‌شوند، هر سریال یک کاشی است و نسخه‌های یک فیلم زیر یک پوستر جمع می‌شوند.</li>
             <li data-i18n="features.watch_later_new_episodes"><strong>همه‌چیز را برایتان دنبال می‌کند.</strong> «بعداً تماشا کن»، قسمت‌های تازهٔ سریال‌هایتان، دانلود یک فصل کامل در یک بار و میزان پیشرفتتان در یک دوره.</li>
-            <li data-i18n="features.tv_home_channels"><strong>Shows up on the TV's home screen.</strong> What is new in your starred chats becomes a row of cards on the Android TV home screen, next to Play next, on launchers that show app rows. Switch it off in Settings.</li>
+            <li data-i18n="features.tv_home_channels"><strong>روی صفحهٔ اصلی تلویزیون نشان داده می‌شود.</strong> تازه‌های گفت‌وگوهای ستاره‌دار شما ردیفی از کارت‌ها روی صفحهٔ اصلی Android TV می‌شود، کنار «پخش بعدی»، در لانچرهایی که ردیف برنامه‌ها را نشان می‌دهند. در تنظیمات خاموش می‌شود.</li>
             <li data-i18n="features.posters_and_overviews"><strong>پوستر و خلاصه اضافه می‌کند، مگر اینکه خاموشش کنید.</strong> در TMDB، TVmaze و AniList فقط با عنوان تمیزشدهٔ ویدیو جستجو می‌شوند، نه با چیز دیگری.</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>نام فایل قسمت‌ها را می‌فهمد.</strong> قسمت بعدی بعد از شمارش معکوسی که می‌توانید متوقفش کنید شروع می‌شود.</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>تایپ شما را می‌بخشد.</strong> غلط تایپی، نبود اعراب و حتی یک واژهٔ اشتباه هم ویدیو را پیدا می‌کند.</li>
@@ -405,7 +405,7 @@
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="tour-h" data-i18n="features.a_closer_look">نگاهی دقیق‌تر</h2>
-          <p class="section-sub" data-i18n="features.five_screens_with_their_parts">Five screens with their parts marked, numbered to match the notes beside them.</p>
+          <p class="section-sub" data-i18n="features.five_screens_with_their_parts">پنج صفحه که بخش‌هایشان علامت خورده و شماره‌ها با یادداشت‌های کنارشان جورند.</p>
         </div>
       </div>
 
@@ -493,26 +493,25 @@
         </figure>
 
         <figure class="shot tour-shot" id="tour-tv-home" data-reveal>
-          <div class="device device-tv">
+          <!-- The launcher's row only, cropped by scripts/annotate-shot.py (tv-home-screen.json). The
+               launcher has no light theme, so one picture serves both. -->
+          <div class="frame">
             <div class="screen">
-              <!-- The launcher has no light theme, so one picture serves both. -->
-              <img src="/screenshots/tv-home-screen.webp" alt="The Android TV home screen with a TMPlayer row of demo films and shows recently added to starred chats, The Quiet Orbit in focus." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_screen_alt">
+              <img src="/screenshots/tv-home-screen.webp" alt="صفحهٔ اصلی Android TV با ردیفی از TMPlayer شامل فیلم‌ها و سریال‌های نمایشی تازه اضافه‌شده به گفتگوهای ستاره‌دار، با انتخاب The Quiet Orbit." width="1440" height="420" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_screen_alt">
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 22.6%; --y: 11.6%"></span>
-                <span style="--x: 19.8%; --y: 43.8%"></span>
-                <span style="--x: 91.6%; --y: 15.5%"></span>
+                <span style="--x: 27%; --y: 11.6%"></span>
+                <span style="--x: 22.5%; --y: 73.8%"></span>
+                <span style="--x: 91.6%; --y: 19.1%"></span>
               </div>
             </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
           </div>
           <figcaption>
-            <h3 data-i18n="features.tour_tv_home_title">On the TV's home screen</h3>
-            <p data-i18n="features.tour_tv_home_text">A row of cards from TMPlayer on the Android TV home screen, there before you open the app. Switch it off in Settings.</p>
+            <h3 data-i18n="features.tour_tv_home_title">روی صفحهٔ اصلی تلویزیون</h3>
+            <p data-i18n="features.tour_tv_home_text">ردیفی از کارت‌های TMPlayer روی صفحهٔ اصلی Android TV، حتی پیش از باز کردن برنامه. در تنظیمات می‌توانید خاموشش کنید.</p>
             <ol class="tour-list">
-              <li data-i18n="features.tour_tv_home_row">What was recently added to your starred chats, in a row under TMPlayer's name.</li>
-              <li data-i18n="features.tour_tv_home_card">The card in focus shows its title, running time and chat. OK plays it, or opens a show's page.</li>
-              <li data-i18n="features.tour_tv_home_posters">Films and shows wear their posters when online lookups are on; other videos show their own thumbnail.</li>
+              <li data-i18n="features.tour_tv_home_row">آنچه تازه به گفتگوهای ستاره‌دارتان اضافه شده، در ردیفی با نام TMPlayer.</li>
+              <li data-i18n="features.tour_tv_home_card">کارت انتخاب‌شده عنوان، مدت و گفتگو را نشان می‌دهد. OK آن را پخش می‌کند یا صفحهٔ سریال را باز می‌کند.</li>
+              <li data-i18n="features.tour_tv_home_posters">وقتی جستجوی آنلاین روشن است، فیلم‌ها و سریال‌ها پوستر دارند؛ ویدیوهای دیگر تصویر کوچک خودشان را نشان می‌دهند.</li>
             </ol>
           </figcaption>
         </figure>

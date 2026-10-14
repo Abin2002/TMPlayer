@@ -61,7 +61,8 @@
     "tmplayer_a_telegram_media_player": "TMPlayer, ein Telegram-Mediaplayer für die Videos in deinen eigenen Chats, auf dem Fernseher und auf dem Smartphone.",
     "tv_home_hero_alt": "Die Startseite von TMPlayer auf einem Fernseher: Demo-Filme und Serien zum Weiterschauen, jeweils mit der Restzeit, über den Postern, die zuletzt in Chats mit Stern dazukamen.",
     "phone_show_page_alt": "Die Seite einer Serie in TMPlayer auf einem Smartphone: die Demo-Serie Skybound Academy mit Bild, Inhaltsangabe und einer Schaltfläche, um die zweite Folge fortzusetzen.",
-    "not_a_media_service_messages": "Kein Mediendienst und keine Chat-App. Deine Nachrichten erscheinen darin nie."
+    "not_a_media_service_messages": "Kein Mediendienst und keine Chat-App. Deine Nachrichten erscheinen darin nie.",
+    "sign_in_qr_alt": "Die Anmeldung bei TMPlayer auf einem Fernseher, mit dem QR-Code, den du mit Telegram auf dem Handy scannst."
   },
   "common": {
     "skip_to_content": "Zum Inhalt springen",
@@ -325,7 +326,6 @@
     "posters_and_overviews": "{strong1} Abgefragt bei TMDB, TVmaze und AniList über den bereinigten Titel des Videos, und sonst nichts.",
     "posters_and_overviews__strong1": "Ergänzt Poster und Beschreibungen, außer du schaltest sie ab.",
     "a_closer_look": "Genauer hingeschaut",
-    "four_screens_with_their_parts": "Vier Bildschirme mit markierten Bereichen, nummeriert passend zu den Notizen daneben.",
     "the_player_watching_while_it": "Der Player: schauen, während er lädt",
     "a_video_starts_while_it": "Ein Video startet, während es noch herunterlädt, und die Steuerung zeigt, wie weit der Download ist.",
     "the_lighter_part_of_the": "Der hellere Teil der Zeitleiste ist das, was schon geladen ist. Spulst du darüber hinaus, springt der Download an die neue Stelle.",
@@ -353,7 +353,15 @@
     "demo_artwork_photos_from_unsplash__a1": "Fotos auf Unsplash",
     "posters_with_the_year_size": "{b1}Poster mit Jahr, Größe und Auflösung. Drück auf eins für die Details, oder spiel es direkt ab.",
     "posters_with_the_year_size__b1": "Schritt zwei: Video wählen",
-    "tv_home_channels": "<strong>Erscheint auf dem Startbildschirm des Fernsehers.</strong> Neues aus deinen markierten Chats wird zu einer Kartenreihe auf dem Android TV Startbildschirm, neben Als Nächstes ansehen, bei Launchern, die App-Reihen zeigen. In den Einstellungen abschaltbar."
+    "tv_home_channels": "{strong1} Neues aus deinen markierten Chats wird zu einer Kartenreihe auf dem Android TV Startbildschirm, neben Als Nächstes ansehen, bei Launchern, die App-Reihen zeigen. In den Einstellungen abschaltbar.",
+    "tv_home_channels__strong1": "Erscheint auf dem Startbildschirm des Fernsehers.",
+    "five_screens_with_their_parts": "Fünf Bildschirme mit markierten Bereichen, nummeriert passend zu den Notizen daneben.",
+    "tour_tv_home_title": "Auf dem Startbildschirm des Fernsehers",
+    "tour_tv_home_text": "Eine Reihe von Karten aus TMPlayer auf dem Android TV Startbildschirm, schon bevor du die App öffnest. In den Einstellungen abschaltbar.",
+    "tour_tv_home_row": "Was neu in deinen markierten Chats ist, in einer Reihe unter dem Namen TMPlayer.",
+    "tour_tv_home_card": "Die ausgewählte Karte zeigt Titel, Laufzeit und Chat. OK spielt sie ab oder öffnet die Seite einer Serie.",
+    "tour_tv_home_posters": "Filme und Serien tragen ihr Poster, wenn die Online-Suche an ist; andere Videos zeigen ihr eigenes Vorschaubild.",
+    "tv_home_screen_alt": "Der Android TV Startbildschirm mit einer TMPlayer-Reihe von Demo-Filmen und -Serien, die neu in markierten Chats sind; The Quiet Orbit ist ausgewählt."
   },
   "download": {
     "download_tmplayer_for_android_tv": "TMPlayer für Android TV, Smartphones, Windows und Linux herunterladen",
@@ -587,7 +595,11 @@
     "a_tv_app_outside_the": "Eine TV-App außerhalb des Play Stores lebt von Mundpropaganda. Ein Stern ist der einfachste Weg, sie zu verbreiten.",
     "watch_telegram_videos_on_android": "Schau Telegram-Videos auf Android TV und Google TV. TMPlayer ist kostenlos und Open Source, mit einem Layout für die Fernbedienung, QR-Anmeldung und flüssiger Wiedergabe auf 1-GB-Sticks.",
     "the_tmplayer_chat_list_on": "Die TMPlayer-Chat-Liste auf Android TV, mit einer Navigationsleiste links.",
-    "videos_from_a_telegram_chat": "Videos aus einem Telegram-Chat auf Android TV, als Raster aus Kacheln mit Laufzeiten und Dateigrößen."
+    "videos_from_a_telegram_chat": "Videos aus einem Telegram-Chat auf Android TV, als Raster aus Kacheln mit Laufzeiten und Dateigrößen.",
+    "rail_shot_alt": "Die Startseite von TMPlayer auf einem Fernseher, mit der Leiste der Kategorien links.",
+    "sign_in_shot_alt": "Die Anmeldung auf einem Fernseher: ein QR-Code zum Scannen mit Telegram auf dem Handy, daneben die drei Schritte.",
+    "search_shot_alt": "Eine Suche in einem Demo-Chat auf einem Fernseher, getippt als harbor lines, findet jede Folge von Harbour Lines.",
+    "next_episode_shot_alt": "Der Player auf einem Fernseher mit einer Karte in der Ecke: als Nächstes S01E05, Start in 12 Sekunden, mit einer Taste zum sofortigen Abspielen."
   },
   "fire_tv": {
     "how_to_install_tmplayer_on": "So installierst du TMPlayer auf Fire TV Stick und Fire TV Cube",

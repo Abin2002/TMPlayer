@@ -61,7 +61,8 @@
     "tmplayer_a_telegram_media_player": "TMPlayer, TV와 휴대폰에서 내 채팅 속 동영상을 재생하는 Telegram 미디어 플레이어.",
     "tv_home_hero_alt": "TV에서 본 TMPlayer 홈: 이어 볼 수 있는 데모 영화와 시리즈가 남은 시간과 함께 있고, 그 아래에 즐겨찾는 채팅에 최근 추가된 포스터가 있어요.",
     "phone_show_page_alt": "휴대폰 TMPlayer의 시리즈 페이지: 데모 시리즈 Skybound Academy의 아트워크, 줄거리, 2화를 이어 보는 버튼이 있어요.",
-    "not_a_media_service_messages": "미디어 서비스도, 채팅 앱도 아니에요. 내 메시지는 앱에 절대 나타나지 않아요."
+    "not_a_media_service_messages": "미디어 서비스도, 채팅 앱도 아니에요. 내 메시지는 앱에 절대 나타나지 않아요.",
+    "sign_in_qr_alt": "TV에서 본 TMPlayer 로그인 화면, 휴대폰 Telegram으로 스캔하는 QR 코드가 있어요."
   },
   "common": {
     "skip_to_content": "본문으로 건너뛰기",
@@ -325,7 +326,6 @@
     "posters_and_overviews": "{strong1} 동영상 제목을 정리한 것만으로 TMDB, TVmaze, AniList에서 찾아요.",
     "posters_and_overviews__strong1": "포스터와 줄거리를 붙여요. 끌 수도 있어요.",
     "a_closer_look": "자세히 보기",
-    "four_screens_with_their_parts": "화면 네 개의 각 부분에 번호를 붙여, 옆의 설명과 맞춰 두었어요.",
     "the_player_watching_while_it": "플레이어: 다운로드하면서 시청",
     "a_video_starts_while_it": "동영상은 다운로드 중에도 재생이 시작되고, 컨트롤에 다운로드가 얼마나 진행됐는지 보여요.",
     "the_lighter_part_of_the": "타임바에서 밝은 부분이 지금까지 다운로드된 구간이에요. 그 너머로 탐색하면 다운로드도 새 위치로 옮겨 가요.",
@@ -353,7 +353,15 @@
     "demo_artwork_photos_from_unsplash__a1": "Unsplash 사진",
     "posters_with_the_year_size": "{b1}연도, 크기, 해상도가 적힌 포스터. 하나를 누르면 상세 정보가 열리고, 바로 재생할 수도 있습니다.",
     "posters_with_the_year_size__b1": "2단계: 동영상 고르기",
-    "tv_home_channels": "<strong>TV 홈 화면에도 표시됩니다.</strong> 별표한 채팅의 새 영상이 앱 행을 보여 주는 런처에서 Android TV 홈 화면의 다음에 재생 옆에 카드 행으로 나타납니다. 설정에서 끌 수 있습니다."
+    "tv_home_channels": "{strong1} 별표한 채팅의 새 영상이 앱 행을 보여 주는 런처에서 Android TV 홈 화면의 다음에 재생 옆에 카드 행으로 나타납니다. 설정에서 끌 수 있습니다.",
+    "tv_home_channels__strong1": "TV 홈 화면에도 표시됩니다.",
+    "five_screens_with_their_parts": "화면 다섯 개의 각 부분에 번호를 붙여, 옆의 설명과 맞춰 두었어요.",
+    "tour_tv_home_title": "TV 홈 화면에서",
+    "tour_tv_home_text": "Android TV 홈 화면에 TMPlayer 카드가 한 줄로 떠요. 앱을 열기 전부터요. 설정에서 끌 수 있어요.",
+    "tour_tv_home_row": "별표한 채팅에 최근 추가된 것을 TMPlayer 이름 아래 한 줄로 보여 줘요.",
+    "tour_tv_home_card": "선택된 카드에는 제목, 재생 시간, 채팅이 나와요. OK를 누르면 재생하거나 시리즈 페이지를 열어요.",
+    "tour_tv_home_posters": "온라인 정보 찾기를 켜면 영화와 시리즈는 포스터로, 다른 동영상은 자체 썸네일로 보여요.",
+    "tv_home_screen_alt": "별표한 채팅에 최근 추가된 데모 영화와 시리즈가 TMPlayer 줄에 놓인 Android TV 홈 화면, The Quiet Orbit이 선택된 모습."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV, 휴대폰, Windows, Linux용 TMPlayer 다운로드",
@@ -587,7 +595,11 @@
     "a_tv_app_outside_the": "Play 스토어 밖의 TV 앱은 입소문으로 알려져요. 별을 누르는 게 가장 쉬운 방법이에요.",
     "watch_telegram_videos_on_android": "Android TV와 Google TV에서 Telegram 동영상을 보세요. TMPlayer는 무료 오픈 소스이고, 리모컨 중심 화면, QR 로그인, 1GB 스틱에서도 부드러운 재생을 지원해요.",
     "the_tmplayer_chat_list_on": "Android TV의 TMPlayer 채팅 목록, 왼쪽에 탐색 레일이 있습니다.",
-    "videos_from_a_telegram_chat": "Android TV에서 Telegram 채팅의 동영상을 재생 시간과 파일 크기가 표시된 타일 격자로 보여 주는 화면."
+    "videos_from_a_telegram_chat": "Android TV에서 Telegram 채팅의 동영상을 재생 시간과 파일 크기가 표시된 타일 격자로 보여 주는 화면.",
+    "rail_shot_alt": "TV에서 본 TMPlayer 홈, 왼쪽에 카테고리 레일이 있어요.",
+    "sign_in_shot_alt": "TV의 로그인 화면: 휴대폰 Telegram으로 스캔하는 QR 코드와 옆에 적힌 세 단계.",
+    "search_shot_alt": "TV의 데모 채팅에서 harbor lines로 입력한 검색이 Harbour Lines의 모든 에피소드를 찾아요.",
+    "next_episode_shot_alt": "TV의 플레이어, 구석의 카드: 다음 S01E05, 12초 후 시작, 바로 재생하는 버튼과 함께."
   },
   "fire_tv": {
     "how_to_install_tmplayer_on": "Fire TV Stick과 Fire TV Cube에 TMPlayer 설치하는 방법",

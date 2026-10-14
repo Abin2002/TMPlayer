@@ -61,7 +61,8 @@
     "tmplayer_a_telegram_media_player": "TMPlayer 是 Telegram 影音播放器，可在電視與手機上播放你自己聊天中的影片。",
     "tv_home_hero_alt": "電視上的 TMPlayer 首頁：可繼續觀看的示範電影和影集，各自標出剩餘時間，下方是我的最愛聊天中新加入的海報。",
     "phone_show_page_alt": "手機上 TMPlayer 的影集頁面：示範影集 Skybound Academy，附有封面圖、簡介和繼續觀看第二集的按鈕。",
-    "not_a_media_service_messages": "不是影音服務，也不是聊天軟體。你的訊息永遠不會出現在裡面。"
+    "not_a_media_service_messages": "不是影音服務，也不是聊天軟體。你的訊息永遠不會出現在裡面。",
+    "sign_in_qr_alt": "電視上的 TMPlayer 登入畫面，附有用手機 Telegram 掃描的 QR 碼。"
   },
   "common": {
     "skip_to_content": "跳到內容",
@@ -325,7 +326,6 @@
     "posters_and_overviews": "{strong1} 只用影片整理過的標題在 TMDB、TVmaze 與 AniList 上查詢，不使用其他任何資訊。",
     "posters_and_overviews__strong1": "加上海報與簡介，可隨時關閉。",
     "a_closer_look": "深入了解",
-    "four_screens_with_their_parts": "四個畫面，各部分都已標示，編號與旁邊的說明一一對應。",
     "the_player_watching_while_it": "播放器：邊下載邊觀看",
     "a_video_starts_while_it": "影片在下載途中就能開始播放，控制列會顯示目前下載到哪裡。",
     "the_lighter_part_of_the": "進度列中顏色較淺的部分是已下載的內容。拖曳到它之後，下載會改從新的位置開始。",
@@ -353,7 +353,15 @@
     "demo_artwork_photos_from_unsplash__a1": "Unsplash 上的照片",
     "posters_with_the_year_size": "{b1}海報標出年份、大小和解析度。按一下查看詳細資訊，或直接播放。",
     "posters_with_the_year_size__b1": "第二步：選一部影片",
-    "tv_home_channels": "<strong>出現在電視主畫面上。</strong>星號聊天裡的新內容會在 Android TV 主畫面上排成一列卡片，位於「接著播放」旁邊，適用於顯示應用程式列的啟動器。可在設定中關閉。"
+    "tv_home_channels": "{strong1}星號聊天裡的新內容會在 Android TV 主畫面上排成一列卡片，位於「接著播放」旁邊，適用於顯示應用程式列的啟動器。可在設定中關閉。",
+    "tv_home_channels__strong1": "出現在電視主畫面上。",
+    "five_screens_with_their_parts": "五個畫面，各部分都已標示，編號與旁邊的說明一一對應。",
+    "tour_tv_home_title": "在電視主畫面上",
+    "tour_tv_home_text": "TMPlayer 在 Android TV 主畫面上的一排卡片，不用開啟應用程式就看得到。可以在設定中關閉。",
+    "tour_tv_home_row": "星號聊天中最近新增的內容，排成一列，標著 TMPlayer 的名稱。",
+    "tour_tv_home_card": "選取的卡片會顯示標題、片長和所在聊天。按 OK 播放，或開啟影集頁面。",
+    "tour_tv_home_posters": "開啟線上資訊查詢後，電影和影集會顯示海報；其他影片顯示自己的縮圖。",
+    "tv_home_screen_alt": "Android TV 主畫面上的一排 TMPlayer 卡片，是最近加入星號聊天的示範電影和影集，選取的是 The Quiet Orbit。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "下載 TMPlayer：支援 Android TV、手機、Windows 與 Linux",
@@ -587,7 +595,11 @@
     "a_tv_app_outside_the": "不在 Play 商店的電視 App，只能靠口耳相傳。加星是最簡單的推廣方式。",
     "watch_telegram_videos_on_android": "在 Android TV 與 Google TV 上觀看 Telegram 影片。TMPlayer 免費開源，以遙控器為優先設計，支援 QR 碼登入，在 1 GB 的電視棒上也能順暢播放。",
     "the_tmplayer_chat_list_on": "Android TV 上的 TMPlayer 聊天列表，左側有導覽列。",
-    "videos_from_a_telegram_chat": "Android TV 上以磚塊格狀顯示的 Telegram 聊天影片，每個磚塊都標示片長與檔案大小。"
+    "videos_from_a_telegram_chat": "Android TV 上以磚塊格狀顯示的 Telegram 聊天影片，每個磚塊都標示片長與檔案大小。",
+    "rail_shot_alt": "電視上的 TMPlayer 首頁，左側是分類導覽列。",
+    "sign_in_shot_alt": "電視上的登入畫面：一個用手機 Telegram 掃描的 QR 碼，旁邊是三個步驟。",
+    "search_shot_alt": "在電視上的示範聊天裡搜尋，輸入 harbor lines，也能找到 Harbour Lines 的每一集。",
+    "next_episode_shot_alt": "電視上的播放器，角落有一張卡片：下一集 S01E05，12 秒後開始，並有立即播放的按鈕。"
   },
   "fire_tv": {
     "how_to_install_tmplayer_on": "如何在 Fire TV Stick 與 Fire TV Cube 上安裝 TMPlayer",

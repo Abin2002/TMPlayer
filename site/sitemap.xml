@@ -2468,12 +2468,12 @@
       <image:title>Playable videos in a Telegram chat, on Android TV</image:title>
     </image:image>
     <image:image>
-      <image:loc>https://tmplayer.org/screenshots/tv-home.webp</image:loc>
-      <image:title>TMPlayer's Home on Android TV, with the rail of categories down the left</image:title>
+      <image:loc>https://tmplayer.org/screenshots/tv-rail.webp</image:loc>
+      <image:title>The rail of categories down the left of TMPlayer on Android TV</image:title>
     </image:image>
     <image:image>
-      <image:loc>https://tmplayer.org/screenshots/tv-home-light.webp</image:loc>
-      <image:title>TMPlayer's Home on a television, in the light theme</image:title>
+      <image:loc>https://tmplayer.org/screenshots/tv-rail-light.webp</image:loc>
+      <image:title>The rail of categories in TMPlayer on a television, in the light theme</image:title>
     </image:image>
     <image:image>
       <image:loc>https://tmplayer.org/screenshots/tv-sign-in.webp</image:loc>

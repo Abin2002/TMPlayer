@@ -61,7 +61,8 @@
     "tmplayer_a_telegram_media_player": "TMPlayer, trình phát đa phương tiện Telegram cho video trong cuộc trò chuyện của chính bạn, trên TV và trên điện thoại.",
     "tv_home_hero_alt": "Trang chủ TMPlayer trên TV: phim và phim bộ demo để xem tiếp, mỗi mục có thời gian còn lại, phía trên các áp phích mới thêm vào cuộc trò chuyện gắn sao.",
     "phone_show_page_alt": "Trang của một phim bộ trong TMPlayer trên điện thoại: phim bộ demo Skybound Academy với hình ảnh, tóm tắt và nút để xem tiếp tập thứ hai.",
-    "not_a_media_service_messages": "Không phải dịch vụ phim ảnh hay ứng dụng nhắn tin. Tin nhắn của bạn không bao giờ xuất hiện trong đó."
+    "not_a_media_service_messages": "Không phải dịch vụ phim ảnh hay ứng dụng nhắn tin. Tin nhắn của bạn không bao giờ xuất hiện trong đó.",
+    "sign_in_qr_alt": "Màn hình đăng nhập TMPlayer trên TV, với mã QR để quét bằng Telegram trên điện thoại."
   },
   "common": {
     "skip_to_content": "Chuyển đến nội dung",
@@ -325,7 +326,6 @@
     "posters_and_overviews": "{strong1} Được tra cứu trên TMDB, TVmaze và AniList chỉ bằng tiêu đề đã làm gọn của video, ngoài ra không gì khác.",
     "posters_and_overviews__strong1": "Thêm poster và phần giới thiệu, trừ khi bạn tắt đi.",
     "a_closer_look": "Xem kỹ hơn",
-    "four_screens_with_their_parts": "Bốn màn hình với các phần được đánh dấu, đánh số khớp với ghi chú bên cạnh.",
     "the_player_watching_while_it": "Trình phát: xem trong khi tải",
     "a_video_starts_while_it": "Video bắt đầu phát khi vẫn đang tải, và các nút điều khiển cho biết đã tải được bao nhiêu.",
     "the_lighter_part_of_the": "Phần sáng hơn của thanh thời gian là phần đã tải xong. Tua qua đó và việc tải sẽ chuyển đến vị trí mới.",
@@ -353,7 +353,15 @@
     "demo_artwork_photos_from_unsplash__a1": "ảnh trên Unsplash",
     "posters_with_the_year_size": "{b1}Áp phích có năm, dung lượng và độ phân giải. Bấm vào một áp phích để xem chi tiết, hoặc phát ngay.",
     "posters_with_the_year_size__b1": "Bước hai: chọn video",
-    "tv_home_channels": "<strong>Hiện trên màn hình chính của TV.</strong> Nội dung mới trong các cuộc trò chuyện gắn sao thành một hàng thẻ trên màn hình chính Android TV, cạnh Phát tiếp theo, với các trình khởi chạy có hiển thị hàng ứng dụng. Có thể tắt trong Cài đặt."
+    "tv_home_channels": "{strong1} Nội dung mới trong các cuộc trò chuyện gắn sao thành một hàng thẻ trên màn hình chính Android TV, cạnh Phát tiếp theo, với các trình khởi chạy có hiển thị hàng ứng dụng. Có thể tắt trong Cài đặt.",
+    "tv_home_channels__strong1": "Hiện trên màn hình chính của TV.",
+    "five_screens_with_their_parts": "Năm màn hình với các phần được đánh dấu, đánh số khớp với ghi chú bên cạnh.",
+    "tour_tv_home_title": "Trên màn hình chính của TV",
+    "tour_tv_home_text": "Một hàng thẻ từ TMPlayer trên màn hình chính Android TV, có sẵn trước khi bạn mở ứng dụng. Có thể tắt trong Cài đặt.",
+    "tour_tv_home_row": "Những gì mới thêm vào các cuộc trò chuyện gắn sao, trong một hàng dưới tên TMPlayer.",
+    "tour_tv_home_card": "Thẻ đang chọn hiện tiêu đề, thời lượng và cuộc trò chuyện. OK để phát, hoặc mở trang của phim bộ.",
+    "tour_tv_home_posters": "Phim lẻ và phim bộ có áp phích khi bật tra cứu trực tuyến; các video khác hiện hình thu nhỏ của chính nó.",
+    "tv_home_screen_alt": "Màn hình chính Android TV với một hàng TMPlayer gồm phim lẻ và phim bộ mẫu mới thêm vào các cuộc trò chuyện gắn sao, đang chọn The Quiet Orbit."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Tải TMPlayer cho Android TV, điện thoại, Windows và Linux",
@@ -587,7 +595,11 @@
     "a_tv_app_outside_the": "Một ứng dụng TV ngoài Play Store sống nhờ truyền miệng. Gắn sao là cách dễ nhất để lan tỏa nó.",
     "watch_telegram_videos_on_android": "Xem video Telegram trên Android TV và Google TV. TMPlayer miễn phí và mã nguồn mở, với giao diện ưu tiên điều khiển từ xa, đăng nhập bằng QR và phát mượt trên TV stick 1 GB.",
     "the_tmplayer_chat_list_on": "Danh sách trò chuyện của TMPlayer trên Android TV, với thanh điều hướng ở bên trái.",
-    "videos_from_a_telegram_chat": "Video từ một cuộc trò chuyện Telegram hiển thị trên Android TV dưới dạng lưới ô ghi thời lượng và dung lượng tệp."
+    "videos_from_a_telegram_chat": "Video từ một cuộc trò chuyện Telegram hiển thị trên Android TV dưới dạng lưới ô ghi thời lượng và dung lượng tệp.",
+    "rail_shot_alt": "Trang chủ TMPlayer trên TV, với thanh danh mục ở bên trái.",
+    "sign_in_shot_alt": "Màn hình đăng nhập trên TV: mã QR để quét bằng Telegram trên điện thoại, và ba bước bên cạnh.",
+    "search_shot_alt": "Tìm kiếm trong một cuộc trò chuyện mẫu trên TV, gõ là harbor lines, vẫn tìm ra mọi tập Harbour Lines.",
+    "next_episode_shot_alt": "Trình phát trên TV với một thẻ ở góc: tiếp theo S01E05, bắt đầu sau 12 giây, kèm nút phát ngay."
   },
   "fire_tv": {
     "how_to_install_tmplayer_on": "Cách cài TMPlayer trên Fire TV Stick và Fire TV Cube",

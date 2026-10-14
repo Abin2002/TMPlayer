@@ -1247,6 +1247,9 @@ kbd {
 
 .frame { padding: 8px; background: var(--surface-container-high); border-radius: var(--shape-xl); }
 .frame img { border-radius: var(--shape-l); width: 100%; background: var(--surface-container); }
+/* A cropped shot in a tour stop: the numbered marks sit over it as they do over a device screen. */
+.frame .screen { position: relative; }
+.frame .screen img { display: block; height: auto; }
 
 /* ---------- Device frames ----------
 
@@ -2418,19 +2421,17 @@ a.card:hover { text-decoration: none; color: var(--on-surface); border-color: va
 a.card:hover .card-go svg { transform: translateX(4px); }
 .card-go svg { transition: transform 0.2s var(--ease-standard); }
 
-/* A card led by a screenshot (the Android TV page). The cards that keep an icon put it in a tile
-   of the same 16:9 size, so the headings of a row line up whichever kind each card is. */
+/* A card led by a screenshot (the Android TV page), cropped to 2:1 by scripts/annotate-shot.py.
+   The cards that keep an icon put it in a tile of the same size, so the headings of a row line up whichever kind each card is. */
 .card-shot {
   display: block;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 2 / 1;
   overflow: hidden;
   border-radius: var(--shape-l);
   background: var(--surface-container);
   margin-bottom: 4px;
 }
 .card-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
-/* The next episode card sits small in the corner of a full frame: the thumbnail leans in on it. */
-.card-shot-corner img { transform: scale(1.7); transform-origin: 97% 74%; }
 .card-shot-icon { display: grid; place-items: center; background: var(--primary-container); color: var(--on-primary-container); }
 
 /* A small picture under a step (the QR sign-in on the home page). */

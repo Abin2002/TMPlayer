@@ -274,7 +274,7 @@
             <li data-i18n="features.home_and_series_pages"><strong>프로그램을 정리해 줘요.</strong> 홈에는 모든 채팅에서 다음에 볼 것이 모이고, 시리즈마다 전용 페이지가 있어서 에피소드가 시즌별로 묶여요.</li>
             <li data-i18n="features.topics_tabs_one_tile"><strong>북적이는 채팅을 정리해요.</strong> 포럼 주제는 탭이 되고, 시리즈는 타일 하나로, 같은 영화의 사본은 포스터 하나로 묶여요.</li>
             <li data-i18n="features.watch_later_new_episodes"><strong>대신 챙겨 줘요.</strong> 나중에 보기, 보고 있는 시리즈의 새 에피소드, 시즌 전체를 한 번에 다운로드, 강좌 진도까지.</li>
-            <li data-i18n="features.tv_home_channels"><strong>Shows up on the TV's home screen.</strong> What is new in your starred chats becomes a row of cards on the Android TV home screen, next to Play next, on launchers that show app rows. Switch it off in Settings.</li>
+            <li data-i18n="features.tv_home_channels"><strong>TV 홈 화면에도 표시됩니다.</strong> 별표한 채팅의 새 영상이 앱 행을 보여 주는 런처에서 Android TV 홈 화면의 다음에 재생 옆에 카드 행으로 나타납니다. 설정에서 끌 수 있습니다.</li>
             <li data-i18n="features.posters_and_overviews"><strong>포스터와 줄거리를 붙여요. 끌 수도 있어요.</strong> 동영상 제목을 정리한 것만으로 TMDB, TVmaze, AniList에서 찾아요.</li>
             <li data-i18n="features.the_next_one_starts_after"><strong>에피소드 파일명을 이해해요.</strong> 멈출 수 있는 카운트다운 후 다음 편이 시작돼요.</li>
             <li data-i18n="features.typos_missing_accents_and_one"><strong>입력이 틀려도 괜찮아요.</strong> 오타, 빠진 악센트, 틀린 단어 하나가 있어도 동영상을 찾아요.</li>
@@ -405,7 +405,7 @@
       <div class="section-head" data-reveal>
         <div class="section-title">
           <h2 id="tour-h" data-i18n="features.a_closer_look">자세히 보기</h2>
-          <p class="section-sub" data-i18n="features.five_screens_with_their_parts">Five screens with their parts marked, numbered to match the notes beside them.</p>
+          <p class="section-sub" data-i18n="features.five_screens_with_their_parts">화면 다섯 개의 각 부분에 번호를 붙여, 옆의 설명과 맞춰 두었어요.</p>
         </div>
       </div>
 
@@ -493,26 +493,25 @@
         </figure>
 
         <figure class="shot tour-shot" id="tour-tv-home" data-reveal>
-          <div class="device device-tv">
+          <!-- The launcher's row only, cropped by scripts/annotate-shot.py (tv-home-screen.json). The
+               launcher has no light theme, so one picture serves both. -->
+          <div class="frame">
             <div class="screen">
-              <!-- The launcher has no light theme, so one picture serves both. -->
-              <img src="/screenshots/tv-home-screen.webp" alt="The Android TV home screen with a TMPlayer row of demo films and shows recently added to starred chats, The Quiet Orbit in focus." width="1920" height="1080" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_screen_alt">
+              <img src="/screenshots/tv-home-screen.webp" alt="별표한 채팅에 최근 추가된 데모 영화와 시리즈가 TMPlayer 줄에 놓인 Android TV 홈 화면, The Quiet Orbit이 선택된 모습." width="1440" height="420" loading="lazy" decoding="async" data-i18n-alt="features.tv_home_screen_alt">
               <div class="tour-marks" aria-hidden="true">
-                <span style="--x: 22.6%; --y: 11.6%"></span>
-                <span style="--x: 19.8%; --y: 43.8%"></span>
-                <span style="--x: 91.6%; --y: 15.5%"></span>
+                <span style="--x: 27%; --y: 11.6%"></span>
+                <span style="--x: 22.5%; --y: 73.8%"></span>
+                <span style="--x: 91.6%; --y: 19.1%"></span>
               </div>
             </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
           </div>
           <figcaption>
-            <h3 data-i18n="features.tour_tv_home_title">On the TV's home screen</h3>
-            <p data-i18n="features.tour_tv_home_text">A row of cards from TMPlayer on the Android TV home screen, there before you open the app. Switch it off in Settings.</p>
+            <h3 data-i18n="features.tour_tv_home_title">TV 홈 화면에서</h3>
+            <p data-i18n="features.tour_tv_home_text">Android TV 홈 화면에 TMPlayer 카드가 한 줄로 떠요. 앱을 열기 전부터요. 설정에서 끌 수 있어요.</p>
             <ol class="tour-list">
-              <li data-i18n="features.tour_tv_home_row">What was recently added to your starred chats, in a row under TMPlayer's name.</li>
-              <li data-i18n="features.tour_tv_home_card">The card in focus shows its title, running time and chat. OK plays it, or opens a show's page.</li>
-              <li data-i18n="features.tour_tv_home_posters">Films and shows wear their posters when online lookups are on; other videos show their own thumbnail.</li>
+              <li data-i18n="features.tour_tv_home_row">별표한 채팅에 최근 추가된 것을 TMPlayer 이름 아래 한 줄로 보여 줘요.</li>
+              <li data-i18n="features.tour_tv_home_card">선택된 카드에는 제목, 재생 시간, 채팅이 나와요. OK를 누르면 재생하거나 시리즈 페이지를 열어요.</li>
+              <li data-i18n="features.tour_tv_home_posters">온라인 정보 찾기를 켜면 영화와 시리즈는 포스터로, 다른 동영상은 자체 썸네일로 보여요.</li>
             </ol>
           </figcaption>
         </figure>
