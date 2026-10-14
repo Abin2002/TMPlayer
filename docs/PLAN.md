@@ -1125,7 +1125,7 @@ it on a phone; Next, Back, Skip all; the last page says Start)
 - A fresh sign in: part 1 then part 2. "Run the setup again" in Settings: both.
 - Existing users updating to 1.26.0: never the choices; a one-time "Take the quick tour" offer (a card in the
   shell, Take the tour or Not now), held back like the other cards (update, language, what's new), then never
-  again; flag `tour_offered`. Settings, About gets "Quick tour" to open part 2 any time.
+  again; flag `tour_offered`. Settings, Help gets "Quick tour" to open part 2 any time.
 
 **5. Pictures**
 - Demo content only (promo build on one emulator, `tmplayer_promo_tv`, phone shape by `wm size` as in CP67;
@@ -1156,6 +1156,20 @@ it on a phone; Next, Back, Skip all; the last page says Start)
   user offer after an update over test13, Save mobile data on the phone's mobile data.
 **Order of work:** (a) Save mobile data and (b) the screenshots run in parallel in their own worktrees while
 (c) the setup and tour code is written here; then badges, translations, tests, device checks, PLAN status.
+**As built (2026-10-14), where it differs from the above:**
+- No order flip on Performance: "Full quality" stays first everywhere, as the device short of memory gets the
+  Device step instead (Performance is left out whenever that step recommends more than Low storage mode).
+- The progress line counts both parts ("Quick tour · Step 7 of 10"); Skip all ends both; Back on the tour's
+  first page returns to the setup's last step.
+- The offer to existing users is a confirm in the shell ("Take a quick tour?", Take the tour or Not now) held
+  behind the other notices; the flag is `tour` (Never, Pending, Done) in `SettingsStore`. "Quick tour" sits in
+  Settings, Help, on Android and the desktop.
+- Pictures: the desktop Settings page is four stacked windows onto the one long page (1140x1518); Downloads'
+  marks are the first downloaded row, the Downloaded tab and the storage panel (the desktop has no space line,
+  so its third mark is the cache line); the TV player marks Episodes for line 3 (no next-episode button on the
+  TV transport); the phone Home marks the menu button for line 3 (no stars on a phone's Home). The app draws
+  each badge just outside its mark's top left corner, so no number covers what it points at.
+- Promo routes: `--es screen tour --es page <name>`, `--ez lighter`, `--ez poster_thumbs`, `--ez downloads_demo`.
 **STOP**
 
 ### U01 Two Sentry settings

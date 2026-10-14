@@ -348,6 +348,19 @@ class PromoCaptureActivity : ComponentActivity() {
                             val shown = remember(recommendations.isNotEmpty()) { recommendations }
                             SetupScreen(store, setup, onDone = { screen = "chats" }, fit = fit, recommendations = shown)
                         }
+                        // The quick tour (CP69), from `--es page videos|home|player|controls|downloads|
+                        // tvhome|settings`. Finishing or Skip all goes to the chat list.
+                        "tour" -> {
+                            val form = com.tmplayer.ui.components.deviceForm()
+                            val tour = remember(form) {
+                                val pages = com.tmplayer.ui.onboarding.Tour.pages(form)
+                                com.tmplayer.ui.onboarding.TourProgress(
+                                    pages,
+                                    start = pages.indexOfFirst { it.name.equals(intent.getStringExtra("page"), ignoreCase = true) }.coerceAtLeast(0),
+                                )
+                            }
+                            com.tmplayer.ui.onboarding.TourScreen(tour, onDone = { screen = "chats" })
+                        }
                         // A page of it from `--es page appearance|playback|subtitles|...`.
                         "settings" -> SettingsScreen(
                             chats = promoChats(),

@@ -44,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -387,8 +388,10 @@ private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifi
                     TmIcons.CheckCircle,
                     contentDescription = null,
                     tint = Tone.accent,
+                    // On the picture's right whatever the reading direction: the shots are of the
+                    // app as it is, and on their left sits what the answer is about.
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
+                        .align(if (choice.screenshot) AbsoluteAlignment.TopRight else Alignment.TopEnd)
                         .padding(6.dp)
                         .size(26.dp)
                         .background(Tone.background, CircleShape),
