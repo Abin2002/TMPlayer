@@ -71,13 +71,6 @@ class ChatListViewModel(private val settings: SettingsStore? = null) : ViewModel
     private fun loading(): UiState.Loading =
         UiState.Loading(LOADING_CHATS, tip = FIRST_LOAD_TIP.takeIf { firstLoad })
 
-    init {
-        paintFromSnapshot()
-        load()
-        watchChatChanges()
-        followKidsLock()
-    }
-
     /**
      * The kids lock (CP57), applied where the list is handed to the screens rather than where it
      * is read: the rows in hand stay whole, so the lock going off shows every chat at once, with
@@ -269,6 +262,16 @@ class ChatListViewModel(private val settings: SettingsStore? = null) : ViewModel
 
     /** When the list last finished syncing, for [refreshIfStale]. */
     private var syncedAt = 0L
+
+    // After every property, not above them: on Dispatchers.Main.immediate (the desktop's, and
+    // Android's) the snapshot coroutine runs inside this block, and a field declared below it
+    // would still be null there, or be reset by its initialiser once the block returned.
+    init {
+        paintFromSnapshot()
+        load()
+        watchChatChanges()
+        followKidsLock()
+    }
 
     /**
      * Refreshes only if the list has had time to go stale.
