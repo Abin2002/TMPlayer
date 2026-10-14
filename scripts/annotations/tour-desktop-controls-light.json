@@ -1,0 +1,43 @@
+{
+  "source": "desktop/tour-player-light.png",
+  "output": "ui/src/jvmMain/resources/onboarding/tour-controls-light.webp",
+  "crop": [
+    0,
+    0,
+    1920,
+    1200
+  ],
+  "width": 1280,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        790,
+        553,
+        345,
+        98
+      ],
+      "seed": 120
+    },
+    {
+      "type": "circle",
+      "box": [
+        1643,
+        1123,
+        42,
+        42
+      ],
+      "seed": 121
+    },
+    {
+      "type": "circle",
+      "box": [
+        1250,
+        200,
+        450,
+        230
+      ],
+      "seed": 122
+    }
+  ]
+}

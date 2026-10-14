@@ -1,0 +1,53 @@
+{
+  "source": "desktop/tour-settings-light.png",
+  "output": "ui/src/jvmMain/resources/onboarding/tour-settings-light.webp",
+  "crop": [
+    0,
+    0,
+    1140,
+    1518
+  ],
+  "width": 1140,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        55,
+        410,
+        115,
+        28
+      ],
+      "seed": 126
+    },
+    {
+      "type": "circle",
+      "box": [
+        55,
+        927,
+        100,
+        28
+      ],
+      "seed": 127
+    },
+    {
+      "type": "circle",
+      "box": [
+        55,
+        1170,
+        105,
+        28
+      ],
+      "seed": 128
+    },
+    {
+      "type": "circle",
+      "box": [
+        55,
+        30,
+        140,
+        28
+      ],
+      "seed": 129
+    }
+  ]
+}

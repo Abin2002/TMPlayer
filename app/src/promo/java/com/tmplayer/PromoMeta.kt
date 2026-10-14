@@ -27,8 +27,12 @@ internal object PromoMeta {
     lateinit var pictures: PromoCatalog.Pictures
         private set
 
+    /** `--ez poster_thumbs true`: the films' thumbnails are their posters. Set before [library] is first read. */
+    @Volatile
+    var posterThumbnails = false
+
     /** The demo library, built once [install] has run. */
-    val library: PromoCatalog.Library by lazy { PromoCatalog.Library(pictures) }
+    val library: PromoCatalog.Library by lazy { PromoCatalog.Library(pictures, posterThumbnails) }
 
     /** The film the detail variant opens: the one the demo viewer is part way through. */
     val film: MediaItem get() = library.quietOrbit

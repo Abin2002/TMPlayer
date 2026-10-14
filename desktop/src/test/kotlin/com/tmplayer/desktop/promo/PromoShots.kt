@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -299,6 +303,38 @@ class PromoShots {
         }
     }
 
+    /**
+     * The quick tour's player page (CP69): an episode of Harbour Lines with the next one in the
+     * chat, inside a canned intro, so Skip intro and the next episode button are both on screen.
+     */
+    @Test
+    fun tourPlayer() = both("tour-player", before = {
+        runBlocking { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = 0L) } }
+    }) {
+        val frame = remember { SkImage.makeFromEncoded(demo("promo_harbour_lines_backdrop")).toComposeImageBitmap() }
+        val episode = remember { library.all.first { "Harbour.Lines.S01E03" in it.fileName } }
+        Box(Modifier.fillMaxSize()) {
+            Image(frame, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            PlayerScreen(
+                media = TourEpisode(episode, library.cinema),
+                startFromBeginning = false,
+                onBack = {},
+                fullscreen = false,
+                onToggleFullscreen = {},
+                settings = settings,
+                prefs = prefs,
+                engineFactory = { StillEngine() },
+                backdrop = androidx.compose.ui.graphics.Color.Transparent,
+            )
+        }
+    }
+
+    /** An episode with its neighbours in [chat] and an intro around [StillEngine]'s position. */
+    private class TourEpisode(item: MediaItem, private val chat: List<MediaItem>) : PlayerMedia by PromoMedia(item) {
+        override suspend fun episodes() = com.tmplayer.data.EpisodeNeighbours.around(item, chat)
+        override suspend fun skipTimes() = listOf(com.tmplayer.online.SkipSegment(com.tmplayer.online.SkipKind.Intro, 4_300_000, 4_390_000))
+    }
+
     @org.junit.After
     fun forgetOnline() {
         com.tmplayer.online.OnlineSubtitles.current = null
@@ -439,6 +475,96 @@ class PromoShots {
         }
     }
 
+    /**
+     * The raw shots of the setup's Performance step (CP69): Home with the films posted under their
+     * posters, so the wide Continue watching tile shows one whole over a blurred fill, and the same
+     * Home with Lighter pictures, which drops the blur.
+     */
+    @Test
+    fun setupPerformance() {
+        val posterLibrary = PromoCatalog.Library(pictures, posterThumbnails = true)
+        val rows = com.tmplayer.data.HomeRows.build(
+            continueWatching = posterLibrary.continueWatching,
+            favourites = com.tmplayer.data.HomeRows.favouriteChats(chats, posterLibrary.favourites),
+            loaded = posterLibrary.byChat.filterKeys { it in posterLibrary.favourites },
+            recent = posterLibrary.all,
+            watchLater = posterLibrary.watchLater,
+            fresh = posterLibrary.newEpisodes,
+        )
+        for (lighter in listOf(false, true)) {
+            com.tmplayer.data.Thumbnails.light = lighter
+            com.tmplayer.ui.theme.Motion.reduced = lighter
+            try {
+                both(if (lighter) "setup-raw-performance-lighter" else "setup-raw-performance-full", before = ::seedWatching) {
+                    withSidebar {
+                        com.tmplayer.desktop.ui.HomeRowsView(
+                            shell, rows, chats, posterLibrary.art, onRowShown = {}, onArtWanted = {}, onRefresh = {},
+                        )
+                    }
+                }
+            } finally {
+                com.tmplayer.data.Thumbnails.light = false
+                com.tmplayer.ui.theme.Motion.reduced = false
+            }
+        }
+    }
+
+    /**
+     * The quick tour's Downloads page (CP69): four demo videos kept in a Downloads folder of sparse
+     * files, each its full size on paper and nothing on the disk. The header names a demo
+     * account's folder rather than the temporary one, which would put this machine's paths in a
+     * picture that ships.
+     */
+    @Test
+    fun tourDownloads() {
+        val folder = dir.resolve("Downloads").apply { mkdirs() }
+        both("tour-downloads", before = {
+            runBlocking {
+                listOf("Saltwater.Lanterns.2023.1080p", "Harbour.Lines.S01E04", "Skybound Academy - 04", "Lesson 04")
+                    .mapNotNull { part -> library.all.firstOrNull { part in it.fileName } }
+                    .forEachIndexed { index, item ->
+                        val file = folder.resolve(item.fileName)
+                        java.io.RandomAccessFile(file, "rw").use { it.setLength(item.sizeBytes) }
+                        // A record needs a file id; the demo videos have none, never having been in TDLib.
+                        settings.noteDownload(item.copy(fileId = 900_000 + index), PromoCatalog.chatTitle(item.chatId), file.path)
+                    }
+            }
+            shell.go(com.tmplayer.desktop.ui.Destination.Downloads)
+        }) {
+            withSidebar { com.tmplayer.desktop.ui.DownloadsPage(shell, File("/home/demo/Downloads/TMPlayer")) }
+        }
+    }
+
+    /**
+     * The quick tour's Settings page (CP69). The desktop has no page list, only one long page, so
+     * the picture is four windows onto that one page, stacked: Appearance, Playback, Storage (down
+     * to its space line, before the folder row names this machine's home) and App lock. Each window
+     * is the real page laid out at [SETTINGS_PAGE_WIDTH], cut at the dp offsets in [SETTINGS_WINDOWS].
+     */
+    @Test
+    fun tourSettings() = both(
+        "tour-settings",
+        width = (SETTINGS_PAGE_WIDTH * DENSITY).toInt(),
+        height = ((SETTINGS_WINDOWS.size * SETTINGS_WINDOW + (SETTINGS_WINDOWS.size - 1) * SETTINGS_GAP) * DENSITY).toInt(),
+        before = { shell.go(com.tmplayer.desktop.ui.Destination.Settings) },
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            SETTINGS_WINDOWS.forEachIndexed { index, top ->
+                if (index > 0) androidx.compose.material3.HorizontalDivider(thickness = SETTINGS_GAP.dp, color = Tone.outline)
+                Box(Modifier.width(SETTINGS_PAGE_WIDTH.dp).height(SETTINGS_WINDOW.dp).clipToBounds()) {
+                    Box(
+                        Modifier
+                            .wrapContentHeight(align = androidx.compose.ui.Alignment.Top, unbounded = true)
+                            .height(SETTINGS_PAGE_HEIGHT.dp)
+                            .offset(y = (-top).dp),
+                    ) {
+                        com.tmplayer.desktop.ui.SettingsPage(shell, version = "1.26.0")
+                    }
+                }
+            }
+        }
+    }
+
     @Composable
     private fun withSidebar(page: @Composable () -> Unit) {
         Row(Modifier.fillMaxSize()) {
@@ -448,18 +574,18 @@ class PromoShots {
         }
     }
 
-    private fun both(name: String, before: () -> Unit = {}, darkOnly: Boolean = false, width: Int = WIDTH, content: @Composable () -> Unit) {
+    private fun both(name: String, before: () -> Unit = {}, darkOnly: Boolean = false, width: Int = WIDTH, height: Int = HEIGHT, content: @Composable () -> Unit) {
         before()
         for (dark in if (darkOnly) listOf(true) else listOf(true, false)) {
-            val png = render(dark, width, content)
+            val png = render(dark, width, height, content)
             assertTrue("$name drew nothing", png.size > 10_000)
             val out = System.getenv("TMPLAYER_PROMO")?.takeIf { it.isNotBlank() } ?: continue
             File(out).apply { mkdirs() }.resolve(if (dark) "$name.png" else "$name-light.png").writeBytes(png)
         }
     }
 
-    private fun render(dark: Boolean, width: Int = WIDTH, content: @Composable () -> Unit): ByteArray =
-        ImageComposeScene(width, HEIGHT, Density(DENSITY)) {
+    private fun render(dark: Boolean, width: Int = WIDTH, height: Int = HEIGHT, content: @Composable () -> Unit): ByteArray =
+        ImageComposeScene(width, height, Density(DENSITY)) {
             TmMaterialTheme(dark = dark) {
                 Surface(Modifier.fillMaxSize(), color = Tone.background) { content() }
             }
@@ -534,6 +660,17 @@ class PromoShots {
         /** 1920 dp across at the same density, for the pages that change with a wide window. */
         const val WIDE = 2880
         const val HEIGHT = 1200
+
+        /** The Settings page's width beside the side bar in the other shots, so it wraps the same. */
+        const val SETTINGS_PAGE_WIDTH = 1000
+
+        /** Tall enough for the whole page, so nothing scrolls. */
+        const val SETTINGS_PAGE_HEIGHT = 4800
+
+        /** Each window's height, the rule between windows, and where each starts on the page. */
+        const val SETTINGS_WINDOW = 250
+        const val SETTINGS_GAP = 4
+        val SETTINGS_WINDOWS = listOf(98, 474, 1700, 2946)
         const val DENSITY = 1.5f
 
         /** Gradle runs the tests from the module directory. */

@@ -1,0 +1,56 @@
+{
+  "source": "ph-tour-controls.png",
+  "output": "app/src/main/res/drawable-nodpi/tour_controls_dark.webp",
+  "crop": [
+    0,
+    600,
+    1080,
+    1200
+  ],
+  "width": 720,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        40,
+        1000,
+        260,
+        400
+      ],
+      "seed": 70
+    },
+    {
+      "type": "circle",
+      "box": [
+        890,
+        820,
+        150,
+        760
+      ],
+      "seed": 71
+    },
+    {
+      "type": "circle",
+      "box": [
+        430,
+        1080,
+        220,
+        220
+      ],
+      "seed": 72
+    },
+    {
+      "type": "arrow",
+      "from": [
+        980,
+        1500
+      ],
+      "to": [
+        980,
+        980
+      ],
+      "bend": 0.1,
+      "seed": 73
+    }
+  ]
+}

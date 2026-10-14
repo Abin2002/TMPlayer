@@ -1,0 +1,43 @@
+{
+  "source": "tvt-home.png",
+  "output": "app/src/main/res/drawable-nodpi/tour_home_tv.webp",
+  "crop": [
+    0,
+    0,
+    1920,
+    1080
+  ],
+  "width": 1280,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        478,
+        212,
+        355,
+        58
+      ],
+      "seed": 84
+    },
+    {
+      "type": "circle",
+      "box": [
+        478,
+        690,
+        600,
+        58
+      ],
+      "seed": 85
+    },
+    {
+      "type": "circle",
+      "box": [
+        90,
+        370,
+        290,
+        60
+      ],
+      "seed": 86
+    }
+  ]
+}

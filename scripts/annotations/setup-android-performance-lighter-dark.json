@@ -1,0 +1,26 @@
+{
+  "source": "ph-perf-lighter-dark.png",
+  "output": "app/src/main/res/drawable-nodpi/setup_performance_lighter_dark.webp",
+  "crop": [
+    36,
+    128,
+    660,
+    660
+  ],
+  "width": 440,
+  "marks": [
+    {
+      "type": "arrow",
+      "from": [
+        630,
+        770
+      ],
+      "to": [
+        600,
+        470
+      ],
+      "bend": 0.25,
+      "seed": 47
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "source": "desktop/tour-player.png",
+  "output": "ui/src/jvmMain/resources/onboarding/tour-player-dark.webp",
+  "crop": [
+    0,
+    0,
+    1920,
+    1200
+  ],
+  "width": 1280,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        1100,
+        1066,
+        160,
+        34
+      ],
+      "seed": 117
+    },
+    {
+      "type": "circle",
+      "box": [
+        45,
+        1120,
+        180,
+        48
+      ],
+      "seed": 118
+    },
+    {
+      "type": "circle",
+      "box": [
+        1700,
+        962,
+        190,
+        50
+      ],
+      "seed": 119
+    }
+  ]
+}

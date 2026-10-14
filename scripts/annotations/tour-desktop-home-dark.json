@@ -1,0 +1,43 @@
+{
+  "source": "desktop/home-meta.png",
+  "output": "ui/src/jvmMain/resources/onboarding/tour-home-dark.webp",
+  "crop": [
+    0,
+    0,
+    1920,
+    1200
+  ],
+  "width": 1280,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        455,
+        158,
+        310,
+        45
+      ],
+      "seed": 114
+    },
+    {
+      "type": "circle",
+      "box": [
+        455,
+        551,
+        515,
+        45
+      ],
+      "seed": 115
+    },
+    {
+      "type": "circle",
+      "box": [
+        45,
+        305,
+        180,
+        45
+      ],
+      "seed": 116
+    }
+  ]
+}

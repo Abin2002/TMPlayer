@@ -1,0 +1,43 @@
+{
+  "source": "ph-tour-player.png",
+  "output": "app/src/main/res/drawable-nodpi/tour_player_dark.webp",
+  "crop": [
+    0,
+    1080,
+    1080,
+    1320
+  ],
+  "width": 720,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        505,
+        2165,
+        130,
+        60
+      ],
+      "seed": 67
+    },
+    {
+      "type": "circle",
+      "box": [
+        100,
+        2262,
+        360,
+        72
+      ],
+      "seed": 68
+    },
+    {
+      "type": "circle",
+      "box": [
+        684,
+        1128,
+        150,
+        216
+      ],
+      "seed": 69
+    }
+  ]
+}

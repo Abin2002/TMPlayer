@@ -1,0 +1,33 @@
+{
+  "source": "tv-home-screen.png",
+  "output": "app/src/main/res/drawable-nodpi/tour_tvhome_tv.webp",
+  "crop": [
+    0,
+    62,
+    1920,
+    540
+  ],
+  "width": 1280,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        104,
+        110,
+        300,
+        32
+      ],
+      "seed": 96
+    },
+    {
+      "type": "circle",
+      "box": [
+        125,
+        200,
+        150,
+        200
+      ],
+      "seed": 97
+    }
+  ]
+}

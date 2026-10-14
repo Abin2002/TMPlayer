@@ -1,0 +1,43 @@
+{
+  "source": "desktop/tour-downloads.png",
+  "output": "ui/src/jvmMain/resources/onboarding/tour-downloads-dark.webp",
+  "crop": [
+    0,
+    0,
+    1920,
+    1200
+  ],
+  "width": 1280,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        590,
+        467,
+        420,
+        50
+      ],
+      "seed": 123
+    },
+    {
+      "type": "circle",
+      "box": [
+        458,
+        304,
+        128,
+        24
+      ],
+      "seed": 124
+    },
+    {
+      "type": "circle",
+      "box": [
+        455,
+        876,
+        690,
+        26
+      ],
+      "seed": 125
+    }
+  ]
+}

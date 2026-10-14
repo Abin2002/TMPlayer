@@ -1,0 +1,43 @@
+{
+  "source": "ph-tour-downloads-light.png",
+  "output": "app/src/main/res/drawable-nodpi/tour_downloads.webp",
+  "crop": [
+    0,
+    0,
+    1080,
+    1560
+  ],
+  "width": 720,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        70,
+        850,
+        910,
+        125
+      ],
+      "seed": 74
+    },
+    {
+      "type": "circle",
+      "box": [
+        408,
+        204,
+        264,
+        54
+      ],
+      "seed": 75
+    },
+    {
+      "type": "circle",
+      "box": [
+        70,
+        372,
+        460,
+        130
+      ],
+      "seed": 76
+    }
+  ]
+}
