@@ -120,6 +120,32 @@ internal fun SelectionBar(
 }
 
 /**
+ * A download refused for room still needs room for all of it, whatever the mode. When Low storage
+ * mode is off and the first refused video would stream in it, the viewer is asked whether to switch
+ * and watch it instead; every time, beside the refusal toast.
+ */
+private suspend fun offerLowStorage(
+    settings: SettingsStore,
+    wanted: List<MediaItem>,
+    candidates: List<CacheShelf.Candidate>,
+    batch: CacheShelf.Batch,
+) {
+    if (runCatching { settings.lowStorageModeNow() }.getOrDefault(true)) return
+    val refused = candidates.indices.firstOrNull { it !in batch.fits && it !in batch.alreadyHere } ?: return
+    val candidate = candidates[refused]
+    val plan = CacheShelf.plan(
+        targetFileId = candidate.fileId,
+        targetSizeBytes = candidate.sizeBytes,
+        targetPartialBytes = candidate.partialBytes,
+        alreadyCached = false,
+        cached = emptyList(),
+        freeBytes = DesktopPaths.disk().freeBytes,
+        streaming = true,
+    )
+    if ((plan as? CacheShelf.Plan.NotEnoughSpace)?.fitsInLowStorage == true) LowStorageQuestion.offer(wanted[refused])
+}
+
+/**
  * Queues every picked video that will fit, over [CacheShelf.planBatch]: one already downloaded or
  * coming down is skipped, one whole in the cache is moved rather than fetched and costs nothing,
  * and the rest are planned against the cache drive's free space with the cached videos nobody
@@ -152,6 +178,7 @@ internal suspend fun downloadSelected(
     }
     val starting = (batch.alreadyHere + batch.fits).sorted().map { wanted[it] }
     starting.forEach { OfflineDownloads.start(runner, it, chatTitle) }
+    if (batch.outOfSpace) offerLowStorage(settings, wanted, candidates, batch)
     val left = wanted.size - starting.size
     val queued = L.browseDownloadingVideos(starting.size)
     return when {

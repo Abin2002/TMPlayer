@@ -140,6 +140,7 @@ fun SettingsPage(
     val autoplay by settings.autoplayNext.collectAsState(initial = true)
     val resumeRewindMs by settings.resumeRewindMs.collectAsState(initial = ResumeRewind.DEFAULT_MS)
     val downloadFirst by settings.downloadBeforePlaying.collectAsState(initial = false)
+    val lowStorage by settings.lowStorageMode.collectAsState(initial = false)
     val openLast by settings.openLastChat.collectAsState(initial = false)
     val minSize by settings.minSizeBytes.collectAsState(initial = SizeFilter.DEFAULT_MIN)
     val maxSize by settings.maxSizeBytes.collectAsState(initial = SizeFilter.DEFAULT_MAX)
@@ -231,6 +232,13 @@ fun SettingsPage(
                 Toggle(s.settingsDownloadFirst, s.settingsDownloadFirstDetail, downloadFirst) {
                     scope.launch { settings.setDownloadBeforePlaying(it) }
                 }
+                // A rolling window of the video on disk, for a drive with less room than the film;
+                // the line under it says the cost.
+                Toggle(
+                    s.settingsLowStorage,
+                    if (lowStorage) s.settingsLowStorageOn else s.settingsLowStorageOff,
+                    lowStorage,
+                ) { on -> scope.launch { settings.setLowStorageMode(on) } }
                 Setting(
                     s.settingsHideControls,
                     s.settingsHideControlsDetail(TouchPrefs.timeoutLabel(touchPrefs.controlsTimeoutMs)),

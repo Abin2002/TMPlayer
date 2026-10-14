@@ -141,6 +141,23 @@ class DesktopStorageTest {
         assertEquals(RoomOnDisk.Decision.Proceed, RoomOnDisk.decide(20 * gb, 0, cached, emptySet(), 0, 0))
     }
 
+    @Test
+    fun `low storage mode measures the window, and a refusal with it off says whether the mode would do`() {
+        // Off: a 4 GB film on 1 GB free is refused, as before, and only a stream is offered the mode.
+        val off = RoomOnDisk.decide(4 * gb, 0, emptyList(), emptySet(), 1 * gb, 100 * gb, streaming = true)
+        assertTrue(off is RoomOnDisk.Decision.NotEnoughSpace && off.fitsInLowStorage)
+        val download = RoomOnDisk.decide(4 * gb, 0, emptyList(), emptySet(), 1 * gb, 100 * gb)
+        assertTrue(download is RoomOnDisk.Decision.NotEnoughSpace && !download.fitsInLowStorage)
+        // On: the same film starts.
+        assertEquals(
+            RoomOnDisk.Decision.Proceed,
+            RoomOnDisk.decide(4 * gb, 0, emptyList(), emptySet(), 1 * gb, 100 * gb, lowStorage = true, streaming = true),
+        )
+        // On, and too full even for the window: refused, nothing offered.
+        val full = RoomOnDisk.decide(4 * gb, 0, emptyList(), emptySet(), 300L * 1024 * 1024, 100 * gb, lowStorage = true, streaming = true)
+        assertTrue(full is RoomOnDisk.Decision.NotEnoughSpace && !full.fitsInLowStorage)
+    }
+
     // ---- settings -----------------------------------------------------------------------------
 
     @Test

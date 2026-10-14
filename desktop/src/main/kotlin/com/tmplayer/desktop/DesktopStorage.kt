@@ -5,6 +5,7 @@ import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.Td
 import com.tmplayer.data.WatchCacheRules
 import com.tmplayer.desktop.player.ActiveStreams
+import com.tmplayer.player.LowStorageWindow
 import com.tmplayer.i18n.L
 import com.tmplayer.platform.Logger
 import com.tmplayer.platform.NoTransferNotifier
@@ -141,8 +142,11 @@ object RoomOnDisk {
         /** Room once these cached videos are deleted. */
         data class Evict(val fileIds: List<Int>) : Decision
 
-        /** Not even with the cache emptied: [shortBytes] more is needed. */
-        data class NotEnoughSpace(val shortBytes: Long) : Decision
+        /**
+         * Not even with the cache emptied: [shortBytes] more is needed. [fitsInLowStorage] when Low
+         * storage mode is off and the video would stream in it, so the refusal can ask to switch.
+         */
+        data class NotEnoughSpace(val shortBytes: Long, val fitsInLowStorage: Boolean = false) : Decision
     }
 
     /**
@@ -158,11 +162,20 @@ object RoomOnDisk {
         spared: Set<Int>,
         freeBytes: Long,
         totalBytes: Long,
+        lowStorage: Boolean = false,
+        streaming: Boolean = false,
     ): Decision {
         if (sizeBytes <= 0 || totalBytes <= 0) return Decision.Proceed
-        val needed = (sizeBytes - partialBytes).coerceAtLeast(0) + CacheShelf.HEADROOM_BYTES
-        if (freeBytes >= needed) return Decision.Proceed
         val candidates = cached.distinctBy { it.fileId }.filter { it.fileId !in spared }.sortedBy { it.updatedAt }
+        val remaining = (sizeBytes - partialBytes).coerceAtLeast(0)
+        // In Low storage mode a stream needs room for its rolling window, sized to what there is.
+        val everything = freeBytes + candidates.sumOf { it.bytes.coerceAtLeast(0) }
+        val windowNeeded = LowStorageWindow.roomNeeded(
+            remaining,
+            LowStorageWindow.windowBytes(everything, CacheShelf.HEADROOM_BYTES),
+        ) + CacheShelf.HEADROOM_BYTES
+        val needed = if (lowStorage) windowNeeded else remaining + CacheShelf.HEADROOM_BYTES
+        if (freeBytes >= needed) return Decision.Proceed
         var room = freeBytes
         val victims = mutableListOf<Int>()
         for (held in candidates) {
@@ -170,7 +183,11 @@ object RoomOnDisk {
             victims += held.fileId
             room += held.bytes.coerceAtLeast(0)
         }
-        return if (room >= needed) Decision.Evict(victims) else Decision.NotEnoughSpace(needed - room)
+        return if (room >= needed) {
+            Decision.Evict(victims)
+        } else {
+            Decision.NotEnoughSpace(needed - room, fitsInLowStorage = !lowStorage && streaming && room >= windowNeeded)
+        }
     }
 
     /** What the player says when there is not room, before a byte is fetched. */

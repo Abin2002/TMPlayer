@@ -356,6 +356,7 @@ private fun Browse(state: ShellState, player: PlayerContent) {
         }
 
         UpdatePopupHost(state)
+        LowStorageQuestionHost(state)
         ShellNotices(state, Modifier.align(Alignment.BottomEnd).padding(24.dp))
         if (signInCard && state.nowPlaying == null && !state.updatePopup) {
             FirstSignInCard(

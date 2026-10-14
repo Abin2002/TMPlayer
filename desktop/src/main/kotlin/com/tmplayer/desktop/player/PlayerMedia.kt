@@ -13,6 +13,9 @@ import com.tmplayer.desktop.DesktopServices
 import com.tmplayer.desktop.DesktopWatchCache
 import com.tmplayer.desktop.DownloadIndex
 import com.tmplayer.desktop.RoomOnDisk
+import com.tmplayer.desktop.ui.LowStorageQuestion
+import com.tmplayer.player.LowStorageStreams
+import com.tmplayer.player.LowStorageWindow
 import com.tmplayer.data.LocalFileAvailability
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.MediaName
@@ -192,10 +195,12 @@ class TelegramPlayerMedia(
         val fileId = Td.currentFileId(item.chatId, item.messageId, item.fileId)
         playingId = fileId
         watchDownload(fileId)
+        val streamsLow = startLowStorageIfOn(fileId)
         // The player claims the cache for every video it opens (the phone's rule): this one is
         // the cached video now, and the one before it goes, unless either is a download.
         cache?.let { c -> background.launch { runCatching { c.claim(item, chatTitle, fileId) } } }
-        if (Td.localFileAvailability(fileId) != LocalFileAvailability.Complete &&
+        // Fetching the whole film first is exactly what Low storage mode is there to avoid.
+        if (!streamsLow && Td.localFileAvailability(fileId) != LocalFileAvailability.Complete &&
             runCatching { downloadFirst() }.getOrDefault(false)
         ) {
             fetchWhole(fileId)
@@ -219,6 +224,27 @@ class TelegramPlayerMedia(
             prefetchTail = TailPrefetch.wanted(name, item.mimeType),
             onClose = { stopDownload(fileId) },
         )
+    }
+
+    /** The file [LowStorageStreams] was told about, taken back at [release]. */
+    @Volatile
+    private var lowStorageFileId = 0
+
+    /**
+     * Lets this video stream through a rolling window when Low storage mode is on. Only a video
+     * being watched: one the viewer downloaded, or is downloading, keeps every byte.
+     */
+    private suspend fun startLowStorageIfOn(fileId: Int): Boolean {
+        if (item.chatId == 0L) return false
+        val settings = DesktopServices.settings
+        if (!runCatching { settings.lowStorageModeNow() }.getOrDefault(false)) return false
+        if (runCatching { Td.localFileAvailability(fileId) }.getOrNull() == LocalFileAvailability.Complete) return false
+        if (runCatching { settings.isKeptDownload(item.chatId, item.messageId) }.getOrDefault(true)) return false
+        if (OfflineDownloads.isDownloading(fileId)) return false
+        val window = LowStorageWindow.windowBytes(DesktopPaths.disk().freeBytes, CacheShelf.HEADROOM_BYTES)
+        LowStorageStreams.allow(fileId, window)
+        lowStorageFileId = fileId
+        return true
     }
 
     private val _preparing = MutableStateFlow<String?>(null)
@@ -371,6 +397,10 @@ class TelegramPlayerMedia(
             CacheShelf.Held(id, runCatching { Td.localDownloadedBytes(id) }.getOrDefault(0L), record.updatedAt)
         }
         val disk = DesktopPaths.disk()
+        // A download the viewer keeps needs room for all of it whatever the mode; a stream in Low
+        // storage mode needs room for its window.
+        val kept = runCatching { settings.isKeptDownload(item.chatId, item.messageId) }.getOrDefault(false)
+        val lowStorage = !kept && runCatching { settings.lowStorageModeNow() }.getOrDefault(false)
         val decision = RoomOnDisk.decide(
             sizeBytes = item.sizeBytes,
             partialBytes = runCatching { Td.localDownloadedBytes(fileId) }.getOrDefault(0L),
@@ -378,6 +408,8 @@ class TelegramPlayerMedia(
             spared = ActiveStreams.openIds() + OfflineDownloads.active.value.keys + fileId,
             freeBytes = disk.freeBytes,
             totalBytes = disk.totalBytes,
+            lowStorage = lowStorage,
+            streaming = !kept,
         )
         when (decision) {
             RoomOnDisk.Decision.Proceed -> Unit
@@ -385,8 +417,14 @@ class TelegramPlayerMedia(
                 runCatching { Td.deleteFile(id) }
                 byId[id]?.let { runCatching { settings.forgetCachedVideo(it.chatId, it.messageId) } }
             }
-            is RoomOnDisk.Decision.NotEnoughSpace ->
+            is RoomOnDisk.Decision.NotEnoughSpace -> {
+                // Asked every time the video would fit in Low storage mode; "Not now" is the refusal.
+                if (decision.fitsInLowStorage && LowStorageQuestion.ask(item)) {
+                    runCatching { settings.setLowStorageMode(true) }
+                    return ensureRoom()
+                }
                 throw java.io.IOException(RoomOnDisk.refusal(decision.shortBytes, DesktopPaths.filesDir))
+            }
         }
     }
 
@@ -395,6 +433,8 @@ class TelegramPlayerMedia(
     }.getOrNull()
 
     override fun release() {
+        if (lowStorageFileId != 0) LowStorageStreams.revoke(lowStorageFileId)
+        lowStorageFileId = 0
         watcher?.cancel()
         openedFromDisk?.let(ActiveStreams::closed)
         openedFromDisk = null

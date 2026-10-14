@@ -313,9 +313,12 @@ fun ConfirmDialog(
     cancelLabel: String? = null,
     /** Drawn under the message and detail, for a choice that belongs to the question, such as a tick box. */
     extra: (@Composable () -> Unit)? = null,
+    /** Focus starts on confirm instead, for an invitation where the confirm is the safe press. */
+    focusConfirm: Boolean = false,
 ) {
     val s = LocalStrings.current
     val cancelFocus = remember { FocusRequester() }
+    val confirmFocus = remember { FocusRequester() }
     TmAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -327,7 +330,7 @@ fun ConfirmDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(onClick = onConfirm, modifier = Modifier.focusRequester(confirmFocus)) {
                 Text(confirmLabel, color = if (destructive) Tone.danger else Tone.accent)
             }
         },
@@ -335,7 +338,7 @@ fun ConfirmDialog(
             TextButton(onClick = onDismiss, modifier = Modifier.focusRequester(cancelFocus)) { Text(cancelLabel ?: s.commonCancel) }
         },
     )
-    LaunchedEffect(Unit) { runCatching { cancelFocus.requestFocus() } }
+    LaunchedEffect(Unit) { runCatching { (if (focusConfirm) confirmFocus else cancelFocus).requestFocus() } }
 }
 
 /** A chat's picture, or its first letter on the surface colour while there is none. */
