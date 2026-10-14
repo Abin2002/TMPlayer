@@ -25,8 +25,7 @@ removed in the commit that added this file), the listing plan artifact
 
 1.26.0, not before 2026-10-17 (release cadence guard: 1.25.0 shipped 2026-10-10). Notes are a "- " list in
 the annotated tag (`docs/RELEASING.md`); tag a commit CI has passed so the release skips the unit tests. The
-store changelog is `fastlane/metadata/android/en-US/changelogs/12600.txt`; refresh it before tagging, it
-predates CP65 to CP68 (TV home screen rows, Low storage mode, setup after sign in, low-end device help).
+store changelog is `fastlane/metadata/android/en-US/changelogs/12600.txt` (covers CP65 to CP68 too).
 
 Pre-release work done on 2026-10-14, all on main at `7254781` with core, ui, app and desktop tests green,
 every app and site string in all 21 languages, `build-site-i18n.py --check` clean, no dashes:
@@ -46,7 +45,6 @@ Before tagging:
   `/home/dracu/vms/win11/shared/`, jars from a keyed local build into `shared/jars/`, then in the VM
   `powershell -executionpolicy bypass -file \\host.lan\data\test.ps1`. The VNC driver scripts lived in a
   session scratchpad; recreate them if needed (vncdotool).
-- Refresh the store changelog (above).
 
 Not seen on real hardware: real first sign in, a low-end device, Low storage mode on a phone or stick,
 course progress (no numbered course on the test account), the New episodes row. The emulator AVD
