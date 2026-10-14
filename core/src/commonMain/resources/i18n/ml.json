@@ -714,10 +714,7 @@
     "row_watch_later": "പിന്നീട് കാണാൻ",
     "see_all": "എല്ലാം കാണുക",
     "see_all_count": "{count, plural, one {# വീഡിയോ} other {# വീഡിയോകൾ}}",
-    "see_all_count_at_least": "{count, plural, one {#+ വീഡിയോ} other {#+ വീഡിയോകൾ}}",
-    "spotlight_next": "അടുത്തത്",
-    "spotlight_position": "{count}-ൽ {index}",
-    "spotlight_previous": "മുമ്പത്തേത്"
+    "see_all_count_at_least": "{count, plural, one {#+ വീഡിയോ} other {#+ വീഡിയോകൾ}}"
   },
   "install": {
     "appimage": "AppImage",

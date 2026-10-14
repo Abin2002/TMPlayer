@@ -714,10 +714,7 @@
     "row_watch_later": "Obejrzyj później",
     "see_all": "Zobacz wszystko",
     "see_all_count": "{count, plural, one {# film} few {# filmy} many {# filmów} other {# filmu}}",
-    "see_all_count_at_least": "{count, plural, one {#+ film} few {#+ filmy} many {#+ filmów} other {#+ filmu}}",
-    "spotlight_next": "Dalej",
-    "spotlight_position": "{index} z {count}",
-    "spotlight_previous": "Wstecz"
+    "see_all_count_at_least": "{count, plural, one {#+ film} few {#+ filmy} many {#+ filmów} other {#+ filmu}}"
   },
   "install": {
     "appimage": "AppImage",

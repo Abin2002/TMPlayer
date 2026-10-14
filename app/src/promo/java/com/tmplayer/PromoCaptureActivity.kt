@@ -463,8 +463,6 @@ private fun PromoChatsScreen(
             }
         }.orEmpty(),
         homeArt = homeData?.art.orEmpty(),
-        // The carousel over the starred demo chats, once their rows have answered.
-        homeFeatured = homeData?.takeIf { it.loaded.isNotEmpty() }?.let { remember(it) { PromoMeta.library.featured(chats) } }.orEmpty(),
         homeWatch = PROMO_WATCH,
         onRetry = {},
         onRefresh = {},
@@ -520,8 +518,7 @@ private class PromoHome(
 )
 
 /**
- * Home over the demo library ([PromoCatalog.Library]): Continue watching with a film first (the
- * spotlight's, with `--ez meta true`), Watch later, New episodes, a row for each starred chat and
+ * Home over the demo library ([PromoCatalog.Library]): Continue watching with a film first, Watch later, New episodes, a row for each starred chat and
  * Recently added in them.
  */
 private fun promoHome(variant: String?): PromoHome? {

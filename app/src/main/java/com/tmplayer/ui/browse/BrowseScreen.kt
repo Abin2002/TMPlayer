@@ -259,10 +259,6 @@ fun BrowseScreen(
     onUpdate: () -> Unit = {},
     /** Home's rows, built by [com.tmplayer.data.HomeRows] from what has loaded so far. */
     homeRows: List<HomeRow> = emptyList(),
-    /** Home's carousel candidates from the starred chats (see [rememberFeatured]). */
-    homeFeatured: List<com.tmplayer.data.FeaturedPick> = emptyList(),
-    /** Puts a video on Watch later (true) or takes it off (false); the second argument is its chat's name. */
-    onSetWatchLater: ((MediaItem, String, Boolean) -> Unit)? = null,
     /** Continue watching videos as Telegram describes them, by progress key, for their pictures. */
     homeArt: Map<String, MediaItem> = emptyMap(),
     homeWatch: SeriesWatch = SeriesWatch.None,
@@ -365,9 +361,6 @@ fun BrowseScreen(
     val pickSort: (ChatSort) -> Unit = { panelScope.launch { browseSettings.setChatSort(it.name) } }
     val pickHistory: (HistoryTab) -> Unit = { panelScope.launch { browseSettings.setHistoryTab(it.name) } }
     val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
-    // Home's hero, for the header drawn over it: the phone's app bar or the television's heading.
-    val homeHero = remember { HeroUnderHeader() }
-    val laterKeys = remember(watchLater) { watchLater.mapTo(HashSet()) { it.key } }
     // History's Continue tab, with the copies of one film or episode as one card, as on Home.
     val continuing = remember(continueWatching) { HomeRows.foldCopies(continueWatching) }
     val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
@@ -432,17 +425,7 @@ fun BrowseScreen(
             val headerAccount = data.account ?: account
             Column(Modifier.fillMaxSize()) {
                     if (tab.isHome) {
-                        // With a hero, a television's heading goes over the pane and the hero's
-                        // picture runs up behind it to the top of the content area; the heading
-                        // stands on the picture's top scrim while the hero is under it. A phone's
-                        // app bar does the same through the shell (see TouchBrowseShell).
-                        val headingOverHero = !touch && homeHero.present
-                        var headingHeight by remember { mutableStateOf(0.dp) }
-                        val density = LocalDensity.current
-                        val heading: @Composable (Modifier, Boolean) -> Unit = { modifier, onArt ->
-                            TabHeading(tab, 0, insets, headerAccount, modifier = modifier, onArt = onArt) { RefreshAction(onRefreshHome) }
-                        }
-                        if (!touch && !headingOverHero) heading(Modifier, false)
+                        if (!touch) TabHeading(tab, 0, insets, headerAccount) { RefreshAction(onRefreshHome) }
                         val titles = remember(data.chats) { data.chats.associate { it.id to it.title } }
                         Box(Modifier.fillMaxSize()) {
                             HomePane(
@@ -479,22 +462,7 @@ fun BrowseScreen(
                                         queueSeason(panelContext, SettingsStore(panelContext), request) { titles[it.chatId].orEmpty() }?.let(onMessage)
                                     }
                                 },
-                                under = if (touch) LocalUnderBar.current else if (headingOverHero) headingHeight else 0.dp,
-                                hero = homeHero,
-                                featured = homeFeatured,
-                                inWatchLater = { item -> laterKeys.contains(SettingsStore.progressKey(item.chatId, item.messageId)) },
-                                onToggleWatchLater = onSetWatchLater?.let { set ->
-                                    { item, chat -> set(item, chat, !laterKeys.contains(SettingsStore.progressKey(item.chatId, item.messageId))) }
-                                },
                             )
-                            if (headingOverHero) {
-                                heading(
-                                    Modifier
-                                        .onSizeChanged { headingHeight = with(density) { it.height.toDp() } }
-                                        .overHero(homeHero.underHeader),
-                                    homeHero.underHeader,
-                                )
-                            }
                         }
                     } else if (tab.listsVideos) {
                         // One branch for both tabs, so the chip row stays the same composition when
@@ -754,7 +722,6 @@ fun BrowseScreen(
             searchQuery = if (tab.listsVideos || tab.isHome) null else query,
             onSearchQueryChange = { query = it },
             onVoiceSearch = voiceSearch,
-            barOverHero = if (tab.isHome && homeHero.present) homeHero.underHeader else null,
             actions = actions@{
                 // Home is rows of tiles whatever the arrangement, so it only offers a refresh.
                 if (tab.isHome) {

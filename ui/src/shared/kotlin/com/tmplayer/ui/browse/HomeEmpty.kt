@@ -32,7 +32,7 @@ import com.tmplayer.ui.theme.Tone
 /**
  * Home with nothing in it yet: one card on [Tone.surface] that says how to get a first video in.
  * An icon chip in the accent, the heading, [body] (where to forward a video), and when there is
- * somewhere to send the viewer, the same bright pill the spotlight uses, [button], which takes
+ * somewhere to send the viewer, a bright pill ([HeroPill]), [button], which takes
  * the remote's focus through [focus]. Under a rule, the line on starring chats, with its own chip.
  *
  * The phone, the television and the desktop all draw this one, so a first run looks the same on

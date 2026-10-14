@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.RowScope
@@ -42,13 +40,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
-import androidx.activity.compose.LocalActivity
-import androidx.core.view.WindowCompat
-import androidx.compose.ui.platform.LocalLayoutDirection
-import com.tmplayer.ui.theme.LocalDarkTheme
-import com.tmplayer.ui.theme.Scrims
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -124,14 +115,6 @@ internal fun TouchBrowseShell(
     onVoiceSearch: (() -> Unit)? = null,
     /** The bar's own buttons, to the right of the magnifier. */
     actions: @Composable RowScope.() -> Unit = {},
-    /**
-     * Null for the usual bar over the content. Otherwise the content (Home with its hero) is
-     * drawn up under the bar, which is told how far through [LocalUnderBar], and the bar is pinned:
-     * true while the hero's picture is under it, when the bar is clear over [Scrims.headerTop] with
-     * its title and icons in [Tone.onArt] (and the status bar's icons light) in either theme;
-     * false once the hero has scrolled away, when it is solid again.
-     */
-    barOverHero: Boolean? = null,
     content: @Composable () -> Unit,
 ) {
     val s = LocalStrings.current
@@ -284,12 +267,10 @@ internal fun TouchBrowseShell(
         // anything. It is parked while searching: a field the keyboard is open on must not be able
         // to scroll off the top of its own results.
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-        // Over a hero the bar stays put: it is what the picture runs up behind.
-        val pinned = searching || barOverHero != null
+        val pinned = searching
         LaunchedEffect(pinned) {
             if (pinned) scrollBehavior.state.heightOffset = 0f
         }
-        StatusIconsOverArt(barOverHero == true)
         // The bar comes back whenever the screen underneath it changes. A bar left hidden across a
         // change of tab has no pull-down to restore it on a tab too short to scroll, which takes
         // the title, the hamburger and every way out of the screen with it.
@@ -308,22 +289,8 @@ internal fun TouchBrowseShell(
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                val solid = TopAppBarDefaults.topAppBarColors().containerColor
                 TopAppBar(
                     scrollBehavior = if (pinned) null else scrollBehavior,
-                    modifier = if (barOverHero != null) Modifier.overHero(barOverHero, solid) else Modifier,
-                    colors = when (barOverHero) {
-                        null -> TopAppBarDefaults.topAppBarColors()
-                        // The ground is drawn behind the bar by overHero, solid or the scrim.
-                        false -> TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent)
-                        true -> TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent,
-                            scrolledContainerColor = Color.Transparent,
-                            navigationIconContentColor = Tone.onArt,
-                            titleContentColor = Tone.onArt,
-                            actionIconContentColor = Tone.onArt,
-                        )
-                    },
                     title = {
                         if (searching && searchQuery != null) {
                             AppBarSearchField(
@@ -366,21 +333,7 @@ internal fun TouchBrowseShell(
                 )
             },
         ) { padding ->
-            if (barOverHero == null) {
-                Box(Modifier.fillMaxSize().padding(padding)) { content() }
-            } else {
-                // Up under the bar, which the content is told the height of.
-                val direction = LocalLayoutDirection.current
-                Box(
-                    Modifier.fillMaxSize().padding(
-                        start = padding.calculateStartPadding(direction),
-                        end = padding.calculateEndPadding(direction),
-                        bottom = padding.calculateBottomPadding(),
-                    ),
-                ) {
-                    CompositionLocalProvider(LocalUnderBar provides padding.calculateTopPadding()) { content() }
-                }
-            }
+            Box(Modifier.fillMaxSize().padding(padding)) { content() }
         }
 
         // The magnifier was pressed to type, so the keyboard should already be up by the time the
@@ -388,27 +341,6 @@ internal fun TouchBrowseShell(
         LaunchedEffect(searching) {
             if (searching) searchFocus.requestFocus()
         }
-    }
-}
-
-/**
- * How far the content runs up under the app bar: the bar's height when [TouchBrowseShell] draws
- * the content under it (Home with a hero), else zero.
- */
-internal val LocalUnderBar = compositionLocalOf { 0.dp }
-
-/**
- * Light status bar icons while the bar stands on a hero's picture, whatever the theme; the
- * theme's own (see MainActivity) otherwise, and again when the shell leaves.
- */
-@Composable
-private fun StatusIconsOverArt(overArt: Boolean) {
-    val dark = LocalDarkTheme.current
-    val window = LocalActivity.current?.window ?: return
-    DisposableEffect(overArt, dark, window) {
-        val controller = WindowCompat.getInsetsController(window, window.decorView)
-        controller.isAppearanceLightStatusBars = !dark && !overArt
-        onDispose { controller.isAppearanceLightStatusBars = !dark }
     }
 }
 

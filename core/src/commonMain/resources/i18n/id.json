@@ -714,10 +714,7 @@
     "row_watch_later": "Tonton nanti",
     "see_all": "Lihat semua",
     "see_all_count": "{count, plural, other {# video}}",
-    "see_all_count_at_least": "{count, plural, other {#+ video}}",
-    "spotlight_next": "Berikutnya",
-    "spotlight_position": "{index} dari {count}",
-    "spotlight_previous": "Sebelumnya"
+    "see_all_count_at_least": "{count, plural, other {#+ video}}"
   },
   "install": {
     "appimage": "AppImage",

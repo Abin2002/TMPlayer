@@ -714,10 +714,7 @@
     "row_watch_later": "পরে দেখুন",
     "see_all": "সব দেখুন",
     "see_all_count": "{count, plural, one {#টি ভিডিও} other {#টি ভিডিও}}",
-    "see_all_count_at_least": "{count, plural, one {#+টি ভিডিও} other {#+টি ভিডিও}}",
-    "spotlight_next": "পরবর্তী",
-    "spotlight_position": "{count}টির মধ্যে {index}",
-    "spotlight_previous": "আগের"
+    "see_all_count_at_least": "{count, plural, one {#+টি ভিডিও} other {#+টি ভিডিও}}"
   },
   "install": {
     "appimage": "AppImage",

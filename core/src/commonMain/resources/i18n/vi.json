@@ -714,10 +714,7 @@
     "row_watch_later": "Xem sau",
     "see_all": "Xem tất cả",
     "see_all_count": "{count, plural, other {# video}}",
-    "see_all_count_at_least": "{count, plural, other {#+ video}}",
-    "spotlight_next": "Tiếp",
-    "spotlight_position": "{index} trên {count}",
-    "spotlight_previous": "Trước"
+    "see_all_count_at_least": "{count, plural, other {#+ video}}"
   },
   "install": {
     "appimage": "AppImage",

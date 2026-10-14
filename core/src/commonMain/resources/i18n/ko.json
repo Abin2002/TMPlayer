@@ -714,10 +714,7 @@
     "row_watch_later": "나중에 볼 영상",
     "see_all": "모두 보기",
     "see_all_count": "{count, plural, other {영상 #개}}",
-    "see_all_count_at_least": "{count, plural, other {영상 #개 이상}}",
-    "spotlight_next": "다음",
-    "spotlight_position": "{count}개 중 {index}",
-    "spotlight_previous": "이전"
+    "see_all_count_at_least": "{count, plural, other {영상 #개 이상}}"
   },
   "install": {
     "appimage": "AppImage",

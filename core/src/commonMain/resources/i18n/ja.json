@@ -714,10 +714,7 @@
     "row_watch_later": "あとで見る",
     "see_all": "すべて表示",
     "see_all_count": "{count, plural, other {#本の動画}}",
-    "see_all_count_at_least": "{count, plural, other {#本以上の動画}}",
-    "spotlight_next": "次へ",
-    "spotlight_position": "{index} / {count}",
-    "spotlight_previous": "前へ"
+    "see_all_count_at_least": "{count, plural, other {#本以上の動画}}"
   },
   "install": {
     "appimage": "AppImage",

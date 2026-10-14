@@ -714,10 +714,7 @@
     "row_watch_later": "تماشا در بعد",
     "see_all": "مشاهدهٔ همه",
     "see_all_count": "{count, plural, one {# ویدیو} other {# ویدیو}}",
-    "see_all_count_at_least": "{count, plural, one {+# ویدیو} other {+# ویدیو}}",
-    "spotlight_next": "بعدی",
-    "spotlight_position": "{index} از {count}",
-    "spotlight_previous": "قبلی"
+    "see_all_count_at_least": "{count, plural, one {+# ویدیو} other {+# ویدیو}}"
   },
   "install": {
     "appimage": "AppImage",

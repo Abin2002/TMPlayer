@@ -714,10 +714,7 @@
     "row_watch_later": "Später ansehen",
     "see_all": "Alle anzeigen",
     "see_all_count": "{count, plural, one {# Video} other {# Videos}}",
-    "see_all_count_at_least": "{count, plural, one {#+ Video} other {#+ Videos}}",
-    "spotlight_next": "Weiter",
-    "spotlight_position": "{index} von {count}",
-    "spotlight_previous": "Zurück"
+    "see_all_count_at_least": "{count, plural, one {#+ Video} other {#+ Videos}}"
   },
   "install": {
     "appimage": "AppImage",

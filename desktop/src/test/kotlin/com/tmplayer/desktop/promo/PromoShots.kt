@@ -328,10 +328,8 @@ class PromoShots {
 
     /**
      * Home over the demo chats: Continue watching, the starred chats (films, a show, an anime, a
-     * course and a nature series) and Recently added. Without posters and overviews there is
-     * nothing sharp enough to lead with, so Home opens on its rows; with them, the carousel leads
-     * with the starred chats' films and shows over their backdrops. Each at 1280 and 1920 dp wide,
-     * light and dark.
+     * course and a nature series) and Recently added, without and with posters and overviews.
+     * Each at 1280 and 1920 dp wide, light and dark.
      */
     @Test
     fun home() = homeShots("home", meta = false)
@@ -350,13 +348,11 @@ class PromoShots {
                 watchLater = library.watchLater,
                 fresh = library.newEpisodes,
             )
-            val featured = library.featured(chats)
             for ((width, suffix) in listOf(WIDTH to "", WIDE to "-1920")) {
                 both("$name$suffix", width = width, before = ::seedWatching) {
                     withSidebar {
                         com.tmplayer.desktop.ui.HomeRowsView(
                             shell, rows, chats, library.art, onRowShown = {}, onArtWanted = {}, onRefresh = {},
-                            featured = featured,
                         )
                     }
                 }

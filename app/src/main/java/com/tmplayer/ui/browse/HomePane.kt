@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -27,10 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
@@ -60,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.tmplayer.data.FeaturedPick
 import com.tmplayer.data.HomeRow
 import com.tmplayer.data.HomeRows
 import com.tmplayer.data.MediaItem
@@ -83,14 +77,9 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.Text as M3Text
 
 /**
- * Home: the spotlight when there is something worth leading with, then a row of what the viewer
- * was part way through, a row of what they saved for later, the new episodes of the shows they
+ * Home: a row of what the viewer was part way through, a row of what they saved for later, the new episodes of the shows they
  * are watching, a row per starred chat, and the newest videos across the starred chats (the rows
  * are built by [com.tmplayer.data.HomeRows]).
- *
- * The spotlight ([HomeCarousel]) is a carousel of up to five films and shows from the starred
- * chats, each with a picture worth showing large; with none, the newest film or show the viewer
- * is part way through when it has one; otherwise Home opens on its rows and nothing stands in.
  *
  * Continue watching is wide cards with the name written on the art and the time left in a chip.
  * In a starred chat's row and in Recently added, films and shows are 2:3 posters and everything
@@ -102,9 +91,8 @@ import androidx.compose.material3.Text as M3Text
  * which is what lets a 1 GB television scroll this without measuring anything twice.
  *
  * On a television the D-pad moves along a row and between rows, each row remembering the tile it
- * was left on. Home opens on the carousel's pill where there is one, else on the first tile;
- * Down from Resume goes into the rows and Up from the first row comes back. A row that leaves
- * videos out offers "See all" on its heading.
+ * was left on. Home opens on the first tile. A row that leaves videos out offers "See all" on its
+ * heading.
  */
 @Composable
 internal fun HomePane(
@@ -139,98 +127,31 @@ internal fun HomePane(
     onSeeWatchLater: () -> Unit = {},
     /** Download season and Download unwatched on a show's page; null leaves them out. */
     onDownloadSeason: ((SeasonDownloadRequest) -> Unit)? = null,
-    /**
-     * How far the hero's picture runs up behind a header drawn over the top of the pane (a
-     * phone's app bar, a television's heading); zero for a header above it.
-     */
-    under: Dp = 0.dp,
-    /** Told whether there is a hero and whether it is under that header, for the header's look. */
-    hero: HeroUnderHeader? = null,
-    /** The carousel's candidates from the starred chats (see [rememberFeatured]). */
-    featured: List<FeaturedPick> = emptyList(),
-    /** Whether a video is on Watch later, for the carousel's toggle. */
-    inWatchLater: (MediaItem) -> Boolean = { false },
-    /** Puts a carousel card's video on Watch later or takes it off; null leaves the toggle out. */
-    onToggleWatchLater: ((MediaItem, String) -> Unit)? = null,
 ) {
     val s = LocalStrings.current
-    if (hero != null) {
-        DisposableEffect(hero) { onDispose { hero.update(present = false, underHeader = false) } }
-    }
     if (rows.isEmpty()) {
         // Nothing played and nothing starred: a first run, so say how to get a first video in.
-        SideEffect { hero?.update(present = false, underHeader = false) }
         FirstVideoEmpty(firstStep, onOpenSection)
         return
     }
     val touch = isTouch()
     val first = remember { FocusRequester() }
-    val heroFocus = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
     var openSeries by remember { mutableStateOf<Series?>(null) }
     val listState = rememberLazyListState()
-    // Set by the first press of the remote, after which a spotlight arriving late does not take
-    // focus away from wherever the viewer has gone.
-    var moved by remember { mutableStateOf(false) }
 
-    val candidates = remember(rows) {
-        rows.filterIsInstance<HomeRow.Continue>().firstOrNull()?.let { HomeRows.spotlight(it.records + it.more) }.orEmpty()
-    }
-    val spotlights = (rememberSpotlights(featured, candidates, art, onArtWanted, chatTitle) as? SpotlightState.Ready)?.spotlights
-    val spotlight = spotlights?.firstOrNull()
-    val heroUnder by rememberHeroUnderHeader(listState, under, spotlight != null)
-    val density = LocalDensity.current
-    if (hero != null) SideEffect { hero.update(present = spotlight != null, underHeader = heroUnder) }
-
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        // A television and a phone on its side put the words beside the picture; a phone upright
-        // puts them under it. Measured on the screen under any header drawn over the pane.
-        val wide = !touch || maxWidth > maxHeight
-        val heroHeight = spotlightHeight(maxHeight - under, wide, touch)
+    Box(Modifier.fillMaxSize()) {
         // Tiles here may wear the show's or the film's picture (see LocalOnlineArt); a chat's grid keeps frames.
         CompositionLocalProvider(LocalOnlineArt provides true) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(
-                        if (touch) {
-                            Modifier
-                        } else {
-                            Modifier.onPreviewKeyEvent { event ->
-                                if (event.type == KeyEventType.KeyDown) moved = true
-                                false
-                            }
-                        },
-                    ),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
-                    top = if (spotlight != null) 0.dp else if (touch) 4.dp else Tv.FocusClearance,
+                    top = if (touch) 4.dp else Tv.FocusClearance,
                     bottom = bottom,
                 ),
                 verticalArrangement = Arrangement.spacedBy(if (touch) ROW_GAP_TOUCH else ROW_GAP_TV),
             ) {
-                if (spotlights != null) {
-                    item(key = SPOTLIGHT_KEY, contentType = "spotlight") {
-                        HomeCarousel(
-                            spotlights = spotlights,
-                            wide = wide,
-                            height = heroHeight,
-                            start = start,
-                            end = end,
-                            input = if (touch) CarouselInput.Touch else CarouselInput.Remote,
-                            onPlay = { card ->
-                                val record = card.record
-                                if (record != null) onResume(record) else onPlay(card.item, card.chatTitle)
-                            },
-                            onDetails = { card -> onHoldMedia(card.item, card.chatTitle) },
-                            inWatchLater = { card -> inWatchLater(card.item) },
-                            onToggleWatchLater = onToggleWatchLater?.let { toggle -> { card -> toggle(card.item, card.chatTitle) } },
-                            resumeFocus = heroFocus,
-                            under = under,
-                            wordsAlpha = { heroWordsAlpha(listState, under, density) },
-                        )
-                    }
-                }
                 items(rows, key = { it.key }, contentType = { it::class }) { row ->
                     val loaded = when (row) {
                         is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> true
@@ -378,20 +299,7 @@ internal fun HomePane(
         is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> true
     }
     LaunchedEffect(firstKey, firstReady) {
-        if (!touch && firstReady && spotlight == null) runCatching { first.requestFocus() }
-    }
-    // The spotlight's Resume, once it is known there is one: the first thing on Home, so the
-    // first thing the remote stands on, unless the viewer has already moved off somewhere.
-    val heroKey = spotlight?.let { "hero" }
-    LaunchedEffect(heroKey) {
-        if (heroKey == null || moved) return@LaunchedEffect
-        withFrameNanos {}
-        // A spotlight that answers after the rows are drawn goes in above them, and the list keeps
-        // standing on the row it was showing, so the hero sat out of sight above the top. A list
-        // still at its top (now one item down, at no offset) moves up to show it.
-        if (listState.firstVisibleItemIndex == 1 && listState.firstVisibleItemScrollOffset == 0) listState.scrollToItem(0)
-        if (touch) return@LaunchedEffect
-        if (listState.firstVisibleItemIndex == 0) runCatching { heroFocus.requestFocus() }
+        if (!touch && firstReady) runCatching { first.requestFocus() }
     }
 
     openSeries?.let { series ->
@@ -694,20 +602,3 @@ private val TILE_GAP_TV = 12.dp
 /** Between a row's poster strip and its strip of cards, on a phone. */
 private val STRIP_GAP = 12.dp
 
-/**
- * What Home's hero tells the header drawn over it (the phone's app bar, the television's heading):
- * whether there is a hero, so the header goes over the pane at all, and whether its picture is
- * still under the header, so the header stands on the picture rather than on its own ground.
- */
-@Stable
-internal class HeroUnderHeader {
-    var present by mutableStateOf(false)
-        private set
-    var underHeader by mutableStateOf(false)
-        private set
-
-    fun update(present: Boolean, underHeader: Boolean) {
-        if (this.present != present) this.present = present
-        if (this.underHeader != underHeader) this.underHeader = underHeader
-    }
-}

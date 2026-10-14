@@ -453,26 +453,3 @@ fun rememberHomeRows(
         HomeRows.build(continueWatching, starred, loaded, recent, partial = partial, watchLater = watchLater, fresh = fresh)
     }
 }
-
-/**
- * The candidates for Home's featured carousel (see [com.tmplayer.data.HomeFeatured]): drawn from
- * the starred chats' videos the rows have already fetched, so the carousel asks Telegram for
- * nothing of its own, and worked out again as those rows arrive.
- *
- * @param watched the Watched list, which keeps what the viewer has seen out of the carousel.
- */
-@Composable
-fun rememberFeatured(
-    model: HomeViewModel,
-    chats: List<ChatSummary>,
-    favourites: Set<Long>,
-    continueWatching: List<ResumeRecord>,
-    watched: Collection<WatchedRecord> = emptyList(),
-): List<com.tmplayer.data.FeaturedPick> {
-    val loaded by model.loaded.collectAsState()
-    val starred = remember(chats, favourites) { HomeRows.favouriteChats(chats, favourites) }
-    val seen = remember(watched) { watched.mapTo(HashSet()) { SettingsStore.progressKey(it.chatId, it.messageId) } }
-    return remember(starred, loaded, continueWatching, seen) {
-        com.tmplayer.data.HomeFeatured.pick(starred, loaded, continueWatching, seen)
-    }
-}

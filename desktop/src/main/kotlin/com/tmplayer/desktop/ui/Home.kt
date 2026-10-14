@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -56,8 +55,6 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isShiftPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -66,7 +63,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.tmplayer.data.ChatSummary
-import com.tmplayer.data.FeaturedPick
 import com.tmplayer.data.HomeRow
 import com.tmplayer.data.HomeRows
 import com.tmplayer.data.MediaItem
@@ -78,24 +74,14 @@ import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ShelfEntry
 import com.tmplayer.data.WatchLaterRecord
-import com.tmplayer.desktop.setWatchLater
 import com.tmplayer.ui.browse.BrowseTab
-import com.tmplayer.ui.browse.CarouselInput
 import com.tmplayer.ui.browse.ChatListViewModel
 import com.tmplayer.ui.browse.ContinueCardArt
 import com.tmplayer.ui.browse.FirstVideoCard
-import com.tmplayer.ui.browse.HomeCarousel
 import com.tmplayer.ui.browse.HomeViewModel
 import com.tmplayer.ui.browse.NewBadge
-import com.tmplayer.ui.browse.SPOTLIGHT_KEY
-import com.tmplayer.ui.browse.SpotlightState
-import com.tmplayer.ui.browse.overHero
-import com.tmplayer.ui.browse.rememberFeatured
-import com.tmplayer.ui.browse.rememberHeroUnderHeader
 import com.tmplayer.ui.browse.rememberHomeRows
-import com.tmplayer.ui.browse.rememberSpotlights
 import com.tmplayer.ui.components.UiState
-import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
@@ -107,9 +93,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
- * Home on the desktop: the same carousel and rows as the phone and the television (see
- * [com.tmplayer.data.HomeRows] and [com.tmplayer.data.HomeFeatured]), each row a horizontal strip
- * that loads when it scrolls into view.
+ * Home on the desktop: the same rows as the phone and the television (see
+ * [com.tmplayer.data.HomeRows]), each row a horizontal strip that loads when it scrolls into view.
  */
 @Composable
 fun HomePage(state: ShellState, chats: ChatListViewModel) {
@@ -138,20 +123,15 @@ fun HomePage(state: ShellState, chats: ChatListViewModel) {
         onArtWanted = model::requestArt,
         onLaterArtWanted = model::requestArt,
         onRefresh = model::refresh,
-        featured = rememberFeatured(model, list, favourites, history, watched.values),
     )
 }
 
 /**
  * Home's rows as drawn, given everything they are built from; the render test calls this directly.
  *
- * The carousel first, when the starred chats have films or shows with a picture worth it (see
- * [rememberSpotlights]): one card at a time, the picture on the end of the page under its fades and
- * the words and buttons on the start side; arrows on hover, Left and Right with focus in it. Then
- * the rows: Continue watching as wide cards with the name on the art, and in a starred chat's row
- * and in Recently added the films and shows as 2:3 posters in one strip with the other videos as
- * cards in a strip under it. Hovering a tile does not move the carousel: a pointer passing over
- * the rows would make it flicker.
+ * Continue watching as wide cards with the name on the art, and in a starred chat's row and in
+ * Recently added the films and shows as 2:3 posters in one strip with the other videos as cards in
+ * a strip under it.
  *
  * Like a desktop app rather than a stretched phone: the cards are sized from the page's width so
  * whole cards fill a row and a wider window shows more of them; a hovered row shows arrows at its
@@ -170,8 +150,6 @@ internal fun HomeRowsView(
     onArtWanted: (ResumeRecord) -> Unit,
     onRefresh: () -> Unit,
     onLaterArtWanted: (WatchLaterRecord) -> Unit = {},
-    /** The carousel's candidates from the starred chats (see [rememberFeatured]). */
-    featured: List<FeaturedPick> = emptyList(),
 ) {
     val s = LocalStrings.current
     var openSeries by remember { mutableStateOf<Series?>(null) }
@@ -198,35 +176,11 @@ internal fun HomeRowsView(
         )
         return
     }
-    val candidates = remember(rows) {
-        rows.filterIsInstance<HomeRow.Continue>().firstOrNull()?.let { HomeRows.spotlight(it.records + it.more) }.orEmpty()
-    }
-    val spotlights = (rememberSpotlights(featured, candidates, art, onArtWanted) { titles[it].orEmpty() } as? SpotlightState.Ready)?.spotlights
-    val laterKeys by state.watched.watchLater.keys.collectAsState(initial = emptySet())
-    val scope = rememberCoroutineScope()
-    val toast = rememberToast()
-    // With a carousel the header is drawn over the list, and the hero's picture runs up behind
-    // it to the top of the page; the header stands on the picture's top scrim while the hero is
-    // under it, and on the page's own background once the hero has scrolled away.
-    val overHero = spotlights != null && rows.isNotEmpty()
     val list = rememberLazyListState()
-    // A carousel that answers after the rows are drawn goes in above them, and the list keeps
-    // standing on the row it was showing, so the hero sat out of sight above the top. A list still
-    // at its top (now one item down, at no offset) moves up to show it.
-    LaunchedEffect(spotlights != null) {
-        if (spotlights == null) return@LaunchedEffect
-        androidx.compose.runtime.withFrameNanos {}
-        if (list.firstVisibleItemIndex == 1 && list.firstVisibleItemScrollOffset == 0) list.scrollToItem(0)
-    }
-    val density = LocalDensity.current
-    var headerHeight by remember { mutableStateOf(HEADER_GUESS) }
-    val heroUnder by rememberHeroUnderHeader(list, headerHeight, overHero)
-    val header: @Composable (Modifier, Boolean) -> Unit = { modifier, onArt ->
+    val header: @Composable () -> Unit = {
         PageHeader(
             BrowseTab.Home.heading,
             BrowseTab.Home.blurb,
-            modifier = modifier,
-            onArt = onArt,
             actions = {
                 IconButton(onClick = onRefresh) { Icon(TmIcons.Refresh, contentDescription = s.commonRefresh) }
                 PosterSizeStep(state)
@@ -237,7 +191,7 @@ internal fun HomeRowsView(
     val side = pageMargin()
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            if (!overHero) header(Modifier, false)
+            header()
             if (rows.isEmpty()) {
                 // Nothing played and nothing starred: a first run, so say how to get a first video in:
                 // through Saved Messages, or with the default groups hidden, through a folder.
@@ -261,8 +215,6 @@ internal fun HomeRowsView(
                 return@Column
             }
             BoxWithConstraints(Modifier.fillMaxSize()) {
-                // Measured on the page under the header, as when the header sat above the list.
-                val heroHeight = ((maxHeight - if (overHero) headerHeight else 0.dp) * HERO_SHARE).coerceIn(HERO_MIN, HERO_MAX)
                 val sizes = CardSizes.of(state.posterWidth, maxWidth - side * 2)
                 LazyColumn(
                     Modifier.fillMaxSize(),
@@ -270,32 +222,6 @@ internal fun HomeRowsView(
                     contentPadding = PaddingValues(bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
-                    if (spotlights != null) {
-                        item(key = SPOTLIGHT_KEY, contentType = "spotlight") {
-                            HomeCarousel(
-                                spotlights = spotlights,
-                                wide = true,
-                                height = heroHeight,
-                                start = side,
-                                end = side,
-                                input = CarouselInput.Pointer,
-                                onPlay = { card -> state.openPlayer(card.item, startFromBeginning = false) },
-                                onDetails = { card ->
-                                    state.openDetail(DetailRequest(item = card.item, chatTitle = card.chatTitle, outsideChat = true))
-                                },
-                                inWatchLater = { card -> card.key in laterKeys },
-                                onToggleWatchLater = { card ->
-                                    val add = card.key !in laterKeys
-                                    scope.launch {
-                                        runCatching { setWatchLater(state.watched, card.item, card.chatTitle, add) }
-                                        toast(if (add) s.detailWatchLaterAdded(card.item.title) else s.detailWatchLaterRemoved(card.item.title))
-                                    }
-                                },
-                                under = headerHeight,
-                                wordsAlpha = { com.tmplayer.ui.browse.heroWordsAlpha(list, headerHeight, density) },
-                            )
-                        }
-                    }
                     items(rows, key = { it.key }, contentType = { it::class }) { row ->
                         val loaded = row.isLoaded()
                         LaunchedEffect(row.key, loaded) { if (!loaded) onRowShown(row) }
@@ -335,15 +261,6 @@ internal fun HomeRowsView(
                     }
                 }
             }
-        }
-        if (overHero) {
-            header(
-                Modifier
-                    .fillMaxWidth()
-                    .onSizeChanged { headerHeight = with(density) { it.height.toDp() } }
-                    .overHero(heroUnder),
-                heroUnder,
-            )
         }
     }
 }
@@ -744,19 +661,11 @@ internal fun OnHome(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalOnlineArt provides true, content = content)
 }
 
-/** The header's height before it is first measured: the display title, its line and the padding. */
-private val HEADER_GUESS = 96.dp
-
 /** A poster on Home, as in a chat's grid: three quarters of a card's width. */
 private const val POSTER_SHARE = 0.75f
 
 /** A Continue watching card, a quarter wider than a card: it carries its name on the art. */
 private const val CONTINUE_SHARE = 1.25f
-
-/** The carousel's share of the window's height, within [HERO_MIN] and [HERO_MAX]. */
-private const val HERO_SHARE = 0.5f
-private val HERO_MIN = 360.dp
-private val HERO_MAX = 440.dp
 
 /** Between two cards in a strip or a grid. */
 private val CARD_GAP = 16.dp

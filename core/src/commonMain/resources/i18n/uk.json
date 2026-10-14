@@ -714,10 +714,7 @@
     "row_watch_later": "Переглянути пізніше",
     "see_all": "Показати все",
     "see_all_count": "{count, plural, one {# відео} few {# відео} many {# відео} other {# відео}}",
-    "see_all_count_at_least": "{count, plural, one {#+ відео} few {#+ відео} many {#+ відео} other {#+ відео}}",
-    "spotlight_next": "Далі",
-    "spotlight_position": "{index} з {count}",
-    "spotlight_previous": "Назад"
+    "see_all_count_at_least": "{count, plural, one {#+ відео} few {#+ відео} many {#+ відео} other {#+ відео}}"
   },
   "install": {
     "appimage": "AppImage",

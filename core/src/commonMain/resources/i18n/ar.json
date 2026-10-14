@@ -714,10 +714,7 @@
     "row_watch_later": "المشاهدة لاحقًا",
     "see_all": "عرض الكل",
     "see_all_count": "{count, plural, zero {لا فيديوهات} one {فيديو واحد} two {فيديوهان} few {# فيديوهات} many {# فيديو} other {# فيديو}}",
-    "see_all_count_at_least": "{count, plural, zero {لا فيديوهات} one {فيديو واحد أو أكثر} two {فيديوهان أو أكثر} few {#+ فيديوهات} many {#+ فيديو} other {#+ فيديو}}",
-    "spotlight_next": "التالي",
-    "spotlight_position": "{index} من {count}",
-    "spotlight_previous": "السابق"
+    "see_all_count_at_least": "{count, plural, zero {لا فيديوهات} one {فيديو واحد أو أكثر} two {فيديوهان أو أكثر} few {#+ فيديوهات} many {#+ فيديو} other {#+ فيديو}}"
   },
   "install": {
     "appimage": "AppImage",

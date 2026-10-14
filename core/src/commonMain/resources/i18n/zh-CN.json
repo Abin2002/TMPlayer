@@ -714,10 +714,7 @@
     "row_watch_later": "稍后观看",
     "see_all": "查看全部",
     "see_all_count": "{count, plural, other {# 个视频}}",
-    "see_all_count_at_least": "{count, plural, other {#+ 个视频}}",
-    "spotlight_next": "下一个",
-    "spotlight_position": "第 {index} 项，共 {count} 项",
-    "spotlight_previous": "上一个"
+    "see_all_count_at_least": "{count, plural, other {#+ 个视频}}"
   },
   "install": {
     "appimage": "AppImage",

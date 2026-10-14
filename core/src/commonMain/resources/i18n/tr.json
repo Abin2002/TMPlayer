@@ -714,10 +714,7 @@
     "row_watch_later": "Daha sonra izle",
     "see_all": "Tümünü gör",
     "see_all_count": "{count, plural, one {# video} other {# video}}",
-    "see_all_count_at_least": "{count, plural, one {#+ video} other {#+ video}}",
-    "spotlight_next": "Sonraki",
-    "spotlight_position": "{index} / {count}",
-    "spotlight_previous": "Önceki"
+    "see_all_count_at_least": "{count, plural, one {#+ video} other {#+ video}}"
   },
   "install": {
     "appimage": "AppImage",
