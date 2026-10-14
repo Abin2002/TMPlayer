@@ -703,7 +703,10 @@ fun Modifier.overHero(overArt: Boolean, solid: Color = Tone.background): Modifie
     val art by animateFloatAsState(if (overArt) 1f else 0f, Motion.standard(Motion.Fast), label = "headerOverHero")
     return drawBehind {
         if (art < 1f) drawRect(solid, alpha = 1f - art)
-        if (art > 0f) drawRect(Scrims.headerTop, size = Size(size.width, size.height * Scrims.HEADER_REACH), alpha = art)
+        if (art > 0f) {
+            val reach = size.height * Scrims.HEADER_REACH
+            drawRect(Scrims.headerTop(reach), size = Size(size.width, reach), alpha = art)
+        }
     }
 }
 

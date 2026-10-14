@@ -58,15 +58,15 @@ object Scrims {
      * The top of a hero's picture where a page header sits over it, as (position, alpha) pairs
      * of black from the top edge down. The header fills the first [HEADER_SHARE] of the height,
      * where the black never drops under 0.66: enough for [Tone.onArtMuted] at 4.5:1 over a white
-     * picture, and [Tone.onArt] at 7:1. Under the header it eases out to clear.
+     * picture, and [Tone.onArt] at 7:1. Under the header it eases out to clear in a short step, so
+     * it stops before the hero's own words below the header.
      */
     internal val TopCurve: List<Pair<Float, Float>> = listOf(
         0f to 0.74f,
-        0.25f to 0.70f,
+        0.40f to 0.70f,
         HEADER_SHARE to 0.66f,
-        0.62f to 0.50f,
-        0.74f to 0.30f,
-        0.86f to 0.11f,
+        0.90f to 0.42f,
+        0.95f to 0.16f,
         1f to 0f,
     )
 
@@ -80,8 +80,20 @@ object Scrims {
         colorStops = TopCurve.map { (at, alpha) -> at to Color.Black.copy(alpha = alpha) }.toTypedArray(),
     )
 
+    /**
+     * [headerTop] with its end fixed at [height] px. A brush with an open end spans the size of the
+     * draw scope it is used in, not the rect drawn with it, so drawing [headerTop] taller than its
+     * header still ended the fade at the header's foot, and in the light theme the header's second
+     * line stood on white.
+     */
+    fun headerTop(height: Float): Brush = Brush.verticalGradient(
+        colorStops = TopCurve.map { (at, alpha) -> at to Color.Black.copy(alpha = alpha) }.toTypedArray(),
+        startY = 0f,
+        endY = height,
+    )
+
     /** The share of [headerTop]'s height the header itself takes. */
-    const val HEADER_SHARE = 0.5f
+    const val HEADER_SHARE = 0.85f
 
     /** How much taller than the header [headerTop] is drawn: the header over its first [HEADER_SHARE]. */
     const val HEADER_REACH = 1f / HEADER_SHARE
