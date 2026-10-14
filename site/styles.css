@@ -2191,9 +2191,8 @@ a.card:active,
   .is-stuck .nav-links { background: var(--surface-container); }
 }
 
-/* The repository, as an icon. It was a pill reading "Star 3", which put a figure in the corner
-   of every page that mostly said the project is small. The count still has a home in the support
-   band, where there is room to ask for the star rather than merely report it. */
+/* The old "Star 3" pill, kept for the support band's star button. The header shows the repository
+   as an icon with the count as a badge over it (.nav-icon-count). */
 .nav-icon,
 .theme-toggle {
   width: 46px;
@@ -2218,6 +2217,44 @@ a.card:active,
    silhouette with fine detail in it, so at the nominal size of the sun beside it, which is a solid
    disc with eight rays reaching the edge of its box, it reads noticeably lighter and smaller. */
 .nav-icon svg { flex: none; width: 26px; height: 26px; }
+/* The star count, as a badge over the icon's top edge. It is placed absolutely, so the bar is the
+   same size before, after and without a count: no shift when the API answers late or not at all.
+   While it waits it is a shimmering pill of the same size; a failed fetch removes it. */
+.nav .nav-icon { position: relative; }
+.nav-icon-count {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 34px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: var(--shape-full);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  justify-content: center;
+  box-shadow: 0 0 0 2px var(--surface);
+  pointer-events: none;
+}
+.nav-icon-count::before { content: "\2605"; font-size: 10px; }
+.nav-icon-count.is-loading {
+  color: transparent;
+  background: linear-gradient(90deg, var(--surface-container-high) 25%, var(--surface-container-highest) 50%, var(--surface-container-high) 75%);
+  background-size: 200% 100%;
+  animation: nav-count-shimmer 1.2s linear infinite;
+}
+.nav-icon-count.is-loading::before { content: ""; }
+.nav-icon-count[hidden] { display: none; }
+@keyframes nav-count-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .nav-icon-count.is-loading { animation: none; } }
 
 .nav-star {
   display: inline-flex;

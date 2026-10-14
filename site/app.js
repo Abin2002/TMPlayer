@@ -857,7 +857,8 @@ var tmT = (function () {
 
   var API = 'https://api.github.com/repos/dracu-lah/TMPlayer';
   var nodes = document.querySelectorAll('[data-count]');
-  if (!nodes.length || typeof fetch !== 'function') { return; }
+  if (!nodes.length) { return; }
+  if (typeof fetch !== 'function') { settleSkeletons(false); return; }
 
   /* Exact up to a thousand, because at this size the exact figure is the more
      persuasive one, and 1.2k after that. */
@@ -867,15 +868,34 @@ var tmT = (function () {
     return (k >= 10 ? Math.round(k) : Math.round(k * 10) / 10) + 'k';
   }
 
-  fetch(API, { headers: { 'Accept': 'application/vnd.github+json' } }).then(function (res) {
+  /* Kept for the tab's session, so moving between pages neither refetches nor flashes the
+     skeleton again, and a reader browsing the site spends one of the 60 hourly calls, not ten. */
+  var KEY = 'tm-repo-counts';
+  var cached = null;
+  try {
+    var saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+    if (saved && Date.now() - saved.at < 3600000) { cached = saved.counts; }
+  } catch (e) { /* storage blocked: fetch every time */ }
+
+  function settleSkeletons(gotStars) {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-count-skeleton]'), function (node) {
+      node.className = node.className.replace(/\s*is-loading/g, '');
+      if (!gotStars) { node.hidden = true; }
+    });
+  }
+
+  (cached ? Promise.resolve(cached) : fetch(API, { headers: { 'Accept': 'application/vnd.github+json' } }).then(function (res) {
     if (!res.ok) { throw new Error('http-' + res.status); }
     return res.json();
   }).then(function (data) {
-    var counts = {
+    var fresh = {
       stars: data.stargazers_count,
       forks: data.forks_count,
       watchers: data.subscribers_count
     };
+    try { sessionStorage.setItem(KEY, JSON.stringify({ at: Date.now(), counts: fresh })); } catch (e) { /* fine */ }
+    return fresh;
+  })).then(function (counts) {
     Array.prototype.forEach.call(nodes, function (node) {
       var value = counts[node.getAttribute('data-count')];
       if (typeof value !== 'number') { return; }
@@ -888,8 +908,10 @@ var tmT = (function () {
         wrap.hidden = false;
       }
     });
+    settleSkeletons(typeof counts.stars === 'number');
   }).catch(function () {
-    /* Nothing to do. The controls are links to GitHub with or without a count. */
+    /* The controls are links to GitHub with or without a count; only the skeleton goes. */
+    settleSkeletons(false);
   });
 })();
 
