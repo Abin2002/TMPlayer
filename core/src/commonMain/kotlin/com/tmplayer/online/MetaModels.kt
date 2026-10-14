@@ -37,7 +37,12 @@ data class MetaQuery(
     /** The same question for the show alone, which is all a tile needs. */
     fun showOnly(): MetaQuery = copy(season = null, episode = null)
 
-    /** What the cache files the answer under: the cleaned title, never the file's own name. */
+    /**
+     * What the cache files the answer under: the cleaned title, never the file's own name. In a
+     * language other than English the answer has been asked in English too and its poster chosen
+     * by [MetaRules.poster], which "+en" marks, so answers kept from before either (a title not
+     * found in Arabic, a poster TMDB named) are asked again rather than kept for months.
+     */
     fun cacheKey(language: String): String = listOf(
         kind.name,
         MetaMatch.normalise(title),
@@ -45,7 +50,7 @@ data class MetaQuery(
         if (wantsEpisode) "${season ?: 1}x$episode" else "",
         if (anime) "anime" else "",
         tmdbId?.toString().orEmpty(),
-        language,
+        if (language.startsWith("en")) language else "$language+en",
     ).joinToString("|")
 
     companion object {

@@ -158,6 +158,19 @@ data class MetaVideo(
     val published: String = "",
 )
 
+/**
+ * One poster in TMDB's list of a title's images, before [MetaRules.poster] picks one. [language]
+ * is ISO 639-1, or null for a poster with no words on it.
+ */
+data class MetaPoster(
+    val path: String,
+    val language: String?,
+    val aspect: Double,
+    val width: Int,
+    val voteAverage: Double = 0.0,
+    val voteCount: Int = 0,
+)
+
 /** The choices behind [MetaExtras], kept apart from the parsing so each one is tested on its own. */
 object MetaRules {
 
@@ -220,6 +233,45 @@ object MetaRules {
             .firstOrNull()
             ?.let { MetaTrailer(it.key) }
     }
+
+    /**
+     * The poster to show from a title's [posters]: one in the UI language first, then one in
+     * English or with no words on it, then one in the title's [original] language; the best voted
+     * of that tier, the widest on a tie. Never a picture that is not a poster: anything far from
+     * the 2:3 shape (a banner, a square logo or a channel's badge uploaded in the wrong place) or
+     * too small to fill a tile is passed over. Null when none is left, and the caller keeps what
+     * the title's own record names.
+     */
+    fun poster(posters: List<MetaPoster>, uiLanguage: String, original: String?): MetaPoster? {
+        val ui = uiLanguage.substringBefore('-').lowercase(Locale.ROOT)
+        val first = original?.substringBefore('-')?.lowercase(Locale.ROOT)?.takeIf { it.isNotBlank() }
+        fun tier(p: MetaPoster): Int? {
+            val lang = p.language?.lowercase(Locale.ROOT)?.takeIf { it.isNotBlank() && it != "xx" }
+            return when {
+                lang != null && lang == ui -> 0
+                lang == null || lang == "en" -> 1
+                lang == first -> 2
+                else -> null
+            }
+        }
+        return posters
+            .filter { it.path.startsWith("/") && it.aspect in POSTER_ASPECT && it.width >= POSTER_MIN_WIDTH }
+            .mapNotNull { p -> tier(p)?.let { it to p } }
+            .sortedWith(
+                compareBy<Pair<Int, MetaPoster>> { it.first }
+                    .thenByDescending { it.second.voteAverage }
+                    .thenByDescending { it.second.voteCount }
+                    .thenByDescending { it.second.width },
+            )
+            .firstOrNull()
+            ?.second
+    }
+
+    /** Width over height a poster may have: 2:3 is 0.667, and TMDB takes 0.6 to 0.75 or so. */
+    private val POSTER_ASPECT = 0.6..0.76
+
+    /** Narrower than this and a poster is a thumbnail, softer than the tile it fills. */
+    private const val POSTER_MIN_WIDTH = 300
 
     /**
      * "More like this", narrowed to what the viewer can play: each of [similar] that one of

@@ -216,49 +216,104 @@ class OnlineMetadata(
 
     private suspend fun tmdbLookup(key: String, query: MetaQuery, lang: String): Outcome {
         val film = query.kind == MetaKind.Film
-        val candidate: MetaCandidate = if (query.tmdbId != null) {
+        // The match as the English search gave it, when that is where it was found.
+        var inEnglish: MetaCandidate? = null
+        var candidate: MetaCandidate = if (query.tmdbId != null) {
             val reply = retrying { if (film) tmdb.movie(key, query.tmdbId.toString(), lang) else tmdb.tv(key, query.tmdbId.toString(), lang) }
             trouble(MetaProvider.Tmdb, reply, key)?.let { return it }
             (reply as MetaReply.Ok).value
         } else {
-            suspend fun search(year: Int?): MetaReply<List<MetaCandidate>> = retrying {
-                if (film) tmdb.searchMovie(key, query.title, year, lang) else tmdb.searchTv(key, query.title, year, lang)
-            }
-            val first = search(query.year)
-            trouble(MetaProvider.Tmdb, first, key)?.let { return it }
-            var found = (first as MetaReply.Ok).value.firstOrNull { MetaMatch.accepts(query.title, query.year, it.names, it.year, show = !film) }
-            // A year one off (a festival date, a late release) is filtered out by TMDB's own year,
-            // so ask once more without it and let the match allow the difference. So is a show's
-            // later season, whose file names carry the season's year rather than the premiere's.
-            if (found == null && query.year != null) {
-                val again = search(null)
-                trouble(MetaProvider.Tmdb, again, key)?.let { return it }
-                found = (again as MetaReply.Ok).value.firstOrNull { MetaMatch.accepts(query.title, query.year, it.names, it.year, show = !film) }
+            // In another language the titles TMDB answers with are that language's, or the original
+            // where nobody translated it ("Le Fabuleux Destin d'Amélie Poulain" in Arabic), and a
+            // file named in English matches neither. So a search that finds nothing in the UI
+            // language is asked once more in English.
+            var found: MetaCandidate? = null
+            for (searchLang in listOf(lang, ENGLISH).distinct()) {
+                when (val outcome = tmdbSearch(key, query, searchLang)) {
+                    is SearchOutcome.Found -> {
+                        found = outcome.candidate
+                        if (searchLang != lang) inEnglish = outcome.candidate
+                        break
+                    }
+                    is SearchOutcome.Stopped -> return outcome.outcome
+                    SearchOutcome.None -> Unit
+                }
             }
             found ?: return Outcome.Nothing
+        }
+        var poster = candidate.posterUrl
+        if (lang != ENGLISH) {
+            // The title in the UI language, and its poster chosen by [MetaRules.poster] rather than
+            // whichever one TMDB names for this language: one call, with the posters appended. A
+            // failure here keeps what the search said.
+            val ui = lang.substringBefore('-').lowercase()
+            val imageLanguages = listOf(ui, "en", "null", candidate.originalLanguage.lowercase()).filter { it.isNotBlank() }.distinct()
+            val localized = retrying { tmdb.localized(key, film, candidate.id, lang, imageLanguages) }
+            if (localized is MetaReply.Ok) {
+                val (local, posters) = localized.value
+                val original = local.originalLanguage.ifBlank { candidate.originalLanguage }
+                poster = MetaRules.poster(posters, lang, original)?.let { tmdb.posterUrl(it) } ?: local.posterUrl ?: poster
+                candidate = local.copy(
+                    names = (local.names + candidate.names).filter { it.isNotBlank() }.distinct(),
+                    backdropUrl = local.backdropUrl ?: candidate.backdropUrl,
+                    originalLanguage = original,
+                )
+            } else if (inEnglish != null) {
+                // Not localized after all: what is shown came from the English search.
+                return Outcome.Found(info(query, candidate, film, poster, candidate.overview, ENGLISH))
+            }
         }
         var overview = candidate.overview
         var overviewLang = lang
         if (overview.isBlank() && lang != ENGLISH) {
-            val english = retrying { if (film) tmdb.movie(key, candidate.id, ENGLISH) else tmdb.tv(key, candidate.id, ENGLISH) }
+            val english = inEnglish?.let { MetaReply.Ok(it) }
+                ?: retrying { if (film) tmdb.movie(key, candidate.id, ENGLISH) else tmdb.tv(key, candidate.id, ENGLISH) }
             if (english is MetaReply.Ok) {
                 overview = english.value.overview
                 overviewLang = ENGLISH
             }
         }
-        return Outcome.Found(
-            MetaInfo(
-                provider = MetaProvider.Tmdb,
-                id = candidate.id,
-                kind = if (film) MetaKind.Film else MetaKind.Show,
-                title = candidate.names.firstOrNull { it.isNotBlank() } ?: query.title,
-                year = candidate.year,
-                overview = overview,
-                posterUrl = candidate.posterUrl,
-                backdropUrl = candidate.backdropUrl,
-                language = overviewLang,
-            ),
-        )
+        return Outcome.Found(info(query, candidate, film, poster, overview, overviewLang))
+    }
+
+    private fun info(query: MetaQuery, candidate: MetaCandidate, film: Boolean, poster: String?, overview: String, overviewLang: String) = MetaInfo(
+        provider = MetaProvider.Tmdb,
+        id = candidate.id,
+        kind = if (film) MetaKind.Film else MetaKind.Show,
+        title = candidate.names.firstOrNull { it.isNotBlank() } ?: query.title,
+        year = candidate.year,
+        overview = overview,
+        posterUrl = poster,
+        backdropUrl = candidate.backdropUrl,
+        language = overviewLang,
+    )
+
+    private sealed interface SearchOutcome {
+        data class Found(val candidate: MetaCandidate) : SearchOutcome
+        data object None : SearchOutcome
+
+        /** Refused, throttled or offline: the lookup ends with [outcome]. */
+        data class Stopped(val outcome: Outcome) : SearchOutcome
+    }
+
+    /** TMDB's search in [searchLang] for the title that [MetaMatch] takes, with the year and then without it. */
+    private suspend fun tmdbSearch(key: String, query: MetaQuery, searchLang: String): SearchOutcome {
+        val film = query.kind == MetaKind.Film
+        suspend fun search(year: Int?): MetaReply<List<MetaCandidate>> = retrying {
+            if (film) tmdb.searchMovie(key, query.title, year, searchLang) else tmdb.searchTv(key, query.title, year, searchLang)
+        }
+        val first = search(query.year)
+        trouble(MetaProvider.Tmdb, first, key)?.let { return SearchOutcome.Stopped(it) }
+        var found = (first as MetaReply.Ok).value.firstOrNull { MetaMatch.accepts(query.title, query.year, it.names, it.year, show = !film) }
+        // A year one off (a festival date, a late release) is filtered out by TMDB's own year,
+        // so ask once more without it and let the match allow the difference. So is a show's
+        // later season, whose file names carry the season's year rather than the premiere's.
+        if (found == null && query.year != null) {
+            val again = search(null)
+            trouble(MetaProvider.Tmdb, again, key)?.let { return SearchOutcome.Stopped(it) }
+            found = (again as MetaReply.Ok).value.firstOrNull { MetaMatch.accepts(query.title, query.year, it.names, it.year, show = !film) }
+        }
+        return found?.let { SearchOutcome.Found(it) } ?: SearchOutcome.None
     }
 
     private suspend fun tvmazeLookup(query: MetaQuery): Outcome {

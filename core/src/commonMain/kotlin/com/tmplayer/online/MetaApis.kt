@@ -29,6 +29,8 @@ data class MetaCandidate(
     val backdropUrl: String?,
     /** AniList's format: a film is `MOVIE`, everything else is a show. Empty for the others. */
     val format: String = "",
+    /** TMDB's `original_language`, ISO 639-1: the language the title was made in. */
+    val originalLanguage: String = "",
 )
 
 private fun enc(text: String): String = URLEncoder.encode(text, "UTF-8")
@@ -89,6 +91,32 @@ class TmdbApi(
 
     suspend fun tv(key: String, id: String, language: String): MetaReply<MetaCandidate> =
         get(key, "tv/$id", "language=$language") { tvCandidate(it) }
+
+    /**
+     * A film or show in [language] with its posters in [imageLanguages] appended (ISO 639-1
+     * codes, `null` for posters with no words), for [MetaRules.poster] to choose from.
+     */
+    suspend fun localized(key: String, film: Boolean, id: String, language: String, imageLanguages: List<String>): MetaReply<Pair<MetaCandidate, List<MetaPoster>>> =
+        get(key, if (film) "movie/$id" else "tv/$id", "language=$language&append_to_response=images&include_image_language=${imageLanguages.joinToString(",")}") { json ->
+            val candidate = if (film) movieCandidate(json) else tvCandidate(json)
+            val posters = objects(json.optJSONObject("images")?.optJSONArray("posters")).mapNotNull { p ->
+                val path = p.optString("file_path").takeIf { it.startsWith("/") } ?: return@mapNotNull null
+                val width = p.optInt("width")
+                val height = p.optInt("height")
+                MetaPoster(
+                    path = path,
+                    language = if (p.isNull("iso_639_1")) null else p.optString("iso_639_1").ifBlank { null },
+                    aspect = p.optDouble("aspect_ratio", 0.0).takeIf { it > 0 } ?: if (height > 0) width.toDouble() / height else 0.0,
+                    width = width,
+                    voteAverage = p.optDouble("vote_average", 0.0),
+                    voteCount = p.optInt("vote_count"),
+                )
+            }
+            candidate to posters
+        }
+
+    /** [poster]'s address at the size a tile draws. */
+    fun posterUrl(poster: MetaPoster): String = "$IMAGES/$POSTER_SIZE${poster.path}"
 
     suspend fun episode(key: String, id: String, season: Int, number: Int, language: String): MetaReply<MetaEpisode> =
         get(key, "tv/$id/season/$season/episode/$number", "language=$language") { json ->
@@ -239,6 +267,7 @@ class TmdbApi(
         overview = it.optString("overview"),
         posterUrl = image(it, "poster_path", POSTER_SIZE),
         backdropUrl = image(it, "backdrop_path", BACKDROP_SIZE),
+        originalLanguage = it.optString("original_language"),
     )
 
     private fun tvCandidate(it: JSONObject) = MetaCandidate(
@@ -248,6 +277,7 @@ class TmdbApi(
         overview = it.optString("overview"),
         posterUrl = image(it, "poster_path", POSTER_SIZE),
         backdropUrl = image(it, "backdrop_path", BACKDROP_SIZE),
+        originalLanguage = it.optString("original_language"),
     )
 
     private fun image(json: JSONObject, field: String, size: String): String? =

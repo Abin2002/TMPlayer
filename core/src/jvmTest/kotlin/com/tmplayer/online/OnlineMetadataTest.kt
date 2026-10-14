@@ -437,7 +437,85 @@ class OnlineMetadataTest {
         val info = (metadata(lang = "es").lookup(query("Big.Buck.Bunny.2008.mkv")) as MetaResult.Found).info
         assertEquals("Un conejo gigante.", info.overview)
         assertEquals("es", info.language)
+        // The search, then the title in Spanish with its posters; no English call.
+        assertEquals(2, http.requests.size)
+        assertEquals(0, http.count("language=en-US"))
+    }
+
+    // ---- another language: the English search, and the poster ---------------------------------
+
+    /** Amélie as TMDB answers in Arabic: no Arabic title, so the French original. */
+    private val amelieSearchAr = """{"results":[{"id":433763,"title":"Amelie rennt","original_title":"Amelie rennt","original_language":"de",
+        "release_date":"2017-09-21","overview":"","poster_path":"/rennt.jpg"},
+        {"id":194,"title":"Le Fabuleux Destin d'Amélie Poulain","original_title":"Le Fabuleux Destin d'Amélie Poulain","original_language":"fr",
+        "release_date":"2001-04-25","overview":"","poster_path":"/fr-top.jpg","backdrop_path":"/a-wide.jpg"}]}"""
+
+    private val amelieSearchEn = """{"results":[{"id":194,"title":"Amélie","original_title":"Le Fabuleux Destin d'Amélie Poulain","original_language":"fr",
+        "release_date":"2001-04-25","overview":"At a tiny Parisian café...","poster_path":"/en-top.jpg","backdrop_path":"/a-wide.jpg"}]}"""
+
+    /** The film in Arabic with its posters: French, English, wordless, a badge and a banner. */
+    private val amelieLocalizedAr = """{"id":194,"title":"Le Fabuleux Destin d'Amélie Poulain","original_title":"Le Fabuleux Destin d'Amélie Poulain",
+        "original_language":"fr","release_date":"2001-04-25","overview":"","poster_path":"/fr-top.jpg","backdrop_path":"/a-wide.jpg",
+        "images":{"posters":[
+          {"file_path":"/fr-top.jpg","iso_639_1":"fr","aspect_ratio":0.667,"width":2000,"height":3000,"vote_average":8.36,"vote_count":6},
+          {"file_path":"/badge.jpg","iso_639_1":null,"aspect_ratio":1.0,"width":1000,"height":1000,"vote_average":9.0,"vote_count":3},
+          {"file_path":"/banner.jpg","iso_639_1":"en","aspect_ratio":1.778,"width":1920,"height":1080,"vote_average":9.5,"vote_count":2},
+          {"file_path":"/en-top.jpg","iso_639_1":"en","aspect_ratio":0.667,"width":2000,"height":3000,"vote_average":6.72,"vote_count":9},
+          {"file_path":"/none.jpg","iso_639_1":null,"aspect_ratio":0.667,"width":1280,"height":1920,"vote_average":3.33,"vote_count":1}
+        ]}}"""
+
+    @Test
+    fun aTitleNotFoundInTheUiLanguageIsFoundInEnglishAndShownInIt() = runBlocking {
+        http.on("include_adult=false&language=ar") { amelieSearchAr }
+        http.on("search/movie") { amelieSearchEn }
+        http.on("movie/194?language=ar") { amelieLocalizedAr }
+        val info = (metadata(lang = "ar").lookup(query("Amelie.2001.1080p.BluRay.mkv")) as MetaResult.Found).info
+        assertEquals("194", info.id)
+        assertEquals("Le Fabuleux Destin d'Amélie Poulain", info.title)
+        assertEquals("the overview the English search gave, with no third call", "At a tiny Parisian café...", info.overview)
+        assertEquals("en-US", info.language)
+        // No Arabic poster: the best English or wordless one, not the badge or the banner,
+        // and not the French one TMDB itself would name.
+        assertEquals("https://image.tmdb.org/t/p/w342/en-top.jpg", info.posterUrl)
+        val localized = http.requests.single { "movie/194" in it.url }.url
+        assertTrue(localized, "append_to_response=images" in localized && "include_image_language=ar,en,null,fr" in localized)
+        assertEquals(0, http.count("movie/194?language=en-US"))
+    }
+
+    @Test
+    fun aPosterInTheUiLanguageComesFirst() = runBlocking {
+        http.on("search/movie") { amelieSearchEn }
+        http.on("movie/194?language=ar") {
+            amelieLocalizedAr.replace(""""file_path":"/none.jpg","iso_639_1":null""", """"file_path":"/ar.jpg","iso_639_1":"ar"""")
+        }
+        val info = (metadata(lang = "ar").lookup(query("Amelie.2001.mkv")) as MetaResult.Found).info
+        assertEquals("https://image.tmdb.org/t/p/w342/ar.jpg", info.posterUrl)
+    }
+
+    @Test
+    fun aFailedPosterCallKeepsTheSearchsAnswer() = runBlocking {
+        http.on("include_adult=false&language=ar") { amelieSearchAr }
+        http.on("search/movie") { amelieSearchEn }
+        http.on("movie/194?language=ar", code = 500) { "{}" }
+        val info = (metadata(lang = "ar").lookup(query("Amelie.2001.mkv")) as MetaResult.Found).info
+        assertEquals("https://image.tmdb.org/t/p/w342/en-top.jpg", info.posterUrl)
+        assertEquals("Amélie", info.title)
+        assertEquals("en-US", info.language)
+    }
+
+    @Test
+    fun englishAsksOnceWithNoPosterCall() = runBlocking {
+        http.on("search/movie") { amelieSearchEn }
+        val info = (metadata(lang = "en").lookup(query("Amelie.2001.mkv")) as MetaResult.Found).info
+        assertEquals("https://image.tmdb.org/t/p/w342/en-top.jpg", info.posterUrl)
         assertEquals(1, http.requests.size)
+    }
+
+    @Test
+    fun aMissKeptBeforeTheEnglishSearchIsAskedAgain() {
+        val q = query("Amelie.2001.mkv")
+        assertEquals("Film|amelie|2001||||en-US", q.cacheKey("en-US"))
+        assertEquals("Film|amelie|2001||||ar+en", q.cacheKey("ar"))
     }
 
     @Test
