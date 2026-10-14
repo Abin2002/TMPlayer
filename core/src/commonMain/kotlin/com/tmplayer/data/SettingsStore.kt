@@ -25,7 +25,6 @@ import okio.Path.Companion.toPath
 import java.io.File
 
 private val FAVORITES = stringSetPreferencesKey("favorite_chats")
-private val OVERVIEW_SEEN = booleanPreferencesKey("overview_seen")
 private val PLAYER_HINT_SEEN = booleanPreferencesKey("player_hint_seen")
 private val FIRST_VIDEO_TIP_DISMISSED = booleanPreferencesKey("first_video_tip_dismissed")
 private val TV_BROWSE_HINT_SEEN = booleanPreferencesKey("tv_browse_hint_seen")
@@ -68,7 +67,7 @@ private val LOCK_ON_OPEN = booleanPreferencesKey("app_lock_on_open")
 private val KIDS_LOCK = booleanPreferencesKey("kids_lock")
 private val KIDS_CHATS = stringSetPreferencesKey("kids_chats")
 
-private val FIRST_SIGN_IN_CARD = stringPreferencesKey("first_sign_in_card")
+private val SETUP = stringPreferencesKey("setup")
 private val HISTORY_TAB = stringPreferencesKey("history_tab")
 private val MEDIA_LAYOUT = stringPreferencesKey("media_layout")
 private val CHAT_SNAPSHOT = stringPreferencesKey("chat_snapshot")
@@ -224,8 +223,8 @@ private fun downloadKey(chatId: Long, messageId: Long) =
 
 /** The same line again for a video nobody asked to keep, which playing one leaves behind. */
 private const val CACHED_PREFIX = "wc_"
-private const val CARD_PENDING = "pending"
-private const val CARD_DONE = "done"
+private const val SETUP_PENDING = "pending"
+private const val SETUP_DONE = "done"
 
 private fun cachedKey(chatId: Long, messageId: Long) =
     stringPreferencesKey("$CACHED_PREFIX${chatId}_$messageId")
@@ -292,8 +291,6 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             val supportNever = prefs[SUPPORT_NEVER]
             val supporter = prefs[SUPPORT_SUPPORTER]
             val recent = prefs[SUPPORT_RECENT]
-            // The first sign in card is asked once per install, not once per account.
-            val card = prefs[FIRST_SIGN_IN_CARD]?.takeIf { it == CARD_DONE }
             val kept = if (keepDownloads) {
                 prefs.asMap().mapNotNull { (key, value) ->
                     val ids = key.name.removePrefixOrNull("dl_") ?: return@mapNotNull null
@@ -311,7 +308,6 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             supportNever?.let { prefs[SUPPORT_NEVER] = it }
             supporter?.let { prefs[SUPPORT_SUPPORTER] = it }
             recent?.let { prefs[SUPPORT_RECENT] = it }
-            card?.let { prefs[FIRST_SIGN_IN_CARD] = it }
             if (keepDownloads) {
                 for ((key, value) in kept) prefs[key] = value
                 migrated?.let { prefs[DOWNLOADS_MIGRATED] = it }
@@ -1280,21 +1276,26 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
     }
 
     /**
-     * The one card after the first sign in (CP42), which asks "Show everything" or "Only my
-     * folders". Armed when a sign in screen is shown and the card has never been dealt with, so a
-     * viewer who was signed in before this existed is never asked; true while it waits for the
-     * shell and the account's folders.
+     * The short setup after signing in (CP67): library, posters and storage, one choice a step.
+     * Armed by a sign in screen ([armSetup]), so an install that was already signed in when this
+     * arrived, and had gone through the old tour, is never walked through it; a fresh sign in,
+     * including one after signing out, is. True while it waits to be shown or is on screen.
      */
-    val firstSignInCardPending: Flow<Boolean> = read { it[FIRST_SIGN_IN_CARD] == CARD_PENDING }
+    val setupPending: Flow<Boolean> = read { it[SETUP] == SETUP_PENDING }
 
-    /** A sign in screen is up: arm the card, unless it has been armed or answered before. */
-    suspend fun armFirstSignInCard() {
-        prefs.edit { if (it[FIRST_SIGN_IN_CARD] == null) it[FIRST_SIGN_IN_CARD] = CARD_PENDING }
+    /** A sign in screen is up: the setup comes once the account is in. */
+    suspend fun armSetup() {
+        prefs.edit { if (it[SETUP] != SETUP_PENDING) it[SETUP] = SETUP_PENDING }
     }
 
-    /** Answered, or skipped for an account with no folders: never asked again on this install. */
-    suspend fun markFirstSignInCardDone() {
-        prefs.edit { it[FIRST_SIGN_IN_CARD] = CARD_DONE }
+    /** Finished, or skipped: not shown again until the next sign in or [replaySetup]. */
+    suspend fun markSetupDone() {
+        prefs.edit { it[SETUP] = SETUP_DONE }
+    }
+
+    /** Settings' "Run the setup again". */
+    suspend fun replaySetup() {
+        prefs.edit { it[SETUP] = SETUP_PENDING }
     }
 
     /** Which tab of History was last open, `HistoryTab` by name. */
@@ -1376,24 +1377,6 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     suspend fun setDynamicColour(value: Boolean) {
         prefs.edit { it[DYNAMIC_COLOUR] = value }
-    }
-
-    // ---- prompts ----------------------------------------------------------------------------
-
-    /**
-     * Whether the tour (Welcome, then How it works) has been seen. It comes before sign in on the
-     * first run, and Settings asks for it again with [replayOverview]. The two page tour kept the
-     * key the six page one used, so an install that saw the old tour is not shown the new one.
-     * Installs from before the shared tour may still carry an old "intro_seen" key; nothing reads it.
-     */
-    val overviewSeen: Flow<Boolean> = read { it[OVERVIEW_SEEN] ?: false }
-
-    suspend fun markOverviewSeen() {
-        prefs.edit { it[OVERVIEW_SEEN] = true }
-    }
-
-    suspend fun replayOverview() {
-        prefs.edit { it[OVERVIEW_SEEN] = false }
     }
 
     // ---- resume -----------------------------------------------------------------------------
