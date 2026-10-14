@@ -189,7 +189,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [x] CP66 Low storage mode: a stream keeps a rolling window of about 200 MB on disk (less on a nearly full disk), so a film larger than the free space plays; off by default, a switch under Playback on phone, TV and desktop, carried in backups; never applied to a download or a video being downloaded; the room check measures the window when it is on, and every refusal of a video or a download that would stream in the mode asks "Switch and play" or "Not now" (eb169ad, 333d8f5, c246c06, 722d167, 66244fc, 538b7d0). Verified: TDLib keeps the holes sparse (desktop TDLib on btrfs, a restart at 509 MB took 40 MB of disk for a 549 MB file); a real TDLib harness through TdByteWindow read 150 MB in 4 rolls with a 40 MB window, 32 MB peak on disk against 150 MB without the mode, SHA-256 equal to a plain read including a seek back; on the TV emulator a 2.7 GB film on 1.1 GB free held 200 MB, rolled at 205 MB and played on, a seek back past the window deleted and refetched, the play prompt (focus on Switch and play, Not now giving the old refusal), the download prompt, and the switch off and on in Settings. Found on the emulator and fixed: a limit of 0 let TDLib fetch the whole film after the end, and a seek inside the window deleted it. Not checked: the prompt inside the player (next episode, autoplay), the phone dialog and the desktop UI on screen, a real device
 - [x] CP67 Setup after sign in instead of the tour before it (user, 2026-10-14): the sign in screen comes first, then up to three steps, one choice each with a cropped, hand-marked picture of both answers (scripts/annotate-shot.py, specs setup-android-* and setup-desktop-*), Skip, Skip all and Back: Your library (Show everything or Only my folders, only with folders; the old first sign in card), Posters and details (the MetadataStore switch, on by default), Storage (Low storage mode, key low_storage_mode, drawn rather than shot). One `setup` flag armed by a sign in screen: an install signed in before it never sees it, a fresh sign in (also after signing out) does, Settings' Run the setup again re-arms it; the two page tour, `overview_seen`, `first_sign_in_card`, the v1.0 sidebar shots and their strings are gone, and Android now shows Telegram's unofficial line under the sign in screens. Strings in all 21 languages. Unit tested (SetupTest, SetupFlagTest), desktop render and keyboard tests (SetupRenderTest: every step light and dark, Arabic, en-XA, a narrow window, arrows, Enter, Back, Skip, Skip all). On the TV emulator with the promo build (`--es screen setup --es step library|posters|storage`): phone portrait and landscape, light, dark and Arabic; TV with the first focus on the recommended answer, Right and OK picking, Back to the step before on the answer set. Not seen: a real first sign in on any device
 - [x] CP68 Low-end devices (user, 2026-10-14): `DeviceFitRules` in core judges a `DeviceProbe` (Android: isLowRamDevice, total memory under 2 GiB, or 1.5 GiB on TV, API under 26 or 32-bit only = short of memory; free space under 3 GiB = short of storage; the desktop reads free disk only) and recommends only existing or new Settings rows still off: Low storage mode on (storage), Thumbnails while seeking off (memory, only where they show at all), and two new rows under Appearance, Lighter pictures (picture cache at 1/16 of the heap instead of 1/8, posters, stills, thumbnails and the backdrop decoded at 3/5 width, no blur behind letterboxed art) and Reduce motion (Motion.standard tweens land at once, the skeleton shimmer stands still), both carried in backups and kept across sign out. Not changed, on purpose: player buffers (already 20 MB target, 50 s ceiling, short back buffer for the 1 GB stick; the 1.5 s PCM floor stays), Home prefetch (rows load art only when shown), posters and details (kept on, the list says they cost data and memory). Offered in three places, each listing exactly what changes: the setup's Device step in Storage's place (Apply focused, Not now), a Recommended for this device card at the top of Settings until applied or closed (Apply all focused on TV), and a once-per-install hint (a bar on the phone, a dialog with Apply focused on TV) when the player drops frames or the system sends onTrimMemory RUNNING_LOW. Strings in all 21 languages. Unit tested (DeviceFitTest, DeviceFitUiTest, SetupTest), desktop render and keyboard tests (the Device step light, dark, Arabic, narrow, Enter applies; the card on Settings). On the TV emulator with the promo build and `--ez lowend true` (`--es screen setup --es step device`, `--es screen settings`, `--es overlay devicehint`): TV step with Apply focused, the Settings card with Apply all focused and gone once applied, the rows on and turned back one by one, the hint dialog; phone-shaped step, card, hint bar and Arabic. A debug build takes the same `--ez lowend true` (and `--ez devicehint true`); the desktop `-Dtmplayer.lowend=true`. Not seen: a real low-end device, a real stutter or memory warning raising the hint
-- [ ] CP69 Full setup and guided tour after sign in, every step with marked screenshots (user, 2026-10-14; plan only, waiting for the user's go and answers to the open questions in the section)
+- [ ] CP69 Full setup, Save mobile data and a quick tour after sign in, in all 21 languages, for 1.26.0 (user, 2026-10-14; in progress)
 
 ## Standing rules
 
@@ -1060,68 +1060,102 @@ the lists for a Home row. Privacy page, sitemap lastmod and `llms.txt` updated.
 
 ## Your tasks
 
-### CP69 Full setup and guided tour after sign in
-**Why:** the user, 2026-10-14: the setup misses Low storage mode and the performance work, and should walk a new
-user through every feature they need, step by step, each step with marked screenshots like the Library and
-Posters steps. Today (CP67, CP68) the setup is at most three choices: Library (only with folders), Posters, and
-Storage (Low storage mode, which the user has seen and is happy with). The performance settings (Lighter pictures, Reduce
-motion, Thumbnails while seeking) appear only as the Device step, and only on a device `DeviceFitRules` calls
-short of memory or storage, so a normal phone, TV or PC never hears of them. Nothing in the setup shows how to
-get a first video, the player, the remote, gestures, downloads, favourites, the TV home screen row or the locks.
-**Shape:** two parts after sign in, one progress line across both, Back, Skip and Skip all on every step as now.
-Part 1 "Set up" asks; part 2 "Quick tour" shows. Settings' "Run the setup again" runs both.
-**Part 1, choices** (one setting per step, two answers, each answer pictured with a cropped, marked screenshot
-from `scripts/annotate-shot.py`; the recommended answer first and focused on TV):
-1. Your library: Show everything or Only my folders. As now, only when the account has folders.
-2. Posters and details: on or off. As now.
-3. Storage: Keep while playing or Low storage mode. Kept as it is, drawn picture included: the user saw it on a
-   device and liked it (2026-10-14).
-4. Performance, on every device: Full quality (recommended on capable devices) or Lighter (Lighter pictures,
-   Reduce motion, Thumbnails while seeking off, listed). Shots: a Home row with full art and the blurred
-   backdrop, then the same row lighter, both marked. On a device short of memory the order flips and Lighter is
-   recommended; on one short of storage too, the Device step (CP68) stays as it is and replaces 3 and 4, so
-   nobody is asked the same thing twice.
-5. Languages: preferred audio and subtitle language (CP49), preselected from the app language, with a marked
-   shot of the player's audio and subtitle picker. Two answers: "Use <language>" or "Original audio, no
-   subtitles".
-6. Phone only: downloads on Wi-Fi only, or on mobile data too (TV ignores it, desktop has no metered state).
-Not asked, on purpose (kept in Settings, shown in the tour instead): autoplay and Skip intro (on by default and
-liked), the app PIN and kids lock (a lock asked for at first run feels like a demand), storage location,
-crash reports (asked after a crash now), theme (follows the system).
-**Part 2, quick tour** (no choices; each page one marked screenshot with numbered markers and short numbered
-lines in app strings, no words inside images, per the site rule; Next, Back, Skip all). Per platform:
-- Getting videos in: forward a video to Saved Messages, or open any chat or channel with videos; marks on the
-  chat list and Saved Messages. All platforms.
-- Home: Continue watching, Recently added in starred chats, how to star a chat (hold OK on TV, long press on a
-  phone, right click on desktop). All platforms.
-- The player: the downloaded part of the timebar, subtitles, audio, speed, Skip intro, next episode. All.
-- Controls: phone gestures (double tap to jump, swipe for brightness and volume), TV remote keys (OK, hold OK,
-  Left and Right, Back), desktop shortcuts (Space, arrows, F, the full list behind ?). One page per platform.
-- Downloads and offline: a season download, the Downloads screen, Remove after watching. All.
-- TV only: the TMPlayer row on the Android TV home screen and how to add Watch later or New episodes rows.
-- Where things live: Settings pages with Playback, Storage, Lock and Appearance marked (PIN, kids lock,
-  Recommended for this device card). All.
-That is at most 6 choice steps (usually 4 or 5) and 6 or 7 tour pages; Skip all ends either part.
-**Screenshots:** demo content only, through the promo fixture on one emulator (`tmplayer_promo_tv`, phone shapes
-from the same emulator as CP67 did) and the desktop promo shots; light and dark paired; one spec per shot in
-`scripts/annotations/` named `setup-<platform>-<step>-<answer>[-dark|-tv].json` and
-`tour-<platform>-<page>[-dark|-tv].json`; WebP at quality 88 where they are stored as WebP, otherwise the
-format the existing setup shots use; no new emulators. Phone shots: `tmplayer_phone_api36` is broken, so either
-the TV emulator phone shape as in CP67 or recreate the AVD first.
-**Code:** `SetupStep` gains Performance, Languages, Network; a `TourPage` enum and `Tour.pages(platform)` in
-`ui/.../onboarding/`; `SetupScreen` gets a tour layout (one big shot, numbered lines beside it on TV and desktop,
-under it on a phone); the promo fixture takes `--es screen tour --es page <name>`; strings in `en.json` only.
-**Existing users:** the setup flag stays armed only by a sign in screen. Proposal: an update to this version shows
-the tour (part 2 only) once, through the what's new card ("Take the quick tour"), never the choices.
-**Tests:** SetupTest for the new step lists per platform and device class (normal, short of memory, short of
-storage, both), a TourTest for the page lists, desktop render and keyboard tests for every new step and page
-(light, dark, Arabic, en-XA, narrow), the promo screens on the TV emulator in TV and phone shapes, and a real
-first sign in on the phone and the stick (the user scans the QR or types the code).
-**Open questions for the user:**
-- Release: hold 1.26.0 for this, or tag 1.26.0 as planned and ship this as 1.27.0? (Suggested: 1.27.0.)
-- Languages and Wi-Fi steps: in, or left to Settings?
-- Existing users: tour once via the what's new card, or only through Settings?
-- Translations: `en.json` only and the other 20 locales left to the user, as the rule says?
+### CP69 Full setup, Save mobile data and a quick tour after sign in (for 1.26.0)
+**Why:** the user, 2026-10-14: the setup should walk a new user through what they need, step by step, every
+step with marked screenshots; the performance work never reaches a capable device; Low storage mode also helps
+people on mobile data, which deserves its own rule; every string in all 21 languages. Wanted in 1.26.0.
+**Today:** CP67 setup, at most three choices: Library (only with folders), Posters, Storage (Low storage mode,
+drawn picture, the user likes it as it is). The performance rows (Lighter pictures, Reduce motion, Thumbnails
+while seeking) only appear as the Device step, on a device `DeviceFitRules` calls short. Nothing shows how to get
+a first video, the player, the controls, downloads, favourites, the TV home screen row or where Settings keep
+the rest. Streaming asks TDLib for the whole rest of the file (`limit = 0`), so on mobile data a film stopped
+after 20 minutes can have cost most of its size.
+
+**1. Save mobile data (new feature, Android)**
+- Setting `save_mobile_data`, default off, carried in backups, kept across sign out like the other device
+  settings. Row "Save mobile data" on Settings, Storage next to "Downloads on Wi-Fi only", phone only (the TV
+  is treated as unmetered, as Wi-Fi only already is; the desktop has no metered state).
+- While it is on and `NetworkMonitor.metered` is true, a stream (not a download) asks TDLib for a bounded window
+  ahead of the playhead (about 100 MB, enough for minutes of 1080p) and extends it as playback nears its end,
+  through the same request path Low storage mode uses, but nothing behind the playhead is deleted, so seeking
+  back and watching again cost nothing extra. Switching to Wi-Fi mid-video lifts the bound at the next request.
+  Low storage mode on top keeps its own rolling and deleting rules.
+- Unit tests for the plan (bounded only while metered and on, extended near the end, never deletes, a download
+  is never bounded); a device check on the phone over mobile data.
+
+**2. Setup, part 1: choices** (one setting per step, two answers, pictures, recommended answer first and focused
+on a remote; Back, Skip, Skip all as now; the progress line counts both parts)
+1. Your library: unchanged (only with folders).
+2. Posters and details: unchanged.
+3. Storage: unchanged, drawn picture included.
+4. Performance (new, every device): "Full quality" or "Lighter" (turns on Lighter pictures and Reduce motion
+   and turns off Thumbnails while seeking; the card lists them). Pictures: marked shots of Home with full art
+   and the same Home lighter. On a device short of memory "Lighter" comes first and is recommended. On a
+   device the Device step (CP68) applies to, that step replaces Storage and Performance as today, so nothing is
+   asked twice.
+5. Mobile data (new, phone only): "Save mobile data" (recommended: Save mobile data on, downloads wait for
+   Wi-Fi) or "No limits" (both off). Drawn picture in the Storage step's style: a timebar with a short
+   stretch fetched ahead against one filled to the end.
+- Not asked, on purpose: preferred languages (a list, not a two-answer question; the tour points to it),
+  autoplay and Skip intro (on by default), PIN and kids lock (asking for a lock at first run feels like a
+  demand), storage location, theme (follows the system), crash reports (asked after a crash now).
+
+**3. Setup, part 2: quick tour** (after the choices; no answers; each page one marked screenshot with numbered
+badges drawn over it by the app, and the same numbers in front of short lines beside it on TV and desktop, under
+it on a phone; Next, Back, Skip all; the last page says Start)
+1. Your videos: (1) Saved Messages, forward any video there; (2) chats and channels, every video in them is
+   here; (3) Search. Shot: the chat list.
+2. Home: (1) Continue watching; (2) Recently added in starred chats; (3) star a chat (hold OK on TV, long
+   press on a phone, right click on the desktop). Shot: Home.
+3. The player: (1) the timebar's lighter part is downloaded, seek anywhere; (2) subtitles, audio, speed;
+   (3) Skip intro and Next episode when they apply. Shot: the player.
+4. Controls, one per platform. Phone: double tap a side to jump, swipe right side for volume and left for
+   brightness, tap to show or hide controls (shot: the player, sides marked). TV: OK plays and hold OK for
+   options, Left opens the side menu, Back goes back and Left and Right jump in the player (shot: a focused
+   card). Desktop: Space and the arrows, F and ?, right click (shot: the player).
+5. Downloads: (1) download a video or a whole season; (2) the Downloads screen and its space; (3) Remove after
+   watching. Shot: Downloads.
+6. TV only, Home screen row: (1) TMPlayer's row of recently added videos; (2) add Watch later or New episodes
+   from the home screen's channel settings. Shot: the launcher row (the site's tv-home-screen capture).
+7. Settings: (1) Playback, incl. preferred audio and subtitle language; (2) Storage, incl. Low storage mode
+   and Save mobile data; (3) Lock: app PIN and kids lock; (4) Appearance: theme, Lighter pictures. Shot:
+   Settings' page list.
+
+**4. Who sees what**
+- A fresh sign in: part 1 then part 2. "Run the setup again" in Settings: both.
+- Existing users updating to 1.26.0: never the choices; a one-time "Take the quick tour" offer (a card in the
+  shell, Take the tour or Not now), held back like the other cards (update, language, what's new), then never
+  again; flag `tour_offered`. Settings, About gets "Quick tour" to open part 2 any time.
+
+**5. Pictures**
+- Demo content only (promo build on one emulator, `tmplayer_promo_tv`, phone shape by `wm size` as in CP67;
+  the desktop through `PromoShots`), cropped and marked by `scripts/annotate-shot.py`, WebP quality 88, no
+  words in any image. Raw captures stay out of git (build/shots/).
+- Android: `app/src/main/res/drawable-nodpi/tour_<page>.webp`, `_dark`, `_tv`; `setup_performance_full` and
+  `setup_performance_lighter` with `_dark` and `_tv`. Desktop: `ui/src/jvmMain/resources/onboarding/
+  tour-<page>-light|dark.webp`, `performance-full|lighter-light|dark.webp`. Pages: videos, home, player,
+  controls, downloads, tvhome (TV only), settings.
+- Badges: every tour spec has one `circle` mark per numbered line, in line order; a generator reads the specs
+  and writes the badge positions (fractions of the image) into `TourBadges.kt`, so a retaken shot moves its
+  numbers with one command.
+
+**6. Localization**
+- Every new string in `en.json` and translated into all 20 other catalogs (user asked, 2026-10-14), including
+  the crash prompt's six `main.crash_*` keys from c48a447. `CatalogTest` green; a key-diff check that no
+  catalog misses a key; Arabic and Persian checked right to left on screen; no text inside pictures.
+- Site: the privacy page is English only by design; any localized page whose text changes (none expected) is
+  rebuilt with `scripts/build-site-i18n.py` and `--check`.
+
+**7. Tests and checks**
+- Unit: SetupTest (step lists per form and device class, Mobile data only on a phone, Performance order flip,
+  Device step replacing both), TourTest (pages per form, TV row only on TV, badges count equal to lines),
+  tour-offer flag tests, Save mobile data planner tests.
+- Desktop render and keyboard tests for each new step and tour page: light, dark, Arabic, en-XA, narrow.
+- Promo screens on the TV emulator, TV and phone shapes, light and dark, English and Arabic.
+- Release build on the phone and the Mi TV: the setup through "Run the setup again", the tour, the existing
+  user offer after an update over test13, Save mobile data on the phone's mobile data.
+**Order of work:** (a) Save mobile data and (b) the screenshots run in parallel in their own worktrees while
+(c) the setup and tour code is written here; then badges, translations, tests, device checks, PLAN status.
 **STOP**
 
 ### U01 Two Sentry settings
