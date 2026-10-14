@@ -1,0 +1,30 @@
+---
+// The star card that ends the page: star and fork, the live counts app.js fills in, the licence,
+// then the sponsor offer. The lede is the page's own reason to star it.
+import Icon from '../Icon.astro';
+import SponsorOffer from './SponsorOffer.astro';
+import { text } from '../../i18n/t';
+
+interface Props { lede: string }
+const { lede } = Astro.props;
+const t = (k: string) => text(Astro.locals.lang, k);
+---
+<section class="band band-tonal" aria-labelledby="support-h">
+  <div class="wrap">
+    <div class="support" data-reveal>
+      <h2 id="support-h">{t('features.star_it_if_it_helped')}</h2>
+      <p>{lede}</p>
+      <div class="support-actions">
+        <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
+        <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/fork" rel="noopener"> <Icon name="fork-btn" /> {t('home.fork_the_repository')}</a>
+      </div>
+      <p class="support-stats">
+        <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
+        <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
+        <span>{t('home.gpl_3_0_and_free')}</span>
+      </p>
+
+      <SponsorOffer />
+    </div>
+  </div>
+</section>

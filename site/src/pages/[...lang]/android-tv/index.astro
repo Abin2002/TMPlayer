@@ -1,6 +1,6 @@
 ---
-// The stored theme, applied before the first paint. With no stored choice nothing is set and the stylesheet follows prefers-color-scheme, which is the system theme.
-
+// Android TV: what the app is like on a television, the ten-foot layout, which devices it runs on,
+// and the star card.
 import Base from '../../../layouts/Base.astro';
 import BgArt from '../../../components/BgArt.astro';
 import Header from '../../../components/Header.astro';
@@ -9,6 +9,11 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import Band from '../../../components/android-tv/Band.astro';
+import FeatureCard from '../../../components/android-tv/FeatureCard.astro';
+import TvShot from '../../../components/android-tv/TvShot.astro';
+import FitPanel from '../../../components/android-tv/FitPanel.astro';
+import SupportBand from '../../../components/android-tv/SupportBand.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -19,30 +24,38 @@ Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
-const ld0 = {
+const breadcrumbs = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "https://tmplayer.org/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Android TV",
-      "item": "https://tmplayer.org/android-tv/"
-    }
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://tmplayer.org/" },
+    { "@type": "ListItem", "position": 2, "name": "Android TV", "item": "https://tmplayer.org/android-tv/" }
   ]
 };
+
+const shot = (name: string, alt: string, light = true) => ({
+  src: `/screenshots/${name}.webp`,
+  light: light ? `/screenshots/${name}-light.webp` : undefined,
+  alt: t(alt),
+  width: 960,
+  height: 480,
+});
+
+// What changes on a television. The next-episode shot has no light twin and a smaller frame.
+const features = [
+  { title: 'android_tv.a_rail_not_a_menu', body: 'android_tv.every_category_down_the_left', shot: shot('tv-rail', 'android_tv.rail_shot_alt') },
+  { title: 'android_tv.sign_in_without_typing', body: 'android_tv.scan_a_qr_code_with', shot: shot('tv-sign-in', 'android_tv.sign_in_shot_alt') },
+  { title: 'android_tv.voice_search_from_the_remote', body: 'android_tv.typos_and_missing_accents_still', shot: shot('tv-search', 'android_tv.search_shot_alt') },
+  { title: 'android_tv.runs_on_a_1_gb', body: 'android_tv.built_on_a_mi_tv', icon: 'chip-large' },
+  { title: 'android_tv.one_video_on_disk_at', body: 'android_tv.the_previous_video_is_cleared', icon: 'sd-card-large' },
+  { title: 'android_tv.next_episode_on_its_own', body: 'android_tv.plays_the_next_episode_after', shot: { ...shot('tv-next-episode', 'android_tv.next_episode_shot_alt', false), width: 840, height: 420 } },
+];
 ---
 <Base page="android_tv" title={t('android_tv.tmplayer_unofficial_telegram_video_player')} description={t('android_tv.watch_telegram_videos_on_android')}>
   <Fragment slot="head">
-    <JsonLd data={ld0} />
+    <JsonLd data={breadcrumbs} />
   </Fragment>
-<!-- Decorative background art, hidden from assistive technology and still under reduced motion. -->
+{/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />
 
 <Header page="android_tv" />
@@ -61,176 +74,44 @@ const ld0 = {
     </div>
   </section>
 
-<Icon name="wave" />
+  <Icon name="wave" />
 
-  <section class="band band-tonal" aria-labelledby="tv-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="tv-h">{t('android_tv.what_changes_on_a_television')}</h2>
-          <p class="section-sub">{t('android_tv.same_account_same_apk_only')}</p>
-        </div>
-      </div>
-
-      <div class="card-grid card-grid-3" data-reveal>
-        <div class="card">
-          <picture class="card-shot">
-            <source data-theme-src srcset="/screenshots/tv-rail-light.webp" media="(prefers-color-scheme: light)">
-            <img src="/screenshots/tv-rail.webp" alt={t('android_tv.rail_shot_alt')} width="960" height="480" loading="lazy" decoding="async">
-          </picture>
-          <h3>{t('android_tv.a_rail_not_a_menu')}</h3>
-          <p>{t('android_tv.every_category_down_the_left')}</p>
-        </div>
-        <div class="card">
-          <picture class="card-shot">
-            <source data-theme-src srcset="/screenshots/tv-sign-in-light.webp" media="(prefers-color-scheme: light)">
-            <img src="/screenshots/tv-sign-in.webp" alt={t('android_tv.sign_in_shot_alt')} width="960" height="480" loading="lazy" decoding="async">
-          </picture>
-          <h3>{t('android_tv.sign_in_without_typing')}</h3>
-          <p>{t('android_tv.scan_a_qr_code_with')}</p>
-        </div>
-        <div class="card">
-          <picture class="card-shot">
-            <source data-theme-src srcset="/screenshots/tv-search-light.webp" media="(prefers-color-scheme: light)">
-            <img src="/screenshots/tv-search.webp" alt={t('android_tv.search_shot_alt')} width="960" height="480" loading="lazy" decoding="async">
-          </picture>
-          <h3>{t('android_tv.voice_search_from_the_remote')}</h3>
-          <p>{t('android_tv.typos_and_missing_accents_still')}</p>
-        </div>
-        <div class="card">
-          <span class="card-shot card-shot-icon" aria-hidden="true">
-            <Icon name="chip-large" />
-          </span>
-          <h3>{t('android_tv.runs_on_a_1_gb')}</h3>
-          <p>{t('android_tv.built_on_a_mi_tv')}</p>
-        </div>
-        <div class="card">
-          <span class="card-shot card-shot-icon" aria-hidden="true">
-            <Icon name="sd-card-large" />
-          </span>
-          <h3>{t('android_tv.one_video_on_disk_at')}</h3>
-          <p>{t('android_tv.the_previous_video_is_cleared')}</p>
-        </div>
-        <div class="card">
-          <picture class="card-shot">
-            <img src="/screenshots/tv-next-episode.webp" alt={t('android_tv.next_episode_shot_alt')} width="840" height="420" loading="lazy" decoding="async">
-          </picture>
-          <h3>{t('android_tv.next_episode_on_its_own')}</h3>
-          <p>{t('android_tv.plays_the_next_episode_after')}</p>
-        </div>
-      </div>
+  <Band tonal headId="tv-h" title={t('android_tv.what_changes_on_a_television')} sub={t('android_tv.same_account_same_apk_only')}>
+    <div class="card-grid card-grid-3" data-reveal>
+      {features.map((f) => <FeatureCard title={t(f.title)} body={t(f.body)} shot={f.shot} icon={f.icon} />)}
     </div>
-  </section>
+  </Band>
 
-<Icon name="wave-flip" />
+  <Icon name="wave-flip" />
 
-  <section class="band" aria-labelledby="tvshots-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="tvshots-h">{t('android_tv.the_ten_foot_layout')}</h2>
-          <p class="section-sub">{t('android_tv.the_app_on_a_television')}</p>
-        </div>
-      </div>
-
-      <div class="shots">
-        <figure class="shot" data-reveal>
-          <div class="device device-tv">
-            <div class="screen">
-              <picture>
-                <source data-theme-src srcset="/screenshots/tv-chats-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-chats.webp" alt={t('android_tv.the_tmplayer_chat_list_on')} width="1920" height="1080" loading="lazy" decoding="async">
-              </picture>
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption><T k="android_tv.categories_on_the_rail_chats"><b slot="b1">{t('android_tv.categories_on_the_rail_chats__b1')}</b></T></figcaption>
-        </figure>
-
-        <figure class="shot" data-reveal>
-          <div class="device device-tv">
-            <div class="screen">
-              <picture>
-                <source data-theme-src srcset="/screenshots/tv-grid-light.webp" media="(prefers-color-scheme: light)">
-                <img src="/screenshots/tv-grid.webp" alt={t('android_tv.videos_from_a_telegram_chat')} width="1920" height="1080" loading="lazy" decoding="async">
-              </picture>
-            </div>
-            <div class="stand"></div>
-            <div class="foot"></div>
-          </div>
-          <figcaption><T k="android_tv.running_time_and_size_on"><b slot="b1">{t('android_tv.running_time_and_size_on__b1')}</b></T></figcaption>
-        </figure>
-      </div>
+  <Band headId="tvshots-h" title={t('android_tv.the_ten_foot_layout')} sub={t('android_tv.the_app_on_a_television')}>
+    <div class="shots">
+      <TvShot src="/screenshots/tv-chats.webp" light="/screenshots/tv-chats-light.webp" alt={t('android_tv.the_tmplayer_chat_list_on')}><T k="android_tv.categories_on_the_rail_chats"><b slot="b1">{t('android_tv.categories_on_the_rail_chats__b1')}</b></T></TvShot>
+      <TvShot src="/screenshots/tv-grid.webp" light="/screenshots/tv-grid-light.webp" alt={t('android_tv.videos_from_a_telegram_chat')}><T k="android_tv.running_time_and_size_on"><b slot="b1">{t('android_tv.running_time_and_size_on__b1')}</b></T></TvShot>
     </div>
-  </section>
+  </Band>
 
-<Icon name="wave" />
+  <Icon name="wave" />
 
-  <section class="band band-tonal" aria-labelledby="tvfit-h">
-    <div class="wrap">
-      <div class="section-head" data-reveal>
-        <div class="section-title">
-          <h2 id="tvfit-h">{t('android_tv.will_it_run_on_yours')}</h2>
-        </div>
-      </div>
-
-      <div class="two-col" data-reveal>
-        <div class="panel">
-          <h3> <span class="panel-icon icon-yes" aria-hidden="true">
-              <Icon name="tick-panel" />
-            </span> {t('android_tv.yes')}</h3>
-          <ul class="ticks">
-            <li>{t('android_tv.android_tv_and_google_tv')}</li>
-            <li><T k="android_tv.sticks_with_fire_tv"><a href={l('/fire-tv/')} slot="a1">{t('android_tv.sticks_with_fire_tv__a1')}</a></T></li>
-            <li>{t('android_tv.boxes_and_tvs_nvidia_shield')}</li>
-            <li>{t('android_tv.32_bit_and_64_bit')}</li>
-          </ul>
-        </div>
-        <div class="panel">
-          <h3> <span class="panel-icon icon-no" aria-hidden="true">
-              <Icon name="cross-panel" />
-            </span> {t('android_tv.no')}</h3>
-          <ul class="crosses">
-            <li>{t('android_tv.not_samsung_tizen_not_lg')}</li>
-            <li>{t('android_tv.not_apple_tv_and_not')}</li>
-            <li>{t('android_tv.not_a_device_where_sideloading')}</li>
-          </ul>
-        </div>
-      </div>
+  <Band tonal headId="tvfit-h" title={t('android_tv.will_it_run_on_yours')}>
+    <div class="two-col" data-reveal>
+      <FitPanel kind="yes" title={t('android_tv.yes')}>
+        <li>{t('android_tv.android_tv_and_google_tv')}</li>
+        <li><T k="android_tv.sticks_with_fire_tv"><a href={l('/fire-tv/')} slot="a1">{t('android_tv.sticks_with_fire_tv__a1')}</a></T></li>
+        <li>{t('android_tv.boxes_and_tvs_nvidia_shield')}</li>
+        <li>{t('android_tv.32_bit_and_64_bit')}</li>
+      </FitPanel>
+      <FitPanel kind="no" title={t('android_tv.no')}>
+        <li>{t('android_tv.not_samsung_tizen_not_lg')}</li>
+        <li>{t('android_tv.not_apple_tv_and_not')}</li>
+        <li>{t('android_tv.not_a_device_where_sideloading')}</li>
+      </FitPanel>
     </div>
-  </section>
+  </Band>
 
-<Icon name="wave-flip" />
+  <Icon name="wave-flip" />
 
-  <section class="band band-tonal" aria-labelledby="support-h">
-    <div class="wrap">
-      <div class="support" data-reveal>
-        <h2 id="support-h">{t('features.star_it_if_it_helped')}</h2>
-        <p>{t('android_tv.a_tv_app_outside_the')}</p>
-        <div class="support-actions">
-          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
-          <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/fork" rel="noopener"> <Icon name="fork-btn" /> {t('home.fork_the_repository')}</a>
-        </div>
-        <p class="support-stats">
-          <span data-count-wrap hidden><b data-count="stars"></b> {t('home.stars')}</span>
-          <span data-count-wrap hidden><b data-count="forks"></b> {t('home.forks')}</span>
-          <span>{t('home.gpl_3_0_and_free')}</span>
-        </p>
-
-        <!-- The coffee and sponsor links, the same block and words as on the download page, so a
-             reader who got something from this page has the offer where they finished reading. -->
-        <div class="support-more" id="sponsor">
-          <h3>{t('home.support_tmplayer')}</h3>
-          <p>{t('home.support_no_ads')}</p>
-          <div class="support-actions support-give">
-            <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
-            <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+  <SupportBand lede={t('android_tv.a_tv_app_outside_the')} />
 
 </main>
 

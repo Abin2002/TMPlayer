@@ -1,0 +1,23 @@
+---
+// A card in "what changes on a television": a screenshot (with its light twin where there is one)
+// or a large icon on top, then the heading and one paragraph.
+import Icon from '../Icon.astro';
+
+export interface Shot { src: string; light?: string; alt: string; width: number; height: number }
+interface Props { title: string; body: string; shot?: Shot; icon?: string }
+const { title, body, shot, icon } = Astro.props;
+---
+<div class="card">
+  {shot ? (
+    <picture class="card-shot">
+      {shot.light && <source data-theme-src srcset={shot.light} media="(prefers-color-scheme: light)">}
+      <img src={shot.src} alt={shot.alt} width={shot.width} height={shot.height} loading="lazy" decoding="async">
+    </picture>
+  ) : (
+    <span class="card-shot card-shot-icon" aria-hidden="true">
+      <Icon name={icon!} />
+    </span>
+  )}
+  <h3>{title}</h3>
+  <p>{body}</p>
+</div>
