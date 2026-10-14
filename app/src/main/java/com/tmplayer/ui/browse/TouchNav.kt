@@ -503,7 +503,8 @@ private fun DrawerFooter(account: Account?) {
             )
         },
         supportingContent = account?.username?.takeIf { it.isNotBlank() }?.let { username ->
-            { Text("@$username", maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            // Isolated left to right, or an Arabic or Persian interface draws "name@".
+            { Text("\u2066@$username\u2069", maxLines = 1, overflow = TextOverflow.Ellipsis) }
         },
         // The sheet has already painted its own background, and a second one over it draws a
         // panel around the account for no reason.
