@@ -55,7 +55,7 @@ class HomeRowsTest {
     }
 
     @Test
-    fun `rows come in order continue, starred chats, then recent`() {
+    fun `rows come in order continue, recent, then starred chats`() {
         val a = video(1)
         val b = video(2)
         val c = video(3)
@@ -65,7 +65,7 @@ class HomeRowsTest {
             loaded = mapOf(1L to listOf(a), 2L to listOf(b)),
             recent = listOf(c),
         )
-        assertEquals(listOf("continue", "chat-2", "chat-1", "recent"), rows.map { it.key })
+        assertEquals(listOf("continue", "recent", "chat-2", "chat-1"), rows.map { it.key })
     }
 
     @Test
@@ -147,7 +147,8 @@ class HomeRowsTest {
             loaded = mapOf(1L to listOf(older, started), 2L to listOf(newer)),
             recent = listOf(groupChat, fromSearch, newer, started),
         )
-        val recent = rows.last() as HomeRow.Recent
+        assertEquals(listOf("continue", "recent", "chat-1", "chat-2"), rows.map { it.key })
+        val recent = rows[1] as HomeRow.Recent
         // Nothing from an unstarred chat, nothing that is in Continue, and the search and the
         // chats' own fetches merged without a repeat.
         assertEquals(listOf(newer.messageId, fromSearch.messageId, older.messageId), ids(recent))
@@ -176,9 +177,9 @@ class HomeRowsTest {
             loaded = mapOf(2L to emptyList()),
             recent = null,
         )
-        assertEquals(listOf("chat-1", "recent"), rows.map { it.key })
-        assertFalse((rows[0] as HomeRow.Chat).loaded)
-        assertFalse((rows[1] as HomeRow.Recent).loaded)
+        assertEquals(listOf("recent", "chat-1"), rows.map { it.key })
+        assertFalse((rows[0] as HomeRow.Recent).loaded)
+        assertFalse((rows[1] as HomeRow.Chat).loaded)
     }
 
     @Test
@@ -198,11 +199,12 @@ class HomeRowsTest {
         assertEquals(12, resume.total)
         assertEquals(2, resume.more.size)
 
-        val small = rows[1] as HomeRow.Chat
+        val chats = rows.filterIsInstance<HomeRow.Chat>()
+        val small = chats[0]
         assertFalse(small.hasMore)
         assertEquals(3, small.total)
 
-        val big = rows[2] as HomeRow.Chat
+        val big = chats[1]
         assertTrue(big.hasMore)
         assertEquals(14, big.total)
         assertFalse(big.totalAtLeast)

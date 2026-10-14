@@ -87,8 +87,9 @@ sealed interface HomeRow {
  * Builds Home's rows from what is on this device and what Telegram has answered so far.
  *
  * Pure, so the rules live in one place for the phone, the television and the desktop:
- * - Continue watching first, then Watch later, then New episodes when there are any, then one row
- *   per starred chat in the chat list's own order, then "Recently added in starred chats".
+ * - Continue watching first, then "Recently added in starred chats", so what just arrived in a
+ *   favourite is near the top, then Watch later, then New episodes when there are any, then one
+ *   row per starred chat in the chat list's own order.
  * - Recently added draws only from the starred chats. Somebody's other chats are family groups,
  *   work and news as often as films, so what is new there is not what Home is for. It needs two
  *   starred chats at least: with one, it would repeat that chat's own row.
@@ -144,6 +145,21 @@ object HomeRows {
         if (resume.isNotEmpty()) add(HomeRow.Continue(resume, everyResume.drop(LIMIT)))
         val inContinue = HashSet(seen)
 
+        val starred = favourites.distinctBy { it.id }
+        if (starred.size >= RECENT_MIN_STARRED) {
+            val starredIds = starred.mapTo(HashSet()) { it.id }
+            if (recent == null) {
+                add(HomeRow.Recent(emptyList(), loaded = false))
+            } else {
+                // The search across chats reaches a starred chat further back than its own row's
+                // fetch, and a starred chat's fetch fills in whatever the search did not reach.
+                val pool = recent.filter { it.chatId in starredIds } + starredIds.flatMap { loaded[it].orEmpty() }
+                // A copy, so the rows below still show these videos in their own chats.
+                val entries = row(pool, HashSet(inContinue))
+                if (entries.isNotEmpty()) add(HomeRow.Recent(entries, loaded = true))
+            }
+        }
+
         // Started since it was saved: Continue already has it, with its place.
         val everyLater = watchLater.distinctBy { it.key }.filterNot { it.key in inContinue }
         val later = everyLater.take(LIMIT)
@@ -152,7 +168,6 @@ object HomeRows {
         val newEpisodes = fresh.filterNot { keyOf(it.item.chatId, it.item.messageId) in seen }.take(LIMIT)
         if (newEpisodes.isNotEmpty()) add(HomeRow.NewEpisodes(newEpisodes))
 
-        val starred = favourites.distinctBy { it.id }
         starred.forEach { chat ->
             val items = loaded[chat.id]
             if (items == null) {
@@ -176,17 +191,6 @@ object HomeRows {
             }
         }
 
-        if (starred.size < RECENT_MIN_STARRED) return@buildList
-        val starredIds = starred.mapTo(HashSet()) { it.id }
-        if (recent == null) {
-            add(HomeRow.Recent(emptyList(), loaded = false))
-        } else {
-            // The search across chats reaches a starred chat further back than its own row's
-            // fetch, and a starred chat's fetch fills in whatever the search did not reach.
-            val pool = recent.filter { it.chatId in starredIds } + starredIds.flatMap { loaded[it].orEmpty() }
-            val entries = row(pool, inContinue)
-            if (entries.isNotEmpty()) add(HomeRow.Recent(entries, loaded = true))
-        }
     }
 
     /**
