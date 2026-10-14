@@ -72,7 +72,7 @@
     "built_by_more_of_what": "Dibuat oleh {strong1}. Karya saya lainnya ada di {a1}.",
     "stream_the_videos_in_your": "Streaming video di obrolan Telegram kamu sendiri di Android TV, HP Android, Windows, dan Linux. Gratis, open source, dan langsung diputar selagi mengunduh.",
     "tmplayer_a_telegram_media_player": "TMPlayer, pemutar media Telegram untuk video di obrolan kamu sendiri, di televisi dan di HP.",
-    "tmplayer_on_a_television_showing": "TMPlayer di televisi, menampilkan video dalam obrolan Telegram sebagai kotak-kotak ubin lengkap dengan durasi dan ukuran file.",
+    "tmplayer_on_a_television_showing": "TMPlayer di televisi, menampilkan film dan serial dalam chat Telegram sebagai poster dengan tahun, ukuran, dan resolusinya.",
     "a_phone_opening_a_telegram": "HP yang membuka obrolan Telegram di TMPlayer dan menampilkan videonya sebagai grid.",
     "email_hello_tmplayer_org_with": "Kirim email ke hello@tmplayer.org untuk permintaan fitur TMPlayer",
     "open_an_issue_in_the": "Buka issue di repositori TMPlayer di GitHub",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram di TV kamu tanpa casting",
     "watch_telegram_videos_on_3a48": "Tonton video Telegram di televisi tanpa casting atau mirroring HP: pemutar di TV itu sendiri masuk ke akun kamu dan memutar video di obrolan kamu secara streaming.",
     "finds_subtitles_online_through_a322": "Mencari subtitle online lewat OpenSubtitles, dan menggeser subtitle atau audio agar pas",
-    "groups_series_by_season_709a": "Mengelompokkan serial per musim di halaman sendiri, dengan poster dan sinopsis yang bisa kamu matikan",
+    "groups_series_by_season_e029": "Mengelompokkan serial per musim di halaman sendiri, dengan poster dan sinopsis yang bisa kamu matikan",
     "changelog_164b": "Catatan perubahan"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "Tampilan jarak jauh, dan kenapa bisa jalan di stick 1 GB.",
     "for_the_television": "Untuk televisi",
     "stream_telegram_videos_while_they": "Streaming video Telegram selagi mengunduh, geser posisi seketika, putar MKV dengan subtitle, dan putar episode berikutnya otomatis di Android TV, HP, Windows, dan Linux.",
-    "tmplayer_on_a_phone_listing": "TMPlayer di HP, menampilkan obrolan contoh: Weekend Clips, Home Projects, Recipe Notes, Travel Diary, Design Study, dan Family Archive.",
-    "a_dense_grid_of_demo": "Grid rapat berisi video contoh dari obrolan Telegram di HP, setiap ubin menampilkan resolusi dan durasinya.",
+    "tmplayer_on_a_phone_listing": "TMPlayer di HP, menampilkan obrolan contoh: Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips, dan Family Archive.",
+    "a_dense_grid_of_demo": "Kisi film demo dan satu serial dari chat Telegram di ponsel, setiap poster menampilkan tahun, ukuran, dan resolusinya.",
     "the_same_chat_list_on": "Daftar chat yang sama di televisi, dengan rel navigasi di sebelah kiri.",
     "tmplayer_settings_on_a_television": "Pengaturan TMPlayer di televisi, menampilkan batas ukuran video, putar otomatis episode berikutnya, dan sisa penyimpanan.",
-    "the_tmplayer_desktop_app_on": "Aplikasi desktop TMPlayer di Windows atau Linux: sidebar bagian obrolan di samping grid video contoh, setiap poster menampilkan durasi, ukuran, dan resolusinya.",
+    "the_tmplayer_desktop_app_on": "Aplikasi desktop TMPlayer di Windows atau Linux: bilah samping berisi bagian di samping film demo sebuah chat sebagai poster, masing-masing dengan tahun, ukuran, dan resolusinya.",
     "the_tmplayer_desktop_player_over": "Pemutar desktop TMPlayer di atas video contoh: judul dan obrolan di bagian atas, bilah waktu, dan tombol untuk subtitle, audio, kecepatan, bentuk gambar, volume, pemutar mini, dan layar penuh.",
     "subtitles_found_online": "{strong1} Kalau file tidak punya subtitle, cari di OpenSubtitles langsung dari pemutar, lalu geser subtitle atau suara lebih awal atau lebih lambat.",
     "subtitles_found_online__strong1": "Mencari subtitle online.",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "Putar otomatis episode berikutnya, suara, thumbnail saat menggeser, dan perilaku kontrol.",
     "subtitle_size_a_box_behind": "Ukuran subtitle, kotak di belakangnya atau tanpa kotak, dan posisinya.",
     "which_videos_show_such_as": "Video mana yang ditampilkan, misalnya menyembunyikan klip di bawah ukuran yang kamu pilih, dan apa yang dibuka pertama kali.",
-    "how_much_space_is_free": "Berapa ruang yang masih kosong, dan di mana unduhan disimpan."
+    "how_much_space_is_free": "Berapa ruang yang masih kosong, dan di mana unduhan disimpan.",
+    "demo_artwork_photos_from_unsplash": "Film dan serial demo ini rekaan. Gambarnya dipotong dari {a1}, dengan nama setiap fotografer.",
+    "demo_artwork_photos_from_unsplash__a1": "foto di Unsplash"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Unduh TMPlayer untuk Android TV, HP, Windows, dan Linux",

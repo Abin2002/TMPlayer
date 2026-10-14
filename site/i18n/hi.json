@@ -72,7 +72,7 @@
     "built_by_more_of_what": "{strong1} द्वारा बनाया गया। मेरे बाकी काम {a1} पर देखें।",
     "stream_the_videos_in_your": "Android TV, Android फ़ोन, Windows और Linux पर अपनी Telegram चैट के वीडियो स्ट्रीम करें। मुफ़्त, ओपन सोर्स, और डाउनलोड होते-होते चलता है।",
     "tmplayer_a_telegram_media_player": "TMPlayer, आपकी अपनी चैट के वीडियो के लिए एक Telegram मीडिया प्लेयर, टीवी और फ़ोन पर।",
-    "tmplayer_on_a_television_showing": "टीवी पर TMPlayer, जो Telegram चैट के वीडियो को अवधि और फ़ाइल साइज़ के साथ टाइल के ग्रिड में दिखा रहा है।",
+    "tmplayer_on_a_television_showing": "टीवी पर TMPlayer, एक Telegram चैट की फ़िल्में और सीरीज़ पोस्टर के रूप में साल, आकार और रिज़ॉल्यूशन के साथ दिखाते हुए।",
     "a_phone_opening_a_telegram": "एक फ़ोन TMPlayer में Telegram चैट खोलकर उसके वीडियो ग्रिड में दिखा रहा है।",
     "email_hello_tmplayer_org_with": "TMPlayer फ़ीचर अनुरोध के साथ hello@tmplayer.org पर ईमेल करें",
     "open_an_issue_in_the": "GitHub पर TMPlayer रिपॉज़िटरी में इश्यू खोलें",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "बिना कास्ट किए अपने टीवी पर Telegram",
     "watch_telegram_videos_on_3a48": "फ़ोन को कास्ट या मिरर किए बिना टीवी पर Telegram वीडियो देखें: टीवी पर ही चलने वाला प्लेयर आपके अकाउंट में साइन इन करता है और आपकी चैट के वीडियो स्ट्रीम करता है।",
     "finds_subtitles_online_through_a322": "OpenSubtitles से सबटाइटल ऑनलाइन ढूँढना, और सबटाइटल या ऑडियो का समय मिलाना",
-    "groups_series_by_season_709a": "सीरीज़ को उनके अपने पेज पर सीज़न के हिसाब से रखना, पोस्टर और विवरण के साथ, जिन्हें आप बंद कर सकते हैं",
+    "groups_series_by_season_e029": "सीरीज़ को उनके अपने पेज पर सीज़न के हिसाब से रखना, पोस्टर और विवरण के साथ, जिन्हें आप बंद कर सकते हैं",
     "changelog_164b": "चेंजलॉग"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "बड़े टीवी वाला लेआउट, और यह 1 GB के स्टिक पर क्यों चलता है।",
     "for_the_television": "टीवी के लिए",
     "stream_telegram_videos_while_they": "Android TV, फ़ोन, Windows और Linux पर Telegram वीडियो डाउनलोड होते-होते स्ट्रीम करें, तुरंत सीक करें, सबटाइटल के साथ MKV चलाएँ और अगला एपिसोड अपने आप चलाएँ।",
-    "tmplayer_on_a_phone_listing": "फ़ोन पर TMPlayer, डेमो चैट की सूची के साथ: Weekend Clips, Home Projects, Recipe Notes, Travel Diary, Design Study और Family Archive।",
-    "a_dense_grid_of_demo": "फ़ोन पर Telegram चैट के डेमो वीडियो का घना ग्रिड, हर टाइल पर उसका रेज़ोल्यूशन और अवधि।",
+    "tmplayer_on_a_phone_listing": "फ़ोन पर TMPlayer, डेमो चैट की सूची के साथ: Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips और Family Archive।",
+    "a_dense_grid_of_demo": "फ़ोन पर एक Telegram चैट की डेमो फ़िल्मों और एक सीरीज़ का ग्रिड, हर पोस्टर पर उसका साल, आकार और रिज़ॉल्यूशन।",
     "the_same_chat_list_on": "टीवी पर वही चैट सूची, बाईं ओर नेविगेशन रेल के साथ।",
     "tmplayer_settings_on_a_television": "टीवी पर TMPlayer की सेटिंग्स, जिनमें वीडियो साइज़ की सीमा, अगले एपिसोड का ऑटोप्ले और बची हुई स्टोरेज दिख रही है।",
-    "the_tmplayer_desktop_app_on": "Windows या Linux पर TMPlayer डेस्कटॉप ऐप: चैट सेक्शन की साइडबार, और डेमो वीडियो का ग्रिड, हर पोस्टर पर अवधि, साइज़ और रेज़ोल्यूशन।",
+    "the_tmplayer_desktop_app_on": "Windows या Linux पर TMPlayer डेस्कटॉप ऐप: सेक्शन वाली साइडबार के बगल में एक चैट की डेमो फ़िल्में पोस्टर के रूप में, हर एक पर साल, आकार और रिज़ॉल्यूशन।",
     "the_tmplayer_desktop_player_over": "डेमो वीडियो पर TMPlayer डेस्कटॉप प्लेयर: ऊपर शीर्षक और चैट, टाइमबार, और सबटाइटल, ऑडियो, गति, तस्वीर का आकार, आवाज़, मिनी प्लेयर और फ़ुलस्क्रीन के बटन।",
     "subtitles_found_online": "{strong1} जब फ़ाइल में सबटाइटल न हों, तो प्लेयर से ही OpenSubtitles पर खोजें, फिर सबटाइटल या आवाज़ को आगे या पीछे करें।",
     "subtitles_found_online__strong1": "सबटाइटल ऑनलाइन ढूँढता है।",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "अगला एपिसोड अपने आप चलना, आवाज़, सीक करते समय थंबनेल, और कंट्रोल कैसे काम करें।",
     "subtitle_size_a_box_behind": "सबटाइटल का साइज़, उनके पीछे बॉक्स या कुछ नहीं, और वे कहाँ दिखें।",
     "which_videos_show_such_as": "कौन से वीडियो दिखें, जैसे आपके चुने साइज़ से छोटी क्लिप छिपाना, और सबसे पहले क्या खुले।",
-    "how_much_space_is_free": "कितनी जगह खाली है, और डाउनलोड कहाँ रखे जाते हैं।"
+    "how_much_space_is_free": "कितनी जगह खाली है, और डाउनलोड कहाँ रखे जाते हैं।",
+    "demo_artwork_photos_from_unsplash": "डेमो फ़िल्में और सीरीज़ काल्पनिक हैं। इनकी तस्वीरें {a1} से ली गई हैं, हर फ़ोटोग्राफ़र के नाम के साथ।",
+    "demo_artwork_photos_from_unsplash__a1": "Unsplash की फ़ोटो"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV, फ़ोन, Windows और Linux के लिए TMPlayer डाउनलोड करें",

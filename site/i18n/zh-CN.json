@@ -72,7 +72,7 @@
     "built_by_more_of_what": "作者：{strong1}。更多作品见 {a1}。",
     "stream_the_videos_in_your": "在 Android TV、Android 手机、Windows 和 Linux 上播放你自己 Telegram 聊天中的视频。免费开源，边下载边播放。",
     "tmplayer_a_telegram_media_player": "TMPlayer，播放你自己聊天中视频的 Telegram 媒体播放器，支持电视和手机。",
-    "tmplayer_on_a_television_showing": "TMPlayer 在电视上以网格方块显示 Telegram 聊天中的视频，并标有时长和文件大小。",
+    "tmplayer_on_a_television_showing": "电视上的 TMPlayer，以海报展示一个 Telegram 聊天里的电影和剧集，并标出年份、大小和分辨率。",
     "a_phone_opening_a_telegram": "手机上在 TMPlayer 中打开 Telegram 聊天，以网格显示其中的视频。",
     "email_hello_tmplayer_org_with": "发邮件到 hello@tmplayer.org，提出 TMPlayer 功能建议",
     "open_an_issue_in_the": "在 GitHub 上的 TMPlayer 仓库中提交 Issue",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "无需投屏的电视版 Telegram",
     "watch_telegram_videos_on_3a48": "无需投屏或镜像手机，就能在电视上观看 Telegram 视频：电视上的播放器直接登录你的账号，串流你聊天中的视频。",
     "finds_subtitles_online_through_a322": "通过 OpenSubtitles 在线查找字幕，并调整字幕或音频的时间使其同步",
-    "groups_series_by_season_709a": "剧集按季分组并拥有独立页面，附带海报和简介，可随时关闭",
+    "groups_series_by_season_e029": "剧集按季分组并拥有独立页面，附带海报和简介，可随时关闭",
     "changelog_164b": "更新日志"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "大屏界面，以及它为什么能在 1 GB 的电视棒上运行。",
     "for_the_television": "电视版介绍",
     "stream_telegram_videos_while_they": "在 Android TV、手机、Windows 和 Linux 上边下载边串流 Telegram 视频，即时拖动进度，播放带字幕的 MKV，并自动播放下一集。",
-    "tmplayer_on_a_phone_listing": "手机上的 TMPlayer，列出演示聊天：周末片段、家庭项目、食谱笔记、旅行日记、设计研究和家庭档案。",
-    "a_dense_grid_of_demo": "手机上 Telegram 聊天中的演示视频密集网格，每个方块都标有分辨率和时长。",
+    "tmplayer_on_a_phone_listing": "手机上的 TMPlayer，列出演示聊天：Cinema Lounge、Anime Vault、Study Hub、Nature Docs、Weekend Clips 和 Family Archive。",
+    "a_dense_grid_of_demo": "手机上一个 Telegram 聊天里的演示电影和剧集网格，每张海报都标有年份、大小和分辨率。",
     "the_same_chat_list_on": "电视上的同一个聊天列表，左侧有导航栏。",
     "tmplayer_settings_on_a_television": "电视上的 TMPlayer 设置，显示视频大小限制、自动播放下一集以及剩余存储空间。",
-    "the_tmplayer_desktop_app_on": "Windows 或 Linux 上的 TMPlayer 桌面应用：聊天分区的侧边栏，旁边是演示视频网格，每张海报都标有时长、大小和分辨率。",
+    "the_tmplayer_desktop_app_on": "Windows 或 Linux 上的 TMPlayer 桌面应用：分区侧边栏旁是一个聊天里以海报呈现的演示电影，每部都标有年份、大小和分辨率。",
     "the_tmplayer_desktop_player_over": "TMPlayer 桌面播放器播放演示视频：顶部是标题和聊天，下方是进度条，以及字幕、音轨、速度、画面比例、音量、迷你播放器和全屏按钮。",
     "subtitles_found_online": "{strong1} 文件没有字幕时，可在播放器里搜索 OpenSubtitles，再把字幕或声音调早或调晚。",
     "subtitles_found_online__strong1": "在线查找字幕。",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "自动播放下一集、声音、拖动时的缩略图，以及控制栏的行为。",
     "subtitle_size_a_box_behind": "字幕大小、背景框的有无，以及字幕的位置。",
     "which_videos_show_such_as": "显示哪些视频，例如隐藏小于你所选大小的片段，以及首先打开什么。",
-    "how_much_space_is_free": "剩余多少空间，以及下载内容保存在哪里。"
+    "how_much_space_is_free": "剩余多少空间，以及下载内容保存在哪里。",
+    "demo_artwork_photos_from_unsplash": "演示电影和剧集均为虚构。图片取自{a1}，并注明了每位摄影师。",
+    "demo_artwork_photos_from_unsplash__a1": "Unsplash 上的照片"
   },
   "download": {
     "download_tmplayer_for_android_tv": "下载适用于 Android TV、手机、Windows 和 Linux 的 TMPlayer",

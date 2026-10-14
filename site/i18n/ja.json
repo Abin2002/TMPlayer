@@ -72,7 +72,7 @@
     "built_by_more_of_what": "開発:{strong1}。ほかの制作物は{a1}にあります。",
     "stream_the_videos_in_your": "Android TV、Androidスマートフォン、Windows、Linuxで、ご自身のTelegramチャットにある動画をストリーミング再生。無料のオープンソースで、ダウンロードしながら再生します。",
     "tmplayer_a_telegram_media_player": "TMPlayer。テレビとスマートフォンで、ご自身のチャットにある動画を再生するTelegramメディアプレーヤー。",
-    "tmplayer_on_a_television_showing": "テレビで動作するTMPlayer。Telegramチャットの動画を、再生時間とファイルサイズ付きのタイルのグリッドで表示しています。",
+    "tmplayer_on_a_television_showing": "テレビで動作するTMPlayer。Telegramチャットの映画とシリーズを、公開年、サイズ、解像度付きのポスターで表示しています。",
     "a_phone_opening_a_telegram": "スマートフォンのTMPlayerでTelegramチャットを開き、動画をグリッドで表示しているところ。",
     "email_hello_tmplayer_org_with": "TMPlayerの機能リクエストをhello@tmplayer.orgにメールで送る",
     "open_an_issue_in_the": "GitHubのTMPlayerリポジトリでissueを作成",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "キャストなしで、テレビでTelegram",
     "watch_telegram_videos_on_3a48": "スマートフォンのキャストやミラーリングなしで、テレビでTelegramの動画を見られます。テレビ上のプレーヤーがあなたのアカウントにサインインし、チャットの動画をストリーミング再生します。",
     "finds_subtitles_online_through_a322": "OpenSubtitlesでオンラインの字幕を検索し、字幕や音声のタイミングを調整",
-    "groups_series_by_season_709a": "シリーズを専用ページでシーズン別に整理、ポスターとあらすじはオフにもできます",
+    "groups_series_by_season_e029": "シリーズを専用ページでシーズン別に整理、ポスターとあらすじはオフにもできます",
     "changelog_164b": "更新履歴"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "テレビ向けレイアウトと、1 GBのスティックでも動く理由。",
     "for_the_television": "テレビ向け",
     "stream_telegram_videos_while_they": "Android TV、スマートフォン、Windows、Linuxで、Telegramの動画をダウンロードしながらストリーミング再生。瞬時にシークでき、MKVも字幕付きで再生し、次のエピソードも自動再生します。",
-    "tmplayer_on_a_phone_listing": "デモ用のチャットを並べたスマートフォンのTMPlayer。Weekend Clips、Home Projects、Recipe Notes、Travel Diary、Design Study、Family Archive。",
-    "a_dense_grid_of_demo": "スマートフォンで表示した、Telegramチャットのデモ動画の密なグリッド。各タイルに解像度と再生時間が付いています。",
+    "tmplayer_on_a_phone_listing": "デモ用のチャットを並べたスマートフォンのTMPlayer。Cinema Lounge、Anime Vault、Study Hub、Nature Docs、Weekend Clips、Family Archive。",
+    "a_dense_grid_of_demo": "スマートフォンに表示した、Telegramチャットのデモ映画とシリーズのグリッド。各ポスターに公開年、サイズ、解像度が付いています。",
     "the_same_chat_list_on": "テレビで表示した同じチャット一覧。左側にナビゲーションレールがあります。",
     "tmplayer_settings_on_a_television": "テレビのTMPlayer設定画面。動画サイズの上限、次のエピソードの自動再生、ストレージの空き容量を表示しています。",
-    "the_tmplayer_desktop_app_on": "WindowsまたはLinuxのTMPlayerデスクトップアプリ。チャット項目のサイドバーと、デモ動画のグリッドが並び、各ポスターに再生時間、サイズ、解像度が付いています。",
+    "the_tmplayer_desktop_app_on": "WindowsまたはLinuxのTMPlayerデスクトップアプリ。セクションのサイドバーの横に、チャットのデモ映画がポスターで並び、それぞれに公開年、サイズ、解像度が付いています。",
     "the_tmplayer_desktop_player_over": "デモ動画を再生中のTMPlayerデスクトッププレーヤー。上部にタイトルとチャット、シークバー、そして字幕、音声、速度、画面の形、音量、ミニプレーヤー、全画面のボタンがあります。",
     "subtitles_found_online": "{strong1}字幕のないファイルでは、プレーヤーからOpenSubtitlesを検索し、字幕や音声を前後にずらせます。",
     "subtitles_found_online__strong1": "字幕をオンラインで探せます。",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "次のエピソードの自動再生、音声、シーク中のサムネイル、コントロールの動作。",
     "subtitle_size_a_box_behind": "字幕のサイズ、背景のボックスの有無、表示位置。",
     "which_videos_show_such_as": "指定したサイズ未満のクリップを隠すなど、表示する動画の選択と、最初に開く画面。",
-    "how_much_space_is_free": "空き容量と、ダウンロードの保存先。"
+    "how_much_space_is_free": "空き容量と、ダウンロードの保存先。",
+    "demo_artwork_photos_from_unsplash": "デモの映画とシリーズは架空のものです。画像は{a1}から切り出し、撮影者ごとにクレジットしています。",
+    "demo_artwork_photos_from_unsplash__a1": "Unsplashの写真"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV、スマートフォン、Windows、Linux向けTMPlayerをダウンロード",

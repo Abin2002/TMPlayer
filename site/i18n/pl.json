@@ -72,7 +72,7 @@
     "built_by_more_of_what": "Autor: {strong1}. Więcej moich projektów znajdziesz na {a1}.",
     "stream_the_videos_in_your": "Odtwarzaj wideo z własnych czatów w Telegramie na Android TV, telefonach z Androidem, Windows i Linuxie. Darmowy, open source, odtwarza w trakcie pobierania.",
     "tmplayer_a_telegram_media_player": "TMPlayer, odtwarzacz multimediów z Telegrama dla wideo z twoich własnych czatów, na telewizorze i telefonie.",
-    "tmplayer_on_a_television_showing": "TMPlayer na telewizorze, z wideo z czatu w Telegramie w formie siatki kafelków z czasem trwania i rozmiarem plików.",
+    "tmplayer_on_a_television_showing": "TMPlayer na telewizorze, pokazujący filmy i seriale z czatu Telegram jako plakaty z rokiem, rozmiarem i rozdzielczością.",
     "a_phone_opening_a_telegram": "Telefon z otwartym czatem z Telegrama w TMPlayerze, wideo pokazane w formie siatki.",
     "email_hello_tmplayer_org_with": "Napisz na hello@tmplayer.org z propozycją funkcji dla TMPlayera",
     "open_an_issue_in_the": "Otwórz zgłoszenie w repozytorium TMPlayera na GitHubie",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram na telewizorze bez przesyłania obrazu",
     "watch_telegram_videos_on_3a48": "Oglądaj wideo z Telegrama na telewizorze bez przesyłania ani duplikowania ekranu telefonu: odtwarzacz na samym telewizorze loguje się na twoje konto i odtwarza wideo z twoich czatów.",
     "finds_subtitles_online_through_a322": "Wyszukuje napisy w sieci przez OpenSubtitles i przesuwa napisy lub dźwięk, by pasowały",
-    "groups_series_by_season_709a": "Grupuje seriale według sezonów na osobnej stronie, z plakatami i opisami, które możesz wyłączyć",
+    "groups_series_by_season_e029": "Grupuje seriale według sezonów na osobnej stronie, z plakatami i opisami, które możesz wyłączyć",
     "changelog_164b": "Lista zmian"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "Interfejs na odległość i dlaczego działa na stiku z 1 GB.",
     "for_the_television": "Dla telewizora",
     "stream_telegram_videos_while_they": "Odtwarzaj wideo z Telegrama w trakcie pobierania, przewijaj natychmiast, oglądaj MKV z napisami i automatycznie odtwarzaj następny odcinek na Android TV, telefonach, Windows i Linuxie.",
-    "tmplayer_on_a_phone_listing": "TMPlayer na telefonie z listą przykładowych czatów: Weekend Clips, Home Projects, Recipe Notes, Travel Diary, Design Study i Family Archive.",
-    "a_dense_grid_of_demo": "Gęsta siatka przykładowych wideo z czatu w Telegramie na telefonie, każdy kafelek z rozdzielczością i czasem trwania.",
+    "tmplayer_on_a_phone_listing": "TMPlayer na telefonie z listą przykładowych czatów: Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips i Family Archive.",
+    "a_dense_grid_of_demo": "Siatka filmów demonstracyjnych i serialu z czatu Telegram na telefonie, każdy plakat z rokiem, rozmiarem i rozdzielczością.",
     "the_same_chat_list_on": "Ta sama lista czatów na telewizorze, z paskiem nawigacji po lewej.",
     "tmplayer_settings_on_a_television": "Ustawienia TMPlayera na telewizorze, z limitami rozmiaru wideo, automatycznym odtwarzaniem następnego odcinka i ilością wolnego miejsca.",
-    "the_tmplayer_desktop_app_on": "Aplikacja TMPlayer na Windows lub Linuxie: panel boczny z sekcjami czatów obok siatki przykładowych wideo, każdy plakat z czasem trwania, rozmiarem i rozdzielczością.",
+    "the_tmplayer_desktop_app_on": "Aplikacja TMPlayer na komputer z systemem Windows lub Linux: pasek boczny z sekcjami obok filmów demonstracyjnych z czatu w postaci plakatów, każdy z rokiem, rozmiarem i rozdzielczością.",
     "the_tmplayer_desktop_player_over": "Odtwarzacz TMPlayer na komputerze nad przykładowym wideo: tytuł i czat u góry, pasek czasu oraz przyciski napisów, dźwięku, prędkości, kształtu obrazu, głośności, mini odtwarzacza i pełnego ekranu.",
     "subtitles_found_online": "{strong1} Gdy plik ich nie ma, wyszukaj je w OpenSubtitles prosto z odtwarzacza, a potem przesuń napisy lub dźwięk wcześniej albo później.",
     "subtitles_found_online__strong1": "Znajduje napisy w sieci.",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "Automatyczne odtwarzanie następnego odcinka, dźwięk, miniatury podczas przewijania i zachowanie elementów sterowania.",
     "subtitle_size_a_box_behind": "Rozmiar napisów, tło pod nimi lub bez tła oraz ich położenie.",
     "which_videos_show_such_as": "Które wideo są widoczne, na przykład ukrywanie klipów poniżej wybranego rozmiaru, i co otwiera się na start.",
-    "how_much_space_is_free": "Ile miejsca jest wolne i gdzie trzymane są pobrane pliki."
+    "how_much_space_is_free": "Ile miejsca jest wolne i gdzie trzymane są pobrane pliki.",
+    "demo_artwork_photos_from_unsplash": "Filmy i seriale demonstracyjne są zmyślone. Ich grafiki wycięto ze {a1}, z podaniem autora każdego zdjęcia.",
+    "demo_artwork_photos_from_unsplash__a1": "zdjęć w serwisie Unsplash"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Pobierz TMPlayera na Android TV, telefony, Windows i Linuxa",

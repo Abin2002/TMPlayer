@@ -555,7 +555,7 @@ private fun PhoneMediaScreen(variant: String, onBack: () -> Unit = {}) {
     TouchMediaScaffold(
         chatTitle = PromoCatalog.chatTitle(PromoCatalog.CINEMA),
         chatPhotoFileId = 0,
-        chatMiniThumbnail = null,
+        chatMiniThumbnail = cinemaAvatar(),
         isFavorite = true,
         query = "",
         onQuery = {},
@@ -631,7 +631,7 @@ private fun TvMediaScreen(variant: String) {
         Header(
             chatTitle = PromoCatalog.chatTitle(PromoCatalog.CINEMA),
             chatPhotoFileId = 0,
-            chatMiniThumbnail = null,
+            chatMiniThumbnail = cinemaAvatar(),
             isFavorite = true,
             query = "",
             onQuery = {},
@@ -830,3 +830,7 @@ internal fun ComponentActivity.promoLanguage(asked: String?) {
     runBlocking { SettingsStore(applicationContext).setLanguage(tag) }
     Translator.select(tag, com.tmplayer.data.AppLocales.system(applicationContext))
 }
+
+/** The Cinema Lounge chat's picture, for the listing's header as the chat list shows it. */
+private fun cinemaAvatar(): ByteArray? =
+    PromoCatalog.chats.first { it.id == PromoCatalog.CINEMA }.avatar?.let(PromoMeta.pictures::bytes)

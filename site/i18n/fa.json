@@ -72,7 +72,7 @@
     "built_by_more_of_what": "ساختهٔ {strong1}. کارهای بیشترم در {a1} است.",
     "stream_the_videos_in_your": "ویدیوهای چت‌های Telegram خودتان را روی Android TV، گوشی Android، Windows و Linux پخش کنید. رایگان، متن‌باز، و هنگام دانلود پخش می‌کند.",
     "tmplayer_a_telegram_media_player": "TMPlayer، پخش‌کنندهٔ رسانه برای ویدیوهای چت‌های خودتان در Telegram، روی تلویزیون و گوشی.",
-    "tmplayer_on_a_television_showing": "TMPlayer روی تلویزیون، با ویدیوهای یک چت Telegram به‌صورت شبکه‌ای از کاشی‌ها همراه با مدت زمان و حجم فایل.",
+    "tmplayer_on_a_television_showing": "TMPlayer روی تلویزیون که فیلم‌ها و سریال‌های یک گفتگوی Telegram را به شکل پوستر با سال، حجم و کیفیت تصویر نشان می‌دهد.",
     "a_phone_opening_a_telegram": "گوشی‌ای که یک چت Telegram را در TMPlayer باز کرده و ویدیوهایش را به‌صورت شبکه نشان می‌دهد.",
     "email_hello_tmplayer_org_with": "ارسال درخواست امکان جدید TMPlayer به ایمیل hello@tmplayer.org",
     "open_an_issue_in_the": "ثبت مشکل در مخزن TMPlayer در GitHub",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram روی تلویزیون شما بدون کست",
     "watch_telegram_videos_on_3a48": "ویدیوهای Telegram را روی تلویزیون ببینید، بدون کست یا آینه‌کردن گوشی: پخش‌کننده‌ای روی خود تلویزیون وارد حسابتان می‌شود و ویدیوهای چت‌هایتان را پخش می‌کند.",
     "finds_subtitles_online_through_a322": "پیدا کردن زیرنویس آنلاین از طریق OpenSubtitles، و جابه‌جا کردن زیرنویس یا صدا برای هماهنگی",
-    "groups_series_by_season_709a": "دسته‌بندی سریال‌ها بر اساس فصل در صفحهٔ جداگانه، با پوستر و خلاصه‌ای که می‌توانید خاموشش کنید",
+    "groups_series_by_season_e029": "دسته‌بندی سریال‌ها بر اساس فصل در صفحهٔ جداگانه، با پوستر و خلاصه‌ای که می‌توانید خاموشش کنید",
     "changelog_164b": "تغییرات نسخه‌ها"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "رابط ویژهٔ تماشا از دور، و اینکه چرا روی Stick با 1 گیگابایت اجرا می‌شود.",
     "for_the_television": "برای تلویزیون",
     "stream_telegram_videos_while_they": "ویدیوهای Telegram را هنگام دانلود پخش کنید، فوری جلو و عقب بروید، MKV را با زیرنویس ببینید و قسمت بعدی را روی Android TV، گوشی، Windows و Linux خودکار پخش کنید.",
-    "tmplayer_on_a_phone_listing": "TMPlayer روی گوشی، با چت‌های نمونه: Weekend Clips، Home Projects، Recipe Notes، Travel Diary، Design Study و Family Archive.",
-    "a_dense_grid_of_demo": "شبکه‌ای فشرده از ویدیوهای نمونهٔ یک چت Telegram روی گوشی، که هر کاشی کیفیت تصویر و مدت زمانش را نشان می‌دهد.",
+    "tmplayer_on_a_phone_listing": "TMPlayer روی گوشی، با چت‌های نمونه: Cinema Lounge، Anime Vault، Study Hub، Nature Docs، Weekend Clips و Family Archive.",
+    "a_dense_grid_of_demo": "شبکه‌ای از فیلم‌های نمایشی و یک سریال از یک گفتگوی Telegram روی گوشی، که هر پوستر سال، حجم و کیفیت تصویرش را نشان می‌دهد.",
     "the_same_chat_list_on": "همان فهرست گفتگوها روی تلویزیون، با نوار پیمایش در سمت چپ.",
     "tmplayer_settings_on_a_television": "تنظیمات TMPlayer روی تلویزیون، با محدودیت حجم ویدیو، پخش خودکار قسمت بعدی و میزان فضای خالی.",
-    "the_tmplayer_desktop_app_on": "برنامهٔ رایانهٔ TMPlayer روی Windows یا Linux: نوار کناری بخش‌های چت در کنار شبکه‌ای از ویدیوهای نمونه، که هر پوستر مدت زمان، حجم و کیفیتش را نشان می‌دهد.",
+    "the_tmplayer_desktop_app_on": "برنامه دسکتاپ TMPlayer روی Windows یا Linux: نوار کناری بخش‌ها کنار فیلم‌های نمایشی یک گفتگو به شکل پوستر، هر کدام با سال، حجم و کیفیت تصویر.",
     "the_tmplayer_desktop_player_over": "پخش‌کنندهٔ رایانهٔ TMPlayer روی یک ویدیوی نمونه: عنوان و چت در بالا، نوار زمان، و دکمه‌هایی برای زیرنویس، صدا، سرعت، شکل تصویر، میزان صدا، پخش‌کنندهٔ کوچک و تمام‌صفحه.",
     "subtitles_found_online": "{strong1} اگر فایلی زیرنویس نداشته باشد، از داخل پخش‌کننده در OpenSubtitles جستجو کنید، سپس زیرنویس یا صدا را جلوتر یا عقب‌تر ببرید.",
     "subtitles_found_online__strong1": "زیرنویس را آنلاین پیدا می‌کند.",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "پخش خودکار قسمت بعدی، صدا، تصویر کوچک هنگام جستجو و رفتار کنترل‌ها.",
     "subtitle_size_a_box_behind": "اندازهٔ زیرنویس، با کادری پشتش یا بدون آن، و جایگاهش.",
     "which_videos_show_such_as": "اینکه کدام ویدیوها نشان داده شوند، مثلاً پنهان کردن کلیپ‌های کوچک‌تر از اندازه‌ای که انتخاب می‌کنید، و اینکه چه چیزی اول باز شود.",
-    "how_much_space_is_free": "چقدر فضای خالی مانده و دانلودها کجا نگه داشته می‌شوند."
+    "how_much_space_is_free": "چقدر فضای خالی مانده و دانلودها کجا نگه داشته می‌شوند.",
+    "demo_artwork_photos_from_unsplash": "فیلم‌ها و سریال‌های نمایشی ساختگی‌اند. تصویرهایشان از {a1} برش خورده و نام هر عکاس آمده است.",
+    "demo_artwork_photos_from_unsplash__a1": "عکس‌هایی در Unsplash"
   },
   "download": {
     "download_tmplayer_for_android_tv": "دانلود TMPlayer برای Android TV، گوشی، Windows و Linux",

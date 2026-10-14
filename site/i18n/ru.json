@@ -72,7 +72,7 @@
     "built_by_more_of_what": "Автор: {strong1}. Другие мои проекты: {a1}.",
     "stream_the_videos_in_your": "Смотрите видео из ваших чатов Telegram на Android TV, телефонах Android, в Windows и Linux. Бесплатно, с открытым кодом, воспроизведение идёт во время загрузки.",
     "tmplayer_a_telegram_media_player": "TMPlayer, медиаплеер для видео из ваших чатов Telegram, на телевизоре и на телефоне.",
-    "tmplayer_on_a_television_showing": "TMPlayer на телевизоре: видео из чата Telegram в виде плиток с длительностью и размером файла.",
+    "tmplayer_on_a_television_showing": "TMPlayer на телевизоре: фильмы и сериалы из чата Telegram в виде постеров с годом, размером и разрешением.",
     "a_phone_opening_a_telegram": "Телефон открывает чат Telegram в TMPlayer и показывает его видео в виде сетки.",
     "email_hello_tmplayer_org_with": "Напишите на hello@tmplayer.org с предложением новой функции для TMPlayer",
     "open_an_issue_in_the": "Создать issue в репозитории TMPlayer на GitHub",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram на вашем ТВ без трансляции",
     "watch_telegram_videos_on_3a48": "Смотрите видео из Telegram на телевизоре без трансляции и дублирования экрана телефона: плеер на самом телевизоре входит в ваш аккаунт и воспроизводит видео из ваших чатов.",
     "finds_subtitles_online_through_a322": "Поиск субтитров в интернете через OpenSubtitles и сдвиг субтитров или звука для синхронизации",
-    "groups_series_by_season_709a": "Сериалы на отдельной странице с группировкой по сезонам, с постерами и описаниями, которые можно отключить",
+    "groups_series_by_season_e029": "Сериалы на отдельной странице с группировкой по сезонам, с постерами и описаниями, которые можно отключить",
     "changelog_164b": "Список изменений"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "Интерфейс для просмотра с дивана и почему он работает на приставке с 1 ГБ.",
     "for_the_television": "Для телевизора",
     "stream_telegram_videos_while_they": "Смотрите видео из Telegram во время загрузки, мгновенно перематывайте, открывайте MKV с субтитрами и включайте автовоспроизведение следующей серии на Android TV, телефонах, в Windows и Linux.",
-    "tmplayer_on_a_phone_listing": "TMPlayer на телефоне, список демонстрационных чатов: Weekend Clips, Home Projects, Recipe Notes, Travel Diary, Design Study и Family Archive.",
-    "a_dense_grid_of_demo": "Плотная сетка демонстрационных видео из чата Telegram на телефоне, на каждой плитке указаны разрешение и длительность.",
+    "tmplayer_on_a_phone_listing": "TMPlayer на телефоне, список демонстрационных чатов: Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips и Family Archive.",
+    "a_dense_grid_of_demo": "Сетка демонстрационных фильмов и сериала из чата Telegram на телефоне, на каждом постере год, размер и разрешение.",
     "the_same_chat_list_on": "Тот же список чатов на телевизоре, с панелью навигации слева.",
     "tmplayer_settings_on_a_television": "Настройки TMPlayer на телевизоре: ограничения размера видео, автовоспроизведение следующей серии и свободное место в хранилище.",
-    "the_tmplayer_desktop_app_on": "Приложение TMPlayer для Windows или Linux: боковая панель с разделами чатов рядом с сеткой демонстрационных видео, на каждом постере указаны длительность, размер и разрешение.",
+    "the_tmplayer_desktop_app_on": "Настольное приложение TMPlayer в Windows или Linux: боковая панель с разделами рядом с демонстрационными фильмами из чата в виде постеров, на каждом год, размер и разрешение.",
     "the_tmplayer_desktop_player_over": "Плеер TMPlayer на компьютере поверх демонстрационного видео: вверху название и чат, шкала времени и кнопки субтитров, звука, скорости, формата картинки, громкости, мини-плеера и полноэкранного режима.",
     "subtitles_found_online": "{strong1} Если в файле их нет, найдите их в OpenSubtitles прямо из плеера, а затем сдвиньте субтитры или звук раньше или позже.",
     "subtitles_found_online__strong1": "Находит субтитры в интернете.",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "Автовоспроизведение следующей серии, звук, миниатюры при перемотке и поведение элементов управления.",
     "subtitle_size_a_box_behind": "Размер субтитров, подложка под ними или без неё, и где они располагаются.",
     "which_videos_show_such_as": "Какие видео показывать, например скрывать ролики меньше выбранного размера, и что открывается первым.",
-    "how_much_space_is_free": "Сколько свободного места и где хранятся загрузки."
+    "how_much_space_is_free": "Сколько свободного места и где хранятся загрузки.",
+    "demo_artwork_photos_from_unsplash": "Демонстрационные фильмы и сериалы выдуманы. Их изображения вырезаны из {a1}, с указанием каждого фотографа.",
+    "demo_artwork_photos_from_unsplash__a1": "фотографий на Unsplash"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Скачать TMPlayer для Android TV, телефонов, Windows и Linux",

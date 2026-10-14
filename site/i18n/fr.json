@@ -72,7 +72,7 @@
     "built_by_more_of_what": "Créé par {strong1}. Le reste de mes projets se trouve sur {a1}.",
     "stream_the_videos_in_your": "Lisez en streaming les vidéos de vos propres discussions Telegram sur Android TV, téléphones Android, Windows et Linux. Gratuit, open source, et la lecture démarre pendant le téléchargement.",
     "tmplayer_a_telegram_media_player": "TMPlayer, un lecteur multimédia Telegram pour les vidéos de vos propres discussions, sur télévision et sur téléphone.",
-    "tmplayer_on_a_television_showing": "TMPlayer sur une télévision, affichant les vidéos d'une discussion Telegram sous forme de grille de vignettes avec durées et tailles de fichier.",
+    "tmplayer_on_a_television_showing": "TMPlayer sur un téléviseur, montrant les films et séries d'une discussion Telegram sous forme d'affiches avec leur année, leur taille et leur résolution.",
     "a_phone_opening_a_telegram": "Un téléphone qui ouvre une discussion Telegram dans TMPlayer et affiche ses vidéos en grille.",
     "email_hello_tmplayer_org_with": "Écrire à hello@tmplayer.org pour une demande de fonction TMPlayer",
     "open_an_issue_in_the": "Ouvrir un ticket dans le dépôt TMPlayer sur GitHub",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram sur votre TV sans diffusion",
     "watch_telegram_videos_on_3a48": "Regardez des vidéos Telegram sur une télévision sans diffusion ni recopie de votre téléphone : un lecteur sur la TV elle-même se connecte à votre compte et lit en streaming les vidéos de vos discussions.",
     "finds_subtitles_online_through_a322": "Trouve des sous-titres en ligne via OpenSubtitles et décale les sous-titres ou l'audio pour les synchroniser",
-    "groups_series_by_season_709a": "Regroupe les séries par saison sur leur propre page, avec affiches et résumés que vous pouvez désactiver",
+    "groups_series_by_season_e029": "Regroupe les séries par saison sur leur propre page, avec affiches et résumés que vous pouvez désactiver",
     "changelog_164b": "Journal des modifications"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "L'interface pensée pour la télécommande, et pourquoi elle tourne sur une clé de 1 Go.",
     "for_the_television": "Pour la télévision",
     "stream_telegram_videos_while_they": "Lisez les vidéos Telegram pendant leur téléchargement, avancez instantanément, lisez du MKV avec sous-titres et lancez automatiquement l'épisode suivant sur Android TV, téléphones, Windows et Linux.",
-    "tmplayer_on_a_phone_listing": "TMPlayer sur un téléphone, avec des discussions de démonstration : Weekend Clips, Home Projects, Recipe Notes, Travel Diary, Design Study et Family Archive.",
-    "a_dense_grid_of_demo": "Une grille dense de vidéos de démonstration d'une discussion Telegram sur un téléphone, chaque vignette indiquant sa résolution et sa durée.",
+    "tmplayer_on_a_phone_listing": "TMPlayer sur un téléphone, avec des discussions de démonstration : Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips et Family Archive.",
+    "a_dense_grid_of_demo": "Une grille de films de démonstration et d'une série issus d'une discussion Telegram sur un téléphone, chaque affiche indiquant son année, sa taille et sa résolution.",
     "the_same_chat_list_on": "La même liste de discussions sur un téléviseur, avec une barre de navigation à gauche.",
     "tmplayer_settings_on_a_television": "Les paramètres de TMPlayer sur une télévision, avec les limites de taille des vidéos, la lecture automatique de l'épisode suivant et l'espace de stockage libre.",
-    "the_tmplayer_desktop_app_on": "L'appli de bureau TMPlayer sur Windows ou Linux : une barre latérale de sections de discussions à côté d'une grille de vidéos de démonstration, chaque affiche indiquant sa durée, sa taille et sa résolution.",
+    "the_tmplayer_desktop_app_on": "L'application de bureau TMPlayer sous Windows ou Linux : une barre latérale de sections à côté des films de démonstration d'une discussion en affiches, chacune avec son année, sa taille et sa résolution.",
     "the_tmplayer_desktop_player_over": "Le lecteur de bureau TMPlayer sur une vidéo de démonstration : le titre et la discussion en haut, une barre de temps, et des boutons pour les sous-titres, l'audio, la vitesse, le format d'image, le volume, le mini-lecteur et le plein écran.",
     "subtitles_found_online": "{strong1} Quand un fichier n'en a pas, cherchez sur OpenSubtitles depuis le lecteur, puis avancez ou retardez les sous-titres ou le son.",
     "subtitles_found_online__strong1": "Trouve des sous-titres en ligne.",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "Lecture automatique de l'épisode suivant, son, miniatures pendant l'avance rapide, et comportement des commandes.",
     "subtitle_size_a_box_behind": "Taille des sous-titres, avec ou sans fond, et leur position.",
     "which_videos_show_such_as": "Quelles vidéos s'affichent, par exemple en masquant les clips sous une taille choisie, et ce qui s'ouvre en premier.",
-    "how_much_space_is_free": "L'espace libre restant, et l'endroit où sont gardés les téléchargements."
+    "how_much_space_is_free": "L'espace libre restant, et l'endroit où sont gardés les téléchargements.",
+    "demo_artwork_photos_from_unsplash": "Les films et séries de démonstration sont inventés. Leurs visuels sont tirés de {a1}, avec le nom de chaque photographe.",
+    "demo_artwork_photos_from_unsplash__a1": "photos sur Unsplash"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Télécharger TMPlayer pour Android TV, téléphones, Windows et Linux",

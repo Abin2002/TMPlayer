@@ -72,7 +72,7 @@
     "built_by_more_of_what": "Hecho por {strong1}. Encontrarás más de lo que hago en {a1}.",
     "stream_the_videos_in_your": "Mira los videos de tus propios chats de Telegram en Android TV, teléfonos Android, Windows y Linux. Gratis, de código abierto y se reproduce mientras descarga.",
     "tmplayer_a_telegram_media_player": "TMPlayer, un reproductor multimedia de Telegram para los videos de tus propios chats, en una televisión y en un teléfono.",
-    "tmplayer_on_a_television_showing": "TMPlayer en una televisión, mostrando los videos de un chat de Telegram como una cuadrícula de miniaturas con su duración y tamaño.",
+    "tmplayer_on_a_television_showing": "TMPlayer en un televisor, mostrando las películas y series de un chat de Telegram como pósteres con su año, tamaño y resolución.",
     "a_phone_opening_a_telegram": "Un teléfono abriendo un chat de Telegram en TMPlayer y mostrando sus videos en una cuadrícula.",
     "email_hello_tmplayer_org_with": "Escribe a hello@tmplayer.org con una sugerencia de función para TMPlayer",
     "open_an_issue_in_the": "Abre un issue en el repositorio de TMPlayer en GitHub",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram en tu TV sin transmitir desde el teléfono",
     "watch_telegram_videos_on_3a48": "Mira videos de Telegram en una televisión sin transmitir ni duplicar la pantalla de tu teléfono: un reproductor en la propia TV inicia sesión en tu cuenta y reproduce en streaming los videos de tus chats.",
     "finds_subtitles_online_through_a322": "Busca subtítulos en internet con OpenSubtitles y ajusta los subtítulos o el audio para que coincidan",
-    "groups_series_by_season_709a": "Agrupa las series por temporada en su propia página, con pósters y sinopsis que puedes desactivar",
+    "groups_series_by_season_e029": "Agrupa las series por temporada en su propia página, con pósters y sinopsis que puedes desactivar",
     "changelog_164b": "Novedades"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "La interfaz para verse desde el sillón, y por qué funciona en un stick de 1 GB.",
     "for_the_television": "Para la tele",
     "stream_telegram_videos_while_they": "Mira videos de Telegram mientras se descargan, adelanta al instante, reproduce MKV con subtítulos y pasa solo al siguiente episodio en Android TV, teléfonos, Windows y Linux.",
-    "tmplayer_on_a_phone_listing": "TMPlayer en un teléfono, con una lista de chats de demostración: Weekend Clips, Home Projects, Recipe Notes, Travel Diary, Design Study y Family Archive.",
-    "a_dense_grid_of_demo": "Una cuadrícula compacta de videos de demostración de un chat de Telegram en un teléfono, cada miniatura con su resolución y duración.",
+    "tmplayer_on_a_phone_listing": "TMPlayer en un teléfono, con una lista de chats de demostración: Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips y Family Archive.",
+    "a_dense_grid_of_demo": "Una cuadrícula de películas de demostración y una serie de un chat de Telegram en un teléfono, cada póster con su año, tamaño y resolución.",
     "the_same_chat_list_on": "La misma lista de chats en un televisor, con una barra de navegación a la izquierda.",
     "tmplayer_settings_on_a_television": "Los ajustes de TMPlayer en una televisión, con los límites de tamaño de video, la reproducción automática del siguiente episodio y el espacio libre.",
-    "the_tmplayer_desktop_app_on": "La app de escritorio de TMPlayer en Windows o Linux: una barra lateral con secciones de chats junto a una cuadrícula de videos de demostración, cada póster con su duración, tamaño y resolución.",
+    "the_tmplayer_desktop_app_on": "La app de escritorio de TMPlayer en Windows o Linux: una barra lateral de secciones junto a las películas de demostración de un chat como pósteres, cada uno con su año, tamaño y resolución.",
     "the_tmplayer_desktop_player_over": "El reproductor de escritorio de TMPlayer sobre un video de demostración: el título y el chat arriba, una barra de tiempo y botones para subtítulos, audio, velocidad, formato de imagen, volumen, el minirreproductor y la pantalla completa.",
     "subtitles_found_online": "{strong1} Si un archivo no tiene, búscalos en OpenSubtitles desde el reproductor y luego adelanta o atrasa los subtítulos o el sonido.",
     "subtitles_found_online__strong1": "Encuentra subtítulos en internet.",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "Reproducción automática del siguiente episodio, sonido, miniaturas al adelantar y cómo se comportan los controles.",
     "subtitle_size_a_box_behind": "Tamaño de los subtítulos, con un recuadro detrás o sin él, y dónde se ubican.",
     "which_videos_show_such_as": "Qué videos se muestran, como ocultar clips por debajo del tamaño que elijas, y qué se abre primero.",
-    "how_much_space_is_free": "Cuánto espacio queda libre y dónde se guardan las descargas."
+    "how_much_space_is_free": "Cuánto espacio queda libre y dónde se guardan las descargas.",
+    "demo_artwork_photos_from_unsplash": "Las películas y series de demostración son inventadas. Sus imágenes salen de {a1}, con el crédito de cada fotógrafo.",
+    "demo_artwork_photos_from_unsplash__a1": "fotos en Unsplash"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Descarga TMPlayer para Android TV, teléfonos, Windows y Linux",

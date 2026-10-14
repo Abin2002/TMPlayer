@@ -72,7 +72,7 @@
     "built_by_more_of_what": "{strong1} tarafından yapıldı. Yaptığım diğer işler {a1} adresinde.",
     "stream_the_videos_in_your": "Kendi Telegram sohbetlerindeki videoları Android TV, Android telefon, Windows ve Linux'ta akıt. Ücretsiz, açık kaynak ve indirirken oynatır.",
     "tmplayer_a_telegram_media_player": "TMPlayer, kendi sohbetlerindeki videolar için televizyonda ve telefonda çalışan bir Telegram medya oynatıcı.",
-    "tmplayer_on_a_television_showing": "Televizyonda TMPlayer, bir Telegram sohbetindeki videoları süre ve dosya boyutuyla birlikte kutucuklar halinde gösteriyor.",
+    "tmplayer_on_a_television_showing": "Televizyonda TMPlayer, bir Telegram sohbetindeki film ve dizileri yılı, boyutu ve çözünürlüğüyle afiş olarak gösteriyor.",
     "a_phone_opening_a_telegram": "TMPlayer'da bir Telegram sohbetini açan ve videolarını ızgara olarak gösteren bir telefon.",
     "email_hello_tmplayer_org_with": "TMPlayer özellik isteğiyle hello@tmplayer.org adresine e-posta gönder",
     "open_an_issue_in_the": "GitHub'daki TMPlayer deposunda issue aç",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "TV'nde yansıtmadan Telegram",
     "watch_telegram_videos_on_3a48": "Telegram videolarını telefonunu yansıtmadan ya da aynalamadan televizyonda izle: TV'nin kendisindeki bir oynatıcı hesabınla giriş yapar ve sohbetlerindeki videoları akıtır.",
     "finds_subtitles_online_through_a322": "OpenSubtitles üzerinden internette altyazı bulma, altyazıyı ya da sesi eşleşecek şekilde kaydırma",
-    "groups_series_by_season_709a": "Dizileri kendi sayfasında sezonlara göre gruplama, kapatabileceğin afiş ve özetlerle",
+    "groups_series_by_season_e029": "Dizileri kendi sayfasında sezonlara göre gruplama, kapatabileceğin afiş ve özetlerle",
     "changelog_164b": "Değişiklik günlüğü"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "Uzaktan okunan arayüz ve neden 1 GB'lık bir çubukta çalıştığı.",
     "for_the_television": "Televizyon için",
     "stream_telegram_videos_while_they": "Android TV'de, telefonlarda, Windows'ta ve Linux'ta Telegram videolarını inerken akıt, anında sar, MKV'yi altyazıyla oynat ve sonraki bölümü otomatik başlat.",
-    "tmplayer_on_a_phone_listing": "Telefonda TMPlayer, demo sohbetleri listeliyor: Weekend Clips, Home Projects, Recipe Notes, Travel Diary, Design Study ve Family Archive.",
-    "a_dense_grid_of_demo": "Telefonda bir Telegram sohbetindeki demo videolardan oluşan sık bir ızgara; her kutucukta çözünürlük ve süre var.",
+    "tmplayer_on_a_phone_listing": "Telefonda TMPlayer, demo sohbetleri listeliyor: Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips ve Family Archive.",
+    "a_dense_grid_of_demo": "Telefonda bir Telegram sohbetindeki demo filmler ve bir dizinin ızgarası; her afişte yılı, boyutu ve çözünürlüğü yer alıyor.",
     "the_same_chat_list_on": "Televizyonda aynı sohbet listesi, solda bir gezinme çubuğuyla.",
     "tmplayer_settings_on_a_television": "Televizyonda TMPlayer ayarları; video boyutu sınırları, sonraki bölümün otomatik oynatılması ve ne kadar depolama alanı boş olduğu görünüyor.",
-    "the_tmplayer_desktop_app_on": "Windows ya da Linux'ta TMPlayer masaüstü uygulaması: sohbet bölümlerinin kenar çubuğu ve yanında demo videoların ızgarası; her afişte süre, boyut ve çözünürlük var.",
+    "the_tmplayer_desktop_app_on": "Windows veya Linux'ta TMPlayer masaüstü uygulaması: bölümlerin yer aldığı kenar çubuğunun yanında bir sohbetin demo filmleri afiş olarak, her birinde yılı, boyutu ve çözünürlüğü.",
     "the_tmplayer_desktop_player_over": "Bir demo video üzerinde TMPlayer masaüstü oynatıcı: üstte başlık ve sohbet, bir zaman çubuğu ve altyazı, ses, hız, görüntü oranı, ses düzeyi, mini oynatıcı ve tam ekran düğmeleri.",
     "subtitles_found_online": "{strong1} Bir dosyada altyazı yoksa oynatıcıdan OpenSubtitles'ta ara, sonra altyazıyı ya da sesi ileri veya geri kaydır.",
     "subtitles_found_online__strong1": "Altyazıları internette bulur.",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "Sonraki bölümü otomatik oynatma, ses, sararken küçük resimler ve kontrollerin davranışı.",
     "subtitle_size_a_box_behind": "Altyazı boyutu, arkalarında kutu olup olmayacağı ve nerede duracakları.",
     "which_videos_show_such_as": "Hangi videoların görüneceği, örneğin seçtiğin boyutun altındaki klipleri gizlemek, ve ilk neyin açılacağı.",
-    "how_much_space_is_free": "Ne kadar boş alan olduğu ve indirilenlerin nerede tutulduğu."
+    "how_much_space_is_free": "Ne kadar boş alan olduğu ve indirilenlerin nerede tutulduğu.",
+    "demo_artwork_photos_from_unsplash": "Demo filmler ve diziler hayal ürünüdür. Görselleri, her fotoğrafçının adı belirtilerek {a1} kırpıldı.",
+    "demo_artwork_photos_from_unsplash__a1": "Unsplash'teki fotoğraflardan"
   },
   "download": {
     "download_tmplayer_for_android_tv": "TMPlayer'ı Android TV, telefonlar, Windows ve Linux için indir",

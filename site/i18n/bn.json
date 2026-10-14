@@ -72,7 +72,7 @@
     "built_by_more_of_what": "তৈরি করেছেন {strong1}। আমার আরও কাজ দেখুন {a1}-এ।",
     "stream_the_videos_in_your": "Android TV, Android ফোন, Windows ও Linux-এ আপনার নিজের Telegram চ্যাটের ভিডিও স্ট্রিম করুন। বিনামূল্যে, ওপেন সোর্স, আর ডাউনলোডের সঙ্গে সঙ্গেই চলে।",
     "tmplayer_a_telegram_media_player": "TMPlayer, আপনার নিজের চ্যাটের ভিডিওর জন্য একটি Telegram মিডিয়া প্লেয়ার, টিভি ও ফোনে।",
-    "tmplayer_on_a_television_showing": "টিভিতে TMPlayer, যেখানে একটি Telegram চ্যাটের ভিডিওগুলো টাইলের গ্রিডে দেখানো হয়েছে, সঙ্গে দৈর্ঘ্য ও ফাইলের সাইজ।",
+    "tmplayer_on_a_television_showing": "টেলিভিশনে TMPlayer, একটি Telegram চ্যাটের সিনেমা ও সিরিজ পোস্টার হিসেবে দেখাচ্ছে, সঙ্গে সাল, আকার আর রেজোলিউশন।",
     "a_phone_opening_a_telegram": "একটি ফোনে TMPlayer-এ Telegram চ্যাট খোলা হয়েছে, আর ভিডিওগুলো গ্রিডে দেখা যাচ্ছে।",
     "email_hello_tmplayer_org_with": "TMPlayer-এর নতুন ফিচারের অনুরোধ নিয়ে hello@tmplayer.org-এ ইমেল করুন",
     "open_an_issue_in_the": "GitHub-এ TMPlayer রিপোজিটরিতে একটি ইস্যু খুলুন",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "কাস্ট ছাড়া আপনার টিভিতে Telegram",
     "watch_telegram_videos_on_3a48": "ফোন কাস্ট বা মিরর না করে টিভিতে Telegram ভিডিও দেখুন: টিভিতেই থাকা একটি প্লেয়ার আপনার অ্যাকাউন্টে সাইন ইন করে এবং চ্যাটের ভিডিও স্ট্রিম করে।",
     "finds_subtitles_online_through_a322": "OpenSubtitles দিয়ে অনলাইনে সাবটাইটেল খোঁজা, আর সাবটাইটেল বা অডিওর সময় মেলানো",
-    "groups_series_by_season_709a": "সিরিজ নিজস্ব পেজে সিজন অনুযায়ী সাজানো, পোস্টার ও সারসংক্ষেপসহ, যা বন্ধ করা যায়",
+    "groups_series_by_season_e029": "সিরিজ নিজস্ব পেজে সিজন অনুযায়ী সাজানো, পোস্টার ও সারসংক্ষেপসহ, যা বন্ধ করা যায়",
     "changelog_164b": "চেঞ্জলগ"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "দূর থেকে দেখার লেআউট, আর কেন এটা 1 GB-এর স্টিকেও চলে।",
     "for_the_television": "টিভির জন্য",
     "stream_telegram_videos_while_they": "Android TV, ফোন, Windows ও Linux-এ Telegram ভিডিও ডাউনলোডের সঙ্গে সঙ্গে স্ট্রিম করুন, সঙ্গে সঙ্গে সিক করুন, সাবটাইটেলসহ MKV চালান এবং পরের পর্ব অটোপ্লে করুন।",
-    "tmplayer_on_a_phone_listing": "ফোনে TMPlayer, ডেমো চ্যাটের তালিকা সহ: Weekend Clips, Home Projects, Recipe Notes, Travel Diary, Design Study ও Family Archive।",
-    "a_dense_grid_of_demo": "ফোনে একটি Telegram চ্যাটের ডেমো ভিডিওর ঘন গ্রিড, প্রতিটি টাইলে রেজোলিউশন ও দৈর্ঘ্য দেখা যাচ্ছে।",
+    "tmplayer_on_a_phone_listing": "ফোনে TMPlayer, ডেমো চ্যাটের তালিকা সহ: Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips ও Family Archive।",
+    "a_dense_grid_of_demo": "ফোনে একটি Telegram চ্যাটের ডেমো সিনেমা ও একটি সিরিজের গ্রিড, প্রতিটি পোস্টারে তার সাল, আকার আর রেজোলিউশন।",
     "the_same_chat_list_on": "টিভিতে একই চ্যাট তালিকা, বাঁ দিকে একটি নেভিগেশন রেল সহ।",
     "tmplayer_settings_on_a_television": "টিভিতে TMPlayer-এর সেটিংস, যেখানে ভিডিওর সাইজের সীমা, পরের পর্বের অটোপ্লে এবং কতটা স্টোরেজ খালি তা দেখা যাচ্ছে।",
-    "the_tmplayer_desktop_app_on": "Windows বা Linux-এ TMPlayer ডেস্কটপ অ্যাপ: চ্যাট বিভাগের সাইডবারের পাশে ডেমো ভিডিওর গ্রিড, প্রতিটি পোস্টারে দৈর্ঘ্য, সাইজ ও রেজোলিউশন।",
+    "the_tmplayer_desktop_app_on": "Windows বা Linux-এ TMPlayer ডেস্কটপ অ্যাপ: বিভাগগুলোর সাইডবারের পাশে একটি চ্যাটের ডেমো সিনেমা পোস্টার হিসেবে, প্রতিটিতে সাল, আকার আর রেজোলিউশন।",
     "the_tmplayer_desktop_player_over": "একটি ডেমো ভিডিওর ওপর TMPlayer ডেস্কটপ প্লেয়ার: ওপরে শিরোনাম ও চ্যাট, একটি টাইমবার, এবং সাবটাইটেল, অডিও, গতি, ছবির আকার, ভলিউম, মিনি প্লেয়ার ও ফুলস্ক্রিনের বোতাম।",
     "subtitles_found_online": "{strong1} কোনো ফাইলে সাবটাইটেল না থাকলে প্লেয়ার থেকেই OpenSubtitles-এ খুঁজুন, তারপর সাবটাইটেল বা শব্দ আগে বা পিছে সরান।",
     "subtitles_found_online__strong1": "অনলাইনে সাবটাইটেল খোঁজে।",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "পরের পর্ব নিজে থেকে চালানো, শব্দ, সিক করার সময় থাম্বনেইল, আর কন্ট্রোল কেমন আচরণ করবে।",
     "subtitle_size_a_box_behind": "সাবটাইটেলের সাইজ, পেছনে বক্স থাকবে কি না, আর কোথায় বসবে।",
     "which_videos_show_such_as": "কোন ভিডিও দেখাবে, যেমন আপনার বাছা সাইজের চেয়ে ছোট ক্লিপ লুকানো, আর প্রথমে কী খুলবে।",
-    "how_much_space_is_free": "কতটা জায়গা খালি আছে, আর ডাউনলোড কোথায় রাখা হয়।"
+    "how_much_space_is_free": "কতটা জায়গা খালি আছে, আর ডাউনলোড কোথায় রাখা হয়।",
+    "demo_artwork_photos_from_unsplash": "ডেমো সিনেমা আর সিরিজগুলো কাল্পনিক। এদের ছবি {a1} থেকে কাটা, প্রতিটি আলোকচিত্রীর নামসহ।",
+    "demo_artwork_photos_from_unsplash__a1": "Unsplash-এর ছবি"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV, ফোন, Windows ও Linux-এর জন্য TMPlayer ডাউনলোড করুন",

@@ -72,7 +72,7 @@
     "built_by_more_of_what": "من تطوير {strong1}. تجد المزيد من أعمالي على {a1}.",
     "stream_the_videos_in_your": "بث الفيديوهات الموجودة في محادثاتك على Telegram على Android TV وهواتف Android وWindows وLinux. مجاني ومفتوح المصدر، ويشغّل الفيديو أثناء تنزيله.",
     "tmplayer_a_telegram_media_player": "TMPlayer، مشغّل وسائط Telegram للفيديوهات الموجودة في محادثاتك، على التلفاز والهاتف.",
-    "tmplayer_on_a_television_showing": "TMPlayer على شاشة تلفاز يعرض فيديوهات إحدى محادثات Telegram في شبكة من المربعات مع مدة كل فيديو وحجم ملفه.",
+    "tmplayer_on_a_television_showing": "TMPlayer على شاشة تلفاز يعرض أفلام ومسلسلات إحدى محادثات Telegram في صورة ملصقات مع سنة كل منها وحجمه ودقته.",
     "a_phone_opening_a_telegram": "هاتف يفتح محادثة Telegram في TMPlayer ويعرض فيديوهاتها في شبكة.",
     "email_hello_tmplayer_org_with": "راسل hello@tmplayer.org بطلب ميزة جديدة في TMPlayer",
     "open_an_issue_in_the": "افتح بلاغًا في مستودع TMPlayer على GitHub",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram على تلفازك دون بث من الهاتف",
     "watch_telegram_videos_on_3a48": "شاهد فيديوهات Telegram على التلفاز دون بث شاشة هاتفك أو عكسها: مشغّل على التلفاز نفسه يسجّل الدخول إلى حسابك ويبث الفيديوهات الموجودة في محادثاتك.",
     "finds_subtitles_online_through_a322": "العثور على الترجمات عبر الإنترنت من خلال OpenSubtitles، وتقديم الترجمة أو الصوت أو تأخيره لمطابقتهما",
-    "groups_series_by_season_709a": "تجميع المسلسلات حسب الموسم في صفحة خاصة بكل منها، مع ملصقات وملخّصات يمكنك إيقافها",
+    "groups_series_by_season_e029": "تجميع المسلسلات حسب الموسم في صفحة خاصة بكل منها، مع ملصقات وملخّصات يمكنك إيقافها",
     "changelog_164b": "سجل التغييرات"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "واجهة المشاهدة من بعيد، ولماذا يعمل على عصا بذاكرة 1 غيغابايت.",
     "for_the_television": "للتلفاز",
     "stream_telegram_videos_while_they": "بث فيديوهات Telegram أثناء تنزيلها، وتنقّل فوري داخل الفيديو، وتشغيل MKV مع الترجمات، وتشغيل الحلقة التالية تلقائيًا على Android TV والهواتف وWindows وLinux.",
-    "tmplayer_on_a_phone_listing": "TMPlayer على هاتف يعرض محادثات تجريبية: Weekend Clips وHome Projects وRecipe Notes وTravel Diary وDesign Study وFamily Archive.",
-    "a_dense_grid_of_demo": "شبكة كثيفة من الفيديوهات التجريبية من محادثة Telegram على هاتف، يحمل كل مربع دقته ومدته.",
+    "tmplayer_on_a_phone_listing": "TMPlayer على هاتف يعرض محادثات تجريبية: Cinema Lounge وAnime Vault وStudy Hub وNature Docs وWeekend Clips وFamily Archive.",
+    "a_dense_grid_of_demo": "شبكة من أفلام تجريبية ومسلسل من محادثة Telegram على هاتف، ويحمل كل ملصق سنته وحجمه ودقته.",
     "the_same_chat_list_on": "قائمة المحادثات نفسها على التلفاز، مع شريط تنقل على اليسار.",
     "tmplayer_settings_on_a_television": "إعدادات TMPlayer على التلفاز، تعرض حدود حجم الفيديو، وتشغيل الحلقة التالية تلقائيًا، والمساحة المتاحة في التخزين.",
-    "the_tmplayer_desktop_app_on": "تطبيق TMPlayer لسطح المكتب على Windows أو Linux: شريط جانبي لأقسام المحادثات بجانب شبكة من الفيديوهات التجريبية، يحمل كل ملصق مدته وحجمه ودقته.",
+    "the_tmplayer_desktop_app_on": "تطبيق TMPlayer لسطح المكتب على Windows أو Linux: شريط جانبي للأقسام بجانب أفلام تجريبية من محادثة في صورة ملصقات، لكل منها سنته وحجمه ودقته.",
     "the_tmplayer_desktop_player_over": "مشغّل TMPlayer لسطح المكتب فوق فيديو تجريبي: العنوان والمحادثة في الأعلى، وشريط زمني، وأزرار للترجمة والصوت والسرعة وشكل الصورة ومستوى الصوت والمشغّل المصغّر وملء الشاشة.",
     "subtitles_found_online": "{strong1} إذا لم يكن للملف ترجمة، فابحث في OpenSubtitles من داخل المشغّل، ثم قدّم الترجمة أو الصوت أو أخّره.",
     "subtitles_found_online__strong1": "يجد الترجمات عبر الإنترنت.",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "تشغيل الحلقة التالية تلقائيًا، والصوت، والصور المصغّرة أثناء التنقل، وسلوك أزرار التحكم.",
     "subtitle_size_a_box_behind": "حجم الترجمة، وخلفية خلفها أو بدونها، وموضعها على الشاشة.",
     "which_videos_show_such_as": "أي الفيديوهات تظهر، مثل إخفاء المقاطع الأصغر من حجم تختاره، وما الذي يُفتح أولًا.",
-    "how_much_space_is_free": "كم تبقّى من مساحة فارغة، وأين تُحفظ التنزيلات."
+    "how_much_space_is_free": "كم تبقّى من مساحة فارغة، وأين تُحفظ التنزيلات.",
+    "demo_artwork_photos_from_unsplash": "الأفلام والمسلسلات التجريبية من نسج الخيال. صورها مقتطعة من {a1}، مع ذكر كل مصوّر.",
+    "demo_artwork_photos_from_unsplash__a1": "صور على Unsplash"
   },
   "download": {
     "download_tmplayer_for_android_tv": "نزّل TMPlayer لأجهزة Android TV والهواتف وWindows وLinux",

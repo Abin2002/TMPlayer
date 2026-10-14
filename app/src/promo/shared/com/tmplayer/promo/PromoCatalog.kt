@@ -44,10 +44,10 @@ object PromoCatalog {
     class Chat(val id: Long, val title: String, val avatar: String?, val kind: ChatKind)
 
     val chats = listOf(
-        Chat(CINEMA, "Cinema Lounge", null, ChatKind.Channel),
-        Chat(ANIME, "Anime Vault", null, ChatKind.Group),
-        Chat(STUDY, "Study Hub", null, ChatKind.Channel),
-        Chat(NATURE, "Nature Docs", null, ChatKind.Channel),
+        Chat(CINEMA, "Cinema Lounge", "promo_saltwater_lanterns_backdrop", ChatKind.Channel),
+        Chat(ANIME, "Anime Vault", "promo_paper_kingdoms_backdrop", ChatKind.Group),
+        Chat(STUDY, "Study Hub", "demo_tutorial", ChatKind.Channel),
+        Chat(NATURE, "Nature Docs", "demo_forest", ChatKind.Channel),
         Chat(CLIPS, "Weekend Clips", "demo_coast", ChatKind.Group),
         Chat(FAMILY, "Family Archive", "demo_birthday", ChatKind.Group),
     )

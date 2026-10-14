@@ -72,7 +72,7 @@
     "built_by_more_of_what": "Do {strong1} xây dựng. Xem thêm những gì tôi làm tại {a1}.",
     "stream_the_videos_in_your": "Phát video trong các cuộc trò chuyện Telegram của chính bạn trên Android TV, điện thoại Android, Windows và Linux. Miễn phí, mã nguồn mở, vừa tải vừa phát.",
     "tmplayer_a_telegram_media_player": "TMPlayer, trình phát đa phương tiện Telegram cho video trong cuộc trò chuyện của chính bạn, trên TV và trên điện thoại.",
-    "tmplayer_on_a_television_showing": "TMPlayer trên TV, hiển thị video của một cuộc trò chuyện Telegram dưới dạng lưới ô kèm thời lượng và dung lượng tệp.",
+    "tmplayer_on_a_television_showing": "TMPlayer trên TV, hiển thị phim lẻ và phim bộ trong một cuộc trò chuyện Telegram dưới dạng áp phích kèm năm, dung lượng và độ phân giải.",
     "a_phone_opening_a_telegram": "Điện thoại mở một cuộc trò chuyện Telegram trong TMPlayer và hiển thị video dưới dạng lưới.",
     "email_hello_tmplayer_org_with": "Gửi email đến hello@tmplayer.org để đề xuất tính năng cho TMPlayer",
     "open_an_issue_in_the": "Mở issue trong kho mã nguồn TMPlayer trên GitHub",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "Telegram trên TV của bạn mà không cần truyền màn hình",
     "watch_telegram_videos_on_3a48": "Xem video Telegram trên TV mà không cần truyền hay chiếu màn hình điện thoại: trình phát ngay trên TV đăng nhập vào tài khoản của bạn và phát các video trong cuộc trò chuyện.",
     "finds_subtitles_online_through_a322": "Tìm phụ đề trực tuyến qua OpenSubtitles, và chỉnh phụ đề hoặc âm thanh cho khớp",
-    "groups_series_by_season_709a": "Nhóm phim bộ theo mùa trên trang riêng, kèm poster và phần giới thiệu mà bạn có thể tắt",
+    "groups_series_by_season_e029": "Nhóm phim bộ theo mùa trên trang riêng, kèm poster và phần giới thiệu mà bạn có thể tắt",
     "changelog_164b": "Nhật ký thay đổi"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "Giao diện cho màn hình lớn, và vì sao nó chạy được trên TV stick 1 GB.",
     "for_the_television": "Dành cho TV",
     "stream_telegram_videos_while_they": "Phát video Telegram trong khi tải, tua tức thì, phát MKV kèm phụ đề và tự phát tập tiếp theo trên Android TV, điện thoại, Windows và Linux.",
-    "tmplayer_on_a_phone_listing": "TMPlayer trên điện thoại, liệt kê các cuộc trò chuyện mẫu: Weekend Clips, Home Projects, Recipe Notes, Travel Diary, Design Study và Family Archive.",
-    "a_dense_grid_of_demo": "Lưới dày các video mẫu từ một cuộc trò chuyện Telegram trên điện thoại, mỗi ô ghi độ phân giải và thời lượng.",
+    "tmplayer_on_a_phone_listing": "TMPlayer trên điện thoại, liệt kê các cuộc trò chuyện mẫu: Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips và Family Archive.",
+    "a_dense_grid_of_demo": "Lưới phim minh họa và một bộ phim nhiều tập từ một cuộc trò chuyện Telegram trên điện thoại, mỗi áp phích ghi năm, dung lượng và độ phân giải.",
     "the_same_chat_list_on": "Cùng danh sách trò chuyện trên TV, với thanh điều hướng ở bên trái.",
     "tmplayer_settings_on_a_television": "Cài đặt TMPlayer trên TV, hiển thị giới hạn kích thước video, tự phát tập tiếp theo và dung lượng còn trống.",
-    "the_tmplayer_desktop_app_on": "Ứng dụng TMPlayer trên Windows hoặc Linux: thanh bên các mục trò chuyện cạnh một lưới video mẫu, mỗi poster ghi thời lượng, dung lượng và độ phân giải.",
+    "the_tmplayer_desktop_app_on": "Ứng dụng TMPlayer cho máy tính trên Windows hoặc Linux: thanh bên gồm các mục cạnh những phim minh họa của một cuộc trò chuyện dưới dạng áp phích, mỗi phim ghi năm, dung lượng và độ phân giải.",
     "the_tmplayer_desktop_player_over": "Trình phát TMPlayer trên máy tính đang phát một video mẫu: tiêu đề và cuộc trò chuyện ở trên cùng, thanh thời gian, và các nút phụ đề, âm thanh, tốc độ, tỷ lệ hình, âm lượng, trình phát mini và toàn màn hình.",
     "subtitles_found_online": "{strong1} Khi tệp không có phụ đề, hãy tìm trên OpenSubtitles ngay trong trình phát, rồi chỉnh phụ đề hoặc âm thanh sớm hơn hay muộn hơn.",
     "subtitles_found_online__strong1": "Tìm phụ đề trực tuyến.",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "Tự động phát tập tiếp theo, âm thanh, ảnh thu nhỏ khi tua và cách các nút điều khiển hoạt động.",
     "subtitle_size_a_box_behind": "Cỡ phụ đề, có nền phía sau hay không, và vị trí hiển thị.",
     "which_videos_show_such_as": "Video nào được hiển thị, chẳng hạn ẩn các đoạn nhỏ hơn kích thước bạn chọn, và màn hình nào mở trước.",
-    "how_much_space_is_free": "Còn trống bao nhiêu dung lượng, và tệp tải xuống được lưu ở đâu."
+    "how_much_space_is_free": "Còn trống bao nhiêu dung lượng, và tệp tải xuống được lưu ở đâu.",
+    "demo_artwork_photos_from_unsplash": "Các phim lẻ và phim bộ minh họa đều là hư cấu. Hình ảnh được cắt từ {a1}, có ghi tên từng nhiếp ảnh gia.",
+    "demo_artwork_photos_from_unsplash__a1": "ảnh trên Unsplash"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Tải TMPlayer cho Android TV, điện thoại, Windows và Linux",

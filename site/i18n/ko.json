@@ -72,7 +72,7 @@
     "built_by_more_of_what": "{strong1}이(가) 만들었어요. 다른 작업물은 {a1}에서 볼 수 있어요.",
     "stream_the_videos_in_your": "내 Telegram 채팅의 동영상을 Android TV, Android 휴대폰, Windows, Linux에서 스트리밍하세요. 무료 오픈 소스이고, 다운로드하면서 바로 재생해요.",
     "tmplayer_a_telegram_media_player": "TMPlayer, TV와 휴대폰에서 내 채팅 속 동영상을 재생하는 Telegram 미디어 플레이어.",
-    "tmplayer_on_a_television_showing": "TV에서 실행한 TMPlayer. Telegram 채팅의 동영상이 재생 시간과 파일 크기가 표시된 타일 격자로 보여요.",
+    "tmplayer_on_a_television_showing": "TV에서 실행 중인 TMPlayer. Telegram 채팅의 영화와 시리즈를 연도, 크기, 해상도가 적힌 포스터로 보여 줍니다.",
     "a_phone_opening_a_telegram": "휴대폰의 TMPlayer에서 Telegram 채팅을 열어 동영상을 격자로 보여 주는 화면.",
     "email_hello_tmplayer_org_with": "TMPlayer 기능 요청은 hello@tmplayer.org로 이메일을 보내 주세요",
     "open_an_issue_in_the": "GitHub의 TMPlayer 저장소에서 이슈 열기",
@@ -202,7 +202,7 @@
     "telegram_on_your_tv_bb50": "캐스팅 없이 TV에서 Telegram 보기",
     "watch_telegram_videos_on_3a48": "휴대폰을 캐스팅하거나 미러링하지 않고 TV에서 Telegram 동영상을 보세요. TV에 설치한 플레이어가 내 계정으로 로그인해서 채팅의 동영상을 스트리밍해요.",
     "finds_subtitles_online_through_a322": "OpenSubtitles로 온라인 자막을 찾고, 자막이나 오디오 싱크를 맞춤",
-    "groups_series_by_season_709a": "시리즈를 전용 페이지에서 시즌별로 정리, 포스터와 줄거리는 끌 수 있어요",
+    "groups_series_by_season_e029": "시리즈를 전용 페이지에서 시즌별로 정리, 포스터와 줄거리는 끌 수 있어요",
     "changelog_164b": "변경 내역"
   },
   "features": {
@@ -314,11 +314,11 @@
     "the_ten_foot_layout_and": "TV 화면 구성과 1GB 스틱에서도 돌아가는 이유를 소개해요.",
     "for_the_television": "TV 이야기",
     "stream_telegram_videos_while_they": "Android TV, 휴대폰, Windows, Linux에서 Telegram 동영상을 다운로드하며 스트리밍하고, 즉시 탐색하고, MKV를 자막과 함께 재생하고, 다음 에피소드를 자동 재생하세요.",
-    "tmplayer_on_a_phone_listing": "휴대폰의 TMPlayer, 데모 채팅 목록: Weekend Clips, Home Projects, Recipe Notes, Travel Diary, Design Study, Family Archive.",
-    "a_dense_grid_of_demo": "휴대폰에서 Telegram 채팅의 데모 동영상을 빽빽한 격자로 보여 주는 화면. 각 타일에 해상도와 재생 시간이 표시돼요.",
+    "tmplayer_on_a_phone_listing": "휴대폰의 TMPlayer, 데모 채팅 목록: Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips, Family Archive.",
+    "a_dense_grid_of_demo": "휴대폰에서 본 Telegram 채팅의 데모 영화와 시리즈 그리드. 포스터마다 연도, 크기, 해상도가 표시됩니다.",
     "the_same_chat_list_on": "TV에서 본 같은 채팅 목록, 왼쪽에 탐색 레일이 있습니다.",
     "tmplayer_settings_on_a_television": "TV의 TMPlayer 설정 화면. 동영상 크기 제한, 다음 에피소드 자동 재생, 남은 저장 공간이 보여요.",
-    "the_tmplayer_desktop_app_on": "Windows 또는 Linux의 TMPlayer 데스크톱 앱. 채팅 섹션 사이드바 옆에 데모 동영상 격자가 있고, 각 포스터에 재생 시간, 크기, 해상도가 표시돼요.",
+    "the_tmplayer_desktop_app_on": "Windows 또는 Linux의 TMPlayer 데스크톱 앱: 섹션 사이드바 옆에 채팅의 데모 영화가 포스터로 표시되며, 각각 연도, 크기, 해상도가 함께 나옵니다.",
     "the_tmplayer_desktop_player_over": "데모 동영상 위의 TMPlayer 데스크톱 플레이어. 위쪽에 제목과 채팅이 있고, 타임바와 자막, 오디오, 속도, 화면 비율, 볼륨, 미니 플레이어, 전체 화면 버튼이 있어요.",
     "subtitles_found_online": "{strong1} 자막이 없는 파일이면 플레이어에서 OpenSubtitles를 검색하고, 자막이나 소리를 앞뒤로 옮길 수 있어요.",
     "subtitles_found_online__strong1": "온라인에서 자막을 찾아요.",
@@ -352,7 +352,9 @@
     "autoplay_of_the_next_episode": "다음 에피소드 자동 재생, 소리, 탐색 중 썸네일, 컨트롤 동작 방식.",
     "subtitle_size_a_box_behind": "자막 크기, 뒤에 상자를 깔지 여부, 자막 위치.",
     "which_videos_show_such_as": "정해 둔 크기보다 작은 클립 숨기기 같은 표시할 동영상 설정, 그리고 처음 열리는 화면.",
-    "how_much_space_is_free": "남은 저장공간과 다운로드 보관 위치."
+    "how_much_space_is_free": "남은 저장공간과 다운로드 보관 위치.",
+    "demo_artwork_photos_from_unsplash": "데모 영화와 시리즈는 지어낸 것입니다. 이미지는 {a1}에서 잘라 왔으며 사진작가별로 출처를 밝혔습니다.",
+    "demo_artwork_photos_from_unsplash__a1": "Unsplash 사진"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV, 휴대폰, Windows, Linux용 TMPlayer 다운로드",
