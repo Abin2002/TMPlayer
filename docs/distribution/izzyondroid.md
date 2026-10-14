@@ -37,6 +37,9 @@ the released `TMPlayer-1.22.0-universal.apk` (sha256 `5c6a01bd...12e9`, matches 
   nothing unless the "Send crash reports" switch in Settings is on, and that switch is **off on a fresh
   install**. Turning it off later calls `Sentry.close()`, and a `beforeSend` gate drops anything
   queued after that.
+- With the switch off, a crash is written to the app's private files only (`CrashRecord`). The next
+  start asks the user whether to send it; only on "Send" is the SDK started, for that one report,
+  and closed again. "Don't send" deletes the file.
 - When on, it sends only crashes: performance tracing 0, session tracking off, every breadcrumb
   source off and `maxBreadcrumbs = 0`, `sendDefaultPii = false`, and the user object (where Sentry
   keeps the installation id) is removed from every event. A report holds the stack trace, app
@@ -122,7 +125,7 @@ Things you will see in the scan, so here they are up front:
 - NonFreeNet: it talks to Telegram's servers.
 - Sentry SDK (io.sentry): crash reporting, strictly opt-in. Auto-init is disabled in the
   manifest; the SDK is only started when the user turns "Send crash reports" on in Settings, which
-  is off on a fresh install. When on, it sends crashes only: no sessions, no performance
+  is off on a fresh install, or agrees to send one report when asked after a crash. When on, it sends crashes only: no sessions, no performance
   tracing, no breadcrumbs, no IP address, no user or installation id
   (app/src/main/java/com/tmplayer/data/CrashReports.kt).
 - Update check: the app can tell the user that a newer version is on GitHub. It never

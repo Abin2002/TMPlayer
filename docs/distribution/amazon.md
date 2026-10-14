@@ -46,7 +46,7 @@ Fire TV):
 >
 > Built for the remote: the whole app works with the D-pad, the Menu button opens the player menu, and rewind and fast forward work as you expect. Thumbnails while you scrub come from the part of the video already downloaded, and are switched off on devices with 1 GB of memory to keep playback smooth.
 >
-> Private by design: TMPlayer talks directly to Telegram from your device. There is no TMPlayer account and no server in between. No ads of its own and no analytics. Crash reports are off unless you turn them on in Settings.
+> Private by design: TMPlayer talks directly to Telegram from your device. There is no TMPlayer account and no server in between. No ads of its own and no analytics. Crash reports are sent only if you agree.
 >
 > Free and open source under the GPL-3.0 licence: https://github.com/dracu-lah/TMPlayer
 >
@@ -141,7 +141,7 @@ listed.
 | Advertising | No ads of its own; note Telegram sponsored messages | The API terms (3.3) require Telegram's sponsored messages in large public channels. Mention it in the free text box if there is one. |
 | In-app purchases | No | None. |
 | Links to external sites | Yes | Sponsor links (GitHub Sponsors, Buy Me a Coffee) shown as QR codes on TV and as links on phones; voluntary, unlock nothing. Also the GitHub and site links in About. |
-| Data collection, crash reporting | Opt-in only | Sentry crash reports, off by default, sent only after the user turns them on in Settings. |
+| Data collection, crash reporting | Opt-in only | Sentry crash reports, off by default, sent only after the user turns them on in Settings or agrees to send one when the app asks after a crash. |
 
 Expect an outcome around "Guidance Suggested" or a teen rating because of user generated content
 and unrestricted access; that is normal for messaging and browser style apps **(unverified)**.

@@ -43,6 +43,8 @@ class App : Application() {
     @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
+        // First of all, so a crash anywhere below is written down for the next start to offer.
+        CrashReports.watch(this)
         // The shared code logs through a facade; on Android it goes to logcat as it always has.
         Logger.sink = AndroidLogSink
         Updates.configureForAndroid()
@@ -98,7 +100,9 @@ class App : Application() {
         if (CrashReports.available) {
             backgroundScope.launch {
                 runCatching {
-                    CrashReports.start(this@App, SettingsStore(this@App).crashReportsNow())
+                    val enabled = SettingsStore(this@App).crashReportsNow()
+                    CrashReports.start(this@App, enabled)
+                    CrashReports.review(this@App, enabled)
                 }
             }
         }

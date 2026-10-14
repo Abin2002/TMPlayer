@@ -132,7 +132,7 @@ It is an unofficial client built on TDLib. It is not made by or affiliated with 
 [/LIST]
 
 [B]Privacy[/B]
-No ads of its own, no analytics, no server in between. Crash reports are off unless you turn them on. Telegram's own sponsored messages appear in public channels, as Telegram's API terms require.
+No ads of its own, no analytics, no server in between. Crash reports are sent only if you agree. Telegram's own sponsored messages appear in public channels, as Telegram's API terms require.
 
 [B]Screenshots[/B]
 [IMG]https://raw.githubusercontent.com/dracu-lah/TMPlayer/v1.22.0/site/screenshots/tv-grid.webp[/IMG]

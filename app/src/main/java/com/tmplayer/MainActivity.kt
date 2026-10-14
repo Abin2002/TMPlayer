@@ -66,6 +66,7 @@ import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.restore
 import com.tmplayer.data.NetworkStatus
 import com.tmplayer.data.ResumeRecord
+import com.tmplayer.data.CrashReports
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.SupportReminder
 import com.tmplayer.data.WatchedRecord
@@ -102,6 +103,7 @@ import com.tmplayer.data.HomeRow
 import com.tmplayer.ui.browse.ChatListViewModel
 import com.tmplayer.ui.browse.MediaGridScreen
 import com.tmplayer.ui.components.TvConfirm
+import com.tmplayer.ui.settings.TickRow
 import com.tmplayer.ui.downloads.DownloadsScreen
 import com.tmplayer.ui.components.UiState
 import com.tmplayer.ui.components.ConnectionNotice
@@ -1463,6 +1465,35 @@ private fun Root() {
 
         if (showUpdate) {
             UpdateDialog(onDismiss = { showUpdate = false; Updates.dismiss() })
+        }
+
+        val crashPending by CrashReports.pending.collectAsStateWithLifecycle()
+        if (crashPending && !showUpdate) {
+            // Asked once per crash, and only while the switch in Settings is off: with it on, the
+            // report went without asking. Back or a tap outside counts as Don't send, so a viewer
+            // who waves it away is not asked again about the same crash.
+            var always by remember { mutableStateOf(false) }
+            TvConfirm(
+                title = s.mainCrashTitle,
+                message = s.mainCrashMessage,
+                detail = s.mainCrashDetail,
+                confirmLabel = s.mainCrashSend,
+                cancelLabel = s.mainCrashDontSend,
+                destructive = false,
+                focusConfirm = true,
+                extra = { TickRow(s.mainCrashAlways, always) { always = !always } },
+                onConfirm = {
+                    val keep = always
+                    com.tmplayer.platform.Background.scope.launch(Dispatchers.IO) {
+                        if (keep) {
+                            runCatching { settings.setCrashReports(true) }
+                            CrashReports.start(context, true)
+                        }
+                        runCatching { CrashReports.sendPending(context) }
+                    }
+                },
+                onDismiss = { CrashReports.discardPending() },
+            )
         }
 
         val noticeLanguage = languageNotice.language

@@ -1889,6 +1889,7 @@ fun SettingsScreen(
                     // than left running until the next launch: somebody handing the television on
                     // must not leave a reporter switched on behind them.
                     runCatching { CrashReports.stop() }
+                    runCatching { CrashReports.discardPending() }
                     runCatching { settings.clearEverything(keepDownloads = !deleteDownloads) }
                     // What this account watched is its own as much as the preferences are, and it
                     // lives in a file of its own, so it is cleared on its own, and so is Watch
@@ -2519,7 +2520,7 @@ private fun StorageCard(
  * ring the rest of the app's controls do.
  */
 @Composable
-private fun TickRow(label: String, checked: Boolean, onToggle: () -> Unit) {
+internal fun TickRow(label: String, checked: Boolean, onToggle: () -> Unit) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     Row(
