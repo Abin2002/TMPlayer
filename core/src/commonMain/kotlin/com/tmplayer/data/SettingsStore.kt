@@ -43,6 +43,10 @@ private val RESUME_REWIND = longPreferencesKey("rewind_on_resume_ms")
 private val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
 private val REMOVE_AFTER_WATCHING = booleanPreferencesKey("remove_after_watching")
 private val LOW_STORAGE_MODE = booleanPreferencesKey("low_storage_mode")
+private val LIGHTER_PICTURES = booleanPreferencesKey("lighter_pictures")
+private val REDUCE_MOTION = booleanPreferencesKey("reduce_motion")
+private val DEVICE_CARD_DISMISSED = booleanPreferencesKey("device_card_dismissed")
+private val DEVICE_HINT_SHOWN = booleanPreferencesKey("device_hint_shown")
 private val TRICKPLAY = booleanPreferencesKey("trickplay")
 private val WATCH_NEXT = booleanPreferencesKey("watch_next")
 private val TV_CHANNELS = booleanPreferencesKey("tv_channels")
@@ -286,6 +290,9 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             val theme = prefs[THEME_CHOICE]
             val dynamic = prefs[DYNAMIC_COLOUR]
             val uiScale = prefs[UI_SCALE]
+            // How light the device needs the app to be is the device's, not the account's.
+            val device = listOf(LIGHTER_PICTURES, REDUCE_MOTION, DEVICE_CARD_DISMISSED, DEVICE_HINT_SHOWN)
+                .mapNotNull { key -> prefs[key]?.let { Pair(key, it) } }
             val migrated = prefs[DOWNLOADS_MIGRATED]
             val support = SUPPORT_KEYS.mapNotNull { key -> prefs[key]?.let { Pair(key, it) } }
             val supportNever = prefs[SUPPORT_NEVER]
@@ -304,6 +311,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             theme?.let { prefs[THEME_CHOICE] = it }
             dynamic?.let { prefs[DYNAMIC_COLOUR] = it }
             uiScale?.let { prefs[UI_SCALE] = it }
+            for ((key, value) in device) prefs[key] = value
             for ((key, value) in support) prefs[key] = value
             supportNever?.let { prefs[SUPPORT_NEVER] = it }
             supporter?.let { prefs[SUPPORT_SUPPORTER] = it }
@@ -430,6 +438,65 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /** Read once at the start of playback, where a flow that has not emitted yet would lie. */
     suspend fun lowStorageModeNow(): Boolean = prefs.data.first()[LOW_STORAGE_MODE] ?: false
+
+    // ---- low-end devices (CP68) -------------------------------------------------------------
+
+    /**
+     * "Lighter pictures": the picture memory takes half its usual share of the heap, posters,
+     * stills and thumbnails are decoded smaller, and art is not blurred behind itself. Off by
+     * default; recommended on a device short of memory ([DeviceFitRules]).
+     */
+    val lighterPictures: Flow<Boolean> = read { it[LIGHTER_PICTURES] ?: false }
+
+    suspend fun setLighterPictures(value: Boolean) {
+        prefs.edit { it[LIGHTER_PICTURES] = value }
+    }
+
+    /** "Reduce motion": pictures and panels appear at once and the loading shimmer stands still. */
+    val reduceMotion: Flow<Boolean> = read { it[REDUCE_MOTION] ?: false }
+
+    suspend fun setReduceMotion(value: Boolean) {
+        prefs.edit { it[REDUCE_MOTION] = value }
+    }
+
+    /** The settings a [Recommendation] is about, as they are now. */
+    val lightSettings: Flow<LightSettings> = read {
+        LightSettings(
+            lowStorageMode = it[LOW_STORAGE_MODE] ?: false,
+            seekThumbnails = it[TRICKPLAY] ?: true,
+            lighterPictures = it[LIGHTER_PICTURES] ?: false,
+            reduceMotion = it[REDUCE_MOTION] ?: false,
+        )
+    }
+
+    /** Applies [recommendations] in one write; each stays its own setting, undone in its own row. */
+    suspend fun applyRecommendations(recommendations: Collection<Recommendation>) {
+        if (recommendations.isEmpty()) return
+        prefs.edit {
+            for (recommendation in recommendations) {
+                when (recommendation) {
+                    Recommendation.LowStorageMode -> it[LOW_STORAGE_MODE] = true
+                    Recommendation.NoSeekThumbnails -> it[TRICKPLAY] = false
+                    Recommendation.LighterPictures -> it[LIGHTER_PICTURES] = true
+                    Recommendation.ReduceMotion -> it[REDUCE_MOTION] = true
+                }
+            }
+        }
+    }
+
+    /** Settings' "Recommended for this device" card, closed by the viewer: it does not come back. */
+    val deviceCardDismissed: Flow<Boolean> = read { it[DEVICE_CARD_DISMISSED] ?: false }
+
+    suspend fun dismissDeviceCard() {
+        prefs.edit { it[DEVICE_CARD_DISMISSED] = true }
+    }
+
+    /** The one-time hint after a stutter or a memory warning: once per install, sign outs included. */
+    val deviceHintShown: Flow<Boolean> = read { it[DEVICE_HINT_SHOWN] ?: false }
+
+    suspend fun markDeviceHintShown() {
+        prefs.edit { it[DEVICE_HINT_SHOWN] = true }
+    }
 
     /**
      * Whether the soundtrack is folded down to stereo, as the viewer set it, or null while they
