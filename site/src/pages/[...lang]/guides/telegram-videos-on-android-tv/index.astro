@@ -5,10 +5,10 @@ import Crumbs from '../../../../components/guides/Crumbs.astro';
 import Action from '../../../../components/guides/Action.astro';
 import Band from '../../../../components/Band.astro';
 import FitPanels from '../../../../components/guides/FitPanels.astro';
-import Steps from '../../../../components/guides/Steps.astro';
-import Step from '../../../../components/guides/Step.astro';
-import Cards from '../../../../components/guides/Cards.astro';
-import Card from '../../../../components/guides/Card.astro';
+import Steps from '../../../../components/Steps.astro';
+import Step from '../../../../components/Step.astro';
+import Cards from '../../../../components/Cards.astro';
+import Card from '../../../../components/Card.astro';
 import MoreHelp from '../../../../components/guides/MoreHelp.astro';
 import T from '../../../../components/T.astro';
 import type { Guide } from '../../../../components/guides/ld';
@@ -66,7 +66,7 @@ const ld: Guide = {
     />
   </Band>
 
-  <Band wave id="steps" title={t('guide_android_tv.four_steps')} sub={t('guide_android_tv.you_do_the_first_three')}>
+  <Band wave body id="steps" title={t('guide_android_tv.four_steps')} sub={t('guide_android_tv.you_do_the_first_three')}>
     <Steps>
       <Step id="tv-1" title={t('guide_android_tv.check_the_television')}>
         <p><T k="guide_android_tv.open_and_look_for_the"><em slot="em1">{t('guide_android_tv.open_and_look_for_the__em1')}</em><em slot="em2">{t('guide_android_tv.open_and_look_for_the__em2')}</em><em slot="em3">{t('guide_android_tv.open_and_look_for_the__em3')}</em></T></p>

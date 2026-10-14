@@ -8,6 +8,8 @@ import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
+import Card from '../../../components/Card.astro';
+import Cards from '../../../components/Cards.astro';
 import Panel from '../../../components/Panel.astro';
 import KeysTable from '../../../components/formats/KeysTable.astro';
 import KeysRow from '../../../components/formats/KeysRow.astro';
@@ -76,14 +78,9 @@ const listed = [
   <Icon name="wave" />
 
   <Band id="listed" labelledby="listed-h" tonal title={t('formats.which_files_show_up_in')} sub={t('formats.the_same_on_every_platform')}>
-    <div class="card-grid card-grid-3" data-reveal>
-      {listed.map(([title, body]) => (
-        <div class="card">
-          <h3>{t(title)}</h3>
-          <p>{t(body)}</p>
-        </div>
-      ))}
-    </div>
+    <Cards>
+      {listed.map(([title, body]) => <Card title={t(title)} body={t(body)} />)}
+    </Cards>
   </Band>
 
   <Icon name="wave-flip" />

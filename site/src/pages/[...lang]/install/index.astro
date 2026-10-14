@@ -10,12 +10,13 @@ import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
+import Steps from '../../../components/Steps.astro';
 import StarCard from '../../../components/StarCard.astro';
-import Step from '../../../components/install/Step.astro';
+import Step from '../../../components/Step.astro';
 import SignIn from '../../../components/install/SignIn.astro';
 import Way from '../../../components/install/Way.astro';
 import Panel from '../../../components/Panel.astro';
-import FaqItem from '../../../components/install/FaqItem.astro';
+import FaqItem from '../../../components/FaqItem.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -127,7 +128,7 @@ const ld1 = {
 
   <Band id="android-tv" labelledby="tv-h" title={t('install.tv_title')} tonal body>
     <T slot="sub" k="install.tv_sub"><a href={l('/fire-tv/')} slot="a1">{t('install.tv_sub__a1')}</a></T>
-        <ol class="steps">
+        <Steps>
           <Step id="step-1" title={t('install.tv_step1_h')}>
             <p><T k="install.tv_step1"><em slot="em1">Downloader</em></T></p>
           </Step>
@@ -141,7 +142,7 @@ const ld1 = {
           <Step id="step-4" title={t('home.sign_in')}>
             <p><T k="install.tv_step4"><em slot="em1">{t('install.tv_step4__em1')}</em><em slot="em2">{t('install.tv_step4__em2')}</em><em slot="em3">{t('install.tv_step4__em3')}</em></T></p>
           </Step>
-        </ol>
+        </Steps>
 
         <h3 class="alt-head">{t('install.other_ways')}</h3>
         <div class="formats">
@@ -160,7 +161,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
 <Icon name="wave-flip" />
 
   <Band id="android" labelledby="phone-h" title={t('install.phone_title')} sub={t('install.phone_sub')} body>
-        <ol class="steps">
+        <Steps>
           <Step id="phone-1" title={t('install.phone_step1_h')}>
             <p><T k="install.phone_step1"><a href={l('/download/')} slot="a1">{t('install.phone_step1__a1')}</a></T></p>
           </Step>
@@ -170,14 +171,14 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
           <Step id="phone-3" title={t('home.sign_in')}>
             <p>{t('install.phone_step3')}</p>
           </Step>
-        </ol>
+        </Steps>
         <p class="muted small section-note"><T k="install.phone_obtainium"><a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener" slot="a1">Obtainium</a></T></p>
   </Band>
 
 <Icon name="wave" />
 
   <Band id="windows" labelledby="windows-h" title={t('install.on_windows')} sub={t('install.windows_10_or_11_64')} tonal body>
-        <ol class="steps">
+        <Steps>
           <Step id="win-1" title={t('install.win_step1_h')}>
             <p><T k="install.win_step1"><em slot="em1">{t('install.win_step1__em1')}</em><em slot="em2">{t('install.win_step1__em2')}</em></T></p>
           </Step>
@@ -190,7 +191,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
             <p>{t('install.win_step3')}</p>
             <p><T k="install.scan_the_qr_code_with"><em slot="em1">{t('install.scan_the_qr_code_with__em1')}</em><em slot="em2">{t('install.scan_the_qr_code_with__em2')}</em><em slot="em3">{t('install.scan_the_qr_code_with__em3')}</em><em slot="em4">{t('install.scan_the_qr_code_with__em4')}</em></T></p>
           </Step>
-        </ol>
+        </Steps>
 
         <Panel id="windows-installer" title={t('install.win_msi_h')} wide>
           <p><T k="install.win_msi"><code data-name="windows-x64-msi" slot="code1">TMPlayer-&lt;version&gt;-windows-x64.msi</code><a href={l('/download/#windows')} slot="a1">{t('install.win_msi__a1')}</a><em slot="em1">{t('install.win_msi__em1')}</em><em slot="em2">{t('install.win_msi__em2')}</em><em slot="em3">{t('install.win_msi__em3')}</em></T></p>
@@ -201,7 +202,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
 <Icon name="wave-flip" />
 
   <Band id="macos" labelledby="macos-h" title={t('install.on_macos')} sub={t('install.macos_sub')} body>
-        <ol class="steps">
+        <Steps>
           <Step id="mac-1" title={t('install.mac_step1_h')}>
             <p><T k="install.mac_step1"><code slot="code1">TMPlayer-&lt;version&gt;-macos-arm64.dmg</code><a href={l('/download/#macos')} slot="a1">{t('install.mac_step1__a1')}</a><em slot="em1">TMPlayer</em><em slot="em2">{t('install.mac_step1__em2')}</em></T></p>
           </Step>
@@ -212,7 +213,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
             <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
           </Step>
           <SignIn id="mac-3" />
-        </ol>
+        </Steps>
 
         <Panel id="macos-updates" title={t('install.mac_update_h')} wide>
           <p>{t('install.mac_update')}</p>
@@ -223,7 +224,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
 <Icon name="wave" />
 
   <Band id="linux" labelledby="linux-h" title={t('install.on_linux')} sub={t('download.x86_64_with_glibc_2')} tonal body>
-        <ol class="steps">
+        <Steps>
           <Step id="linux-1" title={t('install.linux_step1_h')}>
             <p><T k="install.linux_step1"><code data-name="linux-x64-appimage" slot="code1">TMPlayer-&lt;version&gt;-x86_64.AppImage</code><a href={l('/download/#linux')} slot="a1">{t('install.linux_step1__a1')}</a></T></p>
           </Step>
@@ -235,7 +236,7 @@ chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.Ap
             <p><T k="install.or_tick_in_the_file"><em slot="em1">{t('install.or_tick_in_the_file__em1')}</em></T></p>
           </Step>
           <SignIn id="linux-3" />
-        </ol>
+        </Steps>
 
         <h3 class="alt-head">{t('install.other_ways')}</h3>
         <div class="formats">

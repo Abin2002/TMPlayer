@@ -10,7 +10,8 @@ import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
-import FeatureCard from '../../../components/android-tv/FeatureCard.astro';
+import Cards from '../../../components/Cards.astro';
+import Card from '../../../components/Card.astro';
 import TvShot from '../../../components/android-tv/TvShot.astro';
 import Panel from '../../../components/Panel.astro';
 import StarCard from '../../../components/StarCard.astro';
@@ -77,9 +78,9 @@ const features = [
   <Icon name="wave" />
 
   <Band tonal labelledby="tv-h" title={t('android_tv.what_changes_on_a_television')} sub={t('android_tv.same_account_same_apk_only')}>
-    <div class="card-grid card-grid-3" data-reveal>
-      {features.map((f) => <FeatureCard title={t(f.title)} body={t(f.body)} shot={f.shot} icon={f.icon} />)}
-    </div>
+    <Cards>
+      {features.map((f) => <Card title={t(f.title)} body={t(f.body)} shot={f.shot} shotIcon={f.icon} />)}
+    </Cards>
   </Band>
 
   <Icon name="wave-flip" />

@@ -10,6 +10,10 @@ import Footer from '../../components/Footer.astro';
 import ToTop from '../../components/ToTop.astro';
 import T from '../../components/T.astro';
 import Icon from '../../components/Icon.astro';
+import LinkCard from '../../components/LinkCard.astro';
+import Cards from '../../components/Cards.astro';
+import Step from '../../components/Step.astro';
+import Steps from '../../components/Steps.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import LangCount from '../../components/LangCount.astro';
 import StarCard from '../../components/StarCard.astro';
@@ -250,34 +254,13 @@ const ld2 = {
         </div>
       </div>
 
-      <div class="card-grid card-grid-3" data-reveal>
-        <a class="card" href={l('/features/')}>
-          <span class="card-icon" aria-hidden="true">
-            <Icon name="play-card" />
-          </span>
-          <h3>{t('home.what_it_does')}</h3>
-          <p>{t('home.streams_as_it_downloads_plays')}</p>
-          <span class="card-go">{t('home.the_full_list')} <Icon name="arrow-right-sm" /> </span>
-        </a>
+      <Cards>
+        <LinkCard href={l('/features/')} icon="play-card" title={t('home.what_it_does')} body={t('home.streams_as_it_downloads_plays')} go={t('home.the_full_list')} />
 
-        <a class="card" href={l('/android-tv/')}>
-          <span class="card-icon" aria-hidden="true">
-            <Icon name="tv-card" />
-          </span>
-          <h3>{t('home.on_android_tv')}</h3>
-          <p>{t('home.a_ten_foot_layout_for')}</p>
-          <span class="card-go">{t('home.made_for_the_television')} <Icon name="arrow-right-sm" /> </span>
-        </a>
+        <LinkCard href={l('/android-tv/')} icon="tv-card" title={t('home.on_android_tv')} body={t('home.a_ten_foot_layout_for')} go={t('home.made_for_the_television')} />
 
-        <a class="card" href={l('/faq/')}>
-          <span class="card-icon" aria-hidden="true">
-            <Icon name="question-card" />
-          </span>
-          <h3>{t('home.what_it_is_not')}</h3>
-          <p>{t('home.not_a_media_service_messages')}</p>
-          <span class="card-go">{t('home.questions_and_limits')} <Icon name="arrow-right-sm" /> </span>
-        </a>
-      </div>
+        <LinkCard href={l('/faq/')} icon="question-card" title={t('home.what_it_is_not')} body={t('home.not_a_media_service_messages')} go={t('home.questions_and_limits')} />
+      </Cards>
     </div>
   </section>
 
@@ -293,27 +276,24 @@ const ld2 = {
       </div>
 
       <div class="section-body" data-reveal>
-        <ol class="steps">
-          <li>
-            <h3>{t('home.get_the_file')}</h3>
+        <Steps>
+          <Step title={t('home.get_the_file')}>
             <p>{t('home.get_the_file_all')}</p>
             <p><a href={l('/download/')}>{t('home.go_to_the_download_page')}</a></p>
-          </li>
-          <li>
-            <h3>{t('home.install_it')}</h3>
+          </Step>
+          <Step title={t('home.install_it')}>
             <p>{t('home.install_it_each')}</p>
             <p><a href={l('/install/')}>{t('home.read_the_install_steps')}</a></p>
-          </li>
-          <li>
-            <h3>{t('home.scan_the_qr_code')}</h3>
+          </Step>
+          <Step title={t('home.scan_the_qr_code')}>
             <p>{t('home.sign_in_with_telegram_s')}</p>
             <p><a href={l('/faq/')}>{t('home.what_that_does_and_does')}</a></p>
             <picture class="step-shot">
               <source data-theme-src srcset="/screenshots/tv-sign-in-light.webp" media="(prefers-color-scheme: light)">
               <img src="/screenshots/tv-sign-in.webp" alt={t('home.sign_in_qr_alt')} width="960" height="480" loading="lazy" decoding="async">
             </picture>
-          </li>
-        </ol>
+          </Step>
+        </Steps>
         <p class="steps-cta"><a class="btn btn-filled" href={l('/download/')}>{t('common.download')}</a></p>
       </div>
     </div>

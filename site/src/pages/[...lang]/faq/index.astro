@@ -8,7 +8,7 @@ import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
-import FaqItem from '../../../components/faq/FaqItem.astro';
+import FaqItem from '../../../components/FaqItem.astro';
 import Panel from '../../../components/Panel.astro';
 import StarCard from '../../../components/StarCard.astro';
 import { faqLd } from '../../../components/faq/ld';
@@ -87,7 +87,9 @@ const questions = [
         announced as a disclosure, and works with JavaScript off. The height animation lives on
         the inner .faq-body, since details itself cannot be transitioned. */}
     <div class="faq" data-reveal>
-      {questions.map((item) => <FaqItem {...item} />)}
+      {questions.map(({ q, a, href, id }) => (
+        <FaqItem q={t(q)} name="faq" id={id}>{href ? <T k={a}><a href={href} slot="a1">{t(`${a}__a1`)}</a></T> : t(a)}</FaqItem>
+      ))}
     </div>
   </Band>
 

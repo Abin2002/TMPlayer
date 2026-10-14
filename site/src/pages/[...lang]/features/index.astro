@@ -11,11 +11,12 @@ import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
+import Cards from '../../../components/Cards.astro';
 import TickPanel from '../../../components/features/TickPanel.astro';
 import GalleryShot from '../../../components/features/GalleryShot.astro';
 import TourShot from '../../../components/features/TourShot.astro';
 import StarCard from '../../../components/StarCard.astro';
-import NextCard from '../../../components/features/NextCard.astro';
+import LinkCard from '../../../components/LinkCard.astro';
 import type { Shot } from '../../../components/features/GalleryShot.astro';
 import type { Point } from '../../../components/features/TourShot.astro';
 import { langPaths } from '../../../i18n/paths';
@@ -255,9 +256,9 @@ const next = [
   <StarCard tonal lede={t('features.every_feature_here_started_as')} />
 
   <Band wave labelledby="next-h" title={t('features.where_to_next')}>
-    <div class="card-grid card-grid-3" data-reveal>
-      {next.map((c) => <NextCard {...c} />)}
-    </div>
+    <Cards>
+      {next.map((c) => <LinkCard href={l(c.href)} title={t(c.title)} body={t(c.body)} go={t(c.go)} />)}
+    </Cards>
   </Band>
 
 </main>
