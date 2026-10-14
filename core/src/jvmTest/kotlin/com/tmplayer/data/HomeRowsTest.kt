@@ -285,4 +285,26 @@ class HomeRowsTest {
         )
         assertEquals(listOf(clip.messageId), HomeRows.copiesOf(records[4], records).map { it.messageId })
     }
+
+    @Test
+    fun `a film started in one copy keeps its other copies out of the rows below`() {
+        val sd = video(1, "Thunderbolts.2025.720p.HS.WEB-DL.x264.mkv")
+        val hd = video(1, "Thunderbolts.2025.1080p.HS.WEB-DL.x265.mkv")
+        val e1 = video(1, "Loki.S01E01.720p.mkv")
+        val e1hd = video(1, "Loki.S01E01.1080p.mkv")
+        val e2 = video(1, "Loki.S01E02.720p.mkv")
+        val other = video(1, "Night Train (2019) 1080p.mkv")
+        val loaded = listOf(sd, hd, e1, e1hd, e2, other)
+        val rows = HomeRows.build(
+            continueWatching = listOf(resume(sd, updatedAt = 20), resume(e1, updatedAt = 10)),
+            favourites = listOf(chat(1), chat(2)),
+            loaded = mapOf(1L to loaded, 2L to emptyList()),
+            recent = loaded,
+        )
+        val below = rows.drop(1).flatMap(::ids)
+        assertFalse(hd.messageId in below)
+        assertTrue(other.messageId in below)
+        // An episode in progress folds into its show below, so the show is still there.
+        assertTrue(e2.messageId in below || e1.messageId in below)
+    }
 }

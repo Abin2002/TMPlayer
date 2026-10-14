@@ -140,7 +140,7 @@ object HomeRows {
         val resume = everyResume.take(LIMIT)
         resume.forEach { seen += keyOf(it.chatId, it.messageId) }
         // A copy folded under the one watched last is in Continue too, through that one.
-        val shownCopies = resume.mapTo(HashSet()) { record -> copyKeyOf(record) }
+        val shownCopies = resume.mapNotNullTo(HashSet()) { record -> copyKeyOf(record) }
         distinct.forEach { record -> if (copyKeyOf(record).let { it != null && it in shownCopies }) seen += keyOf(record.chatId, record.messageId) }
         if (resume.isNotEmpty()) add(HomeRow.Continue(resume, everyResume.drop(LIMIT)))
         val inContinue = HashSet(seen)
@@ -155,7 +155,7 @@ object HomeRows {
                 // fetch, and a starred chat's fetch fills in whatever the search did not reach.
                 val pool = recent.filter { it.chatId in starredIds } + starredIds.flatMap { loaded[it].orEmpty() }
                 // A copy, so the rows below still show these videos in their own chats.
-                val entries = row(pool, HashSet(inContinue))
+                val entries = row(pool, HashSet(inContinue), shownCopies)
                 if (entries.isNotEmpty()) add(HomeRow.Recent(entries, loaded = true))
             }
         }
@@ -174,7 +174,7 @@ object HomeRows {
                 add(HomeRow.Chat(chat.id, chat.title, emptyList(), loaded = false))
                 return@forEach
             }
-            val entries = row(items, seen)
+            val entries = row(items, seen, shownCopies)
             if (entries.isNotEmpty()) {
                 val all = items.distinctBy { it.id }
                 add(
@@ -197,10 +197,13 @@ object HomeRows {
      * Newest first, without anything an earlier row already showed, folded into shows, cut to
      * [LIMIT]. Whatever ends up in the row is added to [seen], every episode of a folded show
      * included (every copy of each), so a later row cannot show one of them again on its own.
+     * Nor can another copy of a film or episode in Continue ([continuing], as [copyKeyOf] keys
+     * them): the 1080p of a film started in 720p is the same film, part way through.
      */
-    private fun row(items: List<MediaItem>, seen: MutableSet<String>): List<ShelfEntry> {
+    private fun row(items: List<MediaItem>, seen: MutableSet<String>, continuing: Set<String> = emptySet()): List<ShelfEntry> {
         val fresh = items
             .filterNot { keyOf(it.chatId, it.messageId) in seen }
+            .filterNot { item -> continuing.isNotEmpty() && SeriesShelf.sameVideoKey(item)?.let { "${item.chatId}|$it" in continuing } == true }
             .distinctBy { it.id }
             .sortedWith(compareByDescending<MediaItem> { it.date }.thenByDescending { it.messageId })
         val entries = SeriesShelf.arrange(fresh).take(LIMIT)
