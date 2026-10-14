@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -653,18 +655,27 @@ fun SeriesPanel(
     }
     val shown = series.seasons.firstOrNull { it.number == season } ?: series.seasons.first()
     val playFocus = remember { FocusRequester() }
-    // Whether anything on the page holds focus, so Play is only asked for while nothing does.
-    var pageFocused by remember(series.key) { mutableStateOf(false) }
+    // Whether Play holds focus, and whether the viewer has pressed a key on the page yet: Play is
+    // asked for until it has focus or a key has gone elsewhere. Not "until anything has focus":
+    // the window hands focus to the first control it can reach as soon as it gets it, which on a
+    // slow television is the season tab, before Play is even laid out.
+    var playFocused by remember(series.key) { mutableStateOf(false) }
+    var keyPressed by remember(series.key) { mutableStateOf(false) }
     // A page opened from a card on the TV home screen comes up before its window has focus, and a
     // request made then is lost; it is made again once the window has it.
     val windowFocused = LocalWindowInfo.current.isWindowFocused
-    // After a frame, and a few more if need be: Play sits in a lazy list item, which is not
-    // attached until the list has laid it out, and a request before then is lost.
-    LaunchedEffect(series.key, windowFocused) {
-        if (!tv || !windowFocused) return@LaunchedEffect
-        repeat(FOCUS_TRIES) {
+    // Set once Play has been placed. Play sits in a lazy list item in a window of its own, and on a
+    // slow television that item is laid out well after the page opens: a request before then is
+    // lost, so it waits for Play itself rather than for a count of frames, which a stick outlasts.
+    var playPlaced by remember(series.key) { mutableStateOf(false) }
+    LaunchedEffect(series.key, windowFocused, playPlaced) {
+        if (!tv || !windowFocused || !playPlaced) return@LaunchedEffect
+        // Asked again on each frame until Play has focus, for as long as a slow first
+        // layout may take.
+        val until = System.nanoTime() + FOCUS_WAIT_NS
+        while (System.nanoTime() < until) {
             withFrameNanos { }
-            if (pageFocused) return@LaunchedEffect
+            if (playFocused || keyPressed) return@LaunchedEffect
             runCatching { playFocus.requestFocus() }
         }
     }
@@ -729,7 +740,13 @@ fun SeriesPanel(
         Modifier
     }
 
-    BoxWithConstraints(modifier.onFocusChanged { pageFocused = it.hasFocus }) {
+    BoxWithConstraints(
+        modifier
+            .onPreviewKeyEvent { keyPressed = true; false }
+            // Should focus come into the page from outside before Play has it, it goes to Play.
+            .then(if (tv) Modifier.focusProperties { onEnter = { runCatching { playFocus.requestFocus() } } } else Modifier)
+            .focusGroup(),
+    ) {
         val wide = maxWidth > maxHeight || maxWidth >= WIDE_PAGE
         val heroHeight = if (wide) {
             (maxHeight * 0.62f).coerceIn(280.dp, 560.dp)
@@ -802,7 +819,7 @@ fun SeriesPanel(
                     },
                     icon = TmIcons.Play,
                     onClick = { onPlay(next?.item ?: watch.pick(target, progress)) },
-                    modifier = m.then(downToUpNext),
+                    modifier = m.then(downToUpNext).onPlaced { playPlaced = true }.onFocusChanged { playFocused = it.hasFocus },
                     focusRequester = playFocus,
                 )
             }
@@ -1086,8 +1103,8 @@ private fun Modifier.okHold(
 
 private val OK_KEYS = setOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter)
 
-/** Frames to wait for a lazily composed button before giving up on focusing it. */
-private const val FOCUS_TRIES = 5
+/** How long to keep asking for Play's focus after it is placed, before giving up on it. */
+private const val FOCUS_WAIT_NS = 3_000_000_000L
 
 /**
  * Where the page's list scrolls to bring a focused control into view, so the hero is never cut
