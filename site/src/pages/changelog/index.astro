@@ -1,0 +1,77 @@
+---
+// Every release, newest first, from src/data/releases.json (written by scripts/release-data.py).
+import Shell from '../../components/changelog/Shell.astro';
+import Give from '../../components/changelog/Give.astro';
+import RssIcon from '../../components/changelog/RssIcon.astro';
+import Wave from '../../components/changelog/Wave.astro';
+import JsonLd from '../../components/JsonLd.astro';
+import { ENGLISH } from '../../i18n/langs';
+import { DESCRIPTION, PAGE_URL, REPO, SITE, humanDate, notesHtml, releaseUrl, releases } from '../../lib/releases';
+
+Astro.locals.lang = ENGLISH;
+
+const crumbs = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Changelog', item: PAGE_URL },
+  ],
+};
+const blog = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: 'TMPlayer releases',
+  url: PAGE_URL,
+  description: DESCRIPTION,
+  inLanguage: 'en',
+  blogPost: releases.map((r) => ({
+    '@type': 'BlogPosting', headline: `TMPlayer ${r.version}`, url: releaseUrl(r.version), datePublished: r.day,
+  })),
+};
+const oldest = releases.length ? releases[releases.length - 1].version : 'the first';
+---
+<Shell path="/changelog/" title="TMPlayer changelog: every release" description={DESCRIPTION}>
+  <Fragment slot="head">
+    <JsonLd data={crumbs} />
+    <JsonLd data={blog} />
+  </Fragment>
+
+  <section class="page-head">
+    <div class="wrap page-head-wrap">
+      <p class="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span>Changelog</p>
+      <h1>Every <em>release</em></h1>
+      <p class="page-lede">What changed in each TMPlayer release, newest first. Installed copies offer each update, so this is where to find out what it brings.</p>
+      <div class="page-actions">
+        <a class="btn btn-filled" href="/download/">Download the latest</a>
+        <a class="btn btn-outline" href="/changelog/feed.xml" type="application/rss+xml">
+          <RssIcon />
+          Follow by RSS
+        </a>
+      </div>
+    </div>
+  </section>
+
+<Wave />
+
+  <section class="band band-tonal" aria-label="Releases">
+    <div class="wrap">
+      <div class="changelog">
+{releases.length === 0 && <p class="muted">No releases yet.</p>}
+{releases.map((r) => (
+        <article class="changelog-entry" id={`v${r.version}`} aria-labelledby={`v${r.version}-h`}>
+          <header class="changelog-entry-head">
+            <h2 id={`v${r.version}-h`}><a href={`/changelog/${r.version}/`}>TMPlayer {r.version}</a></h2>
+            <p class="changelog-meta"><time datetime={r.day}>{humanDate(r.date)}</time><span class="sep" aria-hidden="true">&middot;</span><a href={r.url} rel="noopener">On GitHub</a></p>
+          </header>
+          <div class="changelog-notes">
+<Fragment set:html={notesHtml(r, ' '.repeat(12))} />
+          </div>
+        </article>
+))}
+      </div>
+<Give lead="Every release on this page was made in spare time." />
+      <p class="muted small section-note changelog-foot">Releases from before {oldest} are on <a href={`https://github.com/${REPO}/tags`} rel="noopener">GitHub as tags</a>. Every release links the source tree it was built from.</p>
+    </div>
+  </section>
+</Shell>

@@ -1,0 +1,232 @@
+[
+  {
+    "path": "/",
+    "lastmod": "2026-10-14",
+    "changefreq": "weekly",
+    "priority": "1.0",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home.webp",
+        "title": "TMPlayer's Home on Android TV: Continue watching and the newest posters from starred chats"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home-light.webp",
+        "title": "TMPlayer's Home on a television, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show.webp",
+        "title": "A show's page in TMPlayer on a phone, with its artwork, overview and resume button"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show-light.webp",
+        "title": "A show's page in TMPlayer on a phone, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-sign-in.webp",
+        "title": "Signing in to TMPlayer on Android TV by scanning a QR code with Telegram on a phone"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-sign-in-light.webp",
+        "title": "The TMPlayer QR sign-in on a television, in the light theme"
+      }
+    ]
+  },
+  {
+    "path": "/features/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.9",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-chats.webp",
+        "title": "The TMPlayer chat list on an Android phone"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-grid.webp",
+        "title": "Playable videos in a Telegram chat, on a phone"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-chats.webp",
+        "title": "The TMPlayer chat list on Android TV"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home.webp",
+        "title": "TMPlayer's Home on Android TV: Continue watching, then the newest posters from starred chats"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-settings.webp",
+        "title": "TMPlayer settings on Android TV"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-chats-light.webp",
+        "title": "The TMPlayer chat list on an Android phone, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-grid-light.webp",
+        "title": "Playable videos in a Telegram chat, on a phone, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-chats-light.webp",
+        "title": "The TMPlayer chat list on a television, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home-light.webp",
+        "title": "TMPlayer's Home on a television, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-settings-light.webp",
+        "title": "TMPlayer settings on a television, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-grid.webp",
+        "title": "Playable videos in a Telegram chat, in the TMPlayer desktop app"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-grid-light.webp",
+        "title": "Playable videos in a Telegram chat, in the TMPlayer desktop app, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-player.webp",
+        "title": "The TMPlayer desktop player on Windows and Linux"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home-screen.webp",
+        "title": "A TMPlayer row of recently added films and shows on the Android TV home screen"
+      }
+    ]
+  },
+  {
+    "path": "/download/",
+    "lastmod": "2026-10-14",
+    "changefreq": "weekly",
+    "priority": "0.9"
+  },
+  {
+    "path": "/install/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.8"
+  },
+  {
+    "path": "/android-tv/",
+    "lastmod": "2026-10-15",
+    "changefreq": "monthly",
+    "priority": "0.8",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-chats.webp",
+        "title": "The TMPlayer chat list on Android TV"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-grid.webp",
+        "title": "Playable videos in a Telegram chat, on Android TV"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-rail.webp",
+        "title": "The rail of categories down the left of TMPlayer on Android TV"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-rail-light.webp",
+        "title": "The rail of categories in TMPlayer on a television, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-sign-in.webp",
+        "title": "Signing in to TMPlayer on Android TV by scanning a QR code with Telegram on a phone"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-sign-in-light.webp",
+        "title": "The TMPlayer QR sign-in on a television, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-search.webp",
+        "title": "Search in a Telegram chat on Android TV finding every episode of a show despite a typo"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-search-light.webp",
+        "title": "Search in a chat on a television, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-next-episode.webp",
+        "title": "The next episode countdown in the TMPlayer player on Android TV"
+      }
+    ]
+  },
+  {
+    "path": "/faq/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.7"
+  },
+  {
+    "path": "/privacy/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.5"
+  },
+  {
+    "path": "/legal/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.5"
+  },
+  {
+    "path": "/signing/",
+    "lastmod": "2026-10-10",
+    "changefreq": "yearly",
+    "priority": "0.3"
+  },
+  {
+    "path": "/support/",
+    "lastmod": "2026-10-15",
+    "changefreq": "monthly",
+    "priority": "0.5"
+  },
+  {
+    "path": "/changelog/",
+    "lastmod": "2026-10-14",
+    "changefreq": "weekly",
+    "priority": "0.7"
+  },
+  {
+    "path": "/fire-tv/",
+    "lastmod": "2026-10-15",
+    "changefreq": "monthly",
+    "priority": "0.8"
+  },
+  {
+    "path": "/formats/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.6"
+  },
+  {
+    "path": "/security/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.6"
+  },
+  {
+    "path": "/guides/telegram-videos-on-android-tv/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.7"
+  },
+  {
+    "path": "/guides/telegram-videos-on-fire-tv/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.7"
+  },
+  {
+    "path": "/guides/telegram-on-tv-without-casting/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.7"
+  },
+  {
+    "path": "/translate/",
+    "lastmod": "2026-10-14",
+    "changefreq": "monthly",
+    "priority": "0.5"
+  }
+]
