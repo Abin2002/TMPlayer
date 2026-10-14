@@ -360,7 +360,7 @@ class SelfUpdate(
         }.getOrDefault(false)
 
         /**
-         * The update feed's key for the package [kind] installs from (see `site/latest.json`).
+         * The update feed's key for the package [kind] installs from (see `site/public/latest.json`).
          * The portable zip, deb and rpm keys stay so a release that still carries them (1.21.0
          * and older) works as before; newer releases simply have no such key.
          */

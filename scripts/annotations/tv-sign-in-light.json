@@ -1,6 +1,6 @@
 {
   "source": "tv-sign-in-light.png",
-  "output": "site/screenshots/tv-sign-in-light.webp",
+  "output": "site/public/screenshots/tv-sign-in-light.webp",
   "crop": [0, 140, 1800, 900],
   "width": 960,
   "marks": [

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerates the desktop app icons from site/logo.svg, the same tile the site and the Android
+# Regenerates the desktop app icons from site/public/logo.svg, the same tile the site and the Android
 # adaptive icon use. Needs ImageMagick 7 with librsvg and Python 3 with Pillow.
 #
 #   desktop/packaging/icons/generate.sh

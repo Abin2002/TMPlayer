@@ -154,11 +154,11 @@ not commit them. A script that builds every file below is kept outside the repo;
 
 | Asset | Size | Rule | Source |
 | --- | --- | --- | --- |
-| Small icon | 114 x 114 | PNG, transparent | `site/icon-512.png`, resampled |
-| Large icon | 512 x 512 | PNG, transparent | `site/icon-512.png` as is |
+| Small icon | 114 x 114 | PNG, transparent | `site/public/icon-512.png`, resampled |
+| Large icon | 512 x 512 | PNG, transparent | `site/public/icon-512.png` as is |
 | Fire TV app icon | 1280 x 720 | PNG, no transparency | the TV banner (`tv_banner.xml`) with the name under it |
 | Fire TV background | 1920 x 1080 | JPG or 24-bit PNG, no transparency, required | dark backdrop with the player mark |
-| Fire TV screenshots | 1920 x 1080, 3 to 10 | JPG or 24-bit PNG, no transparency | `site/screenshots/tv-*.webp` |
+| Fire TV screenshots | 1920 x 1080, 3 to 10 | JPG or 24-bit PNG, no transparency | `site/public/screenshots/tv-*.webp` |
 | Tablet screenshots | 3 to 10, one of Amazon's listed sizes | PNG or JPG | the same 1920 x 1080 TV shots (1920 x 1080 is on the tablet list; the 1080 x 2400 phone shots are not) |
 | Promotional image | 1024 x 500 | optional | not made |
 | Video | up to 5 | optional | not made |
@@ -169,7 +169,7 @@ Screenshots, pixel-identical to the WebP files, 24-bit, no alpha:
 D=amazon-assets; mkdir -p $D/screenshots
 n=1
 for s in tv-grid tv-chats tv-settings tv-grid-light tv-chats-light tv-settings-light; do
-  magick site/screenshots/$s.webp -alpha off -define png:color-type=2 $D/screenshots/$n-$s.png
+  magick site/public/screenshots/$s.webp -alpha off -define png:color-type=2 $D/screenshots/$n-$s.png
   n=$((n+1))
 done
 ```
@@ -177,12 +177,12 @@ done
 Icons:
 
 ```sh
-cp site/icon-512.png $D/icon-large-512.png
-magick site/icon-512.png -filter Lanczos -resize 114x114 $D/icon-small-114.png
+cp site/public/icon-512.png $D/icon-large-512.png
+magick site/public/icon-512.png -filter Lanczos -resize 114x114 $D/icon-small-114.png
 ```
 
 The 1280 x 720 icon and the 1920 x 1080 background are drawn from the `tv_banner.xml` paths and
-rendered with headless Chromium (Poppins 600 from `site/fonts/` for the name). A version with only
+rendered with headless Chromium (Poppins 600 from `site/public/fonts/` for the name). A version with only
 the mark, no name, is beside it in case Amazon's preview crops the text.
 
 Reuse note (R6): no new screenshots were taken for Amazon. The TV shots on the site are the same

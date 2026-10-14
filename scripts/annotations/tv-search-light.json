@@ -1,6 +1,6 @@
 {
   "source": "tv-search-light.png",
-  "output": "site/screenshots/tv-search-light.webp",
+  "output": "site/public/screenshots/tv-search-light.webp",
   "crop": [
     64,
     160,

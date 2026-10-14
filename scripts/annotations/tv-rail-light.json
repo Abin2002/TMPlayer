@@ -1,6 +1,6 @@
 {
   "source": "tv-home-light.png",
-  "output": "site/screenshots/tv-rail-light.webp",
+  "output": "site/public/screenshots/tv-rail-light.webp",
   "crop": [
     0,
     0,

@@ -13,7 +13,15 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
-<link rel="stylesheet" href="../site/styles.css">
+<link rel="stylesheet" href="../site/src/styles/styles.css">
+<!-- The stylesheet names the fonts by their site path (/fonts/...); served from the repository
+     root, this card finds them in site/public/fonts/ instead. -->
+<style>
+  @font-face { font-family: "Poppins"; font-style: normal; font-weight: 400; font-display: swap; src: url("../site/public/fonts/poppins-400.woff2") format("woff2"); }
+  @font-face { font-family: "Poppins"; font-style: normal; font-weight: 500; font-display: swap; src: url("../site/public/fonts/poppins-500.woff2") format("woff2"); }
+  @font-face { font-family: "Poppins"; font-style: normal; font-weight: 600; font-display: swap; src: url("../site/public/fonts/poppins-600.woff2") format("woff2"); }
+  @font-face { font-family: "Poppins"; font-style: normal; font-weight: 700; font-display: swap; src: url("../site/public/fonts/poppins-700.woff2") format("woff2"); }
+</style>
 <style>
   html, body { width: 1198px; height: 748px; overflow: hidden; background: transparent; margin: 0; }
   body::before, body::after { display: none; }
@@ -23,12 +31,12 @@
 <body>
   <figure class="showcase">
     <div class="device device-tv">
-      <div class="screen"><img src="../site/screenshots/tv-home.webp" alt=""></div>
+      <div class="screen"><img src="../site/public/screenshots/tv-home.webp" alt=""></div>
       <div class="stand"></div>
       <div class="foot"></div>
     </div>
     <div class="device device-phone">
-      <div class="screen"><img src="../site/screenshots/phone-show.webp" alt=""></div>
+      <div class="screen"><img src="../site/public/screenshots/phone-show.webp" alt=""></div>
     </div>
   </figure>
 </body>

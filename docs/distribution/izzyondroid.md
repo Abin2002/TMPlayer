@@ -11,7 +11,7 @@ project is archived and says so at the top).
 ## The inclusion policy, checked against TMPlayer 1.22.0
 
 Policy: <https://gitlab.com/IzzyOnDroid/repo/-/wikis/Inclusion-Policy>. Facts below were checked on
-the released `TMPlayer-1.22.0-universal.apk` (sha256 `5c6a01bd...12e9`, matches `site/latest.json`).
+the released `TMPlayer-1.22.0-universal.apk` (sha256 `5c6a01bd...12e9`, matches `site/public/latest.json`).
 
 | Requirement | TMPlayer | |
 | --- | --- | --- |

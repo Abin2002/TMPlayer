@@ -557,19 +557,19 @@ jobs:
           for attempt in 1 2 3; do
             git fetch --depth=1 origin main
             git checkout -B feed FETCH_HEAD
-            CURRENT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' site/latest.json 2>/dev/null || echo 0.0.0)"
+            CURRENT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' site/public/latest.json 2>/dev/null || echo 0.0.0)"
             if [ "$(printf '%s\n%s\n' "$CURRENT" "$VERSION" | sort -V | tail -n1)" != "$VERSION" ]; then
               echo "The feed already names $CURRENT, newer than $VERSION; leaving it."
               MESSAGE="site: the changelog names $VERSION"
             else
-              cp "$RUNNER_TEMP/latest.json" site/latest.json
+              cp "$RUNNER_TEMP/latest.json" site/public/latest.json
               # tmplayer.org/apk follows the newest release's APK, named in full: a release
               # carries one APK, whose name has the version in it.
               python3 scripts/point-apk-redirect.py "$VERSION"
               MESSAGE="site: the update feed names $VERSION"
             fi
             python3 scripts/build-changelog.py
-            git add site/latest.json site/vercel.json site/changelog site/sitemap.xml
+            git add site/public/latest.json site/vercel.json site/changelog site/sitemap.xml
             if git diff --cached --quiet; then
               echo "The site already names $VERSION."
               exit 0
@@ -583,7 +583,7 @@ jobs:
 
       # Tells Bing, Yandex, Seznam and Naver (through IndexNow) that the release's pages changed,
       # instead of waiting for their next crawl. Google does not take part and reads the sitemap.
-      # The key is public by design: site/<key>.txt proves the site asked. A failure here costs
+      # The key is public by design: site/public/<key>.txt proves the site asked. A failure here costs
       # only the ping, never the release.
       - name: Ping IndexNow with the release's pages
         continue-on-error: true
@@ -621,7 +621,7 @@ jobs:
             exit 0
           fi
           git fetch --depth=1 origin main
-          CURRENT="$(git show FETCH_HEAD:site/latest.json | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])' 2>/dev/null || echo 0.0.0)"
+          CURRENT="$(git show FETCH_HEAD:site/public/latest.json | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])' 2>/dev/null || echo 0.0.0)"
           if [ "$(printf '%s\n%s\n' "$CURRENT" "$VERSION" | sort -V | tail -n1)" != "$VERSION" ]; then
             echo "The site names $CURRENT, newer than $VERSION; not announcing an older version."
             exit 0

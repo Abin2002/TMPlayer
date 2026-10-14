@@ -198,7 +198,7 @@ packaged in any build.
 
 ## Visual assets
 
-- Poppins fonts: SIL Open Font License 1.1. The full text is in `site/fonts/OFL-Poppins.txt`.
+- Poppins fonts: SIL Open Font License 1.1. The full text is in `site/public/fonts/OFL-Poppins.txt`.
 - The player mark was adapted and recoloured from a player icon on SVG Repo
   (<https://www.svgrepo.com>), used under the licence that icon is published with there. SVG Repo
   is credited in the website footer and the README.

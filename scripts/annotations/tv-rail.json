@@ -1,6 +1,6 @@
 {
   "source": "tv-home-dark.png",
-  "output": "site/screenshots/tv-rail.webp",
+  "output": "site/public/screenshots/tv-rail.webp",
   "crop": [
     0,
     0,

@@ -1,6 +1,6 @@
 {
   "source": "tv-home-screen.png",
-  "output": "site/screenshots/tv-home-screen.webp",
+  "output": "site/public/screenshots/tv-home-screen.webp",
   "crop": [
     0,
     60,

@@ -19,13 +19,13 @@ PNG. Do not commit the PNG alongside it, and do not lower the quality to save a 
 Where they live and who reads them:
 
 - `docs/screenshots/` is the README. GitHub renders WebP.
-- `site/screenshots/` is the site, referenced from `site/index.html`, `site/sitemap.xml` and
-  `site/site.webmanifest`. Changing a file name means changing all three, and the manifest carries
+- `site/public/screenshots/` is the site, referenced from `site/index.html`, `site/sitemap.xml` and
+  `site/public/site.webmanifest`. Changing a file name means changing all three, and the manifest carries
   a `"type": "image/webp"` next to each one.
 
-Two images are deliberately still PNG. `site/og.png` is the social preview, and the crawlers that
+Two images are deliberately still PNG. `site/public/og.png` is the social preview, and the crawlers that
 fetch it (WhatsApp and LinkedIn among them) cannot be relied on to decode WebP, so a link would
-arrive with no picture at all. `site/icon-512.png` is the PWA icon, where PNG is what installers
+arrive with no picture at all. `site/public/icon-512.png` is the PWA icon, where PNG is what installers
 expect. Both are small. Leave them as they are.
 
 ## Onboarding pictures
@@ -84,11 +84,11 @@ existing ones do. Check them whenever a page under `site/` is added or changed.
   they get translated. The feature tour on `/features/` keeps its numbered HTML markers matched
   by a numbered list. Light and dark shots stay paired. Only demo-content screenshots are used,
   never a real account.
-- **Files for crawlers and machines.** `site/llms.txt` is a hand-written summary of the site for AI
+- **Files for crawlers and machines.** `site/public/llms.txt` is a hand-written summary of the site for AI
   assistants: when a page is added, renamed or its claims change, update it too. The home page
   carries `Organization` JSON-LD (logo, `sameAs` profiles); a new official profile goes there.
-  `site/.well-known/security.txt` expires on the date in it, so renew it before then.
-  `site/<key>.txt` is the IndexNow key the release job pings with; do not delete it.
+  `site/public/.well-known/security.txt` expires on the date in it, so renew it before then.
+  `site/public/<key>.txt` is the IndexNow key the release job pings with; do not delete it.
 - **Download page** keeps its `preconnect` hints to GitHub's API, github.com and
   `release-assets.githubusercontent.com`, the host the release files are served from.
 - **Sponsoring.** Every content page ends with the "Support TMPlayer" offer (GitHub Sponsors and

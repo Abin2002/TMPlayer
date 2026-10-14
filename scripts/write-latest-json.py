@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Writes site/latest.json, the update feed every TMPlayer reads before it asks GitHub.
+"""Writes site/public/latest.json, the update feed every TMPlayer reads before it asks GitHub.
 
 The release job runs it over the files it is about to publish, so the size and the SHA-256 of
 each package come from the very bytes that go up. Run by hand, --from-release reads them off a
 release that is already out instead (`gh release view vX.Y.Z --json assets` carries the digests).
 
-    scripts/write-latest-json.py --version 1.20.0 --dist dist --out site/latest.json
-    scripts/write-latest-json.py --version 1.19.1 --from-release assets.json --out site/latest.json
+    scripts/write-latest-json.py --version 1.20.0 --dist dist --out site/public/latest.json
+    scripts/write-latest-json.py --version 1.19.1 --from-release assets.json --out site/public/latest.json
 
 The schema is version 1 of the plan's C1. Clients ignore keys they do not know, so adding one is
 safe. Renaming a key is not, because installed copies read this file for years. A key may be left

@@ -187,7 +187,7 @@ The release page shows each file's SHA-256 beside it. Check a download with `sha
    It downloads the MSI from the GitHub release, checks its SHA-256 against the one tmplayer.org
    publishes, and installs it for your user. Windows shows no warning this way, because only a
    file a browser downloaded gets SmartScreen's check. The script is
-   [site/install.ps1](site/install.ps1) in this repository; read it before you run it.
+   [site/public/install.ps1](site/public/install.ps1) in this repository; read it before you run it.
 3. Open TMPlayer from the Start menu or the desktop shortcut, and sign in (see
    [First run on a computer](#first-run-on-a-computer)).
 

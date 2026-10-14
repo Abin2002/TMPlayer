@@ -25,12 +25,12 @@ those steps use.
 
   ```sh
   D=fastlane/metadata/android/en-US/images; mkdir -p $D/phoneScreenshots $D/tvScreenshots
-  magick site/screenshots/phone-chats.webp $D/phoneScreenshots/1.png
-  magick site/screenshots/phone-grid-light.webp $D/phoneScreenshots/2.png
-  magick site/screenshots/phone-grid.webp $D/phoneScreenshots/3.png
-  magick site/screenshots/tv-grid.webp $D/tvScreenshots/1.png
-  magick site/screenshots/tv-chats-light.webp $D/tvScreenshots/2.png
-  magick site/screenshots/tv-settings.webp $D/tvScreenshots/3.png
+  magick site/public/screenshots/phone-chats.webp $D/phoneScreenshots/1.png
+  magick site/public/screenshots/phone-grid-light.webp $D/phoneScreenshots/2.png
+  magick site/public/screenshots/phone-grid.webp $D/phoneScreenshots/3.png
+  magick site/public/screenshots/tv-grid.webp $D/tvScreenshots/1.png
+  magick site/public/screenshots/tv-chats-light.webp $D/tvScreenshots/2.png
+  magick site/public/screenshots/tv-settings.webp $D/tvScreenshots/3.png
   ```
 
 ## Points that cut across channels

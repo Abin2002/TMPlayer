@@ -7,7 +7,7 @@ app/src/promo/res/drawable-nodpi/:
 
   films and shows   <name>_backdrop.webp   16:9 centre crop, 1920x1080
                     <name>_poster.webp     2:3 centre crop, 500x750, the title lettered near the top
-                                           in Poppins (site/fonts) over a soft scrim
+                                           in Poppins (site/public/fonts) over a soft scrim
   shows             <name>_e1..eN.webp     episode thumbnails, 640x360: distinct crops of the key art
 
 Lesson thumbnails, channel avatars, clips and the demo titles without art are drawn by the app
