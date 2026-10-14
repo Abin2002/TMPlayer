@@ -1064,7 +1064,7 @@ the lists for a Home row. Privacy page, sitemap lastmod and `llms.txt` updated.
 **Why:** the user, 2026-10-14: the setup misses Low storage mode and the performance work, and should walk a new
 user through every feature they need, step by step, each step with marked screenshots like the Library and
 Posters steps. Today (CP67, CP68) the setup is at most three choices: Library (only with folders), Posters, and
-Storage, where Storage is a drawn picture, not a screenshot. The performance settings (Lighter pictures, Reduce
+Storage (Low storage mode, which the user has seen and is happy with). The performance settings (Lighter pictures, Reduce
 motion, Thumbnails while seeking) appear only as the Device step, and only on a device `DeviceFitRules` calls
 short of memory or storage, so a normal phone, TV or PC never hears of them. Nothing in the setup shows how to
 get a first video, the player, the remote, gestures, downloads, favourites, the TV home screen row or the locks.
@@ -1074,9 +1074,8 @@ Part 1 "Set up" asks; part 2 "Quick tour" shows. Settings' "Run the setup again"
 from `scripts/annotate-shot.py`; the recommended answer first and focused on TV):
 1. Your library: Show everything or Only my folders. As now, only when the account has folders.
 2. Posters and details: on or off. As now.
-3. Storage: Keep while playing or Low storage mode. Replace `StorageArt` with two marked shots: the player
-   timebar with the downloaded part marked (keep), and Settings, Storage with the free space bar and the Low
-   storage row marked (low). The free space on this device is said in the step's body ("12 GB free").
+3. Storage: Keep while playing or Low storage mode. Kept as it is, drawn picture included: the user saw it on a
+   device and liked it (2026-10-14).
 4. Performance, on every device: Full quality (recommended on capable devices) or Lighter (Lighter pictures,
    Reduce motion, Thumbnails while seeking off, listed). Shots: a Home row with full art and the blurred
    backdrop, then the same row lighter, both marked. On a device short of memory the order flips and Lighter is
