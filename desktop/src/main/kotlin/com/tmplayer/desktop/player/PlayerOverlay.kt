@@ -43,7 +43,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import com.tmplayer.desktop.os.OsInfo
 import com.tmplayer.i18n.L
+import com.tmplayer.i18n.Strings
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Floating
@@ -458,7 +460,7 @@ internal fun BoxScope.PlayerOverlay(
                     Spacer(Modifier.weight(1f))
                     ControlsPill {
                         VolumeControl(status.volume, status.muted, onVolume, onToggleMute)
-                        OverlayButton(TmIcons.PictureInPicture, s.playerMiniHint, onMiniPlayer)
+                        OverlayButton(TmIcons.PictureInPicture, s.playerMiniHint(commandKey(s)), onMiniPlayer)
                         OverlayButton(
                             if (fullscreen) TmIcons.FullscreenExit else TmIcons.Fullscreen,
                             if (fullscreen) s.playerExitFullscreenHint else s.playerFullscreenHint,
@@ -735,7 +737,7 @@ internal fun PlayerMenu(
         }
         when (menu.page) {
             MenuPage.Main -> {
-                if (alwaysOnTopAvailable) Entry(s.playerAlwaysOnTop, trailing = s.playerKeyCtrlT) { pick(MenuAction.Do(PlayerAction.AlwaysOnTop)) }
+                if (alwaysOnTopAvailable) Entry(s.playerAlwaysOnTop, trailing = s.playerKeyCommandT(commandKey(s))) { pick(MenuAction.Do(PlayerAction.AlwaysOnTop)) }
                 Entry(s.playerPlaybackOptions) { page(MenuPage.Options) }
                 Entry(s.playerSubtitleStyleAndTiming) { page(MenuPage.SubtitleStyle) }
                 if (fromTelegram || watchedLabel != null) HorizontalDivider()
@@ -1249,3 +1251,6 @@ internal fun BoxScope.ShortcutSheet(onClose: () -> Unit, mac: Boolean = false, w
         }
     }
 }
+
+/** The command key as this OS spells it in a hint: Cmd on a Mac, where [PlayerKeys] reads Cmd, Ctrl elsewhere. */
+private fun commandKey(s: Strings): String = if (OsInfo.isMac) s.keysCmd else s.keysCtrl

@@ -1052,7 +1052,7 @@ fun PlayerScreen(
             }
         }
     }
-    val mac = remember { System.getProperty("os.name").orEmpty().startsWith("Mac") }
+    val mac = com.tmplayer.desktop.os.OsInfo.isMac
 
     // ---- layout ------------------------------------------------------------------------------
 
