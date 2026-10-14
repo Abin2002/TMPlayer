@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.ui.Alignment
-import com.tmplayer.ui.i18n.LocalStrings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -27,7 +25,6 @@ import com.tmplayer.data.MediaItem
 import com.tmplayer.data.Series
 import com.tmplayer.data.SeriesProgress
 import com.tmplayer.ui.components.isTouch
-import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.Tv
 
@@ -108,7 +105,6 @@ private fun SeriesPage(
     chatTitle: String?,
 ) {
     val touch = isTouch()
-    val s = LocalStrings.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
@@ -132,19 +128,10 @@ private fun SeriesPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
+                // A remote has Back on it; a finger needs something to press.
+                onBack = onDismiss.takeIf { touch },
+                barInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top),
             )
-            // A remote has Back on it; a finger needs something to press.
-            if (touch) {
-                PageDiscButton(
-                    TmIcons.ArrowBack,
-                    s.seriesBack,
-                    onDismiss,
-                    Modifier
-                        .align(Alignment.TopStart)
-                        .windowInsetsPadding(WindowInsets.safeDrawing)
-                        .padding(12.dp),
-                )
-            }
         }
     }
 }

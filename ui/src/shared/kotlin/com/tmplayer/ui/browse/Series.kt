@@ -20,6 +20,10 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -654,6 +658,14 @@ fun SeriesPanel(
     onDownload: ((SeasonDownloadRequest) -> Unit)? = null,
     /** The chat the show was posted in, for the facts line; null leaves it out. */
     chatTitle: String? = null,
+    /**
+     * The round back button at the top start, for a finger or a pointer; null leaves it out (a
+     * remote has Back). It sits in a band that fills in as the page scrolls, with the show's
+     * name in it, so the page passes under the band rather than under a bare button.
+     */
+    onBack: (() -> Unit)? = null,
+    /** What the band keeps clear at the top: the status bar on a phone, nothing on the desktop. */
+    barInsets: WindowInsets = WindowInsets(0),
 ) {
     val s = LocalStrings.current
     val tv = !isTouch()
@@ -936,8 +948,54 @@ fun SeriesPanel(
                 }
             }
         }
-    } }
+        }
+        onBack?.let { back ->
+            PageBackBand(list, meta?.title?.takeIf { it.isNotBlank() } ?: series.title, back, barInsets, Modifier.align(Alignment.TopStart))
+        }
+    }
 }
+
+/**
+ * The page's back button, in a band across the top that fills with the page's colour over the
+ * first [BAND_FILL] of scrolling and then names the show. At the top of the page only the round
+ * button shows, over the backdrop; scrolled, the hero, Play and the episodes pass under a solid
+ * band instead of under the button, and the status bar keeps a quiet field behind its icons.
+ */
+@Composable
+private fun PageBackBand(list: LazyListState, title: String, onBack: () -> Unit, insets: WindowInsets, modifier: Modifier) {
+    val s = LocalStrings.current
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val fillPx = with(density) { BAND_FILL.toPx() }
+    val field = Tone.background
+    val fill by remember(list, fillPx) {
+        derivedStateOf {
+            if (list.firstVisibleItemIndex > 0) 1f else (list.firstVisibleItemScrollOffset / fillPx).coerceIn(0f, 1f)
+        }
+    }
+    Row(
+        modifier
+            .fillMaxWidth()
+            .drawBehind { drawRect(field.copy(alpha = fill)) }
+            .windowInsetsPadding(insets)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        PageDiscButton(TmIcons.ArrowBack, s.seriesBack, onBack)
+        Text(
+            title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = Tone.text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f).graphicsLayer { alpha = fill },
+        )
+    }
+}
+
+/** How far the page scrolls before the back band is solid. */
+private val BAND_FILL = 72.dp
 
 /**
  * A long season's episodes in ranges of [EPISODE_RANGE], "1-100", "101-200", drawn like the

@@ -47,7 +47,6 @@ import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.Series
 import com.tmplayer.data.SeriesSeason
 import com.tmplayer.data.SettingsStore
-import com.tmplayer.ui.browse.PageDiscButton
 import com.tmplayer.ui.browse.SeriesArt
 import com.tmplayer.ui.browse.SeriesPanel
 import com.tmplayer.ui.browse.SeriesWatch
@@ -196,13 +195,8 @@ internal fun SeriesPage(
                 }
             },
             chatTitle = state.chatTitleOf(series.cover.chatId),
-        )
-        // Over the backdrop, on a dark disc so it reads on any picture.
-        PageDiscButton(
-            TmIcons.ArrowBack,
-            s.seriesBack,
-            onClose,
-            Modifier.align(Alignment.TopStart).padding(16.dp),
+            // Over the backdrop on a dark disc, in a band that fills in as the page scrolls.
+            onBack = onClose,
         )
     }
 }
