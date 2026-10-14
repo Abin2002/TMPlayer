@@ -48,8 +48,12 @@ export const published: Lang[] = [ENGLISH, ...LANGS.filter((l) => coverage(l) >=
 const PH = /\{(\w+)\}/g;
 const placeholders = (s: string) => [...s.matchAll(PH)].map((m) => m[1]).sort().join(',');
 
+/** Every key a build looked up, written to .astro/used-keys.json for scripts/site-i18n-check.py. */
+const used: Set<string> = ((globalThis as Record<string, unknown>).__tmUsedKeys ??= new Set<string>()) as Set<string>;
+
 /** The translation, or English when it is missing or lost a placeholder. */
 export function text(lang: Lang, key: string): string {
+  used.add(key);
   const en = english[key];
   const tr = catalog(lang)[key];
   if (tr && en !== undefined && placeholders(tr) === placeholders(en)) return tr;
@@ -59,6 +63,7 @@ export function text(lang: Lang, key: string): string {
 
 /** A build.* string: the translation when there is one, English otherwise. */
 export function buildString(lang: Lang, key: string): string {
+  used.add(key);
   return catalog(lang)[key] || english[key];
 }
 

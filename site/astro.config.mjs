@@ -1,6 +1,20 @@
 // The site keeps every URL, header and byte it had before Astro (docs/ASTRO-MIGRATION.md):
 // directories with a trailing slash, HTML left as written, assets hashed under /_astro/.
 import { defineConfig } from 'astro/config';
+import { mkdirSync, writeFileSync } from 'node:fs';
+
+// Writes the catalog keys the pages looked up, so scripts/site-i18n-check.py can tell which
+// en.json strings nothing uses any more.
+const usedKeys = {
+  name: 'tm-used-keys',
+  hooks: {
+    'astro:build:done': () => {
+      const keys = [...(globalThis.__tmUsedKeys ?? [])].sort();
+      mkdirSync(new URL('./.astro/', import.meta.url), { recursive: true });
+      writeFileSync(new URL('./.astro/used-keys.json', import.meta.url), JSON.stringify(keys, null, 1) + '\n');
+    },
+  },
+};
 
 export default defineConfig({
   site: 'https://tmplayer.org',
@@ -8,6 +22,7 @@ export default defineConfig({
   build: { format: 'directory', inlineStylesheets: 'never' },
   compressHTML: false,
   outDir: 'dist',
+  integrations: [usedKeys],
   devToolbar: { enabled: false },
   // styles.css is served as written; minifying it would be the one change nobody asked for.
   vite: { build: { cssMinify: false } },
