@@ -9,6 +9,7 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
@@ -155,24 +156,21 @@ const next = [
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><T k="features.features"><a href={l('/')} slot="a1">{t('features.features__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></p>
-      <h1><T k="features.what_a_telegram_video_player"><em slot="em1">{t('features.what_a_telegram_video_player__em1')}</em></T></h1>
-      <p class="page-lede">{t('features.playing_a_file_is_the')}</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href={l('/download/')}> <Icon name="download-btn" /> {t('common.download')}</a>
-        <a class="btn btn-outline" href={l('/install/')}>{t('features.how_to_install')} <Icon name="arrow-right-sm" /></a>
-      </div>
-      <nav class="platform-jump" aria-label={t('features.on_this_page')}>
-        <a href="#does">{t('home.what_it_does')}</a>
-        <a href="#screens">{t('features.what_it_looks_like')}</a>
-        <a href="#tour">{t('features.a_closer_look')}</a>
-        <a href="#desktop">{t('features.jump_windows_and_linux')}</a>
-        <a href="#keys">{t('features.jump_keyboard_shortcuts')}</a>
-      </nav>
-    </div>
-  </section>
+  <PageHead lede={t('features.playing_a_file_is_the')}>
+    <Fragment slot="crumbs"><T k="features.features"><a href={l('/')} slot="a1">{t('features.features__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
+    <Fragment slot="title"><T k="features.what_a_telegram_video_player"><em slot="em1">{t('features.what_a_telegram_video_player__em1')}</em></T></Fragment>
+    <Fragment slot="actions">
+      <a class="btn btn-filled" href={l('/download/')}> <Icon name="download-btn" /> {t('common.download')}</a>
+      <a class="btn btn-outline" href={l('/install/')}>{t('features.how_to_install')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+    <nav class="platform-jump" aria-label={t('features.on_this_page')}>
+      <a href="#does">{t('home.what_it_does')}</a>
+      <a href="#screens">{t('features.what_it_looks_like')}</a>
+      <a href="#tour">{t('features.a_closer_look')}</a>
+      <a href="#desktop">{t('features.jump_windows_and_linux')}</a>
+      <a href="#keys">{t('features.jump_keyboard_shortcuts')}</a>
+    </nav>
+  </PageHead>
 
   <Band wave id="does" title={t('home.what_it_does')} sub={t('features.built_for_a_remote_a')} tonal>
     <div class="two-col" data-reveal>

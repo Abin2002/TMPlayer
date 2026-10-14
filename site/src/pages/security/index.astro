@@ -6,6 +6,7 @@ import Base from '../../layouts/Base.astro';
 import BgArt from '../../components/BgArt.astro';
 import ToTop from '../../components/ToTop.astro';
 import Icon from '../../components/Icon.astro';
+import PageHead from '../../components/PageHead.astro';
 import JsonLd from '../../components/JsonLd.astro';
 import HeaderPlain from '../../components/plain/HeaderPlain.astro';
 import FooterPlain from '../../components/plain/FooterPlain.astro';
@@ -28,24 +29,21 @@ Astro.locals.lang = ENGLISH;
   <HeaderPlain variant="security" />
 
   <main id="main">
-    <section class="page-head">
-      <div class="wrap page-head-wrap">
-        <p class="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span>Security</p>
-        <h1>Is TMPlayer <em>safe?</em></h1>
-        <p class="page-lede">Every line of it is public, every release is built by GitHub from that public source, and you can check the file you downloaded yourself. Here is how.</p>
-        <div class="page-actions">
-          <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"><Icon name="code-btn" /> Read the source</a>
-          <a class="btn btn-outline" href="#report">Report a problem <Icon name="arrow-right-sm" /></a>
-        </div>
-        <nav class="platform-jump" aria-label="On this page">
-          <a href="#account">Your account</a>
-          <a href="#builds">How a release is made</a>
-          <a href="#verify">Check the file</a>
-          <a href="#warnings">Warnings you may see</a>
-          <a href="#report">Reporting</a>
-        </nav>
-      </div>
-    </section>
+    <PageHead lede="Every line of it is public, every release is built by GitHub from that public source, and you can check the file you downloaded yourself. Here is how.">
+      <Fragment slot="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span>Security</Fragment>
+      <Fragment slot="title">Is TMPlayer <em>safe?</em></Fragment>
+      <Fragment slot="actions">
+        <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"><Icon name="code-btn" /> Read the source</a>
+        <a class="btn btn-outline" href="#report">Report a problem <Icon name="arrow-right-sm" /></a>
+      </Fragment>
+      <nav class="platform-jump" aria-label="On this page">
+        <a href="#account">Your account</a>
+        <a href="#builds">How a release is made</a>
+        <a href="#verify">Check the file</a>
+        <a href="#warnings">Warnings you may see</a>
+        <a href="#report">Reporting</a>
+      </nav>
+    </PageHead>
 
     <Band wave id="account" tonal title="Your Telegram account" sub="What the app does with your sign-in, and where it talks to.">
       <Cards>

@@ -6,6 +6,7 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import JsonLd from '../../../components/JsonLd.astro';
+import PageHead from '../../../components/PageHead.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
 import Card from '../../../components/Card.astro';
@@ -43,19 +44,16 @@ const listed = [
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><T k="formats.formats"><a href={l('/')} slot="a1">{t('formats.formats__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></p>
-      <h1><T k="formats.the_formats_it"><em slot="em1">{t('formats.the_formats_it__em1')}</em></T></h1>
-      <p class="page-lede">{t('formats.on_android_tv_and_phones')}</p>
-      <nav class="platform-jump" aria-label={t('fire_tv.on_this_page')}>
-        <a href="#listed">{t('formats.which_files_show_up')}</a>
-        <a href="#android">{t('formats.android_tv_and_phones')}</a>
-        <a href="#desktop">{t('formats.windows_and_linux')}</a>
-        <a href="#subtitles">{t('formats.subtitle_files')}</a>
-      </nav>
-    </div>
-  </section>
+  <PageHead lede={t('formats.on_android_tv_and_phones')}>
+    <Fragment slot="crumbs"><T k="formats.formats"><a href={l('/')} slot="a1">{t('formats.formats__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
+    <Fragment slot="title"><T k="formats.the_formats_it"><em slot="em1">{t('formats.the_formats_it__em1')}</em></T></Fragment>
+    <nav class="platform-jump" aria-label={t('fire_tv.on_this_page')}>
+      <a href="#listed">{t('formats.which_files_show_up')}</a>
+      <a href="#android">{t('formats.android_tv_and_phones')}</a>
+      <a href="#desktop">{t('formats.windows_and_linux')}</a>
+      <a href="#subtitles">{t('formats.subtitle_files')}</a>
+    </nav>
+  </PageHead>
 
     <Band wave id="listed" labelledby="listed-h" tonal title={t('formats.which_files_show_up_in')} sub={t('formats.the_same_on_every_platform')}>
     <Cards>

@@ -1,6 +1,6 @@
 ---
 import GuidePage from '../../../../components/guides/GuidePage.astro';
-import GuideHead from '../../../../components/guides/GuideHead.astro';
+import PageHead from '../../../../components/PageHead.astro';
 import Crumbs from '../../../../components/guides/Crumbs.astro';
 import Action from '../../../../components/guides/Action.astro';
 import Band from '../../../../components/Band.astro';
@@ -42,14 +42,14 @@ const ld: Guide = {
 ---
 <GuidePage page="guide_android_tv" title={t('guide_android_tv.how_to_watch_telegram_videos')} socialTitle={t('guide_android_tv.how_to_watch_telegram_videos_2')} description={t('guide_android_tv.watch_the_videos_in_your')} ld={ld}>
 
-  <GuideHead lede={t('guide_android_tv.telegram_has_no_app_for')}>
+  <PageHead lede={t('guide_android_tv.telegram_has_no_app_for')}>
     <Crumbs slot="crumbs" here="Android TV" />
     <T slot="title" k="guide_android_tv.telegram_videos"><em slot="em1">{t('guide_android_tv.telegram_videos__em1')}</em></T>
     <Fragment slot="actions">
       <Action filled href="#steps">{t('fire_tv.show_me_the_steps')}</Action>
       <Action href={l('/download/')}>{t('home.download_tmplayer')}</Action>
     </Fragment>
-  </GuideHead>
+  </PageHead>
 
   <Band wave tonal id="fit" title={t('guide_android_tv.what_you_need')}>
     <FitPanels

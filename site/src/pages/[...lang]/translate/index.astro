@@ -8,6 +8,7 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
@@ -48,17 +49,14 @@ const webPage = {
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><T k="translate.translate"><a href={l('/')} slot="a1">{t('translate.translate__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></p>
-      <h1><T k="translate.help_tmplayer"><em slot="em1">{t('translate.help_tmplayer__em1')}</em></T></h1>
-      <p class="page-lede">{t('translate.besides_english_tmplayer_comes_in')}</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href="#fix">{t('translate.fix_a_translation')} <Icon name="arrow-right-sm" /></a>
-        <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/tree/main/site/i18n">{t('translate.the_files_on_github')} <Icon name="arrow-right-sm" /></a>
-      </div>
-    </div>
-  </section>
+  <PageHead lede={t('translate.besides_english_tmplayer_comes_in')}>
+    <Fragment slot="crumbs"><T k="translate.translate"><a href={l('/')} slot="a1">{t('translate.translate__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
+    <Fragment slot="title"><T k="translate.help_tmplayer"><em slot="em1">{t('translate.help_tmplayer__em1')}</em></T></Fragment>
+    <Fragment slot="actions">
+      <a class="btn btn-filled" href="#fix">{t('translate.fix_a_translation')} <Icon name="arrow-right-sm" /></a>
+      <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/tree/main/site/i18n">{t('translate.the_files_on_github')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+  </PageHead>
   <Band wave id="languages" title={t('translate.twenty_languages_and_english')} sub={t('translate.a_language_you_can_read')} tonal body>
     <div class="panel">
       <LangList />

@@ -8,6 +8,7 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
@@ -51,32 +52,29 @@ const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><T k="download.download"><a href={l('/')} slot="a1">{t('download.download__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></p>
-      <h1>{t('common.download')} <em>TMPlayer</em></h1>
-      <p class="page-lede">{t('download.for_android_tv_phones_windows')}</p>
+  <PageHead lede={t('download.for_android_tv_phones_windows')}>
+    <Fragment slot="crumbs"><T k="download.download"><a href={l('/')} slot="a1">{t('download.download__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
+    <Fragment slot="title">{t('common.download')}{' '}<em>TMPlayer</em></Fragment>
+    <Fragment slot="actions">
       {/*
         The filled button is drawn by app.js once it knows which system this is, and only then:
         with scripting off there is no guess to make, and the platform list below does the job.
       */}
-      <div class="page-actions">
-        <a class="btn btn-filled" id="os-download" href="#platforms" hidden>
-          <Icon name="download-btn" />
-          <span id="os-download-label">{t('common.download')}</span>
-        </a>
-        <a class="btn btn-outline" href={l('/install/')}>{t('download.how_to_install_it')} <Icon name="arrow-right-sm" /></a>
-      </div>
-      <p class="os-note" id="os-note" role="status" hidden></p>
-      <nav class="platform-jump" aria-label={t('download.platforms')}>
-        <a href="#android">{t('download.android_phone')}</a>
-        <a href="#android-tv">Android TV</a>
-        <a href="#windows">Windows</a>
-        <a href="#macos" data-mac-jump hidden>macOS</a>
-        <a href="#linux">Linux</a>
-      </nav>
-    </div>
-  </section>
+      <a class="btn btn-filled" id="os-download" href="#platforms" hidden>
+        <Icon name="download-btn" />
+        <span id="os-download-label">{t('common.download')}</span>
+      </a>
+      <a class="btn btn-outline" href={l('/install/')}>{t('download.how_to_install_it')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+    <p class="os-note" id="os-note" role="status" hidden></p>
+    <nav class="platform-jump" aria-label={t('download.platforms')}>
+      <a href="#android">{t('download.android_phone')}</a>
+      <a href="#android-tv">Android TV</a>
+      <a href="#windows">Windows</a>
+      <a href="#macos" data-mac-jump hidden>macOS</a>
+      <a href="#linux">Linux</a>
+    </nav>
+  </PageHead>
 
   <Band wave id="download" labelledby="download-h" title={t('download.every_platform_one_release')} tonal body>
     <T slot="sub" k="download.every_file_comes_from_one_github"><a href="https://about.signpath.io/" rel="noopener" slot="a1">{t('download.every_file_comes_from_one_github__a1')}</a><a href="/signing/" slot="a2">{t('download.every_file_comes_from_one_github__a2')}</a></T>

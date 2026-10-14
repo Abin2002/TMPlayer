@@ -8,6 +8,7 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
@@ -91,23 +92,20 @@ const howTo = {
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span>Fire TV</p>
-      <h1><T k="fire_tv.install_tmplayer"><em slot="em1">{t('fire_tv.install_tmplayer__em1')}</em></T></h1>
-      <p class="page-lede">{t('fire_tv.fire_tv_sticks_the_fire')}</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href="#steps"> <Icon name="download-btn" /> {t('fire_tv.show_me_the_steps')}</a>
-        <a class="btn btn-outline" href={l('/install/')}>{t('fire_tv.other_devices')} <Icon name="arrow-right-sm" /></a>
-      </div>
-      <nav class="platform-jump" aria-label={t('fire_tv.on_this_page')}>
-        <a href="#fit">{t('fire_tv.will_it_run')}</a>
-        <a href="#steps">{t('fire_tv.five_steps')}</a>
-        <a href="#other-ways">{t('fire_tv.with_a_computer_or_a')}</a>
-        <a href="#remote">{t('fire_tv.the_remote_and_updates')}</a>
-      </nav>
-    </div>
-  </section>
+  <PageHead lede={t('fire_tv.fire_tv_sticks_the_fire')}>
+    <Fragment slot="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span>Fire TV</Fragment>
+    <Fragment slot="title"><T k="fire_tv.install_tmplayer"><em slot="em1">{t('fire_tv.install_tmplayer__em1')}</em></T></Fragment>
+    <Fragment slot="actions">
+      <a class="btn btn-filled" href="#steps"> <Icon name="download-btn" /> {t('fire_tv.show_me_the_steps')}</a>
+      <a class="btn btn-outline" href={l('/install/')}>{t('fire_tv.other_devices')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+    <nav class="platform-jump" aria-label={t('fire_tv.on_this_page')}>
+      <a href="#fit">{t('fire_tv.will_it_run')}</a>
+      <a href="#steps">{t('fire_tv.five_steps')}</a>
+      <a href="#other-ways">{t('fire_tv.with_a_computer_or_a')}</a>
+      <a href="#remote">{t('fire_tv.the_remote_and_updates')}</a>
+    </nav>
+  </PageHead>
 
     <Band wave tonal id="fit" labelledby="fit-h" title={t('android_tv.will_it_run_on_yours')} sub={t('fire_tv.tmplayer_needs_android_8_0')}>
     <div class="two-col" data-reveal>

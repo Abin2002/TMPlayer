@@ -1,6 +1,7 @@
 ---
 // One page per release, so a search for "TMPlayer 1.25.0" lands on its notes.
 import Shell from '../../../components/changelog/Shell.astro';
+import PageHead from '../../../components/PageHead.astro';
 import SponsorOffer from '../../../components/SponsorOffer.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
@@ -56,13 +57,11 @@ const get = latest
     <JsonLd data={post} />
   </Fragment>
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/changelog/">Changelog</a><span aria-hidden="true">/</span>{v}</p>
-      <h1>TMPlayer <em>{v}</em></h1>
-      <p class="page-lede">Released <time datetime={r.day}>{humanDate(r.date)}</time>, for Android TV, Android phones, Windows{hasMac(v) ? ', macOS' : ''} and Linux.</p>
-    </div>
-  </section>
+  <PageHead>
+    <Fragment slot="crumbs"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/changelog/">Changelog</a><span aria-hidden="true">/</span>{v}</Fragment>
+    <Fragment slot="title">TMPlayer <em>{v}</em></Fragment>
+    <Fragment slot="lede">Released <time datetime={r.day}>{humanDate(r.date)}</time>, for Android TV, Android phones, Windows{hasMac(v) ? ', macOS' : ''} and Linux.</Fragment>
+  </PageHead>
 
 <Icon name="wave" />
 

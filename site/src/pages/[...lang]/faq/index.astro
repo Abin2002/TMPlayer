@@ -6,6 +6,7 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
@@ -51,17 +52,14 @@ const questions = [
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><T k="faq.questions"><a href={l('/')} slot="a1">{t('faq.questions__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></p>
-      <h1><T k="faq.questions_2"><em slot="em1">{t('faq.questions_2__em1')}</em></T></h1>
-      <p class="page-lede">{t('faq.including_the_ones_about_trust')}</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href={l('/download/')}> <Icon name="download-btn" /> {t('common.download')}</a>
-        <a class="btn btn-outline" href={l('/features/')}>{t('home.what_it_does')} <Icon name="arrow-right-sm" /></a>
-      </div>
-    </div>
-  </section>
+  <PageHead lede={t('faq.including_the_ones_about_trust')}>
+    <Fragment slot="crumbs"><T k="faq.questions"><a href={l('/')} slot="a1">{t('faq.questions__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
+    <Fragment slot="title"><T k="faq.questions_2"><em slot="em1">{t('faq.questions_2__em1')}</em></T></Fragment>
+    <Fragment slot="actions">
+      <a class="btn btn-filled" href={l('/download/')}> <Icon name="download-btn" /> {t('common.download')}</a>
+      <a class="btn btn-outline" href={l('/features/')}>{t('home.what_it_does')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+  </PageHead>
 
     <Band wave id="faq" labelledby="faq-h" tonal title={t('faq.common_questions')} sub={t('faq.ten_short_questions_open_the')}>
     {/* A real accordion, built from native details and summary, so it opens with a keyboard, is

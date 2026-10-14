@@ -8,6 +8,7 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
@@ -87,25 +88,22 @@ const ld1 = {
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><T k="install.how_to_install"><a href={l('/')} slot="a1">{t('install.how_to_install__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></p>
-      <h1><T k="install.how_to_install_it"><em slot="em1">{t('install.how_to_install_it__em1')}</em></T></h1>
-      <p class="page-lede">{t('install.on_a_tv_a_phone')}</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href={l('/download/')}> <Icon name="download-btn" /> {t('install.all_downloads')}</a>
-        <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener">{t('install.the_full_install_md')} <Icon name="arrow-right-sm" /></a>
-      </div>
-      <nav class="platform-jump" aria-label={t('download.platforms')}>
-        <a href="#android-tv">Android TV</a>
-        <a href="#android">{t('download.android_phone')}</a>
-        <a href="#windows">Windows</a>
-        <a href="#macos">macOS</a>
-        <a href="#linux">Linux</a>
-        <a href="#shortcuts">{t('install.desktop_and_menu_shortcuts')}</a>
-      </nav>
-    </div>
-  </section>
+  <PageHead lede={t('install.on_a_tv_a_phone')}>
+    <Fragment slot="crumbs"><T k="install.how_to_install"><a href={l('/')} slot="a1">{t('install.how_to_install__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
+    <Fragment slot="title"><T k="install.how_to_install_it"><em slot="em1">{t('install.how_to_install_it__em1')}</em></T></Fragment>
+    <Fragment slot="actions">
+      <a class="btn btn-filled" href={l('/download/')}> <Icon name="download-btn" /> {t('install.all_downloads')}</a>
+      <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener">{t('install.the_full_install_md')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+    <nav class="platform-jump" aria-label={t('download.platforms')}>
+      <a href="#android-tv">Android TV</a>
+      <a href="#android">{t('download.android_phone')}</a>
+      <a href="#windows">Windows</a>
+      <a href="#macos">macOS</a>
+      <a href="#linux">Linux</a>
+      <a href="#shortcuts">{t('install.desktop_and_menu_shortcuts')}</a>
+    </nav>
+  </PageHead>
 
   <Band wave id="android-tv" labelledby="tv-h" title={t('install.tv_title')} tonal body>
     <T slot="sub" k="install.tv_sub"><a href={l('/fire-tv/')} slot="a1">{t('install.tv_sub__a1')}</a></T>

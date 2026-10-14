@@ -1,6 +1,6 @@
 ---
 import GuidePage from '../../../../components/guides/GuidePage.astro';
-import GuideHead from '../../../../components/guides/GuideHead.astro';
+import PageHead from '../../../../components/PageHead.astro';
 import Crumbs from '../../../../components/guides/Crumbs.astro';
 import Action from '../../../../components/guides/Action.astro';
 import Band from '../../../../components/Band.astro';
@@ -42,14 +42,14 @@ const ld: Guide = {
 ---
 <GuidePage page="guide_fire_tv" title={t('guide_fire_tv.how_to_watch_telegram_videos')} socialTitle={t('guide_fire_tv.how_to_watch_telegram_videos_2')} description={t('guide_fire_tv.watch_the_videos_in_your')} ld={ld}>
 
-  <GuideHead lede={t('guide_fire_tv.amazon_s_store_has_no')}>
+  <PageHead lede={t('guide_fire_tv.amazon_s_store_has_no')}>
     <Crumbs slot="crumbs" here="Fire TV" />
     <T slot="title" k="guide_fire_tv.telegram_videos"><em slot="em1">{t('guide_fire_tv.telegram_videos__em1')}</em></T>
     <Fragment slot="actions">
       <Action filled href="#steps">{t('fire_tv.show_me_the_steps')}</Action>
       <Action href={l('/fire-tv/')}>{t('guide_fire_tv.detailed_install_steps')}</Action>
     </Fragment>
-  </GuideHead>
+  </PageHead>
 
   <Band wave tonal id="fit" title={t('guide_fire_tv.will_it_work_on_yours')}>
     <FitPanels

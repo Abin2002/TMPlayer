@@ -8,6 +8,7 @@ import Footer from '../../../components/Footer.astro';
 import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
@@ -56,17 +57,14 @@ const features = [
 
 <main id="main">
 
-  <section class="page-head">
-    <div class="wrap page-head-wrap">
-      <p class="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span>Android TV</p>
-      <h1><T k="android_tv.a_telegram_video_player"><em slot="em1">{t('android_tv.a_telegram_video_player__em1')}</em></T></h1>
-      <p class="page-lede">{t('android_tv.designed_for_a_d_pad')}</p>
-      <div class="page-actions">
-        <a class="btn btn-filled" href={l('/download/#android-tv')}> <Icon name="download-btn" /> {t('android_tv.download_for_android_tv')}</a>
-        <a class="btn btn-outline" href={l('/install/#android-tv')}>{t('android_tv.sideload_it_in_four_steps')} <Icon name="arrow-right-sm" /></a>
-      </div>
-    </div>
-  </section>
+  <PageHead lede={t('android_tv.designed_for_a_d_pad')}>
+    <Fragment slot="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span>Android TV</Fragment>
+    <Fragment slot="title"><T k="android_tv.a_telegram_video_player"><em slot="em1">{t('android_tv.a_telegram_video_player__em1')}</em></T></Fragment>
+    <Fragment slot="actions">
+      <a class="btn btn-filled" href={l('/download/#android-tv')}> <Icon name="download-btn" /> {t('android_tv.download_for_android_tv')}</a>
+      <a class="btn btn-outline" href={l('/install/#android-tv')}>{t('android_tv.sideload_it_in_four_steps')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+  </PageHead>
 
     <Band wave tonal labelledby="tv-h" title={t('android_tv.what_changes_on_a_television')} sub={t('android_tv.same_account_same_apk_only')}>
     <Cards>
