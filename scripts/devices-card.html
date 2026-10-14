@@ -1,0 +1,35 @@
+<!doctype html>
+<!--
+  Source of docs/screenshots/devices.webp, the README's picture of the TV and the phone together. It
+  is the home page hero's showcase on its own, from the site's stylesheet, with the dark shots in
+  the light theme's frames on a transparent page. Render it the way scripts/render-brand.sh renders
+  og-card.html, over a local web server at the repository root, then convert to WebP at quality 88:
+
+    chromium-browser --headless=new --disable-gpu --no-sandbox --hide-scrollbars \
+      --force-device-scale-factor=1 --force-prefers-reduced-motion --window-size=1198,748 \
+      --default-background-color=00000000 --virtual-time-budget=6000 \
+      --screenshot=devices.png http://127.0.0.1:8719/scripts/devices-card.html
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../site/styles.css">
+<style>
+  html, body { width: 1198px; height: 748px; overflow: hidden; background: transparent; margin: 0; }
+  body::before, body::after { display: none; }
+  .showcase { position: absolute; left: 89px; top: 16px; width: 1020px; }
+</style>
+</head>
+<body>
+  <figure class="showcase">
+    <div class="device device-tv">
+      <div class="screen"><img src="../site/screenshots/tv-home.webp" alt=""></div>
+      <div class="stand"></div>
+      <div class="foot"></div>
+    </div>
+    <div class="device device-phone">
+      <div class="screen"><img src="../site/screenshots/phone-show.webp" alt=""></div>
+    </div>
+  </figure>
+</body>
+</html>
