@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1} GitHub থেকে, Android, Windows ও Linux-এ। সাইন আউট করলে আপনার ইতিহাস ও পছন্দের তালিকা মুছে যায়; আপনি অন্যটা না বাছলে ডাউনলোডগুলো থেকে যায়।",
     "from_github_on_android_windows__strong1": "নিজে আপডেট হয়",
     "what_it_looks_like": "দেখতে কেমন",
-    "four_screens_in_the_order": "ফোন, টিভি ও কম্পিউটারের ছয়টি স্ক্রিন, ডেমো কনটেন্টে ভরা।",
+    "four_screens_in_the_order": "ফোন, টিভি ও কম্পিউটারের সাতটি স্ক্রিন, ডেমো কনটেন্টে ভরা।",
     "every_chat_and_channel_you": "{b1}আপনি যে চ্যাট ও চ্যানেলে আছেন সব, সাম্প্রতিকগুলো ওপরে। মেসেজ কখনো দেখা যায় না।",
     "every_chat_and_channel_you__b1": "প্রথম ধাপ: একটি চ্যাট বাছুন",
-    "tiles_with_running_time_and": "{b1}দৈর্ঘ্য ও রেজোলিউশনসহ টাইল। একটি চাপলে কয়েক সেকেন্ডে চালু হয়।",
-    "tiles_with_running_time_and__b1": "দ্বিতীয় ধাপ: একটি ভিডিও বাছুন",
     "a_rail_for_the_remote": "{b1}রিমোটের জন্য একটি রেল, ঘরের ওপার থেকে পড়া যায় এমন কার্ড, এবং স্পষ্ট ফোকাস।",
     "a_rail_for_the_remote__b1": "একই অ্যাকাউন্ট, টিভিতে",
     "hide_small_clips_autoplay_the": "{b1}ছোট ক্লিপ লুকান, পরের পর্ব অটোপ্লে করুন, অথবা খারাপ কানেকশনে আগে ডাউনলোড করুন।",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "কোন ভিডিও দেখাবে, যেমন আপনার বাছা সাইজের চেয়ে ছোট ক্লিপ লুকানো, আর প্রথমে কী খুলবে।",
     "how_much_space_is_free": "কতটা জায়গা খালি আছে, আর ডাউনলোড কোথায় রাখা হয়।",
     "demo_artwork_photos_from_unsplash": "ডেমো সিনেমা আর সিরিজগুলো কাল্পনিক। এদের ছবি {a1} থেকে কাটা, প্রতিটি আলোকচিত্রীর নামসহ।",
-    "demo_artwork_photos_from_unsplash__a1": "Unsplash-এর ছবি"
+    "demo_artwork_photos_from_unsplash__a1": "Unsplash-এর ছবি",
+    "posters_with_the_year_size": "{b1}সাল, আকার আর রেজোলিউশনসহ পোস্টার। একটিতে চাপলে তার বিস্তারিত দেখবেন, অথবা সরাসরি চালান।",
+    "posters_with_the_year_size__b1": "দ্বিতীয় ধাপ: একটি ভিডিও বাছুন",
+    "films_and_shows_from_your": "{b1}উপরে আপনার প্রিয় চ্যাটের সিনেমা আর সিরিজ, আর ঠিক তার নিচে যা দেখছিলেন।",
+    "films_and_shows_from_your__b1": "হোম, আপনার তারকা দেওয়া চ্যাট থেকে",
+    "tmplayer_s_home_on_a": "টেলিভিশনে TMPlayer-এর হোম: উপরে তারকা দেওয়া একটি চ্যাটের ডেমো সিনেমা, রিজিউম আর বিস্তারিতসহ, আর নিচে দেখা চালিয়ে যান।"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV, ফোন, Windows ও Linux-এর জন্য TMPlayer ডাউনলোড করুন",

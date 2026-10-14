@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1} pelo GitHub, no Android, no Windows e no Linux. Sair da conta apaga seu histórico e seus favoritos; seus downloads ficam, a menos que você escolha o contrário.",
     "from_github_on_android_windows__strong1": "Atualiza sozinho",
     "what_it_looks_like": "Como ele é",
-    "four_screens_in_the_order": "Seis telas no celular, na TV e no computador, preenchidas com conteúdo de demonstração.",
+    "four_screens_in_the_order": "Sete telas no celular, na TV e no computador, preenchidas com conteúdo de demonstração.",
     "every_chat_and_channel_you": "{b1}Todos os chats e canais em que você está, os recentes primeiro. Mensagens nunca aparecem.",
     "every_chat_and_channel_you__b1": "Passo um: escolha um chat",
-    "tiles_with_running_time_and": "{b1}Miniaturas com duração e resolução. Toque em uma e ela começa em segundos.",
-    "tiles_with_running_time_and__b1": "Passo dois: escolha um vídeo",
     "a_rail_for_the_remote": "{b1}Uma fileira para o controle remoto, cartões legíveis de longe e foco bem claro.",
     "a_rail_for_the_remote__b1": "A mesma conta, na TV",
     "hide_small_clips_autoplay_the": "{b1}Oculte clipes curtos, reproduza o próximo episódio automaticamente ou baixe antes em uma conexão ruim.",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "Quais vídeos aparecem, como ocultar clipes abaixo de um tamanho que você escolher, e o que abre primeiro.",
     "how_much_space_is_free": "Quanto espaço está livre e onde os downloads ficam guardados.",
     "demo_artwork_photos_from_unsplash": "Os filmes e séries de demonstração são inventados. As imagens vêm de {a1}, com o crédito de cada fotógrafo.",
-    "demo_artwork_photos_from_unsplash__a1": "fotos no Unsplash"
+    "demo_artwork_photos_from_unsplash__a1": "fotos no Unsplash",
+    "posters_with_the_year_size": "{b1}Pôsteres com ano, tamanho e resolução. Toque em um para ver os detalhes, ou reproduza na hora.",
+    "posters_with_the_year_size__b1": "Passo dois: escolha um vídeo",
+    "films_and_shows_from_your": "{b1}Filmes e séries dos seus chats favoritos no topo, e logo abaixo o que você estava assistindo.",
+    "films_and_shows_from_your__b1": "Início, dos chats que você marca com estrela",
+    "tmplayer_s_home_on_a": "O Início do TMPlayer em uma TV: um filme de demonstração de um chat com estrela no topo, com Retomar e os detalhes, e Continuar assistindo abaixo."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Baixar o TMPlayer para Android TV, celulares, Windows e Linux",

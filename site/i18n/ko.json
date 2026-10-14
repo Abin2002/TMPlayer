@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1}. GitHub에서 받아 Android, Windows, Linux 모두 업데이트해요. 로그아웃하면 기록과 즐겨찾기는 지워지지만, 다운로드한 파일은 직접 지우지 않는 한 남아요.",
     "from_github_on_android_windows__strong1": "스스로 업데이트해요",
     "what_it_looks_like": "이런 모습이에요",
-    "four_screens_in_the_order": "휴대폰, TV, 컴퓨터의 화면 여섯 개예요. 데모 콘텐츠로 채웠어요.",
+    "four_screens_in_the_order": "휴대폰, TV, 컴퓨터의 화면 일곱 개예요. 데모 콘텐츠로 채웠어요.",
     "every_chat_and_channel_you": "{b1}내가 있는 모든 채팅과 채널이 최근 순으로 나와요. 메시지는 보이지 않아요.",
     "every_chat_and_channel_you__b1": "1단계: 채팅 고르기",
-    "tiles_with_running_time_and": "{b1}재생 시간과 해상도가 보이는 타일이에요. 하나를 누르면 몇 초 안에 시작해요.",
-    "tiles_with_running_time_and__b1": "2단계: 동영상 고르기",
     "a_rail_for_the_remote": "{b1}리모컨용 레일, 거실 건너편에서도 읽히는 카드, 또렷한 포커스예요.",
     "a_rail_for_the_remote__b1": "같은 계정, TV에서",
     "hide_small_clips_autoplay_the": "{b1}작은 클립 숨기기, 다음 에피소드 자동 재생, 연결이 나쁠 때 먼저 다운로드하기를 설정할 수 있어요.",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "정해 둔 크기보다 작은 클립 숨기기 같은 표시할 동영상 설정, 그리고 처음 열리는 화면.",
     "how_much_space_is_free": "남은 저장공간과 다운로드 보관 위치.",
     "demo_artwork_photos_from_unsplash": "데모 영화와 시리즈는 지어낸 것입니다. 이미지는 {a1}에서 잘라 왔으며 사진작가별로 출처를 밝혔습니다.",
-    "demo_artwork_photos_from_unsplash__a1": "Unsplash 사진"
+    "demo_artwork_photos_from_unsplash__a1": "Unsplash 사진",
+    "posters_with_the_year_size": "{b1}연도, 크기, 해상도가 적힌 포스터. 하나를 누르면 상세 정보가 열리고, 바로 재생할 수도 있습니다.",
+    "posters_with_the_year_size__b1": "2단계: 동영상 고르기",
+    "films_and_shows_from_your": "{b1}즐겨찾는 채팅의 영화와 시리즈가 위에, 바로 아래에는 보던 영상이 있습니다.",
+    "films_and_shows_from_your__b1": "홈, 별표한 채팅에서",
+    "tmplayer_s_home_on_a": "TV에서 본 TMPlayer 홈: 위쪽에 별표한 채팅의 데모 영화와 이어 보기, 상세 정보가 있고 아래에 시청 중인 콘텐츠가 있습니다."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV, 휴대폰, Windows, Linux용 TMPlayer 다운로드",

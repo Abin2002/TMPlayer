@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1} dari GitHub, di Android, Windows, dan Linux. Keluar akan menghapus riwayat dan favorit; unduhan tetap ada kecuali kamu memilih lain.",
     "from_github_on_android_windows__strong1": "Memperbarui diri sendiri",
     "what_it_looks_like": "Tampilannya",
-    "four_screens_in_the_order": "Enam layar di HP, TV, dan komputer, diisi konten contoh.",
+    "four_screens_in_the_order": "Tujuh layar di HP, TV, dan komputer, diisi konten contoh.",
     "every_chat_and_channel_you": "{b1}Semua obrolan dan channel yang kamu ikuti, yang terbaru di atas. Pesan tidak pernah muncul.",
     "every_chat_and_channel_you__b1": "Langkah satu: pilih obrolan",
-    "tiles_with_running_time_and": "{b1}Ubin dengan durasi dan resolusi. Tekan satu dan video mulai dalam hitungan detik.",
-    "tiles_with_running_time_and__b1": "Langkah dua: pilih video",
     "a_rail_for_the_remote": "{b1}Rail untuk remote, kartu yang terbaca dari seberang ruangan, dan fokus yang jelas.",
     "a_rail_for_the_remote__b1": "Akun yang sama, di TV",
     "hide_small_clips_autoplay_the": "{b1}Sembunyikan klip kecil, putar episode berikutnya otomatis, atau unduh dulu saat koneksi buruk.",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "Video mana yang ditampilkan, misalnya menyembunyikan klip di bawah ukuran yang kamu pilih, dan apa yang dibuka pertama kali.",
     "how_much_space_is_free": "Berapa ruang yang masih kosong, dan di mana unduhan disimpan.",
     "demo_artwork_photos_from_unsplash": "Film dan serial demo ini rekaan. Gambarnya dipotong dari {a1}, dengan nama setiap fotografer.",
-    "demo_artwork_photos_from_unsplash__a1": "foto di Unsplash"
+    "demo_artwork_photos_from_unsplash__a1": "foto di Unsplash",
+    "posters_with_the_year_size": "{b1}Poster dengan tahun, ukuran, dan resolusi. Tekan salah satunya untuk detailnya, atau langsung putar.",
+    "posters_with_the_year_size__b1": "Langkah dua: pilih video",
+    "films_and_shows_from_your": "{b1}Film dan serial dari chat favoritmu di bagian atas, dan tepat di bawahnya yang sedang kamu tonton.",
+    "films_and_shows_from_your__b1": "Beranda, dari chat yang kamu beri bintang",
+    "tmplayer_s_home_on_a": "Beranda TMPlayer di televisi: film demo dari chat berbintang di atas dengan Lanjutkan dan detailnya, serta Lanjutkan menonton di bawahnya."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Unduh TMPlayer untuk Android TV, HP, Windows, dan Linux",

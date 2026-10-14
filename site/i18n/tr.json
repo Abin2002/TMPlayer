@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1} GitHub'dan, Android, Windows ve Linux'ta. Çıkış yapmak geçmişini ve favorilerini siler; aksini seçmezsen indirdiklerin kalır.",
     "from_github_on_android_windows__strong1": "Kendini günceller",
     "what_it_looks_like": "Nasıl görünür",
-    "four_screens_in_the_order": "Telefonda, TV'de ve bilgisayarda altı ekran, demo içerikle dolu.",
+    "four_screens_in_the_order": "Telefonda, TV'de ve bilgisayarda yedi ekran, demo içerikle dolu.",
     "every_chat_and_channel_you": "{b1}İçinde olduğun her sohbet ve kanal, en yeniler üstte. Mesajlar asla görünmez.",
     "every_chat_and_channel_you__b1": "Birinci adım: bir sohbet seç",
-    "tiles_with_running_time_and": "{b1}Süre ve çözünürlük gösteren kutucuklar. Birine bas, saniyeler içinde başlar.",
-    "tiles_with_running_time_and__b1": "İkinci adım: bir video seç",
     "a_rail_for_the_remote": "{b1}Kumanda için bir ray, odanın karşısından okunan kartlar ve net odak.",
     "a_rail_for_the_remote__b1": "Aynı hesap, TV'de",
     "hide_small_clips_autoplay_the": "{b1}Küçük klipleri gizle, sonraki bölümü otomatik oynat ya da zayıf bağlantıda önce indir.",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "Hangi videoların görüneceği, örneğin seçtiğin boyutun altındaki klipleri gizlemek, ve ilk neyin açılacağı.",
     "how_much_space_is_free": "Ne kadar boş alan olduğu ve indirilenlerin nerede tutulduğu.",
     "demo_artwork_photos_from_unsplash": "Demo filmler ve diziler hayal ürünüdür. Görselleri, her fotoğrafçının adı belirtilerek {a1} kırpıldı.",
-    "demo_artwork_photos_from_unsplash__a1": "Unsplash'teki fotoğraflardan"
+    "demo_artwork_photos_from_unsplash__a1": "Unsplash'teki fotoğraflardan",
+    "posters_with_the_year_size": "{b1}Yılı, boyutu ve çözünürlüğüyle afişler. Ayrıntıları için birine basın ya da hemen oynatın.",
+    "posters_with_the_year_size__b1": "İkinci adım: bir video seç",
+    "films_and_shows_from_your": "{b1}Yıldızlı sohbetlerinizdeki film ve diziler üstte, hemen altında da izlemekte olduklarınız.",
+    "films_and_shows_from_your__b1": "Ana sayfa, yıldızladığınız sohbetlerden",
+    "tmplayer_s_home_on_a": "Televizyonda TMPlayer ana sayfası: üstte yıldızlı bir sohbetten demo film, Devam et ve ayrıntılarıyla; altında İzlemeye devam et."
   },
   "download": {
     "download_tmplayer_for_android_tv": "TMPlayer'ı Android TV, telefonlar, Windows ve Linux için indir",

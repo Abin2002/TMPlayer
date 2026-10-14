@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1} từ GitHub, trên Android, Windows và Linux. Đăng xuất sẽ xóa lịch sử và mục yêu thích; các tệp đã tải vẫn còn, trừ khi bạn chọn xóa.",
     "from_github_on_android_windows__strong1": "Tự cập nhật",
     "what_it_looks_like": "Giao diện trông thế nào",
-    "four_screens_in_the_order": "Sáu màn hình trên điện thoại, TV và máy tính, với nội dung mẫu.",
+    "four_screens_in_the_order": "Bảy màn hình trên điện thoại, TV và máy tính, với nội dung mẫu.",
     "every_chat_and_channel_you": "{b1}Mọi cuộc trò chuyện và kênh bạn tham gia, mới nhất ở trên cùng. Tin nhắn không bao giờ hiện ra.",
     "every_chat_and_channel_you__b1": "Bước một: chọn cuộc trò chuyện",
-    "tiles_with_running_time_and": "{b1}Các ô kèm thời lượng và độ phân giải. Bấm một ô và video bắt đầu sau vài giây.",
-    "tiles_with_running_time_and__b1": "Bước hai: chọn video",
     "a_rail_for_the_remote": "{b1}Thanh điều hướng cho điều khiển từ xa, thẻ đọc được từ đầu phòng bên kia và vùng chọn rõ ràng.",
     "a_rail_for_the_remote__b1": "Cùng một tài khoản, trên TV",
     "hide_small_clips_autoplay_the": "{b1}Ẩn các clip nhỏ, tự phát tập tiếp theo, hoặc tải trước khi kết nối kém.",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "Video nào được hiển thị, chẳng hạn ẩn các đoạn nhỏ hơn kích thước bạn chọn, và màn hình nào mở trước.",
     "how_much_space_is_free": "Còn trống bao nhiêu dung lượng, và tệp tải xuống được lưu ở đâu.",
     "demo_artwork_photos_from_unsplash": "Các phim lẻ và phim bộ minh họa đều là hư cấu. Hình ảnh được cắt từ {a1}, có ghi tên từng nhiếp ảnh gia.",
-    "demo_artwork_photos_from_unsplash__a1": "ảnh trên Unsplash"
+    "demo_artwork_photos_from_unsplash__a1": "ảnh trên Unsplash",
+    "posters_with_the_year_size": "{b1}Áp phích có năm, dung lượng và độ phân giải. Bấm vào một áp phích để xem chi tiết, hoặc phát ngay.",
+    "posters_with_the_year_size__b1": "Bước hai: chọn video",
+    "films_and_shows_from_your": "{b1}Phim lẻ và phim bộ từ những cuộc trò chuyện yêu thích ở trên cùng, ngay bên dưới là những gì bạn đang xem dở.",
+    "films_and_shows_from_your__b1": "Trang chủ, từ những cuộc trò chuyện bạn gắn sao",
+    "tmplayer_s_home_on_a": "Trang chủ TMPlayer trên TV: phía trên là một phim minh họa từ cuộc trò chuyện gắn sao cùng nút Tiếp tục và chi tiết, bên dưới là Xem tiếp."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Tải TMPlayer cho Android TV, điện thoại, Windows và Linux",

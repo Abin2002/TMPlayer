@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1} GitHub से, Android, Windows और Linux पर। साइन आउट करने पर आपका इतिहास और पसंदीदा हट जाते हैं; आपके डाउनलोड तब तक रहते हैं जब तक आप कुछ और न चुनें।",
     "from_github_on_android_windows__strong1": "खुद अपडेट होता है",
     "what_it_looks_like": "यह कैसा दिखता है",
-    "four_screens_in_the_order": "फ़ोन, टीवी और कंप्यूटर की छह स्क्रीन, डेमो सामग्री के साथ।",
+    "four_screens_in_the_order": "फ़ोन, टीवी और कंप्यूटर की सात स्क्रीन, डेमो सामग्री के साथ।",
     "every_chat_and_channel_you": "{b1}आपकी हर चैट और चैनल, हाल की ऊपर। संदेश कभी नहीं दिखते।",
     "every_chat_and_channel_you__b1": "पहला कदम: चैट चुनें",
-    "tiles_with_running_time_and": "{b1}अवधि और रेज़ोल्यूशन वाली टाइल। एक दबाएँ और वह सेकंडों में शुरू हो जाता है।",
-    "tiles_with_running_time_and__b1": "दूसरा कदम: वीडियो चुनें",
     "a_rail_for_the_remote": "{b1}रिमोट के लिए कतार, कमरे के उस पार से पढ़ने लायक कार्ड और साफ़ फ़ोकस।",
     "a_rail_for_the_remote__b1": "वही अकाउंट, टीवी पर",
     "hide_small_clips_autoplay_the": "{b1}छोटी क्लिप छिपाएँ, अगला एपिसोड अपने आप चलाएँ, या खराब कनेक्शन पर पहले डाउनलोड करें।",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "कौन से वीडियो दिखें, जैसे आपके चुने साइज़ से छोटी क्लिप छिपाना, और सबसे पहले क्या खुले।",
     "how_much_space_is_free": "कितनी जगह खाली है, और डाउनलोड कहाँ रखे जाते हैं।",
     "demo_artwork_photos_from_unsplash": "डेमो फ़िल्में और सीरीज़ काल्पनिक हैं। इनकी तस्वीरें {a1} से ली गई हैं, हर फ़ोटोग्राफ़र के नाम के साथ।",
-    "demo_artwork_photos_from_unsplash__a1": "Unsplash की फ़ोटो"
+    "demo_artwork_photos_from_unsplash__a1": "Unsplash की फ़ोटो",
+    "posters_with_the_year_size": "{b1}साल, आकार और रिज़ॉल्यूशन वाले पोस्टर। किसी एक को दबाकर उसका विवरण देखें, या सीधे चलाएँ।",
+    "posters_with_the_year_size__b1": "दूसरा कदम: वीडियो चुनें",
+    "films_and_shows_from_your": "{b1}ऊपर आपकी पसंदीदा चैट की फ़िल्में और सीरीज़, और ठीक नीचे वह जो आप देख रहे थे।",
+    "films_and_shows_from_your__b1": "होम, आपकी स्टार की गई चैट से",
+    "tmplayer_s_home_on_a": "टीवी पर TMPlayer का होम: ऊपर स्टार की गई चैट की एक डेमो फ़िल्म, रिज़्यूम और उसके विवरण के साथ, और नीचे देखना जारी रखें।"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV, फ़ोन, Windows और Linux के लिए TMPlayer डाउनलोड करें",

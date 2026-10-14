@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1}。GitHubから、Android、Windows、Linuxで更新されます。サインアウトすると履歴とお気に入りは消えますが、ダウンロードした動画は、指定しない限り残ります。",
     "from_github_on_android_windows__strong1": "自動で更新",
     "what_it_looks_like": "画面のイメージ",
-    "four_screens_in_the_order": "スマートフォン、テレビ、パソコンの6つの画面を、デモ用のコンテンツでご紹介します。",
+    "four_screens_in_the_order": "スマートフォン、テレビ、パソコンの7つの画面を、デモ用のコンテンツでご紹介します。",
     "every_chat_and_channel_you": "{b1}参加しているすべてのチャットとチャンネルが、新しい順に並びます。メッセージは表示されません。",
     "every_chat_and_channel_you__b1": "ステップ1: チャットを選ぶ",
-    "tiles_with_running_time_and": "{b1}再生時間と解像度付きのタイル。押すと数秒で始まります。",
-    "tiles_with_running_time_and__b1": "ステップ2: 動画を選ぶ",
     "a_rail_for_the_remote": "{b1}リモコン向けのレール、部屋の向こうからでも読めるカード、はっきりしたフォーカス。",
     "a_rail_for_the_remote__b1": "同じアカウントを、テレビで",
     "hide_small_clips_autoplay_the": "{b1}小さなクリップを非表示にしたり、次のエピソードを自動再生したり、回線が悪いときは先にダウンロードしたりできます。",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "指定したサイズ未満のクリップを隠すなど、表示する動画の選択と、最初に開く画面。",
     "how_much_space_is_free": "空き容量と、ダウンロードの保存先。",
     "demo_artwork_photos_from_unsplash": "デモの映画とシリーズは架空のものです。画像は{a1}から切り出し、撮影者ごとにクレジットしています。",
-    "demo_artwork_photos_from_unsplash__a1": "Unsplashの写真"
+    "demo_artwork_photos_from_unsplash__a1": "Unsplashの写真",
+    "posters_with_the_year_size": "{b1}公開年、サイズ、解像度付きのポスター。押すと詳細が開き、そのまま再生もできます。",
+    "posters_with_the_year_size__b1": "ステップ2: 動画を選ぶ",
+    "films_and_shows_from_your": "{b1}お気に入りのチャットの映画やシリーズが上に、そのすぐ下に見ていた続きが並びます。",
+    "films_and_shows_from_your__b1": "ホーム、スターを付けたチャットから",
+    "tmplayer_s_home_on_a": "テレビで表示したTMPlayerのホーム。上にスター付きチャットのデモ映画と再開ボタン、詳細が並び、その下に「視聴を続ける」があります。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV、スマートフォン、Windows、Linux向けTMPlayerをダウンロード",

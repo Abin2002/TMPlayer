@@ -636,6 +636,10 @@
       <image:title>The TMPlayer chat list on Android TV</image:title>
     </image:image>
     <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-home.webp</image:loc>
+      <image:title>TMPlayer's Home on Android TV, led by a film from a starred chat</image:title>
+    </image:image>
+    <image:image>
       <image:loc>https://tmplayer.org/screenshots/tv-settings.webp</image:loc>
       <image:title>TMPlayer settings on Android TV</image:title>
     </image:image>
@@ -650,6 +654,10 @@
     <image:image>
       <image:loc>https://tmplayer.org/screenshots/tv-chats-light.webp</image:loc>
       <image:title>The TMPlayer chat list on a television, in the light theme</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://tmplayer.org/screenshots/tv-home-light.webp</image:loc>
+      <image:title>TMPlayer's Home on a television, in the light theme</image:title>
     </image:image>
     <image:image>
       <image:loc>https://tmplayer.org/screenshots/tv-settings-light.webp</image:loc>

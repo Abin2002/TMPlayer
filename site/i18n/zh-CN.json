@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1} 来自 GitHub，支持 Android、Windows 和 Linux。退出登录会清除你的历史记录和收藏；下载的内容除非你选择删除，否则会保留。",
     "from_github_on_android_windows__strong1": "自动更新",
     "what_it_looks_like": "界面预览",
-    "four_screens_in_the_order": "手机、电视和电脑上的六个界面，使用演示内容。",
+    "four_screens_in_the_order": "手机、电视和电脑上的七个界面，使用演示内容。",
     "every_chat_and_channel_you": "{b1}你加入的所有聊天和频道，最近的排在最前。不会显示消息。",
     "every_chat_and_channel_you__b1": "第一步：选择聊天",
-    "tiles_with_running_time_and": "{b1}带时长和分辨率的方块。按一下，几秒内开始播放。",
-    "tiles_with_running_time_and__b1": "第二步：选择视频",
     "a_rail_for_the_remote": "{b1}为遥控器设计的导航栏，隔着房间也能看清的卡片，以及清晰的焦点。",
     "a_rail_for_the_remote__b1": "同一个账号，在电视上",
     "hide_small_clips_autoplay_the": "{b1}隐藏过短的片段，自动播放下一集，网络差时先下载再播放。",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "显示哪些视频，例如隐藏小于你所选大小的片段，以及首先打开什么。",
     "how_much_space_is_free": "剩余多少空间，以及下载内容保存在哪里。",
     "demo_artwork_photos_from_unsplash": "演示电影和剧集均为虚构。图片取自{a1}，并注明了每位摄影师。",
-    "demo_artwork_photos_from_unsplash__a1": "Unsplash 上的照片"
+    "demo_artwork_photos_from_unsplash__a1": "Unsplash 上的照片",
+    "posters_with_the_year_size": "{b1}海报标出年份、大小和分辨率。按一下查看详情，或直接播放。",
+    "posters_with_the_year_size__b1": "第二步：选择视频",
+    "films_and_shows_from_your": "{b1}顶部是收藏聊天里的电影和剧集，下方紧接着是你看到一半的内容。",
+    "films_and_shows_from_your__b1": "首页，来自你加星的聊天",
+    "tmplayer_s_home_on_a": "电视上的 TMPlayer 首页：顶部是一个加星聊天里的演示电影，带有继续播放和详情，下方是继续观看。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "下载适用于 Android TV、手机、Windows 和 Linux 的 TMPlayer",

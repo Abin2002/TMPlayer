@@ -34,6 +34,13 @@
       "label": "The chat list on a television, with favourites, channels and groups"
     },
     {
+      "src": "/screenshots/tv-home.webp",
+      "sizes": "1920x1080",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Home on a television, led by a film from a starred chat"
+    },
+    {
       "src": "/screenshots/tv-grid.webp",
       "sizes": "1920x1080",
       "type": "image/webp",

@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1} z GitHuba, na Androidzie, Windows i Linuxie. Wylogowanie czyści historię i ulubione; pobrane pliki zostają, chyba że zdecydujesz inaczej.",
     "from_github_on_android_windows__strong1": "Aktualizuje się sam",
     "what_it_looks_like": "Jak to wygląda",
-    "four_screens_in_the_order": "Sześć ekranów na telefonie, telewizorze i komputerze, z przykładowymi treściami.",
+    "four_screens_in_the_order": "Siedem ekranów na telefonie, telewizorze i komputerze, z przykładowymi treściami.",
     "every_chat_and_channel_you": "{b1}Każdy czat i kanał, w którym jesteś, najnowsze na górze. Wiadomości nigdy się nie pojawiają.",
     "every_chat_and_channel_you__b1": "Krok pierwszy: wybierz czat",
-    "tiles_with_running_time_and": "{b1}Kafelki z czasem trwania i rozdzielczością. Naciśnij jeden, a wystartuje w kilka sekund.",
-    "tiles_with_running_time_and__b1": "Krok drugi: wybierz wideo",
     "a_rail_for_the_remote": "{b1}Pasek dla pilota, karty czytelne przez cały pokój i wyraźne zaznaczenie.",
     "a_rail_for_the_remote__b1": "To samo konto, na telewizorze",
     "hide_small_clips_autoplay_the": "{b1}Ukryj małe klipy, odtwarzaj automatycznie następny odcinek albo najpierw pobieraj przy słabym połączeniu.",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "Które wideo są widoczne, na przykład ukrywanie klipów poniżej wybranego rozmiaru, i co otwiera się na start.",
     "how_much_space_is_free": "Ile miejsca jest wolne i gdzie trzymane są pobrane pliki.",
     "demo_artwork_photos_from_unsplash": "Filmy i seriale demonstracyjne są zmyślone. Ich grafiki wycięto ze {a1}, z podaniem autora każdego zdjęcia.",
-    "demo_artwork_photos_from_unsplash__a1": "zdjęć w serwisie Unsplash"
+    "demo_artwork_photos_from_unsplash__a1": "zdjęć w serwisie Unsplash",
+    "posters_with_the_year_size": "{b1}Plakaty z rokiem, rozmiarem i rozdzielczością. Naciśnij jeden, by zobaczyć szczegóły, albo od razu go odtwórz.",
+    "posters_with_the_year_size__b1": "Krok drugi: wybierz wideo",
+    "films_and_shows_from_your": "{b1}Filmy i seriale z ulubionych czatów na górze, a tuż pod nimi to, co oglądasz.",
+    "films_and_shows_from_your__b1": "Strona główna, z czatów oznaczonych gwiazdką",
+    "tmplayer_s_home_on_a": "Strona główna TMPlayer na telewizorze: u góry film demonstracyjny z czatu z gwiazdką, ze Wznów i szczegółami, a pod nim Oglądaj dalej."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Pobierz TMPlayera na Android TV, telefony, Windows i Linuxa",

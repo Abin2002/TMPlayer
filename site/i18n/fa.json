@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1} از GitHub، روی Android، Windows و Linux. خروج از حساب تاریخچه و علاقه‌مندی‌ها را پاک می‌کند؛ دانلودهایتان می‌مانند مگر خودتان بخواهید.",
     "from_github_on_android_windows__strong1": "خودش به‌روز می‌شود",
     "what_it_looks_like": "چه شکلی است",
-    "four_screens_in_the_order": "شش صفحه روی گوشی، تلویزیون و رایانه، پر از محتوای نمونه.",
+    "four_screens_in_the_order": "هفت صفحه روی گوشی، تلویزیون و رایانه، پر از محتوای نمونه.",
     "every_chat_and_channel_you": "{b1}همهٔ چت‌ها و کانال‌هایی که در آن‌ها هستید، تازه‌ترین‌ها بالا. پیام‌ها هرگز نمایش داده نمی‌شوند.",
     "every_chat_and_channel_you__b1": "مرحلهٔ اول: یک چت انتخاب کنید",
-    "tiles_with_running_time_and": "{b1}کاشی‌هایی با مدت زمان و کیفیت تصویر. یکی را بزنید تا در چند ثانیه شروع شود.",
-    "tiles_with_running_time_and__b1": "مرحلهٔ دوم: یک ویدیو انتخاب کنید",
     "a_rail_for_the_remote": "{b1}نوار کناری برای ریموت، کارت‌هایی که از آن سوی اتاق خوانده می‌شوند، و فوکوس واضح.",
     "a_rail_for_the_remote__b1": "همان حساب، روی تلویزیون",
     "hide_small_clips_autoplay_the": "{b1}کلیپ‌های کوچک را پنهان کنید، قسمت بعدی را خودکار پخش کنید، یا در اینترنت ضعیف ابتدا دانلود کنید.",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "اینکه کدام ویدیوها نشان داده شوند، مثلاً پنهان کردن کلیپ‌های کوچک‌تر از اندازه‌ای که انتخاب می‌کنید، و اینکه چه چیزی اول باز شود.",
     "how_much_space_is_free": "چقدر فضای خالی مانده و دانلودها کجا نگه داشته می‌شوند.",
     "demo_artwork_photos_from_unsplash": "فیلم‌ها و سریال‌های نمایشی ساختگی‌اند. تصویرهایشان از {a1} برش خورده و نام هر عکاس آمده است.",
-    "demo_artwork_photos_from_unsplash__a1": "عکس‌هایی در Unsplash"
+    "demo_artwork_photos_from_unsplash__a1": "عکس‌هایی در Unsplash",
+    "posters_with_the_year_size": "{b1}پوسترهایی با سال، حجم و کیفیت تصویر. یکی را بزنید تا جزئیاتش را ببینید، یا همان لحظه پخشش کنید.",
+    "posters_with_the_year_size__b1": "مرحلهٔ دوم: یک ویدیو انتخاب کنید",
+    "films_and_shows_from_your": "{b1}فیلم‌ها و سریال‌های گفتگوهای محبوبتان در بالا، و درست زیرشان آنچه داشتید تماشا می‌کردید.",
+    "films_and_shows_from_your__b1": "خانه، از گفتگوهایی که ستاره می‌زنید",
+    "tmplayer_s_home_on_a": "صفحه خانه TMPlayer روی تلویزیون: یک فیلم نمایشی از یک گفتگوی ستاره‌دار در بالا با دکمه ادامه و جزئیاتش، و ادامه تماشا در پایین."
   },
   "download": {
     "download_tmplayer_for_android_tv": "دانلود TMPlayer برای Android TV، گوشی، Windows و Linux",

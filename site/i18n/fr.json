@@ -237,11 +237,9 @@
     "from_github_on_android_windows": "{strong1} depuis GitHub, sur Android, Windows et Linux. La déconnexion efface votre historique et vos favoris ; vos téléchargements restent sauf si vous choisissez le contraire.",
     "from_github_on_android_windows__strong1": "Se met à jour tout seul",
     "what_it_looks_like": "À quoi ça ressemble",
-    "four_screens_in_the_order": "Six écrans sur le téléphone, la TV et l'ordinateur, remplis de contenu de démonstration.",
+    "four_screens_in_the_order": "Sept écrans sur le téléphone, la TV et l'ordinateur, remplis de contenu de démonstration.",
     "every_chat_and_channel_you": "{b1}Toutes les discussions et tous les canaux où vous êtes, les plus récents en haut. Les messages n'apparaissent jamais.",
     "every_chat_and_channel_you__b1": "Étape un : choisir une discussion",
-    "tiles_with_running_time_and": "{b1}Des vignettes avec durée et résolution. Appuyez sur l'une d'elles et elle démarre en quelques secondes.",
-    "tiles_with_running_time_and__b1": "Étape deux : choisir une vidéo",
     "a_rail_for_the_remote": "{b1}Un bandeau pour la télécommande, des cartes lisibles à travers la pièce et un focus bien visible.",
     "a_rail_for_the_remote__b1": "Le même compte, sur la TV",
     "hide_small_clips_autoplay_the": "{b1}Masquez les petits clips, lancez automatiquement l'épisode suivant, ou téléchargez d'abord si la connexion est faible.",
@@ -354,7 +352,12 @@
     "which_videos_show_such_as": "Quelles vidéos s'affichent, par exemple en masquant les clips sous une taille choisie, et ce qui s'ouvre en premier.",
     "how_much_space_is_free": "L'espace libre restant, et l'endroit où sont gardés les téléchargements.",
     "demo_artwork_photos_from_unsplash": "Les films et séries de démonstration sont inventés. Leurs visuels sont tirés de {a1}, avec le nom de chaque photographe.",
-    "demo_artwork_photos_from_unsplash__a1": "photos sur Unsplash"
+    "demo_artwork_photos_from_unsplash__a1": "photos sur Unsplash",
+    "posters_with_the_year_size": "{b1}Des affiches avec l'année, la taille et la résolution. Appuyez sur l'une pour ses détails, ou lancez-la tout de suite.",
+    "posters_with_the_year_size__b1": "Étape deux : choisir une vidéo",
+    "films_and_shows_from_your": "{b1}Les films et séries de vos discussions favorites en haut, et juste en dessous ce que vous regardiez.",
+    "films_and_shows_from_your__b1": "L'accueil, depuis vos discussions étoilées",
+    "tmplayer_s_home_on_a": "L'accueil de TMPlayer sur un téléviseur : un film de démonstration d'une discussion étoilée en haut, avec Reprendre et ses détails, et Continuer à regarder en dessous."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Télécharger TMPlayer pour Android TV, téléphones, Windows et Linux",
