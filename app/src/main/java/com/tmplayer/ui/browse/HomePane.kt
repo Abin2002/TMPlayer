@@ -1,5 +1,6 @@
 package com.tmplayer.ui.browse
 
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -144,8 +145,12 @@ internal fun HomePane(
     val listState = rememberLazyListState()
     // A show's card on the TV home screen asked for its page: opened once the show is in the rows.
     val showAsk by HomeLaunch.show.collectAsState()
-    LaunchedEffect(showAsk, rows) {
+    // Not before this window has focus: the launcher is still on top while the app comes up, and a
+    // page opened then never got the remote's focus on its Play button.
+    val windowFocused = LocalWindowInfo.current.isWindowFocused
+    LaunchedEffect(showAsk, rows, windowFocused) {
         val ask = showAsk ?: return@LaunchedEffect
+        if (!windowFocused) return@LaunchedEffect
         val series = HomeLaunch.find(ask, rows) ?: return@LaunchedEffect
         openSeries = series
         HomeLaunch.show.compareAndSet(ask, null)
