@@ -9,7 +9,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
-import SectionHead from '../../../components/translate/SectionHead.astro';
+import Band from '../../../components/Band.astro';
 import LangList from '../../../components/translate/LangList.astro';
 import RuleCard from '../../../components/translate/RuleCard.astro';
 import { langPaths } from '../../../i18n/paths';
@@ -63,58 +63,38 @@ const webPage = {
       </div>
     </div>
   </section>
-<Icon name="wave" />
-  <section class="band band-tonal" id="languages" aria-labelledby="languages-h">
-    <div class="wrap">
-      <SectionHead id="languages-h" title={t('translate.twenty_languages_and_english')} sub={t('translate.a_language_you_can_read')} />
-      <div class="section-body" data-reveal>
-        <div class="panel">
-          <LangList />
-        </div>
-      </div>
+  <Band wave id="languages" title={t('translate.twenty_languages_and_english')} sub={t('translate.a_language_you_can_read')} tonal body>
+    <div class="panel">
+      <LangList />
     </div>
-  </section>
-<Icon name="wave-flip" />
-  <section class="band" id="fix" aria-labelledby="fix-h">
-    <div class="wrap">
-      <SectionHead id="fix-h" title={t('translate.fix_a_word')} sub={t('translate.three_ways_from_the_quickest')} />
-      <div class="section-body" data-reveal>
-        <ol class="steps">
-          <li id="fix-1">
-            <h3>{t('translate.tell_us')}</h3>
-            <p><T k="translate.say_which_page_or_screen"><a href="https://t.me/tmplayer_chat" rel="noopener" slot="a1">{t('translate.say_which_page_or_screen__a1')}</a><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a2">{t('translate.say_which_page_or_screen__a2')}</a></T></p>
-          </li>
-          <li id="fix-2">
-            <h3>{t('translate.edit_the_file_yourself')}</h3>
-            <p><T k="translate.every_language_is_one_json"><a href="https://github.com/dracu-lah/TMPlayer/tree/main/site/i18n" rel="noopener" slot="a1"><code>site/i18n/</code></a><code slot="code1">core/src/commonMain/resources/i18n/</code><code slot="code2">es-419.json</code></T></p>
-            <p><T k="translate.english_is_the_source_is"><code slot="code1">en.json</code></T></p>
-          </li>
-          <li id="fix-3">
-            <h3>{t('translate.review_a_whole_language')}</h3>
-            <p>{t('translate.read_the_site_or_the')}</p>
-          </li>
-        </ol>
-      </div>
+  </Band>
+  <Band wave id="fix" title={t('translate.fix_a_word')} sub={t('translate.three_ways_from_the_quickest')} body>
+    <ol class="steps">
+      <li id="fix-1">
+        <h3>{t('translate.tell_us')}</h3>
+        <p><T k="translate.say_which_page_or_screen"><a href="https://t.me/tmplayer_chat" rel="noopener" slot="a1">{t('translate.say_which_page_or_screen__a1')}</a><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a2">{t('translate.say_which_page_or_screen__a2')}</a></T></p>
+      </li>
+      <li id="fix-2">
+        <h3>{t('translate.edit_the_file_yourself')}</h3>
+        <p><T k="translate.every_language_is_one_json"><a href="https://github.com/dracu-lah/TMPlayer/tree/main/site/i18n" rel="noopener" slot="a1"><code>site/i18n/</code></a><code slot="code1">core/src/commonMain/resources/i18n/</code><code slot="code2">es-419.json</code></T></p>
+        <p><T k="translate.english_is_the_source_is"><code slot="code1">en.json</code></T></p>
+      </li>
+      <li id="fix-3">
+        <h3>{t('translate.review_a_whole_language')}</h3>
+        <p>{t('translate.read_the_site_or_the')}</p>
+      </li>
+    </ol>
+  </Band>
+  <Band wave id="rules" title={t('translate.a_few_rules')} tonal>
+    <div class="card-grid card-grid-3" data-reveal>
+      <RuleCard title={t('translate.keep_the_braces')}><T k="translate.words_in_curly_braces_such"><code slot="code1">{'{'}version{'}'}</code><code slot="code2">{'{'}a1{'}'}</code></T></RuleCard>
+      <RuleCard title={t('translate.keep_the_names')}>{t('translate.tmplayer_telegram_android_tv_fire')}</RuleCard>
+      <RuleCard title={t('translate.short_beats_literal')}>{t('translate.a_button_that_fits_is')}</RuleCard>
     </div>
-  </section>
-<Icon name="wave" />
-  <section class="band band-tonal" id="rules" aria-labelledby="rules-h">
-    <div class="wrap">
-      <SectionHead id="rules-h" title={t('translate.a_few_rules')} />
-      <div class="card-grid card-grid-3" data-reveal>
-        <RuleCard title={t('translate.keep_the_braces')}><T k="translate.words_in_curly_braces_such"><code slot="code1">{'{'}version{'}'}</code><code slot="code2">{'{'}a1{'}'}</code></T></RuleCard>
-        <RuleCard title={t('translate.keep_the_names')}>{t('translate.tmplayer_telegram_android_tv_fire')}</RuleCard>
-        <RuleCard title={t('translate.short_beats_literal')}>{t('translate.a_button_that_fits_is')}</RuleCard>
-      </div>
-    </div>
-  </section>
-<Icon name="wave-flip" />
-  <section class="band" id="new" aria-labelledby="new-h">
-    <div class="wrap">
-      <SectionHead id="new-h" title={t('translate.a_new_language')} />
-      <p class="muted small section-note" data-reveal><T k="translate.naming_the_language_and_saying"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('translate.naming_the_language_and_saying__a1')}</a></T></p>
-    </div>
-  </section>
+  </Band>
+  <Band wave id="new" title={t('translate.a_new_language')}>
+    <p class="muted small section-note" data-reveal><T k="translate.naming_the_language_and_saying"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('translate.naming_the_language_and_saying__a1')}</a></T></p>
+  </Band>
 
 </main>
 

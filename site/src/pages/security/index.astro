@@ -10,7 +10,7 @@ import JsonLd from '../../components/JsonLd.astro';
 import HeaderPlain from '../../components/plain/HeaderPlain.astro';
 import FooterPlain from '../../components/plain/FooterPlain.astro';
 import { breadcrumb } from '../../components/plain/breadcrumb';
-import Band from '../../components/security/Band.astro';
+import Band from '../../components/Band.astro';
 import Card from '../../components/security/Card.astro';
 import Step from '../../components/security/Step.astro';
 import Panel from '../../components/security/Panel.astro';
@@ -45,7 +45,7 @@ Astro.locals.lang = ENGLISH;
       </div>
     </section>
 
-    <Band id="account" tonal title="Your Telegram account" sub="What the app does with your sign-in, and where it talks to.">
+    <Band wave id="account" tonal title="Your Telegram account" sub="What the app does with your sign-in, and where it talks to.">
       <div class="card-grid card-grid-3" data-reveal>
         <Card title="Telegram's own library">Sign-in and every request go through TDLib, Telegram's official client library, straight to Telegram. You approve the sign-in from your phone, and it shows up in Telegram's list of devices, where you can end it.</Card>
         <Card title="The session stays on the device">There is no TMPlayer account and no TMPlayer server. Your session, settings and downloads live in the app's own storage on your TV, phone or computer.</Card>
@@ -54,7 +54,7 @@ Astro.locals.lang = ENGLISH;
       <p class="muted small section-note" data-reveal>Besides Telegram, the app asks tmplayer.org for one small file naming the newest release, and GitHub for an update when you choose to install it. <a href="/privacy/">The privacy page</a> lists everything, including what a crash report holds.</p>
     </Band>
 
-    <Band id="builds" title="How a release is made" sub="In public, by a machine, from the source you can read.">
+    <Band wave id="builds" title="How a release is made" sub="In public, by a machine, from the source you can read.">
       <div class="section-body" data-reveal>
         <ol class="steps">
           <Step id="build-1" title="Open source, GPL-3.0">All of TMPlayer's code is on <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener">GitHub</a> under the GPL-3.0. Anyone can read it, build it and compare.</Step>
@@ -66,7 +66,7 @@ Astro.locals.lang = ENGLISH;
       </div>
     </Band>
 
-    <Band id="verify" tonal title="Check the file yourself">
+    <Band wave id="verify" tonal title="Check the file yourself">
       <Fragment slot="sub">Compare the result with the SHA-256 beside the file on the <a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">release page</a>, or in <a href="/latest.json"><code>latest.json</code></a>. They should match letter for letter. Run each command in the folder the file was saved to, usually <code>Downloads</code>.</Fragment>
       <div class="section-body" data-reveal>
         <div class="formats">
@@ -93,7 +93,7 @@ Astro.locals.lang = ENGLISH;
       </div>
     </Band>
 
-    <Band id="warnings" title="Warnings you may see" sub="What they mean, honestly.">
+    <Band wave id="warnings" title="Warnings you may see" sub="What they mean, honestly.">
       <div class="section-body" data-reveal>
         <div class="two-col">
           <Panel title="Windows SmartScreen">
@@ -111,7 +111,7 @@ Astro.locals.lang = ENGLISH;
       </div>
     </Band>
 
-    <Band id="report" tonal>
+    <Band wave id="report" tonal>
       <div class="support" data-reveal>
         <h2 id="report-h">Found a security problem?</h2>
         <p>Please report it privately rather than in a public issue. You will get a reply within a week, and credit once it is fixed if you would like it.</p>

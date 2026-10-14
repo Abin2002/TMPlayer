@@ -9,7 +9,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
-import Section from '../../../components/download/Section.astro';
+import Band from '../../../components/Band.astro';
 import StarCard from '../../../components/download/StarCard.astro';
 import Step from '../../../components/install/Step.astro';
 import SignIn from '../../../components/install/SignIn.astro';
@@ -125,7 +125,7 @@ const ld1 = {
 
 <Icon name="wave" />
 
-  <Section id="android-tv" h="tv-h" title={t('install.tv_title')} tonal>
+  <Band id="android-tv" labelledby="tv-h" title={t('install.tv_title')} tonal body>
     <T slot="sub" k="install.tv_sub"><a href={l('/fire-tv/')} slot="a1">{t('install.tv_sub__a1')}</a></T>
         <ol class="steps">
           <Step id="step-1" title={t('install.tv_step1_h')}>
@@ -155,11 +155,11 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
             <p>{t('install.accept_the_debugging_prompt')}</p>
           </Way>
         </div>
-  </Section>
+  </Band>
 
 <Icon name="wave-flip" />
 
-  <Section id="android" h="phone-h" title={t('install.phone_title')} sub={t('install.phone_sub')}>
+  <Band id="android" labelledby="phone-h" title={t('install.phone_title')} sub={t('install.phone_sub')} body>
         <ol class="steps">
           <Step id="phone-1" title={t('install.phone_step1_h')}>
             <p><T k="install.phone_step1"><a href={l('/download/')} slot="a1">{t('install.phone_step1__a1')}</a></T></p>
@@ -172,11 +172,11 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
           </Step>
         </ol>
         <p class="muted small section-note"><T k="install.phone_obtainium"><a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener" slot="a1">Obtainium</a></T></p>
-  </Section>
+  </Band>
 
 <Icon name="wave" />
 
-  <Section id="windows" h="windows-h" title={t('install.on_windows')} sub={t('install.windows_10_or_11_64')} tonal>
+  <Band id="windows" labelledby="windows-h" title={t('install.on_windows')} sub={t('install.windows_10_or_11_64')} tonal body>
         <ol class="steps">
           <Step id="win-1" title={t('install.win_step1_h')}>
             <p><T k="install.win_step1"><em slot="em1">{t('install.win_step1__em1')}</em><em slot="em2">{t('install.win_step1__em2')}</em></T></p>
@@ -196,11 +196,11 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
           <p><T k="install.win_msi"><code data-name="windows-x64-msi" slot="code1">TMPlayer-&lt;version&gt;-windows-x64.msi</code><a href={l('/download/#windows')} slot="a1">{t('install.win_msi__a1')}</a><em slot="em1">{t('install.win_msi__em1')}</em><em slot="em2">{t('install.win_msi__em2')}</em><em slot="em3">{t('install.win_msi__em3')}</em></T></p>
         </ProsePanel>
         <p class="muted small section-note">{t('install.win_zip_note')}</p>
-  </Section>
+  </Band>
 
 <Icon name="wave-flip" />
 
-  <Section id="macos" h="macos-h" title={t('install.on_macos')} sub={t('install.macos_sub')}>
+  <Band id="macos" labelledby="macos-h" title={t('install.on_macos')} sub={t('install.macos_sub')} body>
         <ol class="steps">
           <Step id="mac-1" title={t('install.mac_step1_h')}>
             <p><T k="install.mac_step1"><code slot="code1">TMPlayer-&lt;version&gt;-macos-arm64.dmg</code><a href={l('/download/#macos')} slot="a1">{t('install.mac_step1__a1')}</a><em slot="em1">TMPlayer</em><em slot="em2">{t('install.mac_step1__em2')}</em></T></p>
@@ -218,11 +218,11 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
           <p>{t('install.mac_update')}</p>
         </ProsePanel>
         <p class="muted small section-note"><T k="install.mac_preview_note"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('install.mac_preview_note__a1')}</a></T></p>
-  </Section>
+  </Band>
 
 <Icon name="wave" />
 
-  <Section id="linux" h="linux-h" title={t('install.on_linux')} sub={t('download.x86_64_with_glibc_2')} tonal>
+  <Band id="linux" labelledby="linux-h" title={t('install.on_linux')} sub={t('download.x86_64_with_glibc_2')} tonal body>
         <ol class="steps">
           <Step id="linux-1" title={t('install.linux_step1_h')}>
             <p><T k="install.linux_step1"><code data-name="linux-x64-appimage" slot="code1">TMPlayer-&lt;version&gt;-x86_64.AppImage</code><a href={l('/download/#linux')} slot="a1">{t('install.linux_step1__a1')}</a></T></p>
@@ -250,11 +250,11 @@ chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.Ap
           </Way>
         </div>
         <p class="muted small section-note">{t('install.the_arch_package_adds_a')}</p>
-  </Section>
+  </Band>
 
 <Icon name="wave-flip" />
 
-  <Section id="shortcuts" h="shortcuts-h" title={t('install.on_the_desktop_in_the')} sub={t('install.how_to_keep_it_one')}>
+  <Band id="shortcuts" labelledby="shortcuts-h" title={t('install.on_the_desktop_in_the')} sub={t('install.how_to_keep_it_one')} body>
         <div class="two-col">
           <ProsePanel title="Windows">
             <p><T k="install.win_pin"><em slot="em1">{t('install.win_pin__em1')}</em></T></p>
@@ -298,11 +298,11 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
           <p><T k="install.for_the_arch_package_copy"><code slot="code1">/usr/share/applications/io.github.dracu_lah.TMPlayer.desktop</code></T></p>
           <p><T k="install.gnome_needs_the_desktop_icons"><em slot="em1">{t('install.gnome_needs_the_desktop_icons__em1')}</em></T></p>
         </ProsePanel>
-  </Section>
+  </Band>
 
 <Icon name="wave" />
 
-  <Section h="trouble-h" title={t('install.if_it_goes_wrong')} sub={t('install.the_fixes_for_nearly_every')} tonal body={false}>
+  <Band labelledby="trouble-h" title={t('install.if_it_goes_wrong')} sub={t('install.the_fixes_for_nearly_every')} tonal>
       <div class="faq" data-reveal>
         <FaqItem q={t('install.the_television_says_the_app')}>{t('install.unknown_sources_is_set_per')}</FaqItem>
         <FaqItem q={t('install.adb_connect_refuses_the_connection')}>{t('install.turn_on_network_debugging_use')}</FaqItem>
@@ -313,7 +313,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
       </div>
 
       <p class="muted small section-note" data-reveal><T k="install.still_stuck_with_your_device"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('install.still_stuck_with_your_device__a1')}</a></T></p>
-  </Section>
+  </Band>
 
 <Icon name="wave-flip" />
 

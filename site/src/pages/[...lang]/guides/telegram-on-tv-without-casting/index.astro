@@ -2,7 +2,7 @@
 import GuidePage from '../../../../components/guides/GuidePage.astro';
 import GuideHead from '../../../../components/guides/GuideHead.astro';
 import Action from '../../../../components/guides/Action.astro';
-import Band from '../../../../components/guides/Band.astro';
+import Band from '../../../../components/Band.astro';
 import Cards from '../../../../components/guides/Cards.astro';
 import Card from '../../../../components/guides/Card.astro';
 import MoreHelp from '../../../../components/guides/MoreHelp.astro';
@@ -47,7 +47,7 @@ const ways = [
     </Fragment>
   </GuideHead>
 
-  <Band tonal id="compare" title={t('guide_no_casting.the_ways_to_get_telegram')}>
+  <Band wave tonal id="compare" title={t('guide_no_casting.the_ways_to_get_telegram')}>
     <div class="formats" data-reveal>
       {ways.map(([title, body]) => (
         <div class="format">
@@ -58,7 +58,7 @@ const ways = [
     </div>
   </Band>
 
-  <Band id="how" title={t('guide_no_casting.how_tmplayer_does_it')} sub={t('guide_no_casting.no_casting_no_copies_no')}>
+  <Band wave id="how" title={t('guide_no_casting.how_tmplayer_does_it')} sub={t('guide_no_casting.no_casting_no_copies_no')}>
     <Cards>
       <Card title={t('guide_no_casting.it_is_a_telegram_client')}>{t('guide_no_casting.tmplayer_signs_in_with_telegram')}</Card>
       <Card title={t('guide_no_casting.it_streams_as_it_downloads')}>{t('guide_no_casting.a_video_starts_within_seconds')}</Card>
@@ -66,7 +66,7 @@ const ways = [
     </Cards>
   </Band>
 
-  <Band tonal id="devices" title={t('guide_no_casting.which_tv_do_you_have')}>
+  <Band wave tonal id="devices" title={t('guide_no_casting.which_tv_do_you_have')}>
     <Cards>
       <Card title={t('guide_no_casting.android_tv_or_google_tv')}><T k="guide_no_casting.install_the_apk_and_sign"><a href={l('/guides/telegram-videos-on-android-tv/')} slot="a1">{t('guide_no_casting.install_the_apk_and_sign__a1')}</a></T></Card>
       <Card title="Fire TV"><T k="guide_no_casting.install_it_with_the_downloader"><a href={l('/guides/telegram-videos-on-fire-tv/')} slot="a1">{t('guide_no_casting.install_it_with_the_downloader__a1')}</a></T></Card>

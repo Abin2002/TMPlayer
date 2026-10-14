@@ -9,7 +9,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
-import Section from '../../../components/download/Section.astro';
+import Band from '../../../components/Band.astro';
 import Platform from '../../../components/download/Platform.astro';
 import AbiRow from '../../../components/download/AbiRow.astro';
 import Panel from '../../../components/download/Panel.astro';
@@ -96,7 +96,7 @@ const ld0 = {
 
 <Icon name="wave" />
 
-  <Section id="download" h="download-h" title={t('download.every_platform_one_release')} tonal>
+  <Band id="download" labelledby="download-h" title={t('download.every_platform_one_release')} tonal body>
     <T slot="sub" k="download.every_file_comes_from_one_github"><a href="https://about.signpath.io/" rel="noopener" slot="a1">{t('download.every_file_comes_from_one_github__a1')}</a><a href="/signing/" slot="a2">{t('download.every_file_comes_from_one_github__a2')}</a></T>
 
         {/*
@@ -199,11 +199,11 @@ const ld0 = {
           <ul class="previous-list" id="previous-list"></ul>
           <p class="muted small"><a href="https://github.com/dracu-lah/TMPlayer/releases" rel="noopener">{t('download.all_releases_on_github')}</a></p>
         </section>
-  </Section>
+  </Band>
 
 <Icon name="wave-flip" />
 
-  <Section h="before-h" title={t('download.before_you_open_the_file')} sub={t('download.worth_knowing_about_any_app')} body={false}>
+  <Band labelledby="before-h" title={t('download.before_you_open_the_file')} sub={t('download.worth_knowing_about_any_app')}>
       <div class="two-col" data-reveal>
         <Panel tone="yes" icon="tick-panel" title={t('download.what_you_are_getting')} list="ticks">
             <li><T k="download.on_a_tv_stick_box"><strong slot="strong1">{t('download.on_a_tv_stick_box__strong1')}</strong></T></li>
@@ -214,7 +214,7 @@ const ld0 = {
             {['download.it_is_not_in_a', 'download.it_comes_with_no_media', 'download.no_store_updates_tmplayer_looks'].map((k) => <li>{t(k)}</li>)}
         </Panel>
       </div>
-  </Section>
+  </Band>
 
 <Icon name="wave" />
 

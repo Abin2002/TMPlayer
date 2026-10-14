@@ -9,7 +9,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
-import Band from '../../../components/fire-tv/Band.astro';
+import Band from '../../../components/Band.astro';
 import FitPanel from '../../../components/fire-tv/FitPanel.astro';
 import Step from '../../../components/fire-tv/Step.astro';
 import Format from '../../../components/fire-tv/Format.astro';
@@ -116,7 +116,7 @@ const howTo = {
 
   <Icon name="wave" />
 
-  <Band tonal id="fit" headId="fit-h" title={t('android_tv.will_it_run_on_yours')} sub={t('fire_tv.tmplayer_needs_android_8_0')}>
+  <Band tonal id="fit" labelledby="fit-h" title={t('android_tv.will_it_run_on_yours')} sub={t('fire_tv.tmplayer_needs_android_8_0')}>
     <div class="two-col" data-reveal>
       <FitPanel kind="yes" title={t('android_tv.yes')}>
         <li>{t('fire_tv.fire_tv_stick_stick_4k')}</li>
@@ -132,7 +132,7 @@ const howTo = {
 
   <Icon name="wave-flip" />
 
-  <Band id="steps" headId="steps-h" title={t('fire_tv.five_steps_with_the_remote')} sub={t('fire_tv.no_computer_needed_amazon_s')}>
+  <Band id="steps" labelledby="steps-h" title={t('fire_tv.five_steps_with_the_remote')} sub={t('fire_tv.no_computer_needed_amazon_s')}>
     <div class="section-body" data-reveal>
       <ol class="steps">
         <Step id="fire-1" title={t('fire_tv.turn_on_developer_options')}>
@@ -162,7 +162,7 @@ const howTo = {
 
   <Icon name="wave" />
 
-  <Band tonal id="other-ways" headId="other-h" title={t('fire_tv.or_with_a_computer_or')} sub={t('fire_tv.both_still_need_developer_options')}>
+  <Band tonal id="other-ways" labelledby="other-h" title={t('fire_tv.or_with_a_computer_or')} sub={t('fire_tv.both_still_need_developer_options')}>
     <div class="section-body" data-reveal>
       <div class="formats">
         <Format title={t('fire_tv.adb_from_a_computer')}>
@@ -180,7 +180,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
 
   <Icon name="wave-flip" />
 
-  <Band id="remote" headId="remote-h" title={t('fire_tv.the_remote_and_keeping_it')} sub={t('fire_tv.everything_works_from_the_fire')}>
+  <Band id="remote" labelledby="remote-h" title={t('fire_tv.the_remote_and_keeping_it')} sub={t('fire_tv.everything_works_from_the_fire')}>
     <div class="card-grid card-grid-3" data-reveal>
       <Card title={t('fire_tv.the_d_pad_does_it')}><T k="fire_tv.arrows_to_move_ok_to"><a href={l('/android-tv/')} slot="a1">{t('fire_tv.arrows_to_move_ok_to__a1')}</a></T></Card>
       <Card title={t('fire_tv.voice_search_where_fire_os')}>{t('fire_tv.tmplayer_s_own_search_can')}</Card>
@@ -190,7 +190,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
 
   <Icon name="wave" />
 
-  <Band tonal headId="trouble-h" title={t('install.if_it_goes_wrong')}>
+  <Band tonal labelledby="trouble-h" title={t('install.if_it_goes_wrong')}>
     <div class="faq" data-reveal>
       <FaqItem q={t('fire_tv.there_is_no_install_unknown')}>{t('fire_tv.developer_options_is_still_hidden')}</FaqItem>
       <FaqItem q={t('fire_tv.it_says_there_was_a')}>{t('fire_tv.usually_the_fire_os_version')}</FaqItem>

@@ -9,7 +9,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
-import Band from '../../../components/android-tv/Band.astro';
+import Band from '../../../components/Band.astro';
 import FeatureCard from '../../../components/android-tv/FeatureCard.astro';
 import TvShot from '../../../components/android-tv/TvShot.astro';
 import FitPanel from '../../../components/android-tv/FitPanel.astro';
@@ -76,7 +76,7 @@ const features = [
 
   <Icon name="wave" />
 
-  <Band tonal headId="tv-h" title={t('android_tv.what_changes_on_a_television')} sub={t('android_tv.same_account_same_apk_only')}>
+  <Band tonal labelledby="tv-h" title={t('android_tv.what_changes_on_a_television')} sub={t('android_tv.same_account_same_apk_only')}>
     <div class="card-grid card-grid-3" data-reveal>
       {features.map((f) => <FeatureCard title={t(f.title)} body={t(f.body)} shot={f.shot} icon={f.icon} />)}
     </div>
@@ -84,7 +84,7 @@ const features = [
 
   <Icon name="wave-flip" />
 
-  <Band headId="tvshots-h" title={t('android_tv.the_ten_foot_layout')} sub={t('android_tv.the_app_on_a_television')}>
+  <Band labelledby="tvshots-h" title={t('android_tv.the_ten_foot_layout')} sub={t('android_tv.the_app_on_a_television')}>
     <div class="shots">
       <TvShot src="/screenshots/tv-chats.webp" light="/screenshots/tv-chats-light.webp" alt={t('android_tv.the_tmplayer_chat_list_on')}><T k="android_tv.categories_on_the_rail_chats"><b slot="b1">{t('android_tv.categories_on_the_rail_chats__b1')}</b></T></TvShot>
       <TvShot src="/screenshots/tv-grid.webp" light="/screenshots/tv-grid-light.webp" alt={t('android_tv.videos_from_a_telegram_chat')}><T k="android_tv.running_time_and_size_on"><b slot="b1">{t('android_tv.running_time_and_size_on__b1')}</b></T></TvShot>
@@ -93,7 +93,7 @@ const features = [
 
   <Icon name="wave" />
 
-  <Band tonal headId="tvfit-h" title={t('android_tv.will_it_run_on_yours')}>
+  <Band tonal labelledby="tvfit-h" title={t('android_tv.will_it_run_on_yours')}>
     <div class="two-col" data-reveal>
       <FitPanel kind="yes" title={t('android_tv.yes')}>
         <li>{t('android_tv.android_tv_and_google_tv')}</li>
