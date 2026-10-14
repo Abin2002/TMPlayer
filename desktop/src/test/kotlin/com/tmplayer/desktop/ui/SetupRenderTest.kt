@@ -296,8 +296,10 @@ class SetupRenderTest {
         }
         onNode(hasText("Lighter") and hasClickAction()).performClick()
         waitForIdle()
-        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.lighterPictures.first() && settings.reduceMotion.first() } }
-        assertFalse(runBlocking { settings.trickplay.first() })
+        // Three separate writes, which land one after another (slowest on Windows), so all are awaited.
+        waitUntil(timeoutMillis = WRITE_MS) {
+            runBlocking { settings.lighterPictures.first() && settings.reduceMotion.first() && !settings.trickplay.first() }
+        }
         onNode(hasText("Save mobile data") and hasClickAction()).performClick()
         waitForIdle()
         waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.saveMobileData.first() && settings.wifiOnlyDownloads.first() } }
