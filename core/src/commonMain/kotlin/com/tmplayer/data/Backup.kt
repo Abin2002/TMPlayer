@@ -117,7 +117,12 @@ object Backups {
      * Left out on purpose: crash reports (a consent is given on the device that sends them), the
      * hints and walkthroughs already seen, the last chat opened, cold start snapshots, the update
      * check's and the support card's bookkeeping, and every record of a cached or downloaded file,
-     * which points at a file on this device's disk.
+     * which points at a file on this device's disk. The app lock and the kids lock stay behind too:
+     * a PIN's hash has no place in a file that gets mailed around, and a restore must never be a
+     * way round a lock somebody set on this device.
+     *
+     * A setting one device does not show still travels: a backup moved from a phone to a TV and on
+     * to another phone keeps the phone's choice.
      */
     val SETTINGS: Map<String, Kind> = mapOf(
         "autoplay_next" to Kind.BOOL,
@@ -147,8 +152,10 @@ object Backups {
         "player_haptics" to Kind.BOOL,
         "player_tap_plays_pauses" to Kind.BOOL,
         "remove_after_watching" to Kind.BOOL,
+        "rewind_on_resume_ms" to Kind.LONG,
         "screen_orientation" to Kind.TEXT,
         "show_remaining_time" to Kind.BOOL,
+        "skip_silence" to Kind.BOOL,
         "subtitle_box" to Kind.BOOL,
         "subtitle_mode" to Kind.TEXT,
         "subtitle_position" to Kind.TEXT,

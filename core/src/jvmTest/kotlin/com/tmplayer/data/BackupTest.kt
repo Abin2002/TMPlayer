@@ -107,6 +107,26 @@ class BackupTest {
     }
 
     @Test
+    fun `skip silence and the resume rewind travel, the locks stay on the device`() = runBlocking {
+        val old = Device("player")
+        old.settings.setSkipSilence(true)
+        old.settings.setResumeRewindMs(ResumeRewind.CHOICES_MS.last())
+        old.settings.setPin("1234")
+        old.settings.setKidsLock(true)
+
+        val text = old.service().export()
+        assertFalse("no PIN hash in the file", text.contains("app_pin"))
+        assertFalse("the kids lock is this device's", text.contains("kids_lock"))
+
+        val fresh = Device("player-fresh")
+        val read = fresh.service().read(text) as BackupRead.Ok
+        fresh.service().restore(read.backup)
+        assertTrue(fresh.settings.skipSilenceNow())
+        assertEquals(ResumeRewind.CHOICES_MS.last(), fresh.settings.resumeRewindMs.first())
+        assertFalse(fresh.settings.appLock.first().pinSet)
+    }
+
+    @Test
     fun `the file reads back as it was written`() {
         val original = backup(
             settings = mapOf("autoplay_next" to false, "hold_speed" to 1.75f, "language" to "ml", "min_size_bytes" to 5L),
