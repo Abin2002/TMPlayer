@@ -15,6 +15,7 @@ import androidx.core.content.FileProvider
 import com.tmplayer.data.CacheShelf
 import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.LocalDownloads
+import com.tmplayer.data.LowStorageOffers
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.SettingsStore
@@ -61,7 +62,7 @@ internal suspend fun queueDownloads(
         val (wholeHere, toPlan) = chosen
             .filter { it.id !in inDownloads && !coming.containsKey(it.fileId) }
             .partition { runCatching { Td.isFileCached(it.fileId) }.getOrDefault(false) }
-        val (planTaken, planMessage) = planDownloads(context, settings, toPlan)
+        val (planTaken, planMessage) = planDownloads(context, settings, toPlan, chatTitle)
         val all = wholeHere + planTaken
         all to when {
             all.isEmpty() && toPlan.isEmpty() && chosen.size == 1 -> L.gridAlreadyDownloadedOne
@@ -104,6 +105,7 @@ private suspend fun planDownloads(
     context: Context,
     settings: SettingsStore,
     chosen: List<MediaItem>,
+    chatTitle: (MediaItem) -> String,
 ): Pair<List<MediaItem>, String> {
     if (chosen.isEmpty()) return emptyList<MediaItem>() to ""
     return run {
@@ -156,8 +158,40 @@ private suspend fun planDownloads(
                 }
             }
         }
+        if (batch.outOfSpace) offerLowStorage(context, settings, chosen, candidates, batch, chatTitle)
         batch.fits.map { chosen[it] } to batchMessage(batch, chosen.size)
     }
+}
+
+/**
+ * A download refused for room still needs room for the whole file, whatever the mode. When Low
+ * storage mode is off and the first refused video would stream in it, the viewer is asked whether
+ * to switch and watch it instead. Every time, not once: the refusal message stands either way.
+ */
+private suspend fun offerLowStorage(
+    context: Context,
+    settings: SettingsStore,
+    chosen: List<MediaItem>,
+    candidates: List<CacheShelf.Candidate>,
+    batch: CacheShelf.Batch,
+    chatTitle: (MediaItem) -> String,
+) {
+    if (runCatching { settings.lowStorageModeNow() }.getOrDefault(true)) return
+    val refused = candidates.indices.firstOrNull { it !in batch.fits && it !in batch.alreadyHere } ?: return
+    val candidate = candidates[refused]
+    // Measured again: the cache the batch gave up is gone by now, so this is the room there is.
+    val plan = CacheShelf.plan(
+        targetFileId = candidate.fileId,
+        targetSizeBytes = candidate.sizeBytes,
+        targetPartialBytes = candidate.partialBytes,
+        alreadyCached = false,
+        cached = emptyList(),
+        freeBytes = DiskSpace.read(context).freeBytes,
+        streaming = true,
+    )
+    if ((plan as? CacheShelf.Plan.NotEnoughSpace)?.fitsInLowStorage != true) return
+    val item = chosen[refused]
+    LowStorageOffers.ask(LowStorageOffers.Ask(item, chatTitle(item), keep = true))
 }
 
 /**

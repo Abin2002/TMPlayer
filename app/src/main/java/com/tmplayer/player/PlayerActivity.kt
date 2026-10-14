@@ -99,6 +99,7 @@ import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.TrackChoice
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.CacheShelf
+import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.RoomOnDisk
 import com.tmplayer.data.Td
 import com.tmplayer.data.Thumbnails
@@ -779,7 +780,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 if (!makeRoomForThisVideo(availability)) return@launch
                 holdFile(fileId)
                 claimTheWatchCache()
-                val downloadFirst = runCatching { settings.downloadBeforePlayingNow() }
+                val streamsLow = startLowStorageIfOn(availability)
+                // Fetching the whole film first is exactly what Low storage mode is there to avoid.
+                val downloadFirst = !streamsLow && runCatching { settings.downloadBeforePlayingNow() }
                     .getOrDefault(false)
                 if (downloadFirst && !fetchWholeFilm()) return@launch
             }
@@ -2147,6 +2150,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         return when (val plan = decision.plan) {
             is CacheShelf.Plan.NotEnoughSpace -> {
+                // Asked every time a video only fits in Low storage mode, never just mentioned:
+                // "Switch and play" turns the mode on and plans again, "Not now" is today's refusal.
+                if (plan.fitsInLowStorage && askToSwitchToLowStorage()) {
+                    runCatching { settings.setLowStorageMode(true) }
+                    return makeRoomForThisVideo(availability)
+                }
                 showError(
                     L.playerNotEnoughSpace(Translator.messages.formatter.bytes(plan.shortfallBytes)),
                     retryable = false,
@@ -2164,6 +2173,36 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             CacheShelf.Plan.Proceed -> true
         }
     }
+
+    /** Shows the Low storage offer over the loading screen and waits for the answer. */
+    private suspend fun askToSwitchToLowStorage(): Boolean {
+        val host = sheets ?: return false
+        val answer = CompletableDeferred<Boolean>()
+        host.showLowStorageOffer { answer.complete(it) }
+        return answer.await()
+    }
+
+    /**
+     * Lets this video stream through a rolling window ([LowStorageStreams]) when Low storage mode
+     * is on. Only a video being watched: one the viewer downloaded, or is downloading, keeps every
+     * byte, and one already whole on the disk has nothing to fetch.
+     *
+     * @return whether the mode applies to this video.
+     */
+    private suspend fun startLowStorageIfOn(availability: LocalFileAvailability): Boolean {
+        if (availability == LocalFileAvailability.Complete || !hasMessage()) return false
+        if (!runCatching { settings.lowStorageModeNow() }.getOrDefault(false)) return false
+        if (runCatching { settings.isKeptDownload(chatId, messageId) }.getOrDefault(true)) return false
+        if (OfflineDownloads.isDownloading(fileId)) return false
+        val free = runCatching { DiskSpace.read(applicationContext).freeBytes }.getOrDefault(0L)
+        val window = LowStorageWindow.windowBytes(free, CacheShelf.HEADROOM_BYTES)
+        LowStorageStreams.allow(fileId, window)
+        lowStorageFileId = fileId
+        return true
+    }
+
+    /** The file [LowStorageStreams] was told about, taken back when the player goes. */
+    private var lowStorageFileId = 0
 
     /** This video, as the cache and the shelf want to see it. */
     private fun mediaItemForCache(): MediaItem = MediaItem(
@@ -4369,6 +4408,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         trickplay = null
         holdFile(0)
         stopDownload()
+        if (lowStorageFileId != 0) LowStorageStreams.revoke(lowStorageFileId)
         trimCache()
         // Released before the player it wraps, or it is left holding a released instance.
         mediaSession?.release()

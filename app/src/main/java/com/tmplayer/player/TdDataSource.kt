@@ -11,6 +11,7 @@ import dev.g000sha256.tdl.TdlClient
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import java.io.EOFException
 import java.io.IOException
 import java.io.InterruptedIOException
 
@@ -70,17 +71,29 @@ class TdDataSource(td: TdlClient) : BaseDataSource(true) {
         if (length == 0) return 0
         if (bytesRemaining == 0L) return C.RESULT_END_OF_INPUT
 
-        // Fast path: no coroutine and no TDLib round-trip, which is all but a handful of reads.
-        val available = bytes.cachedAvailable(position)
-            ?: blocking(READ_TIMEOUT_MS) { bytes.awaitBytesAt(position) }
-        val wanted = minOf(length.toLong(), bytesRemaining, available).toInt()
-
-        val read = bytes.read(position, buffer, offset, wanted)
+        val read = readOnce(buffer, offset, length)
 
         position += read
         bytesRemaining -= read
         bytesTransferred(read)
         return read
+    }
+
+    private fun readOnce(buffer: ByteArray, offset: Int, length: Int): Int {
+        var attempt = 0
+        while (true) {
+            // Fast path: no coroutine and no TDLib round-trip, which is all but a handful of reads.
+            val available = bytes.cachedAvailable(position)
+                ?: blocking(READ_TIMEOUT_MS) { bytes.awaitBytesAt(position) }
+            val wanted = minOf(length.toLong(), bytesRemaining, available).toInt()
+            try {
+                return bytes.read(position, buffer, offset, wanted)
+            } catch (e: EOFException) {
+                // The window moved between the check and the read: a Low storage roll, or TDLib
+                // re-creating the file. Asking again finds the bytes wherever they are now.
+                if (++attempt >= SHORT_READ_RETRIES) throw e
+            }
+        }
     }
 
     override fun close() {
@@ -112,6 +125,7 @@ class TdDataSource(td: TdlClient) : BaseDataSource(true) {
 
     private companion object {
         const val OPEN_TIMEOUT_MS = 120_000L
+        const val SHORT_READ_RETRIES = 3
 
         /**
          * The read's own ceiling, a little above the stall timeout it wraps.

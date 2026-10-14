@@ -37,6 +37,7 @@ import com.tmplayer.ui.components.ChoiceList
 import com.tmplayer.ui.components.ChoiceSheet
 import com.tmplayer.ui.components.FocusOnOpen
 import com.tmplayer.ui.components.LocalChoiceFullScreen
+import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.Corner
@@ -77,6 +78,9 @@ class PlayerSheets(
 
         /** A note for a new bookmark at [positionMs] ([editing] null), or for [editing]. */
         class Note(val positionMs: Long, val editing: Bookmark?, val actions: BookmarkSheetActions, val fromList: Boolean) : Sheet
+
+        /** The video does not fit, but would in Low storage mode: switch to it, or not. */
+        class LowStorageOffer(val onAnswer: (Boolean) -> Unit) : Sheet
     }
 
     private val sheet = mutableStateOf<Sheet?>(null)
@@ -124,6 +128,14 @@ class PlayerSheets(
         sheet.value = Sheet.Note(positionMs, editing = null, actions = actions, fromList = false)
     }
 
+    /**
+     * Asks whether to switch to Low storage mode for a video that only fits that way. [onAnswer]
+     * gets true for "Switch and play" and false for "Not now", Back included.
+     */
+    fun showLowStorageOffer(onAnswer: (Boolean) -> Unit) {
+        sheet.value = Sheet.LowStorageOffer(onAnswer)
+    }
+
     private fun close() {
         if (sheet.value == null) return
         sheet.value = null
@@ -162,6 +174,21 @@ class PlayerSheets(
                 onClose = ::close,
             )
             is Sheet.Details -> PlaybackDetailsSheet(shown.title, shown.lines, onClose = ::close)
+            is Sheet.LowStorageOffer -> {
+                val s = LocalStrings.current
+                // Focus on "Switch and play": it is the answer that does what the viewer pressed.
+                TvConfirm(
+                    title = s.settingsLowStorage,
+                    message = s.mainLowStorageAskPlay(mode = s.settingsLowStorage),
+                    detail = s.settingsLowStorageDetail,
+                    confirmLabel = s.mainLowStorageSwitchPlay,
+                    cancelLabel = s.mainLowStorageNotNow,
+                    destructive = false,
+                    focusConfirm = true,
+                    onConfirm = { close(); shown.onAnswer(true) },
+                    onDismiss = { close(); shown.onAnswer(false) },
+                )
+            }
             is Sheet.Bookmarks -> {
                 val actions = shown.actions
                 val list by actions.bookmarks.collectAsState()

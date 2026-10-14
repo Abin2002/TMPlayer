@@ -109,6 +109,11 @@ object RoomOnDisk {
                 .sum()
         }.getOrDefault(0L)
 
+        // A video the viewer downloaded on purpose is kept whole whatever the mode, so it needs
+        // room for all of it; anything else is a stream, which Low storage mode lets start on room
+        // for its rolling window alone, and which is offered the mode when that is all it lacks.
+        val kept = runCatching { settings.isKeptDownload(item.chatId, item.messageId) }.getOrDefault(false)
+        val lowStorage = !kept && runCatching { settings.lowStorageModeNow() }.getOrDefault(false)
         val plan = CacheShelf.plan(
             targetFileId = item.fileId,
             targetSizeBytes = item.sizeBytes,
@@ -117,6 +122,8 @@ object RoomOnDisk {
             cached = held,
             keptBytes = keptBytes,
             freeBytes = free,
+            lowStorage = lowStorage,
+            streaming = !kept,
         )
         Decision(plan, owned.associate { it.first.fileId to it.second })
     }

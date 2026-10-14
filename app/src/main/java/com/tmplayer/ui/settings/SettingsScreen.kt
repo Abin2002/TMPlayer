@@ -279,6 +279,7 @@ fun SettingsScreen(
     // having none: "Nothing cached" for a frame is honest either way.
     val cached by settings.cachedVideos.collectAsStateWithLifecycle(initialValue = emptyList())
     val downloadFirst by settings.downloadBeforePlaying.collectAsStateWithLifecycle(initialValue = false)
+    val lowStorage by settings.lowStorageMode.collectAsStateWithLifecycle(initialValue = false)
     val autoplayNext by settings.autoplayNext.collectAsStateWithLifecycle(initialValue = true)
     val resumeRewindMs by settings.resumeRewindMs.collectAsStateWithLifecycle(initialValue = ResumeRewind.DEFAULT_MS)
     val detailFirst by settings.detailFirst.collectAsStateWithLifecycle(initialValue = true)
@@ -654,6 +655,18 @@ fun SettingsScreen(
                         onToggle = {
                             scope.launch { settings.setDownloadBeforePlaying(!downloadFirst) }
                         },
+                    )
+                }
+                // Streams through a rolling window of the video, for a device with less room than
+                // the film. Its subtitle says the cost: going back fetches again, and a short pause
+                // comes now and then as the window moves on.
+                item {
+                    ToggleRow(
+                        title = s.settingsLowStorage,
+                        subtitle = if (lowStorage) s.settingsLowStorageOn else s.settingsLowStorageOff,
+                        icon = TmIcons.Archive,
+                        checked = lowStorage,
+                        onToggle = { scope.launch { settings.setLowStorageMode(!lowStorage) } },
                     )
                 }
                 // On both devices, defaulting the way each always has: a phone folds surround to stereo

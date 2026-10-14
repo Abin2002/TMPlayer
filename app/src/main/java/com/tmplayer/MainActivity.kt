@@ -57,6 +57,7 @@ import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.AppLockSession
 import com.tmplayer.data.FormFactor
 import com.tmplayer.data.MediaItem
+import com.tmplayer.data.LowStorageOffers
 import com.tmplayer.data.RoomOnDisk
 import com.tmplayer.data.LocalFileAvailability
 import com.tmplayer.data.NetworkMonitor
@@ -606,6 +607,13 @@ private fun Root() {
     // One slot for whatever the current login pane got wrong: only one of them is ever on screen.
     var signInError by rememberSaveable { mutableStateOf<String?>(null) }
     var roomPrompt by remember { mutableStateOf<RoomPrompt?>(null) }
+    // "Switch to Low storage mode?", for a video that only fits that way, and the refusal "Not now"
+    // falls back to. A refused download leaves its question in [LowStorageOffers].
+    var lowStorageAsk by remember { mutableStateOf<Pair<LowStorageOffers.Ask, RoomPrompt?>?>(null) }
+    val offeredLowStorage by LowStorageOffers.pending.collectAsStateWithLifecycle()
+    LaunchedEffect(offeredLowStorage) {
+        if (offeredLowStorage != null) LowStorageOffers.take()?.let { lowStorageAsk = it to null }
+    }
     // The Continue watching entry waiting on "Remove from Continue watching?".
     var forgetPrompt by remember { mutableStateOf<ResumeRecord?>(null) }
     // The machine the space message is about, since "this phone is 2 GB short" on a television
@@ -769,12 +777,18 @@ private fun Root() {
                 is CacheShelf.Plan.Proceed -> start()
 
                 is CacheShelf.Plan.NotEnoughSpace -> {
-                    roomPrompt = RoomPrompt(
+                    val refusal = RoomPrompt(
                         item = item,
                         reclaimBytes = plan.reclaimBytes,
                         shortfallBytes = plan.shortfallBytes,
                         chatTitle = chatTitle,
                     )
+                    // Asked every time a video would fit in Low storage mode, before the refusal.
+                    if (plan.fitsInLowStorage) {
+                        lowStorageAsk = LowStorageOffers.Ask(item, chatTitle, keep = false) to refusal
+                    } else {
+                        roomPrompt = refusal
+                    }
                 }
 
                 // No question is asked. What goes is the single video the last press of Play left
@@ -1301,6 +1315,36 @@ private fun Root() {
                 BackHandler(onBack = leaveAbout)
                 AboutScreen(onBack = leaveAbout)
             }
+        }
+
+        lowStorageAsk?.let { (ask, refusal) ->
+            // An invitation, so focus starts on "Switch and play": it does what the viewer pressed.
+            TvConfirm(
+                title = L.settingsLowStorage,
+                message = if (ask.keep) {
+                    L.mainLowStorageAskKeep(mode = L.settingsLowStorage)
+                } else {
+                    L.mainLowStorageAskPlay(mode = L.settingsLowStorage)
+                },
+                detail = L.settingsLowStorageDetail,
+                confirmLabel = L.mainLowStorageSwitchPlay,
+                cancelLabel = L.mainLowStorageNotNow,
+                destructive = false,
+                focusConfirm = true,
+                onConfirm = {
+                    lowStorageAsk = null
+                    scope.launch {
+                        runCatching { settings.setLowStorageMode(true) }
+                        play(ask.item, chatTitle = ask.chatTitle)
+                    }
+                },
+                // "Not now" is today's answer: the refusal for a video, the message already shown
+                // for a download.
+                onDismiss = {
+                    lowStorageAsk = null
+                    roomPrompt = refusal
+                },
+            )
         }
 
         roomPrompt?.let { pending ->
