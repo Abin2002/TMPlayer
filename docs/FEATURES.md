@@ -11,10 +11,13 @@ the streaming works, see [ARCHITECTURE.md](ARCHITECTURE.md).
 Settings, Devices, Link Desktop Device, point it at the screen. No typing an email address with a
 D-pad. On a phone the number comes first, with the country picker and the code boxes Telegram
 itself uses, and the QR route is there for an account that lives on another handset. Two-step
-verification works either way. Once signed in, a short setup asks up to three things, each with a
+verification works either way. Once signed in, a short setup asks a few things, each with a
 picture of both answers and a Skip: which chats the sidebar lists (only for an account with
-folders), posters and details from TMDB, TVmaze and AniList, and Low storage mode. Settings can
-run it again.
+folders), posters and details from TMDB, TVmaze and AniList, Low storage mode, full quality or
+lighter pictures and motion, and on a phone whether to save mobile data. A quick tour follows: a
+few marked screenshots of where videos come from, Home, the player, the controls, downloads, the
+TV home screen row (on a TV) and Settings. Settings can run either again, and an install updated
+from an older version is offered the tour once.
 
 **Shows media, not messages.** Browse the chats and channels you already have, then see only their
 playable videos. Text messages never appear. Video documents are included too, so an `.mkv` sent

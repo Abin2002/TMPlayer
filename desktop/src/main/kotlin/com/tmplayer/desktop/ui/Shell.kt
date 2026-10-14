@@ -84,8 +84,6 @@ import com.tmplayer.ui.browse.navGroups
 import com.tmplayer.ui.browse.DefaultGroups
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.onboarding.Setup
-import com.tmplayer.ui.onboarding.SetupScreen
-import com.tmplayer.ui.onboarding.SetupState
 import com.tmplayer.ui.browse.rememberNavGroups
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.components.LocalToastHost
@@ -334,6 +332,14 @@ private fun Browse(state: ShellState, player: PlayerContent) {
         if (!setupPending) ShellNotices(state, Modifier.align(Alignment.BottomEnd).padding(24.dp))
         if (setupPending) {
             SetupOverlay(state, chatsUi is UiState.Content, shellFolders.size, (chatsUi as? UiState.Content)?.value?.chats.orEmpty())
+        }
+        // The quick tour on its own (CP69): taken from the offer, or opened from Settings.
+        val tour by state.settings.tourState.collectAsState(initial = com.tmplayer.data.SettingsStore.TourState.Done)
+        if (!setupPending && tour == com.tmplayer.data.SettingsStore.TourState.Pending) {
+            val tourScope = rememberCoroutineScope()
+            Surface(Modifier.fillMaxSize().windowDrag(), color = Tone.background) {
+                com.tmplayer.ui.onboarding.TourOnly(onDone = { tourScope.launch { runCatching { state.settings.markTourDone() } } })
+            }
         }
         if (SupportReminder.enabled && !setupPending) {
             SupportCardHost(state, Modifier.align(Alignment.BottomEnd).padding(24.dp))
@@ -604,18 +610,20 @@ private fun SetupOverlay(state: ShellState, chatsLoaded: Boolean, folderCount: I
             com.tmplayer.data.DeviceFitRules.recommendations(fit, now, seekThumbnailsShown = false, pictures = false)
         }
         val steps = remember {
-            Setup.steps(folderCount, posters = com.tmplayer.online.OnlineMetadata.current != null, device = recommendations.isNotEmpty())
+            Setup.steps(
+                folderCount,
+                posters = com.tmplayer.online.OnlineMetadata.current != null,
+                device = recommendations.isNotEmpty(),
+                // The desktop is only ever offered Low storage mode there, so Performance stays.
+                devicePerformance = false,
+            )
         }
-        if (steps.isEmpty()) {
-            LaunchedEffect(Unit) { finish() }
-            return@Surface
-        }
-        val setup = remember(steps) { SetupState(steps) }
         val favourites by state.settings.favorites.collectAsState(initial = emptySet())
         val unreachable = remember(favourites, chats) { DefaultGroups.unreachableFavorites(favourites, chats) }
-        SetupScreen(
+        // The choices, then the quick tour (CP69); with no choices to make, the tour alone.
+        com.tmplayer.ui.onboarding.SetupAndTour(
             state.settings,
-            setup,
+            steps,
             onDone = finish,
             unreachableFavourites = unreachable,
             fit = fit,

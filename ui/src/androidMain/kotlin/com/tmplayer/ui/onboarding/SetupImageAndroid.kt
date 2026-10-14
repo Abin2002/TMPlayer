@@ -17,6 +17,10 @@ object SetupImages {
     /** The drawable for [choice] on a television or a phone, light or dark; 0 when it has none. */
     @Volatile
     var drawable: (choice: SetupChoice, tv: Boolean, dark: Boolean) -> Int = { _, _, _ -> 0 }
+
+    /** The drawable for a tour [page] on a television or a phone, light or dark; 0 when it has none. */
+    @Volatile
+    var tour: (page: TourPage, tv: Boolean, dark: Boolean) -> Int = { _, _, _ -> 0 }
 }
 
 /**
@@ -36,4 +40,32 @@ internal fun SetupShot(choice: SetupChoice, modifier: Modifier = Modifier) {
         contentScale = ContentScale.Crop,
         modifier = modifier,
     )
+}
+
+/**
+ * A tour page's picture: a cropped, marked shot from the television or the phone, light or dark to
+ * match. Shown whole ([ContentScale.Fit]), since the badges drawn over it are placed by fractions
+ * of the picture.
+ */
+@Composable
+internal fun TourShot(page: TourPage, modifier: Modifier = Modifier) {
+    val tv = deviceForm() == DeviceForm.Tv
+    val id = SetupImages.tour(page, tv, LocalDarkTheme.current)
+    if (id == 0) return
+    Image(
+        painter = painterResource(id),
+        // The numbered lines beside it say what it shows.
+        contentDescription = null,
+        contentScale = ContentScale.Fit,
+        modifier = modifier,
+    )
+}
+
+/** The size of a tour page's picture, for laying out the badges over it; null when it has none. */
+@Composable
+internal fun tourShotSize(page: TourPage): androidx.compose.ui.geometry.Size? {
+    val tv = deviceForm() == DeviceForm.Tv
+    val id = SetupImages.tour(page, tv, LocalDarkTheme.current)
+    if (id == 0) return null
+    return painterResource(id).intrinsicSize
 }

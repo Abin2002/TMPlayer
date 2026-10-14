@@ -72,6 +72,7 @@ private val KIDS_LOCK = booleanPreferencesKey("kids_lock")
 private val KIDS_CHATS = stringSetPreferencesKey("kids_chats")
 
 private val SETUP = stringPreferencesKey("setup")
+private val TOUR = stringPreferencesKey("tour")
 private val HISTORY_TAB = stringPreferencesKey("history_tab")
 private val MEDIA_LAYOUT = stringPreferencesKey("media_layout")
 private val CHAT_SNAPSHOT = stringPreferencesKey("chat_snapshot")
@@ -229,6 +230,8 @@ private fun downloadKey(chatId: Long, messageId: Long) =
 private const val CACHED_PREFIX = "wc_"
 private const val SETUP_PENDING = "pending"
 private const val SETUP_DONE = "done"
+private const val TOUR_PENDING = "pending"
+private const val TOUR_DONE = "done"
 
 private fun cachedKey(chatId: Long, messageId: Long) =
     stringPreferencesKey("$CACHED_PREFIX${chatId}_$messageId")
@@ -1355,15 +1358,47 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         prefs.edit { if (it[SETUP] != SETUP_PENDING) it[SETUP] = SETUP_PENDING }
     }
 
-    /** Finished, or skipped: not shown again until the next sign in or [replaySetup]. */
+    /**
+     * Finished, or skipped: not shown again until the next sign in or [replaySetup]. The quick
+     * tour comes at the end of the setup, so it is done with it, and never offered on its own.
+     */
     suspend fun markSetupDone() {
-        prefs.edit { it[SETUP] = SETUP_DONE }
+        prefs.edit {
+            it[SETUP] = SETUP_DONE
+            it[TOUR] = TOUR_DONE
+        }
     }
 
     /** Settings' "Run the setup again". */
     suspend fun replaySetup() {
         prefs.edit { it[SETUP] = SETUP_PENDING }
     }
+
+    /**
+     * The quick tour (CP69): [TourState.Never] until it has been shown or offered, [TourState.Pending]
+     * while it waits to be shown on its own, [TourState.Done] after. A fresh sign in shows it after
+     * the setup and marks it done with [markSetupDone]; an install updated from a version without
+     * it is offered it once, which is what [TourState.Never] is there to tell.
+     */
+    val tourState: Flow<TourState> = read {
+        when (it[TOUR]) {
+            TOUR_PENDING -> TourState.Pending
+            TOUR_DONE -> TourState.Done
+            else -> TourState.Never
+        }
+    }
+
+    /** The tour, on its own: taken from the offer, or opened from Settings. */
+    suspend fun openTour() {
+        prefs.edit { it[TOUR] = TOUR_PENDING }
+    }
+
+    /** Finished, skipped, or the offer turned down: not shown again unless Settings opens it. */
+    suspend fun markTourDone() {
+        prefs.edit { it[TOUR] = TOUR_DONE }
+    }
+
+    enum class TourState { Never, Pending, Done }
 
     /** Which tab of History was last open, `HistoryTab` by name. */
     val historyTab: Flow<String?> = read { it[HISTORY_TAB] }

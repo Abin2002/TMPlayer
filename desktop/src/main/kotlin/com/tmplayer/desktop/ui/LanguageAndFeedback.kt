@@ -23,10 +23,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +57,7 @@ import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingSurface
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -226,5 +229,21 @@ fun ShellNotices(state: ShellState, modifier: Modifier = Modifier) {
     }
     if (picking) LanguagePopup(state.settings, onClose = { picking = false })
     if (whatsNew.showing && !playing && !state.updatePopup) WhatsNewPopup(onClose = { whatsNew.showing = false })
+    // The quick tour, offered once to an install signed in before it existed (CP69), behind the
+    // other notices. Taking it opens the tour over the window (Shell.kt).
+    val tour by state.settings.tourState.collectAsState(initial = SettingsStore.TourState.Done)
+    if (tour == SettingsStore.TourState.Never && language == null && !whatsNew.showing && !playing && !state.updatePopup) {
+        val scope = rememberCoroutineScope()
+        ConfirmDialog(
+            title = s.tourOfferTitle,
+            message = s.tourOfferBody,
+            confirmLabel = s.tourOfferTake,
+            cancelLabel = s.deviceNotNow,
+            destructive = false,
+            focusConfirm = true,
+            onConfirm = { scope.launch { runCatching { state.settings.openTour() } } },
+            onDismiss = { scope.launch { runCatching { state.settings.markTourDone() } } },
+        )
+    }
 }
 

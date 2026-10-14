@@ -111,14 +111,28 @@ fun SetupScreen(
     /** What the Device step says about this device, and what it offers to change (CP68). */
     fit: DeviceFit = DeviceFit.Fine,
     recommendations: List<Recommendation> = emptyList(),
+    /** The count the step line gives, the quick tour's pages included when it follows ([SetupAndTour]). */
+    total: Int = state.steps.size,
+    /** Whether something follows the last step, so Skip all still means more than Skip there. */
+    moreAfter: Boolean = false,
+    /** Skip all, and Back from the first step: out of the setup and whatever follows it. */
+    onSkipAll: () -> Unit = onDone,
 ) {
     val s = LocalStrings.current
     val scope = rememberCoroutineScope()
     val online = OnlineMetadata.current
     val onlyFolders by settings.hideDefaultGroups.collectAsState(initial = false)
     val lowStorage by settings.lowStorageMode.collectAsState(initial = false)
+    val lighter by settings.lighterPictures.collectAsState(initial = false)
+    val saveData by settings.saveMobileData.collectAsState(initial = false)
     val posters = online?.settings?.collectAsState()?.value?.enabled ?: true
-    val values = SetupValues(onlyFolders = onlyFolders, posters = posters, lowStorage = lowStorage)
+    val values = SetupValues(
+        onlyFolders = onlyFolders,
+        posters = posters,
+        lowStorage = lowStorage,
+        lighter = lighter,
+        saveData = saveData,
+    )
     val form = deviceForm()
     val remote = form != DeviceForm.Phone
 
@@ -132,6 +146,25 @@ fun SetupScreen(
                     SetupChoice.PostersOff -> online?.setEnabled(false)
                     SetupChoice.KeepWhilePlaying -> settings.setLowStorageMode(false)
                     SetupChoice.LowStorage -> settings.setLowStorageMode(true)
+                    // The three rows the Device step offers a slow device (CP68), together.
+                    SetupChoice.FullQuality -> {
+                        settings.setLighterPictures(false)
+                        settings.setReduceMotion(false)
+                        settings.setTrickplay(true)
+                    }
+                    SetupChoice.Lighter -> {
+                        settings.setLighterPictures(true)
+                        settings.setReduceMotion(true)
+                        settings.setTrickplay(false)
+                    }
+                    SetupChoice.SaveData -> {
+                        settings.setSaveMobileData(true)
+                        settings.setWifiOnlyDownloads(true)
+                    }
+                    SetupChoice.NoLimits -> {
+                        settings.setSaveMobileData(false)
+                        settings.setWifiOnlyDownloads(false)
+                    }
                     SetupChoice.ApplyRecommended -> settings.applyRecommendations(recommendations)
                     SetupChoice.NotNow -> Unit
                 }
@@ -140,7 +173,7 @@ fun SetupScreen(
         if (!state.next()) onDone()
     }
 
-    BackHandler { if (!state.back()) onDone() }
+    BackHandler { if (!state.back()) onSkipAll() }
 
     val step = state.step
     val copy = s.setupCopy(step).let { if (step == SetupStep.Device) it.copy(title = s.fitHeadline(fit)) else it }
@@ -163,7 +196,7 @@ fun SetupScreen(
     ) {
         val wide = maxWidth > maxHeight && maxWidth >= WIDE_FROM
         val words: @Composable ColumnScope.() -> Unit = {
-            Text(s.setupStep(state.index + 1, state.steps.size), style = MaterialTheme.typography.labelLarge, color = Tone.accent)
+            Text(s.setupStep(state.index + 1, total), style = MaterialTheme.typography.labelLarge, color = Tone.accent)
             Text(
                 copy.title,
                 style = if (form == DeviceForm.Phone) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
@@ -178,7 +211,7 @@ fun SetupScreen(
                 // they follow the words.
                 if (!wide) Spacer(Modifier.weight(1f))
                 SetupButton(s.setupSkip) { if (!state.next()) onDone() }
-                if (state.canSkipAll) SetupButton(s.setupSkipAll) { onDone() }
+                if (state.canSkipAll || moreAfter) SetupButton(s.setupSkipAll) { onSkipAll() }
             }
         }
         if (wide) {
@@ -344,7 +377,11 @@ private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifi
                 .clip(RoundedCornerShape(Corner.Medium))
                 .background(Tone.background),
         ) {
-            if (choice.screenshot) SetupShot(choice, Modifier.fillMaxSize()) else StorageArt(choice, Modifier.fillMaxSize())
+            when {
+                choice.screenshot -> SetupShot(choice, Modifier.fillMaxSize())
+                choice.step == SetupStep.MobileData -> MobileDataArt(choice, Modifier.fillMaxSize())
+                else -> StorageArt(choice, Modifier.fillMaxSize())
+            }
             if (selected) {
                 Icon(
                     TmIcons.CheckCircle,
@@ -482,6 +519,57 @@ private fun StorageArt(choice: SetupChoice, modifier: Modifier) {
                     Size(inner.width * used, inner.height),
                     r,
                 )
+            }
+        }
+    }
+}
+
+/**
+ * The mobile data step's picture, drawn like the storage step's. Over a video's length, the part
+ * fetched while it plays on mobile data: a short stretch ahead of the playhead when saving data,
+ * or everything to the end without limits. Under it, a download: waiting for Wi-Fi (an empty bar
+ * behind the Wi-Fi sign), or under way.
+ */
+@Composable
+private fun MobileDataArt(choice: SetupChoice, modifier: Modifier) {
+    val save = choice == SetupChoice.SaveData
+    val accent = Tone.accent
+    val track = Tone.outline
+    val ground = Tone.background
+    val text = Tone.muted
+    Column(
+        modifier.padding(14.dp),
+        verticalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(TmIcons.Play, contentDescription = null, tint = text, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(8.dp))
+            Canvas(Modifier.weight(1f).height(26.dp).mirrored()) {
+                val h = size.height * 0.42f
+                val y = (size.height - h) / 2
+                val r = CornerRadius(h / 2, h / 2)
+                drawRoundRect(track, Offset(0f, y), Size(size.width, h), r)
+                val to = if (save) 0.58f else 1f
+                drawRoundRect(if (save) accent else Caution, Offset(0f, y), Size(size.width * to, h), r)
+                val head = Offset(size.width * 0.40f, size.height / 2)
+                drawCircle(ground, radius = size.height * 0.42f, center = head)
+                drawCircle(accent, radius = size.height * 0.30f, center = head)
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                if (save) TmIcons.Wifi else TmIcons.Download,
+                contentDescription = null,
+                tint = text,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            Canvas(Modifier.weight(1f).height(26.dp).mirrored()) {
+                val h = size.height * 0.42f
+                val y = (size.height - h) / 2
+                val r = CornerRadius(h / 2, h / 2)
+                drawRoundRect(track, Offset(0f, y), Size(size.width, h), r)
+                if (!save) drawRoundRect(Caution, Offset(0f, y), Size(size.width * 0.7f, h), r)
             }
         }
     }

@@ -18,22 +18,28 @@ import java.nio.file.Files
 class SetupTest {
 
     @Test
-    fun `an account with folders gets all three steps, in order`() {
+    fun `an account with folders gets every step, in order`() {
         assertEquals(
-            listOf(SetupStep.Library, SetupStep.Posters, SetupStep.Storage),
+            listOf(SetupStep.Library, SetupStep.Posters, SetupStep.Storage, SetupStep.Performance),
             Setup.steps(folderCount = 2, posters = true, storage = true),
         )
     }
 
     @Test
     fun `no folders, no library step`() {
-        assertEquals(listOf(SetupStep.Posters, SetupStep.Storage), Setup.steps(folderCount = 0, posters = true, storage = true))
+        assertEquals(
+            listOf(SetupStep.Posters, SetupStep.Storage, SetupStep.Performance),
+            Setup.steps(folderCount = 0, posters = true, storage = true),
+        )
     }
 
     @Test
     fun `a build without online lookups has no posters step`() {
-        assertEquals(listOf(SetupStep.Library, SetupStep.Storage), Setup.steps(folderCount = 1, posters = false, storage = true))
-        assertEquals(emptyList<SetupStep>(), Setup.steps(folderCount = 0, posters = false, storage = false))
+        assertEquals(
+            listOf(SetupStep.Library, SetupStep.Storage, SetupStep.Performance),
+            Setup.steps(folderCount = 1, posters = false, storage = true),
+        )
+        assertEquals(listOf(SetupStep.Performance), Setup.steps(folderCount = 0, posters = false, storage = false))
     }
 
     @Test
@@ -44,6 +50,40 @@ class SetupTest {
         )
         assertEquals(listOf(SetupStep.Device), Setup.steps(folderCount = 0, posters = false, storage = false, device = true))
         assertFalse(SetupStep.Device in Setup.steps(folderCount = 2, posters = true, device = false))
+    }
+
+    @Test
+    fun `a Device step with only Low storage mode to offer leaves Performance to ask`() {
+        assertEquals(
+            listOf(SetupStep.Posters, SetupStep.Device, SetupStep.Performance),
+            Setup.steps(folderCount = 0, posters = true, device = true, devicePerformance = false),
+        )
+    }
+
+    @Test
+    fun `Mobile data is asked on a phone only, last`() {
+        assertEquals(
+            listOf(SetupStep.Posters, SetupStep.Storage, SetupStep.Performance, SetupStep.MobileData),
+            Setup.steps(folderCount = 0, posters = true, phone = true),
+        )
+        assertFalse(SetupStep.MobileData in Setup.steps(folderCount = 0, posters = true, phone = false))
+        assertEquals(SetupStep.MobileData, Setup.steps(folderCount = 0, posters = false, device = true, phone = true).last())
+    }
+
+    @Test
+    fun `Performance is pictured with shots, Mobile data is drawn`() {
+        assertEquals(listOf(SetupChoice.FullQuality, SetupChoice.Lighter), SetupStep.Performance.choices)
+        assertTrue(SetupChoice.FullQuality.screenshot && SetupChoice.Lighter.screenshot)
+        assertEquals(listOf(SetupChoice.SaveData, SetupChoice.NoLimits), SetupStep.MobileData.choices)
+        assertFalse(SetupChoice.SaveData.screenshot || SetupChoice.NoLimits.screenshot)
+    }
+
+    @Test
+    fun `Performance starts on what is set, Mobile data on saving`() {
+        val lighter = SetupValues(onlyFolders = false, posters = true, lowStorage = false, lighter = true, saveData = false)
+        assertEquals(SetupChoice.Lighter, lighter.current(SetupStep.Performance))
+        assertEquals(SetupChoice.SaveData, lighter.current(SetupStep.MobileData))
+        assertEquals(SetupChoice.FullQuality, lighter.copy(lighter = false).current(SetupStep.Performance))
     }
 
     @Test

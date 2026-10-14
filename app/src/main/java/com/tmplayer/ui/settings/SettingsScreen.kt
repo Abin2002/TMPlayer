@@ -1342,6 +1342,14 @@ fun SettingsScreen(
                 }
                 item {
                     ActionRow(
+                        title = s.settingsTour,
+                        subtitle = s.settingsTourBody,
+                        icon = TmIcons.Info,
+                        onClick = { scope.launch { settings.openTour() } },
+                    )
+                }
+                item {
+                    ActionRow(
                         title = s.settingsWhatsNew,
                         subtitle = s.settingsWhatsNewDetail(WhatsNew.VERSION),
                         icon = TmIcons.StarOutline,
