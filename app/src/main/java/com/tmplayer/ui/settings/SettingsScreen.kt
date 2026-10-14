@@ -635,7 +635,7 @@ fun SettingsScreen(
                 item {
                     ToggleRow(
                         title = s.settingsDetailFirst,
-                        subtitle = if (detailFirst) s.settingsDetailFirstOn else s.settingsDetailFirstOff,
+                        subtitle = if (detailFirst) s.settingsDetailFirstOn(device) else s.settingsDetailFirstOff(device),
                         icon = TmIcons.Info,
                         checked = detailFirst,
                         onToggle = { scope.launch { settings.setDetailFirst(!detailFirst) } },
