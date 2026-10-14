@@ -441,7 +441,7 @@
     "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
     "how_to_install_on_macos": "如何在 macOS 上安裝",
     "no_iphone_or_ipad": "沒有 iPhone 或 iPad 版本。",
-    "checksum_note": "{a1} 會在每個檔案旁顯示它的 SHA-256。可以用 {code1} 驗證下載的檔案，Windows 則用 {code2}：{a2}。",
+    "checksum_note": "{a1} 會在每個檔案旁顯示它的 SHA-256。可以用以下指令驗證下載的檔案：Linux 用 {code1}，Mac 用 {code2}，Windows 用 {code3}：{a2}。",
     "checksum_note__a1": "發布頁面",
     "checksum_note__a2": "確切的指令"
   },

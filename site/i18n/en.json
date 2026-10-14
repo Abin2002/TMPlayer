@@ -421,7 +421,7 @@
     "arch_pkgbuild_link": "The PKGBUILD",
     "how_to_install_on_linux": "How to install on Linux, and put it in the app menu",
     "no_iphone_or_ipad": "There is no iPhone or iPad version.",
-    "checksum_note": "The {a1} shows each file's SHA-256 beside it. Check a download with {code1}, or {code2} on Windows: {a2}.",
+    "checksum_note": "The {a1} shows each file's SHA-256 beside it. Check a download with {code1} on Linux, {code2} on a Mac or {code3} on Windows: {a2}.",
     "checksum_note__a1": "release page",
     "checksum_note__a2": "the exact commands",
     "release_notes": "Release notes",

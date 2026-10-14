@@ -441,7 +441,7 @@
     "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
     "how_to_install_on_macos": "macOS'a nasıl kurulur",
     "no_iphone_or_ipad": "iPhone veya iPad sürümü yok.",
-    "checksum_note": "{a1} her dosyanın SHA-256 değerini yanında gösterir. İndirdiğini {code1} ile, Windows'ta {code2} ile doğrula: {a2}.",
+    "checksum_note": "{a1} her dosyanın SHA-256 değerini yanında gösterir. İndirdiğini Linux'ta {code1}, Mac'te {code2}, Windows'ta {code3} ile doğrula: {a2}.",
     "checksum_note__a1": "Sürüm sayfası",
     "checksum_note__a2": "tam komutlar"
   },

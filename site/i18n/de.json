@@ -441,7 +441,7 @@
     "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
     "how_to_install_on_macos": "So installierst du es unter macOS",
     "no_iphone_or_ipad": "Eine Version für iPhone oder iPad gibt es nicht.",
-    "checksum_note": "Die {a1} zeigt neben jeder Datei ihre SHA-256-Prüfsumme. Prüfe einen Download mit {code1}, oder unter Windows mit {code2}: {a2}.",
+    "checksum_note": "Die {a1} zeigt neben jeder Datei ihre SHA-256-Prüfsumme. Prüfe einen Download unter Linux mit {code1}, auf dem Mac mit {code2} oder unter Windows mit {code3}: {a2}.",
     "checksum_note__a1": "Release-Seite",
     "checksum_note__a2": "die genauen Befehle"
   },

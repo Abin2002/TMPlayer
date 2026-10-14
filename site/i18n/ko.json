@@ -441,7 +441,7 @@
     "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
     "how_to_install_on_macos": "macOS에 설치하는 방법",
     "no_iphone_or_ipad": "iPhone이나 iPad 버전은 없어요.",
-    "checksum_note": "{a1}에는 파일마다 SHA-256이 함께 표시돼요. 받은 파일은 {code1}로 확인하세요. Windows에서는 {code2}를 쓰세요: {a2}.",
+    "checksum_note": "{a1}에는 파일마다 SHA-256이 함께 표시돼요. 받은 파일은 Linux에서는 {code1}, Mac에서는 {code2}, Windows에서는 {code3}로 확인하세요: {a2}.",
     "checksum_note__a1": "릴리스 페이지",
     "checksum_note__a2": "정확한 명령어"
   },

@@ -441,7 +441,7 @@
     "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
     "how_to_install_on_macos": "Cara memasang di macOS",
     "no_iphone_or_ipad": "Tidak ada versi iPhone atau iPad.",
-    "checksum_note": "{a1} menampilkan SHA-256 setiap file di sebelahnya. Periksa unduhan dengan {code1}, atau {code2} di Windows: {a2}.",
+    "checksum_note": "{a1} menampilkan SHA-256 setiap file di sebelahnya. Periksa unduhan dengan {code1} di Linux, {code2} di Mac, atau {code3} di Windows: {a2}.",
     "checksum_note__a1": "Halaman rilis",
     "checksum_note__a2": "perintah lengkapnya"
   },
