@@ -107,9 +107,36 @@ notes. `scripts/build-mediamp-source.sh` in this repository rebuilds it from per
 and SHA-256 sums, and its README lists each file. It stays the right archive for as long as
 TMPlayer bundles mediamp 0.5.0.
 
+The macOS Apple Silicon build (a preview, from 1.26.0) bundles mediamp's macos-arm64 runtime
+instead. mpv, FFmpeg and dav1d are the same as above, built without mpv's `gpl` feature (so mpv is
+LGPL-2.1-or-later there); the other libraries are Homebrew bottles for macOS 15, each matched to
+the shipped file by its Mach-O UUID and code:
+
+| Component | macOS arm64 | Licence |
+|---|---|---|
+| mpv (libmpv), FFmpeg, dav1d | 0.41.0, 8.0.1, 1.5.4 | LGPL-2.1-or-later, LGPL-2.1-or-later, BSD-2-Clause |
+| libass | 0.17.4 | ISC |
+| libplacebo | 7.351.0 | LGPL-2.1-or-later |
+| Little CMS | 2.17 | MIT |
+| FreeType | 2.13.3 | FTL or GPL-2.0-or-later |
+| FriBidi | 1.0.16 | LGPL-2.1-or-later |
+| HarfBuzz | 11.4.5 | MIT |
+| Graphite2 | 1.3.14 | LGPL-2.1-or-later |
+| libunibreak | 6.1 | Zlib |
+| libpng | 1.6.50 | libpng-2.0 |
+| GLib | 2.84.4 | LGPL-2.1-or-later |
+| PCRE2 | 10.46 | BSD-3-Clause |
+| GNU libintl (gettext) | 0.26 | LGPL-2.1-or-later |
+| shaderc, with glslang 15.3.0 and SPIRV-Tools inside | 2025.3 | Apache-2.0; glslang BSD-3-Clause and others |
+| Vulkan loader | 1.4.326 | Apache-2.0 |
+
+Their corresponding source, with Homebrew's formulas and patches, is a second archive,
+`mediamp-corresponding-source-0.5.0-macos.tar.gz` (`scripts/build-mediamp-source.sh --macos`),
+linked as "mediamp macOS source" from the release notes.
+
 ### TDLib on the desktop
 
-tdl-coroutines' JVM artifact (see "Shared") bundles TDLib 1.8.67 for Windows and Linux. On Windows
+tdl-coroutines' JVM artifact (see "Shared") bundles TDLib 1.8.67 for Windows, Linux and macOS. On Windows
 it ships OpenSSL 3.6.4 (`libcrypto-3-x64.dll`, `libssl-3-x64.dll`, Apache-2.0) and zlib (`z.dll`,
 Zlib) beside it; on Linux OpenSSL 3.0.13 (Apache-2.0) is linked into `libtdjsonjava.so`.
 

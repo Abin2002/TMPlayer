@@ -1980,9 +1980,11 @@ private fun TvStatusCluster(account: Account?, onArt: Boolean = false) {
     val locale = LocalConfiguration.current.locales[0]
     // The viewer's own choice of 12 or 24 hour, which is a setting on the device and not a taste
     // this app has any business overriding.
-    val clock = remember(locale) { java.text.SimpleDateFormat("h:mm a", locale) }
-    val clock24 = remember(locale) { java.text.SimpleDateFormat("HH:mm", locale) }
-    val day = remember(locale) { java.text.SimpleDateFormat("EEE d MMM", locale) }
+    // Each in the language's own order (午後3:05, 10月15日(水)), from the fields alone.
+    fun pattern(skeleton: String) = java.text.SimpleDateFormat(android.text.format.DateFormat.getBestDateTimePattern(locale, skeleton), locale)
+    val clock = remember(locale) { pattern("hmma") }
+    val clock24 = remember(locale) { pattern("HHmm") }
+    val day = remember(locale) { pattern("EEEdMMM") }
     val twentyFour = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
 
     Row(verticalAlignment = Alignment.CenterVertically) {

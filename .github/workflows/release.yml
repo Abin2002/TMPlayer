@@ -475,6 +475,17 @@ jobs:
             echo "::warning::Attach mediamp-corresponding-source-$COVERED.tar.gz (scripts/build-mediamp-source.sh) to this release, then set TAG to $GITHUB_REF_NAME in release.yml."
           fi
           echo "url=$URL" >> "$GITHUB_OUTPUT"
+          # The macOS runtime's libraries are Homebrew's, not MSYS2's or Ubuntu's, so their source
+          # is a second archive (scripts/build-mediamp-source.sh --macos), first attached by hand to
+          # v1.26.0. MAC_TAG works as TAG does: empty links this release's own copy.
+          MAC_TAG=""
+          MAC_URL="https://github.com/${{ github.repository }}/releases/download/${MAC_TAG:-$GITHUB_REF_NAME}/mediamp-corresponding-source-$COVERED-macos.tar.gz"
+          if [ -n "$MAC_TAG" ]; then
+            curl --fail --silent --show-error --head --location --max-time 60 "$MAC_URL" > /dev/null
+          else
+            echo "::warning::Attach mediamp-corresponding-source-$COVERED-macos.tar.gz (scripts/build-mediamp-source.sh --macos) to this release, then set MAC_TAG to $GITHUB_REF_NAME in release.yml."
+          fi
+          echo "url_mac=$MAC_URL" >> "$GITHUB_OUTPUT"
 
       # The update feed every installed copy reads (C1 of the storage and updates plan). Written
       # here, from the files about to go up, so each package's size and SHA-256 are the published
@@ -524,7 +535,7 @@ jobs:
             | Linux, glibc 2.38 or newer | `TMPlayer-${{ needs.version.outputs.name }}-x86_64.AppImage` |
             | Arch Linux | [the PKGBUILD](https://github.com/${{ github.repository }}/tree/${{ github.ref_name }}/desktop/packaging/aur), from `TMPlayer-${{ needs.version.outputs.name }}-linux-x64.tar.xz` |
 
-            Installed copies offer each update. [How to install](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/INSTALL.md) · [Moving from the deb, rpm, Flatpak or Windows zip](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/INSTALL.md#moving-from-a-format-that-is-no-longer-published) · [GPL-3.0](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/LICENSE) · [Third party notices](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/THIRD_PARTY_NOTICES.md) · [nextlib source](https://github.com/${{ github.repository }}/releases/download/v1.21.0/nextlib-corresponding-source-1.21.0.tar.gz) · [mediamp source](${{ steps.mediamp.outputs.url }})
+            Installed copies offer each update. [How to install](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/INSTALL.md) · [Moving from the deb, rpm, Flatpak or Windows zip](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/INSTALL.md#moving-from-a-format-that-is-no-longer-published) · [GPL-3.0](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/LICENSE) · [Third party notices](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/THIRD_PARTY_NOTICES.md) · [nextlib source](https://github.com/${{ github.repository }}/releases/download/v1.21.0/nextlib-corresponding-source-1.21.0.tar.gz) · [mediamp source](${{ steps.mediamp.outputs.url }}) · [mediamp macOS source](${{ steps.mediamp.outputs.url_mac }})
 
       # tmplayer.org is deployed by Vercel's git integration from main, with no build step and no
       # deploy hook, so a commit to main is the one way the site learns of the release: Vercel
