@@ -161,7 +161,7 @@ not commit them. A script that builds every file below is kept outside the repo;
 | Fire TV screenshots | 1920 x 1080, 3 to 10 | JPG or 24-bit PNG, no transparency | `site/screenshots/tv-*.webp` |
 | Tablet screenshots | 3 to 10, one of Amazon's listed sizes | PNG or JPG | the same 1920 x 1080 TV shots (1920 x 1080 is on the tablet list; the 1080 x 2400 phone shots are not) |
 | Promotional image | 1024 x 500 | optional | not made |
-| Video | up to 5 | optional | not made (`site/screenshots/demo-phone.mp4` is a phone demo, not a TV one) |
+| Video | up to 5 | optional | not made |
 
 Screenshots, pixel-identical to the WebP files, 24-bit, no alpha:
 
