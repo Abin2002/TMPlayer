@@ -319,6 +319,8 @@ fun SettingsScreen(
     )
     val dynamicColour by settings.dynamicColour.collectAsStateWithLifecycle(initialValue = false)
     val uiScale by rememberUiScale(settings)
+    val lighterPictures by settings.lighterPictures.collectAsStateWithLifecycle(initialValue = false)
+    val reduceMotion by settings.reduceMotion.collectAsStateWithLifecycle(initialValue = false)
     val crashReports by settings.crashReports.collectAsStateWithLifecycle(initialValue = false)
     // The app lock and the kids lock (CP57).
     val appLock by settings.appLock.collectAsStateWithLifecycle(initialValue = AppLockSettings())
@@ -541,6 +543,18 @@ fun SettingsScreen(
             }
         }
 
+        // "Recommended for this device" (CP68), above the categories while anything recommended
+        // for a device short of memory or storage is still off. It draws nothing otherwise.
+        if (page == null) {
+            item {
+                com.tmplayer.ui.onboarding.DeviceFitSettingsCard(
+                    settings,
+                    onApplied = { toast(s.deviceApplied) },
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+            }
+        }
+
         // Each page below holds what used to be one or more sections of a single long list. A
         // page that took in more than one keeps the old headings between them.
         // Each run of rows between two headings is drawn as one card on a phone (settingsGroups).
@@ -595,6 +609,27 @@ fun SettingsScreen(
                         canDecrease = uiScale.ordinal > 0,
                         canIncrease = uiScale.ordinal < UiScale.entries.lastIndex,
                         onStep = { direction -> scope.launch { settings.setUiScale(uiScale.step(direction)) } },
+                    )
+                }
+
+                // CP68: the two lightening switches the low-end device card recommends, each its own
+                // row so either can be turned back on its own.
+                item {
+                    ToggleRow(
+                        title = s.settingsLighterPictures,
+                        subtitle = if (lighterPictures) s.settingsLighterPicturesOn else s.settingsLighterPicturesOff,
+                        icon = TmIcons.Image,
+                        checked = lighterPictures,
+                        onToggle = { scope.launch { settings.setLighterPictures(!lighterPictures) } },
+                    )
+                }
+                item {
+                    ToggleRow(
+                        title = s.settingsReduceMotion,
+                        subtitle = if (reduceMotion) s.settingsReduceMotionOn else s.settingsReduceMotionOff,
+                        icon = TmIcons.Frames,
+                        checked = reduceMotion,
+                        onToggle = { scope.launch { settings.setReduceMotion(!reduceMotion) } },
                     )
                 }
 

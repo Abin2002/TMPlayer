@@ -230,6 +230,13 @@ class MainActivity : ComponentActivity() {
         // everywhere. Every screen already handles its own insets.
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // `--ez lowend true` on a debug build: the low-end device verdict, short of memory and of
+        // storage, so the setup step, the Settings card and the hint can be seen anywhere (CP68).
+        if (BuildConfig.DEBUG && intent?.hasExtra("lowend") == true) {
+            com.tmplayer.data.DeviceFitOverride.forced =
+                if (intent.getBooleanExtra("lowend", false)) com.tmplayer.data.DeviceFit(true, true) else null
+            if (intent.getBooleanExtra("devicehint", false)) com.tmplayer.data.DeviceFitHint.raise()
+        }
         Td.start(this)
         // A debug or promo build can force the support card on, to check it by eye:
         // `adb shell am start -n com.tmplayer/.MainActivity --ez support_reminder true`.
@@ -984,19 +991,42 @@ private fun Root() {
                 waitedOut = true
             }
             val chatsLoaded = chatsState is UiState.Content
-            if (Setup.decide(pending = true, chatsLoaded = chatsLoaded, waitedOut = waitedOut) == Setup.Decision.Wait) {
+            // What this device is short of, and which settings would help (CP68): the Device step.
+            val fit = com.tmplayer.ui.onboarding.rememberDeviceFit()
+            val light by settings.lightSettings.collectAsStateWithLifecycle(initialValue = null)
+            val seekThumbnails = com.tmplayer.ui.onboarding.rememberSeekThumbnailsShown()
+            if (light == null ||
+                Setup.decide(pending = true, chatsLoaded = chatsLoaded, waitedOut = waitedOut) == Setup.Decision.Wait
+            ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { androidx.compose.material3.CircularProgressIndicator(color = Tone.accent) }
                 return@Box
             }
             val finish: () -> Unit = { scope.launch { runCatching { settings.markSetupDone() } } }
-            val steps = remember { Setup.steps(folders.size, posters = com.tmplayer.online.OnlineMetadata.current != null) }
+            // Read once, as the setup opens: applying them must not take the step away under the viewer.
+            val recommendations = remember {
+                com.tmplayer.data.DeviceFitRules.recommendations(fit, light!!, seekThumbnails)
+            }
+            val steps = remember {
+                Setup.steps(
+                    folders.size,
+                    posters = com.tmplayer.online.OnlineMetadata.current != null,
+                    device = recommendations.isNotEmpty(),
+                )
+            }
             if (steps.isEmpty()) {
                 LaunchedEffect(Unit) { finish() }
                 return@Box
             }
             val setup = remember(steps) { SetupState(steps) }
             val unreachable = remember(favorites, chats) { DefaultGroups.unreachableFavorites(favorites, chats) }
-            SetupScreen(settings, setup, onDone = finish, unreachableFavourites = unreachable)
+            SetupScreen(
+                settings,
+                setup,
+                onDone = finish,
+                unreachableFavourites = unreachable,
+                fit = fit,
+                recommendations = recommendations,
+            )
             return@Box
         }
 
@@ -1451,6 +1481,9 @@ private fun Root() {
             )
         }
         if (pickingLanguage) LanguageDialog(settings, onClose = { pickingLanguage = false })
+        // The one-time hint (CP68): the player dropped frames or the system ran short of memory.
+        // Once per install, in the shell, and only with something to offer.
+        DeviceStruggleHint(settings, inShell = inShell && !showUpdate && noticeLanguage == null)
         // Only once the setup is done: inShell waits for it.
         if (FormFactor.isTv(context) && inShell && screen is Screen.Chats) {
             TvBrowseHint(
@@ -1507,3 +1540,63 @@ private const val OFFLINE_SETTLE_MS = 750L
 /** How long the chat list is up before the support card may slide in. */
 private const val SUPPORT_CARD_DELAY_MS = 4_000L
 
+/**
+ * The hint after the device struggled (CP68, [com.tmplayer.data.DeviceFitHint]): a bar at the foot
+ * of a phone's screen, a dialog on a television with Apply focused. Offered once per install, and
+ * only while something recommended is still off; a stutter counts as short of memory whatever the
+ * device's figures said.
+ */
+@Composable
+private fun DeviceStruggleHint(settings: SettingsStore, inShell: Boolean) {
+    val raised by com.tmplayer.data.DeviceFitHint.raised.collectAsStateWithLifecycle()
+    val shown by settings.deviceHintShown.collectAsStateWithLifecycle(initialValue = true)
+    val light by settings.lightSettings.collectAsStateWithLifecycle(initialValue = null)
+    if (!raised || shown || !inShell) return
+    val now = light ?: return
+    val fit = com.tmplayer.ui.onboarding.rememberDeviceFit()
+    val seekThumbnails = com.tmplayer.ui.onboarding.rememberSeekThumbnailsShown()
+    val recommendations = remember(fit, now, seekThumbnails) {
+        com.tmplayer.ui.onboarding.recommendationsAfterStruggle(fit, now, seekThumbnails)
+    }
+    val scope = rememberCoroutineScope()
+    val toast = rememberToast()
+    if (recommendations.isEmpty()) {
+        LaunchedEffect(Unit) { com.tmplayer.data.DeviceFitHint.clear() }
+        return
+    }
+    fun answer(apply: Boolean) {
+        com.tmplayer.data.DeviceFitHint.clear()
+        scope.launch {
+            runCatching {
+                if (apply) settings.applyRecommendations(recommendations)
+                settings.markDeviceHintShown()
+            }
+        }
+        if (apply) toast(L.deviceApplied)
+    }
+    val context = LocalContext.current
+    if (FormFactor.isTv(context)) {
+        TvConfirm(
+            title = L.deviceHintTitle,
+            message = L.deviceHintBody,
+            confirmLabel = L.deviceApply,
+            cancelLabel = L.deviceNotNow,
+            destructive = false,
+            focusConfirm = true,
+            extra = { com.tmplayer.ui.onboarding.RecommendationList(recommendations) },
+            onConfirm = { answer(apply = true) },
+            onDismiss = { answer(apply = false) },
+        )
+    } else {
+        Box(Modifier.fillMaxSize()) {
+            com.tmplayer.ui.onboarding.DeviceHintBar(
+                onApply = { answer(apply = true) },
+                onNotNow = { answer(apply = false) },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(16.dp),
+            )
+        }
+    }
+}

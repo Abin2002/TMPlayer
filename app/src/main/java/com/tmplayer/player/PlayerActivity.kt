@@ -1651,6 +1651,17 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                                 "last fed ${elapsedSinceLastFeedMs}ms ago",
                         )
                     }
+
+                    // Media3 reports dropped frames fifty at a time: the decoder falling behind
+                    // the picture, which is this device struggling, not the download. The shell
+                    // offers the recommended settings once (CP68, DeviceFitHint).
+                    override fun onDroppedVideoFrames(
+                        eventTime: AnalyticsListener.EventTime,
+                        droppedFrames: Int,
+                        elapsedMs: Long,
+                    ) {
+                        if (droppedFrames >= STUTTER_FRAMES) com.tmplayer.data.DeviceFitHint.raise()
+                    }
                 })
             }
     }
@@ -4710,6 +4721,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
          * quarter-second floor cannot ride that out.
          */
         private const val MIN_PCM_BUFFER_US = 1_500_000
+
+        /** Dropped frames in one Media3 report that count as a stutter (it reports at fifty). */
+        private const val STUTTER_FRAMES = 30
         private const val MAX_PCM_BUFFER_US = 2_000_000
 
         /** Enough for the back-seek a thumb makes when it missed a line of dialogue. */

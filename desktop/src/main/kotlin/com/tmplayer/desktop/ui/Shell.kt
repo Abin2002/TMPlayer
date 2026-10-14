@@ -592,11 +592,20 @@ private fun SetupOverlay(state: ShellState, chatsLoaded: Boolean, folderCount: I
     }
     val finish: () -> Unit = { scope.launch { runCatching { state.settings.markSetupDone() } } }
     Surface(Modifier.fillMaxSize().windowDrag(), color = Tone.background) {
-        if (Setup.decide(pending = true, chatsLoaded = chatsLoaded, waitedOut = waitedOut) == Setup.Decision.Wait) {
+        // A disk short of room gets the Device step, offering Low storage mode (CP68).
+        val fit = com.tmplayer.ui.onboarding.rememberDeviceFit()
+        val light by state.settings.lightSettings.collectAsState(initial = null)
+        val now = light
+        if (now == null || Setup.decide(pending = true, chatsLoaded = chatsLoaded, waitedOut = waitedOut) == Setup.Decision.Wait) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Tone.accent) }
             return@Surface
         }
-        val steps = remember { Setup.steps(folderCount, posters = com.tmplayer.online.OnlineMetadata.current != null) }
+        val recommendations = remember {
+            com.tmplayer.data.DeviceFitRules.recommendations(fit, now, seekThumbnailsShown = false, pictures = false)
+        }
+        val steps = remember {
+            Setup.steps(folderCount, posters = com.tmplayer.online.OnlineMetadata.current != null, device = recommendations.isNotEmpty())
+        }
         if (steps.isEmpty()) {
             LaunchedEffect(Unit) { finish() }
             return@Surface
@@ -604,6 +613,13 @@ private fun SetupOverlay(state: ShellState, chatsLoaded: Boolean, folderCount: I
         val setup = remember(steps) { SetupState(steps) }
         val favourites by state.settings.favorites.collectAsState(initial = emptySet())
         val unreachable = remember(favourites, chats) { DefaultGroups.unreachableFavorites(favourites, chats) }
-        SetupScreen(state.settings, setup, onDone = finish, unreachableFavourites = unreachable)
+        SetupScreen(
+            state.settings,
+            setup,
+            onDone = finish,
+            unreachableFavourites = unreachable,
+            fit = fit,
+            recommendations = recommendations,
+        )
     }
 }

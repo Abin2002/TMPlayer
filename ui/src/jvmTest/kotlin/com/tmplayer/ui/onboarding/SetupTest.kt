@@ -37,6 +37,23 @@ class SetupTest {
     }
 
     @Test
+    fun `a low-end device gets the Device step in Storage's place, never both`() {
+        assertEquals(
+            listOf(SetupStep.Library, SetupStep.Posters, SetupStep.Device),
+            Setup.steps(folderCount = 2, posters = true, storage = true, device = true),
+        )
+        assertEquals(listOf(SetupStep.Device), Setup.steps(folderCount = 0, posters = false, storage = false, device = true))
+        assertFalse(SetupStep.Device in Setup.steps(folderCount = 2, posters = true, device = false))
+    }
+
+    @Test
+    fun `the Device step starts on Apply, and has no pictures`() {
+        assertEquals(listOf(SetupChoice.ApplyRecommended, SetupChoice.NotNow), SetupStep.Device.choices)
+        assertEquals(SetupChoice.ApplyRecommended, SetupValues(onlyFolders = true, posters = false, lowStorage = true).current(SetupStep.Device))
+        assertFalse(SetupChoice.ApplyRecommended.screenshot)
+    }
+
+    @Test
     fun `the storage step is on for every platform`() {
         assertTrue(Setup.STORAGE_STEP)
         assertTrue(SetupStep.Storage in Setup.steps(folderCount = 0, posters = false))

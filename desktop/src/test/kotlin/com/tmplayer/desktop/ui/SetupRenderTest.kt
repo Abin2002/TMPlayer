@@ -81,10 +81,12 @@ class SetupRenderTest {
         },
     )
 
-    private val all = SetupStep.entries.toList()
+    // What an account with folders on a device that is fine gets: Device takes Storage's place only on a low-end one.
+    private val all = SetupStep.entries.filter { it != SetupStep.Device }
 
     @After
     fun reset() {
+        com.tmplayer.data.DeviceFitOverride.forced = null
         OnlineMetadata.current = null
         Translator.use(Languages.ENGLISH)
     }
@@ -178,6 +180,69 @@ class SetupRenderTest {
         press(Key.Enter)
         waitForIdle()
         assertTrue("finished after the last step", done)
+        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.lowStorageMode.first() } }
+    }
+
+    /**
+     * CP68: a disk short of room. The Device step in Storage's place (light, dark, Arabic), the
+     * Settings card, and from the keyboard: focus on Apply, Enter turns Low storage mode on.
+     */
+    @Test
+    fun deviceStepAndCard() {
+        val fit = com.tmplayer.data.DeviceFit(shortOfMemory = false, shortOfStorage = true)
+        val all = com.tmplayer.data.Recommendation.entries.toList()
+        val steps = listOf(SetupStep.Posters, SetupStep.Device)
+        for (dark in listOf(true, false)) {
+            save("setup-device-${if (dark) "dark" else "light"}.png", render(dark) {
+                SetupScreen(settings, remember { SetupState(steps, start = 1) }, onDone = {}, fit = fit, recommendations = all)
+            })
+        }
+        save("setup-device-narrow.png", render(true, width = 520, height = 900) {
+            SetupScreen(settings, remember { SetupState(steps, start = 1) }, onDone = {}, fit = fit, recommendations = all)
+        })
+        Translator.use("ar")
+        save("setup-device-ar.png", render(true, rtl = true) {
+            SetupScreen(
+                settings,
+                remember { SetupState(steps, start = 1) },
+                onDone = {},
+                fit = com.tmplayer.data.DeviceFit(true, true),
+                recommendations = all,
+            )
+        })
+        Translator.use(Languages.ENGLISH)
+        save("settings-device-card.png", render(true) {
+            com.tmplayer.ui.onboarding.DeviceFitCard(fit, all, onApply = {}, onDismiss = {})
+        })
+        // The wired card on the real Settings page, with the verdict forced.
+        com.tmplayer.data.DeviceFitOverride.forced = fit
+        save("settings-with-device-card.png", render(true) { SettingsPage(shell, "2.0.0") })
+    }
+
+    @Test
+    fun deviceStepFromTheKeyboard() = runComposeUiTest {
+        val fit = com.tmplayer.data.DeviceFit(shortOfMemory = false, shortOfStorage = true)
+        val setup = SetupState(listOf(SetupStep.Device))
+        var done = false
+        setContent {
+            TmMaterialTheme(dark = true) {
+                Box(Modifier.size(1280.dp, 800.dp)) {
+                    SetupScreen(
+                        settings,
+                        setup,
+                        onDone = { done = true },
+                        fit = fit,
+                        recommendations = listOf(com.tmplayer.data.Recommendation.LowStorageMode),
+                    )
+                }
+            }
+        }
+        waitUntil(timeoutMillis = WRITE_MS) {
+            onAllNodes(hasText("Apply") and hasClickAction() and isFocused()).fetchSemanticsNodes().isNotEmpty()
+        }
+        onNode(isFocused()).performKeyInput { pressKey(Key.Enter) }
+        waitForIdle()
+        assertTrue(done)
         waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.lowStorageMode.first() } }
     }
 

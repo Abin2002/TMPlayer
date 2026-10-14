@@ -217,6 +217,22 @@ class PromoCaptureActivity : ComponentActivity() {
         }
         PromoGroups.demo = groupsDemo
 
+        // `--ez lowend true`: this device counts as short of memory and of storage (CP68), for the
+        // setup's Device step, the Settings card and the hint. `--ez lowend false` clears it, and
+        // `--ez light_reset true` turns the four recommended settings back to their defaults.
+        if (intent.hasExtra("lowend")) {
+            com.tmplayer.data.DeviceFitOverride.forced =
+                if (intent.getBooleanExtra("lowend", false)) com.tmplayer.data.DeviceFit(true, true) else null
+        }
+        if (intent.getBooleanExtra("light_reset", false)) {
+            runBlocking {
+                val store = SettingsStore(applicationContext)
+                store.setLowStorageMode(false)
+                store.setTrickplay(true)
+                store.setLighterPictures(false)
+                store.setReduceMotion(false)
+            }
+        }
         PromoShowOverride.key = intent.getStringExtra("show")?.lowercase() ?: "harbour lines"
         // `--es variant search` with `--es query "..."`: what the chat's search found for it.
         PromoSearch.query = intent.getStringExtra("query") ?: PromoSearch.query
@@ -292,15 +308,25 @@ class PromoCaptureActivity : ComponentActivity() {
                         // The setup after sign in (CP67), which the fixture reaches without a sign in:
                         // every step, as an account with folders gets them, opening on `--es step
                         // library|posters|storage`. Finishing or Skip all goes to the chat list.
+                        // With `--ez lowend true` the Device step (CP68) takes Storage's place, as on a
+                        // low-end device: `--es step device` opens on it.
                         "setup" -> {
-                            val steps = remember { SetupStep.entries.toList() }
-                            val setup = remember {
+                            val store = remember { SettingsStore(applicationContext) }
+                            val fit = com.tmplayer.ui.onboarding.rememberDeviceFit()
+                            val recommendations = com.tmplayer.ui.onboarding.rememberRecommendations(store, fit)
+                            val lowEnd = com.tmplayer.data.DeviceFitOverride.forced != null
+                            val steps = remember(lowEnd) {
+                                SetupStep.entries.filter { if (lowEnd) it != SetupStep.Storage else it != SetupStep.Device }
+                            }
+                            val setup = remember(steps) {
                                 SetupState(
                                     steps,
                                     start = steps.indexOfFirst { it.name.equals(intent.getStringExtra("step"), ignoreCase = true) }.coerceAtLeast(0),
                                 )
                             }
-                            SetupScreen(SettingsStore(applicationContext), setup, onDone = { screen = "chats" })
+                            // Held once shown, as the app holds them, so applying does not empty the list.
+                            val shown = remember(recommendations.isNotEmpty()) { recommendations }
+                            SetupScreen(store, setup, onDone = { screen = "chats" }, fit = fit, recommendations = shown)
                         }
                         // A page of it from `--es page appearance|playback|subtitles|...`.
                         "settings" -> SettingsScreen(
@@ -412,6 +438,41 @@ class PromoCaptureActivity : ComponentActivity() {
                         "tvhint" -> com.tmplayer.ui.browse.TvBrowseHintCard(
                             Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp),
                         )
+                        // The one-time hint after a stutter (CP68): the phone's bar, the TV's dialog.
+                        "devicehint" -> {
+                            val store = remember { SettingsStore(applicationContext) }
+                            val light by store.lightSettings.collectAsState(initial = null)
+                            val now = light
+                            if (now != null) {
+                                val list = com.tmplayer.ui.onboarding.recommendationsAfterStruggle(
+                                    com.tmplayer.ui.onboarding.rememberDeviceFit(),
+                                    now,
+                                    com.tmplayer.ui.onboarding.rememberSeekThumbnailsShown(),
+                                )
+                                if (tv) {
+                                    TvConfirm(
+                                        title = L.deviceHintTitle,
+                                        message = L.deviceHintBody,
+                                        confirmLabel = L.deviceApply,
+                                        cancelLabel = L.deviceNotNow,
+                                        destructive = false,
+                                        focusConfirm = true,
+                                        extra = { com.tmplayer.ui.onboarding.RecommendationList(list) },
+                                        onConfirm = { overlay = null },
+                                        onDismiss = { overlay = null },
+                                    )
+                                } else {
+                                    com.tmplayer.ui.onboarding.DeviceHintBar(
+                                        onApply = { overlay = null },
+                                        onNotNow = { overlay = null },
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                                            .padding(16.dp),
+                                    )
+                                }
+                            }
+                        }
                     }
                     if (confirming) {
                         val s = com.tmplayer.ui.i18n.LocalStrings.current

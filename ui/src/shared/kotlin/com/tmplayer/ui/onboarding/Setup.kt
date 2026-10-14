@@ -24,6 +24,12 @@ enum class SetupStep {
 
     /** Low storage mode: stream big videos without keeping them whole. */
     Storage,
+
+    /**
+     * A device short of memory or storage (CP68): apply the recommended settings, or not now. It
+     * takes the storage step's place, since Low storage mode is among them when storage is short.
+     */
+    Device,
     ;
 
     /** The two answers, in the order they are shown. The first is the recommended one. */
@@ -38,13 +44,15 @@ enum class SetupChoice(val step: SetupStep) {
     PostersOff(SetupStep.Posters),
     KeepWhilePlaying(SetupStep.Storage),
     LowStorage(SetupStep.Storage),
+    ApplyRecommended(SetupStep.Device),
+    NotNow(SetupStep.Device),
     ;
 
     /** True for the answer the setup suggests, which is also every setting's default. */
     val recommended: Boolean get() = step.choices.first() == this
 
     /** Whether this answer is pictured with a screenshot (the storage step draws its own). */
-    val screenshot: Boolean get() = step != SetupStep.Storage
+    val screenshot: Boolean get() = step == SetupStep.Library || step == SetupStep.Posters
 }
 
 /** The settings the setup reads and writes, as they are now. */
@@ -54,6 +62,8 @@ data class SetupValues(val onlyFolders: Boolean, val posters: Boolean, val lowSt
         SetupStep.Library -> if (onlyFolders) SetupChoice.OnlyFolders else SetupChoice.Everything
         SetupStep.Posters -> if (posters) SetupChoice.PostersOn else SetupChoice.PostersOff
         SetupStep.Storage -> if (lowStorage) SetupChoice.LowStorage else SetupChoice.KeepWhilePlaying
+        // Apply is what the step is for; Not now is the press that changes nothing.
+        SetupStep.Device -> SetupChoice.ApplyRecommended
     }
 }
 
@@ -64,11 +74,14 @@ object Setup {
      * folders (with none there is nothing to choose between); Posters only where the build looks
      * them up at all; Storage wherever Low storage mode exists.
      */
-    fun steps(folderCount: Int, posters: Boolean, storage: Boolean = STORAGE_STEP): List<SetupStep> = buildList {
-        if (folderCount > 0) add(SetupStep.Library)
-        if (posters) add(SetupStep.Posters)
-        if (storage) add(SetupStep.Storage)
-    }
+    fun steps(folderCount: Int, posters: Boolean, storage: Boolean = STORAGE_STEP, device: Boolean = false): List<SetupStep> =
+        buildList {
+            if (folderCount > 0) add(SetupStep.Library)
+            if (posters) add(SetupStep.Posters)
+            // A device short of memory or storage, with settings still to recommend, gets the
+            // Device step in Storage's place: Low storage mode is among them when storage is short.
+            if (device) add(SetupStep.Device) else if (storage) add(SetupStep.Storage)
+        }
 
     /**
      * Whether the storage step is offered. Low storage mode is core's (`TdByteWindow`), so the
@@ -155,6 +168,8 @@ fun Strings.setupCopy(step: SetupStep): SetupCopy = when (step) {
     SetupStep.Library -> SetupCopy(setupLibraryTitle, setupLibraryBody)
     SetupStep.Posters -> SetupCopy(setupPostersTitle, setupPostersBody)
     SetupStep.Storage -> SetupCopy(setupStorageTitle, setupStorageBody)
+    // The screen says which: memory, storage or both (fitHeadline).
+    SetupStep.Device -> SetupCopy(deviceShortMemory, deviceQuestion)
 }
 
 fun Strings.choiceCopy(choice: SetupChoice): ChoiceCopy = when (choice) {
@@ -164,4 +179,6 @@ fun Strings.choiceCopy(choice: SetupChoice): ChoiceCopy = when (choice) {
     SetupChoice.PostersOff -> ChoiceCopy(setupPostersOff, setupPostersOffDetail)
     SetupChoice.KeepWhilePlaying -> ChoiceCopy(setupStorageNormal, setupStorageNormalDetail)
     SetupChoice.LowStorage -> ChoiceCopy(setupStorageLow, setupStorageLowDetail)
+    SetupChoice.ApplyRecommended -> ChoiceCopy(deviceApply, deviceQuestion)
+    SetupChoice.NotNow -> ChoiceCopy(deviceNotNow, settingsSavesAsYouGo)
 }

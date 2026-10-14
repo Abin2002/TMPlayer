@@ -34,7 +34,7 @@ fun setupImageName(choice: SetupChoice, dark: Boolean): String? {
         SetupChoice.OnlyFolders -> "library-folders"
         SetupChoice.PostersOn -> "posters-on"
         SetupChoice.PostersOff -> "posters-off"
-        SetupChoice.KeepWhilePlaying, SetupChoice.LowStorage -> return null
+        SetupChoice.KeepWhilePlaying, SetupChoice.LowStorage, SetupChoice.ApplyRecommended, SetupChoice.NotNow -> return null
     }
     return "$shot-${if (dark) "dark" else "light"}.webp"
 }

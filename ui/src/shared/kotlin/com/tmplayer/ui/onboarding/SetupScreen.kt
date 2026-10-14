@@ -3,6 +3,7 @@ package com.tmplayer.ui.onboarding
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -68,7 +69,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import com.tmplayer.data.DeviceFit
 import com.tmplayer.data.DeviceForm
+import com.tmplayer.data.Recommendation
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.ui.components.deviceForm
@@ -105,6 +108,9 @@ fun SetupScreen(
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     unreachableFavourites: Set<Long> = emptySet(),
+    /** What the Device step says about this device, and what it offers to change (CP68). */
+    fit: DeviceFit = DeviceFit.Fine,
+    recommendations: List<Recommendation> = emptyList(),
 ) {
     val s = LocalStrings.current
     val scope = rememberCoroutineScope()
@@ -126,6 +132,8 @@ fun SetupScreen(
                     SetupChoice.PostersOff -> online?.setEnabled(false)
                     SetupChoice.KeepWhilePlaying -> settings.setLowStorageMode(false)
                     SetupChoice.LowStorage -> settings.setLowStorageMode(true)
+                    SetupChoice.ApplyRecommended -> settings.applyRecommendations(recommendations)
+                    SetupChoice.NotNow -> Unit
                 }
             }
         }
@@ -135,7 +143,7 @@ fun SetupScreen(
     BackHandler { if (!state.back()) onDone() }
 
     val step = state.step
-    val copy = s.setupCopy(step)
+    val copy = s.setupCopy(step).let { if (step == SetupStep.Device) it.copy(title = s.fitHeadline(fit)) else it }
     val focus = remember(step) { step.choices.associateWith { FocusRequester() } }
     val holder = remember { FocusHolder() }
     val note = if (step == SetupStep.Library && unreachableFavourites.isNotEmpty()) {
@@ -193,7 +201,11 @@ fun SetupScreen(
                     // Two squares side by side, as large as the width allows and the height leaves
                     // room for, with the answer's name and line under each.
                     val side = min((maxWidth - GAP) / 2 - CARD_PAD * 2, maxHeight - LABELS - CARD_PAD * 2)
-                    Choices(step, values, focus, holder, side, ::pick)
+                    if (step == SetupStep.Device) {
+                        DeviceChoices(recommendations, focus, holder, ::pick)
+                    } else {
+                        Choices(step, values, focus, holder, side, ::pick)
+                    }
                 }
             }
         } else {
@@ -204,7 +216,11 @@ fun SetupScreen(
                 ) {
                     words()
                     Spacer(Modifier.height(4.dp))
-                    Choices(step, values, focus, holder, side = null, onPick = ::pick)
+                    if (step == SetupStep.Device) {
+                        DeviceChoices(recommendations, focus, holder, ::pick)
+                    } else {
+                        Choices(step, values, focus, holder, side = null, onPick = ::pick)
+                    }
                     if (note != null) Note(note)
                     Text(s.setupLater, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
                 }
@@ -238,6 +254,37 @@ private class FocusHolder {
 // Three seconds in all: a television cold start can take that long to give the window its focus.
 private const val FOCUS_TRIES = 40
 private const val FOCUS_RETRY_MS = 75L
+
+/**
+ * The Device step's answers: the list of what would change, then Apply (where a remote starts)
+ * and Not now. No pictures: the changes are settings, and their names say what they do.
+ */
+@Composable
+private fun DeviceChoices(
+    recommendations: List<Recommendation>,
+    focus: Map<SetupChoice, FocusRequester>,
+    holder: FocusHolder,
+    onPick: (SetupChoice) -> Unit,
+) {
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(Corner.Large)).background(Tone.surfaceHigh).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        RecommendationList(recommendations)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (choice in SetupStep.Device.choices) {
+                val s = LocalStrings.current
+                SetupButton(
+                    if (choice == SetupChoice.ApplyRecommended) s.deviceApply else s.deviceNotNow,
+                    primary = choice == SetupChoice.ApplyRecommended,
+                    modifier = Modifier
+                        .focusRequester(focus.getValue(choice))
+                        .onFocusChanged { if (it.isFocused) holder.step = SetupStep.Device },
+                ) { onPick(choice) }
+            }
+        }
+    }
+}
 
 /** The two answers side by side. [side] is the picture's edge; null lets each take half the width. */
 @Composable
@@ -331,17 +378,35 @@ private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifi
     }
 }
 
-/** Skip, Skip all and Back: quiet buttons that fill under the focus like the cards do. */
+/**
+ * Skip, Skip all and Back: quiet buttons that fill under the focus like the cards do. [primary] is
+ * the accent-filled one an answer like Apply gets. Also the low-end device card's buttons.
+ */
 @Composable
-private fun SetupButton(label: String, icon: Boolean = false, onClick: () -> Unit) {
+internal fun SetupButton(
+    label: String,
+    icon: Boolean = false,
+    primary: Boolean = false,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val touch = deviceForm() == DeviceForm.Phone
     Row(
-        Modifier
+        modifier
             .clip(CircleShape)
-            .background(if (focused) Tone.focusFill else Tone.surfaceHigh)
+            .background(
+                when {
+                    focused -> Tone.focusFill
+                    primary -> Tone.accent
+                    else -> Tone.surfaceHigh
+                },
+            )
             .focusRing(focused, CircleShape)
+            // The accent fill and the focus fill are near one colour in the dark theme, so a
+            // focused primary button also gets an outline in the text colour.
+            .then(if (primary && focused) Modifier.border(2.dp, Tone.text, CircleShape) else Modifier)
             .clickable(
                 interactionSource = interactions,
                 indication = if (touch) LocalIndication.current else null,
@@ -351,7 +416,11 @@ private fun SetupButton(label: String, icon: Boolean = false, onClick: () -> Uni
             .padding(horizontal = 18.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val color = if (focused) Tone.onFocusFill else Tone.text
+        val color = when {
+            focused -> Tone.onFocusFill
+            primary -> Tone.onAccent
+            else -> Tone.text
+        }
         if (icon) {
             Icon(TmIcons.ArrowBack, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))

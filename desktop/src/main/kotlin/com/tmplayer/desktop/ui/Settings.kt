@@ -183,6 +183,13 @@ fun SettingsPage(
             SettingsColumn(
                 Modifier.widthIn(max = 760.dp).padding(horizontal = pageMargin(), vertical = 8.dp),
             ) {
+                // "Recommended for this device" (CP68): on a computer, Low storage mode when the
+                // disk is short. It draws nothing otherwise.
+                com.tmplayer.ui.onboarding.DeviceFitSettingsCard(
+                    settings,
+                    onApplied = { toast(s.deviceApplied) },
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
                 Group(s.settingsAppearance)
                 Setting(s.settingsTheme, if (theme == ThemeChoice.System) s.themeSystemDesktopDetail else theme.description) {
                     SingleChoiceSegmentedButtonRow {
