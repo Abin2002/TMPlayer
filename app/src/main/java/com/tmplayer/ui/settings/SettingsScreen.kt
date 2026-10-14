@@ -189,7 +189,7 @@ enum class SettingsPage { Appearance, Playback, Subtitles, Gestures, Library, St
 private suspend fun FocusRequester.settle() {
     repeat(3) {
         withFrameNanos { }
-        if (runCatching { requestFocus() }.isSuccess) return
+        if (runCatching { requestFocus() }.getOrDefault(false)) return
     }
 }
 
@@ -446,6 +446,20 @@ fun SettingsScreen(
                     listState.scrollToItem(0)
                 }
             }
+        }
+    }
+
+    // The PIN pad takes the whole screen, and the row that opened it is gone when it closes ("Set
+    // a PIN" becomes "Change the PIN", and back), so the remote had nothing focused. It lands on the
+    // page's first row again, once the pad has closed and again once the new PIN state is drawn.
+    var pinPadWasOpen by remember { mutableStateOf(false) }
+    if (!touch) {
+        LaunchedEffect(pinFlow == null, appLock.pinSet) {
+            if (pinFlow != null) {
+                pinPadWasOpen = true
+                return@LaunchedEffect
+            }
+            if (pinPadWasOpen && page == SettingsPage.Lock) landing.settle()
         }
     }
 
