@@ -114,6 +114,16 @@
             </intent-filter>
         </receiver>
 
+        <!--
+          The pictures on the TV home screen channels, for the launcher (another app) to read.
+          Exported because which app the launcher is cannot be known to grant it a URI; it serves
+          only copies of those pictures, read only, from one directory. See TvArtProvider.
+        -->
+        <provider
+            android:name=".data.TvArtProvider"
+            android:authorities="${applicationId}.tvart"
+            android:exported="true" />
+
         <!-- Hands the downloaded update to the installer; nothing else is ever shared. -->
         <provider
             android:name="androidx.core.content.FileProvider"

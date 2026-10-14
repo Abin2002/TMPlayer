@@ -27,6 +27,7 @@ import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -141,6 +142,14 @@ internal fun HomePane(
     val scope = rememberCoroutineScope()
     var openSeries by remember { mutableStateOf<Series?>(null) }
     val listState = rememberLazyListState()
+    // A show's card on the TV home screen asked for its page: opened once the show is in the rows.
+    val showAsk by HomeLaunch.show.collectAsState()
+    LaunchedEffect(showAsk, rows) {
+        val ask = showAsk ?: return@LaunchedEffect
+        val series = HomeLaunch.find(ask, rows) ?: return@LaunchedEffect
+        openSeries = series
+        HomeLaunch.show.compareAndSet(ask, null)
+    }
 
     Box(Modifier.fillMaxSize()) {
         // Tiles here may wear the show's or the film's picture (see LocalOnlineArt); a chat's grid keeps frames.

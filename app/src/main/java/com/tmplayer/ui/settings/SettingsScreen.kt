@@ -135,6 +135,7 @@ import com.tmplayer.data.UpdateWords
 import com.tmplayer.data.Updates
 import com.tmplayer.data.WatchCache
 import com.tmplayer.data.WatchNextPublisher
+import com.tmplayer.data.TvChannelsPublisher
 import com.tmplayer.data.WatchedStore
 import com.tmplayer.data.WhatsNew
 import com.tmplayer.data.release
@@ -286,6 +287,8 @@ fun SettingsScreen(
     val watchNextOn by settings.watchNext.collectAsStateWithLifecycle(initialValue = false)
     val trickplayMemory = remember { DeviceQuirks.trickplayMemory(context) }
     val watchNextSupported = remember { DeviceQuirks.remote(context).watchNextSupported }
+    val tvChannelsOn by settings.tvChannels.collectAsStateWithLifecycle(initialValue = true)
+    val tvChannelsSupported = remember { TvChannelsPublisher.supported(context) }
     val touchPrefs by settings.touchPrefs.collectAsStateWithLifecycle(initialValue = TouchPrefs())
     val downmixChoice by settings.downmixChoice.collectAsStateWithLifecycle(initialValue = null)
     val subtitleStyle by settings.subtitleStyle.collectAsStateWithLifecycle(initialValue = SubtitleStyle())
@@ -701,6 +704,21 @@ fun SettingsScreen(
                                     }
                                 }
                             },
+                        )
+                    }
+                }
+                // TMPlayer's own rows of cards on the TV home screen. Only where the launcher has
+                // channels, which rules out phones and Fire TV.
+                if (tvChannelsSupported) {
+                    item {
+                        ToggleRow(
+                            title = s.settingsTvChannels,
+                            subtitle = if (tvChannelsOn) s.settingsTvChannelsOn else s.settingsTvChannelsOff,
+                            icon = TmIcons.Home,
+                            checked = tvChannelsOn,
+                            // Turning it off takes the channels away (TvHomeChannels follows the
+                            // setting); turning it on fills them at the next refresh of Home.
+                            onToggle = { scope.launch { settings.setTvChannels(!tvChannelsOn) } },
                         )
                     }
                 }

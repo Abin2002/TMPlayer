@@ -69,6 +69,7 @@ import com.tmplayer.data.SupportReminder
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedStore
 import com.tmplayer.data.WatchNextPublisher
+import com.tmplayer.data.TvChannelsPublisher
 import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.Td
 import com.tmplayer.data.start
@@ -87,11 +88,14 @@ import com.tmplayer.ui.browse.BrowseScreen
 import com.tmplayer.ui.browse.KeyPresses
 import com.tmplayer.ui.browse.TvBrowseHint
 import com.tmplayer.ui.browse.BrowseSection
+import com.tmplayer.ui.browse.BrowseTab
 import com.tmplayer.ui.browse.HomeViewModel
 import com.tmplayer.ui.lock.PinPad
 import com.tmplayer.ui.lock.PinPurpose
 import com.tmplayer.ui.browse.SeriesWatch
 import com.tmplayer.ui.browse.rememberHomeRows
+import com.tmplayer.ui.browse.HomeLaunch
+import com.tmplayer.ui.browse.TvHomeChannels
 import com.tmplayer.data.HomeRow
 import com.tmplayer.ui.browse.ChatListViewModel
 import com.tmplayer.ui.browse.MediaGridScreen
@@ -242,12 +246,22 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * An entry picked in the home screen's "Play next" row (see [WatchNextPublisher]) opens the
+     * An entry picked in the home screen's "Play next" row (see [WatchNextPublisher]), or a video's
+     * card on one of the app's own channels ([TvChannelsPublisher]), opens the
      * player straight away, over the app as it was. The intent's action is cleared once acted on,
      * so recreating the activity does not play it again.
      */
     @SuppressLint("UnsafeOptInUsageError")
     private fun playFromHomeScreen(intent: Intent?) {
+        // A folded show's card on one of the app's own home screen channels: its page on Home.
+        TvChannelsPublisher.showFrom(intent)?.let { show ->
+            intent?.action = Intent.ACTION_MAIN
+            lifecycleScope.launch {
+                if (!com.tmplayer.data.KidsLock.allows(com.tmplayer.data.ChatGate.awaitReady(), show.chatId)) return@launch
+                HomeLaunch.show.value = show
+            }
+            return
+        }
         val video = WatchNextPublisher.videoFrom(intent) ?: return
         intent?.action = Intent.ACTION_MAIN
         // An entry published before the kids lock went on (CP57) still names its chat; one the
@@ -547,6 +561,8 @@ private fun Root() {
                 chatsViewModel.reset()
                 // Another account's starred chats must not stay on Home behind a sign out.
                 homeViewModel.refresh()
+                // Nor on the TV home screen, where the app's channels show them.
+                App.backgroundScope.launch { TvChannelsPublisher.removeAll(context.applicationContext) }
             }
         }
     }
@@ -994,6 +1010,32 @@ private fun Root() {
             }
         }
 
+        // Home's rows, built here rather than inside Home so the TV home screen channels follow
+        // them whichever screen is open.
+        val homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater, watchedVideos.values)
+        val tvChannelsOn by settings.tvChannels.collectAsStateWithLifecycle(initialValue = null)
+        TvHomeChannels(
+            model = homeViewModel,
+            rows = homeRows,
+            chats = chats,
+            favourites = favorites,
+            watchProgress = watchProgress,
+            signedIn = auth is AuthState.Ready,
+            enabled = tvChannelsOn,
+        )
+        // A show's card on the home screen: Home, where its page opens over the rows (HomePane
+        // reads the ask). Given up after a minute, so a show that never turns up in the rows does
+        // not open by surprise later.
+        val showAsk by HomeLaunch.show.collectAsStateWithLifecycle()
+        LaunchedEffect(showAsk) {
+            val ask = showAsk ?: return@LaunchedEffect
+            autoOpened = true
+            screen = Screen.Chats
+            pickedTabKey = BrowseSection.encode(BrowseSection.of(BrowseTab.Home))
+            delay(HomeLaunch.WAIT_MS)
+            HomeLaunch.show.compareAndSet(ask, null)
+        }
+
         when (val current = screen) {
             is Screen.Chats -> {
                 BrowseScreen(
@@ -1127,7 +1169,7 @@ private fun Root() {
                     folders = folders,
                     onToggleLayout = { scope.launch { settings.setChatLayout(chatLayout.toggled()) } },
                     layout = chatLayout,
-                    homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater, watchedVideos.values),
+                    homeRows = homeRows,
                     homeArt = homeViewModel.art.collectAsStateWithLifecycle().value,
                     homeWatch = homeWatch,
                     onHomeRowShown = { row ->

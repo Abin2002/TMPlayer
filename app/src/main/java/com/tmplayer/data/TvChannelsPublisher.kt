@@ -1,0 +1,369 @@
+package com.tmplayer.data
+
+import android.content.ContentUris
+import android.content.ContentValues
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.media.tv.TvContract
+import android.util.Log
+import androidx.core.content.ContextCompat
+import com.tmplayer.MainActivity
+import com.tmplayer.R
+import com.tmplayer.data.TvChannels.Channel
+import com.tmplayer.online.MetaQuery
+import com.tmplayer.online.MetaResult
+import com.tmplayer.online.OnlineMetadata
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import java.io.File
+import java.security.MessageDigest
+
+/**
+ * Writes [TvChannels]' cards into the TV provider, where the Android TV home screen reads an
+ * app's channels from: the rows of cards under the app's name on the classic launcher.
+ *
+ * The platform's own `TvContract`, as [WatchNextPublisher] uses, rather than the androidx
+ * tvprovider library, for the same reason. Every call is best effort: a launcher without
+ * channels, a provider that refuses a write, or a viewer who hid a channel all end in nothing
+ * happening, never in a crash.
+ *
+ * **When it runs.** Only while the app's process is up: the cards are Home's rows, which need a
+ * signed in TDLib, and TDLib lives in this process. A periodic background job would have to start
+ * the process and open the Telegram session just to refresh a row of pictures, which a 1 GB stick
+ * should not pay for. So the channels are refreshed when the app opens, whenever Home's rows change
+ * while it runs (a post in a starred chat, a video saved for later), and after playback, which
+ * changes Continue watching and with it Recently added.
+ *
+ * **Pictures.** A card's picture must be a URI the launcher's process can read. A film's or a
+ * show's poster from the online lookups when they are on, else the video's own thumbnail from
+ * Telegram; either is copied into [TvArtProvider]'s directory and handed out from there. A card
+ * whose picture could not be had yet wears the app's mark, as "Play next" does, and is tried again
+ * on the next refresh.
+ */
+object TvChannelsPublisher {
+
+    private const val TAG = "TvChannels"
+
+    /** The launch intent's action for a folded show's card: open the show's page on Home. */
+    const val ACTION_OPEN_SHOW = "com.tmplayer.action.OPEN_SHOW_FROM_HOME"
+
+    private const val EXTRA_CHAT = "ch_chat"
+    private const val EXTRA_SERIES = "ch_series"
+    private const val EXTRA_TITLE = "ch_title"
+
+    /** Appended to the stored fingerprint of a card written without its picture, so the next pass tries again. */
+    private const val NO_ART = "\u001fnoart"
+
+    private const val LOGO_SIZE = 256
+    private const val ART_TIMEOUT_MS = 20_000L
+
+    private val lock = Mutex()
+
+    @Volatile
+    private var supportedCache: Boolean? = null
+
+    /**
+     * Whether this device has a home screen that shows channels: a television with the TV
+     * provider, and not a Fire TV, whose launcher reads neither channels nor "Play next".
+     */
+    fun supported(context: Context): Boolean = supportedCache ?: runCatching {
+        val pm = context.packageManager
+        pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK) &&
+            DeviceQuirks.remote(context).watchNextSupported &&
+            pm.resolveContentProvider(TvContract.AUTHORITY, 0) != null
+    }.getOrDefault(false).also { supportedCache = it }
+
+    /** The show a card asks for, or null for any other launch. */
+    fun showFrom(intent: Intent?): TvChannels.Target.Show? {
+        if (intent?.action != ACTION_OPEN_SHOW) return null
+        val chat = intent.getLongExtra(EXTRA_CHAT, 0)
+        val series = intent.getStringExtra(EXTRA_SERIES).orEmpty()
+        if (chat == 0L || series.isEmpty()) return null
+        return TvChannels.Target.Show(chat, series, intent.getStringExtra(EXTRA_TITLE).orEmpty())
+    }
+
+    /**
+     * Makes the channels hold [programs]: missing channels created, cards inserted, rewritten or
+     * removed as [TvChannels.diff] says. [names] gives each channel its title in the UI language.
+     */
+    suspend fun publish(context: Context, programs: List<TvChannels.Program>, names: (Channel) -> String) {
+        if (!supported(context)) return
+        withContext(Dispatchers.IO) {
+            lock.withLock {
+                runCatching { publishLocked(context, programs, names) }.onFailure { Log.w(TAG, "channels not written", it) }
+            }
+        }
+    }
+
+    /** Takes every card out of the channels and leaves the channels: the kids lock went on. */
+    suspend fun clearPrograms(context: Context) {
+        if (!supported(context)) return
+        withContext(Dispatchers.IO) {
+            lock.withLock {
+                runCatching {
+                    ownChannels(context).values.forEach { channel ->
+                        context.contentResolver.delete(TvContract.buildPreviewProgramsUriForChannel(channel.id), null, null)
+                    }
+                    pruneArt(context, emptySet())
+                }.onFailure { Log.w(TAG, "channels not cleared", it) }
+            }
+        }
+    }
+
+    /** Removes the channels themselves, cards and all: a sign out, or the setting turned off. */
+    suspend fun removeAll(context: Context) {
+        if (!supported(context)) return
+        withContext(Dispatchers.IO) {
+            lock.withLock {
+                runCatching {
+                    ownChannels(context).values.forEach { channel ->
+                        context.contentResolver.delete(TvContract.buildChannelUri(channel.id), null, null)
+                    }
+                    pruneArt(context, emptySet())
+                }.onFailure { Log.w(TAG, "channels not removed", it) }
+            }
+        }
+    }
+
+    // ---- channels -------------------------------------------------------------------------------
+
+    private class ChannelRow(val id: Long, val name: String?)
+
+    private fun ownChannels(context: Context): Map<Channel, ChannelRow> = runCatching {
+        val projection = arrayOf(
+            TvContract.Channels._ID,
+            TvContract.Channels.COLUMN_INTERNAL_PROVIDER_ID,
+            TvContract.Channels.COLUMN_DISPLAY_NAME,
+        )
+        context.contentResolver.query(TvContract.Channels.CONTENT_URI, projection, null, null, null)?.use { cursor ->
+            buildMap {
+                while (cursor.moveToNext()) {
+                    val channel = Channel.ofKey(cursor.getString(1)) ?: continue
+                    put(channel, ChannelRow(cursor.getLong(0), cursor.getString(2)))
+                }
+            }
+        }.orEmpty()
+    }.getOrDefault(emptyMap())
+
+    private fun ensureChannel(context: Context, channel: Channel, name: String, existing: ChannelRow?): Long? {
+        if (existing != null) {
+            if (existing.name != name) {
+                runCatching {
+                    context.contentResolver.update(
+                        TvContract.buildChannelUri(existing.id),
+                        ContentValues().apply { put(TvContract.Channels.COLUMN_DISPLAY_NAME, name) },
+                        null,
+                        null,
+                    )
+                }
+            }
+            return existing.id
+        }
+        val values = ContentValues().apply {
+            put(TvContract.Channels.COLUMN_TYPE, TvContract.Channels.TYPE_PREVIEW)
+            put(TvContract.Channels.COLUMN_DISPLAY_NAME, name)
+            put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_ID, channel.key)
+            // The channel's logo opens the app as it is.
+            put(
+                TvContract.Channels.COLUMN_APP_LINK_INTENT_URI,
+                Intent(context, MainActivity::class.java).setAction(Intent.ACTION_MAIN).toUri(Intent.URI_INTENT_SCHEME),
+            )
+        }
+        val uri = context.contentResolver.insert(TvContract.Channels.CONTENT_URI, values) ?: return null
+        val id = ContentUris.parseId(uri)
+        Log.i(TAG, "channel ${channel.key}: $uri")
+        writeLogo(context, id)
+        // The default channel goes on the home screen without asking: Android lets an app's first
+        // channel through. The others wait in the launcher's channel list for the viewer to add.
+        if (channel == Channel.Recent) {
+            runCatching { TvContract.requestChannelBrowsable(context, id) }.onFailure { Log.w(TAG, "channel not made browsable", it) }
+        }
+        return id
+    }
+
+    private fun writeLogo(context: Context, channelId: Long) {
+        runCatching {
+            val icon = ContextCompat.getDrawable(context, R.mipmap.ic_launcher) ?: return
+            val bitmap = Bitmap.createBitmap(LOGO_SIZE, LOGO_SIZE, Bitmap.Config.ARGB_8888)
+            icon.setBounds(0, 0, LOGO_SIZE, LOGO_SIZE)
+            icon.draw(Canvas(bitmap))
+            context.contentResolver.openOutputStream(TvContract.buildChannelLogoUri(channelId))?.use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            }
+            bitmap.recycle()
+        }.onFailure { Log.w(TAG, "channel logo not written", it) }
+    }
+
+    // ---- cards ----------------------------------------------------------------------------------
+
+    private class ProgramRow(val existing: TvChannels.Existing, val art: String?)
+
+    private fun ownPrograms(context: Context, channelId: Long): Map<String, ProgramRow> = runCatching {
+        val projection = arrayOf(
+            TvContract.PreviewPrograms._ID,
+            TvContract.PreviewPrograms.COLUMN_INTERNAL_PROVIDER_ID,
+            TvContract.PreviewPrograms.COLUMN_INTERNAL_PROVIDER_DATA,
+            TvContract.PreviewPrograms.COLUMN_BROWSABLE,
+            TvContract.PreviewPrograms.COLUMN_POSTER_ART_URI,
+        )
+        context.contentResolver.query(TvContract.buildPreviewProgramsUriForChannel(channelId), projection, null, null, null)
+            ?.use { cursor ->
+                buildMap {
+                    while (cursor.moveToNext()) {
+                        val internal = cursor.getString(1) ?: continue
+                        val data = runCatching { cursor.getBlob(2) }.getOrNull()?.let { String(it, Charsets.UTF_8) }
+                        put(
+                            internal,
+                            ProgramRow(TvChannels.Existing(cursor.getLong(0), data, cursor.getInt(3) != 0), cursor.getString(4)),
+                        )
+                    }
+                }
+            }.orEmpty()
+    }.getOrDefault(emptyMap())
+
+    private suspend fun publishLocked(context: Context, programs: List<TvChannels.Program>, names: (Channel) -> String) {
+        val channels = ownChannels(context)
+        val byChannel = programs.groupBy { it.channel }
+        val keptArt = HashSet<String>()
+        for (channel in Channel.entries) {
+            val wanted = byChannel[channel].orEmpty()
+            val row = channels[channel]
+            // An optional channel is only made once it has something in it: an empty one would
+            // sit in the launcher's channel list with nothing to show for it.
+            if (row == null && wanted.isEmpty() && channel != Channel.Recent) continue
+            val channelId = ensureChannel(context, channel, names(channel), row) ?: continue
+            val existing = ownPrograms(context, channelId)
+            val diff = TvChannels.diff(existing.mapValues { it.value.existing }, wanted)
+            diff.delete.forEach { id ->
+                runCatching { context.contentResolver.delete(TvContract.buildPreviewProgramUri(id), null, null) }
+            }
+            val deleted = diff.delete.toHashSet()
+            existing.values.filter { it.existing.rowId !in deleted }.mapNotNullTo(keptArt) { artName(context, it.art) }
+            for (program in diff.insert) {
+                val values = values(context, channelId, program, keptArt)
+                runCatching { context.contentResolver.insert(TvContract.PreviewPrograms.CONTENT_URI, values) }
+                    .onFailure { Log.w(TAG, "card not added", it) }
+            }
+            for ((id, program) in diff.update) {
+                val values = values(context, channelId, program, keptArt)
+                runCatching { context.contentResolver.update(TvContract.buildPreviewProgramUri(id), values, null, null) }
+                    .onFailure { Log.w(TAG, "card not updated", it) }
+            }
+            if (!diff.isEmpty) {
+                Log.i(TAG, "${channel.key}: +${diff.insert.size} ~${diff.update.size} -${diff.delete.size}")
+            }
+        }
+        pruneArt(context, keptArt)
+    }
+
+    private suspend fun values(
+        context: Context,
+        channelId: Long,
+        program: TvChannels.Program,
+        keptArt: MutableSet<String>,
+    ): ContentValues {
+        val art = withTimeoutOrNull(ART_TIMEOUT_MS) { resolveArt(context, program.art) }
+        art?.let { keptArt += it.first }
+        val fingerprint = program.fingerprint + if (art == null) NO_ART else ""
+        return ContentValues().apply {
+            put(TvContract.PreviewPrograms.COLUMN_CHANNEL_ID, channelId)
+            put(TvContract.PreviewPrograms.COLUMN_INTERNAL_PROVIDER_ID, program.internalId)
+            put(TvContract.PreviewPrograms.COLUMN_INTERNAL_PROVIDER_DATA, fingerprint.toByteArray(Charsets.UTF_8))
+            put(
+                TvContract.PreviewPrograms.COLUMN_TYPE,
+                if (program.isShow) TvContract.PreviewPrograms.TYPE_TV_SERIES else TvContract.PreviewPrograms.TYPE_MOVIE,
+            )
+            put(TvContract.PreviewPrograms.COLUMN_TITLE, program.title)
+            put(TvContract.PreviewPrograms.COLUMN_SHORT_DESCRIPTION, program.description)
+            put(TvContract.PreviewPrograms.COLUMN_WEIGHT, program.weight)
+            if (program.durationMs > 0) {
+                put(TvContract.PreviewPrograms.COLUMN_DURATION_MILLIS, program.durationMs.coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
+            }
+            if (program.positionMs > 0) {
+                put(
+                    TvContract.PreviewPrograms.COLUMN_LAST_PLAYBACK_POSITION_MILLIS,
+                    program.positionMs.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
+                )
+            }
+            if (art != null) {
+                put(TvContract.PreviewPrograms.COLUMN_POSTER_ART_URI, TvArtProvider.uriFor(context, art.first).toString())
+                put(TvContract.PreviewPrograms.COLUMN_POSTER_ART_ASPECT_RATIO, art.second)
+            } else {
+                put(TvContract.PreviewPrograms.COLUMN_POSTER_ART_URI, WatchNextPublisher.poster(context).toString())
+                put(TvContract.PreviewPrograms.COLUMN_POSTER_ART_ASPECT_RATIO, TvContract.PreviewPrograms.ASPECT_RATIO_16_9)
+            }
+            put(TvContract.PreviewPrograms.COLUMN_INTENT_URI, intentFor(context, program.target).toUri(Intent.URI_INTENT_SCHEME))
+        }
+    }
+
+    private fun intentFor(context: Context, target: TvChannels.Target): Intent = when (target) {
+        is TvChannels.Target.Play -> WatchNextPublisher.intentFor(context, target.video)
+        is TvChannels.Target.Show -> Intent(context, MainActivity::class.java).apply {
+            action = ACTION_OPEN_SHOW
+            putExtra(EXTRA_CHAT, target.chatId)
+            putExtra(EXTRA_SERIES, target.seriesKey)
+            putExtra(EXTRA_TITLE, target.title)
+        }
+    }
+
+    // ---- pictures -------------------------------------------------------------------------------
+
+    /** The copy's name in [TvArtProvider.dir] and its aspect ratio, or null without a picture. */
+    private suspend fun resolveArt(context: Context, art: TvChannels.Art): Pair<String, Int>? {
+        if (art.posterWanted) {
+            poster(context, art)?.let { return it to TvContract.PreviewPrograms.ASPECT_RATIO_2_3 }
+        }
+        val path = Thumbnails.file(art.thumbnailFileId) ?: return null
+        val name = "t_${Integer.toHexString(art.thumbnailFileId)}.jpg"
+        return copyIn(context, File(path), name)?.let { it to TvContract.PreviewPrograms.ASPECT_RATIO_16_9 }
+    }
+
+    /** The film's or show's poster, when the viewer turned the lookups on and one is known. */
+    private suspend fun poster(context: Context, art: TvChannels.Art): String? {
+        val online = OnlineMetadata.current ?: return null
+        if (!OnlineMetadata.enabled) return null
+        val query = MetaQuery.of(art.name, art.caption.ifBlank { null })?.showOnly() ?: return null
+        val info = (runCatching { online.lookup(query) }.getOrNull() as? MetaResult.Found)?.info ?: return null
+        val url = info.posterUrl ?: return null
+        val file = runCatching { online.image(url) }.getOrNull() ?: return null
+        return copyIn(context, file, "p_${sha1(url)}.jpg")
+    }
+
+    private fun copyIn(context: Context, source: File, name: String): String? = runCatching {
+        if (!TvArtProvider.isValidName(name) || !source.isFile) return null
+        val dir = TvArtProvider.dir(context).apply { mkdirs() }
+        val target = File(dir, name)
+        if (!target.isFile || target.length() != source.length()) {
+            val temp = File(dir, "$name.part")
+            source.copyTo(temp, overwrite = true)
+            if (!temp.renameTo(target)) {
+                temp.delete()
+                return null
+            }
+        }
+        name
+    }.getOrNull()
+
+    /** The copy a card's stored picture URI names, when it is one of this app's. */
+    private fun artName(context: Context, uri: String?): String? {
+        val prefix = "content://${TvArtProvider.authority(context)}/"
+        if (uri == null || !uri.startsWith(prefix)) return null
+        return uri.removePrefix(prefix).takeIf { TvArtProvider.isValidName(it) }
+    }
+
+    /** Deletes the copies no card names any more. */
+    private fun pruneArt(context: Context, kept: Set<String>) {
+        runCatching {
+            TvArtProvider.dir(context).listFiles()?.forEach { file -> if (file.name !in kept) file.delete() }
+        }
+    }
+
+    private fun sha1(text: String): String =
+        MessageDigest.getInstance("SHA-1").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
+}

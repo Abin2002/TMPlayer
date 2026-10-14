@@ -72,7 +72,7 @@ object WatchNextPublisher {
         )
     }
 
-    private fun intentFor(context: Context, video: WatchNext.Video): Intent =
+    internal fun intentFor(context: Context, video: WatchNext.Video): Intent =
         Intent(context, MainActivity::class.java).apply {
             action = ACTION_PLAY
             putExtra(EXTRA_CHAT, video.chatId)
@@ -160,7 +160,7 @@ object WatchNextPublisher {
         put(TvContract.WatchNextPrograms.COLUMN_INTENT_URI, intentFor(context, video).toUri(Intent.URI_INTENT_SCHEME))
     }
 
-    private fun poster(context: Context): Uri = Uri.Builder()
+    internal fun poster(context: Context): Uri = Uri.Builder()
         .scheme(android.content.ContentResolver.SCHEME_ANDROID_RESOURCE)
         .authority(context.packageName)
         .appendPath(context.resources.getResourceTypeName(R.drawable.watch_next_poster))

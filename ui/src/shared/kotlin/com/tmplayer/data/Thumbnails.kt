@@ -76,6 +76,14 @@ object Thumbnails {
         }
     }
 
+    /**
+     * The full thumbnail's file on the disk, fetched first when it is not there yet; null when the
+     * video has none or it could not be fetched. For pictures handed to another app, which needs
+     * the file rather than the decoded bitmap.
+     */
+    suspend fun file(fileId: Int): String? =
+        if (fileId <= 0) null else withContext(Dispatchers.IO) { runCatching { downloadThumbnail(fileId) }.getOrNull() }
+
     /** A thumbnail already decoded, for the first frame, so a tile scrolled back to does not fade in again. */
     fun peekFull(fileId: Int): ImageBitmap? = if (fileId <= 0) null else cache.get("file:$fileId")
 
