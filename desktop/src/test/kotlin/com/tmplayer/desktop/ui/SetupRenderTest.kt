@@ -142,9 +142,13 @@ class SetupRenderTest {
         }
         fun card(title: String) = hasText(title) and hasClickAction()
         fun press(key: Key) = onNode(isFocused()).performKeyInput { pressKey(key) }
+        // The first focus is asked for over a few frames (see SetupScreen), so it is waited for.
+        fun awaitFocus(node: androidx.compose.ui.test.SemanticsMatcher) {
+            waitUntil(timeoutMillis = WRITE_MS) { onAllNodes(node and isFocused()).fetchSemanticsNodes().isNotEmpty() }
+        }
 
         waitForIdle()
-        onNode(card("Show everything")).assertIsFocused()
+        awaitFocus(card("Show everything"))
         // Right to the other answer, Enter picks it: the setting changes and the step moves on.
         press(Key.DirectionRight)
         onNode(card("Only my folders")).assertIsFocused()
@@ -152,13 +156,13 @@ class SetupRenderTest {
         waitForIdle()
         assertEquals(SetupStep.Posters, setup.step)
         waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.hideDefaultGroups.first() } }
-        onNode(card("Posters on")).assertIsFocused()
+        awaitFocus(card("Posters on"))
 
         // Back returns to the library step, on the answer now set.
         back.handleBack()
         waitForIdle()
         assertEquals(SetupStep.Library, setup.step)
-        onNode(card("Only my folders")).assertIsFocused()
+        awaitFocus(card("Only my folders"))
         press(Key.DirectionLeft)
         press(Key.Enter)
         waitForIdle()
@@ -169,7 +173,7 @@ class SetupRenderTest {
         waitForIdle()
         assertEquals(SetupStep.Storage, setup.step)
         assertTrue(online.settings.value.enabled)
-        onNode(card("Keep what plays")).assertIsFocused()
+        awaitFocus(card("Keep what plays"))
         press(Key.DirectionRight)
         press(Key.Enter)
         waitForIdle()
