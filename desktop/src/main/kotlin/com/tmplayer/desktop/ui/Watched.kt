@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -104,7 +103,7 @@ fun WatchedPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
         tabs()
         val list = records
         when {
-            list == null -> Centred { CircularProgressIndicator() }
+            list == null -> VideoGridSkeleton(state.posterWidth, posters = false)
             list.isEmpty() -> Centred {
                 Text(s.watchedEmpty, color = Tone.muted)
             }
@@ -199,7 +198,7 @@ fun WatchLaterPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
         tabs()
         val list = records
         when {
-            list == null -> Centred { CircularProgressIndicator() }
+            list == null -> VideoGridSkeleton(state.posterWidth, posters = false)
             list.isEmpty() -> Centred { Text(s.browseEmptyWatchLater, color = Tone.muted) }
             else -> {
                 val grid = rememberLazyGridState()

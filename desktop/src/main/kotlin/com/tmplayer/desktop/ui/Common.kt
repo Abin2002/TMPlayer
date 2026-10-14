@@ -17,6 +17,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -62,6 +63,9 @@ import com.tmplayer.ui.theme.Tone
  * One screen's worth of [UiState]: a spinner (with a first-time tip, and "Telegram is slow to
  * answer" once the wait runs long), an error with Try again, an empty line with its one action,
  * or content.
+ *
+ * With [skeleton], the wait draws placeholders shaped like the content instead of the spinner, so
+ * nothing moves when it arrives; the tip and the slow line then sit over the foot of them.
  */
 @Composable
 fun <T> StateBox(
@@ -69,12 +73,29 @@ fun <T> StateBox(
     onRetry: (() -> Unit)? = null,
     onAction: ((StateAction) -> Unit)? = null,
     slowAfterMs: Long = SlowAnswer.AFTER_MS,
+    skeleton: (@Composable () -> Unit)? = null,
     content: @Composable (T) -> Unit,
 ) {
     val s = LocalStrings.current
     when (state) {
         is UiState.Content -> content(state.value)
-        is UiState.Loading -> Centred {
+        is UiState.Loading -> if (skeleton != null) {
+            Box(Modifier.fillMaxSize()) {
+                skeleton()
+                Column(
+                    Modifier.align(Alignment.BottomCenter).padding(24.dp).widthIn(max = 480.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    state.tip?.let {
+                        Surface(shape = MaterialTheme.shapes.medium, color = Tone.surfaceHigh, tonalElevation = 2.dp) {
+                            Text(it, color = Tone.muted, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.padding(12.dp))
+                        }
+                    }
+                    if (onRetry != null) SlowAnswerLine(state, onRetry, slowAfterMs)
+                }
+            }
+        } else Centred {
             CircularProgressIndicator()
             Text(state.label, color = Tone.muted)
             state.tip?.let { Text(it, color = Tone.muted, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center) }
@@ -225,6 +246,8 @@ fun PageHeader(
     title: String,
     subtitle: String? = null,
     modifier: Modifier = Modifier,
+    /** The [subtitle] is on its way: a placeholder holds its line, so the page does not jump. */
+    subtitlePending: Boolean = false,
     leading: (@Composable () -> Unit)? = null,
     onArt: Boolean = false,
     actions: @Composable () -> Unit = {},
@@ -259,6 +282,8 @@ fun PageHeader(
                 )
                 if (subtitle != null) {
                     Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = if (onArt) Tone.onArtMuted else Tone.muted)
+                } else if (subtitlePending) {
+                    SubtitleSkeleton()
                 }
             }
             actions()

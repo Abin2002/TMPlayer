@@ -176,7 +176,7 @@ fun ChatsPage(
                 },
             )
         }
-        StateBox(ui, onRetry = { model.load() }) { data ->
+        StateBox(ui, onRetry = { model.load() }, skeleton = { ChatListSkeleton() }) { data ->
             LaunchedEffect(data.chats) { state.noteChatTitles(data.chats) }
             if (allVideos) {
                 AllChatsResults(

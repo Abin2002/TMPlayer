@@ -160,8 +160,12 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
     val min = minSize
     val max = maxSize
     Column(Modifier.fillMaxSize()) {
+        // Whether this chat's grid was last films and shows, so its placeholders take the shape of
+        // the cards about to arrive, poster or wide, when a topic or a refresh loads it again.
+        var postersLast by remember(chat.id) { mutableStateOf(false) }
         if (min == null || max == null) {
-            Centred { CircularProgressIndicator() }
+            PageHeader(title = chat.title, subtitlePending = true)
+            VideoGridSkeleton(state.posterWidth, posters = false)
             return@Column
         }
         val model = rememberViewModel(Triple(chat.id, min, max)) { MediaListViewModel(chat.id, min, max, onSearched = { state.settings.addRecentSearch(it) }, downloadedIds = { DownloadIndex.presentIds(state.settings) }, topicMemory = state.settings.topicMemory()) }
@@ -183,7 +187,15 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
 
         PageHeader(
             title = chat.title,
-            subtitle = (ui as? UiState.Content)?.value?.items?.size?.let { s.browseVideosCount(it) },
+            // The count's line is always there: a placeholder while a topic loads, nothing in it
+            // after an error, so moving between topics never moves the page under the header.
+            subtitle = when (val shown = ui) {
+                is UiState.Content -> s.browseVideosCount(shown.value.items.size)
+                is UiState.Empty -> s.browseVideosCount(0)
+                is UiState.Error -> ""
+                is UiState.Loading -> null
+            },
+            subtitlePending = ui is UiState.Loading,
             leading = {
                 IconButton(onClick = { state.closeChat() }) {
                     Icon(TmIcons.ArrowBack, contentDescription = s.browseBackToChats)
@@ -205,7 +217,10 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         topicBar?.let { bar ->
             com.tmplayer.ui.browse.TopicTabs(bar, model::selectTopic, Modifier.padding(bottom = 12.dp), edge = 24.dp)
         }
-        StateBox(ui, onRetry = { model.load() }, onAction = model::act) { content ->
+        val skeleton: @Composable () -> Unit = {
+            VideoGridSkeleton(if (postersLast) state.posterWidth * POSTER_SHARE else state.posterWidth, posters = postersLast)
+        }
+        StateBox(ui, onRetry = { model.load() }, onAction = model::act, skeleton = skeleton) { content ->
             val grid = rememberLazyGridState()
             LoadMoreNearEnd(grid, enabled = !content.endReached && !content.loadingMore) { model.loadMore() }
             val ad = content.sponsored?.messages?.firstOrNull()
@@ -239,9 +254,17 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             val watch = rememberSeriesWatch(state)
             // Off the main thread, as the shelf is: it reads every name through the lesson parser,
             // and runs again whenever anything is watched.
-            val course by produceState<com.tmplayer.data.CourseProgress?>(null, content.items, watch, grouping) {
-                value = if (grouping) withContext(Dispatchers.Default) { watch.course(content.items) } else null
+            // Until it has answered the placeholders stay up: the course card arriving after the
+            // posters would push them all down a row.
+            val courseRead by produceState<Computed<com.tmplayer.data.CourseProgress?>?>(null, content.items, watch, grouping) {
+                value = Computed(if (grouping) withContext(Dispatchers.Default) { watch.course(content.items) } else null)
             }
+            LaunchedEffect(posterIds) { postersLast = posterIds.isNotEmpty() }
+            val read = courseRead ?: run {
+                skeleton()
+                return@StateBox
+            }
+            val course = read.value
             val shows = remember(arranged) {
                 arranged.filterIsInstance<com.tmplayer.data.ShelfEntry.Show>().associate { it.series.cover.id to it.series }
             }
@@ -410,7 +433,7 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
         tabs()
         val list = records
         when {
-            list == null -> Centred { CircularProgressIndicator() }
+            list == null -> VideoGridSkeleton(state.posterWidth * CONTINUE_WIDTH, posters = false, nameBelow = false)
             list.isEmpty() -> Centred { Text(s.continueEmpty, color = Tone.muted) }
             else -> {
                 val grid = rememberLazyGridState()
@@ -1153,3 +1176,6 @@ private const val CONTINUE_WIDTH = 1.25f
 
 /** A sponsored message's picture: 16:9 like every other, about the height its three lines take. */
 private val SPONSORED_ART = 112.dp
+
+/** A value worked out off the main thread, so "not answered yet" and "answered null" differ. */
+private class Computed<T>(val value: T)
