@@ -1407,13 +1407,6 @@
     "watch_again": "Ver de nuevo",
     "wifi_only": "Este video aún no está descargado y TMPlayer está configurado para usar solo Wi-Fi. Conéctate a Wi-Fi o desactiva esa opción en Configuración."
   },
-  "screensaver": {
-    "detail": "Tras {minutes, plural, one {# minuto} many {# minutos} other {# minutos}} sin actividad en las pantallas de exploración, la TV se atenúa y muestra un reloj. Cualquier tecla la reactiva",
-    "off_detail": "La pantalla nunca se atenúa por sí sola",
-    "title": "Protector de pantalla",
-    "value": "{minutes, plural, one {# min} many {# min} other {# min}}",
-    "wake": "Presiona cualquier tecla"
-  },
   "series": {
     "all_watched": "Todo visto",
     "back": "Volver al chat",

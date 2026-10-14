@@ -1407,13 +1407,6 @@
     "watch_again": "Erneut ansehen",
     "wifi_only": "Dieses Video ist noch nicht heruntergeladen, und TMPlayer ist auf nur WLAN eingestellt. Verbinde dich mit WLAN oder schalte das in den Einstellungen aus."
   },
-  "screensaver": {
-    "detail": "Nach {minutes, plural, one {# Minute} other {# Minuten}} ohne Eingabe in den Übersichten dimmt der Fernseher auf eine Uhr ab. Jede Taste weckt ihn",
-    "off_detail": "Der Bildschirm dimmt nie von selbst ab",
-    "title": "Bildschirmschoner",
-    "value": "{minutes, plural, one {# Min.} other {# Min.}}",
-    "wake": "Beliebige Taste drücken"
-  },
   "series": {
     "all_watched": "Alle gesehen",
     "back": "Zurück zum Chat",

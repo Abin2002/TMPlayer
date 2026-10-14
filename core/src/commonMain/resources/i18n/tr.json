@@ -1407,13 +1407,6 @@
     "watch_again": "Tekrar izle",
     "wifi_only": "Bu video henüz indirilmedi ve TMPlayer yalnızca Wi-Fi kullanacak şekilde ayarlı. Wi-Fi'a bağlan ya da Ayarlar'dan bunu kapat."
   },
-  "screensaver": {
-    "detail": "Göz atma ekranlarında {minutes, plural, one {# dakika} other {# dakika}} işlem yapılmazsa TV bir saate kararır. Herhangi bir tuş uyandırır",
-    "off_detail": "Ekran kendiliğinden hiç kararmaz",
-    "title": "Ekran koruyucu",
-    "value": "{minutes, plural, one {# dk} other {# dk}}",
-    "wake": "Herhangi bir tuşa bas"
-  },
   "series": {
     "all_watched": "Hepsi izlendi",
     "back": "Sohbete dön",

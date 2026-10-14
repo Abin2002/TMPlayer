@@ -1407,13 +1407,6 @@
     "watch_again": "Watch again",
     "wifi_only": "This video isn't downloaded yet, and TMPlayer is set to use Wi-Fi only. Connect to Wi-Fi, or turn that off in Settings."
   },
-  "screensaver": {
-    "detail": "After {minutes, plural, one {# minute} other {# minutes}} idle on the browse screens, the TV dims to a clock. Any key wakes it",
-    "off_detail": "The screen never dims on its own",
-    "title": "Screensaver",
-    "value": "{minutes, plural, one {# min} other {# min}}",
-    "wake": "Press any key"
-  },
   "series": {
     "all_watched": "All watched",
     "back": "Back to the chat",

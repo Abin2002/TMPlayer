@@ -21,12 +21,4 @@ object AppLockWords {
         lock.kids -> L.lockKidsOn
         else -> L.lockKidsOff
     }
-
-    /** The line under the screensaver's row, for [minutes] (0 is off). */
-    fun screensaverDetail(minutes: Int): String =
-        if (minutes <= 0) L.screensaverOffDetail else L.screensaverDetail(minutes = minutes)
-
-    /** The screensaver's value beside its row: "Off" or "5 min". */
-    fun screensaverValue(minutes: Int): String =
-        if (minutes <= 0) L.commonOff else L.screensaverValue(minutes = minutes)
 }

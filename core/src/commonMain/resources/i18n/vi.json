@@ -1407,13 +1407,6 @@
     "watch_again": "Xem lại",
     "wifi_only": "Video này chưa được tải, và TMPlayer đang đặt chỉ dùng Wi-Fi. Hãy kết nối Wi-Fi, hoặc tắt tùy chọn đó trong Cài đặt."
   },
-  "screensaver": {
-    "detail": "Sau {minutes, plural, other {# phút}} không thao tác ở các màn hình duyệt, TV sẽ tối lại thành đồng hồ. Nhấn phím bất kỳ để đánh thức",
-    "off_detail": "Màn hình không bao giờ tự tối",
-    "title": "Trình bảo vệ màn hình",
-    "value": "{minutes, plural, other {# phút}}",
-    "wake": "Nhấn phím bất kỳ"
-  },
   "series": {
     "all_watched": "Đã xem hết",
     "back": "Quay lại cuộc trò chuyện",

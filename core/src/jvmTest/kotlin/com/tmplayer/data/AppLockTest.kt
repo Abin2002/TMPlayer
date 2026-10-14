@@ -139,11 +139,8 @@ class AppLockTest {
     fun `signing out, here or from another device, clears the lock`() = runBlocking {
         settings.setPin("1234")
         settings.setKidsLock(true)
-        settings.setScreensaverMinutes(10)
         settings.clearEverything()
         assertFalse(settings.pinSetNow())
-        // The screensaver is the television's setting, not the account's.
-        assertEquals(10, settings.screensaverMinutes.first())
 
         settings.setPin("1234")
         settings.setKidsChats(setOf(1L))
@@ -233,27 +230,5 @@ class AppLockTest {
         assertEquals(setOf(4L), ChatGate.awaitReady())
         ChatGate.set(null)
         assertNull(ChatGate.awaitReady())
-    }
-
-    // ---- the screensaver -------------------------------------------------------------------
-
-    @Test
-    fun `the screensaver steps through its choices and holds at the ends`() {
-        assertEquals(10, Screensaver.step(5, 1))
-        assertEquals(10, Screensaver.step(10, 1))
-        assertEquals(0, Screensaver.step(2, -1))
-        assertEquals(0, Screensaver.step(0, -1))
-        assertEquals(Screensaver.step(5, 1), Screensaver.step(7, 1))
-        assertNull(Screensaver.idleMs(0))
-        assertEquals(300_000L, Screensaver.idleMs(5))
-    }
-
-    @Test
-    fun `the clock never stays put from one move to the next`() {
-        for (slot in 0L until 30L) {
-            assertNotEquals(Screensaver.spot(slot), Screensaver.spot(slot + 1))
-            val (x, y) = Screensaver.spot(slot)
-            assertTrue(x in 0f..1f && y in 0f..1f)
-        }
     }
 }

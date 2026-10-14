@@ -1407,13 +1407,6 @@
     "watch_again": "Revoir",
     "wifi_only": "Cette vidéo n'est pas encore téléchargée, et TMPlayer est réglé pour n'utiliser que le Wi-Fi. Connectez-vous au Wi-Fi, ou désactivez cette option dans les Réglages."
   },
-  "screensaver": {
-    "detail": "Après {minutes, plural, one {# minute} many {# de minutes} other {# minutes}} d'inactivité sur les écrans de navigation, le téléviseur s'assombrit et affiche une horloge. N'importe quelle touche le réveille",
-    "off_detail": "L'écran ne s'assombrit jamais de lui-même",
-    "title": "Économiseur d'écran",
-    "value": "{minutes, plural, one {# min} many {# min} other {# min}}",
-    "wake": "Appuyez sur une touche"
-  },
   "series": {
     "all_watched": "Tout vu",
     "back": "Retour à la discussion",

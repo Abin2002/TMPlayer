@@ -1407,13 +1407,6 @@
     "watch_again": "再看一遍",
     "wifi_only": "此视频尚未下载，而 TMPlayer 设为仅使用 Wi-Fi。请连接 Wi-Fi，或在设置中关闭此选项。"
   },
-  "screensaver": {
-    "detail": "在浏览界面闲置 {minutes, plural, other {# 分钟}}后，电视会变暗并显示时钟。按任意键唤醒",
-    "off_detail": "屏幕不会自动变暗",
-    "title": "屏幕保护",
-    "value": "{minutes, plural, other {# 分钟}}",
-    "wake": "按任意键"
-  },
   "series": {
     "all_watched": "全部已观看",
     "back": "返回聊天",

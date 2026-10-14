@@ -1407,13 +1407,6 @@
     "watch_again": "Tonton lagi",
     "wifi_only": "Video ini belum diunduh, dan TMPlayer diatur hanya memakai Wi-Fi. Sambungkan ke Wi-Fi, atau matikan itu di Pengaturan."
   },
-  "screensaver": {
-    "detail": "Setelah {minutes, plural, other {# menit}} tidak aktif di layar jelajah, TV meredup menjadi jam. Tombol apa pun membangunkannya",
-    "off_detail": "Layar tidak pernah meredup sendiri",
-    "title": "Screensaver",
-    "value": "{minutes, plural, other {# mnt}}",
-    "wake": "Tekan tombol apa saja"
-  },
   "series": {
     "all_watched": "Semua sudah ditonton",
     "back": "Kembali ke chat",

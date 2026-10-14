@@ -1407,13 +1407,6 @@
     "watch_again": "Guarda di nuovo",
     "wifi_only": "Questo video non è ancora scaricato e TMPlayer è impostato per usare solo il Wi-Fi. Connettiti al Wi-Fi, o disattiva l'opzione in Impostazioni."
   },
-  "screensaver": {
-    "detail": "Dopo {minutes, plural, one {# minuto} many {# di minuti} other {# minuti}} di inattività nelle schermate di navigazione, la TV si oscura e mostra un orologio. Qualsiasi tasto la riattiva",
-    "off_detail": "Lo schermo non si oscura mai da solo",
-    "title": "Salvaschermo",
-    "value": "{minutes, plural, one {# min} many {# min} other {# min}}",
-    "wake": "Premi un tasto qualsiasi"
-  },
   "series": {
     "all_watched": "Tutti visti",
     "back": "Torna alla chat",

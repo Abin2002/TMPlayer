@@ -1407,13 +1407,6 @@
     "watch_again": "重新觀看",
     "wifi_only": "這部影片尚未下載，而 TMPlayer 設為只使用 Wi-Fi。請連上 Wi-Fi，或到「設定」中關閉此選項。"
   },
-  "screensaver": {
-    "detail": "在瀏覽畫面閒置 {minutes, plural, other {# 分鐘}}後，電視會變暗並顯示時鐘。按任意鍵喚醒",
-    "off_detail": "螢幕不會自動變暗",
-    "title": "螢幕保護程式",
-    "value": "{minutes, plural, other {# 分鐘}}",
-    "wake": "按任意鍵"
-  },
   "series": {
     "all_watched": "全部已觀看",
     "back": "返回聊天",

@@ -1407,13 +1407,6 @@
     "watch_again": "Assistir de novo",
     "wifi_only": "Este vídeo ainda não foi baixado e o TMPlayer está configurado para usar só Wi-Fi. Conecte-se ao Wi-Fi ou desative isso em Configurações."
   },
-  "screensaver": {
-    "detail": "Após {minutes, plural, one {# minuto} many {# de minutos} other {# minutos}} sem uso nas telas de navegação, a TV escurece e mostra um relógio. Qualquer tecla a desperta",
-    "off_detail": "A tela nunca escurece sozinha",
-    "title": "Protetor de tela",
-    "value": "{minutes, plural, one {# min} many {# min} other {# min}}",
-    "wake": "Pressione qualquer tecla"
-  },
   "series": {
     "all_watched": "Tudo assistido",
     "back": "Voltar ao chat",

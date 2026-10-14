@@ -1407,13 +1407,6 @@
     "watch_again": "다시 보기",
     "wifi_only": "이 영상은 아직 다운로드되지 않았고 TMPlayer가 Wi-Fi에서만 받도록 설정돼 있어요. Wi-Fi에 연결하거나 설정에서 해제하세요."
   },
-  "screensaver": {
-    "detail": "탐색 화면에서 {minutes, plural, other {#분}} 동안 조작이 없으면 TV가 어두워지고 시계가 표시돼요. 아무 키나 누르면 다시 켜져요",
-    "off_detail": "화면이 자동으로 어두워지지 않아요",
-    "title": "화면 보호기",
-    "value": "{minutes, plural, other {#분}}",
-    "wake": "아무 키나 누르세요"
-  },
   "series": {
     "all_watched": "모두 시청함",
     "back": "채팅으로 돌아가기",

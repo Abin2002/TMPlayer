@@ -1407,13 +1407,6 @@
     "watch_again": "Obejrzyj ponownie",
     "wifi_only": "Ten film nie jest jeszcze pobrany, a TMPlayer jest ustawiony na korzystanie tylko z Wi-Fi. Połącz się z Wi-Fi lub wyłącz to w Ustawieniach."
   },
-  "screensaver": {
-    "detail": "Po {minutes, plural, one {# minucie} few {# minutach} many {# minutach} other {# minuty}} bezczynności na ekranach przeglądania telewizor przyciemnia się i pokazuje zegar. Dowolny przycisk go wybudza",
-    "off_detail": "Ekran nigdy nie przyciemnia się sam",
-    "title": "Wygaszacz ekranu",
-    "value": "{minutes, plural, one {# min} few {# min} many {# min} other {# min}}",
-    "wake": "Naciśnij dowolny przycisk"
-  },
   "series": {
     "all_watched": "Wszystko obejrzane",
     "back": "Wróć do czatu",

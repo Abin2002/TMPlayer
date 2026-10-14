@@ -1407,13 +1407,6 @@
     "watch_again": "もう一度見る",
     "wifi_only": "この動画はまだダウンロードされておらず、TMPlayerはWi-Fiのみに設定されています。Wi-Fiに接続するか、設定でその設定をオフにしてください。"
   },
-  "screensaver": {
-    "detail": "閲覧画面で{minutes, plural, other {#分}}操作がないと、テレビが暗くなり時計を表示します。いずれかのキーで復帰します",
-    "off_detail": "画面が自動で暗くなることはありません",
-    "title": "スクリーンセーバー",
-    "value": "{minutes, plural, other {#分}}",
-    "wake": "いずれかのキーを押してください"
-  },
   "series": {
     "all_watched": "すべて視聴済み",
     "back": "チャットに戻る",

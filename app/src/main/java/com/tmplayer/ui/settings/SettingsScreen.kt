@@ -110,7 +110,6 @@ import com.tmplayer.data.BackupWords
 import com.tmplayer.data.AppLockSession
 import com.tmplayer.data.AppLockSettings
 import com.tmplayer.data.CacheShelf
-import com.tmplayer.data.Screensaver
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.lock.AppLockWords
 import com.tmplayer.ui.lock.PinPad
@@ -313,11 +312,8 @@ fun SettingsScreen(
     val dynamicColour by settings.dynamicColour.collectAsStateWithLifecycle(initialValue = false)
     val uiScale by rememberUiScale(settings)
     val crashReports by settings.crashReports.collectAsStateWithLifecycle(initialValue = false)
-    // The app lock and the kids lock (CP57), and the television's screensaver.
+    // The app lock and the kids lock (CP57).
     val appLock by settings.appLock.collectAsStateWithLifecycle(initialValue = AppLockSettings())
-    val screensaverMinutes by settings.screensaverMinutes.collectAsStateWithLifecycle(
-        initialValue = Screensaver.DEFAULT_MINUTES,
-    )
     var pinFlow by remember { mutableStateOf<PinFlow?>(null) }
     var pickingKidsChats by remember { mutableStateOf(false) }
 
@@ -578,26 +574,6 @@ fun SettingsScreen(
                         canIncrease = uiScale.ordinal < UiScale.entries.lastIndex,
                         onStep = { direction -> scope.launch { settings.setUiScale(uiScale.step(direction)) } },
                     )
-                }
-
-                // A television's alone: a phone has its own screen timeout, and the player is
-                // never covered (CP57).
-                if (!touch) {
-                    item {
-                        StepperRow(
-                            title = s.screensaverTitle,
-                            subtitle = AppLockWords.screensaverDetail(screensaverMinutes),
-                            value = AppLockWords.screensaverValue(screensaverMinutes),
-                            icon = TmIcons.Clock,
-                            canDecrease = screensaverMinutes > Screensaver.CHOICES.first(),
-                            canIncrease = screensaverMinutes < Screensaver.CHOICES.last(),
-                            onStep = { direction ->
-                                scope.launch {
-                                    settings.setScreensaverMinutes(Screensaver.step(screensaverMinutes, direction))
-                                }
-                            },
-                        )
-                    }
                 }
 
                 if (touch) {

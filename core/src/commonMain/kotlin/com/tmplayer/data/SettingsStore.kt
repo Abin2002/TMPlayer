@@ -66,8 +66,6 @@ private val LOCK_ON_OPEN = booleanPreferencesKey("app_lock_on_open")
 private val KIDS_LOCK = booleanPreferencesKey("kids_lock")
 private val KIDS_CHATS = stringSetPreferencesKey("kids_chats")
 
-/** The TV screensaver's idle time in minutes, 0 for off. About the device, so it outlives a sign out. */
-private val SCREENSAVER_MINUTES = longPreferencesKey("screensaver_minutes")
 private val FIRST_SIGN_IN_CARD = stringPreferencesKey("first_sign_in_card")
 private val HISTORY_TAB = stringPreferencesKey("history_tab")
 private val MEDIA_LAYOUT = stringPreferencesKey("media_layout")
@@ -292,7 +290,6 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             val supportNever = prefs[SUPPORT_NEVER]
             val supporter = prefs[SUPPORT_SUPPORTER]
             val recent = prefs[SUPPORT_RECENT]
-            val screensaver = prefs[SCREENSAVER_MINUTES]
             // The first sign in card is asked once per install, not once per account.
             val card = prefs[FIRST_SIGN_IN_CARD]?.takeIf { it == CARD_DONE }
             val kept = if (keepDownloads) {
@@ -313,7 +310,6 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             supporter?.let { prefs[SUPPORT_SUPPORTER] = it }
             recent?.let { prefs[SUPPORT_RECENT] = it }
             card?.let { prefs[FIRST_SIGN_IN_CARD] = it }
-            screensaver?.let { prefs[SCREENSAVER_MINUTES] = it }
             if (keepDownloads) {
                 for ((key, value) in kept) prefs[key] = value
                 migrated?.let { prefs[DOWNLOADS_MIGRATED] = it }
@@ -1241,17 +1237,6 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             it.remove(KIDS_LOCK)
             it.remove(KIDS_CHATS)
         }
-    }
-
-    // ---- the TV screensaver ------------------------------------------------------------------
-
-    /** Minutes idle on a browse screen before the TV dims to its screensaver; 0 is off. */
-    val screensaverMinutes: Flow<Int> = read {
-        (it[SCREENSAVER_MINUTES] ?: Screensaver.DEFAULT_MINUTES.toLong()).toInt()
-    }
-
-    suspend fun setScreensaverMinutes(minutes: Int) {
-        prefs.edit { it[SCREENSAVER_MINUTES] = minutes.toLong() }
     }
 
     /**

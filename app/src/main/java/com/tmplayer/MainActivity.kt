@@ -3,7 +3,6 @@ package com.tmplayer
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.BackHandler
@@ -89,9 +88,6 @@ import com.tmplayer.ui.browse.KeyPresses
 import com.tmplayer.ui.browse.TvBrowseHint
 import com.tmplayer.ui.browse.BrowseSection
 import com.tmplayer.ui.browse.HomeViewModel
-import com.tmplayer.ui.components.ScreensaverTimer
-import com.tmplayer.ui.components.TvIdle
-import com.tmplayer.ui.components.TvScreensaver
 import com.tmplayer.ui.lock.PinPad
 import com.tmplayer.ui.lock.PinPurpose
 import com.tmplayer.ui.browse.SeriesWatch
@@ -264,15 +260,6 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * Every key passes the screensaver first (CP57): it notes the remote is in use, and a key that
-     * only wakes the screensaver goes no further, so it neither moves focus nor presses anything.
-     */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (TvIdle.onKey(event)) return true
-        return super.dispatchKeyEvent(event)
-    }
-
-    /**
      * A language picked on Android's own page for this app (Android 13 and later) while it was in
      * the background becomes the in-app choice. See [AppLocales].
      */
@@ -396,8 +383,6 @@ private fun Root() {
     LaunchedEffect(appUnlocked) {
         if (!appUnlocked) settingsUnlocked = false
     }
-    val screensaverMinutes by settings.screensaverMinutes.collectAsStateWithLifecycle(initialValue = 0)
-    val screensaverUp by TvIdle.showing.collectAsStateWithLifecycle()
 
     val toast = rememberToast()
 
@@ -961,12 +946,6 @@ private fun Root() {
             return@Box
         }
 
-        // The TV screensaver (CP57), on the browse screens only: the player is another activity,
-        // and this one is not resumed while it plays.
-        if (FormFactor.isTv(context)) {
-            val browsing = inShell && (screen is Screen.Chats || screen is Screen.Media || screen is Screen.Downloads)
-            ScreensaverTimer(minutes = screensaverMinutes, browsing = browsing)
-        }
         // Back to browsing locks Settings again.
         LaunchedEffect(screen) {
             if (screen is Screen.Chats || screen is Screen.Media) settingsUnlocked = false
@@ -1465,10 +1444,6 @@ private fun Root() {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp),
         )
-
-        // Over everything this window draws. The key that ends it never reaches the screen
-        // under it (TvIdle.onKey).
-        if (screensaverUp) TvScreensaver(continueWatching)
     }
 }
 
