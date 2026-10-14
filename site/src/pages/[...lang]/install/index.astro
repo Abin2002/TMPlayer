@@ -14,7 +14,7 @@ import StarCard from '../../../components/StarCard.astro';
 import Step from '../../../components/install/Step.astro';
 import SignIn from '../../../components/install/SignIn.astro';
 import Way from '../../../components/install/Way.astro';
-import ProsePanel from '../../../components/install/ProsePanel.astro';
+import Panel from '../../../components/Panel.astro';
 import FaqItem from '../../../components/install/FaqItem.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
@@ -192,9 +192,9 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
           </Step>
         </ol>
 
-        <ProsePanel id="windows-installer" title={t('install.win_msi_h')} wide>
+        <Panel id="windows-installer" title={t('install.win_msi_h')} wide>
           <p><T k="install.win_msi"><code data-name="windows-x64-msi" slot="code1">TMPlayer-&lt;version&gt;-windows-x64.msi</code><a href={l('/download/#windows')} slot="a1">{t('install.win_msi__a1')}</a><em slot="em1">{t('install.win_msi__em1')}</em><em slot="em2">{t('install.win_msi__em2')}</em><em slot="em3">{t('install.win_msi__em3')}</em></T></p>
-        </ProsePanel>
+        </Panel>
         <p class="muted small section-note">{t('install.win_zip_note')}</p>
   </Band>
 
@@ -214,9 +214,9 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
           <SignIn id="mac-3" />
         </ol>
 
-        <ProsePanel id="macos-updates" title={t('install.mac_update_h')} wide>
+        <Panel id="macos-updates" title={t('install.mac_update_h')} wide>
           <p>{t('install.mac_update')}</p>
-        </ProsePanel>
+        </Panel>
         <p class="muted small section-note"><T k="install.mac_preview_note"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('install.mac_preview_note__a1')}</a></T></p>
   </Band>
 
@@ -256,16 +256,16 @@ chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.Ap
 
   <Band id="shortcuts" labelledby="shortcuts-h" title={t('install.on_the_desktop_in_the')} sub={t('install.how_to_keep_it_one')} body>
         <div class="two-col">
-          <ProsePanel title="Windows">
+          <Panel title="Windows">
             <p><T k="install.win_pin"><em slot="em1">{t('install.win_pin__em1')}</em></T></p>
-          </ProsePanel>
-          <ProsePanel title={t('install.linux_the_arch_package')}>
+          </Panel>
+          <Panel title={t('install.linux_the_arch_package')}>
             <p>{t('install.it_is_in_the_app')}</p>
             <p><strong>GNOME:</strong> <T k="install.right_click_it_in_activities"><em slot="em1">{t('install.right_click_it_in_activities__em1')}</em><strong slot="strong2">{t('install.right_click_it_in_activities__strong2')}</strong><em slot="em2">{t('install.right_click_it_in_activities__em2')}</em></T></p>
-          </ProsePanel>
+          </Panel>
         </div>
 
-        <ProsePanel title={t('install.linux_appimage_in_the_app')} wide>
+        <Panel title={t('install.linux_appimage_in_the_app')} wide>
           <p>{t('install.a_single_file_has_no')}</p>
           <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
 mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
@@ -288,16 +288,16 @@ chmod +x ~/.local/share/applications/tmplayer.desktop
 update-desktop-database ~/.local/share/applications</code></pre>
           <p>{t('install.then_pin_it_as_above')}</p>
           <p><T k="install.prefer_clicking_and_do_all"><a href="https://flathub.org/apps/it.mijorus.gearlever" rel="noopener" slot="a1">{t('install.prefer_clicking_and_do_all__a1')}</a><a href="https://github.com/TheAssassin/AppImageLauncher" rel="noopener" slot="a2">{t('install.prefer_clicking_and_do_all__a2')}</a></T></p>
-        </ProsePanel>
+        </Panel>
 
-        <ProsePanel title={t('install.linux_an_icon_on_the')} wide>
+        <Panel title={t('install.linux_an_icon_on_the')} wide>
           <p>{t('install.copy_the_launcher_made_above')}</p>
           <pre class="code"><code>cp ~/.local/share/applications/tmplayer.desktop ~/Desktop/
 chmod +x ~/Desktop/tmplayer.desktop
 gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
           <p><T k="install.for_the_arch_package_copy"><code slot="code1">/usr/share/applications/io.github.dracu_lah.TMPlayer.desktop</code></T></p>
           <p><T k="install.gnome_needs_the_desktop_icons"><em slot="em1">{t('install.gnome_needs_the_desktop_icons__em1')}</em></T></p>
-        </ProsePanel>
+        </Panel>
   </Band>
 
 <Icon name="wave" />

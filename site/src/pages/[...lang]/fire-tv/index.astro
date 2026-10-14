@@ -10,7 +10,7 @@ import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
-import FitPanel from '../../../components/fire-tv/FitPanel.astro';
+import Panel from '../../../components/Panel.astro';
 import Step from '../../../components/fire-tv/Step.astro';
 import Format from '../../../components/fire-tv/Format.astro';
 import Card from '../../../components/fire-tv/Card.astro';
@@ -118,15 +118,15 @@ const howTo = {
 
   <Band tonal id="fit" labelledby="fit-h" title={t('android_tv.will_it_run_on_yours')} sub={t('fire_tv.tmplayer_needs_android_8_0')}>
     <div class="two-col" data-reveal>
-      <FitPanel kind="yes" title={t('android_tv.yes')}>
+      <Panel kind="yes" title={t('android_tv.yes')}>
         <li>{t('fire_tv.fire_tv_stick_stick_4k')}</li>
         <li>{t('fire_tv.the_one_universal_apk_the')}</li>
         <li>{t('fire_tv.the_tv_layout_the_remote')}</li>
-      </FitPanel>
-      <FitPanel kind="no" title={t('android_tv.no')}>
+      </Panel>
+      <Panel kind="no" title={t('android_tv.no')}>
         <li>{t('fire_tv.fire_os_6_and_older')}</li>
         <li>{t('fire_tv.fire_tv_models_that_run')}</li>
-      </FitPanel>
+      </Panel>
     </div>
   </Band>
 

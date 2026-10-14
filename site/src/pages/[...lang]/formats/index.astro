@@ -8,6 +8,7 @@ import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
+import Panel from '../../../components/Panel.astro';
 import KeysTable from '../../../components/formats/KeysTable.astro';
 import KeysRow from '../../../components/formats/KeysRow.astro';
 import SponsorOffer from '../../../components/SponsorOffer.astro';
@@ -121,14 +122,12 @@ const listed = [
 
   <Band id="subtitles" labelledby="subtitles-h" title={t('formats.subtitle_files_of_your_own')} sub={t('formats.for_a_video_whose_subtitles')}>
     <div class="two-col" data-reveal>
-      <div class="panel panel-prose">
-        <h3>{t('formats.on_a_phone')}</h3>
+      <Panel title={t('formats.on_a_phone')}>
         <p><T k="formats.in_the_player_s_menu"><em slot="em1">{t('formats.in_the_player_s_menu__em1')}</em><code slot="code1">.srt</code><code slot="code2">.ass</code><code slot="code3">.ssa</code><code slot="code4">.vtt</code><code slot="code5">.sub</code></T></p>
-      </div>
-      <div class="panel panel-prose">
-        <h3>{t('features.on_windows_and_linux')}</h3>
+      </Panel>
+      <Panel title={t('features.on_windows_and_linux')}>
         <p><T k="formats.drop_the_file_on_the"><code slot="code1">.srt</code><code slot="code2">.ass</code><code slot="code3">.ssa</code><code slot="code4">.vtt</code><code slot="code5">.sub</code></T></p>
-      </div>
+      </Panel>
     </div>
     <p class="muted small section-note" data-reveal><T k="formats.picture_based_vobsub_files_cannot"><code slot="code1">.sub</code></T></p>
 

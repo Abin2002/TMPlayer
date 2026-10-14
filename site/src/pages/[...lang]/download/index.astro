@@ -12,7 +12,7 @@ import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
 import Platform from '../../../components/download/Platform.astro';
 import AbiRow from '../../../components/download/AbiRow.astro';
-import Panel from '../../../components/download/Panel.astro';
+import Panel from '../../../components/Panel.astro';
 import StarCard from '../../../components/StarCard.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
@@ -205,12 +205,12 @@ const ld0 = {
 
   <Band labelledby="before-h" title={t('download.before_you_open_the_file')} sub={t('download.worth_knowing_about_any_app')}>
       <div class="two-col" data-reveal>
-        <Panel tone="yes" icon="tick-panel" title={t('download.what_you_are_getting')} list="ticks">
+        <Panel kind="yes" title={t('download.what_you_are_getting')}>
             <li><T k="download.on_a_tv_stick_box"><strong slot="strong1">{t('download.on_a_tv_stick_box__strong1')}</strong></T></li>
             <li><T k="download.with_the_same_library_and"><strong slot="strong1">{t('download.with_the_same_library_and__strong1')}</strong></T></li>
             <li><T k="download.every_release_links_the_source"><strong slot="strong1">{t('download.every_release_links_the_source__strong1')}</strong></T></li>
         </Panel>
-        <Panel tone="no" icon="cross-panel" title={t('download.what_it_will_not_do')} list="crosses">
+        <Panel kind="no" title={t('download.what_it_will_not_do')}>
             {['download.it_is_not_in_a', 'download.it_comes_with_no_media', 'download.no_store_updates_tmplayer_looks'].map((k) => <li>{t(k)}</li>)}
         </Panel>
       </div>

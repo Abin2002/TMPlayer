@@ -9,7 +9,7 @@ import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import Band from '../../../components/Band.astro';
 import FaqItem from '../../../components/faq/FaqItem.astro';
-import ListPanel from '../../../components/faq/ListPanel.astro';
+import Panel from '../../../components/Panel.astro';
 import StarCard from '../../../components/StarCard.astro';
 import { faqLd } from '../../../components/faq/ld';
 import { langPaths } from '../../../i18n/paths';
@@ -95,16 +95,16 @@ const questions = [
 
   <Band id="about" labelledby="about-h" title={t('faq.what_it_is_and_what')} sub={t('faq.a_player_pointed_at_an')}>
     <div class="two-col" data-reveal>
-      <ListPanel kind="yes" title={t('faq.what_it_is')}>
+      <Panel kind="yes" title={t('faq.what_it_is')}>
         <li><T k="faq.a_player_for_telegram_account"><strong slot="strong1">{t('faq.a_player_for_telegram_account__strong1')}</strong></T></li>
         <li><T k="faq.a_way_to_watch_videos"><strong slot="strong1">{t('faq.a_way_to_watch_videos__strong1')}</strong></T></li>
         <li>{t('faq.free_and_open_source_you')}</li>
-      </ListPanel>
-      <ListPanel kind="no" title={t('home.what_it_is_not')}>
+      </Panel>
+      <Panel kind="no" title={t('home.what_it_is_not')}>
         <li>{t('faq.not_a_media_service_or')}</li>
         <li>{t('faq.not_a_telegram_app_you')}</li>
         <li>{t('faq.not_affiliated_with_telegram_fz')}</li>
-      </ListPanel>
+      </Panel>
     </div>
 
     <p class="muted small section-note" data-reveal><T k="faq.the_lists_what_stays_on"><a href="/privacy/" slot="a1">{t('faq.the_lists_what_stays_on__a1')}</a><a href="/legal/" slot="a2">{t('faq.the_lists_what_stays_on__a2')}</a></T></p>
