@@ -118,7 +118,9 @@ private fun SeriesPage(
             SeriesPanel(
                 series = series,
                 watch = watch,
-                onPlay = { onDismiss(); onPlay(it) },
+                // The page stays open under the player, so Back from an episode lands on the
+                // show again, with its progress and Continue line brought up to date.
+                onPlay = onPlay,
                 onLongClick = onLongClick,
                 onDownload = onDownload,
                 chatTitle = chatTitle,
