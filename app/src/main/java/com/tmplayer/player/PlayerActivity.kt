@@ -1665,13 +1665,47 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private fun attachMediaSession(exo: ExoPlayer) {
         mediaSession?.release()
         mediaSession = runCatching {
-            MediaSession.Builder(this, exo)
+            MediaSession.Builder(this, EpisodeStepping(exo))
                 // Distinct per activity instance: stepping to the next episode builds a second
                 // activity before the first has been destroyed, and two sessions sharing an id
                 // is the one thing the builder refuses outright.
                 .setId("tmplayer-$chatId-$messageId-${SystemClock.elapsedRealtime()}")
                 .build()
         }.getOrNull()
+    }
+
+    /**
+     * The player as the media session sees it: one video, plus the chat's next and previous
+     * episodes. Picture in picture, the notification and a headset's buttons draw next as
+     * disabled for a lone item, though the episode list has one; here next steps to it, and
+     * previous does when the playhead is near the start, as it would in a playlist.
+     */
+    private inner class EpisodeStepping(exo: ExoPlayer) : androidx.media3.common.ForwardingPlayer(exo) {
+        override fun getAvailableCommands(): Player.Commands {
+            val found = _episodes.value
+            val more = Player.Commands.Builder().addAll(super.getAvailableCommands())
+            if (found.next != null) more.addAll(Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+            if (found.previous != null) more.addAll(Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+            return more.build()
+        }
+
+        override fun isCommandAvailable(command: Int): Boolean = availableCommands.contains(command)
+
+        override fun seekToNext() {
+            if (!stepEpisode(forward = true)) super.seekToNext()
+        }
+
+        override fun seekToNextMediaItem() {
+            if (!stepEpisode(forward = true)) super.seekToNextMediaItem()
+        }
+
+        override fun seekToPrevious() {
+            if (currentPosition > maxSeekToPreviousPosition || !stepEpisode(forward = false)) super.seekToPrevious()
+        }
+
+        override fun seekToPreviousMediaItem() {
+            if (!stepEpisode(forward = false)) super.seekToPreviousMediaItem()
+        }
     }
 
     /**
@@ -2246,8 +2280,37 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * The position in the episode being left is saved on the way out.
      */
     fun playEpisode(item: MediaItem) {
-        startActivity(intent(this, item, chatTitle))
+        handingOver = true
+        startActivity(
+            intent(this, item, chatTitle).putExtra(
+                EXTRA_OUTSIDE_APP_TASK,
+                inPictureInPicture || intent.getBooleanExtra(EXTRA_OUTSIDE_APP_TASK, false),
+            ),
+        )
         finish()
+    }
+
+    /** Set by [playEpisode], so the episode handing over to the next does not open the app too. */
+    private var handingOver = false
+
+    /**
+     * An episode started from the corner window lands in the window's own task, not the app's,
+     * and once the window is opened full screen again Back from it went to the launcher rather
+     * than to the page it was started from. Such a player, and the episodes it steps on to,
+     * bring the app's own task back as they leave.
+     */
+    override fun finish() {
+        val stranded = !handingOver && isTaskRoot && !isChangingConfigurations &&
+            intent.getBooleanExtra(EXTRA_OUTSIDE_APP_TASK, false)
+        super.finish()
+        if (stranded) {
+            runCatching {
+                startActivity(
+                    Intent(this, com.tmplayer.MainActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
+                )
+            }
+        }
     }
 
     /**
@@ -4615,6 +4678,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         private const val EXTRA_THUMBNAIL_ID = "thumbnail_id"
         private const val EXTRA_MINI_THUMBNAIL = "mini_thumbnail"
         private const val EXTRA_CAN_BE_SAVED = "can_be_saved"
+        private const val EXTRA_OUTSIDE_APP_TASK = "outside_app_task"
 
         /** Said when a press asks for a copy of a video Telegram does not let leave the app. */
         private val NOT_SAVABLE_FEEDBACK: String get() = L.playerNotSavable
