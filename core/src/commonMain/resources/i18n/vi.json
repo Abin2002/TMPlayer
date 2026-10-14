@@ -1680,12 +1680,12 @@
     "skip": "Bỏ qua",
     "skip_all": "Bỏ qua tất cả",
     "step": "Bước {current} trên {total}",
-    "storage_body": "Video lớn chiếm nhiều chỗ. Chế độ ít bộ nhớ phát trực tuyến mà không giữ toàn bộ tệp trên thiết bị này.",
-    "storage_low": "Chế độ ít bộ nhớ",
+    "storage_body": "Video lớn chiếm nhiều chỗ. Chế độ ít dung lượng phát trực tuyến mà không giữ toàn bộ tệp trên thiết bị này.",
+    "storage_low": "Chế độ ít dung lượng",
     "storage_low_detail": "Chỉ giữ đoạn quanh vị trí bạn đang xem. Tua lại sẽ tải đoạn đó lần nữa.",
     "storage_normal": "Giữ phần đã phát",
     "storage_normal_detail": "Video được giữ khi đang phát, nên tua lại diễn ra ngay",
-    "storage_title": "Bộ nhớ"
+    "storage_title": "Lưu trữ"
   },
   "share": {
     "chooser_title": "{count, plural, other {Chia sẻ # video}}",
