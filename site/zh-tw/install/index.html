@@ -282,6 +282,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">Android 手機</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">桌面與選單捷徑</a>
       </nav>
@@ -408,7 +409,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">在 macOS 上</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">預覽版，從 1.26.0 起，適用於搭載 Apple 晶片（M1 及更新）、執行 macOS 26 Tahoe 或以上版本的 Mac。不支援 Intel Mac，較舊的 macOS 也無法打開它。</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">拖到「應用程式」</h3>
+            <p data-i18n="install.mac_step1">從<a href="/zh-tw/download/#macos">下載頁面</a>下載 <code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code>，打開它，將 <em>TMPlayer</em> 拖到<em>應用程式</em>。</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">打開它，然後允許一次</h3>
+            <p data-i18n="install.mac_step2">這個 App 還沒有經過 Apple 公證，所以第一次打開時 macOS 會顯示<em>未打開「TMPlayer」</em>。按一下<em>完成</em>。</p>
+            <p data-i18n="install.mac_step2b">打開<em>系統設定</em>、<em>隱私權與安全性</em>，向下捲動到<em>已阻擋「TMPlayer」以保護你的 Mac</em>，按一下<em>強制打開</em>。用密碼或 Touch ID 確認，再按一次<em>強制打開</em>。macOS 會記住，之後就能直接打開。</p>
+            <p data-i18n="install.mac_terminal">也可以在「終端機」中這樣做：</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">登入</h3>
+            <p data-i18n="install.scan_the_qr_code_with">用手機上的 Telegram 掃描 QR 碼：<em>設定</em>、<em>裝置</em>、<em>連結桌面裝置</em>。或選擇 <em>以電話號碼登入</em>。</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">更新</h3>
+          <p data-i18n="install.mac_update">有新版本時，TMPlayer 會通知你並打開發行頁面。下載新的 DMG，將它拖到「應用程式」覆蓋舊版：登入、紀錄和下載內容都會保留。</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">這是測試最少的版本。每個版本都會在 macOS 26 機器上建置和檢查，但還沒有在真正的 Mac 上試過播放。歡迎在<a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">問題頁面</a>回報。</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -455,9 +495,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -518,9 +558,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -578,9 +618,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">有幫助的話，請給它一顆星</h2>
@@ -654,7 +694,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安裝程式", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_checksums": "檢查碼", "os_note_mac": "沒有 macOS 版本。以下內容適用於 Android、Windows 與 Linux。", "os_note_ios": "沒有 iPhone 或 iPad 版本。以下內容適用於 Android、Windows 與 Linux。", "download_for": "下載 {os} 版", "downloads_one": "{count} 次下載", "downloads_other": "{count} 次下載", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下載 {file}", "install_version_for": "為 {os} 安裝 {version}", "download_version_for": "下載 {os} 版 {version}", "download_version_other_os": "下載 {version}，適用 Android、Windows 或 Linux", "download_version": "下載 {version}", "latest": "最新", "no_files_yet": "此版本尚未附上任何檔案。建置可能仍在進行中。", "open_on_github": "在 GitHub 上開啟 {version}", "release": "版本", "unavailable": "無法使用", "fail_downloads": "下載仍然可用：下方每個按鈕都會開啟{link}，檔案會依名稱列在那裡。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下載", "not_released": "尚未發布", "no_release": "尚未發布任何版本。你仍可以從原始碼建置 App。", "build_instructions": "在 GitHub 上閱讀建置說明", "view_project": "在 GitHub 上查看專案", "fail_browser": "這個瀏覽器無法載入版本清單。", "fail_rate": "GitHub 正在限制這個網路的請求次數。它的公開 API 每個位址每小時允許 60 次請求，而這個位址已經用完了。", "fail_timeout": "GitHub 未在時限內回應。", "fail_load": "無法從 GitHub 載入版本清單。", "theme_to_dark": "切換為深色主題", "theme_to_light": "切換為淺色主題", "menu_close": "關閉選單", "menu": "選單"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安裝程式", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "檢查碼", "os_note_ios_only": "沒有 iPhone 或 iPad 版本。下方的檔案適用於 Android 手機、Android TV 和電腦。", "download_for": "下載 {os} 版", "os_note_mac_preview": "macOS 版是預覽版，適用於搭載 Apple 晶片（M1 及更新）、執行 macOS 26 或以上版本的 Mac。它無法在 Intel Mac 上執行。", "os_note_mac": "沒有 macOS 版本。以下內容適用於 Android、Windows 與 Linux。", "downloads_one": "{count} 次下載", "downloads_other": "{count} 次下載", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下載 {file}", "download_version_mac": "下載適用於 Apple 晶片 Mac 的 {version}", "download_version_for": "下載 {os} 版 {version}", "download_version_other_os": "下載 {version}，適用 Android、Windows 或 Linux", "install_version_for": "為 {os} 安裝 {version}", "download_version": "下載 {version}", "latest": "最新", "no_files_yet": "此版本尚未附上任何檔案。建置可能仍在進行中。", "open_on_github": "在 GitHub 上開啟 {version}", "release": "版本", "unavailable": "無法使用", "fail_downloads": "下載仍然可用：下方每個按鈕都會開啟{link}，檔案會依名稱列在那裡。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下載", "not_released": "尚未發布", "no_release": "尚未發布任何版本。你仍可以從原始碼建置 App。", "build_instructions": "在 GitHub 上閱讀建置說明", "view_project": "在 GitHub 上查看專案", "fail_browser": "這個瀏覽器無法載入版本清單。", "fail_rate": "GitHub 正在限制這個網路的請求次數。它的公開 API 每個位址每小時允許 60 次請求，而這個位址已經用完了。", "fail_timeout": "GitHub 未在時限內回應。", "fail_load": "無法從 GitHub 載入版本清單。", "theme_to_dark": "切換為深色主題", "theme_to_light": "切換為淺色主題", "menu_close": "關閉選單", "menu": "選單"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

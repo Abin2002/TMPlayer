@@ -282,6 +282,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">HP Android</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">Pintasan desktop dan menu</a>
       </nav>
@@ -408,7 +409,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">Di macOS</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">Versi pratinjau, mulai 1.26.0, untuk Mac dengan Apple Silicon (M1 dan yang lebih baru) yang menjalankan macOS 26 Tahoe atau yang lebih baru. Mac Intel tidak didukung, dan macOS yang lebih lama tidak akan membukanya.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">Seret ke Aplikasi</h3>
+            <p data-i18n="install.mac_step1">Unduh <code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code> dari <a href="/id/download/#macos">halaman unduhan</a>, buka, lalu seret <em>TMPlayer</em> ke <em>Aplikasi</em>.</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">Buka, lalu izinkan sekali</h3>
+            <p data-i18n="install.mac_step2">Aplikasi ini belum dinotarisasi Apple, jadi pertama kali macOS menampilkan <em>"TMPlayer" Tidak Dibuka</em>. Klik <em>Selesai</em>.</p>
+            <p data-i18n="install.mac_step2b">Buka <em>Pengaturan Sistem</em>, <em>Privasi &amp; Keamanan</em>, gulir ke bawah ke <em>"TMPlayer" diblokir untuk melindungi Mac Anda</em> lalu klik <em>Tetap Buka</em>. Konfirmasi dengan kata sandi atau Touch ID, lalu klik <em>Tetap Buka</em> sekali lagi. macOS mengingatnya, jadi selanjutnya aplikasi langsung terbuka.</p>
+            <p data-i18n="install.mac_terminal">Atau hal yang sama di Terminal:</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">Masuk</h3>
+            <p data-i18n="install.scan_the_qr_code_with">Pindai kode QR dengan Telegram di HP: <em>Pengaturan</em>, <em>Perangkat</em>, <em>Tautkan Perangkat Desktop</em>. Atau pilih <em>Masuk dengan nomor telepon</em>.</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">Pembaruan</h3>
+          <p data-i18n="install.mac_update">TMPlayer memberi tahu saat versi baru keluar dan membuka halaman rilisnya. Unduh DMG baru dan seret ke atas salinan lama di Aplikasi: login, riwayat, dan unduhan Anda tetap ada.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">Ini build yang paling sedikit diuji. Setiap rilis dibuat dan diperiksa di mesin macOS 26, tetapi pemutaran belum dicoba di Mac sungguhan. Laporan dipersilakan di <a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">halaman issues</a>.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -455,9 +495,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -518,9 +558,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -578,9 +618,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">Beri bintang kalau terbantu</h2>
@@ -654,7 +694,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK universal", "kind_windows_installer": "Installer Windows", "kind_windows_zip": "Zip Windows", "kind_linux_tarball": "Tarball Linux", "kind_checksums": "Checksum", "os_note_mac": "Tidak ada versi macOS. Semua di bawah ini untuk Android, Windows, dan Linux.", "os_note_ios": "Tidak ada versi iPhone atau iPad. Semua di bawah ini untuk Android, Windows, dan Linux.", "download_for": "Unduh untuk {os}", "downloads_one": "{count} unduhan", "downloads_other": "{count} unduhan", "not_in_release": "Tidak ada di {version}", "on_github": "Di GitHub", "download_file": "Unduh {file}", "install_version_for": "Pasang {version} untuk {os}", "download_version_for": "Unduh {version} untuk {os}", "download_version_other_os": "Unduh {version} untuk Android, Windows, atau Linux", "download_version": "Unduh {version}", "latest": "Terbaru", "no_files_yet": "Rilis ini belum punya file terlampir. Build mungkin masih berjalan.", "open_on_github": "Buka {version} di GitHub", "release": "Rilis", "unavailable": "Tidak tersedia", "fail_downloads": "Unduhannya tetap ada: setiap tombol di bawah membuka {link}, tempat file didaftar menurut namanya.", "fail_link": "rilis terbaru di GitHub", "go_to_downloads": "Buka unduhan", "not_released": "Belum dirilis", "no_release": "Belum ada rilis yang dipublikasikan. Kamu masih bisa membangun aplikasinya dari sumber.", "build_instructions": "Baca petunjuk build di GitHub", "view_project": "Lihat proyek di GitHub", "fail_browser": "Browser ini tidak bisa memuat daftar rilis.", "fail_rate": "GitHub membatasi jaringan ini. API publiknya mengizinkan 60 permintaan per jam untuk setiap alamat, dan jatah alamat ini sudah habis.", "fail_timeout": "GitHub tidak menjawab tepat waktu.", "fail_load": "Daftar rilis tidak bisa dimuat dari GitHub.", "theme_to_dark": "Beralih ke tema gelap", "theme_to_light": "Beralih ke tema terang", "menu_close": "Tutup menu", "menu": "Menu"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK universal", "kind_windows_installer": "Installer Windows", "kind_windows_zip": "Zip Windows", "kind_linux_tarball": "Tarball Linux", "kind_mac_dmg": "DMG macOS", "kind_checksums": "Checksum", "os_note_ios_only": "Tidak ada versi iPhone atau iPad. File di bawah untuk ponsel Android, Android TV, dan komputer.", "download_for": "Unduh untuk {os}", "os_note_mac_preview": "Versi macOS adalah pratinjau untuk Mac dengan Apple Silicon (M1 dan yang lebih baru) dan macOS 26 atau yang lebih baru. Versi ini tidak berjalan di Mac Intel.", "os_note_mac": "Tidak ada versi macOS. Semua di bawah ini untuk Android, Windows, dan Linux.", "downloads_one": "{count} unduhan", "downloads_other": "{count} unduhan", "not_in_release": "Tidak ada di {version}", "on_github": "Di GitHub", "download_file": "Unduh {file}", "download_version_mac": "Unduh {version} untuk Mac dengan Apple Silicon", "download_version_for": "Unduh {version} untuk {os}", "download_version_other_os": "Unduh {version} untuk Android, Windows, atau Linux", "install_version_for": "Pasang {version} untuk {os}", "download_version": "Unduh {version}", "latest": "Terbaru", "no_files_yet": "Rilis ini belum punya file terlampir. Build mungkin masih berjalan.", "open_on_github": "Buka {version} di GitHub", "release": "Rilis", "unavailable": "Tidak tersedia", "fail_downloads": "Unduhannya tetap ada: setiap tombol di bawah membuka {link}, tempat file didaftar menurut namanya.", "fail_link": "rilis terbaru di GitHub", "go_to_downloads": "Buka unduhan", "not_released": "Belum dirilis", "no_release": "Belum ada rilis yang dipublikasikan. Kamu masih bisa membangun aplikasinya dari sumber.", "build_instructions": "Baca petunjuk build di GitHub", "view_project": "Lihat proyek di GitHub", "fail_browser": "Browser ini tidak bisa memuat daftar rilis.", "fail_rate": "GitHub membatasi jaringan ini. API publiknya mengizinkan 60 permintaan per jam untuk setiap alamat, dan jatah alamat ini sudah habis.", "fail_timeout": "GitHub tidak menjawab tepat waktu.", "fail_load": "Daftar rilis tidak bisa dimuat dari GitHub.", "theme_to_dark": "Beralih ke tema gelap", "theme_to_light": "Beralih ke tema terang", "menu_close": "Tutup menu", "menu": "Menu"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

@@ -282,6 +282,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">Android 手机</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">桌面和菜单快捷方式</a>
       </nav>
@@ -408,7 +409,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">在 macOS 上</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">预览版，从 1.26.0 起，适用于搭载 Apple 芯片（M1 及更新）、运行 macOS 26 Tahoe 或更高版本的 Mac。不支持 Intel Mac，更旧的 macOS 也打不开它。</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">拖到“应用程序”</h3>
+            <p data-i18n="install.mac_step1">从<a href="/zh/download/#macos">下载页面</a>下载 <code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code>，打开它，把 <em>TMPlayer</em> 拖到<em>应用程序</em>。</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">打开它，然后允许一次</h3>
+            <p data-i18n="install.mac_step2">这个应用还没有经过 Apple 公证，所以第一次打开时 macOS 会显示<em>未打开“TMPlayer”</em>。点按<em>完成</em>。</p>
+            <p data-i18n="install.mac_step2b">打开<em>系统设置</em>、<em>隐私与安全性</em>，向下滚动到<em>已阻止“TMPlayer”以保护你的 Mac</em>，点按<em>仍要打开</em>。用密码或触控 ID 确认，再点按一次<em>仍要打开</em>。macOS 会记住，之后就能直接打开。</p>
+            <p data-i18n="install.mac_terminal">也可以在“终端”里这样做：</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">登录</h3>
+            <p data-i18n="install.scan_the_qr_code_with">用手机上的 Telegram 扫描二维码：<em>设置</em>、<em>设备</em>、<em>链接桌面设备</em>。或选择 <em>使用手机号登录</em>。</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">更新</h3>
+          <p data-i18n="install.mac_update">有新版本时，TMPlayer 会提示你并打开发布页面。下载新的 DMG，把它拖到“应用程序”里覆盖旧版：登录、历史记录和下载内容都会保留。</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">这是测试最少的版本。每个版本都会在 macOS 26 机器上构建和检查，但还没有在真正的 Mac 上试过播放。欢迎在<a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">问题页面</a>反馈。</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -455,9 +495,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -518,9 +558,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -578,9 +618,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">有帮助就点个星</h2>
@@ -654,7 +694,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安装程序", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_checksums": "校验和", "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。", "os_note_ios": "没有 iPhone 或 iPad 版本。以下内容适用于 Android、Windows 和 Linux。", "download_for": "下载 {os} 版", "downloads_one": "{count} 次下载", "downloads_other": "{count} 次下载", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下载 {file}", "install_version_for": "为 {os} 安装 {version}", "download_version_for": "下载适用于 {os} 的 {version}", "download_version_other_os": "下载适用于 Android、Windows 或 Linux 的 {version}", "download_version": "下载 {version}", "latest": "最新", "no_files_yet": "此版本尚未附带任何文件。构建可能仍在进行中。", "open_on_github": "在 GitHub 上打开 {version}", "release": "版本", "unavailable": "不可用", "fail_downloads": "下载仍然可用：下方每个按钮都会打开{link}，那里按名称列出了所有文件。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下载", "not_released": "尚未发布", "no_release": "尚未发布任何版本。你仍然可以从源代码构建应用。", "build_instructions": "阅读 GitHub 上的构建说明", "view_project": "在 GitHub 上查看项目", "fail_browser": "此浏览器无法加载版本列表。", "fail_rate": "GitHub 正在限制此网络的请求频率。其公开 API 每个地址每小时允许 60 次请求，而这个地址已经用完了。", "fail_timeout": "GitHub 未能及时响应。", "fail_load": "无法从 GitHub 加载版本列表。", "theme_to_dark": "切换到深色主题", "theme_to_light": "切换到浅色主题", "menu_close": "关闭菜单", "menu": "菜单"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安装程序", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "校验和", "os_note_ios_only": "没有 iPhone 或 iPad 版本。下面的文件适用于 Android 手机、Android TV 和电脑。", "download_for": "下载 {os} 版", "os_note_mac_preview": "macOS 版是预览版，适用于搭载 Apple 芯片（M1 及更新）、运行 macOS 26 或更高版本的 Mac。它不能在 Intel Mac 上运行。", "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。", "downloads_one": "{count} 次下载", "downloads_other": "{count} 次下载", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下载 {file}", "download_version_mac": "下载适用于 Apple 芯片 Mac 的 {version}", "download_version_for": "下载适用于 {os} 的 {version}", "download_version_other_os": "下载适用于 Android、Windows 或 Linux 的 {version}", "install_version_for": "为 {os} 安装 {version}", "download_version": "下载 {version}", "latest": "最新", "no_files_yet": "此版本尚未附带任何文件。构建可能仍在进行中。", "open_on_github": "在 GitHub 上打开 {version}", "release": "版本", "unavailable": "不可用", "fail_downloads": "下载仍然可用：下方每个按钮都会打开{link}，那里按名称列出了所有文件。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下载", "not_released": "尚未发布", "no_release": "尚未发布任何版本。你仍然可以从源代码构建应用。", "build_instructions": "阅读 GitHub 上的构建说明", "view_project": "在 GitHub 上查看项目", "fail_browser": "此浏览器无法加载版本列表。", "fail_rate": "GitHub 正在限制此网络的请求频率。其公开 API 每个地址每小时允许 60 次请求，而这个地址已经用完了。", "fail_timeout": "GitHub 未能及时响应。", "fail_load": "无法从 GitHub 加载版本列表。", "theme_to_dark": "切换到深色主题", "theme_to_light": "切换到浅色主题", "menu_close": "关闭菜单", "menu": "菜单"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

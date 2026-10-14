@@ -282,6 +282,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">Android telefon</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">Masaüstü ve menü kısayolları</a>
       </nav>
@@ -408,7 +409,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">macOS'ta</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">1.26.0'dan itibaren bir önizleme: Apple Silicon'lu (M1 ve sonrası) ve macOS 26 Tahoe veya daha yenisini çalıştıran Mac'ler için. Intel Mac'ler desteklenmez, daha eski bir macOS da uygulamayı açmaz.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">Uygulamalar'a sürükleyin</h3>
+            <p data-i18n="install.mac_step1"><code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code> dosyasını <a href="/tr/download/#macos">indirme sayfasından</a> indirin, açın ve <em>TMPlayer</em> simgesini <em>Uygulamalar</em> klasörüne sürükleyin.</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">Açın ve bir kez izin verin</h3>
+            <p data-i18n="install.mac_step2">Uygulama henüz Apple tarafından onaylanmadığı için macOS ilk seferde <em>"TMPlayer" açılmadı</em> der. <em>Bitti</em> düğmesine tıklayın.</p>
+            <p data-i18n="install.mac_step2b"><em>Sistem Ayarları</em>, <em>Gizlilik ve Güvenlik</em> bölümünü açın, <em>"TMPlayer", Mac'inizi korumak için engellendi</em> satırına kadar aşağı kaydırın ve <em>Yine de Aç</em> düğmesine tıklayın. Parolanız veya Touch ID ile onaylayıp bir kez daha <em>Yine de Aç</em> düğmesine tıklayın. macOS bunu hatırlar, sonraki açılışlar doğrudan olur.</p>
+            <p data-i18n="install.mac_terminal">Ya da aynısı Terminal'de:</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">Giriş</h3>
+            <p data-i18n="install.scan_the_qr_code_with">QR kodu telefonundaki Telegram ile tara: <em>Ayarlar</em>, <em>Cihazlar</em>, <em>Masaüstü Cihazı Bağla</em>. Ya da <em>Telefon numarasıyla giriş yap</em> seç.</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">Güncellemeler</h3>
+          <p data-i18n="install.mac_update">TMPlayer yeni bir sürüm çıktığında haber verir ve sürüm sayfasını açar. Yeni DMG'yi indirip Uygulamalar'daki eski kopyanın üzerine sürükleyin: oturumunuz, geçmişiniz ve indirmeleriniz korunur.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">Bu en az test edilen sürüm. Her sürüm macOS 26 çalıştıran bir makinede derlenip denetleniyor, ancak oynatma henüz gerçek bir Mac'te denenmedi. Bildirimlerinizi <a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">sorunlar sayfasında</a> bekliyoruz.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -455,9 +495,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -518,9 +558,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -578,9 +618,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">İşine yaradıysa yıldız ver</h2>
@@ -654,7 +694,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "Evrensel APK", "kind_windows_installer": "Windows yükleyicisi", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_checksums": "Sağlama toplamları", "os_note_mac": "macOS sürümü yok. Aşağıdakilerin hepsi Android, Windows ve Linux için.", "os_note_ios": "iPhone ya da iPad sürümü yok. Aşağıdakilerin hepsi Android, Windows ve Linux için.", "download_for": "{os} için indir", "downloads_one": "{count} indirme", "downloads_other": "{count} indirme", "not_in_release": "{version} içinde yok", "on_github": "GitHub'da", "download_file": "{file} dosyasını indir", "install_version_for": "{os} için {version} sürümünü kur", "download_version_for": "{version} sürümünü {os} için indir", "download_version_other_os": "{version} sürümünü Android, Windows ya da Linux için indir", "download_version": "{version} sürümünü indir", "latest": "En yeni", "no_files_yet": "Bu sürüme henüz dosya eklenmemiş. Derleme hâlâ sürüyor olabilir.", "open_on_github": "{version} sürümünü GitHub'da aç", "release": "Sürüm", "unavailable": "Kullanılamıyor", "fail_downloads": "İndirmeler hâlâ orada: aşağıdaki her düğme, dosyaların adlarıyla listelendiği {link} sayfasını açar.", "fail_link": "GitHub'daki son sürüm", "go_to_downloads": "İndirmelere git", "not_released": "Henüz yayımlanmadı", "no_release": "Henüz yayımlanmış bir sürüm yok. Uygulamayı yine de kaynaktan derleyebilirsin.", "build_instructions": "Derleme talimatlarını GitHub'da oku", "view_project": "Projeyi GitHub'da gör", "fail_browser": "Bu tarayıcı sürüm listesini yükleyemiyor.", "fail_rate": "GitHub bu ağı sınırlıyor. Herkese açık API'si adres başına saatte 60 isteğe izin verir ve bu adres hepsini kullandı.", "fail_timeout": "GitHub zamanında yanıt vermedi.", "fail_load": "Sürüm listesi GitHub'dan yüklenemedi.", "theme_to_dark": "Koyu temaya geç", "theme_to_light": "Açık temaya geç", "menu_close": "Menüyü kapat", "menu": "Menü"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "Evrensel APK", "kind_windows_installer": "Windows yükleyicisi", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "Sağlama toplamları", "os_note_ios_only": "iPhone veya iPad sürümü yok. Aşağıdaki dosyalar Android telefonlar, Android TV ve bilgisayarlar için.", "download_for": "{os} için indir", "os_note_mac_preview": "macOS sürümü, Apple Silicon'lu (M1 ve sonrası) ve macOS 26 veya daha yenisini çalıştıran Mac'ler için bir önizleme. Intel Mac'lerde çalışmaz.", "os_note_mac": "macOS sürümü yok. Aşağıdakilerin hepsi Android, Windows ve Linux için.", "downloads_one": "{count} indirme", "downloads_other": "{count} indirme", "not_in_release": "{version} içinde yok", "on_github": "GitHub'da", "download_file": "{file} dosyasını indir", "download_version_mac": "{version} sürümünü Apple Silicon'lu Mac'ler için indir", "download_version_for": "{version} sürümünü {os} için indir", "download_version_other_os": "{version} sürümünü Android, Windows ya da Linux için indir", "install_version_for": "{os} için {version} sürümünü kur", "download_version": "{version} sürümünü indir", "latest": "En yeni", "no_files_yet": "Bu sürüme henüz dosya eklenmemiş. Derleme hâlâ sürüyor olabilir.", "open_on_github": "{version} sürümünü GitHub'da aç", "release": "Sürüm", "unavailable": "Kullanılamıyor", "fail_downloads": "İndirmeler hâlâ orada: aşağıdaki her düğme, dosyaların adlarıyla listelendiği {link} sayfasını açar.", "fail_link": "GitHub'daki son sürüm", "go_to_downloads": "İndirmelere git", "not_released": "Henüz yayımlanmadı", "no_release": "Henüz yayımlanmış bir sürüm yok. Uygulamayı yine de kaynaktan derleyebilirsin.", "build_instructions": "Derleme talimatlarını GitHub'da oku", "view_project": "Projeyi GitHub'da gör", "fail_browser": "Bu tarayıcı sürüm listesini yükleyemiyor.", "fail_rate": "GitHub bu ağı sınırlıyor. Herkese açık API'si adres başına saatte 60 isteğe izin verir ve bu adres hepsini kullandı.", "fail_timeout": "GitHub zamanında yanıt vermedi.", "fail_load": "Sürüm listesi GitHub'dan yüklenemedi.", "theme_to_dark": "Koyu temaya geç", "theme_to_light": "Açık temaya geç", "menu_close": "Menüyü kapat", "menu": "Menü"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

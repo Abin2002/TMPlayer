@@ -136,8 +136,6 @@
     "neither_the_app_talks_3701": "Ani jedno, ani drugie. Aplikacja łączy się z Telegramem bezpośrednio przez jego oficjalną bibliotekę. Żadne multimedia ani dane konta nie przechodzą przez serwer TMPlayera.",
     "which_file_do_i_ec0b": "Który plik pobrać?",
     "android_tv_or_phone_bd9a": "Android TV lub telefon: uniwersalny APK. Windows: instalator MSI. Linux: AppImage lub PKGBUILD na Archu. Strona pobierania pokazuje na początku ten właściwy dla ciebie.",
-    "is_there_a_windows_b87b": "Czy jest wersja na Windows lub Linuxa?",
-    "yes_for_windows_10_0b9e": "Tak, na Windows 10 i 11 oraz 64-bitowego Linuxa, z tego samego wydania, odtwarzanie przez mpv. Nie ma wersji na macOS, iPhone'a ani iPada.",
     "can_i_read_my_61ff": "Czy mogę w niej czytać wiadomości?",
     "no_it_only_ever_01d3": "Nie. Pokazuje wyłącznie wideo z twoich czatów. Nie można w niej czytać, odpisywać ani niczego wysyłać.",
     "does_tmplayer_provide_any_e5a6": "Czy TMPlayer dostarcza jakieś własne treści?",
@@ -189,7 +187,9 @@
     "when_the_tv_asks_c1d1": "Gdy telewizor zapyta, pozwól Downloaderowi instalować aplikacje i naciśnij Zainstaluj. Jeśli nie ma przełącznika, naciśnij siedem razy Numer kompilacji w Ustawienia, Informacje i spróbuj ponownie.",
     "open_tmplayer_and_scan_6c50": "Otwórz TMPlayer i zeskanuj jego kod QR w Telegramie na telefonie: Ustawienia, Urządzenia, Połącz urządzenie stacjonarne.",
     "open_downloader_type_tmplayer_03fc": "Otwórz Downloader, wpisz tmplayer.org/apk w pasku adresu, naciśnij Go, a gdy Fire OS zapyta, naciśnij Zainstaluj.",
-    "turn_on_developer_options_ebe1": "Włącz Opcje programisty, zainstaluj Downloader, pozwól mu instalować aplikacje, a potem wpisz w nim tmplayer.org/apk i zainstaluj TMPlayer."
+    "turn_on_developer_options_ebe1": "Włącz Opcje programisty, zainstaluj Downloader, pozwól mu instalować aplikacje, a potem wpisz w nim tmplayer.org/apk i zainstaluj TMPlayer.",
+    "is_there_a_windows_b2c9": "Czy jest wersja na Windows, macOS lub Linuksa?",
+    "yes_for_windows_10_b1b9": "Tak, na Windows 10 i 11 oraz 64-bitowego Linuxa, z tego samego wydania, odtwarzanie przez mpv. Od 1.26.0 jest też wersja testowa dla Maców z Apple Silicon i macOS 26 lub nowszym. Nie ma wersji na iPhone'a ani iPada."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "Funkcje TMPlayera: wideo z Telegrama na telewizorze i komputerze",
@@ -396,7 +396,6 @@
     "a_pkgbuild_lives_in_it": "PKGBUILD znajduje się w {code1}. Buduje się z {code2} przy każdym wydaniu. AppImage działa też na Archu.",
     "the_recipe": "Przepis",
     "how_to_install_on_linux": "Jak zainstalować na Linuxie i dodać do menu aplikacji",
-    "there_is_no_iphone_or": "Nie ma wersji na macOS, iPhone'a ani iPada.",
     "the_shows_each_file_s": "{a1} pokazuje obok każdego pliku jego sumę SHA-256. Sprawdź pobrany plik poleceniem {code1} lub {code2} w Windows.",
     "the_shows_each_file_s__a1": "Strona wydania",
     "release_notes": "Opis wydania",
@@ -428,7 +427,17 @@
     "win_msi_note": "Nie ma jeszcze podpisu kodu, więc SmartScreen może ostrzec: kliknij {em1}, a potem {em2}.",
     "win_cmd__em1": "PowerShell",
     "win_msi_note__em1": "Więcej informacji",
-    "win_msi_note__em2": "Uruchom mimo to"
+    "win_msi_note__em2": "Uruchom mimo to",
+    "macos_req": "Maki z Apple Silicon (M1 i nowsze), macOS 26 Tahoe lub nowszy. Maki z procesorem Intel nie są obsługiwane.",
+    "preview": "Wersja testowa",
+    "mac_dmg_note": "Przeciągnij go do Aplikacji. Nie jest jeszcze notaryzowany przez Apple, więc za pierwszym razem macOS pisze, że go nie otwarto: kliknij {em1}, a potem {em2} w {em3}, {em4}.",
+    "mac_dmg_note__em1": "Gotowe",
+    "mac_dmg_note__em2": "Otwórz mimo to",
+    "mac_dmg_note__em3": "Ustawienia systemowe",
+    "mac_dmg_note__em4": "Prywatność i ochrona",
+    "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
+    "how_to_install_on_macos": "Jak zainstalować na macOS",
+    "no_iphone_or_ipad": "Nie ma wersji na iPhone'a ani iPada."
   },
   "install": {
     "how_to_install_tmplayer_on": "Jak zainstalować TMPlayera na Android TV, Windows i Linuxie",
@@ -553,7 +562,28 @@
     "win_msi__em1": "System Windows ochronił ten komputer",
     "win_msi__em2": "Więcej informacji",
     "win_msi__em3": "Uruchom mimo to",
-    "win_pin__em1": "Przypnij do paska zadań"
+    "win_pin__em1": "Przypnij do paska zadań",
+    "on_macos": "Na macOS",
+    "macos_sub": "Wersja testowa, od 1.26.0, dla Maców z Apple Silicon (M1 i nowsze) z macOS 26 Tahoe lub nowszym. Maki z procesorem Intel nie są obsługiwane, a starszy macOS jej nie otworzy.",
+    "mac_step1_h": "Przeciągnij do Aplikacji",
+    "mac_step1": "Pobierz {code1} ze {a1}, otwórz go i przeciągnij {em1} na {em2}.",
+    "mac_step1__a1": "strony pobierania",
+    "mac_step1__em2": "Aplikacje",
+    "mac_step2_h": "Otwórz i zezwól raz",
+    "mac_step2": "Aplikacja nie jest jeszcze notaryzowana przez Apple, więc za pierwszym razem macOS wyświetla {em1}. Kliknij {em2}.",
+    "mac_step2__em1": "Nie otwarto „TMPlayer”",
+    "mac_step2__em2": "Gotowe",
+    "mac_step2b": "Otwórz {em1}, {em2}, przewiń do {em3} i kliknij {em4}. Potwierdź hasłem lub Touch ID i kliknij {em5} jeszcze raz. macOS to zapamięta, więc później aplikacja otwiera się od razu.",
+    "mac_step2b__em1": "Ustawienia systemowe",
+    "mac_step2b__em2": "Prywatność i ochrona",
+    "mac_step2b__em3": "Zablokowano „TMPlayer”, aby chronić Maca",
+    "mac_step2b__em4": "Otwórz mimo to",
+    "mac_step2b__em5": "Otwórz mimo to",
+    "mac_terminal": "Albo to samo w Terminalu:",
+    "mac_update_h": "Aktualizacje",
+    "mac_update": "TMPlayer daje znać, gdy wyjdzie nowa wersja, i otwiera stronę wydania. Pobierz nowy DMG i przeciągnij go na starą kopię w Aplikacjach: logowanie, historia i pobrane pliki zostają.",
+    "mac_preview_note": "To najmniej przetestowana wersja. Każde wydanie jest budowane i sprawdzane na maszynie z macOS 26, ale odtwarzania nie wypróbowano jeszcze na prawdziwym Macu. Zgłoszenia są mile widziane na {a1}.",
+    "mac_preview_note__a1": "stronie zgłoszeń"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: nieoficjalny odtwarzacz wideo z Telegrama na Android TV i Google TV",
@@ -713,9 +743,6 @@
     "which_file_do_i_download": "Który plik pobrać?",
     "android_tv_or_phone_the": "Android TV lub telefon: uniwersalny APK. Windows: instalator MSI. Linux: AppImage lub PKGBUILD na Archu. {a1} pokazuje na początku ten właściwy dla ciebie.",
     "android_tv_or_phone_the__a1": "Strona pobierania",
-    "is_there_a_windows_linux": "Czy jest wersja na Windows lub Linuxa?",
-    "yes_for_windows_10_and": "Tak, na Windows 10 i 11 oraz 64-bitowego Linuxa, z tego samego wydania, odtwarzanie przez mpv. Nie ma wersji na macOS, iPhone'a ani iPada. {a1}.",
-    "yes_for_windows_10_and__a1": "Pobierz tutaj",
     "can_i_read_my_messages": "Czy mogę w niej czytać wiadomości?",
     "no_it_only_ever_shows": "Nie. Pokazuje wyłącznie wideo z twoich czatów. Nie można w niej czytać, odpisywać ani niczego wysyłać.",
     "does_tmplayer_provide_any_media": "Czy TMPlayer dostarcza jakieś własne treści?",
@@ -744,7 +771,10 @@
     "the_lists_what_stays_on__a1": "Strona o prywatności",
     "the_lists_what_stays_on__a2": "Legalne użycie",
     "no_money_no_account_no": "Bez pieniędzy, bez konta, bez e-maila. Projekt prosi tylko o gwiazdkę.",
-    "answers_about_tmplayer_streaming_without": "Odpowiedzi o TMPlayerze: odtwarzanie bez czekania, brak serwera i bota, który plik pobrać, wersje na Windows i Linuxa, prywatność i czego nie robi."
+    "answers_about_tmplayer_streaming_without": "Odpowiedzi o TMPlayerze: odtwarzanie bez czekania, brak serwera i bota, który plik pobrać, wersje na Windows i Linuxa, prywatność i czego nie robi.",
+    "is_there_a_windows_macos_linux": "Czy jest wersja na Windows, macOS lub Linuksa?",
+    "yes_for_windows_10_11_macos": "Tak, na Windows 10 i 11 oraz 64-bitowego Linuxa, z tego samego wydania, odtwarzanie przez mpv. Od 1.26.0 jest też wersja testowa dla Maców z Apple Silicon i macOS 26 lub nowszym. Nie ma wersji na iPhone'a ani iPada. {a1}.",
+    "yes_for_windows_10_11_macos__a1": "Pobierz tutaj"
   },
   "formats": {
     "supported_formats_what_tmplayer_plays": "Obsługiwane formaty: co TMPlayer odtwarza na Android TV, Windows i Linuxie",
@@ -1001,7 +1031,6 @@
     "kind_linux_tarball": "Archiwum tar dla Linuxa",
     "kind_checksums": "Sumy kontrolne",
     "os_note_mac": "Nie ma wersji na macOS. Wszystko poniżej dotyczy Androida, Windows i Linuxa.",
-    "os_note_ios": "Nie ma wersji na iPhone'a ani iPada. Wszystko poniżej dotyczy Androida, Windows i Linuxa.",
     "download_for": "Pobierz na {os}",
     "downloads_one": "{count} pobranie",
     "downloads_other": "Pobrań: {count}",
@@ -1031,7 +1060,11 @@
     "theme_to_light": "Przełącz na jasny motyw",
     "menu_close": "Zamknij menu",
     "menu": "Menu",
-    "install_version_for": "Zainstaluj {version} dla {os}"
+    "install_version_for": "Zainstaluj {version} dla {os}",
+    "kind_mac_dmg": "DMG dla macOS",
+    "os_note_ios_only": "Nie ma wersji na iPhone'a ani iPada. Pliki poniżej są dla telefonów z Androidem, Android TV i komputerów.",
+    "os_note_mac_preview": "Wersja na macOS jest testowa, dla Maców z Apple Silicon (M1 i nowsze) i macOS 26 lub nowszym. Nie działa na Makach z procesorem Intel.",
+    "download_version_mac": "Pobierz {version} na Maki z Apple Silicon"
   },
   "build": {
     "language": "Język",

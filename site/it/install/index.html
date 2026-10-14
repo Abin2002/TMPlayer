@@ -282,6 +282,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">Telefono Android</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">Collegamenti sul desktop e nel menu</a>
       </nav>
@@ -408,7 +409,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">Su macOS</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">Un'anteprima, dalla 1.26.0, per i Mac con Apple Silicon (M1 e successivi) con macOS 26 Tahoe o successivo. I Mac Intel non sono supportati, e un macOS precedente non lo apre.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">Trascinalo in Applicazioni</h3>
+            <p data-i18n="install.mac_step1">Scarica <code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code> dalla <a href="/it/download/#macos">pagina di download</a>, aprilo e trascina <em>TMPlayer</em> su <em>Applicazioni</em>.</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">Aprilo, poi consentilo una volta</h3>
+            <p data-i18n="install.mac_step2">L'app non è ancora autenticata da Apple, quindi la prima volta macOS mostra <em>"TMPlayer" non è stato aperto</em>. Fai clic su <em>Fine</em>.</p>
+            <p data-i18n="install.mac_step2b">Apri <em>Impostazioni di Sistema</em>, <em>Privacy e sicurezza</em>, scorri fino a <em>"TMPlayer" è stato bloccato per proteggere il Mac</em> e fai clic su <em>Apri comunque</em>. Conferma con la password o Touch ID e fai clic ancora su <em>Apri comunque</em>. macOS se lo ricorda, e le volte successive l'app si apre subito.</p>
+            <p data-i18n="install.mac_terminal">Oppure lo stesso nel Terminale:</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">Accesso</h3>
+            <p data-i18n="install.scan_the_qr_code_with">Inquadra il codice QR con Telegram sul telefono: <em>Impostazioni</em>, <em>Dispositivi</em>, <em>Collega dispositivo desktop</em>. Oppure scegli <em>Accedi con il numero di telefono</em>.</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">Aggiornamenti</h3>
+          <p data-i18n="install.mac_update">TMPlayer ti avvisa quando esce una nuova versione e apre la pagina della versione. Scarica il nuovo DMG e trascinalo sulla vecchia copia in Applicazioni: accesso, cronologia e download restano.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">È la build meno collaudata. Ogni versione viene compilata e verificata su una macchina con macOS 26, ma la riproduzione non è ancora stata provata su un Mac vero. Le segnalazioni sono benvenute nella <a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">pagina delle issue</a>.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -455,9 +495,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -518,9 +558,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -578,9 +618,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">Metti una stella se ti è servito</h2>
@@ -654,7 +694,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK universale", "kind_windows_installer": "Programma di installazione per Windows", "kind_windows_zip": "Zip per Windows", "kind_linux_tarball": "Tarball per Linux", "kind_checksums": "Checksum", "os_note_mac": "Non esiste una versione per macOS. Tutto ciò che segue riguarda Android, Windows e Linux.", "os_note_ios": "Non esiste una versione per iPhone o iPad. Tutto ciò che segue riguarda Android, Windows e Linux.", "download_for": "Scarica per {os}", "downloads_one": "{count} download", "downloads_other": "{count} download", "not_in_release": "Non in {version}", "on_github": "Su GitHub", "download_file": "Scarica {file}", "install_version_for": "Installa {version} per {os}", "download_version_for": "Scarica {version} per {os}", "download_version_other_os": "Scarica {version} per Android, Windows o Linux", "download_version": "Scarica {version}", "latest": "Ultima", "no_files_yet": "Questa versione non ha ancora file allegati. La build potrebbe essere ancora in corso.", "open_on_github": "Apri {version} su GitHub", "release": "Versione", "unavailable": "Non disponibile", "fail_downloads": "I download ci sono ancora: ogni pulsante qui sotto apre {link}, dove i file sono elencati per nome.", "fail_link": "l'ultima versione su GitHub", "go_to_downloads": "Vai ai download", "not_released": "Non ancora pubblicata", "no_release": "Non è ancora stata pubblicata nessuna versione. Puoi comunque compilare l'app dal codice sorgente.", "build_instructions": "Leggi le istruzioni di compilazione su GitHub", "view_project": "Vedi il progetto su GitHub", "fail_browser": "Questo browser non riesce a caricare l'elenco delle versioni.", "fail_rate": "GitHub sta limitando questa rete. La sua API pubblica consente 60 richieste all'ora per indirizzo, e questo le ha esaurite.", "fail_timeout": "GitHub non ha risposto in tempo.", "fail_load": "Non è stato possibile caricare da GitHub l'elenco delle versioni.", "theme_to_dark": "Passa al tema scuro", "theme_to_light": "Passa al tema chiaro", "menu_close": "Chiudi il menu", "menu": "Menu"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK universale", "kind_windows_installer": "Programma di installazione per Windows", "kind_windows_zip": "Zip per Windows", "kind_linux_tarball": "Tarball per Linux", "kind_mac_dmg": "DMG per macOS", "kind_checksums": "Checksum", "os_note_ios_only": "Non esiste una versione per iPhone o iPad. I file qui sotto sono per telefoni Android, Android TV e computer.", "download_for": "Scarica per {os}", "os_note_mac_preview": "La versione per macOS è un'anteprima per i Mac con Apple Silicon (M1 e successivi) e macOS 26 o successivo. Non funziona sui Mac Intel.", "os_note_mac": "Non esiste una versione per macOS. Tutto ciò che segue riguarda Android, Windows e Linux.", "downloads_one": "{count} download", "downloads_other": "{count} download", "not_in_release": "Non in {version}", "on_github": "Su GitHub", "download_file": "Scarica {file}", "download_version_mac": "Scarica {version} per Mac con Apple Silicon", "download_version_for": "Scarica {version} per {os}", "download_version_other_os": "Scarica {version} per Android, Windows o Linux", "install_version_for": "Installa {version} per {os}", "download_version": "Scarica {version}", "latest": "Ultima", "no_files_yet": "Questa versione non ha ancora file allegati. La build potrebbe essere ancora in corso.", "open_on_github": "Apri {version} su GitHub", "release": "Versione", "unavailable": "Non disponibile", "fail_downloads": "I download ci sono ancora: ogni pulsante qui sotto apre {link}, dove i file sono elencati per nome.", "fail_link": "l'ultima versione su GitHub", "go_to_downloads": "Vai ai download", "not_released": "Non ancora pubblicata", "no_release": "Non è ancora stata pubblicata nessuna versione. Puoi comunque compilare l'app dal codice sorgente.", "build_instructions": "Leggi le istruzioni di compilazione su GitHub", "view_project": "Vedi il progetto su GitHub", "fail_browser": "Questo browser non riesce a caricare l'elenco delle versioni.", "fail_rate": "GitHub sta limitando questa rete. La sua API pubblica consente 60 richieste all'ora per indirizzo, e questo le ha esaurite.", "fail_timeout": "GitHub non ha risposto in tempo.", "fail_load": "Non è stato possibile caricare da GitHub l'elenco delle versioni.", "theme_to_dark": "Passa al tema scuro", "theme_to_light": "Passa al tema chiaro", "menu_close": "Chiudi il menu", "menu": "Menu"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

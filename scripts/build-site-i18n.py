@@ -136,7 +136,7 @@ META_TEXT = {("name", "description"), ("property", "og:title"), ("property", "og
              ("name", "twitter:description"), ("name", "twitter:image:alt")}
 # Words and handles that read the same in every language.
 NO_TRANSLATE = {"TMPlayer", "Telegram", "GitHub", "nevil.dev", "Nevil", "dracu-lah", "Infoek.cz",
-                "Android TV", "Android", "Windows", "Linux", "Fire TV", "Flatpak", "AppImage",
+                "Android TV", "Android", "Windows", "Linux", "macOS", "DMG", "Fire TV", "Flatpak", "AppImage",
                 "Telegram group", "Obtainium", "Downloader", "mpv"}
 LD_TEXT_KEYS = {"name", "alternateName", "description", "text", "headline", "featureList",
                 "about", "abstract", "acceptedAnswer"}

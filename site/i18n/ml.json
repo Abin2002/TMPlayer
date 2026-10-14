@@ -136,8 +136,6 @@
     "neither_the_app_talks_3701": "ഇല്ല. ആപ്പ് Telegram-ന്റെ ഔദ്യോഗിക ലൈബ്രറി വഴി നേരിട്ട് Telegram-നോട് സംസാരിക്കുന്നു. മീഡിയയോ അക്കൗണ്ട് വിവരങ്ങളോ ഒരു TMPlayer സെർവറിലൂടെയും പോകുന്നില്ല.",
     "which_file_do_i_ec0b": "ഞാൻ ഏത് ഫയൽ ഡൗൺലോഡ് ചെയ്യണം?",
     "android_tv_or_phone_bd9a": "Android TV അല്ലെങ്കിൽ ഫോൺ: യൂണിവേഴ്സൽ APK. Windows: MSI ഇൻസ്റ്റാളർ. Linux: AppImage, അല്ലെങ്കിൽ Arch-ൽ PKGBUILD. നിങ്ങളുടേത് ഡൗൺലോഡ് പേജ് ആദ്യം കാണിക്കും.",
-    "is_there_a_windows_b87b": "Windows അല്ലെങ്കിൽ Linux പതിപ്പുണ്ടോ?",
-    "yes_for_windows_10_0b9e": "ഉണ്ട്, Windows 10, 11, 64-ബിറ്റ് Linux എന്നിവയ്ക്ക്, അതേ റിലീസിൽ നിന്ന്, mpv വഴി പ്ലേ ചെയ്യുന്നു. macOS, iPhone, iPad പതിപ്പില്ല.",
     "can_i_read_my_61ff": "എനിക്ക് ഇതിൽ എന്റെ സന്ദേശങ്ങൾ വായിക്കാമോ?",
     "no_it_only_ever_01d3": "ഇല്ല. ഇത് നിങ്ങളുടെ ചാറ്റുകളിലെ വീഡിയോകൾ മാത്രമേ കാണിക്കൂ. ഇതിൽ നിന്ന് വായിക്കാനോ മറുപടി നൽകാനോ ഒന്നും അയയ്ക്കാനോ കഴിയില്ല.",
     "does_tmplayer_provide_any_e5a6": "TMPlayer സ്വന്തമായി എന്തെങ്കിലും മീഡിയ നൽകുന്നുണ്ടോ?",
@@ -189,7 +187,9 @@
     "when_the_tv_asks_c1d1": "TV ചോദിക്കുമ്പോൾ Downloader-ന് ആപ്പുകൾ ഇൻസ്റ്റാൾ ചെയ്യാൻ അനുമതി നൽകി Install അമർത്തുക. സ്വിച്ച് ഇല്ലെങ്കിൽ ക്രമീകരണങ്ങൾ, About-ൽ Build ഏഴ് തവണ അമർത്തി വീണ്ടും ശ്രമിക്കുക.",
     "open_tmplayer_and_scan_6c50": "TMPlayer തുറന്ന് ഫോണിലെ Telegram ഉപയോഗിച്ച് അതിന്റെ QR കോഡ് സ്കാൻ ചെയ്യുക: ക്രമീകരണങ്ങൾ, ഉപകരണങ്ങൾ, Link Desktop Device.",
     "open_downloader_type_tmplayer_03fc": "Downloader തുറന്ന് വിലാസ ബോക്സിൽ tmplayer.org/apk ടൈപ്പ് ചെയ്ത് Go അമർത്തുക, പിന്നെ Fire OS ചോദിക്കുമ്പോൾ Install അമർത്തുക.",
-    "turn_on_developer_options_ebe1": "Developer options ഓണാക്കുക, Downloader ഇൻസ്റ്റാൾ ചെയ്യുക, ആപ്പുകൾ ഇൻസ്റ്റാൾ ചെയ്യാൻ അനുവദിക്കുക, പിന്നെ അതിൽ tmplayer.org/apk ടൈപ്പ് ചെയ്ത് TMPlayer ഇൻസ്റ്റാൾ ചെയ്യുക."
+    "turn_on_developer_options_ebe1": "Developer options ഓണാക്കുക, Downloader ഇൻസ്റ്റാൾ ചെയ്യുക, ആപ്പുകൾ ഇൻസ്റ്റാൾ ചെയ്യാൻ അനുവദിക്കുക, പിന്നെ അതിൽ tmplayer.org/apk ടൈപ്പ് ചെയ്ത് TMPlayer ഇൻസ്റ്റാൾ ചെയ്യുക.",
+    "is_there_a_windows_b2c9": "Windows, macOS, Linux പതിപ്പുണ്ടോ?",
+    "yes_for_windows_10_b1b9": "ഉണ്ട്, Windows 10, 11, 64-ബിറ്റ് Linux എന്നിവയ്ക്ക്, അതേ റിലീസിൽ നിന്ന്, mpv വഴി പ്ലേ ചെയ്യുന്നു. 1.26.0 മുതൽ Apple Silicon ഉള്ള, macOS 26 അല്ലെങ്കിൽ പുതിയത് ഓടുന്ന Mac-കൾക്കായി ഒരു പ്രിവ്യൂ പതിപ്പുമുണ്ട്. iPhone, iPad പതിപ്പില്ല."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer ഫീച്ചറുകൾ: ടിവിയിലും PC-യിലും Telegram വീഡിയോകൾ സ്ട്രീം ചെയ്യുക",
@@ -396,7 +396,6 @@
     "a_pkgbuild_lives_in_it": "ഒരു PKGBUILD {code1}-ൽ ഉണ്ട്. ഓരോ റിലീസിലും {code2}-ൽ നിന്ന് ഇത് ബിൽഡ് ചെയ്യും. AppImage-ഉം Arch-ൽ പ്രവർത്തിക്കും.",
     "the_recipe": "റെസിപ്പി",
     "how_to_install_on_linux": "Linux-ൽ ഇൻസ്റ്റാൾ ചെയ്ത് ആപ്പ് മെനുവിൽ ചേർക്കുന്ന വിധം",
-    "there_is_no_iphone_or": "macOS, iPhone, iPad പതിപ്പില്ല.",
     "the_shows_each_file_s": "{a1} ഓരോ ഫയലിന്റെയും SHA-256 അതിനടുത്ത് കാണിക്കുന്നു. ഡൗൺലോഡ് {code1} ഉപയോഗിച്ച് പരിശോധിക്കുക, Windows-ൽ {code2}.",
     "the_shows_each_file_s__a1": "റിലീസ് പേജ്",
     "release_notes": "റിലീസ് കുറിപ്പുകൾ",
@@ -428,7 +427,17 @@
     "win_msi_note": "ഇതിന് ഇതുവരെ കോഡ് സൈനിങ് ഇല്ല, അതിനാൽ SmartScreen മുന്നറിയിപ്പ് നൽകിയേക്കാം: {em1} ക്ലിക്ക് ചെയ്യുക, പിന്നെ {em2}.",
     "win_cmd__em1": "PowerShell",
     "win_msi_note__em1": "More info",
-    "win_msi_note__em2": "Run anyway"
+    "win_msi_note__em2": "Run anyway",
+    "macos_req": "Apple Silicon (M1 മുതൽ) ഉള്ള Mac-കൾ, macOS 26 Tahoe അല്ലെങ്കിൽ പുതിയത്. Intel Mac-കൾ പിന്തുണയ്ക്കുന്നില്ല.",
+    "preview": "പ്രിവ്യൂ",
+    "mac_dmg_note": "ഇത് Applications-ലേക്ക് വലിച്ചിടുക. Apple ഇതുവരെ ഇത് notarize ചെയ്തിട്ടില്ല, അതിനാൽ ആദ്യതവണ തുറന്നില്ലെന്ന് macOS പറയും: {em1} ക്ലിക്ക് ചെയ്യുക, പിന്നെ {em3}, {em4}-ൽ {em2} ക്ലിക്ക് ചെയ്യുക.",
+    "mac_dmg_note__em1": "Done",
+    "mac_dmg_note__em2": "Open Anyway",
+    "mac_dmg_note__em3": "System Settings",
+    "mac_dmg_note__em4": "Privacy and Security",
+    "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
+    "how_to_install_on_macos": "macOS-ൽ ഇൻസ്റ്റാൾ ചെയ്യുന്ന വിധം",
+    "no_iphone_or_ipad": "iPhone, iPad പതിപ്പില്ല."
   },
   "install": {
     "how_to_install_tmplayer_on": "Android TV, Windows, Linux എന്നിവയിൽ TMPlayer ഇൻസ്റ്റാൾ ചെയ്യുന്ന വിധം",
@@ -553,7 +562,28 @@
     "win_msi__em1": "Windows protected your PC",
     "win_msi__em2": "More info",
     "win_msi__em3": "Run anyway",
-    "win_pin__em1": "Pin to taskbar"
+    "win_pin__em1": "Pin to taskbar",
+    "on_macos": "macOS-ൽ",
+    "macos_sub": "1.26.0 മുതൽ ഒരു പ്രിവ്യൂ, Apple Silicon (M1 മുതൽ) ഉള്ള, macOS 26 Tahoe അല്ലെങ്കിൽ പുതിയത് ഓടുന്ന Mac-കൾക്കായി. Intel Mac-കൾ പിന്തുണയ്ക്കുന്നില്ല, പഴയ macOS ഇത് തുറക്കുകയുമില്ല.",
+    "mac_step1_h": "ഇത് Applications-ലേക്ക് വലിച്ചിടുക",
+    "mac_step1": "{a1}-ൽ നിന്ന് {code1} ഡൗൺലോഡ് ചെയ്ത് തുറക്കുക, എന്നിട്ട് {em1} {em2}-ലേക്ക് വലിച്ചിടുക.",
+    "mac_step1__a1": "ഡൗൺലോഡ് പേജ്",
+    "mac_step1__em2": "Applications",
+    "mac_step2_h": "തുറക്കുക, പിന്നെ ഒരിക്കൽ അനുവദിക്കുക",
+    "mac_step2": "Apple ഇതുവരെ ആപ്പ് notarize ചെയ്തിട്ടില്ല, അതിനാൽ ആദ്യതവണ macOS {em1} എന്ന് കാണിക്കും. {em2} ക്ലിക്ക് ചെയ്യുക.",
+    "mac_step2__em1": "\"TMPlayer\" Not Opened",
+    "mac_step2__em2": "Done",
+    "mac_step2b": "{em1}, {em2} തുറന്ന് {em3} വരെ താഴേക്ക് പോയി {em4} ക്ലിക്ക് ചെയ്യുക. പാസ്‌വേഡ് അല്ലെങ്കിൽ Touch ID കൊണ്ട് സ്ഥിരീകരിച്ച് ഒരിക്കൽ കൂടി {em5} ക്ലിക്ക് ചെയ്യുക. macOS ഇത് ഓർക്കും, പിന്നീട് ആപ്പ് നേരെ തുറക്കും.",
+    "mac_step2b__em1": "System Settings",
+    "mac_step2b__em2": "Privacy and Security",
+    "mac_step2b__em3": "\"TMPlayer\" was blocked to protect your Mac",
+    "mac_step2b__em4": "Open Anyway",
+    "mac_step2b__em5": "Open Anyway",
+    "mac_terminal": "അല്ലെങ്കിൽ Terminal-ൽ ഇതുതന്നെ:",
+    "mac_update_h": "അപ്ഡേറ്റുകൾ",
+    "mac_update": "പുതിയ പതിപ്പ് വരുമ്പോൾ TMPlayer അറിയിക്കുകയും റിലീസ് പേജ് തുറക്കുകയും ചെയ്യും. പുതിയ DMG ഡൗൺലോഡ് ചെയ്ത് Applications-ലെ പഴയ കോപ്പിയുടെ മുകളിലേക്ക് വലിച്ചിടുക: നിങ്ങളുടെ സൈൻ ഇൻ, ചരിത്രം, ഡൗൺലോഡുകൾ എന്നിവ നിലനിൽക്കും.",
+    "mac_preview_note": "ഏറ്റവും കുറച്ച് പരീക്ഷിച്ച ബിൽഡാണിത്. ഓരോ റിലീസും macOS 26 ഉള്ള ഒരു മെഷീനിൽ നിർമിച്ച് പരിശോധിക്കുന്നുണ്ട്, പക്ഷേ യഥാർഥ Mac-ൽ പ്ലേബാക്ക് ഇതുവരെ പരീക്ഷിച്ചിട്ടില്ല. {a1}-ൽ റിപ്പോർട്ടുകൾ സ്വാഗതം.",
+    "mac_preview_note__a1": "issues പേജ്"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: Android TV-ക്കും Google TV-ക്കുമുള്ള അനൗദ്യോഗിക Telegram വീഡിയോ പ്ലേയർ",
@@ -713,9 +743,6 @@
     "which_file_do_i_download": "ഞാൻ ഏത് ഫയൽ ഡൗൺലോഡ് ചെയ്യണം?",
     "android_tv_or_phone_the": "Android TV അല്ലെങ്കിൽ ഫോൺ: യൂണിവേഴ്സൽ APK. Windows: MSI ഇൻസ്റ്റാളർ. Linux: AppImage, അല്ലെങ്കിൽ Arch-ൽ PKGBUILD. {a1} നിങ്ങളുടേത് ആദ്യം കാണിക്കും.",
     "android_tv_or_phone_the__a1": "ഡൗൺലോഡ് പേജ്",
-    "is_there_a_windows_linux": "Windows അല്ലെങ്കിൽ Linux പതിപ്പുണ്ടോ?",
-    "yes_for_windows_10_and": "ഉണ്ട്, Windows 10, 11, 64-ബിറ്റ് Linux എന്നിവയ്ക്ക്, അതേ റിലീസിൽ നിന്ന്, mpv വഴി പ്ലേ ചെയ്യുന്നു. macOS, iPhone, iPad പതിപ്പില്ല. {a1}.",
-    "yes_for_windows_10_and__a1": "ഇവിടെ നിന്ന് എടുക്കാം",
     "can_i_read_my_messages": "എനിക്ക് ഇതിൽ എന്റെ സന്ദേശങ്ങൾ വായിക്കാമോ?",
     "no_it_only_ever_shows": "ഇല്ല. ഇത് നിങ്ങളുടെ ചാറ്റുകളിലെ വീഡിയോകൾ മാത്രമേ കാണിക്കൂ. ഇതിൽ നിന്ന് വായിക്കാനോ മറുപടി നൽകാനോ ഒന്നും അയയ്ക്കാനോ കഴിയില്ല.",
     "does_tmplayer_provide_any_media": "TMPlayer സ്വന്തമായി എന്തെങ്കിലും മീഡിയ നൽകുന്നുണ്ടോ?",
@@ -744,7 +771,10 @@
     "the_lists_what_stays_on__a1": "സ്വകാര്യതാ പേജ്",
     "the_lists_what_stays_on__a2": "നിയമപരമായ ഉപയോഗം",
     "no_money_no_account_no": "പണമില്ല, അക്കൗണ്ടില്ല, ഇമെയിലില്ല. പ്രോജക്റ്റ് ചോദിക്കുന്നത് ഒരു സ്റ്റാർ മാത്രമാണ്.",
-    "answers_about_tmplayer_streaming_without": "TMPlayer-നെക്കുറിച്ചുള്ള ഉത്തരങ്ങൾ: കാത്തിരിക്കാതെയുള്ള സ്ട്രീമിങ്, സെർവറോ ബോട്ടോ ഇല്ല, ഏത് ഫയൽ ഡൗൺലോഡ് ചെയ്യണം, Windows, Linux പതിപ്പുകൾ, സ്വകാര്യത, ഇത് ചെയ്യാത്ത കാര്യങ്ങൾ."
+    "answers_about_tmplayer_streaming_without": "TMPlayer-നെക്കുറിച്ചുള്ള ഉത്തരങ്ങൾ: കാത്തിരിക്കാതെയുള്ള സ്ട്രീമിങ്, സെർവറോ ബോട്ടോ ഇല്ല, ഏത് ഫയൽ ഡൗൺലോഡ് ചെയ്യണം, Windows, Linux പതിപ്പുകൾ, സ്വകാര്യത, ഇത് ചെയ്യാത്ത കാര്യങ്ങൾ.",
+    "is_there_a_windows_macos_linux": "Windows, macOS, Linux പതിപ്പുണ്ടോ?",
+    "yes_for_windows_10_11_macos": "ഉണ്ട്, Windows 10, 11, 64-ബിറ്റ് Linux എന്നിവയ്ക്ക്, അതേ റിലീസിൽ നിന്ന്, mpv വഴി പ്ലേ ചെയ്യുന്നു. 1.26.0 മുതൽ Apple Silicon ഉള്ള, macOS 26 അല്ലെങ്കിൽ പുതിയത് ഓടുന്ന Mac-കൾക്കായി ഒരു പ്രിവ്യൂ പതിപ്പുമുണ്ട്. iPhone, iPad പതിപ്പില്ല. {a1}.",
+    "yes_for_windows_10_11_macos__a1": "ഇവിടെ നിന്ന് എടുക്കാം"
   },
   "formats": {
     "supported_formats_what_tmplayer_plays": "പിന്തുണയ്ക്കുന്ന ഫോർമാറ്റുകൾ: Android TV, Windows, Linux എന്നിവയിൽ TMPlayer എന്തൊക്കെ പ്ലേ ചെയ്യും",
@@ -1001,7 +1031,6 @@
     "kind_linux_tarball": "Linux tarball",
     "kind_checksums": "ചെക്ക്സമ്മുകൾ",
     "os_note_mac": "macOS പതിപ്പില്ല. താഴെയുള്ളതെല്ലാം Android, Windows, Linux എന്നിവയ്ക്കുള്ളതാണ്.",
-    "os_note_ios": "iPhone, iPad പതിപ്പില്ല. താഴെയുള്ളതെല്ലാം Android, Windows, Linux എന്നിവയ്ക്കുള്ളതാണ്.",
     "download_for": "{os}-ന് ഡൗൺലോഡ് ചെയ്യുക",
     "downloads_one": "{count} ഡൗൺലോഡ്",
     "downloads_other": "{count} ഡൗൺലോഡുകൾ",
@@ -1031,7 +1060,11 @@
     "theme_to_light": "ലൈറ്റ് തീമിലേക്ക് മാറുക",
     "menu_close": "മെനു അടയ്ക്കുക",
     "menu": "മെനു",
-    "install_version_for": "{os}-നായി {version} ഇൻസ്റ്റാൾ ചെയ്യുക"
+    "install_version_for": "{os}-നായി {version} ഇൻസ്റ്റാൾ ചെയ്യുക",
+    "kind_mac_dmg": "macOS DMG",
+    "os_note_ios_only": "iPhone, iPad പതിപ്പില്ല. താഴെയുള്ള ഫയലുകൾ Android ഫോണുകൾക്കും Android TV-ക്കും കമ്പ്യൂട്ടറുകൾക്കുമുള്ളതാണ്.",
+    "os_note_mac_preview": "macOS പതിപ്പ് ഒരു പ്രിവ്യൂ ആണ്, Apple Silicon (M1 മുതൽ) ഉള്ള, macOS 26 അല്ലെങ്കിൽ പുതിയത് ഓടുന്ന Mac-കൾക്കായി. Intel Mac-കളിൽ ഇത് പ്രവർത്തിക്കില്ല.",
+    "download_version_mac": "Apple Silicon ഉള്ള Mac-കൾക്കായി {version} ഡൗൺലോഡ് ചെയ്യുക"
   },
   "build": {
     "language": "ഭാഷ",

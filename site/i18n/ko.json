@@ -136,8 +136,6 @@
     "neither_the_app_talks_3701": "둘 다 아니에요. 앱은 Telegram 공식 라이브러리로 Telegram과 직접 통신해요. 미디어와 계정 데이터는 어떤 TMPlayer 서버도 거치지 않아요.",
     "which_file_do_i_ec0b": "어떤 파일을 받아야 하나요?",
     "android_tv_or_phone_bd9a": "Android TV나 휴대폰은 범용 APK, Windows는 MSI 설치 파일, Linux는 AppImage예요. Arch에서는 PKGBUILD도 있어요. 다운로드 페이지에서 내 기기용이 먼저 보여요.",
-    "is_there_a_windows_b87b": "Windows나 Linux 버전도 있나요?",
-    "yes_for_windows_10_0b9e": "네, Windows 10과 11, 64비트 Linux용이 같은 릴리스에 있고 mpv로 재생해요. macOS, iPhone, iPad 버전은 없어요.",
     "can_i_read_my_61ff": "여기서 메시지를 읽을 수 있나요?",
     "no_it_only_ever_01d3": "아니요. 채팅 속 동영상만 보여 줘요. 메시지를 읽거나 답장하거나 보낼 수 없어요.",
     "does_tmplayer_provide_any_e5a6": "TMPlayer가 자체 미디어를 제공하나요?",
@@ -189,7 +187,9 @@
     "when_the_tv_asks_c1d1": "TV가 물으면 Downloader의 앱 설치를 허용하고 설치를 누르세요. 스위치가 없으면 설정, 정보에서 빌드를 일곱 번 누른 뒤 다시 시도하세요.",
     "open_tmplayer_and_scan_6c50": "TMPlayer를 열고 휴대폰의 Telegram으로 QR 코드를 스캔하세요. 설정, 기기, 데스크톱 기기 연결 순서예요.",
     "open_downloader_type_tmplayer_03fc": "Downloader를 열고 주소 창에 tmplayer.org/apk를 입력해 Go를 누른 뒤, Fire OS가 물으면 설치를 누르세요.",
-    "turn_on_developer_options_ebe1": "개발자 옵션을 켜고 Downloader를 설치해 앱 설치를 허용한 뒤, tmplayer.org/apk를 입력해 TMPlayer를 설치하세요."
+    "turn_on_developer_options_ebe1": "개발자 옵션을 켜고 Downloader를 설치해 앱 설치를 허용한 뒤, tmplayer.org/apk를 입력해 TMPlayer를 설치하세요.",
+    "is_there_a_windows_b2c9": "Windows, macOS, Linux 버전이 있나요?",
+    "yes_for_windows_10_b1b9": "네, Windows 10과 11, 64비트 Linux용이 같은 릴리스에 있고 mpv로 재생해요. 1.26.0부터는 Apple 실리콘을 탑재하고 macOS 26 이상을 쓰는 Mac용 미리보기 버전도 있어요. iPhone이나 iPad 버전은 없어요."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer 기능: TV와 PC에서 Telegram 동영상 스트리밍",
@@ -396,7 +396,6 @@
     "a_pkgbuild_lives_in_it": "PKGBUILD는 {code1}에 있어요. 릴리스마다 {code2}에서 빌드해요. AppImage도 Arch에서 실행돼요.",
     "the_recipe": "레시피",
     "how_to_install_on_linux": "Linux에 설치하고 앱 메뉴에 추가하는 방법",
-    "there_is_no_iphone_or": "macOS, iPhone, iPad 버전은 없어요.",
     "the_shows_each_file_s": "{a1}에는 파일마다 SHA-256이 함께 표시돼요. 받은 파일은 {code1}로 확인하세요. Windows에서는 {code2}를 쓰세요.",
     "the_shows_each_file_s__a1": "릴리스 페이지",
     "release_notes": "릴리스 노트",
@@ -428,7 +427,17 @@
     "win_msi_note": "아직 코드 서명이 없어서 SmartScreen이 경고할 수 있어요. {em1}, {em2} 순서로 클릭하세요.",
     "win_cmd__em1": "PowerShell",
     "win_msi_note__em1": "추가 정보",
-    "win_msi_note__em2": "실행"
+    "win_msi_note__em2": "실행",
+    "macos_req": "Apple 실리콘(M1 이상)을 탑재한 Mac, macOS 26 Tahoe 이상. Intel Mac은 지원하지 않아요.",
+    "preview": "미리보기",
+    "mac_dmg_note": "응용 프로그램으로 끌어다 놓으세요. 아직 Apple의 공증을 받지 않아서 처음에는 macOS가 열리지 않았다고 알려요. {em1}을 클릭한 다음 {em3}, {em4}에서 {em2}를 클릭하세요.",
+    "mac_dmg_note__em1": "완료",
+    "mac_dmg_note__em2": "그래도 열기",
+    "mac_dmg_note__em3": "시스템 설정",
+    "mac_dmg_note__em4": "개인정보 보호 및 보안",
+    "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
+    "how_to_install_on_macos": "macOS에 설치하는 방법",
+    "no_iphone_or_ipad": "iPhone이나 iPad 버전은 없어요."
   },
   "install": {
     "how_to_install_tmplayer_on": "Android TV, Windows, Linux에 TMPlayer 설치하는 방법",
@@ -553,7 +562,28 @@
     "win_msi__em1": "Windows가 PC를 보호했습니다",
     "win_msi__em2": "추가 정보",
     "win_msi__em3": "실행",
-    "win_pin__em1": "작업 표시줄에 고정"
+    "win_pin__em1": "작업 표시줄에 고정",
+    "on_macos": "macOS에서",
+    "macos_sub": "1.26.0부터 나오는 미리보기 버전으로, Apple 실리콘(M1 이상)을 탑재하고 macOS 26 Tahoe 이상을 쓰는 Mac용이에요. Intel Mac은 지원하지 않고, 이전 macOS에서는 열리지 않아요.",
+    "mac_step1_h": "응용 프로그램으로 끌어다 놓기",
+    "mac_step1": "{a1}에서 {code1}을 내려받아 열고, {em1}을 {em2}로 끌어다 놓으세요.",
+    "mac_step1__a1": "다운로드 페이지",
+    "mac_step1__em2": "응용 프로그램",
+    "mac_step2_h": "열고, 한 번 허용하기",
+    "mac_step2": "앱이 아직 Apple의 공증을 받지 않아서 처음에는 macOS가 {em1}이라고 표시해요. {em2}을 클릭하세요.",
+    "mac_step2__em1": "'TMPlayer'이(가) 열리지 않음",
+    "mac_step2__em2": "완료",
+    "mac_step2b": "{em1}, {em2}을 열고 {em3}까지 내려가 {em4}를 클릭하세요. 암호나 Touch ID로 확인한 뒤 {em5}를 한 번 더 클릭하세요. macOS가 기억하니까 다음부터는 바로 열려요.",
+    "mac_step2b__em1": "시스템 설정",
+    "mac_step2b__em2": "개인정보 보호 및 보안",
+    "mac_step2b__em3": "Mac을 보호하기 위해 'TMPlayer'이(가) 차단되었습니다",
+    "mac_step2b__em4": "그래도 열기",
+    "mac_step2b__em5": "그래도 열기",
+    "mac_terminal": "또는 터미널에서 같은 작업을:",
+    "mac_update_h": "업데이트",
+    "mac_update": "새 버전이 나오면 TMPlayer가 알려 주고 릴리스 페이지를 열어요. 새 DMG를 내려받아 응용 프로그램에 있는 이전 사본 위로 끌어다 놓으세요. 로그인, 기록, 다운로드는 그대로 남아요.",
+    "mac_preview_note": "가장 적게 테스트된 빌드예요. 각 릴리스는 macOS 26 머신에서 빌드하고 확인하지만, 실제 Mac에서 재생은 아직 해 보지 못했어요. {a1}에 알려 주세요.",
+    "mac_preview_note__a1": "이슈 페이지"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: Android TV와 Google TV용 비공식 Telegram 동영상 플레이어",
@@ -713,9 +743,6 @@
     "which_file_do_i_download": "어떤 파일을 받아야 하나요?",
     "android_tv_or_phone_the": "Android TV나 휴대폰은 범용 APK, Windows는 MSI 설치 파일, Linux는 AppImage예요. Arch에서는 PKGBUILD도 있어요. {a1}에서 내 기기용이 먼저 보여요.",
     "android_tv_or_phone_the__a1": "다운로드 페이지",
-    "is_there_a_windows_linux": "Windows나 Linux 버전도 있나요?",
-    "yes_for_windows_10_and": "네, Windows 10과 11, 64비트 Linux용이 같은 릴리스에 있고 mpv로 재생해요. macOS, iPhone, iPad 버전은 없어요. {a1}.",
-    "yes_for_windows_10_and__a1": "여기서 받으세요",
     "can_i_read_my_messages": "여기서 메시지를 읽을 수 있나요?",
     "no_it_only_ever_shows": "아니요. 채팅 속 동영상만 보여 줘요. 메시지를 읽거나 답장하거나 보낼 수 없어요.",
     "does_tmplayer_provide_any_media": "TMPlayer가 자체 미디어를 제공하나요?",
@@ -744,7 +771,10 @@
     "the_lists_what_stays_on__a1": "개인정보 페이지",
     "the_lists_what_stays_on__a2": "합법적 사용",
     "no_money_no_account_no": "돈도, 계정도, 이메일도 필요 없어요. 프로젝트가 바라는 건 별 하나뿐이에요.",
-    "answers_about_tmplayer_streaming_without": "TMPlayer에 대한 답변: 기다리지 않는 스트리밍, 서버와 봇이 없다는 점, 받아야 할 파일, Windows와 Linux 버전, 개인정보, 하지 않는 일."
+    "answers_about_tmplayer_streaming_without": "TMPlayer에 대한 답변: 기다리지 않는 스트리밍, 서버와 봇이 없다는 점, 받아야 할 파일, Windows와 Linux 버전, 개인정보, 하지 않는 일.",
+    "is_there_a_windows_macos_linux": "Windows, macOS, Linux 버전이 있나요?",
+    "yes_for_windows_10_11_macos": "네, Windows 10과 11, 64비트 Linux용이 같은 릴리스에 있고 mpv로 재생해요. 1.26.0부터는 Apple 실리콘을 탑재하고 macOS 26 이상을 쓰는 Mac용 미리보기 버전도 있어요. iPhone이나 iPad 버전은 없어요. {a1}.",
+    "yes_for_windows_10_11_macos__a1": "여기서 받으세요"
   },
   "formats": {
     "supported_formats_what_tmplayer_plays": "지원 형식: Android TV, Windows, Linux에서 TMPlayer가 재생하는 것",
@@ -1001,7 +1031,6 @@
     "kind_linux_tarball": "Linux tarball",
     "kind_checksums": "체크섬",
     "os_note_mac": "macOS 버전은 없어요. 아래 내용은 모두 Android, Windows, Linux용이에요.",
-    "os_note_ios": "iPhone이나 iPad 버전은 없어요. 아래 내용은 모두 Android, Windows, Linux용이에요.",
     "download_for": "{os}용 다운로드",
     "downloads_one": "{count}회 다운로드",
     "downloads_other": "{count}회 다운로드",
@@ -1031,7 +1060,11 @@
     "theme_to_light": "라이트 테마로 전환",
     "menu_close": "메뉴 닫기",
     "menu": "메뉴",
-    "install_version_for": "{os}용 {version} 설치"
+    "install_version_for": "{os}용 {version} 설치",
+    "kind_mac_dmg": "macOS DMG",
+    "os_note_ios_only": "iPhone이나 iPad 버전은 없어요. 아래 파일은 Android 휴대폰, Android TV, 컴퓨터용이에요.",
+    "os_note_mac_preview": "macOS 버전은 Apple 실리콘(M1 이상)을 탑재하고 macOS 26 이상을 쓰는 Mac용 미리보기예요. Intel Mac에서는 실행되지 않아요.",
+    "download_version_mac": "Apple 실리콘 Mac용 {version} 다운로드"
   },
   "build": {
     "language": "언어",

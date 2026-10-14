@@ -49,7 +49,7 @@ var tmT = (function () {
   /* Every file a release can carry, matched loosely on the end of its name so a
      version in the middle never matters. The label is what the previous
      releases list calls it. A release now carries the universal APK, the MSI,
-     the AppImage and the tarball; the other kinds stay only so the previous
+     the AppImage, the tarball and, from 1.26.0, the macOS DMG; the other kinds stay only so the previous
      releases list still names the files older releases had (x86_64 and per-ABI
      APKs, the Windows zip, the deb, the rpm and the Flatpak). */
   var KINDS = [
@@ -64,6 +64,7 @@ var tmT = (function () {
     { id: 'linux-appimage', label: 'AppImage', test: /\.appimage$/i },
     { id: 'linux-flatpak', label: 'Flatpak', test: /\.flatpak$/i },
     { id: 'linux-tar', label: tmT('kind_linux_tarball', 'Linux tarball'), test: /linux-x64\.tar\.(gz|xz)$/i },
+    { id: 'mac-dmg', label: tmT('kind_mac_dmg', 'macOS DMG'), test: /macos-arm64\.dmg$/i },
     { id: 'sums', label: tmT('kind_checksums', 'Checksums'), test: /^sha256sums/i, quiet: true }
   ];
 
@@ -71,6 +72,7 @@ var tmT = (function () {
     android: 'Android',
     'android-tv': 'Android TV',
     windows: 'Windows',
+    macos: 'macOS',
     linux: 'Linux'
   };
 
@@ -109,13 +111,15 @@ var tmT = (function () {
 
   /* A guess from the user agent, used only to choose an order and a button: every
      platform stays on the page whatever it says. ?os=windows (or linux, android,
-     android-tv, mac, ios) overrides it, for checking each layout by hand.
+     android-tv, macos, ios) overrides it, for checking each layout by hand.
+     A browser on a Mac says Intel whatever the chip is, so this cannot tell an
+     Apple Silicon Mac from an Intel one: every macOS line says Apple Silicon.
      Android TV browsers rarely say so, so a television mostly reads as a phone,
      which lands on the same universal APK anyway. */
   function detectOs() {
     try {
       var forced = /[?&]os=([a-z-]+)/.exec(window.location.search);
-      if (forced) { return forced[1]; }
+      if (forced) { return forced[1] === 'mac' ? 'macos' : forced[1]; }
     } catch (e) {}
     var nav = window.navigator || {};
     var ua = String(nav.userAgent || '');
@@ -127,7 +131,7 @@ var tmT = (function () {
     if (/Win/i.test(platform) || /Windows/i.test(ua)) { return 'windows'; }
     if (/Mac/i.test(platform) || /Macintosh/i.test(ua)) {
       // An iPad asks for the desktop site and says Macintosh; it has a touch screen.
-      return nav.maxTouchPoints > 1 ? 'ios' : 'mac';
+      return nav.maxTouchPoints > 1 ? 'ios' : 'macos';
     }
     if (/CrOS/i.test(ua)) { return null; }
     if (/Linux|X11/i.test(platform + ' ' + ua)) { return 'linux'; }
@@ -143,27 +147,52 @@ var tmT = (function () {
   }
 
   /* The visitor's platform goes first and gets the filled button. Done before
-     the request, so the page is in its final order while GitHub is answering. */
+     the request, so the page is in its final order while GitHub is answering.
+     macOS waits for the answer instead: its card is in the markup hidden, and
+     only a release with a DMG shows it (see showMac). */
   function arrange() {
     if (!document.getElementById('platforms')) { return; }
-    if (os === 'mac' || os === 'ios') {
-      el.osNote.textContent = os === 'mac'
-        ? tmT('os_note_mac', 'There is no macOS version. Everything below is for Android, Windows and Linux.')
-        : tmT('os_note_ios', 'There is no iPhone or iPad version. Everything below is for Android, Windows and Linux.');
+    if (os === 'ios') {
+      el.osNote.textContent = tmT('os_note_ios_only', 'There is no iPhone or iPad version. The files below are for Android phones, Android TV and computers.');
       el.osNote.hidden = false;
       return;
     }
-    var card = os && document.getElementById(os);
+    if (os === 'macos') { return; }
+    putFirst(os);
+  }
+
+  function putFirst(id) {
+    var card = id && document.getElementById(id);
     if (!card || !el.platforms.insertBefore) { return; }
     el.platforms.insertBefore(card, el.platforms.firstChild);
     card.className += ' is-yours';
     var badge = card.querySelector('.platform-yours');
     if (badge) { badge.hidden = false; }
-    var row = primaryRow(os);
+    var row = primaryRow(id);
     if (row) { row.className += ' pick'; }
-    el.osBtn.href = '#' + os;
-    el.osLabel.textContent = tmT('download_for', 'Download for {os}', { os: NAMES[os] });
+    el.osBtn.href = '#' + id;
+    el.osLabel.textContent = tmT('download_for', 'Download for {os}', { os: NAMES[id] });
     el.osBtn.hidden = false;
+  }
+
+  /* The macOS card, its jump link and, for a Mac, the first place and the
+     filled button, once the release is known to carry the DMG. A release
+     without one leaves the card hidden, and a Mac visitor is told so. The
+     note always names Apple Silicon, since the browser cannot tell. */
+  function showMac(release) {
+    var card = document.getElementById('macos');
+    if (!card) { return; }
+    var has = !!findAsset(release, 'mac-dmg');
+    if (has) {
+      card.hidden = false;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-mac-jump]'), function (a) { a.hidden = false; });
+    }
+    if (os !== 'macos' || !document.getElementById('platforms')) { return; }
+    el.osNote.textContent = has
+      ? tmT('os_note_mac_preview', 'The macOS version is a preview for Macs with Apple Silicon (M1 and later) and macOS 26 or newer. It does not run on Intel Macs.')
+      : tmT('os_note_mac', 'There is no macOS version. Everything below is for Android, Windows and Linux.');
+    el.osNote.hidden = false;
+    if (has && card.className.indexOf('is-yours') < 0) { putFirst('macos'); }
   }
 
   /* ---------- small helpers ---------- */
@@ -325,8 +354,34 @@ var tmT = (function () {
         android: 'apk-universal',
         'android-tv': 'apk-universal',
         windows: 'win-msi',
+        macos: 'mac-dmg',
         linux: 'linux-appimage'
       }[os];
+    }
+
+    /* A Mac gets the DMG only when this release has one, and the label says Apple Silicon,
+       because an Intel Mac reads the same to a browser and the DMG will not run there. The
+       download page hands over the file, with the requirement right under the button; the home
+       page goes to the macOS card on the download page in the reader's language, where the
+       requirement and the first launch are explained. */
+    if (os === 'macos') {
+      var dmg = findAsset(release, 'mac-dmg');
+      var downloads = document.querySelector('a[href$="/download/"]');
+      var page = downloads ? downloads.getAttribute('href') : '/download/';
+      if (dmg) {
+        el.osBtn.href = dmg.browser_download_url;
+        el.osBtn.title = dmg.name;
+        el.osLabel.textContent = tmT('download_version_mac', 'Download {version} for Macs with Apple Silicon', { version: tag });
+        // The hero has room for a short label only. It opens the macOS card rather than the file,
+        // so the requirement is read before anything is downloaded.
+        el.heroBtn.href = page + '#macos';
+        el.heroBtn.title = tmT('os_note_mac_preview', 'The macOS version is a preview for Macs with Apple Silicon (M1 and later) and macOS 26 or newer. It does not run on Intel Macs.');
+        el.heroLabel.textContent = tmT('download_version_for', 'Download {version} for {os}', { version: tag, os: NAMES[os] });
+      } else {
+        el.heroBtn.href = page;
+        el.heroLabel.textContent = tmT('download_version_other_os', 'Download {version} for Android, Windows or Linux', { version: tag });
+      }
+      return;
     }
 
     /* Windows leads with the PowerShell command, which installs without the SmartScreen prompt the
@@ -358,7 +413,7 @@ var tmT = (function () {
 
     // No guess, or a guess this release has no file for: the download page.
     el.heroBtn.href = '/download/';
-    el.heroLabel.textContent = os === 'mac' || os === 'ios'
+    el.heroLabel.textContent = os === 'ios'
       ? tmT('download_version_other_os', 'Download {version} for Android, Windows or Linux', { version: tag })
       : tmT('download_version', 'Download {version}', { version: tag });
   }
@@ -381,6 +436,7 @@ var tmT = (function () {
     }
 
     fillRows(release, tag);
+    showMac(release);
     fillButtons(release, tag);
 
     /* Release notes are untrusted text from the API. textContent only. */

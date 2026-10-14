@@ -249,6 +249,7 @@
         <a href="#android" data-i18n="download.android_phone">Android phone</a>
         <a href="#android-tv">Android TV</a>
         <a href="#windows">Windows</a>
+        <a href="#macos" data-mac-jump hidden>macOS</a>
         <a href="#linux">Linux</a>
       </nav>
     </div>
@@ -373,6 +374,38 @@
             <p class="platform-foot"><a href="/install/#windows" data-i18n="download.how_to_install_on_windows">How to install on Windows</a></p>
           </article>
 
+          <!--
+            The macOS card arrives with the first release that has a DMG. The site deploys before
+            that release does, so the card starts hidden and app.js shows it only once the latest
+            release carries a macos-arm64.dmg: until then it would offer a file that does not exist.
+          -->
+          <article class="platform" id="macos" data-os="macos" aria-labelledby="macos-h" hidden>
+            <div class="platform-head">
+              <span class="panel-icon icon-play" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path fill="currentColor" d="M6 3h12a2 2 0 0 1 2 2v10H4V5a2 2 0 0 1 2-2Zm0 2v8h12V5H6ZM2 17h20v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1Z"/></svg>
+              </span>
+              <div class="platform-title">
+                <h3 id="macos-h">macOS</h3>
+                <p class="platform-req" data-i18n="download.macos_req">Macs with Apple Silicon (M1 and later), macOS 26 Tahoe or newer. Intel Macs are not supported.</p>
+              </div>
+              <span class="badge platform-yours" hidden data-i18n="download.your_computer">Your computer</span>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="mac-dmg" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name">DMG <span class="badge badge-quiet" data-i18n="download.preview">Preview</span></p>
+                  <p class="abi-note" data-i18n="download.mac_dmg_note">Drag it to Applications. It is not notarized by Apple yet, so the first time macOS says it was not opened: click <em>Done</em>, then <em>Open Anyway</em> in <em>System Settings</em>, <em>Privacy and Security</em>.</p>
+                  <p class="abi-file" data-file data-i18n="download.tmplayer_version_macos_arm64_dmg">TMPlayer-&lt;version&gt;-macos-arm64.dmg</p>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg><span data-i18n="common.download">Download</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href="/install/#macos" data-i18n="download.how_to_install_on_macos">How to install on macOS</a></p>
+          </article>
+
           <article class="platform" id="linux" data-os="linux" aria-labelledby="linux-h">
             <div class="platform-head">
               <span class="panel-icon icon-no" aria-hidden="true">
@@ -412,7 +445,7 @@
         </div>
 
         <div class="later">
-          <p data-i18n="download.there_is_no_iphone_or">There is no macOS, iPhone or iPad version.</p>
+          <p data-i18n="download.no_iphone_or_ipad">There is no iPhone or iPad version.</p>
         </div>
 
         <p class="muted small section-note" data-i18n="download.the_shows_each_file_s">The <a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">release page</a> shows each file's SHA-256 beside it. Check a download with <code>sha256sum</code>, or <code>Get-FileHash</code> on Windows.</p>

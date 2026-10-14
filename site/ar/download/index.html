@@ -250,6 +250,7 @@
         <a href="#android" data-i18n="download.android_phone">هاتف Android</a>
         <a href="#android-tv">Android TV</a>
         <a href="#windows">Windows</a>
+        <a href="#macos" data-mac-jump hidden>macOS</a>
         <a href="#linux">Linux</a>
       </nav>
     </div>
@@ -374,6 +375,38 @@
             <p class="platform-foot"><a href="/ar/install/#windows" data-i18n="download.how_to_install_on_windows">طريقة التثبيت على Windows</a></p>
           </article>
 
+          <!--
+            The macOS card arrives with the first release that has a DMG. The site deploys before
+            that release does, so the card starts hidden and app.js shows it only once the latest
+            release carries a macos-arm64.dmg: until then it would offer a file that does not exist.
+          -->
+          <article class="platform" id="macos" data-os="macos" aria-labelledby="macos-h" hidden>
+            <div class="platform-head">
+              <span class="panel-icon icon-play" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path fill="currentColor" d="M6 3h12a2 2 0 0 1 2 2v10H4V5a2 2 0 0 1 2-2Zm0 2v8h12V5H6ZM2 17h20v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1Z"/></svg>
+              </span>
+              <div class="platform-title">
+                <h3 id="macos-h">macOS</h3>
+                <p class="platform-req" data-i18n="download.macos_req">أجهزة Mac بشريحة Apple Silicon (M1 وما بعدها)، مع macOS 26 Tahoe أو أحدث. أجهزة Mac بمعالج Intel غير مدعومة.</p>
+              </div>
+              <span class="badge platform-yours" hidden data-i18n="download.your_computer">جهاز الكمبيوتر</span>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="mac-dmg" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name">DMG <span class="badge badge-quiet" data-i18n="download.preview">نسخة تجريبية</span></p>
+                  <p class="abi-note" data-i18n="download.mac_dmg_note">اسحبه إلى التطبيقات. لم تصادق عليه Apple بعد، لذا يقول macOS في المرة الأولى إنه لم يُفتح: انقر <em>تم</em>، ثم <em>فتح على أي حال</em> في <em>إعدادات النظام</em>، <em>الخصوصية والأمن</em>.</p>
+                  <p class="abi-file" data-file data-i18n="download.tmplayer_version_macos_arm64_dmg">TMPlayer-&lt;version&gt;-macos-arm64.dmg</p>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg><span data-i18n="common.download">التنزيل</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href="/ar/install/#macos" data-i18n="download.how_to_install_on_macos">طريقة التثبيت على macOS</a></p>
+          </article>
+
           <article class="platform" id="linux" data-os="linux" aria-labelledby="linux-h">
             <div class="platform-head">
               <span class="panel-icon icon-no" aria-hidden="true">
@@ -413,7 +446,7 @@
         </div>
 
         <div class="later">
-          <p data-i18n="download.there_is_no_iphone_or">لا توجد نسخة لأجهزة macOS أو iPhone أو iPad.</p>
+          <p data-i18n="download.no_iphone_or_ipad">لا توجد نسخة لـ iPhone أو iPad.</p>
         </div>
 
         <p class="muted small section-note" data-i18n="download.the_shows_each_file_s">تعرض <a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">صفحة الإصدار</a> بصمة SHA-256 لكل ملف بجانبه. تحقّق من التنزيل باستخدام <code>sha256sum</code>، أو <code>Get-FileHash</code> على Windows.</p>
@@ -571,7 +604,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "ملف APK شامل", "kind_windows_installer": "مثبّت Windows", "kind_windows_zip": "ملف zip لـ Windows", "kind_linux_tarball": "أرشيف tar لـ Linux", "kind_checksums": "المجاميع الاختبارية", "os_note_mac": "لا يوجد إصدار لـ macOS. كل ما يلي مخصص لـ Android وWindows وLinux.", "os_note_ios": "لا يوجد إصدار لـ iPhone أو iPad. كل ما يلي مخصص لـ Android وWindows وLinux.", "download_for": "التنزيل لـ {os}", "downloads_one": "عدد التنزيلات: {count}", "downloads_other": "عدد التنزيلات: {count}", "not_in_release": "غير متوفر في {version}", "on_github": "على GitHub", "download_file": "تنزيل {file}", "install_version_for": "ثبّت {version} لنظام {os}", "download_version_for": "تنزيل {version} لـ {os}", "download_version_other_os": "تنزيل {version} لـ Android أو Windows أو Linux", "download_version": "تنزيل {version}", "latest": "الأحدث", "no_files_yet": "لا توجد ملفات مرفقة بهذا الإصدار بعد. ربما لا يزال البناء جاريًا.", "open_on_github": "فتح {version} على GitHub", "release": "الإصدار", "unavailable": "غير متاح", "fail_downloads": "التنزيلات لا تزال متاحة: كل زر أدناه يفتح {link}، حيث تُسرد الملفات بأسمائها.", "fail_link": "أحدث إصدار على GitHub", "go_to_downloads": "انتقل إلى التنزيلات", "not_released": "لم يصدر بعد", "no_release": "لم يُنشر أي إصدار بعد. لا يزال بإمكانك بناء التطبيق من الشيفرة المصدرية.", "build_instructions": "اقرأ تعليمات البناء على GitHub", "view_project": "اعرض المشروع على GitHub", "fail_browser": "لا يستطيع هذا المتصفح تحميل قائمة الإصدارات.", "fail_rate": "يقيّد GitHub عدد الطلبات من هذه الشبكة. تسمح واجهته البرمجية العامة بـ 60 طلبًا في الساعة لكل عنوان، وقد استُنفدت لهذا العنوان.", "fail_timeout": "لم يستجب GitHub في الوقت المحدد.", "fail_load": "تعذر تحميل قائمة الإصدارات من GitHub.", "theme_to_dark": "التبديل إلى المظهر الداكن", "theme_to_light": "التبديل إلى المظهر الفاتح", "menu_close": "إغلاق القائمة", "menu": "القائمة"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "ملف APK شامل", "kind_windows_installer": "مثبّت Windows", "kind_windows_zip": "ملف zip لـ Windows", "kind_linux_tarball": "أرشيف tar لـ Linux", "kind_mac_dmg": "ملف DMG لـ macOS", "kind_checksums": "المجاميع الاختبارية", "os_note_ios_only": "لا توجد نسخة لـ iPhone أو iPad. الملفات أدناه لهواتف Android وAndroid TV والحواسيب.", "download_for": "التنزيل لـ {os}", "os_note_mac_preview": "نسخة macOS تجريبية، لأجهزة Mac بشريحة Apple Silicon (M1 وما بعدها) مع macOS 26 أو أحدث. لا تعمل على أجهزة Mac بمعالج Intel.", "os_note_mac": "لا يوجد إصدار لـ macOS. كل ما يلي مخصص لـ Android وWindows وLinux.", "downloads_one": "عدد التنزيلات: {count}", "downloads_other": "عدد التنزيلات: {count}", "not_in_release": "غير متوفر في {version}", "on_github": "على GitHub", "download_file": "تنزيل {file}", "download_version_mac": "تنزيل {version} لأجهزة Mac بشريحة Apple Silicon", "download_version_for": "تنزيل {version} لـ {os}", "download_version_other_os": "تنزيل {version} لـ Android أو Windows أو Linux", "install_version_for": "ثبّت {version} لنظام {os}", "download_version": "تنزيل {version}", "latest": "الأحدث", "no_files_yet": "لا توجد ملفات مرفقة بهذا الإصدار بعد. ربما لا يزال البناء جاريًا.", "open_on_github": "فتح {version} على GitHub", "release": "الإصدار", "unavailable": "غير متاح", "fail_downloads": "التنزيلات لا تزال متاحة: كل زر أدناه يفتح {link}، حيث تُسرد الملفات بأسمائها.", "fail_link": "أحدث إصدار على GitHub", "go_to_downloads": "انتقل إلى التنزيلات", "not_released": "لم يصدر بعد", "no_release": "لم يُنشر أي إصدار بعد. لا يزال بإمكانك بناء التطبيق من الشيفرة المصدرية.", "build_instructions": "اقرأ تعليمات البناء على GitHub", "view_project": "اعرض المشروع على GitHub", "fail_browser": "لا يستطيع هذا المتصفح تحميل قائمة الإصدارات.", "fail_rate": "يقيّد GitHub عدد الطلبات من هذه الشبكة. تسمح واجهته البرمجية العامة بـ 60 طلبًا في الساعة لكل عنوان، وقد استُنفدت لهذا العنوان.", "fail_timeout": "لم يستجب GitHub في الوقت المحدد.", "fail_load": "تعذر تحميل قائمة الإصدارات من GitHub.", "theme_to_dark": "التبديل إلى المظهر الداكن", "theme_to_light": "التبديل إلى المظهر الفاتح", "menu_close": "إغلاق القائمة", "menu": "القائمة"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

@@ -250,6 +250,7 @@
         <a href="#android" data-i18n="download.android_phone">Android फ़ोन</a>
         <a href="#android-tv">Android TV</a>
         <a href="#windows">Windows</a>
+        <a href="#macos" data-mac-jump hidden>macOS</a>
         <a href="#linux">Linux</a>
       </nav>
     </div>
@@ -374,6 +375,38 @@
             <p class="platform-foot"><a href="/hi/install/#windows" data-i18n="download.how_to_install_on_windows">Windows पर इंस्टॉल कैसे करें</a></p>
           </article>
 
+          <!--
+            The macOS card arrives with the first release that has a DMG. The site deploys before
+            that release does, so the card starts hidden and app.js shows it only once the latest
+            release carries a macos-arm64.dmg: until then it would offer a file that does not exist.
+          -->
+          <article class="platform" id="macos" data-os="macos" aria-labelledby="macos-h" hidden>
+            <div class="platform-head">
+              <span class="panel-icon icon-play" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path fill="currentColor" d="M6 3h12a2 2 0 0 1 2 2v10H4V5a2 2 0 0 1 2-2Zm0 2v8h12V5H6ZM2 17h20v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1Z"/></svg>
+              </span>
+              <div class="platform-title">
+                <h3 id="macos-h">macOS</h3>
+                <p class="platform-req" data-i18n="download.macos_req">Apple Silicon (M1 और बाद के) वाले Mac, macOS 26 Tahoe या नया। Intel Mac समर्थित नहीं हैं।</p>
+              </div>
+              <span class="badge platform-yours" hidden data-i18n="download.your_computer">आपका कंप्यूटर</span>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="mac-dmg" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name">DMG <span class="badge badge-quiet" data-i18n="download.preview">प्रीव्यू</span></p>
+                  <p class="abi-note" data-i18n="download.mac_dmg_note">इसे Applications में खींचें। Apple ने इसे अभी notarize नहीं किया है, इसलिए पहली बार macOS कहता है कि यह नहीं खुला: <em>Done</em> पर क्लिक करें, फिर <em>System Settings</em>, <em>Privacy and Security</em> में <em>Open Anyway</em> पर क्लिक करें।</p>
+                  <p class="abi-file" data-file data-i18n="download.tmplayer_version_macos_arm64_dmg">TMPlayer-&lt;version&gt;-macos-arm64.dmg</p>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg><span data-i18n="common.download">डाउनलोड</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href="/hi/install/#macos" data-i18n="download.how_to_install_on_macos">macOS पर इंस्टॉल करने का तरीका</a></p>
+          </article>
+
           <article class="platform" id="linux" data-os="linux" aria-labelledby="linux-h">
             <div class="platform-head">
               <span class="panel-icon icon-no" aria-hidden="true">
@@ -413,7 +446,7 @@
         </div>
 
         <div class="later">
-          <p data-i18n="download.there_is_no_iphone_or">macOS, iPhone या iPad वर्शन नहीं है।</p>
+          <p data-i18n="download.no_iphone_or_ipad">iPhone या iPad संस्करण नहीं है।</p>
         </div>
 
         <p class="muted small section-note" data-i18n="download.the_shows_each_file_s"><a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">रिलीज़ पेज</a> हर फ़ाइल के बगल में उसका SHA-256 दिखाता है। डाउनलोड को <code>sha256sum</code> से जाँचें, या Windows पर <code>Get-FileHash</code> से।</p>
@@ -571,7 +604,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "यूनिवर्सल APK", "kind_windows_installer": "Windows इंस्टॉलर", "kind_windows_zip": "Windows ज़िप", "kind_linux_tarball": "Linux टारबॉल", "kind_checksums": "चेकसम", "os_note_mac": "macOS वर्शन नहीं है। नीचे सब कुछ Android, Windows और Linux के लिए है।", "os_note_ios": "iPhone या iPad वर्शन नहीं है। नीचे सब कुछ Android, Windows और Linux के लिए है।", "download_for": "{os} के लिए डाउनलोड करें", "downloads_one": "{count} डाउनलोड", "downloads_other": "{count} डाउनलोड", "not_in_release": "{version} में नहीं", "on_github": "GitHub पर", "download_file": "{file} डाउनलोड करें", "install_version_for": "{os} के लिए {version} इंस्टॉल करें", "download_version_for": "{os} के लिए {version} डाउनलोड करें", "download_version_other_os": "Android, Windows या Linux के लिए {version} डाउनलोड करें", "download_version": "{version} डाउनलोड करें", "latest": "नवीनतम", "no_files_yet": "इस रिलीज़ में अभी कोई फ़ाइल नहीं जुड़ी है। हो सकता है बिल्ड अभी चल रहा हो।", "open_on_github": "GitHub पर {version} खोलें", "release": "रिलीज़", "unavailable": "उपलब्ध नहीं", "fail_downloads": "डाउनलोड अब भी मौजूद हैं: नीचे का हर बटन {link} खोलता है, जहाँ फ़ाइलें नाम से सूचीबद्ध हैं।", "fail_link": "GitHub पर नवीनतम रिलीज़", "go_to_downloads": "डाउनलोड पर जाएँ", "not_released": "अभी रिलीज़ नहीं हुआ", "no_release": "अभी कोई रिलीज़ प्रकाशित नहीं हुई है। आप फिर भी ऐप को सोर्स से बना सकते हैं।", "build_instructions": "GitHub पर बिल्ड निर्देश पढ़ें", "view_project": "GitHub पर प्रोजेक्ट देखें", "fail_browser": "यह ब्राउज़र रिलीज़ सूची लोड नहीं कर सकता।", "fail_rate": "GitHub इस नेटवर्क पर रेट लिमिट लगा रहा है। उसका सार्वजनिक API हर पते पर प्रति घंटे 60 अनुरोध देता है, और यह पता उन्हें पूरा कर चुका है।", "fail_timeout": "GitHub ने समय पर जवाब नहीं दिया।", "fail_load": "GitHub से रिलीज़ सूची लोड नहीं हो सकी।", "theme_to_dark": "डार्क थीम पर जाएँ", "theme_to_light": "लाइट थीम पर जाएँ", "menu_close": "मेनू बंद करें", "menu": "मेनू"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "यूनिवर्सल APK", "kind_windows_installer": "Windows इंस्टॉलर", "kind_windows_zip": "Windows ज़िप", "kind_linux_tarball": "Linux टारबॉल", "kind_mac_dmg": "macOS DMG", "kind_checksums": "चेकसम", "os_note_ios_only": "iPhone या iPad संस्करण नहीं है। नीचे की फ़ाइलें Android फ़ोन, Android TV और कंप्यूटर के लिए हैं।", "download_for": "{os} के लिए डाउनलोड करें", "os_note_mac_preview": "macOS संस्करण एक प्रीव्यू है, Apple Silicon (M1 और बाद के) वाले और macOS 26 या नए Mac के लिए। यह Intel Mac पर नहीं चलता।", "os_note_mac": "macOS वर्शन नहीं है। नीचे सब कुछ Android, Windows और Linux के लिए है।", "downloads_one": "{count} डाउनलोड", "downloads_other": "{count} डाउनलोड", "not_in_release": "{version} में नहीं", "on_github": "GitHub पर", "download_file": "{file} डाउनलोड करें", "download_version_mac": "Apple Silicon वाले Mac के लिए {version} डाउनलोड करें", "download_version_for": "{os} के लिए {version} डाउनलोड करें", "download_version_other_os": "Android, Windows या Linux के लिए {version} डाउनलोड करें", "install_version_for": "{os} के लिए {version} इंस्टॉल करें", "download_version": "{version} डाउनलोड करें", "latest": "नवीनतम", "no_files_yet": "इस रिलीज़ में अभी कोई फ़ाइल नहीं जुड़ी है। हो सकता है बिल्ड अभी चल रहा हो।", "open_on_github": "GitHub पर {version} खोलें", "release": "रिलीज़", "unavailable": "उपलब्ध नहीं", "fail_downloads": "डाउनलोड अब भी मौजूद हैं: नीचे का हर बटन {link} खोलता है, जहाँ फ़ाइलें नाम से सूचीबद्ध हैं।", "fail_link": "GitHub पर नवीनतम रिलीज़", "go_to_downloads": "डाउनलोड पर जाएँ", "not_released": "अभी रिलीज़ नहीं हुआ", "no_release": "अभी कोई रिलीज़ प्रकाशित नहीं हुई है। आप फिर भी ऐप को सोर्स से बना सकते हैं।", "build_instructions": "GitHub पर बिल्ड निर्देश पढ़ें", "view_project": "GitHub पर प्रोजेक्ट देखें", "fail_browser": "यह ब्राउज़र रिलीज़ सूची लोड नहीं कर सकता।", "fail_rate": "GitHub इस नेटवर्क पर रेट लिमिट लगा रहा है। उसका सार्वजनिक API हर पते पर प्रति घंटे 60 अनुरोध देता है, और यह पता उन्हें पूरा कर चुका है।", "fail_timeout": "GitHub ने समय पर जवाब नहीं दिया।", "fail_load": "GitHub से रिलीज़ सूची लोड नहीं हो सकी।", "theme_to_dark": "डार्क थीम पर जाएँ", "theme_to_light": "लाइट थीम पर जाएँ", "menu_close": "मेनू बंद करें", "menu": "मेनू"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

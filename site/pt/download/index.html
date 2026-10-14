@@ -250,6 +250,7 @@
         <a href="#android" data-i18n="download.android_phone">Celular Android</a>
         <a href="#android-tv">Android TV</a>
         <a href="#windows">Windows</a>
+        <a href="#macos" data-mac-jump hidden>macOS</a>
         <a href="#linux">Linux</a>
       </nav>
     </div>
@@ -374,6 +375,38 @@
             <p class="platform-foot"><a href="/pt/install/#windows" data-i18n="download.how_to_install_on_windows">Como instalar no Windows</a></p>
           </article>
 
+          <!--
+            The macOS card arrives with the first release that has a DMG. The site deploys before
+            that release does, so the card starts hidden and app.js shows it only once the latest
+            release carries a macos-arm64.dmg: until then it would offer a file that does not exist.
+          -->
+          <article class="platform" id="macos" data-os="macos" aria-labelledby="macos-h" hidden>
+            <div class="platform-head">
+              <span class="panel-icon icon-play" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path fill="currentColor" d="M6 3h12a2 2 0 0 1 2 2v10H4V5a2 2 0 0 1 2-2Zm0 2v8h12V5H6ZM2 17h20v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1Z"/></svg>
+              </span>
+              <div class="platform-title">
+                <h3 id="macos-h">macOS</h3>
+                <p class="platform-req" data-i18n="download.macos_req">Macs com Apple Silicon (M1 e posteriores), macOS 26 Tahoe ou mais recente. Macs com Intel não são compatíveis.</p>
+              </div>
+              <span class="badge platform-yours" hidden data-i18n="download.your_computer">Seu computador</span>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="mac-dmg" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name">DMG <span class="badge badge-quiet" data-i18n="download.preview">Prévia</span></p>
+                  <p class="abi-note" data-i18n="download.mac_dmg_note">Arraste para Aplicativos. Ainda não é notarizado pela Apple, então na primeira vez o macOS diz que não foi aberto: clique em <em>OK</em> e depois em <em>Abrir Mesmo Assim</em> em <em>Ajustes do Sistema</em>, <em>Privacidade e Segurança</em>.</p>
+                  <p class="abi-file" data-file data-i18n="download.tmplayer_version_macos_arm64_dmg">TMPlayer-&lt;version&gt;-macos-arm64.dmg</p>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg><span data-i18n="common.download">Download</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href="/pt/install/#macos" data-i18n="download.how_to_install_on_macos">Como instalar no macOS</a></p>
+          </article>
+
           <article class="platform" id="linux" data-os="linux" aria-labelledby="linux-h">
             <div class="platform-head">
               <span class="panel-icon icon-no" aria-hidden="true">
@@ -413,7 +446,7 @@
         </div>
 
         <div class="later">
-          <p data-i18n="download.there_is_no_iphone_or">Não há versão para macOS, iPhone nem iPad.</p>
+          <p data-i18n="download.no_iphone_or_ipad">Não existe versão para iPhone nem iPad.</p>
         </div>
 
         <p class="muted small section-note" data-i18n="download.the_shows_each_file_s">A <a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">página da versão</a> mostra o SHA-256 de cada arquivo ao lado dele. Confira um download com <code>sha256sum</code>, ou <code>Get-FileHash</code> no Windows.</p>
@@ -571,7 +604,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK universal", "kind_windows_installer": "Instalador para Windows", "kind_windows_zip": "Zip para Windows", "kind_linux_tarball": "Tarball para Linux", "kind_checksums": "Checksums", "os_note_mac": "Não há versão para macOS. Tudo abaixo é para Android, Windows e Linux.", "os_note_ios": "Não há versão para iPhone nem iPad. Tudo abaixo é para Android, Windows e Linux.", "download_for": "Baixar para {os}", "downloads_one": "{count} download", "downloads_other": "{count} downloads", "not_in_release": "Não está na {version}", "on_github": "No GitHub", "download_file": "Baixar {file}", "install_version_for": "Instalar {version} para {os}", "download_version_for": "Baixar a {version} para {os}", "download_version_other_os": "Baixar a {version} para Android, Windows ou Linux", "download_version": "Baixar a {version}", "latest": "Mais recente", "no_files_yet": "Esta versão ainda não tem arquivos anexados. A compilação pode ainda estar em andamento.", "open_on_github": "Abrir a {version} no GitHub", "release": "Versão", "unavailable": "Indisponível", "fail_downloads": "Os downloads continuam lá: cada botão abaixo abre {link}, onde os arquivos estão listados por nome.", "fail_link": "a versão mais recente no GitHub", "go_to_downloads": "Ir para os downloads", "not_released": "Ainda não lançada", "no_release": "Nenhuma versão foi publicada ainda. Você ainda pode compilar o app a partir do código-fonte.", "build_instructions": "Leia as instruções de compilação no GitHub", "view_project": "Ver o projeto no GitHub", "fail_browser": "Este navegador não consegue carregar a lista de versões.", "fail_rate": "O GitHub está limitando esta rede. A API pública dele permite 60 requisições por hora por endereço, e este já usou todas.", "fail_timeout": "O GitHub não respondeu a tempo.", "fail_load": "Não foi possível carregar a lista de versões do GitHub.", "theme_to_dark": "Mudar para o tema escuro", "theme_to_light": "Mudar para o tema claro", "menu_close": "Fechar menu", "menu": "Menu"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK universal", "kind_windows_installer": "Instalador para Windows", "kind_windows_zip": "Zip para Windows", "kind_linux_tarball": "Tarball para Linux", "kind_mac_dmg": "DMG para macOS", "kind_checksums": "Checksums", "os_note_ios_only": "Não existe versão para iPhone nem iPad. Os arquivos abaixo são para celulares Android, Android TV e computadores.", "download_for": "Baixar para {os}", "os_note_mac_preview": "A versão para macOS é uma prévia, para Macs com Apple Silicon (M1 e posteriores) e macOS 26 ou mais recente. Ela não roda em Macs com Intel.", "os_note_mac": "Não há versão para macOS. Tudo abaixo é para Android, Windows e Linux.", "downloads_one": "{count} download", "downloads_other": "{count} downloads", "not_in_release": "Não está na {version}", "on_github": "No GitHub", "download_file": "Baixar {file}", "download_version_mac": "Baixar {version} para Macs com Apple Silicon", "download_version_for": "Baixar a {version} para {os}", "download_version_other_os": "Baixar a {version} para Android, Windows ou Linux", "install_version_for": "Instalar {version} para {os}", "download_version": "Baixar a {version}", "latest": "Mais recente", "no_files_yet": "Esta versão ainda não tem arquivos anexados. A compilação pode ainda estar em andamento.", "open_on_github": "Abrir a {version} no GitHub", "release": "Versão", "unavailable": "Indisponível", "fail_downloads": "Os downloads continuam lá: cada botão abaixo abre {link}, onde os arquivos estão listados por nome.", "fail_link": "a versão mais recente no GitHub", "go_to_downloads": "Ir para os downloads", "not_released": "Ainda não lançada", "no_release": "Nenhuma versão foi publicada ainda. Você ainda pode compilar o app a partir do código-fonte.", "build_instructions": "Leia as instruções de compilação no GitHub", "view_project": "Ver o projeto no GitHub", "fail_browser": "Este navegador não consegue carregar a lista de versões.", "fail_rate": "O GitHub está limitando esta rede. A API pública dele permite 60 requisições por hora por endereço, e este já usou todas.", "fail_timeout": "O GitHub não respondeu a tempo.", "fail_load": "Não foi possível carregar a lista de versões do GitHub.", "theme_to_dark": "Mudar para o tema escuro", "theme_to_light": "Mudar para o tema claro", "menu_close": "Fechar menu", "menu": "Menu"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

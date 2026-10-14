@@ -284,6 +284,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">Android phone</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">Desktop and menu shortcuts</a>
       </nav>
@@ -416,7 +417,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">On macOS</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">A preview, from 1.26.0, for Macs with Apple Silicon (M1 and later) running macOS 26 Tahoe or newer. Intel Macs are not supported, and an older macOS will not open it.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">Drag it to Applications</h3>
+            <p data-i18n="install.mac_step1">Download <code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code> from <a href="/download/#macos">the download page</a>, open it, and drag <em>TMPlayer</em> onto <em>Applications</em>.</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">Open it, then allow it once</h3>
+            <p data-i18n="install.mac_step2">The app is not notarized by Apple yet, so the first time macOS says <em>"TMPlayer" Not Opened</em>. Click <em>Done</em>.</p>
+            <p data-i18n="install.mac_step2b">Open <em>System Settings</em>, <em>Privacy and Security</em>, scroll down to <em>"TMPlayer" was blocked to protect your Mac</em> and click <em>Open Anyway</em>. Confirm with your password or Touch ID and click <em>Open Anyway</em> once more. macOS remembers this, so later launches open straight away.</p>
+            <p data-i18n="install.mac_terminal">Or the same in Terminal:</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">Sign in</h3>
+            <p data-i18n="install.scan_the_qr_code_with">Scan the QR code with Telegram on your phone: <em>Settings</em>, <em>Devices</em>, <em>Link Desktop Device</em>. Or choose <em>Log in by phone number</em>.</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">Updates</h3>
+          <p data-i18n="install.mac_update">TMPlayer tells you when a new version is out and opens the release page. Download the new DMG and drag it over the old copy in Applications: your sign-in, history and downloads are kept.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">This is the least tested build. Each release is built and checked on a macOS 26 machine, but playback has not been tried on a real Mac yet. Reports are welcome on the <a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">issues page</a>.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -463,9 +503,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -526,9 +566,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -586,9 +626,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">Star it if it helped</h2>

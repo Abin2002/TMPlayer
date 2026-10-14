@@ -282,6 +282,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">Android ফোন</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">ডেস্কটপ ও মেনু শর্টকাট</a>
       </nav>
@@ -408,7 +409,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">macOS-এ</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">1.26.0 থেকে একটি প্রিভিউ, Apple Silicon (M1 ও পরের) যুক্ত এবং macOS 26 Tahoe বা নতুন চালানো Mac-এর জন্য। Intel Mac সমর্থিত নয়, আর পুরনো macOS এটি খুলবে না।</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">এটি Applications-এ টেনে আনুন</h3>
+            <p data-i18n="install.mac_step1"><a href="/bn/download/#macos">ডাউনলোড পেজ</a> থেকে <code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code> ডাউনলোড করুন, খুলুন, আর <em>TMPlayer</em>-কে <em>Applications</em>-এর উপর টেনে আনুন।</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">খুলুন, তারপর একবার অনুমতি দিন</h3>
+            <p data-i18n="install.mac_step2">Apple এখনো অ্যাপটি notarize করেনি, তাই প্রথমবার macOS দেখায় <em>"TMPlayer" Not Opened</em>। <em>Done</em>-এ ক্লিক করুন।</p>
+            <p data-i18n="install.mac_step2b"><em>System Settings</em>, <em>Privacy and Security</em> খুলুন, নিচে <em>"TMPlayer" was blocked to protect your Mac</em> পর্যন্ত যান এবং <em>Open Anyway</em>-এ ক্লিক করুন। পাসওয়ার্ড বা Touch ID দিয়ে নিশ্চিত করুন এবং আরেকবার <em>Open Anyway</em>-এ ক্লিক করুন। macOS এটি মনে রাখে, তাই পরের বার থেকে অ্যাপ সরাসরি খোলে।</p>
+            <p data-i18n="install.mac_terminal">অথবা Terminal-এ একই কাজ:</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">সাইন ইন</h3>
+            <p data-i18n="install.scan_the_qr_code_with">ফোনের Telegram দিয়ে QR কোড স্ক্যান করুন: <em>সেটিংস</em>, <em>ডিভাইস</em>, <em>ডেস্কটপ ডিভাইস লিঙ্ক করুন</em>। অথবা বেছে নিন <em>ফোন নম্বর দিয়ে লগ ইন করুন</em>।</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">আপডেট</h3>
+          <p data-i18n="install.mac_update">নতুন সংস্করণ এলে TMPlayer জানায় এবং রিলিজ পেজ খোলে। নতুন DMG ডাউনলোড করে Applications-এ পুরনো কপির উপর টেনে আনুন: আপনার সাইন-ইন, ইতিহাস আর ডাউনলোড থেকে যায়।</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">এটি সবচেয়ে কম পরীক্ষিত বিল্ড। প্রতিটি রিলিজ macOS 26 চালানো একটি মেশিনে তৈরি ও যাচাই করা হয়, কিন্তু আসল Mac-এ প্লেব্যাক এখনো চেষ্টা করা হয়নি। <a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">issues পেজ</a>-এ রিপোর্ট স্বাগত।</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -455,9 +495,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -518,9 +558,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -578,9 +618,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">কাজে লাগলে স্টার দিন</h2>
@@ -654,7 +694,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "ইউনিভার্সাল APK", "kind_windows_installer": "Windows ইনস্টলার", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_checksums": "চেকসাম", "os_note_mac": "macOS সংস্করণ নেই। নিচের সবকিছু Android, Windows ও Linux-এর জন্য।", "os_note_ios": "iPhone বা iPad সংস্করণ নেই। নিচের সবকিছু Android, Windows ও Linux-এর জন্য।", "download_for": "{os}-এর জন্য ডাউনলোড করুন", "downloads_one": "{count}টি ডাউনলোড", "downloads_other": "{count}টি ডাউনলোড", "not_in_release": "{version}-এ নেই", "on_github": "GitHub-এ", "download_file": "{file} ডাউনলোড করুন", "install_version_for": "{os}-এর জন্য {version} ইনস্টল করুন", "download_version_for": "{os}-এর জন্য {version} ডাউনলোড করুন", "download_version_other_os": "Android, Windows বা Linux-এর জন্য {version} ডাউনলোড করুন", "download_version": "{version} ডাউনলোড করুন", "latest": "সর্বশেষ", "no_files_yet": "এই রিলিজে এখনো কোনো ফাইল যুক্ত নেই। বিল্ড হয়তো এখনো চলছে।", "open_on_github": "GitHub-এ {version} খুলুন", "release": "রিলিজ", "unavailable": "পাওয়া যাচ্ছে না", "fail_downloads": "ডাউনলোডগুলো এখনো আছে: নিচের প্রতিটি বোতাম {link} খোলে, যেখানে ফাইলগুলো নাম ধরে তালিকাভুক্ত।", "fail_link": "GitHub-এর সর্বশেষ রিলিজ", "go_to_downloads": "ডাউনলোডে যান", "not_released": "এখনো প্রকাশিত হয়নি", "no_release": "এখনো কোনো রিলিজ প্রকাশ করা হয়নি। তবু আপনি সোর্স থেকে অ্যাপটি বানাতে পারেন।", "build_instructions": "GitHub-এ বিল্ডের নির্দেশনা পড়ুন", "view_project": "GitHub-এ প্রজেক্টটি দেখুন", "fail_browser": "এই ব্রাউজার রিলিজের তালিকা লোড করতে পারছে না।", "fail_rate": "GitHub এই নেটওয়ার্কে রেট লিমিট চালু করেছে। এর পাবলিক API প্রতি ঠিকানায় ঘণ্টায় 60টি অনুরোধ দেয়, আর এই ঠিকানা সেগুলো শেষ করে ফেলেছে।", "fail_timeout": "GitHub সময়মতো উত্তর দেয়নি।", "fail_load": "GitHub থেকে রিলিজের তালিকা লোড করা যায়নি।", "theme_to_dark": "ডার্ক থিমে যান", "theme_to_light": "লাইট থিমে যান", "menu_close": "মেনু বন্ধ করুন", "menu": "মেনু"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "ইউনিভার্সাল APK", "kind_windows_installer": "Windows ইনস্টলার", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "চেকসাম", "os_note_ios_only": "iPhone বা iPad সংস্করণ নেই। নিচের ফাইলগুলো Android ফোন, Android TV এবং কম্পিউটারের জন্য।", "download_for": "{os}-এর জন্য ডাউনলোড করুন", "os_note_mac_preview": "macOS সংস্করণটি একটি প্রিভিউ, Apple Silicon (M1 ও পরের) যুক্ত এবং macOS 26 বা নতুন Mac-এর জন্য। এটি Intel Mac-এ চলে না।", "os_note_mac": "macOS সংস্করণ নেই। নিচের সবকিছু Android, Windows ও Linux-এর জন্য।", "downloads_one": "{count}টি ডাউনলোড", "downloads_other": "{count}টি ডাউনলোড", "not_in_release": "{version}-এ নেই", "on_github": "GitHub-এ", "download_file": "{file} ডাউনলোড করুন", "download_version_mac": "Apple Silicon যুক্ত Mac-এর জন্য {version} ডাউনলোড করুন", "download_version_for": "{os}-এর জন্য {version} ডাউনলোড করুন", "download_version_other_os": "Android, Windows বা Linux-এর জন্য {version} ডাউনলোড করুন", "install_version_for": "{os}-এর জন্য {version} ইনস্টল করুন", "download_version": "{version} ডাউনলোড করুন", "latest": "সর্বশেষ", "no_files_yet": "এই রিলিজে এখনো কোনো ফাইল যুক্ত নেই। বিল্ড হয়তো এখনো চলছে।", "open_on_github": "GitHub-এ {version} খুলুন", "release": "রিলিজ", "unavailable": "পাওয়া যাচ্ছে না", "fail_downloads": "ডাউনলোডগুলো এখনো আছে: নিচের প্রতিটি বোতাম {link} খোলে, যেখানে ফাইলগুলো নাম ধরে তালিকাভুক্ত।", "fail_link": "GitHub-এর সর্বশেষ রিলিজ", "go_to_downloads": "ডাউনলোডে যান", "not_released": "এখনো প্রকাশিত হয়নি", "no_release": "এখনো কোনো রিলিজ প্রকাশ করা হয়নি। তবু আপনি সোর্স থেকে অ্যাপটি বানাতে পারেন।", "build_instructions": "GitHub-এ বিল্ডের নির্দেশনা পড়ুন", "view_project": "GitHub-এ প্রজেক্টটি দেখুন", "fail_browser": "এই ব্রাউজার রিলিজের তালিকা লোড করতে পারছে না।", "fail_rate": "GitHub এই নেটওয়ার্কে রেট লিমিট চালু করেছে। এর পাবলিক API প্রতি ঠিকানায় ঘণ্টায় 60টি অনুরোধ দেয়, আর এই ঠিকানা সেগুলো শেষ করে ফেলেছে।", "fail_timeout": "GitHub সময়মতো উত্তর দেয়নি।", "fail_load": "GitHub থেকে রিলিজের তালিকা লোড করা যায়নি।", "theme_to_dark": "ডার্ক থিমে যান", "theme_to_light": "লাইট থিমে যান", "menu_close": "মেনু বন্ধ করুন", "menu": "মেনু"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

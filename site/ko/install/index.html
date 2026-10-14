@@ -282,6 +282,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">Android 휴대폰</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">바탕 화면과 메뉴 바로가기</a>
       </nav>
@@ -408,7 +409,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">macOS에서</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">1.26.0부터 나오는 미리보기 버전으로, Apple 실리콘(M1 이상)을 탑재하고 macOS 26 Tahoe 이상을 쓰는 Mac용이에요. Intel Mac은 지원하지 않고, 이전 macOS에서는 열리지 않아요.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">응용 프로그램으로 끌어다 놓기</h3>
+            <p data-i18n="install.mac_step1"><a href="/ko/download/#macos">다운로드 페이지</a>에서 <code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code>을 내려받아 열고, <em>TMPlayer</em>을 <em>응용 프로그램</em>로 끌어다 놓으세요.</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">열고, 한 번 허용하기</h3>
+            <p data-i18n="install.mac_step2">앱이 아직 Apple의 공증을 받지 않아서 처음에는 macOS가 <em>'TMPlayer'이(가) 열리지 않음</em>이라고 표시해요. <em>완료</em>을 클릭하세요.</p>
+            <p data-i18n="install.mac_step2b"><em>시스템 설정</em>, <em>개인정보 보호 및 보안</em>을 열고 <em>Mac을 보호하기 위해 'TMPlayer'이(가) 차단되었습니다</em>까지 내려가 <em>그래도 열기</em>를 클릭하세요. 암호나 Touch ID로 확인한 뒤 <em>그래도 열기</em>를 한 번 더 클릭하세요. macOS가 기억하니까 다음부터는 바로 열려요.</p>
+            <p data-i18n="install.mac_terminal">또는 터미널에서 같은 작업을:</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">로그인</h3>
+            <p data-i18n="install.scan_the_qr_code_with">휴대폰의 Telegram으로 QR 코드를 스캔하세요. <em>설정</em>, <em>기기</em>, <em>데스크톱 기기 연결</em> 순서예요. 또는 <em>전화번호로 로그인</em>를 고르세요.</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">업데이트</h3>
+          <p data-i18n="install.mac_update">새 버전이 나오면 TMPlayer가 알려 주고 릴리스 페이지를 열어요. 새 DMG를 내려받아 응용 프로그램에 있는 이전 사본 위로 끌어다 놓으세요. 로그인, 기록, 다운로드는 그대로 남아요.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">가장 적게 테스트된 빌드예요. 각 릴리스는 macOS 26 머신에서 빌드하고 확인하지만, 실제 Mac에서 재생은 아직 해 보지 못했어요. <a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">이슈 페이지</a>에 알려 주세요.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -455,9 +495,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -518,9 +558,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -578,9 +618,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">도움이 됐다면 별을 눌러 주세요</h2>
@@ -654,7 +694,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "범용 APK", "kind_windows_installer": "Windows 설치 파일", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_checksums": "체크섬", "os_note_mac": "macOS 버전은 없어요. 아래 내용은 모두 Android, Windows, Linux용이에요.", "os_note_ios": "iPhone이나 iPad 버전은 없어요. 아래 내용은 모두 Android, Windows, Linux용이에요.", "download_for": "{os}용 다운로드", "downloads_one": "{count}회 다운로드", "downloads_other": "{count}회 다운로드", "not_in_release": "{version}에는 없음", "on_github": "GitHub에서 보기", "download_file": "{file} 다운로드", "install_version_for": "{os}용 {version} 설치", "download_version_for": "{os}용 {version} 다운로드", "download_version_other_os": "Android, Windows, Linux용 {version} 다운로드", "download_version": "{version} 다운로드", "latest": "최신", "no_files_yet": "이 릴리스에는 아직 첨부된 파일이 없어요. 빌드가 아직 진행 중일 수 있어요.", "open_on_github": "GitHub에서 {version} 열기", "release": "릴리스", "unavailable": "사용할 수 없음", "fail_downloads": "다운로드는 그대로 있어요. 아래 버튼은 모두 {link}를 열고, 거기서 파일 이름으로 찾을 수 있어요.", "fail_link": "GitHub의 최신 릴리스", "go_to_downloads": "다운로드로 가기", "not_released": "아직 출시되지 않았어요", "no_release": "아직 게시된 릴리스가 없어요. 소스에서 직접 앱을 빌드할 수는 있어요.", "build_instructions": "GitHub에서 빌드 방법 보기", "view_project": "GitHub에서 프로젝트 보기", "fail_browser": "이 브라우저는 릴리스 목록을 불러올 수 없어요.", "fail_rate": "GitHub가 이 네트워크의 요청을 제한하고 있어요. 공개 API는 주소당 시간당 60회까지 허용하는데 모두 사용했어요.", "fail_timeout": "GitHub가 제시간에 응답하지 않았어요.", "fail_load": "GitHub에서 릴리스 목록을 불러오지 못했어요.", "theme_to_dark": "다크 테마로 전환", "theme_to_light": "라이트 테마로 전환", "menu_close": "메뉴 닫기", "menu": "메뉴"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "범용 APK", "kind_windows_installer": "Windows 설치 파일", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "체크섬", "os_note_ios_only": "iPhone이나 iPad 버전은 없어요. 아래 파일은 Android 휴대폰, Android TV, 컴퓨터용이에요.", "download_for": "{os}용 다운로드", "os_note_mac_preview": "macOS 버전은 Apple 실리콘(M1 이상)을 탑재하고 macOS 26 이상을 쓰는 Mac용 미리보기예요. Intel Mac에서는 실행되지 않아요.", "os_note_mac": "macOS 버전은 없어요. 아래 내용은 모두 Android, Windows, Linux용이에요.", "downloads_one": "{count}회 다운로드", "downloads_other": "{count}회 다운로드", "not_in_release": "{version}에는 없음", "on_github": "GitHub에서 보기", "download_file": "{file} 다운로드", "download_version_mac": "Apple 실리콘 Mac용 {version} 다운로드", "download_version_for": "{os}용 {version} 다운로드", "download_version_other_os": "Android, Windows, Linux용 {version} 다운로드", "install_version_for": "{os}용 {version} 설치", "download_version": "{version} 다운로드", "latest": "최신", "no_files_yet": "이 릴리스에는 아직 첨부된 파일이 없어요. 빌드가 아직 진행 중일 수 있어요.", "open_on_github": "GitHub에서 {version} 열기", "release": "릴리스", "unavailable": "사용할 수 없음", "fail_downloads": "다운로드는 그대로 있어요. 아래 버튼은 모두 {link}를 열고, 거기서 파일 이름으로 찾을 수 있어요.", "fail_link": "GitHub의 최신 릴리스", "go_to_downloads": "다운로드로 가기", "not_released": "아직 출시되지 않았어요", "no_release": "아직 게시된 릴리스가 없어요. 소스에서 직접 앱을 빌드할 수는 있어요.", "build_instructions": "GitHub에서 빌드 방법 보기", "view_project": "GitHub에서 프로젝트 보기", "fail_browser": "이 브라우저는 릴리스 목록을 불러올 수 없어요.", "fail_rate": "GitHub가 이 네트워크의 요청을 제한하고 있어요. 공개 API는 주소당 시간당 60회까지 허용하는데 모두 사용했어요.", "fail_timeout": "GitHub가 제시간에 응답하지 않았어요.", "fail_load": "GitHub에서 릴리스 목록을 불러오지 못했어요.", "theme_to_dark": "다크 테마로 전환", "theme_to_light": "라이트 테마로 전환", "menu_close": "메뉴 닫기", "menu": "메뉴"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

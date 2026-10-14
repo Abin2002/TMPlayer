@@ -250,6 +250,7 @@
         <a href="#android" data-i18n="download.android_phone">Телефон Android</a>
         <a href="#android-tv">Android TV</a>
         <a href="#windows">Windows</a>
+        <a href="#macos" data-mac-jump hidden>macOS</a>
         <a href="#linux">Linux</a>
       </nav>
     </div>
@@ -374,6 +375,38 @@
             <p class="platform-foot"><a href="/ru/install/#windows" data-i18n="download.how_to_install_on_windows">Как установить в Windows</a></p>
           </article>
 
+          <!--
+            The macOS card arrives with the first release that has a DMG. The site deploys before
+            that release does, so the card starts hidden and app.js shows it only once the latest
+            release carries a macos-arm64.dmg: until then it would offer a file that does not exist.
+          -->
+          <article class="platform" id="macos" data-os="macos" aria-labelledby="macos-h" hidden>
+            <div class="platform-head">
+              <span class="panel-icon icon-play" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path fill="currentColor" d="M6 3h12a2 2 0 0 1 2 2v10H4V5a2 2 0 0 1 2-2Zm0 2v8h12V5H6ZM2 17h20v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1Z"/></svg>
+              </span>
+              <div class="platform-title">
+                <h3 id="macos-h">macOS</h3>
+                <p class="platform-req" data-i18n="download.macos_req">Mac с Apple Silicon (M1 и новее), macOS 26 Tahoe или новее. Mac с Intel не поддерживаются.</p>
+              </div>
+              <span class="badge platform-yours" hidden data-i18n="download.your_computer">Ваш компьютер</span>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="mac-dmg" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name">DMG <span class="badge badge-quiet" data-i18n="download.preview">Предварительная версия</span></p>
+                  <p class="abi-note" data-i18n="download.mac_dmg_note">Перетащите его в Программы. Apple ещё не заверила приложение, поэтому в первый раз macOS сообщает, что оно не открыто: нажмите <em>Готово</em>, затем <em>Все равно открыть</em> в разделе <em>Системные настройки</em>, <em>Конфиденциальность и безопасность</em>.</p>
+                  <p class="abi-file" data-file data-i18n="download.tmplayer_version_macos_arm64_dmg">TMPlayer-&lt;version&gt;-macos-arm64.dmg</p>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg><span data-i18n="common.download">Скачать</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href="/ru/install/#macos" data-i18n="download.how_to_install_on_macos">Как установить на macOS</a></p>
+          </article>
+
           <article class="platform" id="linux" data-os="linux" aria-labelledby="linux-h">
             <div class="platform-head">
               <span class="panel-icon icon-no" aria-hidden="true">
@@ -413,7 +446,7 @@
         </div>
 
         <div class="later">
-          <p data-i18n="download.there_is_no_iphone_or">Версий для macOS, iPhone и iPad нет.</p>
+          <p data-i18n="download.no_iphone_or_ipad">Версии для iPhone и iPad нет.</p>
         </div>
 
         <p class="muted small section-note" data-i18n="download.the_shows_each_file_s">На <a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">странице релиза</a> рядом с каждым файлом указан его SHA-256. Проверьте загрузку командой <code>sha256sum</code>, а в Windows <code>Get-FileHash</code>.</p>
@@ -571,7 +604,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "Универсальный APK", "kind_windows_installer": "Установщик для Windows", "kind_windows_zip": "Zip для Windows", "kind_linux_tarball": "Архив tar для Linux", "kind_checksums": "Контрольные суммы", "os_note_mac": "Версии для macOS нет. Всё ниже относится к Android, Windows и Linux.", "os_note_ios": "Версии для iPhone и iPad нет. Всё ниже относится к Android, Windows и Linux.", "download_for": "Скачать для {os}", "downloads_one": "Загрузок: {count}", "downloads_other": "Загрузок: {count}", "not_in_release": "Нет в {version}", "on_github": "На GitHub", "download_file": "Скачать {file}", "install_version_for": "Установить {version} для {os}", "download_version_for": "Скачать {version} для {os}", "download_version_other_os": "Скачать {version} для Android, Windows или Linux", "download_version": "Скачать {version}", "latest": "Последний", "no_files_yet": "К этому релизу пока не прикреплены файлы. Возможно, сборка ещё идёт.", "open_on_github": "Открыть {version} на GitHub", "release": "Релиз", "unavailable": "Недоступно", "fail_downloads": "Загрузки на месте: каждая кнопка ниже открывает {link}, где файлы перечислены по именам.", "fail_link": "последний релиз на GitHub", "go_to_downloads": "Перейти к загрузкам", "not_released": "Ещё не выпущен", "no_release": "Ни одного релиза пока не опубликовано. Приложение всё равно можно собрать из исходного кода.", "build_instructions": "Читать инструкцию по сборке на GitHub", "view_project": "Открыть проект на GitHub", "fail_browser": "Этот браузер не может загрузить список релизов.", "fail_rate": "GitHub ограничивает запросы из этой сети. Его публичный API разрешает 60 запросов в час на адрес, и этот лимит исчерпан.", "fail_timeout": "GitHub не ответил вовремя.", "fail_load": "Не удалось загрузить список релизов с GitHub.", "theme_to_dark": "Включить тёмную тему", "theme_to_light": "Включить светлую тему", "menu_close": "Закрыть меню", "menu": "Меню"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "Универсальный APK", "kind_windows_installer": "Установщик для Windows", "kind_windows_zip": "Zip для Windows", "kind_linux_tarball": "Архив tar для Linux", "kind_mac_dmg": "DMG для macOS", "kind_checksums": "Контрольные суммы", "os_note_ios_only": "Версии для iPhone и iPad нет. Файлы ниже для телефонов на Android, Android TV и компьютеров.", "download_for": "Скачать для {os}", "os_note_mac_preview": "Версия для macOS предварительная: для Mac с Apple Silicon (M1 и новее) и macOS 26 или новее. На Mac с Intel она не работает.", "os_note_mac": "Версии для macOS нет. Всё ниже относится к Android, Windows и Linux.", "downloads_one": "Загрузок: {count}", "downloads_other": "Загрузок: {count}", "not_in_release": "Нет в {version}", "on_github": "На GitHub", "download_file": "Скачать {file}", "download_version_mac": "Скачать {version} для Mac с Apple Silicon", "download_version_for": "Скачать {version} для {os}", "download_version_other_os": "Скачать {version} для Android, Windows или Linux", "install_version_for": "Установить {version} для {os}", "download_version": "Скачать {version}", "latest": "Последний", "no_files_yet": "К этому релизу пока не прикреплены файлы. Возможно, сборка ещё идёт.", "open_on_github": "Открыть {version} на GitHub", "release": "Релиз", "unavailable": "Недоступно", "fail_downloads": "Загрузки на месте: каждая кнопка ниже открывает {link}, где файлы перечислены по именам.", "fail_link": "последний релиз на GitHub", "go_to_downloads": "Перейти к загрузкам", "not_released": "Ещё не выпущен", "no_release": "Ни одного релиза пока не опубликовано. Приложение всё равно можно собрать из исходного кода.", "build_instructions": "Читать инструкцию по сборке на GitHub", "view_project": "Открыть проект на GitHub", "fail_browser": "Этот браузер не может загрузить список релизов.", "fail_rate": "GitHub ограничивает запросы из этой сети. Его публичный API разрешает 60 запросов в час на адрес, и этот лимит исчерпан.", "fail_timeout": "GitHub не ответил вовремя.", "fail_load": "Не удалось загрузить список релизов с GitHub.", "theme_to_dark": "Включить тёмную тему", "theme_to_light": "Включить светлую тему", "menu_close": "Закрыть меню", "menu": "Меню"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

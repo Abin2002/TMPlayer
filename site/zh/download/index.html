@@ -250,6 +250,7 @@
         <a href="#android" data-i18n="download.android_phone">Android 手机</a>
         <a href="#android-tv">Android TV</a>
         <a href="#windows">Windows</a>
+        <a href="#macos" data-mac-jump hidden>macOS</a>
         <a href="#linux">Linux</a>
       </nav>
     </div>
@@ -374,6 +375,38 @@
             <p class="platform-foot"><a href="/zh/install/#windows" data-i18n="download.how_to_install_on_windows">如何在 Windows 上安装</a></p>
           </article>
 
+          <!--
+            The macOS card arrives with the first release that has a DMG. The site deploys before
+            that release does, so the card starts hidden and app.js shows it only once the latest
+            release carries a macos-arm64.dmg: until then it would offer a file that does not exist.
+          -->
+          <article class="platform" id="macos" data-os="macos" aria-labelledby="macos-h" hidden>
+            <div class="platform-head">
+              <span class="panel-icon icon-play" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" focusable="false"><path fill="currentColor" d="M6 3h12a2 2 0 0 1 2 2v10H4V5a2 2 0 0 1 2-2Zm0 2v8h12V5H6ZM2 17h20v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1Z"/></svg>
+              </span>
+              <div class="platform-title">
+                <h3 id="macos-h">macOS</h3>
+                <p class="platform-req" data-i18n="download.macos_req">搭载 Apple 芯片（M1 及更新）的 Mac，macOS 26 Tahoe 或更高版本。不支持 Intel Mac。</p>
+              </div>
+              <span class="badge platform-yours" hidden data-i18n="download.your_computer">你的电脑</span>
+            </div>
+            <ul class="abi-list">
+              <li class="abi" data-asset="mac-dmg" data-primary>
+                <div class="abi-text">
+                  <p class="abi-name">DMG <span class="badge badge-quiet" data-i18n="download.preview">预览版</span></p>
+                  <p class="abi-note" data-i18n="download.mac_dmg_note">把它拖到“应用程序”。它还没有经过 Apple 公证，所以第一次打开时 macOS 会提示未打开：点按<em>完成</em>，然后在<em>系统设置</em>、<em>隐私与安全性</em>中点按<em>仍要打开</em>。</p>
+                  <p class="abi-file" data-file data-i18n="download.tmplayer_version_macos_arm64_dmg">TMPlayer-&lt;version&gt;-macos-arm64.dmg</p>
+                </div>
+                <div class="abi-get">
+                  <span class="abi-size" data-size></span>
+                  <a class="dl" data-dl href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Zm-7 15a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg><span data-i18n="common.download">下载</span></a>
+                </div>
+              </li>
+            </ul>
+            <p class="platform-foot"><a href="/zh/install/#macos" data-i18n="download.how_to_install_on_macos">如何在 macOS 上安装</a></p>
+          </article>
+
           <article class="platform" id="linux" data-os="linux" aria-labelledby="linux-h">
             <div class="platform-head">
               <span class="panel-icon icon-no" aria-hidden="true">
@@ -413,7 +446,7 @@
         </div>
 
         <div class="later">
-          <p data-i18n="download.there_is_no_iphone_or">没有 macOS、iPhone 或 iPad 版本。</p>
+          <p data-i18n="download.no_iphone_or_ipad">没有 iPhone 或 iPad 版本。</p>
         </div>
 
         <p class="muted small section-note" data-i18n="download.the_shows_each_file_s"><a href="https://github.com/dracu-lah/TMPlayer/releases/latest" rel="noopener">发布页面</a> 会在每个文件旁显示其 SHA-256。可用 <code>sha256sum</code> 校验下载的文件，Windows 上用 <code>Get-FileHash</code>。</p>
@@ -571,7 +604,7 @@
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安装程序", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_checksums": "校验和", "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。", "os_note_ios": "没有 iPhone 或 iPad 版本。以下内容适用于 Android、Windows 和 Linux。", "download_for": "下载 {os} 版", "downloads_one": "{count} 次下载", "downloads_other": "{count} 次下载", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下载 {file}", "install_version_for": "为 {os} 安装 {version}", "download_version_for": "下载适用于 {os} 的 {version}", "download_version_other_os": "下载适用于 Android、Windows 或 Linux 的 {version}", "download_version": "下载 {version}", "latest": "最新", "no_files_yet": "此版本尚未附带任何文件。构建可能仍在进行中。", "open_on_github": "在 GitHub 上打开 {version}", "release": "版本", "unavailable": "不可用", "fail_downloads": "下载仍然可用：下方每个按钮都会打开{link}，那里按名称列出了所有文件。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下载", "not_released": "尚未发布", "no_release": "尚未发布任何版本。你仍然可以从源代码构建应用。", "build_instructions": "阅读 GitHub 上的构建说明", "view_project": "在 GitHub 上查看项目", "fail_browser": "此浏览器无法加载版本列表。", "fail_rate": "GitHub 正在限制此网络的请求频率。其公开 API 每个地址每小时允许 60 次请求，而这个地址已经用完了。", "fail_timeout": "GitHub 未能及时响应。", "fail_load": "无法从 GitHub 加载版本列表。", "theme_to_dark": "切换到深色主题", "theme_to_light": "切换到浅色主题", "menu_close": "关闭菜单", "menu": "菜单"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "通用 APK", "kind_windows_installer": "Windows 安装程序", "kind_windows_zip": "Windows zip", "kind_linux_tarball": "Linux tarball", "kind_mac_dmg": "macOS DMG", "kind_checksums": "校验和", "os_note_ios_only": "没有 iPhone 或 iPad 版本。下面的文件适用于 Android 手机、Android TV 和电脑。", "download_for": "下载 {os} 版", "os_note_mac_preview": "macOS 版是预览版，适用于搭载 Apple 芯片（M1 及更新）、运行 macOS 26 或更高版本的 Mac。它不能在 Intel Mac 上运行。", "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。", "downloads_one": "{count} 次下载", "downloads_other": "{count} 次下载", "not_in_release": "不在 {version} 中", "on_github": "在 GitHub 上", "download_file": "下载 {file}", "download_version_mac": "下载适用于 Apple 芯片 Mac 的 {version}", "download_version_for": "下载适用于 {os} 的 {version}", "download_version_other_os": "下载适用于 Android、Windows 或 Linux 的 {version}", "install_version_for": "为 {os} 安装 {version}", "download_version": "下载 {version}", "latest": "最新", "no_files_yet": "此版本尚未附带任何文件。构建可能仍在进行中。", "open_on_github": "在 GitHub 上打开 {version}", "release": "版本", "unavailable": "不可用", "fail_downloads": "下载仍然可用：下方每个按钮都会打开{link}，那里按名称列出了所有文件。", "fail_link": "GitHub 上的最新版本", "go_to_downloads": "前往下载", "not_released": "尚未发布", "no_release": "尚未发布任何版本。你仍然可以从源代码构建应用。", "build_instructions": "阅读 GitHub 上的构建说明", "view_project": "在 GitHub 上查看项目", "fail_browser": "此浏览器无法加载版本列表。", "fail_rate": "GitHub 正在限制此网络的请求频率。其公开 API 每个地址每小时允许 60 次请求，而这个地址已经用完了。", "fail_timeout": "GitHub 未能及时响应。", "fail_load": "无法从 GitHub 加载版本列表。", "theme_to_dark": "切换到深色主题", "theme_to_light": "切换到浅色主题", "menu_close": "关闭菜单", "menu": "菜单"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

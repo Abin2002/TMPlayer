@@ -282,6 +282,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">هاتف Android</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">اختصارات سطح المكتب والقائمة</a>
       </nav>
@@ -408,7 +409,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">على macOS</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">نسخة تجريبية، منذ الإصدار 1.26.0، لأجهزة Mac بشريحة Apple Silicon (M1 وما بعدها) تعمل بنظام macOS 26 Tahoe أو أحدث. أجهزة Mac بمعالج Intel غير مدعومة، ولن يفتحه إصدار أقدم من macOS.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">اسحبه إلى التطبيقات</h3>
+            <p data-i18n="install.mac_step1">نزّل <code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code> من <a href="/ar/download/#macos">صفحة التنزيل</a>، وافتحه، واسحب <em>TMPlayer</em> إلى <em>التطبيقات</em>.</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">افتحه، ثم اسمح به مرة واحدة</h3>
+            <p data-i18n="install.mac_step2">لم تصادق Apple على التطبيق بعد، لذا يعرض macOS في المرة الأولى <em>لم يتم فتح "TMPlayer"</em>. انقر <em>تم</em>.</p>
+            <p data-i18n="install.mac_step2b">افتح <em>إعدادات النظام</em>، <em>الخصوصية والأمن</em>، ومرّر إلى الأسفل حتى <em>تم حظر "TMPlayer" لحماية الـ Mac</em> وانقر <em>فتح على أي حال</em>. أكّد بكلمة السر أو Touch ID وانقر <em>فتح على أي حال</em> مرة أخرى. يتذكر macOS ذلك، فيفتح التطبيق مباشرة في المرات التالية.</p>
+            <p data-i18n="install.mac_terminal">أو الشيء نفسه في Terminal:</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">تسجيل الدخول</h3>
+            <p data-i18n="install.scan_the_qr_code_with">امسح رمز QR بتطبيق Telegram على هاتفك: <em>الإعدادات</em>، ثم <em>الأجهزة</em>، ثم <em>ربط جهاز كمبيوتر</em>. أو اختر <em>تسجيل الدخول برقم الهاتف</em>.</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">التحديثات</h3>
+          <p data-i18n="install.mac_update">يخبرك TMPlayer عند صدور نسخة جديدة ويفتح صفحة الإصدار. نزّل ملف DMG الجديد واسحبه فوق النسخة القديمة في التطبيقات: يبقى تسجيل دخولك وسجلك وتنزيلاتك كما هي.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">هذه أقل النسخ اختبارًا. يُبنى كل إصدار ويُفحص على جهاز يعمل بنظام macOS 26، لكن التشغيل لم يُجرَّب بعد على جهاز Mac حقيقي. نرحب بالبلاغات في <a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">صفحة المشكلات</a>.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -455,9 +495,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -518,9 +558,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -578,9 +618,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">امنحه نجمة إن أفادك</h2>
@@ -654,7 +694,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "ملف APK شامل", "kind_windows_installer": "مثبّت Windows", "kind_windows_zip": "ملف zip لـ Windows", "kind_linux_tarball": "أرشيف tar لـ Linux", "kind_checksums": "المجاميع الاختبارية", "os_note_mac": "لا يوجد إصدار لـ macOS. كل ما يلي مخصص لـ Android وWindows وLinux.", "os_note_ios": "لا يوجد إصدار لـ iPhone أو iPad. كل ما يلي مخصص لـ Android وWindows وLinux.", "download_for": "التنزيل لـ {os}", "downloads_one": "عدد التنزيلات: {count}", "downloads_other": "عدد التنزيلات: {count}", "not_in_release": "غير متوفر في {version}", "on_github": "على GitHub", "download_file": "تنزيل {file}", "install_version_for": "ثبّت {version} لنظام {os}", "download_version_for": "تنزيل {version} لـ {os}", "download_version_other_os": "تنزيل {version} لـ Android أو Windows أو Linux", "download_version": "تنزيل {version}", "latest": "الأحدث", "no_files_yet": "لا توجد ملفات مرفقة بهذا الإصدار بعد. ربما لا يزال البناء جاريًا.", "open_on_github": "فتح {version} على GitHub", "release": "الإصدار", "unavailable": "غير متاح", "fail_downloads": "التنزيلات لا تزال متاحة: كل زر أدناه يفتح {link}، حيث تُسرد الملفات بأسمائها.", "fail_link": "أحدث إصدار على GitHub", "go_to_downloads": "انتقل إلى التنزيلات", "not_released": "لم يصدر بعد", "no_release": "لم يُنشر أي إصدار بعد. لا يزال بإمكانك بناء التطبيق من الشيفرة المصدرية.", "build_instructions": "اقرأ تعليمات البناء على GitHub", "view_project": "اعرض المشروع على GitHub", "fail_browser": "لا يستطيع هذا المتصفح تحميل قائمة الإصدارات.", "fail_rate": "يقيّد GitHub عدد الطلبات من هذه الشبكة. تسمح واجهته البرمجية العامة بـ 60 طلبًا في الساعة لكل عنوان، وقد استُنفدت لهذا العنوان.", "fail_timeout": "لم يستجب GitHub في الوقت المحدد.", "fail_load": "تعذر تحميل قائمة الإصدارات من GitHub.", "theme_to_dark": "التبديل إلى المظهر الداكن", "theme_to_light": "التبديل إلى المظهر الفاتح", "menu_close": "إغلاق القائمة", "menu": "القائمة"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "ملف APK شامل", "kind_windows_installer": "مثبّت Windows", "kind_windows_zip": "ملف zip لـ Windows", "kind_linux_tarball": "أرشيف tar لـ Linux", "kind_mac_dmg": "ملف DMG لـ macOS", "kind_checksums": "المجاميع الاختبارية", "os_note_ios_only": "لا توجد نسخة لـ iPhone أو iPad. الملفات أدناه لهواتف Android وAndroid TV والحواسيب.", "download_for": "التنزيل لـ {os}", "os_note_mac_preview": "نسخة macOS تجريبية، لأجهزة Mac بشريحة Apple Silicon (M1 وما بعدها) مع macOS 26 أو أحدث. لا تعمل على أجهزة Mac بمعالج Intel.", "os_note_mac": "لا يوجد إصدار لـ macOS. كل ما يلي مخصص لـ Android وWindows وLinux.", "downloads_one": "عدد التنزيلات: {count}", "downloads_other": "عدد التنزيلات: {count}", "not_in_release": "غير متوفر في {version}", "on_github": "على GitHub", "download_file": "تنزيل {file}", "download_version_mac": "تنزيل {version} لأجهزة Mac بشريحة Apple Silicon", "download_version_for": "تنزيل {version} لـ {os}", "download_version_other_os": "تنزيل {version} لـ Android أو Windows أو Linux", "install_version_for": "ثبّت {version} لنظام {os}", "download_version": "تنزيل {version}", "latest": "الأحدث", "no_files_yet": "لا توجد ملفات مرفقة بهذا الإصدار بعد. ربما لا يزال البناء جاريًا.", "open_on_github": "فتح {version} على GitHub", "release": "الإصدار", "unavailable": "غير متاح", "fail_downloads": "التنزيلات لا تزال متاحة: كل زر أدناه يفتح {link}، حيث تُسرد الملفات بأسمائها.", "fail_link": "أحدث إصدار على GitHub", "go_to_downloads": "انتقل إلى التنزيلات", "not_released": "لم يصدر بعد", "no_release": "لم يُنشر أي إصدار بعد. لا يزال بإمكانك بناء التطبيق من الشيفرة المصدرية.", "build_instructions": "اقرأ تعليمات البناء على GitHub", "view_project": "اعرض المشروع على GitHub", "fail_browser": "لا يستطيع هذا المتصفح تحميل قائمة الإصدارات.", "fail_rate": "يقيّد GitHub عدد الطلبات من هذه الشبكة. تسمح واجهته البرمجية العامة بـ 60 طلبًا في الساعة لكل عنوان، وقد استُنفدت لهذا العنوان.", "fail_timeout": "لم يستجب GitHub في الوقت المحدد.", "fail_load": "تعذر تحميل قائمة الإصدارات من GitHub.", "theme_to_dark": "التبديل إلى المظهر الداكن", "theme_to_light": "التبديل إلى المظهر الفاتح", "menu_close": "إغلاق القائمة", "menu": "القائمة"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

@@ -136,8 +136,6 @@
     "neither_the_app_talks_3701": "都不会。应用通过 Telegram 官方库直接与 Telegram 通信。媒体和账号数据不会经过任何 TMPlayer 服务器。",
     "which_file_do_i_ec0b": "我该下载哪个文件？",
     "android_tv_or_phone_bd9a": "Android TV 或手机：通用 APK。Windows：MSI 安装程序。Linux：AppImage，Arch 上可用 PKGBUILD。下载页面会把适合你的放在最前面。",
-    "is_there_a_windows_b87b": "有 Windows 或 Linux 版本吗？",
-    "yes_for_windows_10_0b9e": "有，支持 Windows 10 和 11 以及 64 位 Linux，来自同一个版本，通过 mpv 播放。没有 macOS、iPhone 或 iPad 版本。",
     "can_i_read_my_61ff": "我能用它读消息吗？",
     "no_it_only_ever_01d3": "不能。它只显示你聊天中的视频。你无法在其中阅读、回复或发送任何内容。",
     "does_tmplayer_provide_any_e5a6": "TMPlayer 自己提供任何媒体内容吗？",
@@ -189,7 +187,9 @@
     "when_the_tv_asks_c1d1": "电视询问时，允许 Downloader 安装应用，然后按安装。如果没有这个开关，在设置、关于中按版本号七次，再试一次。",
     "open_tmplayer_and_scan_6c50": "打开 TMPlayer，用手机上的 Telegram 扫描它的二维码：设置、设备、链接桌面设备。",
     "open_downloader_type_tmplayer_03fc": "打开 Downloader，在地址栏输入 tmplayer.org/apk，按 Go，Fire OS 询问时按安装。",
-    "turn_on_developer_options_ebe1": "打开开发者选项，安装 Downloader，允许它安装应用，然后在其中输入 tmplayer.org/apk 并安装 TMPlayer。"
+    "turn_on_developer_options_ebe1": "打开开发者选项，安装 Downloader，允许它安装应用，然后在其中输入 tmplayer.org/apk 并安装 TMPlayer。",
+    "is_there_a_windows_b2c9": "有 Windows、macOS 或 Linux 版本吗？",
+    "yes_for_windows_10_b1b9": "有，支持 Windows 10 和 11 以及 64 位 Linux，来自同一个版本，通过 mpv 播放。从 1.26.0 起，还有适用于搭载 Apple 芯片、运行 macOS 26 或更高版本的 Mac 的预览版。没有 iPhone 或 iPad 版本。"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer 功能：在电视和电脑上串流 Telegram 视频",
@@ -396,7 +396,6 @@
     "a_pkgbuild_lives_in_it": "PKGBUILD 位于 {code1}。每次发布时都会根据 {code2} 构建。AppImage 也能在 Arch 上运行。",
     "the_recipe": "构建脚本",
     "how_to_install_on_linux": "如何在 Linux 上安装，并添加到应用菜单",
-    "there_is_no_iphone_or": "没有 macOS、iPhone 或 iPad 版本。",
     "the_shows_each_file_s": "{a1} 会在每个文件旁显示其 SHA-256。可用 {code1} 校验下载的文件，Windows 上用 {code2}。",
     "the_shows_each_file_s__a1": "发布页面",
     "release_notes": "版本说明",
@@ -428,7 +427,17 @@
     "win_msi_note": "它还没有代码签名，所以 SmartScreen 可能会警告：点击 {em1}，再点击 {em2}。",
     "win_cmd__em1": "PowerShell",
     "win_msi_note__em1": "更多信息",
-    "win_msi_note__em2": "仍要运行"
+    "win_msi_note__em2": "仍要运行",
+    "macos_req": "搭载 Apple 芯片（M1 及更新）的 Mac，macOS 26 Tahoe 或更高版本。不支持 Intel Mac。",
+    "preview": "预览版",
+    "mac_dmg_note": "把它拖到“应用程序”。它还没有经过 Apple 公证，所以第一次打开时 macOS 会提示未打开：点按{em1}，然后在{em3}、{em4}中点按{em2}。",
+    "mac_dmg_note__em1": "完成",
+    "mac_dmg_note__em2": "仍要打开",
+    "mac_dmg_note__em3": "系统设置",
+    "mac_dmg_note__em4": "隐私与安全性",
+    "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
+    "how_to_install_on_macos": "如何在 macOS 上安装",
+    "no_iphone_or_ipad": "没有 iPhone 或 iPad 版本。"
   },
   "install": {
     "how_to_install_tmplayer_on": "如何在 Android TV、Windows 和 Linux 上安装 TMPlayer",
@@ -553,7 +562,28 @@
     "win_msi__em1": "Windows 已保护你的电脑",
     "win_msi__em2": "更多信息",
     "win_msi__em3": "仍要运行",
-    "win_pin__em1": "固定到任务栏"
+    "win_pin__em1": "固定到任务栏",
+    "on_macos": "在 macOS 上",
+    "macos_sub": "预览版，从 1.26.0 起，适用于搭载 Apple 芯片（M1 及更新）、运行 macOS 26 Tahoe 或更高版本的 Mac。不支持 Intel Mac，更旧的 macOS 也打不开它。",
+    "mac_step1_h": "拖到“应用程序”",
+    "mac_step1": "从{a1}下载 {code1}，打开它，把 {em1} 拖到{em2}。",
+    "mac_step1__a1": "下载页面",
+    "mac_step1__em2": "应用程序",
+    "mac_step2_h": "打开它，然后允许一次",
+    "mac_step2": "这个应用还没有经过 Apple 公证，所以第一次打开时 macOS 会显示{em1}。点按{em2}。",
+    "mac_step2__em1": "未打开“TMPlayer”",
+    "mac_step2__em2": "完成",
+    "mac_step2b": "打开{em1}、{em2}，向下滚动到{em3}，点按{em4}。用密码或触控 ID 确认，再点按一次{em5}。macOS 会记住，之后就能直接打开。",
+    "mac_step2b__em1": "系统设置",
+    "mac_step2b__em2": "隐私与安全性",
+    "mac_step2b__em3": "已阻止“TMPlayer”以保护你的 Mac",
+    "mac_step2b__em4": "仍要打开",
+    "mac_step2b__em5": "仍要打开",
+    "mac_terminal": "也可以在“终端”里这样做：",
+    "mac_update_h": "更新",
+    "mac_update": "有新版本时，TMPlayer 会提示你并打开发布页面。下载新的 DMG，把它拖到“应用程序”里覆盖旧版：登录、历史记录和下载内容都会保留。",
+    "mac_preview_note": "这是测试最少的版本。每个版本都会在 macOS 26 机器上构建和检查，但还没有在真正的 Mac 上试过播放。欢迎在{a1}反馈。",
+    "mac_preview_note__a1": "问题页面"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer：适用于 Android TV 和 Google TV 的非官方 Telegram 视频播放器",
@@ -713,9 +743,6 @@
     "which_file_do_i_download": "我该下载哪个文件？",
     "android_tv_or_phone_the": "Android TV 或手机：通用 APK。Windows：MSI 安装程序。Linux：AppImage，Arch 上可用 PKGBUILD。{a1}会把适合你的放在最前面。",
     "android_tv_or_phone_the__a1": "下载页面",
-    "is_there_a_windows_linux": "有 Windows 或 Linux 版本吗？",
-    "yes_for_windows_10_and": "有，支持 Windows 10 和 11 以及 64 位 Linux，来自同一个版本，通过 mpv 播放。没有 macOS、iPhone 或 iPad 版本。{a1}。",
-    "yes_for_windows_10_and__a1": "在这里获取",
     "can_i_read_my_messages": "我能用它读消息吗？",
     "no_it_only_ever_shows": "不能。它只显示你聊天中的视频。你无法在其中阅读、回复或发送任何内容。",
     "does_tmplayer_provide_any_media": "TMPlayer 自己提供任何媒体内容吗？",
@@ -744,7 +771,10 @@
     "the_lists_what_stays_on__a1": "隐私页面",
     "the_lists_what_stays_on__a2": "合法使用",
     "no_money_no_account_no": "不花钱，不用账号，不用邮箱。项目只希望你点个星。",
-    "answers_about_tmplayer_streaming_without": "关于 TMPlayer 的解答：无需等待的串流、没有服务器或机器人、该下载哪个文件、Windows 和 Linux 版本、隐私，以及它不会做什么。"
+    "answers_about_tmplayer_streaming_without": "关于 TMPlayer 的解答：无需等待的串流、没有服务器或机器人、该下载哪个文件、Windows 和 Linux 版本、隐私，以及它不会做什么。",
+    "is_there_a_windows_macos_linux": "有 Windows、macOS 或 Linux 版本吗？",
+    "yes_for_windows_10_11_macos": "有，支持 Windows 10 和 11 以及 64 位 Linux，来自同一个版本，通过 mpv 播放。从 1.26.0 起，还有适用于搭载 Apple 芯片、运行 macOS 26 或更高版本的 Mac 的预览版。没有 iPhone 或 iPad 版本。{a1}。",
+    "yes_for_windows_10_11_macos__a1": "在这里获取"
   },
   "formats": {
     "supported_formats_what_tmplayer_plays": "支持的格式：TMPlayer 在 Android TV、Windows 和 Linux 上能播放什么",
@@ -1001,7 +1031,6 @@
     "kind_linux_tarball": "Linux tarball",
     "kind_checksums": "校验和",
     "os_note_mac": "没有 macOS 版本。以下内容适用于 Android、Windows 和 Linux。",
-    "os_note_ios": "没有 iPhone 或 iPad 版本。以下内容适用于 Android、Windows 和 Linux。",
     "download_for": "下载 {os} 版",
     "downloads_one": "{count} 次下载",
     "downloads_other": "{count} 次下载",
@@ -1031,7 +1060,11 @@
     "theme_to_light": "切换到浅色主题",
     "menu_close": "关闭菜单",
     "menu": "菜单",
-    "install_version_for": "为 {os} 安装 {version}"
+    "install_version_for": "为 {os} 安装 {version}",
+    "kind_mac_dmg": "macOS DMG",
+    "os_note_ios_only": "没有 iPhone 或 iPad 版本。下面的文件适用于 Android 手机、Android TV 和电脑。",
+    "os_note_mac_preview": "macOS 版是预览版，适用于搭载 Apple 芯片（M1 及更新）、运行 macOS 26 或更高版本的 Mac。它不能在 Intel Mac 上运行。",
+    "download_version_mac": "下载适用于 Apple 芯片 Mac 的 {version}"
   },
   "build": {
     "language": "语言",

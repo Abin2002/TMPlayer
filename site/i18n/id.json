@@ -136,8 +136,6 @@
     "neither_the_app_talks_3701": "Tidak ada. Aplikasi berbicara langsung ke Telegram lewat library resmi Telegram. Tidak ada media atau data akun yang melewati server TMPlayer mana pun.",
     "which_file_do_i_ec0b": "File mana yang harus saya unduh?",
     "android_tv_or_phone_bd9a": "Android TV atau HP: APK universal. Windows: installer MSI. Linux: AppImage, atau PKGBUILD di Arch. Halaman unduhan menampilkan yang cocok untukmu di urutan pertama.",
-    "is_there_a_windows_b87b": "Apakah ada versi Windows atau Linux?",
-    "yes_for_windows_10_0b9e": "Ada untuk Windows 10 dan 11 serta Linux 64-bit, dari rilis yang sama, diputar lewat mpv. Tidak ada versi macOS, iPhone, atau iPad.",
     "can_i_read_my_61ff": "Apakah saya bisa membaca pesan saya di sini?",
     "no_it_only_ever_01d3": "Tidak. Aplikasi hanya menampilkan video di obrolan kamu. Kamu tidak bisa membaca, membalas, atau mengirim apa pun dari sini.",
     "does_tmplayer_provide_any_e5a6": "Apakah TMPlayer menyediakan media sendiri?",
@@ -189,7 +187,9 @@
     "when_the_tv_asks_c1d1": "Saat TV bertanya, izinkan Downloader memasang aplikasi, lalu tekan Instal. Jika tidak ada tombolnya, tekan Build tujuh kali di Pengaturan, Tentang, lalu coba lagi.",
     "open_tmplayer_and_scan_6c50": "Buka TMPlayer dan pindai kode QR-nya dengan Telegram di HP: Pengaturan, Perangkat, Tautkan Perangkat Desktop.",
     "open_downloader_type_tmplayer_03fc": "Buka Downloader, ketik tmplayer.org/apk di kotak alamat, tekan Go, lalu tekan Instal saat Fire OS bertanya.",
-    "turn_on_developer_options_ebe1": "Aktifkan Opsi developer, pasang Downloader, izinkan memasang aplikasi, lalu ketik tmplayer.org/apk di dalamnya dan pasang TMPlayer."
+    "turn_on_developer_options_ebe1": "Aktifkan Opsi developer, pasang Downloader, izinkan memasang aplikasi, lalu ketik tmplayer.org/apk di dalamnya dan pasang TMPlayer.",
+    "is_there_a_windows_b2c9": "Apakah ada versi Windows, macOS, atau Linux?",
+    "yes_for_windows_10_b1b9": "Ada untuk Windows 10 dan 11 serta Linux 64-bit, dari rilis yang sama, diputar lewat mpv. Mulai 1.26.0 ada juga versi pratinjau untuk Mac dengan Apple Silicon dan macOS 26 atau yang lebih baru. Tidak ada versi iPhone atau iPad."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "Fitur TMPlayer: streaming video Telegram di TV dan PC",
@@ -396,7 +396,6 @@
     "a_pkgbuild_lives_in_it": "PKGBUILD ada di {code1}. Paket dibangun dari {code2} di setiap rilis. AppImage juga jalan di Arch.",
     "the_recipe": "Resepnya",
     "how_to_install_on_linux": "Cara memasang di Linux, dan menaruhnya di menu aplikasi",
-    "there_is_no_iphone_or": "Tidak ada versi macOS, iPhone, atau iPad.",
     "the_shows_each_file_s": "{a1} menampilkan SHA-256 setiap file di sebelahnya. Periksa unduhan dengan {code1}, atau {code2} di Windows.",
     "the_shows_each_file_s__a1": "Halaman rilis",
     "release_notes": "Catatan rilis",
@@ -428,7 +427,17 @@
     "win_msi_note": "Installer ini belum ditandatangani, jadi SmartScreen mungkin memperingatkan: klik {em1}, lalu {em2}.",
     "win_cmd__em1": "PowerShell",
     "win_msi_note__em1": "Informasi selengkapnya",
-    "win_msi_note__em2": "Tetap jalankan"
+    "win_msi_note__em2": "Tetap jalankan",
+    "macos_req": "Mac dengan Apple Silicon (M1 dan yang lebih baru), macOS 26 Tahoe atau yang lebih baru. Mac Intel tidak didukung.",
+    "preview": "Pratinjau",
+    "mac_dmg_note": "Seret ke Aplikasi. Aplikasi ini belum dinotarisasi Apple, jadi pertama kali macOS bilang aplikasi tidak dibuka: klik {em1}, lalu {em2} di {em3}, {em4}.",
+    "mac_dmg_note__em1": "Selesai",
+    "mac_dmg_note__em2": "Tetap Buka",
+    "mac_dmg_note__em3": "Pengaturan Sistem",
+    "mac_dmg_note__em4": "Privasi & Keamanan",
+    "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
+    "how_to_install_on_macos": "Cara memasang di macOS",
+    "no_iphone_or_ipad": "Tidak ada versi iPhone atau iPad."
   },
   "install": {
     "how_to_install_tmplayer_on": "Cara memasang TMPlayer di Android TV, Windows, dan Linux",
@@ -553,7 +562,28 @@
     "win_msi__em1": "Windows melindungi PC Anda",
     "win_msi__em2": "Informasi selengkapnya",
     "win_msi__em3": "Tetap jalankan",
-    "win_pin__em1": "Sematkan ke bilah tugas"
+    "win_pin__em1": "Sematkan ke bilah tugas",
+    "on_macos": "Di macOS",
+    "macos_sub": "Versi pratinjau, mulai 1.26.0, untuk Mac dengan Apple Silicon (M1 dan yang lebih baru) yang menjalankan macOS 26 Tahoe atau yang lebih baru. Mac Intel tidak didukung, dan macOS yang lebih lama tidak akan membukanya.",
+    "mac_step1_h": "Seret ke Aplikasi",
+    "mac_step1": "Unduh {code1} dari {a1}, buka, lalu seret {em1} ke {em2}.",
+    "mac_step1__a1": "halaman unduhan",
+    "mac_step1__em2": "Aplikasi",
+    "mac_step2_h": "Buka, lalu izinkan sekali",
+    "mac_step2": "Aplikasi ini belum dinotarisasi Apple, jadi pertama kali macOS menampilkan {em1}. Klik {em2}.",
+    "mac_step2__em1": "\"TMPlayer\" Tidak Dibuka",
+    "mac_step2__em2": "Selesai",
+    "mac_step2b": "Buka {em1}, {em2}, gulir ke bawah ke {em3} lalu klik {em4}. Konfirmasi dengan kata sandi atau Touch ID, lalu klik {em5} sekali lagi. macOS mengingatnya, jadi selanjutnya aplikasi langsung terbuka.",
+    "mac_step2b__em1": "Pengaturan Sistem",
+    "mac_step2b__em2": "Privasi & Keamanan",
+    "mac_step2b__em3": "\"TMPlayer\" diblokir untuk melindungi Mac Anda",
+    "mac_step2b__em4": "Tetap Buka",
+    "mac_step2b__em5": "Tetap Buka",
+    "mac_terminal": "Atau hal yang sama di Terminal:",
+    "mac_update_h": "Pembaruan",
+    "mac_update": "TMPlayer memberi tahu saat versi baru keluar dan membuka halaman rilisnya. Unduh DMG baru dan seret ke atas salinan lama di Aplikasi: login, riwayat, dan unduhan Anda tetap ada.",
+    "mac_preview_note": "Ini build yang paling sedikit diuji. Setiap rilis dibuat dan diperiksa di mesin macOS 26, tetapi pemutaran belum dicoba di Mac sungguhan. Laporan dipersilakan di {a1}.",
+    "mac_preview_note__a1": "halaman issues"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: pemutar video Telegram tidak resmi untuk Android TV dan Google TV",
@@ -713,9 +743,6 @@
     "which_file_do_i_download": "File mana yang harus saya unduh?",
     "android_tv_or_phone_the": "Android TV atau HP: APK universal. Windows: installer MSI. Linux: AppImage, atau PKGBUILD di Arch. {a1} menampilkan yang cocok untukmu di urutan pertama.",
     "android_tv_or_phone_the__a1": "Halaman unduhan",
-    "is_there_a_windows_linux": "Apakah ada versi Windows atau Linux?",
-    "yes_for_windows_10_and": "Ada untuk Windows 10 dan 11 serta Linux 64-bit, dari rilis yang sama, diputar lewat mpv. Tidak ada versi macOS, iPhone, atau iPad. {a1}.",
-    "yes_for_windows_10_and__a1": "Dapatkan di sini",
     "can_i_read_my_messages": "Apakah saya bisa membaca pesan saya di sini?",
     "no_it_only_ever_shows": "Tidak. Aplikasi hanya menampilkan video di obrolan kamu. Kamu tidak bisa membaca, membalas, atau mengirim apa pun dari sini.",
     "does_tmplayer_provide_any_media": "Apakah TMPlayer menyediakan media sendiri?",
@@ -744,7 +771,10 @@
     "the_lists_what_stays_on__a1": "Halaman privasi",
     "the_lists_what_stays_on__a2": "Penggunaan yang sah",
     "no_money_no_account_no": "Tanpa uang, tanpa akun, tanpa email. Bintang adalah satu-satunya yang diminta proyek ini.",
-    "answers_about_tmplayer_streaming_without": "Jawaban seputar TMPlayer: streaming tanpa menunggu, tanpa server atau bot, file mana yang diunduh, versi Windows dan Linux, privasi, dan yang tidak dilakukannya."
+    "answers_about_tmplayer_streaming_without": "Jawaban seputar TMPlayer: streaming tanpa menunggu, tanpa server atau bot, file mana yang diunduh, versi Windows dan Linux, privasi, dan yang tidak dilakukannya.",
+    "is_there_a_windows_macos_linux": "Apakah ada versi Windows, macOS, atau Linux?",
+    "yes_for_windows_10_11_macos": "Ada untuk Windows 10 dan 11 serta Linux 64-bit, dari rilis yang sama, diputar lewat mpv. Mulai 1.26.0 ada juga versi pratinjau untuk Mac dengan Apple Silicon dan macOS 26 atau yang lebih baru. Tidak ada versi iPhone atau iPad. {a1}.",
+    "yes_for_windows_10_11_macos__a1": "Dapatkan di sini"
   },
   "formats": {
     "supported_formats_what_tmplayer_plays": "Format yang didukung: apa yang diputar TMPlayer di Android TV, Windows, dan Linux",
@@ -1001,7 +1031,6 @@
     "kind_linux_tarball": "Tarball Linux",
     "kind_checksums": "Checksum",
     "os_note_mac": "Tidak ada versi macOS. Semua di bawah ini untuk Android, Windows, dan Linux.",
-    "os_note_ios": "Tidak ada versi iPhone atau iPad. Semua di bawah ini untuk Android, Windows, dan Linux.",
     "download_for": "Unduh untuk {os}",
     "downloads_one": "{count} unduhan",
     "downloads_other": "{count} unduhan",
@@ -1031,7 +1060,11 @@
     "theme_to_light": "Beralih ke tema terang",
     "menu_close": "Tutup menu",
     "menu": "Menu",
-    "install_version_for": "Pasang {version} untuk {os}"
+    "install_version_for": "Pasang {version} untuk {os}",
+    "kind_mac_dmg": "DMG macOS",
+    "os_note_ios_only": "Tidak ada versi iPhone atau iPad. File di bawah untuk ponsel Android, Android TV, dan komputer.",
+    "os_note_mac_preview": "Versi macOS adalah pratinjau untuk Mac dengan Apple Silicon (M1 dan yang lebih baru) dan macOS 26 atau yang lebih baru. Versi ini tidak berjalan di Mac Intel.",
+    "download_version_mac": "Unduh {version} untuk Mac dengan Apple Silicon"
   },
   "build": {
     "language": "Bahasa",

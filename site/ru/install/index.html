@@ -282,6 +282,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">Телефон Android</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">Ярлыки на рабочем столе и в меню</a>
       </nav>
@@ -408,7 +409,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">На macOS</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">Предварительная версия, с 1.26.0, для Mac с Apple Silicon (M1 и новее) и macOS 26 Tahoe или новее. Mac с Intel не поддерживаются, а более старая macOS приложение не откроет.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">Перетащите в Программы</h3>
+            <p data-i18n="install.mac_step1">Скачайте <code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code> со <a href="/ru/download/#macos">страницы загрузки</a>, откройте его и перетащите <em>TMPlayer</em> на <em>Программы</em>.</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">Откройте и разрешите один раз</h3>
+            <p data-i18n="install.mac_step2">Apple ещё не заверила приложение, поэтому в первый раз macOS показывает <em>«TMPlayer» не открыто</em>. Нажмите <em>Готово</em>.</p>
+            <p data-i18n="install.mac_step2b">Откройте <em>Системные настройки</em>, <em>Конфиденциальность и безопасность</em>, прокрутите вниз до <em>«TMPlayer» заблокировано для защиты Mac</em> и нажмите <em>Все равно открыть</em>. Подтвердите паролем или Touch ID и ещё раз нажмите <em>Все равно открыть</em>. macOS это запомнит, и дальше приложение будет открываться сразу.</p>
+            <p data-i18n="install.mac_terminal">Или то же самое в Терминале:</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">Вход</h3>
+            <p data-i18n="install.scan_the_qr_code_with">Отсканируйте QR-код в Telegram на телефоне: <em>Настройки</em>, <em>Устройства</em>, <em>Подключить устройство</em>. Или выберите <em>Войти по номеру телефона</em>.</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">Обновления</h3>
+          <p data-i18n="install.mac_update">TMPlayer сообщает о новой версии и открывает страницу выпуска. Скачайте новый DMG и перетащите его поверх старой копии в Программах: вход, история и загрузки сохранятся.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">Это наименее проверенная сборка. Каждый выпуск собирается и проверяется на машине с macOS 26, но воспроизведение на настоящем Mac ещё не пробовали. Сообщения о проблемах ждём на <a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">странице issues</a>.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -455,9 +495,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -518,9 +558,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -578,9 +618,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">Поставьте звезду, если он помог</h2>
@@ -654,7 +694,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "Универсальный APK", "kind_windows_installer": "Установщик для Windows", "kind_windows_zip": "Zip для Windows", "kind_linux_tarball": "Архив tar для Linux", "kind_checksums": "Контрольные суммы", "os_note_mac": "Версии для macOS нет. Всё ниже относится к Android, Windows и Linux.", "os_note_ios": "Версии для iPhone и iPad нет. Всё ниже относится к Android, Windows и Linux.", "download_for": "Скачать для {os}", "downloads_one": "Загрузок: {count}", "downloads_other": "Загрузок: {count}", "not_in_release": "Нет в {version}", "on_github": "На GitHub", "download_file": "Скачать {file}", "install_version_for": "Установить {version} для {os}", "download_version_for": "Скачать {version} для {os}", "download_version_other_os": "Скачать {version} для Android, Windows или Linux", "download_version": "Скачать {version}", "latest": "Последний", "no_files_yet": "К этому релизу пока не прикреплены файлы. Возможно, сборка ещё идёт.", "open_on_github": "Открыть {version} на GitHub", "release": "Релиз", "unavailable": "Недоступно", "fail_downloads": "Загрузки на месте: каждая кнопка ниже открывает {link}, где файлы перечислены по именам.", "fail_link": "последний релиз на GitHub", "go_to_downloads": "Перейти к загрузкам", "not_released": "Ещё не выпущен", "no_release": "Ни одного релиза пока не опубликовано. Приложение всё равно можно собрать из исходного кода.", "build_instructions": "Читать инструкцию по сборке на GitHub", "view_project": "Открыть проект на GitHub", "fail_browser": "Этот браузер не может загрузить список релизов.", "fail_rate": "GitHub ограничивает запросы из этой сети. Его публичный API разрешает 60 запросов в час на адрес, и этот лимит исчерпан.", "fail_timeout": "GitHub не ответил вовремя.", "fail_load": "Не удалось загрузить список релизов с GitHub.", "theme_to_dark": "Включить тёмную тему", "theme_to_light": "Включить светлую тему", "menu_close": "Закрыть меню", "menu": "Меню"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "Универсальный APK", "kind_windows_installer": "Установщик для Windows", "kind_windows_zip": "Zip для Windows", "kind_linux_tarball": "Архив tar для Linux", "kind_mac_dmg": "DMG для macOS", "kind_checksums": "Контрольные суммы", "os_note_ios_only": "Версии для iPhone и iPad нет. Файлы ниже для телефонов на Android, Android TV и компьютеров.", "download_for": "Скачать для {os}", "os_note_mac_preview": "Версия для macOS предварительная: для Mac с Apple Silicon (M1 и новее) и macOS 26 или новее. На Mac с Intel она не работает.", "os_note_mac": "Версии для macOS нет. Всё ниже относится к Android, Windows и Linux.", "downloads_one": "Загрузок: {count}", "downloads_other": "Загрузок: {count}", "not_in_release": "Нет в {version}", "on_github": "На GitHub", "download_file": "Скачать {file}", "download_version_mac": "Скачать {version} для Mac с Apple Silicon", "download_version_for": "Скачать {version} для {os}", "download_version_other_os": "Скачать {version} для Android, Windows или Linux", "install_version_for": "Установить {version} для {os}", "download_version": "Скачать {version}", "latest": "Последний", "no_files_yet": "К этому релизу пока не прикреплены файлы. Возможно, сборка ещё идёт.", "open_on_github": "Открыть {version} на GitHub", "release": "Релиз", "unavailable": "Недоступно", "fail_downloads": "Загрузки на месте: каждая кнопка ниже открывает {link}, где файлы перечислены по именам.", "fail_link": "последний релиз на GitHub", "go_to_downloads": "Перейти к загрузкам", "not_released": "Ещё не выпущен", "no_release": "Ни одного релиза пока не опубликовано. Приложение всё равно можно собрать из исходного кода.", "build_instructions": "Читать инструкцию по сборке на GitHub", "view_project": "Открыть проект на GitHub", "fail_browser": "Этот браузер не может загрузить список релизов.", "fail_rate": "GitHub ограничивает запросы из этой сети. Его публичный API разрешает 60 запросов в час на адрес, и этот лимит исчерпан.", "fail_timeout": "GitHub не ответил вовремя.", "fail_load": "Не удалось загрузить список релизов с GitHub.", "theme_to_dark": "Включить тёмную тему", "theme_to_light": "Включить светлую тему", "menu_close": "Закрыть меню", "menu": "Меню"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

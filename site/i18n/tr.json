@@ -136,8 +136,6 @@
     "neither_the_app_talks_3701": "İkisi de değil. Uygulama, Telegram'ın resmi kitaplığı üzerinden doğrudan Telegram ile konuşur. Hiçbir medya ya da hesap verisi herhangi bir TMPlayer sunucusundan geçmez.",
     "which_file_do_i_ec0b": "Hangi dosyayı indirmeliyim?",
     "android_tv_or_phone_bd9a": "Android TV veya telefon: evrensel APK. Windows: MSI yükleyicisi. Linux: AppImage, Arch'ta ise PKGBUILD. İndirme sayfası seninkini en üstte gösterir.",
-    "is_there_a_windows_b87b": "Windows ya da Linux sürümü var mı?",
-    "yes_for_windows_10_0b9e": "Windows 10 ve 11 ile 64 bit Linux için evet, aynı sürümden, mpv ile oynatır. macOS, iPhone ya da iPad sürümü yok.",
     "can_i_read_my_61ff": "Mesajlarımı bununla okuyabilir miyim?",
     "no_it_only_ever_01d3": "Hayır. Yalnızca sohbetlerindeki videoları gösterir. Buradan mesaj okuyamaz, yanıtlayamaz ya da gönderemezsin.",
     "does_tmplayer_provide_any_e5a6": "TMPlayer kendi başına herhangi bir medya sağlıyor mu?",
@@ -189,7 +187,9 @@
     "when_the_tv_asks_c1d1": "TV sorduğunda Downloader'ın uygulama kurmasına izin ver, sonra Yükle'ye bas. İzin anahtarı yoksa Ayarlar, Hakkında altında Derleme'ye yedi kez bas ve yeniden dene.",
     "open_tmplayer_and_scan_6c50": "TMPlayer'ı aç ve QR kodunu telefonundaki Telegram ile tara: Ayarlar, Cihazlar, Masaüstü Cihazı Bağla.",
     "open_downloader_type_tmplayer_03fc": "Downloader'ı aç, adres kutusuna tmplayer.org/apk yaz, Go'ya bas, Fire OS sorunca da Yükle'ye bas.",
-    "turn_on_developer_options_ebe1": "Geliştirici seçeneklerini aç, Downloader'ı kur, uygulama kurmasına izin ver, sonra içine tmplayer.org/apk yaz ve TMPlayer'ı kur."
+    "turn_on_developer_options_ebe1": "Geliştirici seçeneklerini aç, Downloader'ı kur, uygulama kurmasına izin ver, sonra içine tmplayer.org/apk yaz ve TMPlayer'ı kur.",
+    "is_there_a_windows_b2c9": "Windows, macOS veya Linux sürümü var mı?",
+    "yes_for_windows_10_b1b9": "Windows 10 ve 11 ile 64 bit Linux için evet, aynı sürümden, mpv ile oynatır. 1.26.0'dan itibaren Apple Silicon'lu ve macOS 26 veya daha yenisini çalıştıran Mac'ler için bir önizleme de var. iPhone veya iPad sürümü yok."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer özellikleri: Telegram videolarını TV'de ve bilgisayarda akıt",
@@ -396,7 +396,6 @@
     "a_pkgbuild_lives_in_it": "Bir PKGBUILD {code1} içinde durur. Her sürümde {code2} üzerinden derler. AppImage Arch'ta da çalışır.",
     "the_recipe": "Tarif",
     "how_to_install_on_linux": "Linux'a nasıl kurulur ve uygulama menüsüne nasıl eklenir",
-    "there_is_no_iphone_or": "macOS, iPhone ya da iPad sürümü yok.",
     "the_shows_each_file_s": "{a1} her dosyanın SHA-256 değerini yanında gösterir. İndirdiğini {code1} ile, Windows'ta {code2} ile doğrula.",
     "the_shows_each_file_s__a1": "Sürüm sayfası",
     "release_notes": "Sürüm notları",
@@ -428,7 +427,17 @@
     "win_msi_note": "Henüz kod imzası yok, bu yüzden SmartScreen uyarabilir: {em1} ve ardından {em2} seçeneğine tıkla.",
     "win_cmd__em1": "PowerShell",
     "win_msi_note__em1": "Daha fazla bilgi",
-    "win_msi_note__em2": "Yine de çalıştır"
+    "win_msi_note__em2": "Yine de çalıştır",
+    "macos_req": "Apple Silicon'lu Mac'ler (M1 ve sonrası), macOS 26 Tahoe veya daha yenisi. Intel Mac'ler desteklenmez.",
+    "preview": "Önizleme",
+    "mac_dmg_note": "Uygulamalar'a sürükleyin. Henüz Apple tarafından onaylanmadığı için macOS ilk seferde açılmadığını söyler: {em1} düğmesine, sonra {em3}, {em4} içinde {em2} düğmesine tıklayın.",
+    "mac_dmg_note__em1": "Bitti",
+    "mac_dmg_note__em2": "Yine de Aç",
+    "mac_dmg_note__em3": "Sistem Ayarları",
+    "mac_dmg_note__em4": "Gizlilik ve Güvenlik",
+    "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
+    "how_to_install_on_macos": "macOS'a nasıl kurulur",
+    "no_iphone_or_ipad": "iPhone veya iPad sürümü yok."
   },
   "install": {
     "how_to_install_tmplayer_on": "TMPlayer Android TV, Windows ve Linux'a nasıl kurulur",
@@ -553,7 +562,28 @@
     "win_msi__em1": "Windows bilgisayarınızı korudu",
     "win_msi__em2": "Daha fazla bilgi",
     "win_msi__em3": "Yine de çalıştır",
-    "win_pin__em1": "Görev çubuğuna sabitle"
+    "win_pin__em1": "Görev çubuğuna sabitle",
+    "on_macos": "macOS'ta",
+    "macos_sub": "1.26.0'dan itibaren bir önizleme: Apple Silicon'lu (M1 ve sonrası) ve macOS 26 Tahoe veya daha yenisini çalıştıran Mac'ler için. Intel Mac'ler desteklenmez, daha eski bir macOS da uygulamayı açmaz.",
+    "mac_step1_h": "Uygulamalar'a sürükleyin",
+    "mac_step1": "{code1} dosyasını {a1} indirin, açın ve {em1} simgesini {em2} klasörüne sürükleyin.",
+    "mac_step1__a1": "indirme sayfasından",
+    "mac_step1__em2": "Uygulamalar",
+    "mac_step2_h": "Açın ve bir kez izin verin",
+    "mac_step2": "Uygulama henüz Apple tarafından onaylanmadığı için macOS ilk seferde {em1} der. {em2} düğmesine tıklayın.",
+    "mac_step2__em1": "\"TMPlayer\" açılmadı",
+    "mac_step2__em2": "Bitti",
+    "mac_step2b": "{em1}, {em2} bölümünü açın, {em3} satırına kadar aşağı kaydırın ve {em4} düğmesine tıklayın. Parolanız veya Touch ID ile onaylayıp bir kez daha {em5} düğmesine tıklayın. macOS bunu hatırlar, sonraki açılışlar doğrudan olur.",
+    "mac_step2b__em1": "Sistem Ayarları",
+    "mac_step2b__em2": "Gizlilik ve Güvenlik",
+    "mac_step2b__em3": "\"TMPlayer\", Mac'inizi korumak için engellendi",
+    "mac_step2b__em4": "Yine de Aç",
+    "mac_step2b__em5": "Yine de Aç",
+    "mac_terminal": "Ya da aynısı Terminal'de:",
+    "mac_update_h": "Güncellemeler",
+    "mac_update": "TMPlayer yeni bir sürüm çıktığında haber verir ve sürüm sayfasını açar. Yeni DMG'yi indirip Uygulamalar'daki eski kopyanın üzerine sürükleyin: oturumunuz, geçmişiniz ve indirmeleriniz korunur.",
+    "mac_preview_note": "Bu en az test edilen sürüm. Her sürüm macOS 26 çalıştıran bir makinede derlenip denetleniyor, ancak oynatma henüz gerçek bir Mac'te denenmedi. Bildirimlerinizi {a1} bekliyoruz.",
+    "mac_preview_note__a1": "sorunlar sayfasında"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: Android TV ve Google TV için resmi olmayan Telegram video oynatıcı",
@@ -713,9 +743,6 @@
     "which_file_do_i_download": "Hangi dosyayı indirmeliyim?",
     "android_tv_or_phone_the": "Android TV veya telefon: evrensel APK. Windows: MSI yükleyicisi. Linux: AppImage, Arch'ta ise PKGBUILD. {a1} seninkini en üstte gösterir.",
     "android_tv_or_phone_the__a1": "İndirme sayfası",
-    "is_there_a_windows_linux": "Windows ya da Linux sürümü var mı?",
-    "yes_for_windows_10_and": "Windows 10 ve 11 ile 64 bit Linux için evet, aynı sürümden, mpv ile oynatır. macOS, iPhone ya da iPad sürümü yok. {a1}.",
-    "yes_for_windows_10_and__a1": "Buradan al",
     "can_i_read_my_messages": "Mesajlarımı bununla okuyabilir miyim?",
     "no_it_only_ever_shows": "Hayır. Yalnızca sohbetlerindeki videoları gösterir. Buradan mesaj okuyamaz, yanıtlayamaz ya da gönderemezsin.",
     "does_tmplayer_provide_any_media": "TMPlayer kendi başına herhangi bir medya sağlıyor mu?",
@@ -744,7 +771,10 @@
     "the_lists_what_stays_on__a1": "Gizlilik sayfası",
     "the_lists_what_stays_on__a2": "Yasal kullanım",
     "no_money_no_account_no": "Para yok, hesap yok, e-posta yok. Projenin istediği tek şey bir yıldız.",
-    "answers_about_tmplayer_streaming_without": "TMPlayer hakkında yanıtlar: beklemeden akış, sunucu ya da bot yok, hangi dosyanın indirileceği, Windows ve Linux sürümleri, gizlilik ve neler yapmayacağı."
+    "answers_about_tmplayer_streaming_without": "TMPlayer hakkında yanıtlar: beklemeden akış, sunucu ya da bot yok, hangi dosyanın indirileceği, Windows ve Linux sürümleri, gizlilik ve neler yapmayacağı.",
+    "is_there_a_windows_macos_linux": "Windows, macOS veya Linux sürümü var mı?",
+    "yes_for_windows_10_11_macos": "Windows 10 ve 11 ile 64 bit Linux için evet, aynı sürümden, mpv ile oynatır. 1.26.0'dan itibaren Apple Silicon'lu ve macOS 26 veya daha yenisini çalıştıran Mac'ler için bir önizleme de var. iPhone veya iPad sürümü yok. {a1}.",
+    "yes_for_windows_10_11_macos__a1": "Buradan al"
   },
   "formats": {
     "supported_formats_what_tmplayer_plays": "Desteklenen biçimler: TMPlayer'ın Android TV, Windows ve Linux'ta oynattıkları",
@@ -1001,7 +1031,6 @@
     "kind_linux_tarball": "Linux tarball",
     "kind_checksums": "Sağlama toplamları",
     "os_note_mac": "macOS sürümü yok. Aşağıdakilerin hepsi Android, Windows ve Linux için.",
-    "os_note_ios": "iPhone ya da iPad sürümü yok. Aşağıdakilerin hepsi Android, Windows ve Linux için.",
     "download_for": "{os} için indir",
     "downloads_one": "{count} indirme",
     "downloads_other": "{count} indirme",
@@ -1031,7 +1060,11 @@
     "theme_to_light": "Açık temaya geç",
     "menu_close": "Menüyü kapat",
     "menu": "Menü",
-    "install_version_for": "{os} için {version} sürümünü kur"
+    "install_version_for": "{os} için {version} sürümünü kur",
+    "kind_mac_dmg": "macOS DMG",
+    "os_note_ios_only": "iPhone veya iPad sürümü yok. Aşağıdaki dosyalar Android telefonlar, Android TV ve bilgisayarlar için.",
+    "os_note_mac_preview": "macOS sürümü, Apple Silicon'lu (M1 ve sonrası) ve macOS 26 veya daha yenisini çalıştıran Mac'ler için bir önizleme. Intel Mac'lerde çalışmaz.",
+    "download_version_mac": "{version} sürümünü Apple Silicon'lu Mac'ler için indir"
   },
   "build": {
     "language": "Dil",

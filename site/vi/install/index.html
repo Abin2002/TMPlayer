@@ -282,6 +282,7 @@
         <a href="#android-tv">Android TV</a>
         <a href="#android" data-i18n="download.android_phone">Điện thoại Android</a>
         <a href="#windows">Windows</a>
+        <a href="#macos">macOS</a>
         <a href="#linux">Linux</a>
         <a href="#shortcuts" data-i18n="install.desktop_and_menu_shortcuts">Lối tắt trên màn hình nền và menu</a>
       </nav>
@@ -408,7 +409,46 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
 
 <svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" id="linux" aria-labelledby="linux-h">
+  <section class="band" id="macos" aria-labelledby="macos-h">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div class="section-title">
+          <h2 id="macos-h" data-i18n="install.on_macos">Trên macOS</h2>
+          <p class="section-sub" data-i18n="install.macos_sub">Bản xem trước, từ 1.26.0, cho máy Mac dùng Apple Silicon (M1 trở lên) chạy macOS 26 Tahoe trở lên. Không hỗ trợ máy Mac dùng Intel, và macOS cũ hơn sẽ không mở được.</p>
+        </div>
+      </div>
+
+      <div class="section-body" data-reveal>
+        <ol class="steps">
+          <li id="mac-1">
+            <h3 data-i18n="install.mac_step1_h">Kéo vào Ứng dụng</h3>
+            <p data-i18n="install.mac_step1">Tải <code>TMPlayer-&lt;version&gt;-macos-arm64.dmg</code> từ <a href="/vi/download/#macos">trang tải về</a>, mở ra và kéo <em>TMPlayer</em> vào <em>Ứng dụng</em>.</p>
+          </li>
+          <li id="mac-2">
+            <h3 data-i18n="install.mac_step2_h">Mở, rồi cho phép một lần</h3>
+            <p data-i18n="install.mac_step2">Ứng dụng chưa được Apple công chứng, nên lần đầu macOS báo <em>"TMPlayer" chưa được mở</em>. Bấm <em>Xong</em>.</p>
+            <p data-i18n="install.mac_step2b">Mở <em>Cài đặt hệ thống</em>, <em>Quyền riêng tư &amp; Bảo mật</em>, cuộn xuống đến <em>"TMPlayer" đã bị chặn để bảo vệ máy Mac của bạn</em> và bấm <em>Vẫn mở</em>. Xác nhận bằng mật khẩu hoặc Touch ID rồi bấm <em>Vẫn mở</em> thêm một lần. macOS sẽ nhớ, nên những lần sau ứng dụng mở ngay.</p>
+            <p data-i18n="install.mac_terminal">Hoặc làm tương tự trong Terminal:</p>
+            <pre class="code"><code>xattr -dr com.apple.quarantine /Applications/TMPlayer.app</code></pre>
+          </li>
+          <li id="mac-3">
+            <h3 data-i18n="home.sign_in">Đăng nhập</h3>
+            <p data-i18n="install.scan_the_qr_code_with">Quét mã QR bằng Telegram trên điện thoại: <em>Cài đặt</em>, <em>Thiết bị</em>, <em>Liên kết thiết bị máy tính</em>. Hoặc chọn <em>Đăng nhập bằng số điện thoại</em>.</p>
+          </li>
+        </ol>
+
+        <div class="panel panel-prose panel-wide" id="macos-updates">
+          <h3 data-i18n="install.mac_update_h">Cập nhật</h3>
+          <p data-i18n="install.mac_update">TMPlayer báo khi có phiên bản mới và mở trang phát hành. Tải DMG mới và kéo đè lên bản cũ trong Ứng dụng: đăng nhập, lịch sử và nội dung đã tải vẫn được giữ.</p>
+        </div>
+        <p class="muted small section-note" data-i18n="install.mac_preview_note">Đây là bản ít được thử nhất. Mỗi bản phát hành được dựng và kiểm tra trên máy chạy macOS 26, nhưng việc phát video chưa được thử trên máy Mac thật. Rất hoan nghênh báo lỗi trên <a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener">trang issues</a>.</p>
+      </div>
+    </div>
+  </section>
+
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+
+  <section class="band band-tonal" id="linux" aria-labelledby="linux-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -455,9 +495,9 @@ adb install TMPlayer-&lt;version&gt;-universal.apk</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" id="shortcuts" aria-labelledby="shortcuts-h">
+  <section class="band" id="shortcuts" aria-labelledby="shortcuts-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -518,9 +558,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band" aria-labelledby="trouble-h">
+  <section class="band band-tonal" aria-labelledby="trouble-h">
     <div class="wrap">
       <div class="section-head" data-reveal>
         <div class="section-title">
@@ -578,9 +618,9 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     </div>
   </section>
 
-<svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
+<svg class="wave wave-flip" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path fill="currentColor" d="M0 30c180-40 360-40 540 0s360 40 540 0 300-30 360-20v50H0Z"/></svg>
 
-  <section class="band band-tonal" aria-labelledby="support-h">
+  <section class="band" aria-labelledby="support-h">
     <div class="wrap">
       <div class="support" data-reveal>
         <h2 id="support-h" data-i18n="features.star_it_if_it_helped">Hãy gắn sao nếu nó có ích</h2>
@@ -654,7 +694,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
   </div>
 </footer>
 
-<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK chung", "kind_windows_installer": "Trình cài đặt Windows", "kind_windows_zip": "Tệp zip Windows", "kind_linux_tarball": "Tệp tarball Linux", "kind_checksums": "Mã kiểm tra", "os_note_mac": "Không có bản cho macOS. Mọi thứ bên dưới dành cho Android, Windows và Linux.", "os_note_ios": "Không có bản cho iPhone hay iPad. Mọi thứ bên dưới dành cho Android, Windows và Linux.", "download_for": "Tải cho {os}", "downloads_one": "{count} lượt tải", "downloads_other": "{count} lượt tải", "not_in_release": "Không có trong {version}", "on_github": "Trên GitHub", "download_file": "Tải {file}", "install_version_for": "Cài {version} cho {os}", "download_version_for": "Tải {version} cho {os}", "download_version_other_os": "Tải {version} cho Android, Windows hoặc Linux", "download_version": "Tải {version}", "latest": "Mới nhất", "no_files_yet": "Bản phát hành này chưa có tệp đính kèm. Có thể bản dựng vẫn đang chạy.", "open_on_github": "Mở {version} trên GitHub", "release": "Bản phát hành", "unavailable": "Không khả dụng", "fail_downloads": "Các tệp tải về vẫn còn đó: mọi nút bên dưới đều mở {link}, nơi các tệp được liệt kê theo tên.", "fail_link": "bản phát hành mới nhất trên GitHub", "go_to_downloads": "Đến phần tải về", "not_released": "Chưa phát hành", "no_release": "Chưa có bản phát hành nào được công bố. Bạn vẫn có thể tự dựng ứng dụng từ mã nguồn.", "build_instructions": "Đọc hướng dẫn dựng trên GitHub", "view_project": "Xem dự án trên GitHub", "fail_browser": "Trình duyệt này không tải được danh sách bản phát hành.", "fail_rate": "GitHub đang giới hạn tốc độ của mạng này. API công khai của nó cho phép 60 yêu cầu mỗi giờ cho mỗi địa chỉ, và mạng này đã dùng hết.", "fail_timeout": "GitHub không phản hồi kịp thời.", "fail_load": "Không tải được danh sách bản phát hành từ GitHub.", "theme_to_dark": "Chuyển sang giao diện tối", "theme_to_light": "Chuyển sang giao diện sáng", "menu_close": "Đóng menu", "menu": "Menu"}</script>
+<script type="application/json" id="tm-strings">{"kind_universal_apk": "APK chung", "kind_windows_installer": "Trình cài đặt Windows", "kind_windows_zip": "Tệp zip Windows", "kind_linux_tarball": "Tệp tarball Linux", "kind_mac_dmg": "DMG cho macOS", "kind_checksums": "Mã kiểm tra", "os_note_ios_only": "Không có bản cho iPhone hay iPad. Các tệp bên dưới dành cho điện thoại Android, Android TV và máy tính.", "download_for": "Tải cho {os}", "os_note_mac_preview": "Bản macOS là bản xem trước cho máy Mac dùng Apple Silicon (M1 trở lên) và macOS 26 trở lên. Bản này không chạy trên máy Mac dùng Intel.", "os_note_mac": "Không có bản cho macOS. Mọi thứ bên dưới dành cho Android, Windows và Linux.", "downloads_one": "{count} lượt tải", "downloads_other": "{count} lượt tải", "not_in_release": "Không có trong {version}", "on_github": "Trên GitHub", "download_file": "Tải {file}", "download_version_mac": "Tải {version} cho máy Mac dùng Apple Silicon", "download_version_for": "Tải {version} cho {os}", "download_version_other_os": "Tải {version} cho Android, Windows hoặc Linux", "install_version_for": "Cài {version} cho {os}", "download_version": "Tải {version}", "latest": "Mới nhất", "no_files_yet": "Bản phát hành này chưa có tệp đính kèm. Có thể bản dựng vẫn đang chạy.", "open_on_github": "Mở {version} trên GitHub", "release": "Bản phát hành", "unavailable": "Không khả dụng", "fail_downloads": "Các tệp tải về vẫn còn đó: mọi nút bên dưới đều mở {link}, nơi các tệp được liệt kê theo tên.", "fail_link": "bản phát hành mới nhất trên GitHub", "go_to_downloads": "Đến phần tải về", "not_released": "Chưa phát hành", "no_release": "Chưa có bản phát hành nào được công bố. Bạn vẫn có thể tự dựng ứng dụng từ mã nguồn.", "build_instructions": "Đọc hướng dẫn dựng trên GitHub", "view_project": "Xem dự án trên GitHub", "fail_browser": "Trình duyệt này không tải được danh sách bản phát hành.", "fail_rate": "GitHub đang giới hạn tốc độ của mạng này. API công khai của nó cho phép 60 yêu cầu mỗi giờ cho mỗi địa chỉ, và mạng này đã dùng hết.", "fail_timeout": "GitHub không phản hồi kịp thời.", "fail_load": "Không tải được danh sách bản phát hành từ GitHub.", "theme_to_dark": "Chuyển sang giao diện tối", "theme_to_light": "Chuyển sang giao diện sáng", "menu_close": "Đóng menu", "menu": "Menu"}</script>
 <script src="/app.js"></script>
 <!--
   Vercel Web Analytics. Served from this domain rather than from anybody else, sets no cookie and

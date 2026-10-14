@@ -136,8 +136,6 @@
     "neither_the_app_talks_3701": "Không có. Ứng dụng làm việc trực tiếp với Telegram qua thư viện chính thức của Telegram. Không có nội dung hay dữ liệu tài khoản nào đi qua máy chủ của TMPlayer.",
     "which_file_do_i_ec0b": "Tôi nên tải tệp nào?",
     "android_tv_or_phone_bd9a": "Android TV hoặc điện thoại: APK chung. Windows: trình cài đặt MSI. Linux: AppImage, hoặc PKGBUILD trên Arch. Trang tải về sẽ hiện tệp phù hợp với bạn lên đầu.",
-    "is_there_a_windows_b87b": "Có bản cho Windows hay Linux không?",
-    "yes_for_windows_10_0b9e": "Có cho Windows 10 và 11 và Linux 64 bit, trong cùng một bản phát hành, phát qua mpv. Không có bản cho macOS, iPhone hay iPad.",
     "can_i_read_my_61ff": "Tôi có đọc được tin nhắn trên đó không?",
     "no_it_only_ever_01d3": "Không. Nó chỉ hiển thị các video trong cuộc trò chuyện của bạn. Bạn không thể đọc, trả lời hay gửi gì từ đó.",
     "does_tmplayer_provide_any_e5a6": "TMPlayer có cung cấp nội dung riêng không?",
@@ -189,7 +187,9 @@
     "when_the_tv_asks_c1d1": "Khi TV hỏi, cho phép Downloader cài ứng dụng rồi bấm Cài đặt. Nếu không có nút cho phép, bấm Bản dựng bảy lần trong Cài đặt, Giới thiệu rồi thử lại.",
     "open_tmplayer_and_scan_6c50": "Mở TMPlayer và quét mã QR của nó bằng Telegram trên điện thoại: Cài đặt, Thiết bị, Liên kết thiết bị máy tính.",
     "open_downloader_type_tmplayer_03fc": "Mở Downloader, gõ tmplayer.org/apk vào ô địa chỉ, bấm Go, rồi bấm Cài đặt khi Fire OS hỏi.",
-    "turn_on_developer_options_ebe1": "Bật Tùy chọn nhà phát triển, cài Downloader, cho phép nó cài ứng dụng, rồi gõ tmplayer.org/apk vào đó và cài TMPlayer."
+    "turn_on_developer_options_ebe1": "Bật Tùy chọn nhà phát triển, cài Downloader, cho phép nó cài ứng dụng, rồi gõ tmplayer.org/apk vào đó và cài TMPlayer.",
+    "is_there_a_windows_b2c9": "Có bản cho Windows, macOS hoặc Linux không?",
+    "yes_for_windows_10_b1b9": "Có cho Windows 10 và 11 và Linux 64 bit, trong cùng một bản phát hành, phát qua mpv. Từ 1.26.0 còn có bản xem trước cho máy Mac dùng Apple Silicon chạy macOS 26 trở lên. Không có bản cho iPhone hay iPad."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "Tính năng TMPlayer: phát video Telegram trên TV và PC",
@@ -396,7 +396,6 @@
     "a_pkgbuild_lives_in_it": "Có một PKGBUILD trong {code1}. Nó dựng từ {code2} ở mỗi bản phát hành. AppImage cũng chạy được trên Arch.",
     "the_recipe": "Công thức dựng",
     "how_to_install_on_linux": "Cách cài trên Linux và đưa vào menu ứng dụng",
-    "there_is_no_iphone_or": "Không có bản cho macOS, iPhone hay iPad.",
     "the_shows_each_file_s": "{a1} hiển thị SHA-256 của từng tệp bên cạnh. Kiểm tra tệp tải về bằng {code1}, hoặc {code2} trên Windows.",
     "the_shows_each_file_s__a1": "Trang phát hành",
     "release_notes": "Ghi chú phát hành",
@@ -428,7 +427,17 @@
     "win_msi_note": "Trình cài đặt chưa được ký mã, nên SmartScreen có thể cảnh báo: bấm {em1}, rồi {em2}.",
     "win_cmd__em1": "PowerShell",
     "win_msi_note__em1": "Thông tin khác",
-    "win_msi_note__em2": "Vẫn chạy"
+    "win_msi_note__em2": "Vẫn chạy",
+    "macos_req": "Máy Mac dùng Apple Silicon (M1 trở lên), macOS 26 Tahoe trở lên. Không hỗ trợ máy Mac dùng Intel.",
+    "preview": "Bản xem trước",
+    "mac_dmg_note": "Kéo vào Ứng dụng. Ứng dụng chưa được Apple công chứng, nên lần đầu macOS báo là chưa mở: bấm {em1}, rồi bấm {em2} trong {em3}, {em4}.",
+    "mac_dmg_note__em1": "Xong",
+    "mac_dmg_note__em2": "Vẫn mở",
+    "mac_dmg_note__em3": "Cài đặt hệ thống",
+    "mac_dmg_note__em4": "Quyền riêng tư & Bảo mật",
+    "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
+    "how_to_install_on_macos": "Cách cài trên macOS",
+    "no_iphone_or_ipad": "Không có bản cho iPhone hay iPad."
   },
   "install": {
     "how_to_install_tmplayer_on": "Cách cài TMPlayer trên Android TV, Windows và Linux",
@@ -553,7 +562,28 @@
     "win_msi__em1": "Windows đã bảo vệ PC của bạn",
     "win_msi__em2": "Thông tin khác",
     "win_msi__em3": "Vẫn chạy",
-    "win_pin__em1": "Ghim vào thanh tác vụ"
+    "win_pin__em1": "Ghim vào thanh tác vụ",
+    "on_macos": "Trên macOS",
+    "macos_sub": "Bản xem trước, từ 1.26.0, cho máy Mac dùng Apple Silicon (M1 trở lên) chạy macOS 26 Tahoe trở lên. Không hỗ trợ máy Mac dùng Intel, và macOS cũ hơn sẽ không mở được.",
+    "mac_step1_h": "Kéo vào Ứng dụng",
+    "mac_step1": "Tải {code1} từ {a1}, mở ra và kéo {em1} vào {em2}.",
+    "mac_step1__a1": "trang tải về",
+    "mac_step1__em2": "Ứng dụng",
+    "mac_step2_h": "Mở, rồi cho phép một lần",
+    "mac_step2": "Ứng dụng chưa được Apple công chứng, nên lần đầu macOS báo {em1}. Bấm {em2}.",
+    "mac_step2__em1": "\"TMPlayer\" chưa được mở",
+    "mac_step2__em2": "Xong",
+    "mac_step2b": "Mở {em1}, {em2}, cuộn xuống đến {em3} và bấm {em4}. Xác nhận bằng mật khẩu hoặc Touch ID rồi bấm {em5} thêm một lần. macOS sẽ nhớ, nên những lần sau ứng dụng mở ngay.",
+    "mac_step2b__em1": "Cài đặt hệ thống",
+    "mac_step2b__em2": "Quyền riêng tư & Bảo mật",
+    "mac_step2b__em3": "\"TMPlayer\" đã bị chặn để bảo vệ máy Mac của bạn",
+    "mac_step2b__em4": "Vẫn mở",
+    "mac_step2b__em5": "Vẫn mở",
+    "mac_terminal": "Hoặc làm tương tự trong Terminal:",
+    "mac_update_h": "Cập nhật",
+    "mac_update": "TMPlayer báo khi có phiên bản mới và mở trang phát hành. Tải DMG mới và kéo đè lên bản cũ trong Ứng dụng: đăng nhập, lịch sử và nội dung đã tải vẫn được giữ.",
+    "mac_preview_note": "Đây là bản ít được thử nhất. Mỗi bản phát hành được dựng và kiểm tra trên máy chạy macOS 26, nhưng việc phát video chưa được thử trên máy Mac thật. Rất hoan nghênh báo lỗi trên {a1}.",
+    "mac_preview_note__a1": "trang issues"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: trình phát video Telegram không chính thức cho Android TV và Google TV",
@@ -713,9 +743,6 @@
     "which_file_do_i_download": "Tôi nên tải tệp nào?",
     "android_tv_or_phone_the": "Android TV hoặc điện thoại: APK chung. Windows: trình cài đặt MSI. Linux: AppImage, hoặc PKGBUILD trên Arch. {a1} hiện tệp phù hợp với bạn lên đầu.",
     "android_tv_or_phone_the__a1": "Trang tải về",
-    "is_there_a_windows_linux": "Có bản cho Windows hay Linux không?",
-    "yes_for_windows_10_and": "Có cho Windows 10 và 11 và Linux 64 bit, trong cùng một bản phát hành, phát qua mpv. Không có bản cho macOS, iPhone hay iPad. {a1}.",
-    "yes_for_windows_10_and__a1": "Tải tại đây",
     "can_i_read_my_messages": "Tôi có đọc được tin nhắn trên đó không?",
     "no_it_only_ever_shows": "Không. Nó chỉ hiển thị các video trong cuộc trò chuyện của bạn. Bạn không thể đọc, trả lời hay gửi gì từ đó.",
     "does_tmplayer_provide_any_media": "TMPlayer có cung cấp nội dung riêng không?",
@@ -744,7 +771,10 @@
     "the_lists_what_stays_on__a1": "Trang quyền riêng tư",
     "the_lists_what_stays_on__a2": "Sử dụng hợp pháp",
     "no_money_no_account_no": "Không tiền, không tài khoản, không email. Dự án chỉ xin một ngôi sao.",
-    "answers_about_tmplayer_streaming_without": "Giải đáp về TMPlayer: phát không cần chờ, không máy chủ hay bot, nên tải tệp nào, bản Windows và Linux, quyền riêng tư và những gì nó sẽ không làm."
+    "answers_about_tmplayer_streaming_without": "Giải đáp về TMPlayer: phát không cần chờ, không máy chủ hay bot, nên tải tệp nào, bản Windows và Linux, quyền riêng tư và những gì nó sẽ không làm.",
+    "is_there_a_windows_macos_linux": "Có bản cho Windows, macOS hoặc Linux không?",
+    "yes_for_windows_10_11_macos": "Có cho Windows 10 và 11 và Linux 64 bit, trong cùng một bản phát hành, phát qua mpv. Từ 1.26.0 còn có bản xem trước cho máy Mac dùng Apple Silicon chạy macOS 26 trở lên. Không có bản cho iPhone hay iPad. {a1}.",
+    "yes_for_windows_10_11_macos__a1": "Tải tại đây"
   },
   "formats": {
     "supported_formats_what_tmplayer_plays": "Định dạng được hỗ trợ: TMPlayer phát gì trên Android TV, Windows và Linux",
@@ -1001,7 +1031,6 @@
     "kind_linux_tarball": "Tệp tarball Linux",
     "kind_checksums": "Mã kiểm tra",
     "os_note_mac": "Không có bản cho macOS. Mọi thứ bên dưới dành cho Android, Windows và Linux.",
-    "os_note_ios": "Không có bản cho iPhone hay iPad. Mọi thứ bên dưới dành cho Android, Windows và Linux.",
     "download_for": "Tải cho {os}",
     "downloads_one": "{count} lượt tải",
     "downloads_other": "{count} lượt tải",
@@ -1031,7 +1060,11 @@
     "theme_to_light": "Chuyển sang giao diện sáng",
     "menu_close": "Đóng menu",
     "menu": "Menu",
-    "install_version_for": "Cài {version} cho {os}"
+    "install_version_for": "Cài {version} cho {os}",
+    "kind_mac_dmg": "DMG cho macOS",
+    "os_note_ios_only": "Không có bản cho iPhone hay iPad. Các tệp bên dưới dành cho điện thoại Android, Android TV và máy tính.",
+    "os_note_mac_preview": "Bản macOS là bản xem trước cho máy Mac dùng Apple Silicon (M1 trở lên) và macOS 26 trở lên. Bản này không chạy trên máy Mac dùng Intel.",
+    "download_version_mac": "Tải {version} cho máy Mac dùng Apple Silicon"
   },
   "build": {
     "language": "Ngôn ngữ",

@@ -136,8 +136,6 @@
     "neither_the_app_talks_3701": "لا هذا ولا ذاك. يتواصل التطبيق مع Telegram مباشرة عبر مكتبة Telegram الرسمية. ولا تمر أي وسائط أو بيانات حساب عبر أي خادم تابع لـ TMPlayer.",
     "which_file_do_i_ec0b": "أي ملف أنزّل؟",
     "android_tv_or_phone_bd9a": "لأجهزة Android TV أو الهاتف: ملف APK العام. لنظام Windows: مثبّت MSI. لنظام Linux: ملف AppImage، أو PKGBUILD على Arch. وتعرض صفحة التنزيل الملف المناسب لك أولًا.",
-    "is_there_a_windows_b87b": "هل توجد نسخة لنظام Windows أو Linux؟",
-    "yes_for_windows_10_0b9e": "نعم لنظامي Windows 10 و11 ولنظام Linux بمعمارية 64 بت، ضمن الإصدار نفسه، ويشغّل عبر mpv. لا توجد نسخة لأجهزة macOS أو iPhone أو iPad.",
     "can_i_read_my_61ff": "هل يمكنني قراءة رسائلي فيه؟",
     "no_it_only_ever_01d3": "لا. فهو لا يعرض إلا الفيديوهات الموجودة في محادثاتك. ولا يمكنك قراءة أي شيء أو الرد أو الإرسال منه.",
     "does_tmplayer_provide_any_e5a6": "هل يوفّر TMPlayer أي وسائط خاصة به؟",
@@ -189,7 +187,9 @@
     "when_the_tv_asks_c1d1": "عندما يسأل التلفاز، اسمح لتطبيق Downloader بتثبيت التطبيقات ثم اضغط تثبيت. إن لم يظهر المفتاح، اضغط رقم الإصدار سبع مرات في الإعدادات، حول، ثم حاول مجددًا.",
     "open_tmplayer_and_scan_6c50": "افتح TMPlayer وامسح رمز QR الخاص به بتطبيق Telegram على هاتفك: الإعدادات، الأجهزة، ربط جهاز كمبيوتر.",
     "open_downloader_type_tmplayer_03fc": "افتح Downloader واكتب tmplayer.org/apk في خانة العنوان واضغط Go، ثم اضغط تثبيت عندما يطلب Fire OS ذلك.",
-    "turn_on_developer_options_ebe1": "فعّل خيارات المطوّرين، وثبّت Downloader، واسمح له بتثبيت التطبيقات، ثم اكتب فيه tmplayer.org/apk وثبّت TMPlayer."
+    "turn_on_developer_options_ebe1": "فعّل خيارات المطوّرين، وثبّت Downloader، واسمح له بتثبيت التطبيقات، ثم اكتب فيه tmplayer.org/apk وثبّت TMPlayer.",
+    "is_there_a_windows_b2c9": "هل توجد نسخة لـ Windows أو macOS أو Linux؟",
+    "yes_for_windows_10_b1b9": "نعم لنظامي Windows 10 و11 ولنظام Linux بمعمارية 64 بت، ضمن الإصدار نفسه، ويشغّل عبر mpv. ومنذ الإصدار 1.26.0 توجد أيضًا نسخة تجريبية لأجهزة Mac بشريحة Apple Silicon مع macOS 26 أو أحدث. لا توجد نسخة لـ iPhone أو iPad."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "ميزات TMPlayer: بث فيديوهات Telegram على التلفاز والكمبيوتر",
@@ -396,7 +396,6 @@
     "a_pkgbuild_lives_in_it": "يوجد ملف PKGBUILD في {code1}. ويبني الحزمة من {code2} مع كل إصدار. ويعمل AppImage أيضًا على Arch.",
     "the_recipe": "وصفة البناء",
     "how_to_install_on_linux": "طريقة التثبيت على Linux، وإضافته إلى قائمة التطبيقات",
-    "there_is_no_iphone_or": "لا توجد نسخة لأجهزة macOS أو iPhone أو iPad.",
     "the_shows_each_file_s": "تعرض {a1} بصمة SHA-256 لكل ملف بجانبه. تحقّق من التنزيل باستخدام {code1}، أو {code2} على Windows.",
     "the_shows_each_file_s__a1": "صفحة الإصدار",
     "release_notes": "ملاحظات الإصدار",
@@ -428,7 +427,17 @@
     "win_msi_note": "ليس موقّعًا رقميًا بعد، لذا قد يحذّرك SmartScreen: انقر {em1} ثم {em2}.",
     "win_cmd__em1": "PowerShell",
     "win_msi_note__em1": "More info",
-    "win_msi_note__em2": "Run anyway"
+    "win_msi_note__em2": "Run anyway",
+    "macos_req": "أجهزة Mac بشريحة Apple Silicon (M1 وما بعدها)، مع macOS 26 Tahoe أو أحدث. أجهزة Mac بمعالج Intel غير مدعومة.",
+    "preview": "نسخة تجريبية",
+    "mac_dmg_note": "اسحبه إلى التطبيقات. لم تصادق عليه Apple بعد، لذا يقول macOS في المرة الأولى إنه لم يُفتح: انقر {em1}، ثم {em2} في {em3}، {em4}.",
+    "mac_dmg_note__em1": "تم",
+    "mac_dmg_note__em2": "فتح على أي حال",
+    "mac_dmg_note__em3": "إعدادات النظام",
+    "mac_dmg_note__em4": "الخصوصية والأمن",
+    "tmplayer_version_macos_arm64_dmg": "TMPlayer-<version>-macos-arm64.dmg",
+    "how_to_install_on_macos": "طريقة التثبيت على macOS",
+    "no_iphone_or_ipad": "لا توجد نسخة لـ iPhone أو iPad."
   },
   "install": {
     "how_to_install_tmplayer_on": "كيفية تثبيت TMPlayer على Android TV وWindows وLinux",
@@ -553,7 +562,28 @@
     "win_msi__em1": "Windows protected your PC",
     "win_msi__em2": "More info",
     "win_msi__em3": "Run anyway",
-    "win_pin__em1": "تثبيت على شريط المهام"
+    "win_pin__em1": "تثبيت على شريط المهام",
+    "on_macos": "على macOS",
+    "macos_sub": "نسخة تجريبية، منذ الإصدار 1.26.0، لأجهزة Mac بشريحة Apple Silicon (M1 وما بعدها) تعمل بنظام macOS 26 Tahoe أو أحدث. أجهزة Mac بمعالج Intel غير مدعومة، ولن يفتحه إصدار أقدم من macOS.",
+    "mac_step1_h": "اسحبه إلى التطبيقات",
+    "mac_step1": "نزّل {code1} من {a1}، وافتحه، واسحب {em1} إلى {em2}.",
+    "mac_step1__a1": "صفحة التنزيل",
+    "mac_step1__em2": "التطبيقات",
+    "mac_step2_h": "افتحه، ثم اسمح به مرة واحدة",
+    "mac_step2": "لم تصادق Apple على التطبيق بعد، لذا يعرض macOS في المرة الأولى {em1}. انقر {em2}.",
+    "mac_step2__em1": "لم يتم فتح \"TMPlayer\"",
+    "mac_step2__em2": "تم",
+    "mac_step2b": "افتح {em1}، {em2}، ومرّر إلى الأسفل حتى {em3} وانقر {em4}. أكّد بكلمة السر أو Touch ID وانقر {em5} مرة أخرى. يتذكر macOS ذلك، فيفتح التطبيق مباشرة في المرات التالية.",
+    "mac_step2b__em1": "إعدادات النظام",
+    "mac_step2b__em2": "الخصوصية والأمن",
+    "mac_step2b__em3": "تم حظر \"TMPlayer\" لحماية الـ Mac",
+    "mac_step2b__em4": "فتح على أي حال",
+    "mac_step2b__em5": "فتح على أي حال",
+    "mac_terminal": "أو الشيء نفسه في Terminal:",
+    "mac_update_h": "التحديثات",
+    "mac_update": "يخبرك TMPlayer عند صدور نسخة جديدة ويفتح صفحة الإصدار. نزّل ملف DMG الجديد واسحبه فوق النسخة القديمة في التطبيقات: يبقى تسجيل دخولك وسجلك وتنزيلاتك كما هي.",
+    "mac_preview_note": "هذه أقل النسخ اختبارًا. يُبنى كل إصدار ويُفحص على جهاز يعمل بنظام macOS 26، لكن التشغيل لم يُجرَّب بعد على جهاز Mac حقيقي. نرحب بالبلاغات في {a1}.",
+    "mac_preview_note__a1": "صفحة المشكلات"
   },
   "android_tv": {
     "tmplayer_unofficial_telegram_video_player": "TMPlayer: مشغّل فيديو غير رسمي لـ Telegram على Android TV وGoogle TV",
@@ -713,9 +743,6 @@
     "which_file_do_i_download": "أي ملف أنزّل؟",
     "android_tv_or_phone_the": "Android TV أو الهاتف: ملف APK الشامل. Windows: مثبّت MSI. Linux: ملف AppImage، أو PKGBUILD على Arch. {a1} تعرض ملفك أولًا.",
     "android_tv_or_phone_the__a1": "صفحة التنزيل",
-    "is_there_a_windows_linux": "هل توجد نسخة لنظام Windows أو Linux؟",
-    "yes_for_windows_10_and": "نعم لـ Windows 10 و11 وLinux بمعمارية 64 بت، ضمن الإصدار نفسه، والتشغيل عبر mpv. لا توجد نسخة لأجهزة macOS أو iPhone أو iPad. {a1}.",
-    "yes_for_windows_10_and__a1": "احصل عليه من هنا",
     "can_i_read_my_messages": "هل يمكنني قراءة رسائلي فيه؟",
     "no_it_only_ever_shows": "لا. لا يعرض إلا المقاطع الموجودة في محادثاتك. لا يمكنك القراءة أو الرد أو إرسال أي شيء منه.",
     "does_tmplayer_provide_any_media": "هل يوفّر TMPlayer أي وسائط خاصة به؟",
@@ -744,7 +771,10 @@
     "the_lists_what_stays_on__a1": "صفحة الخصوصية",
     "the_lists_what_stays_on__a2": "الاستخدام المشروع",
     "no_money_no_account_no": "لا مال ولا حساب ولا بريد إلكتروني. كل ما يطلبه المشروع نجمة.",
-    "answers_about_tmplayer_streaming_without": "إجابات عن TMPlayer: بث دون انتظار، لا خادم ولا بوت، أي ملف تنزّل، إصدارات Windows وLinux، الخصوصية وما لن يفعله التطبيق."
+    "answers_about_tmplayer_streaming_without": "إجابات عن TMPlayer: بث دون انتظار، لا خادم ولا بوت، أي ملف تنزّل، إصدارات Windows وLinux، الخصوصية وما لن يفعله التطبيق.",
+    "is_there_a_windows_macos_linux": "هل توجد نسخة لـ Windows أو macOS أو Linux؟",
+    "yes_for_windows_10_11_macos": "نعم لـ Windows 10 و11 وLinux بمعمارية 64 بت، ضمن الإصدار نفسه، والتشغيل عبر mpv. ومنذ الإصدار 1.26.0 توجد أيضًا نسخة تجريبية لأجهزة Mac بشريحة Apple Silicon مع macOS 26 أو أحدث. لا توجد نسخة لـ iPhone أو iPad. {a1}.",
+    "yes_for_windows_10_11_macos__a1": "احصل عليه من هنا"
   },
   "formats": {
     "supported_formats_what_tmplayer_plays": "الصيغ المدعومة: ما يشغّله TMPlayer على Android TV وWindows وLinux",
@@ -1001,7 +1031,6 @@
     "kind_linux_tarball": "أرشيف tar لـ Linux",
     "kind_checksums": "المجاميع الاختبارية",
     "os_note_mac": "لا يوجد إصدار لـ macOS. كل ما يلي مخصص لـ Android وWindows وLinux.",
-    "os_note_ios": "لا يوجد إصدار لـ iPhone أو iPad. كل ما يلي مخصص لـ Android وWindows وLinux.",
     "download_for": "التنزيل لـ {os}",
     "downloads_one": "عدد التنزيلات: {count}",
     "downloads_other": "عدد التنزيلات: {count}",
@@ -1031,7 +1060,11 @@
     "theme_to_light": "التبديل إلى المظهر الفاتح",
     "menu_close": "إغلاق القائمة",
     "menu": "القائمة",
-    "install_version_for": "ثبّت {version} لنظام {os}"
+    "install_version_for": "ثبّت {version} لنظام {os}",
+    "kind_mac_dmg": "ملف DMG لـ macOS",
+    "os_note_ios_only": "لا توجد نسخة لـ iPhone أو iPad. الملفات أدناه لهواتف Android وAndroid TV والحواسيب.",
+    "os_note_mac_preview": "نسخة macOS تجريبية، لأجهزة Mac بشريحة Apple Silicon (M1 وما بعدها) مع macOS 26 أو أحدث. لا تعمل على أجهزة Mac بمعالج Intel.",
+    "download_version_mac": "تنزيل {version} لأجهزة Mac بشريحة Apple Silicon"
   },
   "build": {
     "language": "اللغة",
