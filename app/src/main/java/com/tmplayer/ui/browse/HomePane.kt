@@ -65,6 +65,8 @@ import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ShelfEntry
 import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.ui.components.TmSecondaryButton
+import com.tmplayer.ui.components.WithinMargins
+import com.tmplayer.ui.components.edgeFade
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
@@ -398,18 +400,27 @@ private fun TileRow(
     modifier: Modifier = Modifier,
     content: LazyListScope.() -> Unit,
 ) {
-    val touch = isTouch()
+    if (!isTouch()) {
+        // On a television the tiles fade out over the margins rather than being cut off at the
+        // rail, and the tile the remote moves to stays inside them.
+        val row = rememberLazyListState()
+        WithinMargins(start, end) {
+            LazyRow(
+                state = row,
+                // Coming back down into a row lands on the tile it was left on, not whichever is nearest.
+                modifier = modifier.fillMaxWidth().focusRestorer().edgeFade(row, start, end),
+                // Room above and below for a focused tile to grow into without being clipped by the row.
+                contentPadding = PaddingValues(start = start, end = end, top = Tv.FocusClearance, bottom = Tv.FocusClearance),
+                horizontalArrangement = Arrangement.spacedBy(TILE_GAP_TV),
+                content = content,
+            )
+        }
+        return
+    }
     LazyRow(
-        // Coming back down into a row lands on the tile it was left on, not whichever is nearest.
-        modifier = modifier.fillMaxWidth().then(if (touch) Modifier else Modifier.focusRestorer()),
-        contentPadding = PaddingValues(
-            start = start,
-            end = end,
-            // Room for a focused tile to grow into without being clipped by the row.
-            top = if (touch) 0.dp else Tv.FocusClearance,
-            bottom = if (touch) 0.dp else Tv.FocusClearance,
-        ),
-        horizontalArrangement = Arrangement.spacedBy(if (touch) TILE_GAP_TOUCH else TILE_GAP_TV),
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(start = start, end = end),
+        horizontalArrangement = Arrangement.spacedBy(TILE_GAP_TOUCH),
         content = content,
     )
 }

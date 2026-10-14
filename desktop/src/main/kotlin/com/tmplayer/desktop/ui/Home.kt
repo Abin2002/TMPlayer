@@ -82,6 +82,8 @@ import com.tmplayer.ui.browse.HomeViewModel
 import com.tmplayer.ui.browse.NewBadge
 import com.tmplayer.ui.browse.rememberHomeRows
 import com.tmplayer.ui.components.UiState
+import com.tmplayer.ui.components.WithinMargins
+import com.tmplayer.ui.components.edgeFade
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
@@ -579,12 +581,17 @@ private fun Strip(side: Dp, content: LazyListScope.() -> Unit) {
                 event.changes.forEach { it.consume() }
             },
     ) {
-        LazyRow(
-            state = strip,
-            contentPadding = PaddingValues(start = side, end = side + 8.dp, top = 8.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(CARD_GAP),
-            content = content,
-        )
+        // Cards scrolled past the margins fade out there rather than being cut off at the sidebar,
+        // and a card the keyboard moves to stays inside them.
+        WithinMargins(side, side + 8.dp) {
+            LazyRow(
+                modifier = Modifier.edgeFade(strip, side, side + 8.dp),
+                state = strip,
+                contentPadding = PaddingValues(start = side, end = side + 8.dp, top = 8.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(CARD_GAP),
+                content = content,
+            )
+        }
         val shown by animateFloatAsState(if (hovered) 1f else 0f, Motion.standard(Motion.Fast), label = "stripArrows")
         if (shown > 0f) {
             val page = { strip.layoutInfo.viewportSize.width * PAGE_SHARE }
