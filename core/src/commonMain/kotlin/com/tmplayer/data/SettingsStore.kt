@@ -45,6 +45,7 @@ private val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
 private val REMOVE_AFTER_WATCHING = booleanPreferencesKey("remove_after_watching")
 private val TRICKPLAY = booleanPreferencesKey("trickplay")
 private val WATCH_NEXT = booleanPreferencesKey("watch_next")
+private val TV_CHANNELS = booleanPreferencesKey("tv_channels")
 private val CRASH_REPORTS = booleanPreferencesKey("crash_reports")
 private val LAST_CHAT = longPreferencesKey("last_chat")
 private val MIN_SIZE = longPreferencesKey("min_size_bytes")
@@ -613,6 +614,21 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     suspend fun setWatchNext(value: Boolean) {
         prefs.edit { it[WATCH_NEXT] = value }
+    }
+
+    /**
+     * TMPlayer's own channels on the Android TV home screen. See [TvChannels].
+     *
+     * On unless the viewer turns it off, unlike "Play next": the channels show what is new in the
+     * chats they starred, not what they watched, and the launcher shows an app's channels only
+     * once the viewer has the app on the home screen.
+     */
+    val tvChannels: Flow<Boolean> = read { it[TV_CHANNELS] ?: true }
+
+    suspend fun tvChannelsNow(): Boolean = prefs.data.first()[TV_CHANNELS] ?: true
+
+    suspend fun setTvChannels(value: Boolean) {
+        prefs.edit { it[TV_CHANNELS] = value }
     }
 
     // ---- the support card -------------------------------------------------------------------

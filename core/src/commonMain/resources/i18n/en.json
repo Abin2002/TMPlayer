@@ -699,6 +699,7 @@
     "shown_toast": "Chats and Saved Messages are back"
   },
   "home": {
+    "channel_recent": "Recently added",
     "favourites_hint": "{form, select, tv {Add chats to your favourites and their videos show here, a row for each. Hold OK on any chat in the list and pick Add to favourites.} other {Add chats to your favourites and their videos show here, a row for each. Press and hold any chat in the list and pick Add to favourites.}}",
     "first_body": "Forward any video to Saved Messages in Telegram, then open Saved Messages here to play it.",
     "first_more": "Star a chat to give it a row here. Videos you start wait at the top.",
@@ -1654,6 +1655,9 @@
     "trickplay_low_memory": "Not on this device: it has too little memory",
     "trickplay_off": "Off: seeking shows the time only",
     "trickplay_on": "A picture over the bar, from the part of the video already downloaded",
+    "tv_channels": "Show on the TV home screen",
+    "tv_channels_off": "Off: TMPlayer adds no rows to the home screen",
+    "tv_channels_on": "Rows of what is new in your starred chats, on the home screen",
     "up_to_date": "TMPlayer {version} is the newest version",
     "update_detail": "Downloads {size} from GitHub, then Android asks you to confirm",
     "update_notify": "Tell me when a new version is out",
