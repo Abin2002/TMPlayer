@@ -134,14 +134,18 @@ class PromoCaptureActivity : ComponentActivity() {
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
         super.onCreate(savedInstanceState)
-        if (tv) {
+        // `--ez nobars true` does the same on a phone: the site's phone shots carry no status bar or
+        // gesture pill, and the page fills the whole 1080x2400 rather than leaving a band where
+        // the bars were. A swipe from the edge still brings them back for a moment.
+        if (tv || intent.getBooleanExtra("nobars", false)) {
             // A television has no status bar and no gesture pill, and a shot of the TV layout with
             // a phone's clock and battery in the corner would be a picture of something that does
             // not exist.
             WindowCompat.setDecorFitsSystemWindows(window, false)
-            WindowInsetsControllerCompat(window, window.decorView).hide(
-                WindowInsetsCompat.Type.systemBars(),
-            )
+            WindowInsetsControllerCompat(window, window.decorView).apply {
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
+            }
         }
         // `--es theme light|dark` pins the appearance, so the site can carry a light picture for
         // its light theme and a dark one for its dark theme rather than showing a black phone on
