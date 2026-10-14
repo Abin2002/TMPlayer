@@ -1,30 +1,35 @@
 {
   "schema": 1,
-  "version": "1.25.0",
-  "versionCode": 12500,
-  "published": "2026-10-09T22:03:02Z",
-  "releaseUrl": "https://github.com/dracu-lah/TMPlayer/releases/tag/v1.25.0",
-  "notes": "release: 1.25.0 Series now have an Episodes list in the player on phone, TV and desktop, with autoplay to the next episode and marking episodes watched right from the list. The side bar is simpler: Home, History, Favourites, Chats, Downloads and Settings, and Only my folders hides Telegram's own Chats and Saved groups. There is a shorter welcome tour, and Home says how to get a first video in. TMPlayer now asks before forgetting progress, clearing caches or deleting downloads. On desktop, Chinese, Japanese, Korean, Hindi, Bengali, Malayalam, Arabic and Persian show even without system fonts, and the AppImage updates only what changed. On TV, OK pauses in one press and See all sits on each Home row. Labels that were cut short in German, Russian and Malayalam fit, and buttons in the light theme are readable again.",
+  "version": "1.26.0",
+  "versionCode": 12600,
+  "published": "2026-10-14T20:45:07Z",
+  "releaseUrl": "https://github.com/dracu-lah/TMPlayer/releases/tag/v1.26.0",
+  "notes": "A new Home with posters, overviews and episode names for films and shows, and TMPlayer rows on the Android TV home screen. A setup and a quick tour after sign in, in every language, with Performance and Mobile data steps; existing users are offered the tour once. Low storage mode streams videos larger than the free space, and Save mobile data fetches only a few minutes ahead on mobile data. Skip intro, recap and credits, speed remembered per series, preferred audio and subtitle language, watch later, season downloads, bookmarks, A-B repeat and skip silence. Backups of settings and lists, an app PIN and a kids lock with allowed chats. After a crash, TMPlayer asks before sending a report, once or always. A macOS preview for Apple Silicon Macs with macOS 26 or newer. New icons, the desktop's own window buttons, and many fixes for right-to-left languages, TV focus and long translations.",
   "assets": {
     "android-universal": {
-      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.25.0/TMPlayer-1.25.0-universal.apk",
-      "sha256": "5b8c7ed18898a676d3da07554e52d228801a02b53d6c3411d4f3b44a838490bd",
-      "size": 27382772
+      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.26.0/TMPlayer-1.26.0-universal.apk",
+      "sha256": "9338ce417b8403e3104f889b343a34968c73c40690b6f144e9a4160aa231f472",
+      "size": 28962511
     },
     "windows-x64-msi": {
-      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.25.0/TMPlayer-1.25.0-windows-x64.msi",
-      "sha256": "f20c83436b63dffe17f7c103409e924802707841a86d52448d143ec28f78a368",
-      "size": 101815436
+      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.26.0/TMPlayer-1.26.0-windows-x64.msi",
+      "sha256": "13ffc7e10338ede20c634401be34f38b84369e3665a7f7eb70becafd83d87891",
+      "size": 103625844
+    },
+    "macos-arm64-dmg": {
+      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.26.0/TMPlayer-1.26.0-macos-arm64.dmg",
+      "sha256": "1a545b21114346dc2e6e9bd433e3ab42c6c405eea5b2fdaa6a9f5e3a5bb79482",
+      "size": 110982855
     },
     "linux-x64-appimage": {
-      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.25.0/TMPlayer-1.25.0-x86_64.AppImage",
-      "sha256": "0e976dc08384a952a262c268038ed95f88e88b4f1ca9e8fc7716c641ceb745ce",
-      "size": 97077752
+      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.26.0/TMPlayer-1.26.0-x86_64.AppImage",
+      "sha256": "b7a5b5b80bfeed73785fd8f4c7c7cde2a493f23968ec5774278cf3512224524c",
+      "size": 98621944
     },
     "linux-x64-tarball": {
-      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.25.0/TMPlayer-1.25.0-linux-x64.tar.xz",
-      "sha256": "eac624cf346395d1899a50e2711f2d936d0aca158e0a4c72a725f326d9d6dffe",
-      "size": 72016712
+      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.26.0/TMPlayer-1.26.0-linux-x64.tar.xz",
+      "sha256": "4c3682d27c68d4ab18a7ea3866e829d4407a1d870b626b329717ee0e0f16f9bc",
+      "size": 73382416
     }
   }
 }

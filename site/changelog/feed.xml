@@ -5,8 +5,24 @@
     <link>https://tmplayer.org/changelog/</link>
     <description>What changed in every TMPlayer release, newest first: Android TV, phones, Windows and Linux, all from one release.</description>
     <language>en-gb</language>
-    <lastBuildDate>Fri, 09 Oct 2026 22:03:12 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 14 Oct 2026 20:45:18 GMT</lastBuildDate>
     <atom:link href="https://tmplayer.org/changelog/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>TMPlayer 1.26.0</title>
+      <link>https://tmplayer.org/changelog/1.26.0/</link>
+      <guid isPermaLink="false">tmplayer-v1.26.0</guid>
+      <pubDate>Wed, 14 Oct 2026 20:45:18 GMT</pubDate>
+      <description>&lt;ul&gt;
+  &lt;li&gt;A new Home with posters, overviews and episode names for films and shows, and TMPlayer rows on the Android TV home screen&lt;/li&gt;
+  &lt;li&gt;A setup and a quick tour after sign in, in every language, with Performance and Mobile data steps; existing users are offered the tour once&lt;/li&gt;
+  &lt;li&gt;Low storage mode streams videos larger than the free space, and Save mobile data fetches only a few minutes ahead on mobile data&lt;/li&gt;
+  &lt;li&gt;Skip intro, recap and credits, speed remembered per series, preferred audio and subtitle language, watch later, season downloads, bookmarks, A-B repeat and skip silence&lt;/li&gt;
+  &lt;li&gt;Backups of settings and lists, an app PIN and a kids lock with allowed chats&lt;/li&gt;
+  &lt;li&gt;After a crash, TMPlayer asks before sending a report, once or always&lt;/li&gt;
+  &lt;li&gt;A macOS preview for Apple Silicon Macs with macOS 26 or newer&lt;/li&gt;
+  &lt;li&gt;New icons, the desktop&#x27;s own window buttons, and many fixes for right-to-left languages, TV focus and long translations&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
     <item>
       <title>TMPlayer 1.25.0</title>
       <link>https://tmplayer.org/changelog/1.25.0/</link>
