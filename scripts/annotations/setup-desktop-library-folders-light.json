@@ -3,21 +3,21 @@
   "output": "ui/src/jvmMain/resources/onboarding/library-folders-light.webp",
   "crop": [
     0,
-    360,
     440,
-    440
+    420,
+    420
   ],
-  "width": 440,
+  "width": 420,
   "marks": [
     {
       "type": "circle",
       "box": [
-        30,
-        470,
-        360,
-        210
+        56,
+        543,
+        310,
+        136
       ],
-      "seed": 5
+      "seed": 37
     }
   ]
 }

@@ -2,22 +2,25 @@
   "source": "setup-raw-posters-on.png",
   "output": "ui/src/jvmMain/resources/onboarding/posters-on-dark.webp",
   "crop": [
-    446,
-    0,
-    860,
-    860
+    734,
+    515,
+    685,
+    685
   ],
   "width": 560,
   "marks": [
     {
-      "type": "circle",
-      "box": [
-        752,
-        24,
-        252,
-        376
+      "type": "arrow",
+      "from": [
+        1300,
+        1100
       ],
-      "seed": 7
+      "to": [
+        1030,
+        760
+      ],
+      "bend": 0.25,
+      "seed": 45
     }
   ]
 }

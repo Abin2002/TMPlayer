@@ -2,22 +2,25 @@
   "source": "ph-posters-false-light.png",
   "output": "app/src/main/res/drawable-nodpi/setup_posters_off.webp",
   "crop": [
-    20,
-    140,
-    1040,
-    1040
+    0,
+    1458,
+    572,
+    572
   ],
   "width": 440,
   "marks": [
     {
-      "type": "circle",
-      "box": [
-        396,
-        180,
-        296,
-        452
+      "type": "arrow",
+      "from": [
+        530,
+        1950
       ],
-      "seed": 18
+      "to": [
+        378,
+        1750
+      ],
+      "bend": 0.3,
+      "seed": 41
     }
   ]
 }

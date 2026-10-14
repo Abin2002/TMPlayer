@@ -2,22 +2,22 @@
   "source": "tv-lib-folders.png",
   "output": "app/src/main/res/drawable-nodpi/setup_library_folders_tv.webp",
   "crop": [
-    20,
-    400,
-    440,
-    440
+    40,
+    420,
+    380,
+    380
   ],
   "width": 400,
   "marks": [
     {
       "type": "circle",
       "box": [
-        80,
-        452,
-        310,
-        236
+        74,
+        552,
+        312,
+        170
       ],
-      "seed": 20
+      "seed": 35
     }
   ]
 }

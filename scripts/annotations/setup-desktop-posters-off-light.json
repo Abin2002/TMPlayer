@@ -2,22 +2,25 @@
   "source": "setup-raw-posters-off-light.png",
   "output": "ui/src/jvmMain/resources/onboarding/posters-off-light.webp",
   "crop": [
-    446,
-    0,
-    860,
-    860
+    1158,
+    272,
+    714,
+    714
   ],
   "width": 560,
   "marks": [
     {
-      "type": "circle",
-      "box": [
-        822,
-        18,
-        328,
-        182
+      "type": "arrow",
+      "from": [
+        1760,
+        860
       ],
-      "seed": 9
+      "to": [
+        1532,
+        470
+      ],
+      "bend": -0.25,
+      "seed": 47
     }
   ]
 }

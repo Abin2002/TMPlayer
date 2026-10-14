@@ -2,7 +2,7 @@
   "source": "tv-posters-off.png",
   "output": "app/src/main/res/drawable-nodpi/setup_posters_off_tv.webp",
   "crop": [
-    300,
+    1340,
     300,
     560,
     560
@@ -10,14 +10,17 @@
   "width": 480,
   "marks": [
     {
-      "type": "circle",
-      "box": [
-        354,
-        340,
-        222,
-        340
+      "type": "arrow",
+      "from": [
+        1896,
+        840
       ],
-      "seed": 22
+      "to": [
+        1846,
+        640
+      ],
+      "bend": -0.3,
+      "seed": 43
     }
   ]
 }
