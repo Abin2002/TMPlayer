@@ -26,8 +26,8 @@ OUT = ROOT / "ui" / "src" / "shared" / "kotlin" / "com" / "tmplayer" / "ui" / "o
 PAGES = ["videos", "home", "player", "controls", "downloads", "tvhome", "settings"]
 FORMS = {"Phone": "tour-android-{}.json", "Tv": "tour-android-{}-tv.json", "Desktop": "tour-desktop-{}-light.json"}
 
-# The badge sits on the circle's top left corner, nudged in so it never leaves the picture.
-EDGE = 0.03
+# The badge sits just outside the circle's top left corner; the app keeps it inside the picture.
+EDGE = 0.0
 
 
 def badges(spec_path: Path):

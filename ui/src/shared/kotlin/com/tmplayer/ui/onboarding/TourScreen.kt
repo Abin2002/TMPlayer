@@ -196,9 +196,10 @@ private fun Picture(page: TourPage, badges: List<androidx.compose.ui.geometry.Of
     ) {
         TourShot(page, Modifier.fillMaxSize())
         badges.forEachIndexed { i, at ->
-            // From the picture's left edge whatever the reading direction, as the picture is.
-            val x = maxWidth * at.x - BADGE / 2
-            val y = maxHeight * at.y - BADGE / 2
+            // From the picture's left edge whatever the reading direction, as the picture is. Up and
+            // to the left of the marked thing's corner, so the number never covers what it points at.
+            val x = (maxWidth * at.x - BADGE * OUTSIDE).coerceIn(0.dp, (maxWidth - BADGE).coerceAtLeast(0.dp))
+            val y = (maxHeight * at.y - BADGE * OUTSIDE).coerceIn(0.dp, (maxHeight - BADGE).coerceAtLeast(0.dp))
             Box(Modifier.align(AbsoluteAlignment.TopLeft).absoluteOffset(x, y).clearAndSetSemantics { }) {
                 Badge(s.formatter.number(i + 1), marked = true)
             }
@@ -229,5 +230,8 @@ private val WIDE_FROM = 560.dp
 private val PHONE_MAX = 600.dp
 private val MAX = 1280.dp
 private val BADGE = 28.dp
+
+/** How much of a badge sits outside its mark's corner: most of it, so it touches the circle's edge. */
+private const val OUTSIDE = 0.85f
 private const val FOCUS_TRIES = 40
 private const val FOCUS_RETRY_MS = 75L
