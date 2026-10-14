@@ -127,6 +127,45 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+  # The Apple Silicon DMG (a preview from 1.26.0). macos-26 because the bundled TDLib is built for
+  # macOS 26, so an older runner could not load it in the self-test.
+  desktop-macos:
+    name: Desktop (macOS)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Package and self-test
+        uses: ./.github/actions/desktop-macos
+        with:
+          version: 1.0.1-ci.${{ github.run_number }}
+
+      - name: Upload the macOS package
+        uses: actions/upload-artifact@v7
+        with:
+          name: tmplayer-desktop-macos
+          path: dist/*
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Publish desktop test report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-test-results-macos
+          path: desktop/build/reports/tests/
+          retention-days: 14
+          if-no-files-found: ignore
+
   desktop-windows:
     name: Desktop (Windows)
     runs-on: windows-latest

@@ -1,0 +1,66 @@
+name: Desktop macOS package
+description: >
+  Tests the desktop app, builds the Apple Silicon app bundle, signs it ad hoc, runs its --self-test,
+  and packs it into dist/TMPlayer-<version>-macos-arm64.dmg. Shared by ci.yml and release.yml; the
+  caller checks out on an arm64 macOS 26 runner (the bundled TDLib needs macOS 26), sets up JDK 21
+  and Gradle, and writes local.properties if the build should carry credentials.
+
+  The DMG is not signed with a Developer ID or notarized, so macOS asks once before the first launch
+  (Privacy and Security, Open Anyway). An ad hoc signature is still needed: Apple Silicon refuses to
+  run native code with none, or with one that a later change to the bundle has broken.
+
+inputs:
+  version:
+    description: The version to build, x.y.z or x.y.z-suffix (the bundle takes the x.y.z)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Run desktop tests
+      shell: bash
+      run: ./gradlew :desktop:test
+
+    - name: Build the app bundle
+      shell: bash
+      run: ./gradlew :desktop:createReleaseDistributable -PdesktopVersion=${{ inputs.version }}
+
+    - name: Sign the bundle ad hoc
+      shell: bash
+      run: |
+        app=desktop/build/compose/binaries/main-release/app/TMPlayer.app
+        [ -d "$app" ] || { echo "::error::no app bundle at $app"; exit 1; }
+        codesign --force --deep --sign - "$app"
+        codesign --verify --deep --strict --verbose=2 "$app"
+        /usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$app/Contents/Info.plist"
+
+    - name: Self-test the app bundle
+      shell: bash
+      run: desktop/build/compose/binaries/main-release/app/TMPlayer.app/Contents/MacOS/TMPlayer --self-test
+
+    - name: Build the DMG
+      shell: bash
+      run: |
+        V="${{ inputs.version }}"
+        stage="$RUNNER_TEMP/dmg"
+        rm -rf "$stage" && mkdir -p "$stage" dist
+        # ditto keeps the signature's extended attributes; the Applications link is the usual
+        # drag target beside the app.
+        ditto desktop/build/compose/binaries/main-release/app/TMPlayer.app "$stage/TMPlayer.app"
+        ln -s /Applications "$stage/Applications"
+        hdiutil create -volname "TMPlayer $V" -srcfolder "$stage" -fs APFS -format ULMO -ov "dist/TMPlayer-$V-macos-arm64.dmg"
+
+    - name: Self-test the app from the DMG
+      shell: bash
+      run: |
+        V="${{ inputs.version }}"
+        mnt="$RUNNER_TEMP/mnt"
+        mkdir -p "$mnt"
+        hdiutil attach -nobrowse -readonly -mountpoint "$mnt" "dist/TMPlayer-$V-macos-arm64.dmg"
+        trap 'hdiutil detach "$mnt" || true' EXIT
+        codesign --verify --deep --strict "$mnt/TMPlayer.app"
+        "$mnt/TMPlayer.app/Contents/MacOS/TMPlayer" --self-test
+
+    - name: List the package
+      shell: bash
+      run: ls -la dist

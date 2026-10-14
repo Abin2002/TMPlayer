@@ -153,7 +153,8 @@ the bottom, or under **Settings → Apps → See all apps**.
 
 # Installing TMPlayer on a computer
 
-The desktop app runs on **Windows 10 and 11 (64-bit)** and on **64-bit x86 Linux**. It signs in
+The desktop app runs on **Windows 10 and 11 (64-bit)**, on **64-bit x86 Linux**, and, as a preview
+from 1.26.0, on **Apple Silicon Macs with macOS 26 or newer**. It signs in
 to the same Telegram account, shows the same library and streams the same way as the Android app,
 played through mpv, which is bundled: there is nothing to install beside it.
 
@@ -162,6 +163,7 @@ Every file is on the same GitHub release as the APK:
 | File | For |
 | --- | --- |
 | `TMPlayer-<version>-windows-x64.msi` | Windows installer, per user, no administrator needed |
+| `TMPlayer-<version>-macos-arm64.dmg` | macOS 26 or newer on Apple Silicon (M1 and later), a preview |
 | `TMPlayer-<version>-x86_64.AppImage` | Linux, any distribution, one file |
 | `TMPlayer-<version>-x86_64.AppImage.zsync` | Not a download: lets AppImage updaters fetch only what changed |
 | `TMPlayer-<version>-linux-x64.tar.xz` | The plain app folder, which the Arch PKGBUILD builds from |
@@ -197,6 +199,32 @@ Either way it installs for your user only, into your own profile, so it never as
 administrator password. A newer version installs over it in place; your sign-in, history and
 downloads live in your user profile and are kept. Remove it under **Settings, Apps, Installed
 apps**.
+
+## macOS
+
+A preview, from 1.26.0: **Apple Silicon only** (M1 and later), and **macOS 26 Tahoe or newer**,
+because the Telegram library TMPlayer is built on needs it. Intel Macs are not supported. An older
+macOS says the app needs a newer version and does not open.
+
+1. Download `TMPlayer-<version>-macos-arm64.dmg`, open it, and drag **TMPlayer** onto
+   **Applications**.
+2. Open TMPlayer from Applications. The app is not notarized by Apple yet, so the first time macOS
+   says **"TMPlayer" Not Opened** (Apple could not verify it is free of malware). Click **Done**.
+3. Open **System Settings, Privacy and Security**, scroll down to **"TMPlayer" was blocked to
+   protect your Mac**, click **Open Anyway**, confirm with your password or Touch ID, and click
+   **Open Anyway** once more. macOS remembers this; later launches open straight away.
+
+   The same in Terminal, if you prefer: `xattr -dr com.apple.quarantine /Applications/TMPlayer.app`.
+4. Sign in (see [First run on a computer](#first-run-on-a-computer)).
+
+A newer version is announced inside the app, which opens the release page: download the new DMG
+and drag it over the old copy in Applications. Your sign in, history and downloads live in your
+user Library and are kept. To remove TMPlayer, drag it from Applications to the Bin; its data is in
+`~/Library/Application Support/TMPlayer` and `~/Library/Caches/TMPlayer`.
+
+This is the least tested build: the release job builds it on a macOS 26 runner and proves Telegram
+and mpv load, but playback, fullscreen and the keyboard have not been tried on a real Mac yet.
+Reports are welcome on the [issues page](https://github.com/dracu-lah/TMPlayer/issues).
 
 ## Linux
 
@@ -298,6 +326,7 @@ Where the files are, until you choose otherwise:
 |---|---|---|
 | Linux | `~/Downloads/TMPlayer` (your XDG Downloads folder) | `~/.cache/TMPlayer/cache` |
 | Windows | `Downloads\TMPlayer` (your Downloads folder, wherever it has been moved) | `%LOCALAPPDATA%\TMPlayer\Cache\cache` |
+| macOS | `~/Downloads/TMPlayer` | `~/Library/Caches/TMPlayer/cache` |
 
 Your sign in and settings stay in the per user data and config folders and never move.
 
@@ -332,6 +361,7 @@ The phone and the TV do the same with the amber **Update** row in the drawer and
 |---|---|
 | Windows installer (MSI) | Downloads the new MSI, closes, installs it without an administrator prompt, and opens again |
 | AppImage | Replaces the AppImage file in place; **Restart now** in the popup runs the new one |
+| macOS DMG | **Open release page**; download the new DMG and drag it over the old copy |
 | Arch package, tarball | **Open release page**; rebuild the PKGBUILD, or unpack the tarball over the old one |
 | Windows portable zip, deb, rpm, Flatpak | Announces the new version and opens the release page, which no longer has that format; see [Moving from a format that is no longer published](#moving-from-a-format-that-is-no-longer-published) |
 | Android phone or TV | Downloads the APK (on mobile data the button says how much; with Wi-Fi only on, it waits for Wi-Fi), then Android asks you to confirm |

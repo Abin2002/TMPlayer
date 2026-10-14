@@ -30,6 +30,7 @@ REPO = "dracu-lah/TMPlayer"
 ASSETS = {
     "android-universal": "TMPlayer-{v}-universal.apk",
     "windows-x64-msi": "TMPlayer-{v}-windows-x64.msi",
+    "macos-arm64-dmg": "TMPlayer-{v}-macos-arm64.dmg",
     "linux-x64-appimage": "TMPlayer-{v}-x86_64.AppImage",
     "linux-x64-tarball": "TMPlayer-{v}-linux-x64.tar.xz",
 }

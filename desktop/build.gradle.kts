@@ -76,8 +76,11 @@ kotlin.sourceSets.test { kotlin.srcDir("../app/src/promo/shared") }
 
 val hostOs: String = System.getProperty("os.name").lowercase()
 val hostArm: Boolean = System.getProperty("os.arch").let { it == "aarch64" || it == "arm64" }
+val hostMac: Boolean = hostOs.contains("mac")
 val mpvRuntime = when {
     hostOs.contains("win") -> libs.mediamp.runtime.windows.x64
+    // Apple Silicon only: the DMG is built on an arm64 runner, and Intel Macs are not offered.
+    hostMac -> libs.mediamp.runtime.macos.arm64
     else -> libs.mediamp.runtime.linux.x64
 }
 
@@ -94,6 +97,7 @@ val mpvRuntime = when {
 // the installers are built on the matching host. The self-test proves the TDLib that remains loads.
 val tdlibKeep = when {
     hostOs.contains("win") -> "windows/x64/"
+    hostMac -> if (hostArm) "macos/arm64/" else "macos/x64/"
     else -> if (hostArm) "linux/arm64/" else "linux/x64/"
 }
 // The name is the transform's cache identity: change it whenever the transform's output changes.
@@ -303,7 +307,9 @@ tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(sy
 compose.desktop {
     application {
         mainClass = "com.tmplayer.desktop.MainKt"
-        jvmArgs += listOf("-Dsun.java2d.uiScale.enabled=true")
+        // apple.awt.application.appearance lets the macOS title bar follow the system's light or dark
+        // look; other systems ignore it.
+        jvmArgs += listOf("-Dsun.java2d.uiScale.enabled=true", "-Dapple.awt.application.appearance=system")
         // The release image (createReleaseDistributable, packageReleaseMsi) runs ProGuard over the
         // classpath to drop code nothing reaches: Compose, Material, coroutines and the big
         // libraries are mostly unused. Names are kept and optimisation is off, because the risk is in
@@ -338,6 +344,18 @@ compose.desktop {
                 debMaintainer = "TMPlayer <noreply@github.com>"
                 rpmLicenseType = "GPLv3+"
                 shortcut = true
+            }
+            // The DMG (a preview, Apple Silicon, from 1.26.0) is not made by jpackage: the release
+            // job signs the app image ad hoc and packs it with hdiutil (.github/actions/desktop-macos),
+            // so this only shapes the app bundle. macOS 26 is the floor because the TDLib in
+            // tdl-coroutines 15.0.0 is built for it (the mpv runtime's libraries ask for 15), and the
+            // floor in Info.plist makes an older Mac say so instead of failing at sign in.
+            macOS {
+                bundleID = "io.github.dracu-lah.tmplayer"
+                iconFile.set(packagingDir.file("icons/tmplayer.icns"))
+                appCategory = "public.app-category.video"
+                minimumSystemVersion = "26.0"
+                dockName = "TMPlayer"
             }
             windows {
                 iconFile.set(packagingDir.file("icons/tmplayer.ico"))
