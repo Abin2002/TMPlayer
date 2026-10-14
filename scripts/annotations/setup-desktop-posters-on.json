@@ -1,0 +1,23 @@
+{
+  "source": "setup-raw-posters-on.png",
+  "output": "ui/src/jvmMain/resources/onboarding/posters-on-dark.webp",
+  "crop": [
+    446,
+    0,
+    860,
+    860
+  ],
+  "width": 560,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        752,
+        24,
+        252,
+        376
+      ],
+      "seed": 7
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "source": "ph-lib-false-light.png",
+  "output": "app/src/main/res/drawable-nodpi/setup_library_everything.webp",
+  "crop": [
+    0,
+    470,
+    760,
+    760
+  ],
+  "width": 440,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        96,
+        620,
+        540,
+        300
+      ],
+      "seed": 12
+    }
+  ]
+}

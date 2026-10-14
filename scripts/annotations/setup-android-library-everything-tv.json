@@ -1,0 +1,23 @@
+{
+  "source": "tv-lib-everything.png",
+  "output": "app/src/main/res/drawable-nodpi/setup_library_everything_tv.webp",
+  "crop": [
+    20,
+    400,
+    440,
+    440
+  ],
+  "width": 400,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        80,
+        452,
+        310,
+        236
+      ],
+      "seed": 19
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "source": "setup-raw-library-everything.png",
+  "output": "ui/src/jvmMain/resources/onboarding/library-everything-dark.webp",
+  "crop": [
+    0,
+    360,
+    440,
+    440
+  ],
+  "width": 440,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        30,
+        470,
+        360,
+        210
+      ],
+      "seed": 3
+    }
+  ]
+}

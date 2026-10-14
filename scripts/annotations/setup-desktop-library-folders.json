@@ -1,0 +1,23 @@
+{
+  "source": "setup-raw-library-folders.png",
+  "output": "ui/src/jvmMain/resources/onboarding/library-folders-dark.webp",
+  "crop": [
+    0,
+    360,
+    440,
+    440
+  ],
+  "width": 440,
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        30,
+        470,
+        360,
+        210
+      ],
+      "seed": 5
+    }
+  ]
+}
