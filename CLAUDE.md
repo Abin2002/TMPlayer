@@ -19,9 +19,10 @@ PNG. Do not commit the PNG alongside it, and do not lower the quality to save a 
 Where they live and who reads them:
 
 - `docs/screenshots/` is the README. GitHub renders WebP.
-- `site/public/screenshots/` is the site, referenced from `site/index.html`, `site/sitemap.xml` and
-  `site/public/site.webmanifest`. Changing a file name means changing all three, and the manifest carries
-  a `"type": "image/webp"` next to each one.
+- `site/public/screenshots/` is the site, referenced from the pages under `site/src/pages/`, the
+  sitemap's image entries in `site/src/data/lastmod.json` and `site/public/site.webmanifest`.
+  Changing a file name means changing all three (`grep -rn` the old name under `site/src`), and the
+  manifest carries a `"type": "image/webp"` next to each one.
 
 Two images are deliberately still PNG. `site/public/og.png` is the social preview, and the crawlers that
 fetch it (WhatsApp and LinkedIn among them) cannot be relied on to decode WebP, so a link would
@@ -50,55 +51,68 @@ grep -rInP '\x{2014}|\x{2013}' --exclude-dir=.git --exclude-dir=build --exclude-
 
 ## Site SEO
 
-Every rule below exists so a new page or a release reaches search engines the same way the
-existing ones do. Check them whenever a page under `site/` is added or changed.
+tmplayer.org is an Astro site in `site/` (`site/README.md` says how to run it, add a page, a
+string or a language). Every rule below exists so a new page or a release reaches search engines
+the same way the existing ones do. Check them whenever a page under `site/src/` is added or
+changed.
 
-- **URLs end in a slash.** `vercel.json` sets `trailingSlash` and `cleanUrls`, so `/privacy`
-  redirects to `/privacy/`. Canonicals, `og:url`, sitemap `<loc>`s and internal links all use the
-  slash form; a canonical that points at a redirect is ignored by Google.
-- **Every page's head** carries: a unique `<title>` (under about 60 characters, no "X - TMPlayer"
-  where X already says TMPlayer), a `description` of roughly 120 to 160 characters, `canonical`,
-  `robots`, `author`, `og:type`, `og:site_name`, `og:title`, `og:description`, `og:url`, `og:image`
-  with its type, width and height, `og:locale`, the four `twitter:` tags, the icons and the
-  manifest, and JSON-LD with at least a `BreadcrumbList`. `site/support/index.html` is the
-  smallest complete example. `404.html` is the one page that is `noindex` and has no canonical.
+- **URLs end in a slash.** `vercel.json` sets `trailingSlash` and `cleanUrls`, and Astro builds
+  with `trailingSlash: 'always'`, so `/privacy` redirects to `/privacy/`. Canonicals, `og:url`,
+  sitemap `<loc>`s and internal links all use the slash form; a canonical that points at a
+  redirect is ignored by Google.
+- **Every page's head** comes from `site/src/layouts/Base.astro`, which writes the canonical,
+  `robots`, `author`, the Open Graph tags with the image's type, width and height, `og:locale`,
+  the four `twitter:` tags, the icons, the manifest and, on localized pages, the hreflang
+  alternates. A page passes it a unique `title` (under about 60 characters, no "X - TMPlayer"
+  where X already says TMPlayer) and a `description` of roughly 120 to 160 characters, plus its
+  page id or path, and puts JSON-LD with at least a `BreadcrumbList` in the `head` slot.
+  `site/src/pages/support/index.astro` is the smallest complete example. The 404 page is the one
+  that is `noindex` and has no canonical (`notFound`).
 - **One `<h1>` per page**; every `<img>` has `alt`, `width`, `height`, and below the fold
   `loading="lazy" decoding="async"`.
-- **Sitemap.** A new indexable page gets a `<url>` in `site/sitemap.xml` with a real `lastmod` (the
-  date of its last content change, not today by default). Localized entries and their hreflang
-  alternates are written by `scripts/build-site-i18n.py`; never edit those by hand.
-- **Releases.** `scripts/build-changelog.py` writes `/changelog/`, the RSS feed, one page per
-  release at `/changelog/<version>/` (BlogPosting JSON-LD) and the release entries in the sitemap.
-  The release job commits all of it. Do not hand-edit anything under `site/changelog/`; change the
-  script and rerun it. Release notes are the tag message, so a good tag message is the SEO text
-  for that release.
-- **Caching** lives in `site/vercel.json`. Fonts are immutable (their names never change content);
-  `styles.css` and `app.js` keep a short cache because their names do not change between deploys,
-  so do not raise it without adding a content hash to their URLs. Images, the manifest, the
-  sitemap and the feed have their own entries; a new top-level asset type gets one too.
+- **Strings.** Text a reader sees comes from `site/i18n/en.json` by key: `{t('key')}`, or
+  `<T k="key">` with named slots for the markup inside a sentence. A new string is a new key in
+  `en.json`; the other catalogs are translated with the same keys and placeholders. English-only
+  pages (legal, privacy, security, signing, support, changelog) keep literal English.
+- **Sitemap.** `site/src/pages/sitemap.xml.ts` writes it: English pages from
+  `site/src/data/lastmod.json`, each with a real `lastmod` (the date of its last content change,
+  not today by default), localized copies and hreflang alternates for every published language,
+  and the releases from `releases.json`. A new indexable page gets an entry in `lastmod.json`.
+- **Releases.** The release job runs `scripts/release-data.py`, which writes
+  `site/src/data/releases.json`; the site renders `/changelog/`, the RSS feed, one page per
+  release at `/changelog/<version>/` (BlogPosting JSON-LD) and the sitemap's release entries from
+  it. Do not hand-edit `releases.json`; rerun the script. Release notes are the tag message, so a
+  good tag message is the SEO text for that release.
+- **Caching** lives in `site/vercel.json`. Fonts are immutable (their names never change content),
+  and so is `/_astro/`, where the stylesheet and `app.js` are served under content-hashed names
+  (`site/src/styles/styles.css`, `site/src/scripts/app.js`). Images, the manifest, the sitemap
+  and the feed have their own entries; a new top-level asset type gets one too.
 - **Feature screenshots with markers.** A shot that points at one thing is cropped to the part
   that matters and zoomed, and its hand-drawn arrows, circles and underlines are drawn into the
   image by `scripts/annotate-shot.py` from a spec in `scripts/annotations/`, so the site and the
   app's onboarding share one look and a retaken shot is re-marked with one command (user,
-  2026-10-14). No words go into an image: labels stay HTML with `data-i18n` (or app strings) so
+  2026-10-14). No words go into an image: labels stay HTML with catalog keys (or app strings) so
   they get translated. The feature tour on `/features/` keeps its numbered HTML markers matched
   by a numbered list. Light and dark shots stay paired. Only demo-content screenshots are used,
   never a real account.
-- **Files for crawlers and machines.** `site/public/llms.txt` is a hand-written summary of the site for AI
-  assistants: when a page is added, renamed or its claims change, update it too. The home page
-  carries `Organization` JSON-LD (logo, `sameAs` profiles); a new official profile goes there.
-  `site/public/.well-known/security.txt` expires on the date in it, so renew it before then.
-  `site/public/<key>.txt` is the IndexNow key the release job pings with; do not delete it.
+- **Files for crawlers and machines.** `site/public/llms.txt` is a hand-written summary of the
+  site for AI assistants: when a page is added, renamed or its claims change, update it too. The
+  home page carries `Organization` JSON-LD (logo, `sameAs` profiles); a new official profile goes
+  there. `site/public/.well-known/security.txt` expires on the date in it, so renew it before
+  then. `site/public/<key>.txt` is the IndexNow key the release job pings with; do not delete it.
+  `site/public/latest.json` is the installed apps' update feed: only the release job writes it.
 - **Download page** keeps its `preconnect` hints to GitHub's API, github.com and
   `release-assets.githubusercontent.com`, the host the release files are served from.
 - **Sponsoring.** Every content page ends with the "Support TMPlayer" offer (GitHub Sponsors and
-  Buy Me a Coffee), the block first written on the download page: inside the page's star card
-  where it has one, otherwise as a `support-slim` card in the last band. Reuse its markup and its
+  Buy Me a Coffee): inside the page's star card where it has one, otherwise as a `support-slim`
+  card in the last band. Use the shared component for it, which carries the
   `home.support_tmplayer`, `home.support_no_ads`, `home.sponsor_on_github` and
-  `home.buy_me_a_coffee` keys so it arrives translated; a new page gets it too. Release pages and
-  the changelog carry it from `scripts/build-changelog.py`. It stays an offer: no popups, no nags,
-  nothing locked.
-- After changing any localized page, run `scripts/build-site-i18n.py` and `--check`.
+  `home.buy_me_a_coffee` keys so it arrives translated; a new page gets it too. It stays an offer:
+  no popups, no nags, nothing locked.
+- **After changing the site**, run `pnpm -C site build`, `python3 scripts/site-i18n-check.py` and
+  `python3 scripts/site-links.py` (CI runs all three). `scripts/site-review.sh` compares a build
+  page by page against an older one (`SITE_BASELINE=<dir of a built site>`), for changes that
+  should not show.
 
 ## Branches and worktrees
 
