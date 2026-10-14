@@ -781,6 +781,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 holdFile(fileId)
                 claimTheWatchCache()
                 val streamsLow = startLowStorageIfOn(availability)
+                if (!streamsLow) startSavingDataIfOn(availability)
                 // Fetching the whole film first is exactly what Low storage mode is there to avoid.
                 val downloadFirst = !streamsLow && runCatching { settings.downloadBeforePlayingNow() }
                     .getOrDefault(false)
@@ -2253,6 +2254,29 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** The file [LowStorageStreams] was told about, taken back when the player goes. */
     private var lowStorageFileId = 0
+
+    /**
+     * Lets this video stream with "Save mobile data" ([SaveDataStreams]) when the setting is on:
+     * on a metered connection it is then fetched only a bounded stretch ahead of the playhead,
+     * extended as playback nears its end. Decided once, like Low storage mode, which wins where
+     * both are on; whether the connection is metered is asked again at every request, so moving
+     * between Wi-Fi and mobile data mid-video is followed. Only a video being watched: one the
+     * viewer downloaded, or is downloading, is fetched to the end as asked.
+     */
+    private suspend fun startSavingDataIfOn(availability: LocalFileAvailability) {
+        // Whatever an earlier player of this file decided does not carry over.
+        SaveDataStreams.revoke(fileId)
+        if (availability == LocalFileAvailability.Complete || !hasMessage()) return
+        val stored = runCatching { settings.saveMobileDataNow() }.getOrDefault(false)
+        if (!MeteredPolicy.saveMobileDataInForce(stored, FormFactor.isTv(this))) return
+        if (runCatching { settings.isKeptDownload(chatId, messageId) }.getOrDefault(true)) return
+        if (OfflineDownloads.isDownloading(fileId)) return
+        SaveDataStreams.allow(fileId) { NetworkMonitor.metered.value }
+        saveDataFileId = fileId
+    }
+
+    /** The file [SaveDataStreams] was told about, taken back when the player goes. */
+    private var saveDataFileId = 0
 
     /** This video, as the cache and the shelf want to see it. */
     private fun mediaItemForCache(): MediaItem = MediaItem(
@@ -4502,6 +4526,11 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // That late request is stopped here too.
         if (lowStorageFileId != 0) {
             LowStorageStreams.revoke(lowStorageFileId)
+            stopDownload()
+        }
+        // The same for "Save mobile data": a late read must not ask for the rest of the film.
+        if (saveDataFileId != 0) {
+            SaveDataStreams.revoke(saveDataFileId)
             stopDownload()
         }
         super.onDestroy()

@@ -285,6 +285,7 @@ fun SettingsScreen(
     val resumeRewindMs by settings.resumeRewindMs.collectAsStateWithLifecycle(initialValue = ResumeRewind.DEFAULT_MS)
     val detailFirst by settings.detailFirst.collectAsStateWithLifecycle(initialValue = true)
     val wifiOnly by settings.wifiOnlyDownloads.collectAsStateWithLifecycle(initialValue = false)
+    val saveMobileData by settings.saveMobileData.collectAsStateWithLifecycle(initialValue = false)
     val trickplayOn by settings.trickplay.collectAsStateWithLifecycle(initialValue = true)
     val watchNextOn by settings.watchNext.collectAsStateWithLifecycle(initialValue = false)
     val trickplayMemory = remember { DeviceQuirks.trickplayMemory(context) }
@@ -1192,6 +1193,23 @@ fun SettingsScreen(
                             icon = TmIcons.Wifi,
                             checked = wifiOnly,
                             onToggle = { scope.launch { settings.setWifiOnlyDownloads(!wifiOnly) } },
+                        )
+                    }
+                }
+                // Beside it, a phone's row only for the same reason: a stream on mobile data fetched
+                // only a few minutes ahead, so a film stopped early has not cost most of its size.
+                if (MeteredPolicy.saveMobileDataOffered(television = !touch)) {
+                    item {
+                        ToggleRow(
+                            title = s.settingsSaveMobileData,
+                            subtitle = if (saveMobileData) {
+                                s.settingsSaveMobileDataOn
+                            } else {
+                                s.settingsSaveMobileDataOff
+                            },
+                            icon = TmIcons.Phone,
+                            checked = saveMobileData,
+                            onToggle = { scope.launch { settings.setSaveMobileData(!saveMobileData) } },
                         )
                     }
                 }

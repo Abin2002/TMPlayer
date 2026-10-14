@@ -107,6 +107,22 @@ class BackupTest {
     }
 
     @Test
+    fun `save mobile data travels in a backup and outlives a sign out`() = runBlocking {
+        val old = Device("save-data")
+        old.settings.setSaveMobileData(true)
+        val text = old.service().export()
+
+        val fresh = Device("save-data-fresh")
+        assertFalse(fresh.settings.saveMobileDataNow())
+        fresh.service().restore((fresh.service().read(text) as BackupRead.Ok).backup)
+        assertTrue(fresh.settings.saveMobileDataNow())
+
+        // How sparingly this phone may use its data allowance is the phone's, not the account's.
+        old.settings.clearEverything()
+        assertTrue(old.settings.saveMobileData.first())
+    }
+
+    @Test
     fun `skip silence and the resume rewind travel, the locks stay on the device`() = runBlocking {
         val old = Device("player")
         old.settings.setSkipSilence(true)
