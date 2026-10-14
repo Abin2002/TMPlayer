@@ -375,6 +375,7 @@ private fun Root() {
     val watchedHistory by watchedStore.history.collectAsStateWithLifecycle(initialValue = emptyList())
     val watchLater by watchedStore.watchLater.items.collectAsStateWithLifecycle(initialValue = emptyList())
     val lastChatId by settings.lastChatId.collectAsStateWithLifecycle(initialValue = 0L)
+    val openLastChat by settings.openLastChat.collectAsStateWithLifecycle(initialValue = false)
     val minSize by settings.minSizeBytes.collectAsStateWithLifecycle(initialValue = SizeFilter.DEFAULT_MIN)
     val maxSize by settings.maxSizeBytes.collectAsStateWithLifecycle(initialValue = SizeFilter.DEFAULT_MAX)
     val chatLayout by settings.chatLayout.collectAsStateWithLifecycle(initialValue = CardLayout.List)
@@ -1183,7 +1184,8 @@ private fun Root() {
                         }
                         toast(L.detailWatchLaterRemoved(record.title))
                     },
-                    launchChatId = lastChatId,
+                    // Marked "Opens on launch" only while Carry on from the last chat is on.
+                    launchChatId = if (openLastChat) lastChatId else 0L,
                     picked = pickedTab,
                     onPickTab = { pickedTabKey = BrowseSection.encode(it) },
                     folders = folders,
