@@ -1,0 +1,20 @@
+---
+// One band of a guide: the wave that leads into it, then a titled section. A tonal band opens
+// with the wave and a plain one with the flipped wave, so the colours meet along the curve.
+import Icon from '../Icon.astro';
+
+interface Props { id: string; title: string; sub?: string; tonal?: boolean }
+const { id, title, sub, tonal = false } = Astro.props;
+---
+<Icon name={tonal ? 'wave' : 'wave-flip'} />
+<section class={tonal ? 'band band-tonal' : 'band'} id={id} aria-labelledby={`${id}-h`}>
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <div class="section-title">
+        <h2 id={`${id}-h`}>{title}</h2>
+        {sub && <p class="section-sub">{sub}</p>}
+      </div>
+    </div>
+    <slot />
+  </div>
+</section>

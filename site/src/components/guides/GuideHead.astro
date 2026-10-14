@@ -1,0 +1,15 @@
+---
+// The top of a guide: breadcrumbs, the heading, the lede and two buttons.
+interface Props { lede: string }
+const { lede } = Astro.props;
+---
+<section class="page-head">
+  <div class="wrap page-head-wrap">
+    <p class="crumbs"><slot name="crumbs" /></p>
+    <h1><slot name="title" /></h1>
+    <p class="page-lede">{lede}</p>
+    <div class="page-actions">
+      <slot name="actions" />
+    </div>
+  </div>
+</section>
