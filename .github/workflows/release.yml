@@ -534,14 +534,15 @@ jobs:
 
             Installed copies offer each update. [How to install](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/INSTALL.md) · [Moving from the deb, rpm, Flatpak or Windows zip](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/INSTALL.md#moving-from-a-format-that-is-no-longer-published) · [GPL-3.0](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/LICENSE) · [Third party notices](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/THIRD_PARTY_NOTICES.md) · [nextlib source](https://github.com/${{ github.repository }}/releases/download/v1.21.0/nextlib-corresponding-source-1.21.0.tar.gz) · [mediamp source](${{ steps.mediamp.outputs.url }}) · [mediamp macOS source](${{ steps.mediamp.outputs.url_mac }})
 
-      # tmplayer.org is deployed by Vercel's git integration from main, with no build step and no
-      # deploy hook, so a commit to main is the one way the site learns of the release: Vercel
-      # picks it up like any other push and the feed is live a minute later. Pushed with this
+      # tmplayer.org is deployed by Vercel's git integration from main, which builds the Astro site
+      # in site/ for every push, so a commit to main is the one way the site learns of the release:
+      # Vercel builds it like any other push and the feed is live a couple of minutes later. Pushed with this
       # job's token, which starts no other workflow. A tag for an older version (a re-run, a
       # patch to an old line) leaves a newer feed alone.
       #
-      # The changelog page and its RSS feed (site/changelog/) go up in the same commit, written by
-      # scripts/build-changelog.py from the release list, which by now includes this release. It
+      # The changelog pages, their RSS feed and the release entries in the sitemap are rendered by
+      # the site from site/src/data/releases.json, which goes up in the same commit, written by
+      # scripts/release-data.py from the release list, which by now includes this release. It
       # runs for an older tag too, since a patch to an old line still belongs on the page, and it
       # writes the same bytes for the same releases, so a re-run commits nothing. Its notes are the
       # annotated tags' messages: this release's tag is here, as the checkout fetched it, and the
@@ -568,8 +569,8 @@ jobs:
               python3 scripts/point-apk-redirect.py "$VERSION"
               MESSAGE="site: the update feed names $VERSION"
             fi
-            python3 scripts/build-changelog.py
-            git add site/public/latest.json site/vercel.json site/changelog site/sitemap.xml
+            python3 scripts/release-data.py
+            git add site/public/latest.json site/vercel.json site/src/data/releases.json
             if git diff --cached --quiet; then
               echo "The site already names $VERSION."
               exit 0
