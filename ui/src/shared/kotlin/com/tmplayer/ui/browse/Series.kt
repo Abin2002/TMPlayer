@@ -1,6 +1,7 @@
 package com.tmplayer.ui.browse
 
 import androidx.compose.foundation.gestures.BringIntoViewSpec
+import com.tmplayer.ui.theme.trackedFor
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.CompositionLocalProvider
@@ -777,9 +778,10 @@ fun SeriesPanel(
             tallBackdropHeight(maxWidth, maxHeight, online = meta?.backdropUrl != null)
         }
         val heading: @Composable () -> Unit = {
+            val title = meta?.title?.takeIf { it.isNotBlank() } ?: series.title
             Text(
-                meta?.title?.takeIf { it.isNotBlank() } ?: series.title,
-                style = MaterialTheme.typography.displaySmall,
+                title,
+                style = MaterialTheme.typography.displaySmall.trackedFor(title),
                 color = Tone.text,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,

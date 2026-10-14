@@ -1,6 +1,7 @@
 package com.tmplayer.ui.browse
 
 import androidx.compose.foundation.background
+import com.tmplayer.ui.theme.trackedFor
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -254,7 +255,7 @@ fun MediaDetailPanel(
                 Text(
                     heading,
                     // The page's display size, a step down beside a poster in a pane this narrow.
-                    style = if (meta?.posterUrl != null) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.displaySmall,
+                    style = if (meta?.posterUrl != null) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.displaySmall.trackedFor(heading),
                     fontWeight = FontWeight.Bold,
                     color = Tone.text,
                     maxLines = 3,

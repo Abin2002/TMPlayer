@@ -1,6 +1,7 @@
 package com.tmplayer.ui.browse
 
 import androidx.compose.foundation.background
+import com.tmplayer.ui.theme.trackedFor
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -293,7 +294,7 @@ private fun TitleBlock(page: DetailPage) {
         }
         Text(
             heading,
-            style = MaterialTheme.typography.displaySmall,
+            style = MaterialTheme.typography.displaySmall.trackedFor(heading),
             color = Tone.text,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,

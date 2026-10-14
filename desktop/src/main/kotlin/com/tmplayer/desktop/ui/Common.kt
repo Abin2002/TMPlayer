@@ -1,6 +1,7 @@
 package com.tmplayer.desktop.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import com.tmplayer.ui.theme.trackedFor
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -276,7 +277,7 @@ fun PageHeader(
             Column(Modifier.weight(1f)) {
                 Text(
                     title,
-                    style = MaterialTheme.typography.displaySmall,
+                    style = MaterialTheme.typography.displaySmall.trackedFor(title),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
