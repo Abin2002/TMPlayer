@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "Các phim lẻ và phim bộ minh họa đều là hư cấu. Hình ảnh được cắt từ {a1}, có ghi tên từng nhiếp ảnh gia.",
     "demo_artwork_photos_from_unsplash__a1": "ảnh trên Unsplash",
     "posters_with_the_year_size": "{b1}Áp phích có năm, dung lượng và độ phân giải. Bấm vào một áp phích để xem chi tiết, hoặc phát ngay.",
-    "posters_with_the_year_size__b1": "Bước hai: chọn video"
+    "posters_with_the_year_size__b1": "Bước hai: chọn video",
+    "tv_home_channels": "<strong>Hiện trên màn hình chính của TV.</strong> Nội dung mới trong các cuộc trò chuyện gắn sao thành một hàng thẻ trên màn hình chính Android TV, cạnh Phát tiếp theo, với các trình khởi chạy có hiển thị hàng ứng dụng. Có thể tắt trong Cài đặt."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Tải TMPlayer cho Android TV, điện thoại, Windows và Linux",

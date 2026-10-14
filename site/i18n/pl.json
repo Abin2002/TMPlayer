@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "Filmy i seriale demonstracyjne są zmyślone. Ich grafiki wycięto ze {a1}, z podaniem autora każdego zdjęcia.",
     "demo_artwork_photos_from_unsplash__a1": "zdjęć w serwisie Unsplash",
     "posters_with_the_year_size": "{b1}Plakaty z rokiem, rozmiarem i rozdzielczością. Naciśnij jeden, by zobaczyć szczegóły, albo od razu go odtwórz.",
-    "posters_with_the_year_size__b1": "Krok drugi: wybierz wideo"
+    "posters_with_the_year_size__b1": "Krok drugi: wybierz wideo",
+    "tv_home_channels": "<strong>Pojawia się na ekranie głównym telewizora.</strong> Nowości z czatów oznaczonych gwiazdką tworzą rząd kart na ekranie głównym Android TV, obok Odtwórz następne, w launcherach pokazujących rzędy aplikacji. Można to wyłączyć w Ustawieniach."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Pobierz TMPlayera na Android TV, telefony, Windows i Linuxa",

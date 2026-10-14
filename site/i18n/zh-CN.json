@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "演示电影和剧集均为虚构。图片取自{a1}，并注明了每位摄影师。",
     "demo_artwork_photos_from_unsplash__a1": "Unsplash 上的照片",
     "posters_with_the_year_size": "{b1}海报标出年份、大小和分辨率。按一下查看详情，或直接播放。",
-    "posters_with_the_year_size__b1": "第二步：选择视频"
+    "posters_with_the_year_size__b1": "第二步：选择视频",
+    "tv_home_channels": "<strong>出现在电视主屏幕上。</strong>星标聊天里的新内容会在 Android TV 主屏幕上排成一行卡片，位于“接下来播放”旁边，适用于显示应用行的启动器。可在设置中关闭。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "下载适用于 Android TV、手机、Windows 和 Linux 的 TMPlayer",

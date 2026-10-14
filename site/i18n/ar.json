@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "الأفلام والمسلسلات التجريبية من نسج الخيال. صورها مقتطعة من {a1}، مع ذكر كل مصوّر.",
     "demo_artwork_photos_from_unsplash__a1": "صور على Unsplash",
     "posters_with_the_year_size": "{b1}ملصقات عليها السنة والحجم والدقة. اضغط على أحدها لترى تفاصيله، أو شغّله مباشرة.",
-    "posters_with_the_year_size__b1": "الخطوة الثانية: اختر فيديو"
+    "posters_with_the_year_size__b1": "الخطوة الثانية: اختر فيديو",
+    "tv_home_channels": "<strong>يظهر على الشاشة الرئيسية للتلفاز.</strong> يصبح الجديد في محادثاتك المميّزة بنجمة صفًّا من البطاقات على الشاشة الرئيسية لـ Android TV بجانب «التشغيل التالي»، في المشغّلات التي تعرض صفوف التطبيقات. يمكن إيقافه من الإعدادات."
   },
   "download": {
     "download_tmplayer_for_android_tv": "نزّل TMPlayer لأجهزة Android TV والهواتف وWindows وLinux",

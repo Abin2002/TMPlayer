@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "Die Demo-Filme und -Serien sind erfunden. Ihre Bilder stammen aus {a1}, mit Nennung der Fotografen.",
     "demo_artwork_photos_from_unsplash__a1": "Fotos auf Unsplash",
     "posters_with_the_year_size": "{b1}Poster mit Jahr, Größe und Auflösung. Drück auf eins für die Details, oder spiel es direkt ab.",
-    "posters_with_the_year_size__b1": "Schritt zwei: Video wählen"
+    "posters_with_the_year_size__b1": "Schritt zwei: Video wählen",
+    "tv_home_channels": "<strong>Erscheint auf dem Startbildschirm des Fernsehers.</strong> Neues aus deinen markierten Chats wird zu einer Kartenreihe auf dem Android TV Startbildschirm, neben Als Nächstes ansehen, bei Launchern, die App-Reihen zeigen. In den Einstellungen abschaltbar."
   },
   "download": {
     "download_tmplayer_for_android_tv": "TMPlayer für Android TV, Smartphones, Windows und Linux herunterladen",

@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "डेमो फ़िल्में और सीरीज़ काल्पनिक हैं। इनकी तस्वीरें {a1} से ली गई हैं, हर फ़ोटोग्राफ़र के नाम के साथ।",
     "demo_artwork_photos_from_unsplash__a1": "Unsplash की फ़ोटो",
     "posters_with_the_year_size": "{b1}साल, आकार और रिज़ॉल्यूशन वाले पोस्टर। किसी एक को दबाकर उसका विवरण देखें, या सीधे चलाएँ।",
-    "posters_with_the_year_size__b1": "दूसरा कदम: वीडियो चुनें"
+    "posters_with_the_year_size__b1": "दूसरा कदम: वीडियो चुनें",
+    "tv_home_channels": "<strong>टीवी की होम स्क्रीन पर भी दिखता है।</strong> तारांकित चैट में जो नया है, वह ऐप पंक्तियाँ दिखाने वाले लॉन्चर पर Android TV होम स्क्रीन पर \"आगे चलाएँ\" के पास कार्डों की एक पंक्ति बन जाता है। सेटिंग में बंद किया जा सकता है।"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV, फ़ोन, Windows और Linux के लिए TMPlayer डाउनलोड करें",

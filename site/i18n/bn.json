@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "ডেমো সিনেমা আর সিরিজগুলো কাল্পনিক। এদের ছবি {a1} থেকে কাটা, প্রতিটি আলোকচিত্রীর নামসহ।",
     "demo_artwork_photos_from_unsplash__a1": "Unsplash-এর ছবি",
     "posters_with_the_year_size": "{b1}সাল, আকার আর রেজোলিউশনসহ পোস্টার। একটিতে চাপলে তার বিস্তারিত দেখবেন, অথবা সরাসরি চালান।",
-    "posters_with_the_year_size__b1": "দ্বিতীয় ধাপ: একটি ভিডিও বাছুন"
+    "posters_with_the_year_size__b1": "দ্বিতীয় ধাপ: একটি ভিডিও বাছুন",
+    "tv_home_channels": "<strong>টিভির হোম স্ক্রিনেও দেখায়।</strong> তারকা দেওয়া চ্যাটের নতুন ভিডিও, অ্যাপের সারি দেখায় এমন লঞ্চারে, Android TV হোম স্ক্রিনে \"পরবর্তী চালান\"-এর পাশে কার্ডের একটি সারি হয়ে আসে। সেটিংসে বন্ধ করা যায়।"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV, ফোন, Windows ও Linux-এর জন্য TMPlayer ডাউনলোড করুন",

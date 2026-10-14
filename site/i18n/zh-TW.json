@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "示範電影和影集皆為虛構。圖片取自{a1}，並註明了每位攝影師。",
     "demo_artwork_photos_from_unsplash__a1": "Unsplash 上的照片",
     "posters_with_the_year_size": "{b1}海報標出年份、大小和解析度。按一下查看詳細資訊，或直接播放。",
-    "posters_with_the_year_size__b1": "第二步：選一部影片"
+    "posters_with_the_year_size__b1": "第二步：選一部影片",
+    "tv_home_channels": "<strong>出現在電視主畫面上。</strong>星號聊天裡的新內容會在 Android TV 主畫面上排成一列卡片，位於「接著播放」旁邊，適用於顯示應用程式列的啟動器。可在設定中關閉。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "下載 TMPlayer：支援 Android TV、手機、Windows 與 Linux",

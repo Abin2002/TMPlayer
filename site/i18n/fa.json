@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "فیلم‌ها و سریال‌های نمایشی ساختگی‌اند. تصویرهایشان از {a1} برش خورده و نام هر عکاس آمده است.",
     "demo_artwork_photos_from_unsplash__a1": "عکس‌هایی در Unsplash",
     "posters_with_the_year_size": "{b1}پوسترهایی با سال، حجم و کیفیت تصویر. یکی را بزنید تا جزئیاتش را ببینید، یا همان لحظه پخشش کنید.",
-    "posters_with_the_year_size__b1": "مرحلهٔ دوم: یک ویدیو انتخاب کنید"
+    "posters_with_the_year_size__b1": "مرحلهٔ دوم: یک ویدیو انتخاب کنید",
+    "tv_home_channels": "<strong>روی صفحهٔ اصلی تلویزیون نشان داده می‌شود.</strong> تازه‌های گفت‌وگوهای ستاره‌دار شما ردیفی از کارت‌ها روی صفحهٔ اصلی Android TV می‌شود، کنار «پخش بعدی»، در لانچرهایی که ردیف برنامه‌ها را نشان می‌دهند. در تنظیمات خاموش می‌شود."
   },
   "download": {
     "download_tmplayer_for_android_tv": "دانلود TMPlayer برای Android TV، گوشی، Windows و Linux",

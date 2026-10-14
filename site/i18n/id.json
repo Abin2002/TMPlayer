@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "Film dan serial demo ini rekaan. Gambarnya dipotong dari {a1}, dengan nama setiap fotografer.",
     "demo_artwork_photos_from_unsplash__a1": "foto di Unsplash",
     "posters_with_the_year_size": "{b1}Poster dengan tahun, ukuran, dan resolusi. Tekan salah satunya untuk detailnya, atau langsung putar.",
-    "posters_with_the_year_size__b1": "Langkah dua: pilih video"
+    "posters_with_the_year_size__b1": "Langkah dua: pilih video",
+    "tv_home_channels": "<strong>Muncul di layar utama TV.</strong> Yang baru di chat berbintang menjadi deretan kartu di layar utama Android TV, di samping Putar berikutnya, pada launcher yang menampilkan baris aplikasi. Bisa dimatikan di Setelan."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Unduh TMPlayer untuk Android TV, HP, Windows, dan Linux",

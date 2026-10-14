@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "Os filmes e séries de demonstração são inventados. As imagens vêm de {a1}, com o crédito de cada fotógrafo.",
     "demo_artwork_photos_from_unsplash__a1": "fotos no Unsplash",
     "posters_with_the_year_size": "{b1}Pôsteres com ano, tamanho e resolução. Toque em um para ver os detalhes, ou reproduza na hora.",
-    "posters_with_the_year_size__b1": "Passo dois: escolha um vídeo"
+    "posters_with_the_year_size__b1": "Passo dois: escolha um vídeo",
+    "tv_home_channels": "<strong>Aparece na tela inicial da TV.</strong> O que há de novo nos seus chats com estrela vira uma fileira de cartões na tela inicial do Android TV, ao lado de Assistir a seguir, nos launchers que mostram fileiras de apps. Dá para desativar nas Configurações."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Baixar o TMPlayer para Android TV, celulares, Windows e Linux",

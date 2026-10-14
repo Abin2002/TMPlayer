@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "Demo filmler ve diziler hayal ürünüdür. Görselleri, her fotoğrafçının adı belirtilerek {a1} kırpıldı.",
     "demo_artwork_photos_from_unsplash__a1": "Unsplash'teki fotoğraflardan",
     "posters_with_the_year_size": "{b1}Yılı, boyutu ve çözünürlüğüyle afişler. Ayrıntıları için birine basın ya da hemen oynatın.",
-    "posters_with_the_year_size__b1": "İkinci adım: bir video seç"
+    "posters_with_the_year_size__b1": "İkinci adım: bir video seç",
+    "tv_home_channels": "<strong>TV'nin ana ekranında görünür.</strong> Yıldızlı sohbetlerindeki yenilikler, uygulama satırlarını gösteren başlatıcılarda Android TV ana ekranında Sıradaki'nin yanında bir kart satırı olur. Ayarlar'dan kapatılabilir."
   },
   "download": {
     "download_tmplayer_for_android_tv": "TMPlayer'ı Android TV, telefonlar, Windows ve Linux için indir",

@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "Las películas y series de demostración son inventadas. Sus imágenes salen de {a1}, con el crédito de cada fotógrafo.",
     "demo_artwork_photos_from_unsplash__a1": "fotos en Unsplash",
     "posters_with_the_year_size": "{b1}Pósteres con el año, el tamaño y la resolución. Presiona uno para ver sus detalles o reprodúcelo de inmediato.",
-    "posters_with_the_year_size__b1": "Paso dos: elige un video"
+    "posters_with_the_year_size__b1": "Paso dos: elige un video",
+    "tv_home_channels": "<strong>Aparece en la pantalla de inicio de la TV.</strong> Lo nuevo de tus chats destacados se convierte en una fila de tarjetas en la pantalla de inicio de Android TV, junto a Reproducir a continuación, en los launchers que muestran filas de apps. Se desactiva en Ajustes."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Descarga TMPlayer para Android TV, teléfonos, Windows y Linux",

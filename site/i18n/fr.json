@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "Les films et séries de démonstration sont inventés. Leurs visuels sont tirés de {a1}, avec le nom de chaque photographe.",
     "demo_artwork_photos_from_unsplash__a1": "photos sur Unsplash",
     "posters_with_the_year_size": "{b1}Des affiches avec l'année, la taille et la résolution. Appuyez sur l'une pour ses détails, ou lancez-la tout de suite.",
-    "posters_with_the_year_size__b1": "Étape deux : choisir une vidéo"
+    "posters_with_the_year_size__b1": "Étape deux : choisir une vidéo",
+    "tv_home_channels": "<strong>S'affiche sur l'écran d'accueil de la TV.</strong> Les nouveautés de vos discussions favorites deviennent une rangée de cartes sur l'écran d'accueil d'Android TV, à côté de Lecture suivante, sur les launchers qui affichent les rangées d'applis. Désactivable dans les Réglages."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Télécharger TMPlayer pour Android TV, téléphones, Windows et Linux",

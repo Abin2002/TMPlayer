@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "데모 영화와 시리즈는 지어낸 것입니다. 이미지는 {a1}에서 잘라 왔으며 사진작가별로 출처를 밝혔습니다.",
     "demo_artwork_photos_from_unsplash__a1": "Unsplash 사진",
     "posters_with_the_year_size": "{b1}연도, 크기, 해상도가 적힌 포스터. 하나를 누르면 상세 정보가 열리고, 바로 재생할 수도 있습니다.",
-    "posters_with_the_year_size__b1": "2단계: 동영상 고르기"
+    "posters_with_the_year_size__b1": "2단계: 동영상 고르기",
+    "tv_home_channels": "<strong>TV 홈 화면에도 표시됩니다.</strong> 별표한 채팅의 새 영상이 앱 행을 보여 주는 런처에서 Android TV 홈 화면의 다음에 재생 옆에 카드 행으로 나타납니다. 설정에서 끌 수 있습니다."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV, 휴대폰, Windows, Linux용 TMPlayer 다운로드",

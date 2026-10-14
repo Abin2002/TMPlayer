@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "デモの映画とシリーズは架空のものです。画像は{a1}から切り出し、撮影者ごとにクレジットしています。",
     "demo_artwork_photos_from_unsplash__a1": "Unsplashの写真",
     "posters_with_the_year_size": "{b1}公開年、サイズ、解像度付きのポスター。押すと詳細が開き、そのまま再生もできます。",
-    "posters_with_the_year_size__b1": "ステップ2: 動画を選ぶ"
+    "posters_with_the_year_size__b1": "ステップ2: 動画を選ぶ",
+    "tv_home_channels": "<strong>テレビのホーム画面にも表示。</strong>スター付きチャットの新着が、アプリの行を表示するランチャーで、Android TV のホーム画面の「次に再生」の横にカードの行として並びます。設定でオフにできます。"
   },
   "download": {
     "download_tmplayer_for_android_tv": "Android TV、スマートフォン、Windows、Linux向けTMPlayerをダウンロード",

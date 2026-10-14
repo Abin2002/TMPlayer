@@ -351,7 +351,8 @@
     "demo_artwork_photos_from_unsplash": "I film e le serie dimostrativi sono inventati. Le immagini sono ricavate da {a1}, con il nome di ogni fotografo.",
     "demo_artwork_photos_from_unsplash__a1": "foto su Unsplash",
     "posters_with_the_year_size": "{b1}Locandine con anno, dimensione e risoluzione. Premine una per i dettagli, o avviala subito.",
-    "posters_with_the_year_size__b1": "Secondo passo: scegli un video"
+    "posters_with_the_year_size__b1": "Secondo passo: scegli un video",
+    "tv_home_channels": "<strong>Compare nella schermata Home della TV.</strong> Le novità delle chat con la stella diventano una fila di schede nella schermata Home di Android TV, accanto a Riproduci dopo, nei launcher che mostrano le file delle app. Si disattiva nelle Impostazioni."
   },
   "download": {
     "download_tmplayer_for_android_tv": "Scarica TMPlayer per Android TV, telefoni, Windows e Linux",
