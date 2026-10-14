@@ -43,6 +43,7 @@ private val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
 private val RESUME_REWIND = longPreferencesKey("rewind_on_resume_ms")
 private val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
 private val REMOVE_AFTER_WATCHING = booleanPreferencesKey("remove_after_watching")
+private val LOW_STORAGE_MODE = booleanPreferencesKey("low_storage_mode")
 private val TRICKPLAY = booleanPreferencesKey("trickplay")
 private val WATCH_NEXT = booleanPreferencesKey("watch_next")
 private val TV_CHANNELS = booleanPreferencesKey("tv_channels")
@@ -410,6 +411,20 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
     /** Read once at the start of playback, where a flow that has not emitted yet would lie. */
     suspend fun downloadBeforePlayingNow(): Boolean =
         prefs.data.first()[DOWNLOAD_FIRST] ?: false
+
+    /**
+     * "Low storage mode": a streamed video keeps only a rolling window of itself on the disk, so a
+     * film larger than the free space can still be watched. Off by default, because seeking back
+     * past the window fetches those bytes again. Never applies to a video the viewer downloaded.
+     */
+    val lowStorageMode: Flow<Boolean> = read { it[LOW_STORAGE_MODE] ?: false }
+
+    suspend fun setLowStorageMode(value: Boolean) {
+        prefs.edit { it[LOW_STORAGE_MODE] = value }
+    }
+
+    /** Read once at the start of playback, where a flow that has not emitted yet would lie. */
+    suspend fun lowStorageModeNow(): Boolean = prefs.data.first()[LOW_STORAGE_MODE] ?: false
 
     /**
      * Whether the soundtrack is folded down to stereo, as the viewer set it, or null while they

@@ -137,6 +137,7 @@ object Backups {
         "history_tab" to Kind.TEXT,
         "hold_speed" to Kind.FLOAT,
         "language" to Kind.TEXT,
+        "low_storage_mode" to Kind.BOOL,
         "max_size_bytes" to Kind.LONG,
         "media_layout" to Kind.TEXT,
         "min_size_bytes" to Kind.LONG,
