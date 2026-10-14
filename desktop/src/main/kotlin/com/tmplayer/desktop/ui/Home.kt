@@ -292,6 +292,7 @@ internal fun HomeRowsView(
                                     }
                                 },
                                 under = headerHeight,
+                                wordsAlpha = { com.tmplayer.ui.browse.heroWordsAlpha(list, headerHeight, density) },
                             )
                         }
                     }

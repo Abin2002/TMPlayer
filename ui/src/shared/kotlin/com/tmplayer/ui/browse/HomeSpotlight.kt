@@ -309,6 +309,12 @@ fun HomeCarousel(
     onToggleWatchLater: ((Spotlight) -> Unit)? = null,
     resumeFocus: FocusRequester? = null,
     under: Dp = 0.dp,
+    /**
+     * How much of the words, buttons and dots to show, read while drawing: the pane fades them as
+     * the hero scrolls up under a header drawn over it, so the card's name never runs into the
+     * page's own title. The picture stays, under the header's scrim.
+     */
+    wordsAlpha: () -> Float = { 1f },
 ) {
     if (spotlights.isEmpty()) return
     val s = LocalStrings.current
@@ -418,6 +424,7 @@ fun HomeCarousel(
             }
         }
         val dotsRoom = if (count > 1) DOTS_ROOM else 0.dp
+        Box(Modifier.matchParentSize().graphicsLayer { alpha = wordsAlpha() }) {
         if (pager != null) {
             HorizontalPager(
                 state = pager,
@@ -458,6 +465,7 @@ fun HomeCarousel(
                     .align(if (wide) Alignment.BottomStart else Alignment.BottomCenter)
                     .padding(start = if (wide) start else 0.dp, bottom = if (wide) 14.dp else 4.dp),
             )
+        }
         }
         if (input == CarouselInput.Pointer && count > 1) {
             val shown by animateFloatAsState(if (hovered) 1f else 0f, Motion.standard(Motion.Fast), label = "carouselArrows")
@@ -992,3 +1000,17 @@ fun spotlightHeight(screenHeight: Dp, wide: Boolean, touch: Boolean): Dp = when 
     touch -> (screenHeight * 0.7f).coerceIn(220.dp, 400.dp)
     else -> (screenHeight * 0.5f).coerceIn(240.dp, 440.dp)
 }
+
+/**
+ * The hero's words fade over the first [WORDS_FADE] of scrolling while a header stands over the
+ * pane ([under]), and are gone before they reach it; with no header over them they stay.
+ */
+fun heroWordsAlpha(list: androidx.compose.foundation.lazy.LazyListState, under: Dp, density: androidx.compose.ui.unit.Density): Float {
+    if (under <= 0.dp) return 1f
+    if (list.firstVisibleItemIndex > 0) return 0f
+    val fade = with(density) { WORDS_FADE.toPx() }
+    return (1f - list.firstVisibleItemScrollOffset / fade).coerceIn(0f, 1f)
+}
+
+/** How far the list scrolls before the hero's words are gone from under a header. */
+private val WORDS_FADE = 56.dp

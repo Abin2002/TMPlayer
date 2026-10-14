@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
@@ -178,6 +179,7 @@ internal fun HomePane(
     val spotlights = (rememberSpotlights(featured, candidates, art, onArtWanted, chatTitle) as? SpotlightState.Ready)?.spotlights
     val spotlight = spotlights?.firstOrNull()
     val heroUnder by rememberHeroUnderHeader(listState, under, spotlight != null)
+    val density = LocalDensity.current
     if (hero != null) SideEffect { hero.update(present = spotlight != null, underHeader = heroUnder) }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -225,6 +227,7 @@ internal fun HomePane(
                             onToggleWatchLater = onToggleWatchLater?.let { toggle -> { card -> toggle(card.item, card.chatTitle) } },
                             resumeFocus = heroFocus,
                             under = under,
+                            wordsAlpha = { heroWordsAlpha(listState, under, density) },
                         )
                     }
                 }
