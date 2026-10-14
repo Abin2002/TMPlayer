@@ -150,6 +150,11 @@ jobs:
         run: ./gradlew :core:jvmTest :app:testDebugUnitTest
 
       - name: Build the signed APK
+        env:
+          # Optional. With it, the R8 mapping is uploaded to Sentry under the UUID the build writes
+          # into the APK, so crash reports from this release read as the source does. Without it
+          # the build is the same, and its reports' stack traces stay minified.
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           ./gradlew :app:assembleRelease \
             -PtmVersionName=${{ needs.version.outputs.name }} \

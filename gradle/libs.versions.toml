@@ -22,6 +22,9 @@ datastore = "1.2.1"
 # Crash reporting, and only when the viewer switches it on. Core alone: the "sentry-android"
 # umbrella pulls in NDK, fragment, Compose and Room integrations, none of which this needs.
 sentry = "8.16.0"
+# Only for the R8 mapping: a UUID in the APK and the mapping uploaded under it, so a report's
+# stack trace reads as the source does. Every other feature of the plugin is off (app/build.gradle.kts).
+sentryGradle = "6.20.0"
 junit = "4.13.2"
 # Draws the TV player's Compose overlays on the JVM, so a screen that cannot compose fails CI.
 robolectric = "4.17"
@@ -116,3 +119,4 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 # AGP's own plugin for the Android target of a Kotlin Multiplatform library, used by `:core`.
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+sentry-android = { id = "io.sentry.android.gradle", version.ref = "sentryGradle" }

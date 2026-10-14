@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.sentry.android)
 }
 
 val localProps = Properties().apply {
@@ -295,4 +296,37 @@ dependencies {
     // The unit tests run against android.jar stubs, whose org.json returns nothing, and the UI
     // text catalog is parsed with org.json. The real library goes first on the test classpath.
     testImplementation(libs.json)
+}
+
+// The R8 mapping for crash reports, and nothing else of Sentry's plugin. A release build is
+// minified, so without its mapping a report's stack trace is a list of renamed classes. The
+// plugin writes a UUID into the APK and the matching mapping is uploaded under it, but only when
+// SENTRY_AUTH_TOKEN is set (the release workflow, or a local `export`): any other build, a fork's
+// included, uploads nothing and needs no account. No SDK is added (the app picks its own, core
+// only), no code is instrumented, and the plugin sends no telemetry of its own.
+sentry {
+    org.set(System.getenv("SENTRY_ORG") ?: "nevil-i0")
+    // The project is the DSN's last path segment, its numeric id, which sentry-cli takes as well
+    // as a slug, so nothing but the DSN has to be configured.
+    val dsn = localProps.getProperty("SENTRY_DSN") ?: System.getenv("SENTRY_DSN") ?: ""
+    projectName.set(System.getenv("SENTRY_PROJECT") ?: dsn.substringAfterLast('/', ""))
+    authToken.set(System.getenv("SENTRY_AUTH_TOKEN") ?: "")
+    val upload = !System.getenv("SENTRY_AUTH_TOKEN").isNullOrBlank() && dsn.isNotBlank()
+
+    includeProguardMapping.set(true)
+    autoUploadProguardMapping.set(upload)
+    uploadNativeSymbols.set(false)
+    includeNativeSources.set(false)
+    includeSourceContext.set(false)
+    includeDependenciesReport.set(false)
+    telemetry.set(false)
+    // Release only: the debug and promo builds are not minified, and never report anything.
+    ignoredVariants.set(listOf("debug", "promoDebug", "promoRelease", "promo"))
+
+    tracingInstrumentation {
+        enabled.set(false)
+    }
+    autoInstallation {
+        enabled.set(false)
+    }
 }
