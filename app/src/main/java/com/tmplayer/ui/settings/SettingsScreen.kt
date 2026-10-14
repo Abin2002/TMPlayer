@@ -2564,7 +2564,9 @@ private fun StepperRow(
     if (touch) {
         ListItem(
             headlineContent = { M3Text(title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-            supportingContent = { M3Text(s.settingsValueAndDetail(value, subtitle), maxLines = 3) },
+            // Not cut to a line count: beside the two arrows a phone held upright has room for a
+            // few words a line, and three lines stopped "Interface size" halfway through a sentence.
+            supportingContent = { M3Text(s.settingsValueAndDetail(value, subtitle)) },
             leadingContent = { SettingIconChip(icon) },
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
