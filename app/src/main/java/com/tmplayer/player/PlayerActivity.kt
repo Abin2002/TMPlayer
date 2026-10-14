@@ -1380,7 +1380,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * Returns false when there is nothing to start: the sheet on screen is the answer.
      */
     private suspend fun allowedOnThisConnection(availability: LocalFileAvailability): Boolean {
-        val wifiOnly = runCatching { settings.wifiOnlyDownloadsNow() }.getOrDefault(false)
+        val wifiOnly = MeteredPolicy.wifiOnlyInForce(
+            runCatching { settings.wifiOnlyDownloadsNow() }.getOrDefault(false),
+            FormFactor.isTv(this),
+        )
         val decision = MeteredPolicy.decide(
             metered = NetworkMonitor.metered.value,
             wifiOnly = wifiOnly,

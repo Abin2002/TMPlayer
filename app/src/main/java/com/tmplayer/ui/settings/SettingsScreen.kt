@@ -120,6 +120,7 @@ import com.tmplayer.data.DeviceQuirks
 import com.tmplayer.data.DiskInfo
 import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.LocalDownloads
+import com.tmplayer.data.MeteredPolicy
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.RestorePlan
 import com.tmplayer.data.ResumeRewind
@@ -1144,7 +1145,7 @@ fun SettingsScreen(
                 // A phone's row only. A television is on the wall and a stick is behind it, both plugged
                 // into a network that is Wi-Fi or a cable and never a data allowance somebody pays for by
                 // the gigabyte, so on a TV this asks the viewer to rule out something that cannot happen.
-                if (touch) {
+                if (MeteredPolicy.wifiOnlyOffered(television = !touch)) {
                     item {
                         ToggleRow(
                             title = s.settingsWifiOnly,

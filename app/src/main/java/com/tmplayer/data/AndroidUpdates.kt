@@ -39,7 +39,7 @@ val UPDATE_WAITS_FOR_WIFI: String get() = L.updateWaitsForWifi
  * keep a second copy of the app around on a stick with eight gigabytes on it.
  */
 suspend fun Updates.downloadAndInstall(context: Context, release: Release) {
-    if (onMeteredNetwork() && SettingsStore(context).wifiOnlyDownloadsNow()) {
+    if (onMeteredNetwork() && MeteredPolicy.wifiOnlyInForce(SettingsStore(context).wifiOnlyDownloadsNow(), FormFactor.isTv(context))) {
         refuse(UPDATE_WAITS_FOR_WIFI)
         return
     }

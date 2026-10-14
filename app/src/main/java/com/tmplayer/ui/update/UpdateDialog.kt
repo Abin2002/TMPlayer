@@ -39,6 +39,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.tmplayer.data.FormFactor
+import com.tmplayer.data.MeteredPolicy
 import com.tmplayer.data.NetworkMonitor
 import com.tmplayer.data.Release
 import com.tmplayer.data.SettingsStore
@@ -87,7 +89,8 @@ fun UpdateDialog(onDismiss: () -> Unit) {
     val state by Updates.state.collectAsStateWithLifecycle()
     val settings = remember { SettingsStore(context) }
     val scheduler = remember { updateScheduler(context) }
-    val wifiOnly by settings.wifiOnlyDownloads.collectAsStateWithLifecycle(initialValue = false)
+    val storedWifiOnly by settings.wifiOnlyDownloads.collectAsStateWithLifecycle(initialValue = false)
+    val wifiOnly = MeteredPolicy.wifiOnlyInForce(storedWifiOnly, FormFactor.isTv(context))
     val metered by NetworkMonitor.metered.collectAsStateWithLifecycle()
     val confirm = remember { FocusRequester() }
     val touch = isTouch()

@@ -22,6 +22,21 @@ enum class MeteredDecision {
  */
 object MeteredPolicy {
 
+    /**
+     * Whether Settings offers "Only download over Wi-Fi" here. Not on a television: a TV is wired
+     * or on Wi-Fi, never on a data allowance paid for by the gigabyte, so there it would ask the
+     * viewer to rule out something that cannot happen.
+     */
+    fun wifiOnlyOffered(television: Boolean): Boolean = !television
+
+    /**
+     * The switch as it applies on this device. Where it is not offered its stored value is kept, so
+     * a backup carries it on to the next phone, but it holds nothing back: a phone's "Wi-Fi only"
+     * restored onto a TV that happens to sit on a phone's hotspot would otherwise stop every video
+     * behind a switch the TV has no row for.
+     */
+    fun wifiOnlyInForce(stored: Boolean, television: Boolean): Boolean = stored && wifiOnlyOffered(television)
+
     fun decide(
         metered: Boolean,
         wifiOnly: Boolean,

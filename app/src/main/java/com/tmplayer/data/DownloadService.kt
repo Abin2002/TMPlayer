@@ -27,6 +27,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -137,7 +138,9 @@ class DownloadService : Service() {
      */
     private fun watchTheNetwork() {
         scope.launch {
+            val television = FormFactor.isTv(applicationContext)
             val wifiOnly = SettingsStore(applicationContext).wifiOnlyDownloads
+                .map { MeteredPolicy.wifiOnlyInForce(it, television) }
             combine(
                 NetworkMonitor.status,
                 NetworkMonitor.metered,

@@ -9,6 +9,16 @@ class MeteredPolicyTest {
     private val small = MeteredPolicy.LARGE_DOWNLOAD_BYTES / 4
 
     @Test
+    fun `wifi only is a phone's switch, and a television holds nothing back for it`() {
+        assertEquals(true, MeteredPolicy.wifiOnlyOffered(television = false))
+        assertEquals(false, MeteredPolicy.wifiOnlyOffered(television = true))
+        assertEquals(true, MeteredPolicy.wifiOnlyInForce(stored = true, television = false))
+        assertEquals(false, MeteredPolicy.wifiOnlyInForce(stored = false, television = false))
+        // Restored from a phone's backup onto a TV: kept, but not in force where there is no row.
+        assertEquals(false, MeteredPolicy.wifiOnlyInForce(stored = true, television = true))
+    }
+
+    @Test
     fun `wifi never asks anything`() {
         assertEquals(
             MeteredDecision.Allow,
