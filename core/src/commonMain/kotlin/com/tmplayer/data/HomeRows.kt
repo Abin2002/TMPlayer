@@ -155,7 +155,7 @@ object HomeRows {
                 // fetch, and a starred chat's fetch fills in whatever the search did not reach.
                 val pool = recent.filter { it.chatId in starredIds } + starredIds.flatMap { loaded[it].orEmpty() }
                 // A copy, so the rows below still show these videos in their own chats.
-                val entries = row(pool, HashSet(inContinue), shownCopies)
+                val entries = row(pool, HashSet(inContinue), shownCopies, inContinue)
                 if (entries.isNotEmpty()) add(HomeRow.Recent(entries, loaded = true))
             }
         }
@@ -174,7 +174,7 @@ object HomeRows {
                 add(HomeRow.Chat(chat.id, chat.title, emptyList(), loaded = false))
                 return@forEach
             }
-            val entries = row(items, seen, shownCopies)
+            val entries = row(items, seen, shownCopies, inContinue)
             if (entries.isNotEmpty()) {
                 val all = items.distinctBy { it.id }
                 add(
@@ -199,14 +199,32 @@ object HomeRows {
      * included (every copy of each), so a later row cannot show one of them again on its own.
      * Nor can another copy of a film or episode in Continue ([continuing], as [copyKeyOf] keys
      * them): the 1080p of a film started in 720p is the same film, part way through.
+     *
+     * An episode in Continue ([inProgress]) still counts towards its show, though: left out, the
+     * show's tile said "11 episodes" for a show of 12. It is only never a tile of its own.
      */
-    private fun row(items: List<MediaItem>, seen: MutableSet<String>, continuing: Set<String> = emptySet()): List<ShelfEntry> {
+    private fun row(
+        items: List<MediaItem>,
+        seen: MutableSet<String>,
+        continuing: Set<String> = emptySet(),
+        inProgress: Set<String> = emptySet(),
+    ): List<ShelfEntry> {
+        fun copyOfContinuing(item: MediaItem): Boolean =
+            continuing.isNotEmpty() && SeriesShelf.sameVideoKey(item)?.let { "${item.chatId}|$it" in continuing } == true
+        fun episode(item: MediaItem): Boolean = SeriesShelf.episodeOf(item).episode != null
         val fresh = items
-            .filterNot { keyOf(it.chatId, it.messageId) in seen }
-            .filterNot { item -> continuing.isNotEmpty() && SeriesShelf.sameVideoKey(item)?.let { "${item.chatId}|$it" in continuing } == true }
+            .filterNot { item ->
+                val key = keyOf(item.chatId, item.messageId)
+                val partOfAShow = episode(item) && (key in inProgress || copyOfContinuing(item))
+                !partOfAShow && (key in seen || copyOfContinuing(item))
+            }
             .distinctBy { it.id }
             .sortedWith(compareByDescending<MediaItem> { it.date }.thenByDescending { it.messageId })
-        val entries = SeriesShelf.arrange(fresh).take(LIMIT)
+        val entries = SeriesShelf.arrange(fresh)
+            .filterNot { entry ->
+                entry is ShelfEntry.File && entry.item.let { keyOf(it.chatId, it.messageId) in inProgress || copyOfContinuing(it) }
+            }
+            .take(LIMIT)
         entries.forEach { entry ->
             when (entry) {
                 is ShelfEntry.File -> seen += keyOf(entry.item.chatId, entry.item.messageId)

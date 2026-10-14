@@ -304,7 +304,15 @@ class HomeRowsTest {
         val below = rows.drop(1).flatMap(::ids)
         assertFalse(hd.messageId in below)
         assertTrue(other.messageId in below)
-        // An episode in progress folds into its show below, so the show is still there.
-        assertTrue(e2.messageId in below || e1.messageId in below)
+        // An episode in progress still counts towards its show below, and is never a tile alone.
+        val show = rows.drop(1).flatMap { row ->
+            when (row) {
+                is HomeRow.Recent -> row.entries
+                is HomeRow.Chat -> row.entries
+                else -> emptyList()
+            }
+        }.filterIsInstance<ShelfEntry.Show>().first()
+        assertEquals(2, show.series.episodeCount)
+        assertTrue(rows.drop(1).none { row -> row is HomeRow.Recent && row.entries.any { it is ShelfEntry.File && it.item.messageId == e1.messageId } })
     }
 }
