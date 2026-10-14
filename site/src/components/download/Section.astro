@@ -1,0 +1,25 @@
+---
+// One band of the page: the heading and its sub line, then the body. `tonal` gives the tinted
+// band; `body={false}` leaves the body unwrapped, for a band whose content sits straight under the
+// heading. The sub line takes either the `sub` string or a "sub" slot (for a <T> with markup).
+interface Props {
+  id?: string;
+  h: string;
+  title: string;
+  sub?: string;
+  tonal?: boolean;
+  body?: boolean;
+}
+const { id, h, title, sub, tonal = false, body = true } = Astro.props;
+---
+<section class:list={['band', { 'band-tonal': tonal }]} id={id} aria-labelledby={h}>
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <div class="section-title">
+        <h2 id={h}>{title}</h2>
+        {sub !== undefined ? <p class="section-sub">{sub}</p> : <p class="section-sub"><slot name="sub" /></p>}
+      </div>
+    </div>
+    {body ? <div class="section-body" data-reveal><slot /></div> : <slot />}
+  </div>
+</section>
