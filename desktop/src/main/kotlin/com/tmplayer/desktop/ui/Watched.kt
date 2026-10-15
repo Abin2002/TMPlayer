@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.tmplayer.data.HomeRows
 import com.tmplayer.data.MediaMapper
 import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.data.WatchedRecord
@@ -76,7 +77,9 @@ fun HistoryPage(state: ShellState) {
 @Composable
 fun WatchedPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
     val s = LocalStrings.current
-    val records by state.watched.history.collectAsState(initial = null)
+    val all by state.watched.history.collectAsState(initial = null)
+    // One card for the copies of one video, as Continue watching has.
+    val records = remember(all) { all?.let(HomeRows::foldWatched) }
     val progress by state.settings.watchProgress.collectAsState(initial = emptyMap())
     var confirmClear by remember { mutableStateOf(false) }
     // The page's, not a tile's: unmarking takes the tile away, and with it any scope of its own.
@@ -124,7 +127,7 @@ fun WatchedPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                         itemsIndexed(list, key = { _, it -> it.key }) { index, record ->
                             LaunchedEffect(record) { state.noteChatTitle(record.chatId, record.chatTitle) }
                             WatchedTile(state, record, progress[record.key]?.fraction, now, nav, index) {
-                                val item = record.toMediaItem()
+                                val item = HomeRows.watchedItem(record, all.orEmpty())
                                 toast(s.watchedMarkedUnwatched(item.title))
                                 scope.launch {
                                     runCatching { setWatched(state.watched, state.settings, item, record.chatTitle, watched = false) }

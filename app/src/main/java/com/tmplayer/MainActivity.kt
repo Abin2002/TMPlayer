@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tmplayer.data.HomeRows
 import com.tmplayer.data.AndroidPaths
 import com.tmplayer.data.AndroidTransferNotifier
 import com.tmplayer.data.AuthState
@@ -1270,10 +1271,12 @@ private fun Root() {
                     onMarkMediaWatched = { record ->
                         setWatched(record.toMediaItem(), record.chatTitle, watched = true)
                     },
-                    watchedHistory = watchedHistory,
+                    // One card for the copies of one video, as Continue watching has; unmarking
+                    // it unmarks them all.
+                    watchedHistory = remember(watchedHistory) { HomeRows.foldWatched(watchedHistory) },
                     onOpenWatched = { record -> openStored(record.toMediaItem(), record.chatTitle) },
                     onMarkUnwatched = { record ->
-                        setWatched(record.toMediaItem(), record.chatTitle, watched = false)
+                        setWatched(HomeRows.watchedItem(record, watchedHistory), record.chatTitle, watched = false)
                     },
                     onClearWatched = {
                         scope.launch {

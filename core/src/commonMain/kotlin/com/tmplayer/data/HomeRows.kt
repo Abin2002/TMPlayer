@@ -269,6 +269,29 @@ object HomeRows {
     }
 
     /**
+     * The Watched list with the copies of one film or episode as one card, as [foldCopies] folds
+     * Continue watching: the copy finished last, where it stood. [records] come newest first.
+     */
+    fun foldWatched(records: List<WatchedRecord>): List<WatchedRecord> {
+        val seen = HashSet<String>()
+        return records.filter { record -> watchedKeyOf(record)?.let(seen::add) ?: true }
+    }
+
+    /**
+     * [record] as the video its folded card stands for: every copy on the Watched list as its
+     * [MediaItem.versions], so taking the mark off takes it off all of them.
+     */
+    fun watchedItem(record: WatchedRecord, records: List<WatchedRecord>): MediaItem {
+        val item = record.toMediaItem()
+        val key = watchedKeyOf(record) ?: return item
+        val copies = records.filter { it.key == record.key || watchedKeyOf(it) == key }.map { it.toMediaItem() }
+        return if (copies.size > 1) item.copy(versions = copies) else item
+    }
+
+    private fun watchedKeyOf(record: WatchedRecord): String? =
+        if (record.fileName != null) VideoCopies.keyOf(record.toMediaItem()) else VideoCopies.keyOfTitle(record.title)
+
+    /**
      * [record] and every other copy of the same film or episode in [records]: what removing a
      * card [foldCopies] made must remove, or the copy behind it takes its place at once.
      */

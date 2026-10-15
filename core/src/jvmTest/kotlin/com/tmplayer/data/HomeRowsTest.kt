@@ -258,6 +258,22 @@ class HomeRowsTest {
     }
 
     @Test
+    fun `the watched list folds copies like continue watching, and unmarking the card covers them all`() {
+        val hd = video(1, "Loki.S02E05.1080p.WEB.x265.mkv")
+        val sd = video(2, "Loki.S02E05.720p.WEB.x264.mkv")
+        val next = video(1, "Loki.S02E06.720p.WEB.x264.mkv")
+        val records = listOf(
+            WatchedRecord.of(hd, "Chat 1", watchedAt = 30, manual = false),
+            WatchedRecord.of(next, "Chat 1", watchedAt = 20, manual = false),
+            WatchedRecord.of(sd, "Chat 2", watchedAt = 10, manual = true),
+        )
+        assertEquals(listOf(hd.messageId, next.messageId), HomeRows.foldWatched(records).map { it.messageId })
+        val card = HomeRows.watchedItem(records[0], records)
+        assertEquals(setOf(hd.messageId, sd.messageId), card.versions.map { it.messageId }.toSet())
+        assertTrue(HomeRows.watchedItem(records[1], records).versions.isEmpty())
+    }
+
+    @Test
     fun `copies of one episode fold, in this chat and others, and other episodes stay apart`() {
         val e1hd = video(1, "Loki.S02E05.1080p.WEB.x265.mkv")
         val e1sd = video(1, "Loki.S02E05.720p.WEB.x264.mkv")
