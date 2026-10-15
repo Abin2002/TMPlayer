@@ -97,4 +97,26 @@ class TileTitleTest {
     fun `nothing readable keeps the title`() {
         assertEquals("@@@", SeriesShelf.tileTitle(video("@@@", title = "@@@")))
     }
+
+    @Test
+    fun `a channel handle joined to the name with underscores is cut off, not the whole name`() {
+        assertEquals(
+            "Night Train (2022)",
+            SeriesShelf.tileTitle(video("@HarbourMob_LinkZz_Night_Train_2022_Tamil_Proper_HQ_HDRip_700MB_x264_AAC.mkv")),
+        )
+        assertEquals("Night Train (2022)", SeriesShelf.tileTitle(video("@HEVC_Mob_Night_Train_2022_Tamil_720p.mkv")))
+        assertEquals("Night Train (2024)", SeriesShelf.tileTitle(video("@TG_Clips4u -Night Train (2024) Tamil 720p.mkv")))
+        assertEquals(true, SeriesShelf.isFilm(video("@HarbourMob_LinkZz_Night_Train_2022_Tamil_HQ_HDRip.mkv")))
+        // A handle with nothing release-like after it stays a handle and nothing more.
+        assertEquals("Workshop", SeriesShelf.tileTitle(video("@Creator_Clips_Daily Workshop.mp4")))
+    }
+
+    @Test
+    fun `a name ending in nothing but tags loses them`() {
+        assertEquals("Marina", SeriesShelf.tileTitle(video("Marina Tamil Hd.mp4")))
+        assertEquals("Coast Walk", SeriesShelf.tileTitle(video("Coast_Walk_Tamil.mkv")))
+        assertEquals("Paper Moons", SeriesShelf.tileTitle(video("Paper Moons Full Movie HD.mp4")))
+        // A language inside an ordinary name is not a tag block.
+        assertEquals("Learn Tamil Fast", SeriesShelf.tileTitle(video("Learn_Tamil_Fast.mp4")))
+    }
 }

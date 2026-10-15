@@ -263,6 +263,16 @@ object SeriesShelf {
     }
 
     /**
+     * The keys of [entries] drawn as 2:3 posters: all of them. A listing keeps the chat's own order
+     * and is never split into films and other videos, since release names vary too much for that
+     * split to be trusted: a film named without a year, or written up like a video's description,
+     * would land among the clips. So every card is the same portrait shape, with the film's poster
+     * where one is found and the video's own frame or cover otherwise, and a row never mixes a
+     * tall card with a short one.
+     */
+    fun posterKeys(entries: List<ShelfEntry>): Set<String> = entries.mapTo(HashSet()) { it.key }
+
+    /**
      * A film poster's name, without the year ("Gladiator II"), which its line of facts carries
      * instead; [tileTitle] where the name reads as nothing.
      */

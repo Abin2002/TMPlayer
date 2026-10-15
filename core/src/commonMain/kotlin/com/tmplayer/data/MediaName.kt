@@ -131,7 +131,8 @@ object MediaName {
         if (fileName.isBlank()) return null
         val tidy = clean(stripDecoration(stripExtension(fileName)).replace(SEPARATORS, " ").replace(WHITESPACE, " "))
         val parsed = parse(fileName, caption, maxYear)
-        val release = parsed.year != null || parsed.isEpisode || EpisodeCopies.markers(fileName).isNotEmpty()
+        val release = parsed.year != null || parsed.isEpisode || EpisodeCopies.markers(fileName).isNotEmpty() ||
+            endsInTags(tidy)
         // A name that is nothing but its marker ("Episode 1") reads back as the whole name, which
         // says it already; adding the code to it would say it twice.
         val title = parsed.title.takeIf { release && it.isNotBlank() && !it.equals(tidy, ignoreCase = true) }
@@ -141,6 +142,16 @@ object MediaName {
             parsed.year != null -> "$title (${parsed.year})"
             else -> title
         }
+    }
+
+    /**
+     * Whether everything in [text] from its first release tag on is tags and separators, as in
+     * "Marina Tamil Hd" or "Chinna Veedu | Full Movie": a name with a title and nothing but tags
+     * after it, which is safe to cut where "Learn Tamil Fast" is not.
+     */
+    private fun endsInTags(text: String): Boolean {
+        val start = firstTagIndex(text) ?: return false
+        return text.substring(start).replace(TAGS, " ").all { it.isWhitespace() || it in TRIM_CHARS }
     }
 
     /** What [read] found, with the title left empty when nothing came before the first marker. */
@@ -330,10 +341,23 @@ object MediaName {
         return withoutSymbols
             // A fansub group's tag, "[SubsPlease] Show - 02", is a signature in brackets.
             .replace(GROUP_TAG, "")
-            .replace(HANDLE, " ")
+            .replace(HANDLE) { handleOf(it.value) }
             .replace(SITE, " ")
             // Whatever the signature was attached with, once it is gone.
             .trimStart { it.isWhitespace() || it in TRIM_CHARS }
+    }
+
+    /**
+     * What a [HANDLE] match leaves behind. A handle can hold underscores, and so can the name it is
+     * stapled to: "@TamilMob_LinkZz_BEAST_2022_Tamil_HQ_HDRip.mkv" matches as one word. When the
+     * match runs on into a year or a release tag, it is a handle followed by the name, and the
+     * handle is taken as its first two words, which is how channels name themselves
+     * ("@TamilMob_LinkZz", "@HEVC_Mob"); the rest goes back as the name.
+     */
+    private fun handleOf(match: String): String {
+        val words = match.removePrefix("@").split('_').filter { it.isNotEmpty() }
+        val runsOn = words.drop(1).any { BARE_YEAR.matches(it) || TAGS.matches(it) }
+        return if (runsOn && words.size > 2) " " + words.drop(2).joinToString(" ") else " "
     }
 
     private fun clean(raw: String): String = raw
@@ -449,6 +473,7 @@ object MediaName {
             // Release furniture
             "proper", "repack", "extended", "unrated", "uncut", "limited", "internal",
             "complete", "retail", "subbed", "dubbed", "esubs?", "msubs?", "hq", "hs", "nuked",
+            "full ?movie", "\\d+(?:\\.\\d+)? ?[mg]b",
         ).joinToString("|") + """)\b""",
         RegexOption.IGNORE_CASE,
     )

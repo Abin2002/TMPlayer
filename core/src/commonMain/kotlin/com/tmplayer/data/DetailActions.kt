@@ -97,7 +97,6 @@ object DetailActions {
             context.cached -> add(DetailAction.SaveToDownloads)
             else -> add(DetailAction.Download)
         }
-        if (context.canSelect && context.canBeSaved) add(DetailAction.SelectVideos)
         // Both pass the file to somebody else's app, which is a copy leaving Telegram's hands, and
         // only once the whole file is here: half a file opened elsewhere stops after two minutes.
         val whole = context.inDownloads || context.cached
@@ -105,9 +104,6 @@ object DetailActions {
             add(DetailAction.Share)
             add(DetailAction.OpenElsewhere)
         }
-        // A restricted chat is one whose owner asked for its posts not to be passed on, and a
-        // link is a way of passing one on, so it goes too.
-        if (context.hasClipboard && context.canBeSaved) add(DetailAction.CopyLink)
         if (context.outsideChat) add(DetailAction.OpenChat)
     }
 

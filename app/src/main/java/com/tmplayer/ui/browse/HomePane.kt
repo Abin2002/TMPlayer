@@ -66,6 +66,7 @@ import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ShelfEntry
 import com.tmplayer.data.WatchLaterRecord
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.WithinMargins
 import com.tmplayer.ui.components.edgeFade
@@ -86,9 +87,7 @@ import androidx.compose.material3.Text as M3Text
  * are built by [com.tmplayer.data.HomeRows]).
  *
  * Continue watching is wide cards with the name written on the art and the time left in a chip.
- * In a starred chat's row and in Recently added, films and shows are 2:3 posters and everything
- * else a 16:9 card, each kind in its own strip under the one heading, posters first, so a row
- * never mixes a tall card with a short one.
+ * A starred chat's row and Recently added keep the chat's own order in one strip of 2:3 posters.
  *
  * One vertical lazy list of horizontal lazy rows, so only the rows on screen exist and only the
  * tiles on screen in each of those. Every row and tile is keyed, and every tile is a fixed width,
@@ -305,6 +304,7 @@ internal fun HomePane(
                 }
             }
         }
+        ScrollToTop(listState)
     }
 
     // Somewhere for the remote to stand the moment Home opens. Keyed on the first row, so a row
@@ -332,9 +332,8 @@ internal fun HomePane(
 }
 
 /**
- * A starred chat's row or Recently added: its films and shows as 2:3 posters in one strip, its
- * other videos as 16:9 cards in a strip under it, each in the row's own order. Only the strips
- * that have anything in them are drawn, so a chat of clips is one strip of cards as before.
+ * A starred chat's row or Recently added: one strip in the row's own order, films, shows and other
+ * videos together, all as 2:3 posters ([SeriesShelf.posterKeys]).
  */
 @Composable
 private fun ShelfRows(
@@ -351,19 +350,9 @@ private fun ShelfRows(
     upToSeeAll: Modifier,
     onOpenSeries: (Series) -> Unit,
 ) {
-    val (posters, videos) = remember(entries) { entries.partition(SeriesShelf::isPoster) }
-    val lead = posters.firstOrNull() ?: videos.firstOrNull()
-    Column(verticalArrangement = Arrangement.spacedBy(if (touch) STRIP_GAP else 0.dp)) {
-        if (posters.isNotEmpty()) {
-            TileRow(start, end, upToSeeAll) {
-                entries(posters, poster = true, watch, touch, if (isFirstRow) lead else null, first, chatTitle, onPlay, onHold, onOpenSeries)
-            }
-        }
-        if (videos.isNotEmpty()) {
-            TileRow(start, end, if (posters.isEmpty()) upToSeeAll else Modifier) {
-                entries(videos, poster = false, watch, touch, if (isFirstRow) lead else null, first, chatTitle, onPlay, onHold, onOpenSeries)
-            }
-        }
+    val poster = remember(entries) { SeriesShelf.posterKeys(entries).isNotEmpty() }
+    TileRow(start, end, upToSeeAll) {
+        entries(entries, poster, watch, touch, if (isFirstRow) entries.firstOrNull() else null, first, chatTitle, onPlay, onHold, onOpenSeries)
     }
 }
 

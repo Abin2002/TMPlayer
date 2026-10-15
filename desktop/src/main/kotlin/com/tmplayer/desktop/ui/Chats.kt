@@ -45,6 +45,7 @@ import androidx.compose.foundation.shape.CircleShape
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Focus
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.TmDropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -345,6 +346,7 @@ internal fun ChatList(
             rememberScrollbarAdapter(listState),
             Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
         )
+        ScrollToTop(listState)
     }
 }
 

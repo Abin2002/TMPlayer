@@ -2,7 +2,6 @@ package com.tmplayer.data
 
 import com.tmplayer.data.DetailAction.AddWatchLater
 import com.tmplayer.data.DetailAction.CancelDownload
-import com.tmplayer.data.DetailAction.CopyLink
 import com.tmplayer.data.DetailAction.Download
 import com.tmplayer.data.DetailAction.InDownloads
 import com.tmplayer.data.DetailAction.MarkUnwatched
@@ -14,7 +13,6 @@ import com.tmplayer.data.DetailAction.RemoveDownload
 import com.tmplayer.data.DetailAction.RemoveWatchLater
 import com.tmplayer.data.DetailAction.Resume
 import com.tmplayer.data.DetailAction.SaveToDownloads
-import com.tmplayer.data.DetailAction.SelectVideos
 import com.tmplayer.data.DetailAction.Share
 import com.tmplayer.data.DetailAction.StartOver
 import org.junit.Assert.assertEquals
@@ -30,7 +28,7 @@ class DetailActionsTest {
     @Test
     fun `a fresh video on the phone's grid`() {
         assertEquals(
-            listOf(Play, MarkWatched, Download, SelectVideos, CopyLink),
+            listOf(Play, MarkWatched, Download),
             DetailActions.of(phoneGrid),
         )
     }
@@ -68,7 +66,7 @@ class DetailActionsTest {
     @Test
     fun `downloaded on the phone offers removing, sharing and another app`() {
         assertEquals(
-            listOf(Play, MarkWatched, InDownloads, RemoveDownload, SelectVideos, Share, OpenElsewhere, CopyLink),
+            listOf(Play, MarkWatched, InDownloads, RemoveDownload, Share, OpenElsewhere),
             DetailActions.of(phoneGrid.copy(inDownloads = true)),
         )
     }
@@ -92,7 +90,7 @@ class DetailActionsTest {
     @Test
     fun `the television has no other app and no clipboard`() {
         val tv = DetailContext(canBeSaved = true, inDownloads = true, canSelect = true)
-        assertEquals(listOf(Play, MarkWatched, InDownloads, RemoveDownload, SelectVideos), DetailActions.of(tv))
+        assertEquals(listOf(Play, MarkWatched, InDownloads, RemoveDownload), DetailActions.of(tv))
     }
 
     @Test

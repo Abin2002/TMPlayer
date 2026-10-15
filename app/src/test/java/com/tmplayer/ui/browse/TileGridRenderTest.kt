@@ -108,9 +108,9 @@ class TileGridRenderTest {
             video("Paper.Moons.2018.1080p.BluRay.mkv", portrait = true),
             video("Low.Tide.2022.720p.WEB.mkv", art = false),
         )
-        // As the chat's grid lays it out: films and shows first as posters, then the other videos.
-        val arranged = SeriesShelf.arrange(items)
-        val shelf = arranged.filter(SeriesShelf::isPoster) + arranged.filterNot(SeriesShelf::isPoster)
+        // As the chat's grid lays it out: the chat's own order, posters when enough entries are.
+        val shelf = SeriesShelf.arrange(items)
+        val posterKeys = SeriesShelf.posterKeys(shelf)
         val watch = SeriesWatch(point = { null }, finished = { false })
 
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
@@ -133,7 +133,7 @@ class TileGridRenderTest {
                         items(
                             shelf,
                             key = { it.key },
-                            span = { GridItemSpan(columns / if (SeriesShelf.isPoster(it)) posters else wide) },
+                            span = { GridItemSpan(columns / if (it.key in posterKeys) posters else wide) },
                         ) { entry ->
                             when (entry) {
                                 is ShelfEntry.Show -> SeriesCard(
@@ -141,7 +141,7 @@ class TileGridRenderTest {
                                     progress = watch.progress(entry.series),
                                     onClick = {},
                                     dense = touch,
-                                    poster = true,
+                                    poster = entry.key in posterKeys,
                                 )
                                 is ShelfEntry.File -> MediaCard(
                                     item = entry.item,
@@ -150,7 +150,7 @@ class TileGridRenderTest {
                                     onClick = {},
                                     onFocused = {},
                                     dense = touch,
-                                    poster = SeriesShelf.isFilm(entry.item),
+                                    poster = entry.key in posterKeys,
                                     badge = if (entry.item.onDevice) null else if (entry.item.title.startsWith("Mountains")) {
                                         { TileBadge("New") }
                                     } else {

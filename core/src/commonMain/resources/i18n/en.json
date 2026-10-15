@@ -263,6 +263,7 @@
   },
   "common": {
     "back": "Back",
+    "back_to_top": "Back to top",
     "cancel": "Cancel",
     "cancel_all": "Cancel all",
     "change": "Change",

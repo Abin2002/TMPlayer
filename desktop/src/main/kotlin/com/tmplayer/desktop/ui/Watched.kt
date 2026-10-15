@@ -39,6 +39,7 @@ import com.tmplayer.data.WatchedWhen
 import com.tmplayer.desktop.WatchedWords
 import com.tmplayer.desktop.setWatched
 import com.tmplayer.ui.browse.BrowseTab
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.Tone
@@ -132,6 +133,7 @@ fun WatchedPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                         }
                     }
                     VerticalScrollbar(rememberScrollbarAdapter(grid), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+                    ScrollToTop(grid)
                 }
             }
         }
@@ -222,6 +224,7 @@ fun WatchLaterPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                         }
                     }
                     VerticalScrollbar(rememberScrollbarAdapter(grid), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+                    ScrollToTop(grid)
                 }
             }
         }

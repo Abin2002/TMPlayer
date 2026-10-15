@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -88,6 +89,7 @@ import com.tmplayer.data.start
 import com.tmplayer.i18n.L
 import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.components.BigEmpty
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.rememberToast
@@ -581,145 +583,150 @@ fun DownloadsScreen(
                 )
             }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 24.dp),
-            ) {
-                if (tab == ONGOING) {
-                    if (active.isNotEmpty()) {
-                        item {
-                            QueueHeading(
-                                title = queueHeading(active),
-                                // Only worth offering on a real queue. With one video the card's
-                                // own button says the same thing an inch further down the screen.
-                                bulk = if (active.size > 1) {
-                                    if (active.any { it.busy }) L.commonPauseAll else L.commonResumeAll
-                                } else {
-                                    null
-                                },
-                                onBulk = {
-                                    if (active.any { it.busy }) {
-                                        OfflineDownloads.pauseAll(context)
+            val listState = rememberLazyListState()
+            Box(Modifier.fillMaxSize()) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 24.dp),
+                ) {
+                    if (tab == ONGOING) {
+                        if (active.isNotEmpty()) {
+                            item {
+                                QueueHeading(
+                                    title = queueHeading(active),
+                                    // Only worth offering on a real queue. With one video the card's
+                                    // own button says the same thing an inch further down the screen.
+                                    bulk = if (active.size > 1) {
+                                        if (active.any { it.busy }) L.commonPauseAll else L.commonResumeAll
                                     } else {
-                                        OfflineDownloads.resumeAll(context)
-                                    }
-                                },
-                            )
-                        }
-                        items(active, key = { "active_${it.fileId}" }) { progress ->
-                            ActiveDownloadCard(
-                                progress = progress,
-                                // Where it stands among the videos still to be fetched, so a
-                                // waiting row can say how long the wait is.
-                                //
-                                // Looked up from the map built once above rather than worked out
-                                // per row: the progress ticker rebuilds this list once a second
-                                // for as long as anything is downloading.
-                                place = queuePlaces[progress.fileId] ?: -1,
-                                onPause = { OfflineDownloads.pause(context, progress.fileId) },
-                                onResume = { OfflineDownloads.resume(context, progress.fileId) },
-                                onCancel = { OfflineDownloads.cancel(context, progress.fileId) },
-                            )
-                        }
-                    } else {
-                        item {
-                            // Given a height of its own: BigEmpty fills what it is given, and
-                            // inside a LazyColumn that is nothing, so it would collapse to a line.
-                            Box(emptyStateHeight(0.7f)) {
-                                BigEmpty(
-                                    L.downloadsEmptyDownloading,
-                                    icon = TmIcons.Download,
+                                        null
+                                    },
+                                    onBulk = {
+                                        if (active.any { it.busy }) {
+                                            OfflineDownloads.pauseAll(context)
+                                        } else {
+                                            OfflineDownloads.resumeAll(context)
+                                        }
+                                    },
                                 )
+                            }
+                            items(active, key = { "active_${it.fileId}" }) { progress ->
+                                ActiveDownloadCard(
+                                    progress = progress,
+                                    // Where it stands among the videos still to be fetched, so a
+                                    // waiting row can say how long the wait is.
+                                    //
+                                    // Looked up from the map built once above rather than worked out
+                                    // per row: the progress ticker rebuilds this list once a second
+                                    // for as long as anything is downloading.
+                                    place = queuePlaces[progress.fileId] ?: -1,
+                                    onPause = { OfflineDownloads.pause(context, progress.fileId) },
+                                    onResume = { OfflineDownloads.resume(context, progress.fileId) },
+                                    onCancel = { OfflineDownloads.cancel(context, progress.fileId) },
+                                )
+                            }
+                        } else {
+                            item {
+                                // Given a height of its own: BigEmpty fills what it is given, and
+                                // inside a LazyColumn that is nothing, so it would collapse to a line.
+                                Box(emptyStateHeight(0.7f)) {
+                                    BigEmpty(
+                                        L.downloadsEmptyDownloading,
+                                        icon = TmIcons.Download,
+                                    )
+                                }
+                            }
+                        }
+                        return@LazyColumn
+                    }
+
+                    if (tab == CACHED) {
+                        item {
+                            Text(
+                                L.downloadsCachedNote,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 4.dp),
+                            )
+                        }
+                        items(cachedRows, key = { it.key }) { row ->
+                            DownloadCard(
+                                row = row,
+                                picking = false,
+                                checked = false,
+                                onPlay = { onPlay(row.record) },
+                                onShare = { saveToDownloads(row) },
+                                onDelete = { confirmingDelete = row },
+                                onToggle = {},
+                                onHold = null,
+                            )
+                        }
+                        if (counted && cachedRows.isEmpty()) {
+                            item {
+                                Box(emptyStateHeight(0.6f)) {
+                                    BigEmpty(
+                                        L.downloadsEmptyCached,
+                                        icon = TmIcons.Download,
+                                    )
+                                }
+                            }
+                        }
+                        return@LazyColumn
+                    }
+
+                    item {
+                        StorageSummary(
+                            split = split,
+                            freeBytes = disk.freeBytes,
+                            totalBytes = disk.totalBytes,
+                        )
+                    }
+                    item {
+                        RemoveAfterWatchingRow(removeAfterWatching) { on ->
+                            // Turning it on is asked first: from then on files go without a press.
+                            // Turning it off deletes nothing, so it just happens.
+                            if (on) {
+                                confirmingRemoveAfterWatching = true
+                            } else {
+                                scope.launch { settings.setRemoveAfterWatching(false) }
                             }
                         }
                     }
-                    return@LazyColumn
-                }
-
-                if (tab == CACHED) {
-                    item {
-                        Text(
-                            L.downloadsCachedNote,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 4.dp),
-                        )
-                    }
-                    items(cachedRows, key = { it.key }) { row ->
+                    items(shown, key = { it.key }) { row ->
                         DownloadCard(
                             row = row,
-                            picking = false,
-                            checked = false,
-                            onPlay = { onPlay(row.record) },
-                            onShare = { saveToDownloads(row) },
-                            onDelete = { confirmingDelete = row },
-                            onToggle = {},
-                            onHold = null,
+                            picking = picking,
+                            checked = row.key in picked,
+                            onPlay = {
+                                // A part downloaded one carries on downloading; anything else plays.
+                                if (row.partial) saveToDownloads(row) else onPlay(row.record)
+                            },
+                            onShare = { share(listOf(row)) },
+                            onDelete = { if (row.missing) removeMissing(row) else confirmingDelete = row },
+                            onToggle = {
+                                picked = if (row.key in picked) picked - row.key else picked + row.key
+                            },
+                            // A hold is how a list of anything on a phone starts a selection, and it
+                            // saves walking to the top bar for the first tick.
+                            onHold = {
+                                picking = true
+                                picked = picked + row.key
+                            },
                         )
                     }
-                    if (counted && cachedRows.isEmpty()) {
+                    if (counted && shown.isEmpty()) {
                         item {
                             Box(emptyStateHeight(0.6f)) {
                                 BigEmpty(
-                                    L.downloadsEmptyCached,
+                                    L.downloadsEmptyDownloaded(folder = LegacyDownloads.FOLDER),
                                     icon = TmIcons.Download,
                                 )
                             }
                         }
                     }
-                    return@LazyColumn
                 }
-
-                item {
-                    StorageSummary(
-                        split = split,
-                        freeBytes = disk.freeBytes,
-                        totalBytes = disk.totalBytes,
-                    )
-                }
-                item {
-                    RemoveAfterWatchingRow(removeAfterWatching) { on ->
-                        // Turning it on is asked first: from then on files go without a press.
-                        // Turning it off deletes nothing, so it just happens.
-                        if (on) {
-                            confirmingRemoveAfterWatching = true
-                        } else {
-                            scope.launch { settings.setRemoveAfterWatching(false) }
-                        }
-                    }
-                }
-                items(shown, key = { it.key }) { row ->
-                    DownloadCard(
-                        row = row,
-                        picking = picking,
-                        checked = row.key in picked,
-                        onPlay = {
-                            // A part downloaded one carries on downloading; anything else plays.
-                            if (row.partial) saveToDownloads(row) else onPlay(row.record)
-                        },
-                        onShare = { share(listOf(row)) },
-                        onDelete = { if (row.missing) removeMissing(row) else confirmingDelete = row },
-                        onToggle = {
-                            picked = if (row.key in picked) picked - row.key else picked + row.key
-                        },
-                        // A hold is how a list of anything on a phone starts a selection, and it
-                        // saves walking to the top bar for the first tick.
-                        onHold = {
-                            picking = true
-                            picked = picked + row.key
-                        },
-                    )
-                }
-                if (counted && shown.isEmpty()) {
-                    item {
-                        Box(emptyStateHeight(0.6f)) {
-                            BigEmpty(
-                                L.downloadsEmptyDownloaded(folder = LegacyDownloads.FOLDER),
-                                icon = TmIcons.Download,
-                            )
-                        }
-                    }
-                }
+                ScrollToTop(listState)
             }
         }
     }
