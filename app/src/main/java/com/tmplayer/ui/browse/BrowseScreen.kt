@@ -150,6 +150,7 @@ import com.tmplayer.ui.components.MenuAction
 import com.tmplayer.ui.components.holdable
 import com.tmplayer.ui.components.AppMark
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.components.pressScale
 import kotlinx.coroutines.delay
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.TvConfirm
@@ -322,6 +323,8 @@ fun BrowseScreen(
     var query by remember { mutableStateOf("") }
     // What the viewer held OK on. Only ever one at a time, so two nullable slots cover both lists.
     var chatMenu by remember { mutableStateOf<ChatSummary?>(null) }
+    // The chat just starred from its menu, whose row's star pops in rather than simply appearing.
+    var justStarred by remember { mutableStateOf<Long?>(null) }
     var mediaMenu by remember { mutableStateOf<ResumeRecord?>(null) }
     var watchedMenu by remember { mutableStateOf<WatchedRecord?>(null) }
     var laterMenu by remember { mutableStateOf<WatchLaterRecord?>(null) }
@@ -438,14 +441,18 @@ fun BrowseScreen(
         )
     }
 
+    // A phone lists chats as rows, always: tiles of chat pictures are for a television across the
+    // room. History's videos keep the choice, and so does every list on a television.
+    val chatLayout: (BrowseSection) -> CardLayout = { section -> if (touch && !section.listsVideos) CardLayout.List else layout }
     val pane: @Composable (BrowseSection) -> Unit = { tab ->
         val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
         val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
         val showsWatchLater = tab.listsVideos && historyTab == HistoryTab.WatchLater
+        androidx.compose.runtime.CompositionLocalProvider(LocalJustStarred provides justStarred) {
         StateScaffold(
             state,
             onRetry = onRetry,
-            loading = { ChatListSkeleton(layout = layout) },
+            loading = { ChatListSkeleton(layout = chatLayout(tab)) },
         ) { data ->
             val visible = remember(data.chats, tab, favorites, query, chatFilter, chatSort) {
                 filterChats(data.chats, tab, favorites, query, chatFilter, chatSort)
@@ -627,13 +634,13 @@ fun BrowseScreen(
                                     chatFilter == ChatFilter.All &&
                                     chatSort == ChatSort.Recent &&
                                     query.isBlank() &&
-                                    layout == CardLayout.List
+                                    chatLayout(tab) == CardLayout.List
                                 ) {
                                     visible.take(RECENT_COUNT)
                                 } else {
                                     emptyList()
                                 },
-                                layout = layout,
+                                layout = chatLayout(tab),
                                 insets = insets,
                                 tiles = tiles,
                                 autoFocus = !touch,
@@ -646,6 +653,7 @@ fun BrowseScreen(
                     }
                 }
         }
+    }
     }
 
     val chatsNow = (state as? UiState.Content)?.value?.chats.orEmpty()
@@ -713,17 +721,23 @@ fun BrowseScreen(
                     else -> chats?.let { filterChats(it, section, favorites, query, chatFilter, chatSort).size } ?: 0
                 }
             },
-            // Home is rows of tiles whatever the arrangement, and refreshes with a pull: no pill.
-            actions = unlessHidden(tab.isHome) actions@{
-                BarIcon(
-                    label = if (layout == CardLayout.Grid) s.browseShowAsRows else s.browseShowAsTiles,
-                    icon = if (layout == CardLayout.Grid) {
-                        TmIcons.List
-                    } else {
-                        TmIcons.Grid
-                    },
-                    onClick = onToggleLayout,
-                )
+            // Home is rows of tiles whatever the arrangement, and refreshes with a pull; a list of
+            // chats is rows on a phone; so only History offers rows or tiles, and a page with
+            // nothing to offer has no pill at all.
+            actions = unlessHidden(
+                tab.isHome || !(tab.listsVideos || (tab == BrowseSection.of(BrowseTab.Favorites) && favorites.isNotEmpty())),
+            ) actions@{
+                if (tab.listsVideos) {
+                    BarIcon(
+                        label = if (layout == CardLayout.Grid) s.browseShowAsRows else s.browseShowAsTiles,
+                        icon = if (layout == CardLayout.Grid) {
+                            TmIcons.List
+                        } else {
+                            TmIcons.Grid
+                        },
+                        onClick = onToggleLayout,
+                    )
+                }
                 // Everything destructive goes behind the overflow. A "Clear history" button
                 // sitting in the bar beside Refresh is one mis-tap from emptying the tab.
                 val clearHistory = showsContinue && continueWatching.isNotEmpty()
@@ -847,6 +861,7 @@ fun BrowseScreen(
                         },
                     ) {
                         chatMenu = null
+                        justStarred = if (favorite) null else chat.id
                         onToggleFavorite(chat)
                     },
                 )
@@ -1035,15 +1050,13 @@ fun BrowseScreen(
 }
 
 /**
- * One button in the phone's app bar.
- *
- * Icon-only and stock: [IconButton] brings the 48 dp touch target and the ripple for free.
+ * One button in the pill of a page's own buttons over the floating bar: [FloatingBarIcon], in
+ * the pill's ink (an [IconButton] here took the theme's content colour, black on the dark pill),
+ * sinking under the finger and turning rows into tiles in place.
  */
 @Composable
 private fun RowScope.BarIcon(label: String, icon: ImageVector, onClick: () -> Unit) {
-    IconButton(onClick = onClick) {
-        M3Icon(icon, contentDescription = label)
-    }
+    com.tmplayer.ui.components.FloatingBarIcon(icon, label, onClick)
 }
 
 /** The three dots, and everything that should take two taps rather than one. */
@@ -1051,9 +1064,7 @@ private fun RowScope.BarIcon(label: String, icon: ImageVector, onClick: () -> Un
 internal fun RowScope.BarOverflow(items: List<Pair<String, () -> Unit>>) {
     val s = LocalStrings.current
     var open by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }) {
-        M3Icon(TmIcons.MoreVert, contentDescription = s.commonMoreOptions)
-    }
+    com.tmplayer.ui.components.FloatingBarIcon(TmIcons.MoreVert, s.commonMoreOptions, { open = true })
     TmDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
         items.forEach { (label, action) ->
             DropdownMenuItem(
@@ -2085,6 +2096,26 @@ internal fun TouchFilterChip(
     description: String? = null,
     onClick: () -> Unit,
 ) {
+    // A pick cross-fades the chip into its chosen colours rather than switching them, and the chip
+    // gives a little under the finger, as the bar's buttons do.
+    val press = remember { MutableInteractionSource() }
+    // Material's own filter chip colours, which its chip switches between at once.
+    val scheme = androidx.compose.material3.MaterialTheme.colorScheme
+    val container by androidx.compose.animation.animateColorAsState(
+        if (selected) scheme.secondaryContainer else Color.Transparent,
+        Motion.standard(Motion.Fast),
+        label = "chipBack",
+    )
+    val ink by androidx.compose.animation.animateColorAsState(
+        if (selected) scheme.onSecondaryContainer else scheme.onSurfaceVariant,
+        Motion.standard(Motion.Fast),
+        label = "chipInk",
+    )
+    val glyph by androidx.compose.animation.animateColorAsState(
+        if (selected) scheme.onSecondaryContainer else scheme.primary,
+        Motion.standard(Motion.Fast),
+        label = "chipIcon",
+    )
     androidx.compose.material3.FilterChip(
         selected = selected,
         onClick = onClick,
@@ -2092,9 +2123,20 @@ internal fun TouchFilterChip(
         // A pill, like the television's chips and every other chip in the app.
         shape = CircleShape,
         leadingIcon = {
-            M3Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            com.tmplayer.ui.components.SwapIcon(icon, glyph, size = 18.dp)
         },
-        modifier = description?.let { words -> Modifier.semantics { contentDescription = words } } ?: Modifier,
+        colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+            containerColor = container,
+            selectedContainerColor = container,
+            labelColor = ink,
+            selectedLabelColor = ink,
+            iconColor = glyph,
+            selectedLeadingIconColor = glyph,
+        ),
+        interactionSource = press,
+        modifier = Modifier.pressScale(press).then(
+            description?.let { words -> Modifier.semantics { contentDescription = words } } ?: Modifier,
+        ),
     )
 }
 
@@ -2264,6 +2306,9 @@ private fun ChatSection(
 
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
+    // On a phone a chip, a sort or a search moves the rows to their new places and fades newcomers
+    // in. Not past a few hundred chats, where the bookkeeping costs more than the motion is worth.
+    val animateRows = rowsAreFullBleed && !(rememberReducedMotion() || Motion.reduced) && chats.size <= ANIMATED_ROWS_MAX
     Box(Modifier.fillMaxSize()) {
         when (layout) {
             CardLayout.List -> LazyColumn(
@@ -2336,7 +2381,8 @@ private fun ChatSection(
                         opensOnLaunch = chat.id == launchChatId,
                         onClick = { onOpenChat(chat) },
                         onHold = { onHold(chat) },
-                        modifier = focusOf(chat, inStrip = false),
+                        modifier = focusOf(chat, inStrip = false)
+                            .then(if (animateRows) Modifier.animateItem() else Modifier),
                     )
                 }
             }
@@ -2371,6 +2417,19 @@ private fun ChatSection(
         when (layout) {
             CardLayout.List -> ScrollToTop(listState)
             CardLayout.Grid -> ScrollToTop(gridState)
+        }
+        if (rowsAreFullBleed) {
+            // The rows pass under the pinned title and chips: a short fade at the top edge lets
+            // them go softly rather than being cut by a hard line, once the list has moved.
+            val scrolled by remember { derivedStateOf { listState.canScrollBackward } }
+            val fade by androidx.compose.animation.core.animateFloatAsState(if (scrolled) 1f else 0f, Motion.standard(Motion.Fast), label = "listFade")
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(LIST_FADE)
+                    .graphicsLayer { alpha = fade }
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Tone.background, Tone.background.copy(alpha = 0f)))),
+            )
         }
     }
 
@@ -2725,12 +2784,24 @@ private fun TouchChatRow(
                     UnreadBadge(chat)
                     ChatMarkers(chat, size = 16.dp)
                     if (favorite) {
-                        M3Icon(
-                            TmIcons.Star,
-                            contentDescription = s.browseFavourite,
-                            tint = Tone.accent,
-                            modifier = Modifier.size(20.dp),
-                        )
+                        // Starred a moment ago from the hold menu: the star pops in on a spring.
+                        // Any other time (a scroll, a launch) it is simply there.
+                        val pop = LocalJustStarred.current == chat.id && !(rememberReducedMotion() || Motion.reduced)
+                        val shown = remember { androidx.compose.animation.core.MutableTransitionState(!pop).apply { targetState = true } }
+                        androidx.compose.animation.AnimatedVisibility(
+                            visibleState = shown,
+                            enter = androidx.compose.animation.scaleIn(
+                                androidx.compose.animation.core.spring(dampingRatio = 0.4f, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow),
+                                initialScale = 0.3f,
+                            ) + androidx.compose.animation.fadeIn(Motion.standard(Motion.Fast)),
+                        ) {
+                            M3Icon(
+                                TmIcons.Star,
+                                contentDescription = s.browseFavourite,
+                                tint = Tone.accent,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
                     }
                 }
             }
@@ -2884,6 +2955,15 @@ private class BrowseInsets(val start: Dp, val end: Dp, val top: Dp, val bottom: 
 
 private val TvInsets = BrowseInsets(start = 28.dp, end = Tv.FocusClearance, top = Tv.SafeV, bottom = Tv.SafeV)
 private val TouchInsets = BrowseInsets(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+
+/** The longest chat list whose rows move to a new order rather than being redrawn in it. */
+private const val ANIMATED_ROWS_MAX = 300
+
+/** How tall the fade is where the chat list passes under the pinned title and chips. */
+private val LIST_FADE = 12.dp
+
+/** The chat just starred from its hold menu, for its row's star to pop in. */
+private val LocalJustStarred = androidx.compose.runtime.compositionLocalOf<Long?> { null }
 
 /** [content] for a page's action pill, or none at all where [hidden]. */
 private fun unlessHidden(hidden: Boolean, content: @Composable RowScope.() -> Unit): (@Composable RowScope.() -> Unit)? =

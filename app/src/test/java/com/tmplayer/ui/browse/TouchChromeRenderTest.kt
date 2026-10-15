@@ -86,13 +86,15 @@ class TouchChromeRenderTest {
 
     @Test
     @Config(sdk = [35], qualifiers = "w411dp-h891dp-port-night-xhdpi")
-    fun settingsLightsTheBar() {
+    fun settingsLightsThePicture() {
         val chrome = TouchChrome()
         render("chrome-settings.png", chrome, "settings") {
-            TouchPage(TouchPageSpec(current = TouchDestination.Settings))
+            TouchPage(TouchPageSpec(current = null, inProfile = true))
             rows()()
         }
-        assertEquals(TouchDestination.Settings, chrome.specs["settings"]?.current)
+        // Settings lives behind the picture, so the picture is lit rather than a button.
+        assertNull(chrome.specs["settings"]?.current)
+        assertTrue(chrome.specs["settings"]!!.inProfile)
         assertEquals("settings", chrome.pageKey)
     }
 
