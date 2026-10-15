@@ -31,6 +31,10 @@ import androidx.fragment.app.FragmentActivity
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.data.Bookmark
+import com.tmplayer.data.MediaItem
+import com.tmplayer.data.VideoCopies
+import com.tmplayer.ui.browse.copyDetail
+import com.tmplayer.ui.browse.copyHeading
 import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.components.ChoiceLine
 import com.tmplayer.ui.components.ChoiceList
@@ -81,6 +85,14 @@ class PlayerSheets(
 
         /** The video does not fit, but would in Low storage mode: switch to it, or not. */
         class LowStorageOffer(val onAnswer: (Boolean) -> Unit) : Sheet
+
+        /** The copies of the video playing, [playing] ticked. */
+        class Copies(
+            val copies: List<MediaItem>,
+            val playing: String,
+            val chatOf: (MediaItem) -> String,
+            val onPick: (MediaItem) -> Unit,
+        ) : Sheet
     }
 
     private val sheet = mutableStateOf<Sheet?>(null)
@@ -136,6 +148,11 @@ class PlayerSheets(
         sheet.value = Sheet.LowStorageOffer(onAnswer)
     }
 
+    /** Every copy of the video playing; choosing another plays it from the same moment. */
+    fun showCopies(copies: List<MediaItem>, playing: String, chatOf: (MediaItem) -> String, onPick: (MediaItem) -> Unit) {
+        sheet.value = Sheet.Copies(copies, playing, chatOf, onPick)
+    }
+
     private fun close() {
         if (sheet.value == null) return
         sheet.value = null
@@ -174,6 +191,13 @@ class PlayerSheets(
                 onClose = ::close,
             )
             is Sheet.Details -> PlaybackDetailsSheet(shown.title, shown.lines, onClose = ::close)
+            is Sheet.Copies -> CopiesSheet(
+                copies = shown.copies,
+                playing = shown.playing,
+                chatOf = shown.chatOf,
+                onPick = { close(); shown.onPick(it) },
+                onClose = ::close,
+            )
             is Sheet.LowStorageOffer -> {
                 val s = LocalStrings.current
                 // Focus on "Switch and play": it is the answer that does what the viewer pressed.
@@ -398,6 +422,39 @@ internal fun SleepSheet(
                     selected = running != null && minutes == ticked,
                     modifier = if (minutes == focusOn) Modifier.focusRequester(focus) else Modifier,
                 ) { onPick(minutes) }
+            }
+        }
+        FocusOnOpen(focus)
+    }
+}
+
+/**
+ * The copies of the video playing, as the pickers' panel lists a choice of one: each by its
+ * quality and codec, with its size, length, date and (where the copies span chats) its chat under
+ * that, the one playing ticked and focused. Choosing another plays it from the same moment.
+ */
+@Composable
+internal fun CopiesSheet(
+    copies: List<MediaItem>,
+    playing: String,
+    chatOf: (MediaItem) -> String,
+    onPick: (MediaItem) -> Unit,
+    onClose: () -> Unit,
+) {
+    val s = LocalStrings.current
+    val touch = isTouch()
+    val focus = remember { FocusRequester() }
+    val spans = remember(copies) { VideoCopies.spansChats(copies) }
+    ChoiceSheet(title = s.playerCopies, note = s.playerCopiesNote, onDismiss = onClose, onClose = onClose, ignoreRelease = !touch, fullScreen = true) {
+        ChoiceList {
+            copies.forEach { copy ->
+                val here = copy.id == playing
+                ChoiceLine(
+                    title = copyHeading(copy),
+                    detail = copyDetail(copy, s, chatOf(copy).takeIf { spans }),
+                    selected = here,
+                    modifier = if (here) Modifier.focusRequester(focus) else Modifier,
+                ) { if (here) onClose() else onPick(copy) }
             }
         }
         FocusOnOpen(focus)

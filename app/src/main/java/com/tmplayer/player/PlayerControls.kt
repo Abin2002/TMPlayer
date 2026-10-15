@@ -70,6 +70,8 @@ class PlayerControls(
     private val onRemainingToggled: (Boolean) -> Unit = {},
     /** The row's Episodes button: opens the episode list. */
     private val onEpisodes: () -> Unit = {},
+    /** The row's copy button: opens the list of this video's copies. */
+    private val onCopies: () -> Unit = {},
 ) {
 
     private val container: View = root.findViewById(R.id.player_controls)
@@ -99,6 +101,7 @@ class PlayerControls(
     private val timesDuration: TextView = root.findViewById(R.id.times_duration)
     private val cluster: View = root.findViewById(R.id.controls_cluster)
     private val episodesButton: TextView = root.findViewById(R.id.control_episodes)
+    private val copyButton: TextView = root.findViewById(R.id.control_copy)
 
     /** The phone's times line shows what is left rather than the total. */
     var showRemaining = false
@@ -173,6 +176,7 @@ class PlayerControls(
         wire(root.findViewById(R.id.control_speed)) { onPickSpeed() }
         wire(rotate) { onCycleOrientation() }
         wire(episodesButton) { onEpisodes() }
+        wire(copyButton) { onCopies() }
         episodesButton.text = L.episodesTitle
         rotate.visibility = if (isTv) View.GONE else View.VISIBLE
         // The scrims on five stops, which their XML stand-ins cannot hold without a seam.
@@ -402,6 +406,7 @@ class PlayerControls(
             R.id.control_rotate to L.playerScreenOrientation,
             R.id.control_tv_more to L.commonMore,
             R.id.control_episodes to L.episodesTitle,
+            R.id.control_copy to L.playerCopies,
         )
         for ((id, name) in names) root.findViewById<View>(id)?.contentDescription = name
     }
@@ -497,6 +502,26 @@ class PlayerControls(
         val hadFocus = episodesButton.hasFocus()
         episodesButton.visibility = wanted
         if (hadFocus) focusRow()
+    }
+
+    /**
+     * Names the copy playing on the copy button ("1080p"), or takes the button away with null: a
+     * video with no other copy has nothing to switch to.
+     */
+    fun setCopy(label: String?) {
+        val wanted = if (label.isNullOrBlank()) View.GONE else View.VISIBLE
+        copyButton.text = label.orEmpty()
+        if (copyButton.visibility == wanted) return
+        val hadFocus = copyButton.hasFocus()
+        copyButton.visibility = wanted
+        if (hadFocus) focusRow()
+    }
+
+    /** Puts the remote back on the copy button, for when the list it opened closes. */
+    fun focusCopy() {
+        if (!isTv || !visible || copyButton.visibility != View.VISIBLE) return
+        copyButton.requestFocus()
+        poke()
     }
 
     /** Puts the remote back on the Episodes button, for when the list it opened closes. */

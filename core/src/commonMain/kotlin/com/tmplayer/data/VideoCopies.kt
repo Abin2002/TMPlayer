@@ -243,12 +243,17 @@ object CopyHandoff {
 
     private val offers = java.util.concurrent.ConcurrentHashMap<String, Offer>()
 
-    /** Remembers [copies], with the name of each chat they are in where known. */
+    /**
+     * Remembers [copies], with the name of each chat they are in where known. Names offered for
+     * these copies before are kept: the player re-offers what a search across chats handed it with
+     * only its own chat's name.
+     */
     fun offer(copies: List<MediaItem>, chatTitles: Map<Long, String> = emptyMap()) {
         if (copies.size <= 1) return
         // This lives as long as the process does: a long session starts over rather than grows.
         if (offers.size > MAX) offers.clear()
-        val offer = Offer(copies, chatTitles)
+        val known = copies.mapNotNull { offers[it.id]?.chatTitles }.fold(emptyMap<Long, String>()) { all, more -> all + more }
+        val offer = Offer(copies, known + chatTitles)
         copies.forEach { offers[it.id] = offer }
     }
 
