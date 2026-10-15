@@ -356,7 +356,7 @@
     "read_the_steps": "Read the steps",
     "the_ten_foot_layout_and": "The ten-foot layout, and why it runs on a 1 GB stick.",
     "for_the_television": "For the television",
-    "stream_telegram_videos_while_they": "Stream Telegram videos while they download, seek instantly, play MKV with subtitles and autoplay the next episode on Android TV, phones, Windows, macOS and Linux.",
+    "stream_telegram_videos_while_they": "Stream Telegram videos while they download, seek instantly, play MKV with subtitles and autoplay the next episode on Android TV, phones, Windows, Mac and Linux.",
     "on_this_page": "On this page",
     "tmplayer_on_a_phone_listing": "TMPlayer on a phone, listing demo chats: Cinema Lounge, Anime Vault, Study Hub, Nature Docs, Weekend Clips and Family Archive.",
     "a_dense_grid_of_demo": "A grid of demo films and a show from a Telegram chat on a phone, each poster carrying its year, size and resolution.",
@@ -739,7 +739,7 @@
     "on_this_page": "On this page"
   },
   "faq": {
-    "tmplayer_faq_unofficial_telegram_video": "TMPlayer FAQ: unofficial Telegram video player questions answered",
+    "tmplayer_faq_unofficial_telegram_video": "TMPlayer FAQ: Telegram video player questions answered",
     "questions": "{a1}{span1}Questions",
     "questions__a1": "Home",
     "questions_2": "Questions, {em1}",
@@ -855,7 +855,7 @@
     "the_containers_video_and_audio": "The containers, video and audio codecs and subtitles TMPlayer plays: Media3 with FFmpeg decoders on Android TV and phones, mpv on Windows, macOS and Linux."
   },
   "translate": {
-    "help_translate_tmplayer_tmplayer": "Help translate TMPlayer | TMPlayer",
+    "help_translate_tmplayer_tmplayer": "Help translate TMPlayer into your language",
     "translate": "{a1}{span1}Translate",
     "translate__a1": "Home",
     "help_tmplayer": "Help {em1} TMPlayer",
@@ -906,7 +906,7 @@
     "a_new_language": "A new language",
     "naming_the_language_and_saying": "{a1} naming the language and saying whether you can review it. A language goes on the site once almost all of it is translated.",
     "naming_the_language_and_saying__a1": "Open an issue",
-    "tmplayer_speaks_21_languages_on": "TMPlayer speaks 21 languages, on the website and in the app, machine translated first and corrected by the people who use them. Here is how to fix a word or add a language.",
+    "tmplayer_speaks_21_languages_on": "TMPlayer speaks 21 languages on the website and in the app, machine translated first and corrected by its users. Here is how to fix a word or add a language.",
     "help_translate_tmplayer": "Help translate TMPlayer"
   },
   "guide_android_tv": {
@@ -995,7 +995,7 @@
     "stuck_on_a_step_lists": "Stuck on a step? {a1} lists the usual causes. On Android TV or Google TV instead? {a2}.",
     "stuck_on_a_step_lists__a1": "If it goes wrong",
     "stuck_on_a_step_lists__a2": "Read the Android TV guide",
-    "watch_the_videos_in_your": "Watch the videos in your own Telegram chats on a Fire TV Stick, Fire TV Cube or Fire TV Edition television with TMPlayer, a free player you install with the Downloader app.",
+    "watch_the_videos_in_your": "Watch the videos in your Telegram chats on a Fire TV Stick, Fire TV Cube or Fire TV Edition TV with TMPlayer, a free player installed with the Downloader app.",
     "how_to_watch_telegram_videos_2": "How to watch Telegram videos on Fire TV"
   },
   "guide_no_casting": {
@@ -1035,7 +1035,7 @@
     "tmplayer_also_runs_on_windows__a1": "Downloads",
     "tmplayer_does_not_provide_media": "TMPlayer does not provide media: it plays what is already in your own chats and channels. {a1} cover what it can and cannot see.",
     "tmplayer_does_not_provide_media__a1": "The questions",
-    "watch_telegram_videos_on_a": "Watch Telegram videos on a television without casting or mirroring your phone: a player on the TV itself signs in to your account and streams the videos in your chats.",
+    "watch_telegram_videos_on_a": "Watch Telegram videos on a TV without casting or mirroring your phone: a player on the TV signs in to your account and streams the videos in your chats.",
     "telegram_on_your_tv_without_2": "Telegram on your TV without casting"
   },
   "js": {

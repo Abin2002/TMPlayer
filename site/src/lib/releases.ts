@@ -149,7 +149,7 @@ export function notesHtml(r: Release, indent: string): string {
 /** The notes cut at a word to a search snippet's length, for the description tag. */
 export function summary(r: Release, limit = 155): string {
   const text = plain(r.notes);
-  if (!text) return `TMPlayer ${r.version}, released ${humanDate(r.date)}: the files and notes on GitHub.`;
+  if (!text) return `TMPlayer ${r.version}, released ${humanDate(r.date)}, a release of the free Telegram video player. No notes were written for it; its files are on GitHub.`;
   const chars = Array.from(text);
   if (chars.length <= limit) return text;
   const cut = chars.slice(0, limit).join('');
