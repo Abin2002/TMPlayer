@@ -706,7 +706,7 @@ fun MediaGridScreen(
                             state = listState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = padding,
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(if (touch) 2.dp else 12.dp),
                         ) {
                             if (metaNotice) item(key = "meta-notice") { metaNoticeCard() }
                             if (course != null || loadedOnly) item(key = "course") { courseHeader() }
@@ -2018,12 +2018,12 @@ private fun MediaRow(
         onLongClick = onLongClick,
         selected = selected,
         art = { artModifier ->
-            MediaArt(item, watched, artModifier, compact = touch, selected = selected, finished = finished, poster = true)
+            MediaArt(item, watched, artModifier, compact = touch, selected = selected, finished = finished, poster = true, thumb = touch)
         },
     ) {
         Text(
             SeriesShelf.tileTitle(item),
-            style = MaterialTheme.typography.titleLarge,
+            style = if (touch) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
             color = Tone.text,
             // Three lines here, unlike the tile: this is the arrangement someone picked in order
             // to read the name, and a row can afford the height a grid cell cannot.
@@ -2066,7 +2066,7 @@ private fun SeriesRow(
     ) {
         Text(
             series.title,
-            style = MaterialTheme.typography.titleLarge,
+            style = if (touch) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
             color = Tone.text,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
@@ -2137,10 +2137,22 @@ private fun ListRow(
     }
 
     if (touch) {
-        Card(
-            shape = RoundedCornerShape(Corner.Medium),
-            border = if (selected == true) BorderStroke(SELECTED_EDGE, Tone.accent) else null,
-            modifier = modifier.fillMaxWidth().longPressable(onClick, onLongClick),
+        // No card: rows of a small poster and its words read as a list on spacing alone, and a
+        // card around each one only boxed the text in. A ticked row is tinted and edged instead.
+        Box(
+            modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Corner.Medium))
+                .then(
+                    if (selected == true) {
+                        Modifier
+                            .background(Tone.accent.copy(alpha = 0.12f))
+                            .border(SELECTED_EDGE, Tone.accent, RoundedCornerShape(Corner.Medium))
+                    } else {
+                        Modifier
+                    },
+                )
+                .longPressable(onClick, onLongClick),
         ) {
             row()
         }
@@ -2188,12 +2200,18 @@ private fun MediaArt(
     badge: (@Composable () -> Unit)? = null,
     /** A film's 2:3 poster: see [PosterArt]. */
     poster: Boolean = false,
+    /**
+     * A list row's small thumbnail, beside a title and a facts line that already say the name and
+     * the quality: no quality badge and no name drawn on a generated cover, either of which would
+     * fill most of a picture this size.
+     */
+    thumb: Boolean = false,
 ) {
     val s = LocalStrings.current
     val named = rememberCover(item)
     // The phone's small card writes the name under the art, and a name on the cover as well
     // would be the same words twice a few dp apart, cut short in both places.
-    val cover = if (compact && !poster) remember(named) { named.copy(title = "") } else named
+    val cover = if ((compact && !poster) || thumb) remember(named) { named.copy(title = "") } else named
     val inset = if (compact) 4.dp else TileBadgeInset
     Box(modifier) {
         if (poster) {
@@ -2253,7 +2271,7 @@ private fun MediaArt(
         when {
             badge != null -> Box(Modifier.align(Alignment.TopEnd).padding(inset)) { badge() }
             // Only on its own: two chips across a narrow poster would meet in the middle.
-            poster && quality != null && waiting == null && !item.onDevice && !finished -> TileBadge(quality, Modifier.align(Alignment.TopEnd).padding(inset))
+            poster && !thumb && quality != null && waiting == null && !item.onDevice && !finished -> TileBadge(quality, Modifier.align(Alignment.TopEnd).padding(inset))
         }
 
         // Where playback stopped, as a line laid on the foot of the picture. Only with a saved
@@ -2405,7 +2423,7 @@ internal val TOUCH_EDGE = 16.dp
 private const val LIST_LEAD = 4
 
 private val ROW_POSTER_WIDTH = 104.dp
-private val TOUCH_ROW_POSTER_WIDTH = 76.dp
+private val TOUCH_ROW_POSTER_WIDTH = 56.dp
 
 /**
  * How much of a list row the art takes on a phone, where a width in dp cannot work: the same row
