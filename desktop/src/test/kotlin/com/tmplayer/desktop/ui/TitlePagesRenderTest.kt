@@ -51,6 +51,17 @@ class TitlePagesRenderTest {
     private val episodes = (1..8).map { n ->
         item(600L + n, 4, "Harbour.Lights.S0${if (n > 5) 2 else 1}E%02d.1080p.WEB-DL.mkv".format(if (n > 5) n - 5 else n), 0xFF2AABEE.toInt(), 1_790_000_000 + n, mini = n != 3)
     }
+    /** The same film in two more copies, and the first three episodes again in 720p. */
+    private val bunnyCopies = listOf(
+        bunny,
+        item(501, 2, "Big.Buck.Bunny.2008.720p.BluRay.x264.mkv", 0xFF46A758.toInt()).copy(sizeBytes = 610L * 1024 * 1024, width = 1280, height = 720),
+        item(502, 2, "Big.Buck.Bunny.2008.2160p.HEVC.mkv", 0xFF46A758.toInt()).copy(sizeBytes = 2_900L * 1024 * 1024, width = 3840, height = 2160),
+    )
+    private val bunnyFolded = bunny.copy(versions = bunnyCopies)
+    private val smallEpisodes = (1..3).map { n ->
+        item(650L + n, 4, "Harbour.Lights.S01E%02d.720p.WEB-DL.mkv".format(n), 0xFF2AABEE.toInt(), 1_780_000_000 + n)
+            .copy(sizeBytes = 350L * 1024 * 1024, width = 1280, height = 720)
+    }
     private val lecture = item(700, 9, "Lecture_07_-_Compilers_and_parsers.mp4", 0xFFF5A524.toInt(), mini = false)
 
     private fun rows(resume: Boolean): List<DetailRow> = listOfNotNull(
@@ -79,6 +90,12 @@ class TitlePagesRenderTest {
                 save("detail-film-wide-$theme.png", render(960, 540, dark) {
                     MediaDetailScreen(bunny, "Film Club", null, false, rows(resume = false), onClose = {})
                 })
+                save("detail-versions-tall-$theme.png", render(412, 1100, dark) {
+                    MediaDetailScreen(bunnyFolded, "Film Club", null, false, rows(resume = false), onClose = {}, onOpenItem = {})
+                })
+                save("detail-versions-wide-$theme.png", render(960, 540, dark) {
+                    MediaDetailScreen(bunnyFolded, "Film Club", null, false, rows(resume = false), onClose = {}, onOpenItem = {})
+                })
             }
             save("detail-episode-tall.png", render(412, 1400, true) {
                 MediaDetailScreen(episodes[4], "Weekend series", null, true, rows(resume = false), onClose = {})
@@ -103,7 +120,7 @@ class TitlePagesRenderTest {
 
     @Test
     fun seriesPages() = kotlinx.coroutines.runBlocking {
-        val show = (SeriesShelf.arrange(episodes).first() as ShelfEntry.Show).series
+        val show = (SeriesShelf.arrange(episodes + smallEpisodes).first() as ShelfEntry.Show).series
         val online = MetaFixture.install("on")
         try {
             warm(online, episodes[4])

@@ -99,6 +99,11 @@ class TileRenderTest {
         video("Mountains.2021.2160p.HDR.mkv"),
         video("Birthday highlights.mp4", art = false),
         video("Low.Tide.2022.720p.WEB.mkv", art = false),
+        // One film in three copies, and a name no lookup will know, so the poster has to read
+        // well on its own.
+        video("Ponniyin.Selvan.Part.Two.2023.Tamil.1080p.WEB-DL.x265.mkv"),
+        video("Ponniyin.Selvan.Part.Two.2023.Tamil.720p.HDRip.x264.mkv"),
+        video("Ponniyin.Selvan.Part.Two.2023.Tamil.480p.mkv", art = false),
     )
 
     @Test
