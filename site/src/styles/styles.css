@@ -2976,6 +2976,9 @@ a[lang="ar"] { font-family: "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif; 
 .kao-bar::before { content: ""; flex: none; width: 44px; }
 .kao-bar p { flex: 1 1 auto; text-align: center; padding: 6px 0; }
 .kao-bar a { white-space: nowrap; }
+/* On a narrow phone a long translation of the link ("О кампании Keep Android Open") would push the
+   close button off the screen, so there it may wrap like the sentence before it. */
+@media (max-width: 399px) { .kao-bar a { white-space: normal; } }
 .kao-bar .kao-close:focus-visible { outline-color: var(--surface); }
 
 /* Phones get the same bar rather than a card pinned over the bottom quarter of the first screen,

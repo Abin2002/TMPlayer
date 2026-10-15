@@ -90,7 +90,7 @@
       ]
     },
     {
-      "source": "/(og\\.png|icon-512\\.png|favicon\\.svg|logo\\.svg)",
+      "source": "/(og\\.png|icon-512\\.png|favicon\\.svg|favicon\\.ico|logo\\.svg)",
       "headers": [
         {
           "key": "Cache-Control",
