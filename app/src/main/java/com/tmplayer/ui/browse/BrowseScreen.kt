@@ -2023,18 +2023,37 @@ private fun ChipRow(
     // whichever chip happens to sit nearest the row the focus left.
     val chosen = remember { FocusRequester() }
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val rowModifier = Modifier
+        .fillMaxWidth()
+        .onFocusChanged { onFocus(it.hasFocus) }
+        .then(if (touch || chips.none { it.selected }) Modifier else Modifier.focusRestorer(chosen))
+        .horizontalScroll(rememberScrollState())
+        .padding(
+            start = insets.start,
+            end = insets.end,
+            top = if (touch) 4.dp else 8.dp,
+            bottom = if (touch) 8.dp else 20.dp,
+        )
+    // On a phone one pill slides from chip to chip behind the row (ChipSlider); a television's
+    // chips keep their own fills, which its focus colours replace.
+    if (touch) {
+        ChipSliderBox(rowModifier) { ChipRowItems(chips, insets, chosen, touch, rtl, Modifier) }
+    } else {
+        ChipRowItems(chips, insets, chosen, touch, rtl, rowModifier)
+    }
+}
+
+@Composable
+private fun ChipRowItems(
+    chips: List<ChipSpec>,
+    insets: BrowseInsets,
+    chosen: FocusRequester,
+    touch: Boolean,
+    rtl: Boolean,
+    modifier: Modifier,
+) {
     Row(
-        Modifier
-            .fillMaxWidth()
-            .onFocusChanged { onFocus(it.hasFocus) }
-            .then(if (touch || chips.none { it.selected }) Modifier else Modifier.focusRestorer(chosen))
-            .horizontalScroll(rememberScrollState())
-            .padding(
-                start = insets.start,
-                end = insets.end,
-                top = if (touch) 4.dp else 8.dp,
-                bottom = if (touch) 8.dp else 20.dp,
-            ),
+        modifier,
         horizontalArrangement = Arrangement.spacedBy(if (touch) 8.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -2099,10 +2118,12 @@ internal fun TouchFilterChip(
     // A pick cross-fades the chip into its chosen colours rather than switching them, and the chip
     // gives a little under the finger, as the bar's buttons do.
     val press = remember { MutableInteractionSource() }
-    // Material's own filter chip colours, which its chip switches between at once.
+    // Material's own filter chip colours, which its chip switches between at once. In a row with
+    // a sliding pill behind it ([ChipSliderBox]) the pill is the chosen chip's fill.
     val scheme = androidx.compose.material3.MaterialTheme.colorScheme
+    val sliding = LocalChipSlider.current != null
     val container by androidx.compose.animation.animateColorAsState(
-        if (selected) scheme.secondaryContainer else Color.Transparent,
+        if (selected && !sliding) scheme.secondaryContainer else Color.Transparent,
         Motion.standard(Motion.Fast),
         label = "chipBack",
     )
@@ -2134,7 +2155,7 @@ internal fun TouchFilterChip(
             selectedLeadingIconColor = glyph,
         ),
         interactionSource = press,
-        modifier = Modifier.pressScale(press).then(
+        modifier = Modifier.chipSlot(selected).pressScale(press).then(
             description?.let { words -> Modifier.semantics { contentDescription = words } } ?: Modifier,
         ),
     )
@@ -2145,15 +2166,18 @@ internal fun TouchFilterChip(
  */
 @Composable
 internal fun TouchChipStrip(content: @Composable RowScope.() -> Unit) {
-    Row(
+    ChipSliderBox(
         Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
             .padding(start = TouchInsets.start, end = TouchInsets.end, top = 4.dp, bottom = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        content = content,
-    )
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            content = content,
+        )
+    }
 }
 
 /**

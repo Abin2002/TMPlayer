@@ -1,5 +1,8 @@
 package com.tmplayer.ui.browse
 
+import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.graphicsLayer
+import com.tmplayer.ui.components.riseIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -273,6 +276,28 @@ private fun CopyChooser(
         rows.groupBy { (copy, _) -> VideoCopies.heightOf(copy)?.let { copy.copyQuality() } }.entries
             .sortedBy { it.key == null }
     }
+    // A choice made by a finger is shown before the list goes: the tint and the mark move to the
+    // copy picked, and the sheet closes a moment later, so the hand sees what it chose.
+    val touch = isTouch()
+    val still = com.tmplayer.ui.components.rememberLessMotion()
+    val tick = com.tmplayer.ui.components.rememberStepTick()
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var picked by remember(item.id) { mutableStateOf<String?>(null) }
+    val choose: (MediaItem) -> Unit = { copy ->
+        if (picked == null) {
+            if (!touch || still) {
+                onChoose(copy)
+            } else {
+                picked = copy.id
+                tick()
+                scope.launch {
+                    kotlinx.coroutines.delay(CHOICE_SHOWN_MS)
+                    onChoose(copy)
+                }
+            }
+        }
+    }
+    var row = 0
     Column {
         if (header) Text(
             SeriesShelf.tileTitle(item),
@@ -319,8 +344,10 @@ private fun CopyChooser(
                         s.detailCopyStarted.takeIf { same.any(started) },
                         postedAgain(same, s),
                     ).joinToString("  ·  "),
-                    chosen = same.any { it.id == item.id },
-                    onClick = { onChoose(copy) },
+                    chosen = picked?.let { id -> same.any { it.id == id } } ?: same.any { it.id == item.id },
+                    onClick = { choose(copy) },
+                    // The rows arrive one after another, top first, as the sheet comes up.
+                    modifier = Modifier.riseIn(row++, enabled = touch),
                 )
             }
         }
@@ -329,23 +356,31 @@ private fun CopyChooser(
 
 /** One copy in [CopyChooser]: a radio, its size as the title, and what it is under that. */
 @Composable
-private fun CopyOption(copy: MediaItem, title: String, what: String, facts: String, chosen: Boolean, onClick: () -> Unit) {
+private fun CopyOption(
+    copy: MediaItem,
+    title: String,
+    what: String,
+    facts: String,
+    chosen: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val s = LocalStrings.current
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val shape = RoundedCornerShape(Corner.Medium)
+    // The chosen tint fades from the old copy to the new one rather than switching rows.
+    val tint by androidx.compose.animation.animateColorAsState(
+        if (chosen) Tone.accent.copy(alpha = 0.12f) else Color.Transparent,
+        com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+        label = "copyTint",
+    )
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(
-                when {
-                    focused -> Tone.focusFill
-                    chosen -> Tone.accent.copy(alpha = 0.12f)
-                    else -> Color.Transparent
-                },
-            )
+            .background(if (focused) Tone.focusFill else tint)
             .focusRing(focused, shape)
             .semantics {
                 selected = chosen
@@ -378,9 +413,31 @@ private fun RadioMark(chosen: Boolean, focused: Boolean, modifier: Modifier = Mo
             .border(2.dp, if (chosen) (if (focused) ink else Tone.accent) else ink.copy(alpha = 0.5f), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        if (chosen) Box(Modifier.size(10.dp).clip(CircleShape).background(if (focused) ink else Tone.accent))
+        // The dot grows into the ring chosen and shrinks out of the one left, so the choice is
+        // seen to move; with less motion asked for it only appears.
+        val still = com.tmplayer.ui.components.rememberLessMotion()
+        val dot by androidx.compose.animation.core.animateFloatAsState(
+            if (chosen) 1f else 0f,
+            if (still) androidx.compose.animation.core.snap() else if (chosen) com.tmplayer.ui.components.Micro.release() else com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+            label = "radioDot",
+        )
+        if (dot > 0f) {
+            Box(
+                Modifier
+                    .size(10.dp)
+                    .graphicsLayer {
+                        scaleX = dot
+                        scaleY = dot
+                    }
+                    .clip(CircleShape)
+                    .background(if (focused) ink else Tone.accent),
+            )
+        }
     }
 }
+
+/** How long a copy picked by a finger shows as chosen before the sheet closes. */
+private const val CHOICE_SHOWN_MS = 220L
 
 /**
  * For a file posted more than once: "in 2 chats" where the posts are in different chats, else

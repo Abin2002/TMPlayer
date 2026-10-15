@@ -3,6 +3,12 @@ package com.tmplayer.ui.components
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.scaleIn
+import androidx.compose.ui.graphics.TransformOrigin
+import com.tmplayer.ui.theme.Motion
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -95,11 +101,24 @@ fun BoxScope.TopMessageHost() {
         delay(SHOWN_MS)
         shown = null
     }
+    // It drops in from the top on a soft spring, grows the last bit from its top edge as it lands,
+    // and goes back up the way it came; with less motion asked for it only fades.
+    val still = rememberLessMotion()
     AnimatedVisibility(
         visible = shown != null,
         modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 8.dp, start = 24.dp, end = 24.dp),
-        enter = fadeIn() + slideInVertically { -it / 2 },
-        exit = fadeOut() + slideOutVertically { -it / 2 },
+        enter = if (still) {
+            fadeIn(Motion.standard(Motion.Fast))
+        } else {
+            fadeIn(Motion.standard(Motion.Fast)) +
+                slideInVertically(spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow)) { -it } +
+                scaleIn(Motion.standard(Motion.Normal), initialScale = 0.9f, transformOrigin = TransformOrigin(0.5f, 0f))
+        },
+        exit = if (still) {
+            fadeOut(Motion.standard(Motion.Fast))
+        } else {
+            fadeOut(Motion.standard(Motion.Fast)) + slideOutVertically(Motion.standard(Motion.Normal)) { -it / 2 }
+        },
     ) {
         val shape = RoundedCornerShape(50)
         Box(
@@ -111,7 +130,10 @@ fun BoxScope.TopMessageHost() {
                 .padding(horizontal = 18.dp, vertical = 10.dp)
                 .semantics { liveRegion = LiveRegionMode.Polite },
         ) {
-            Text(last, style = MaterialTheme.typography.bodyMedium, color = Tone.text, textAlign = TextAlign.Center)
+            // A newer message replacing one on screen cross-fades into it, the pill staying put.
+            Crossfade(targetState = last, animationSpec = Motion.standard(Motion.Fast), label = "topMessage") { words ->
+                Text(words, style = MaterialTheme.typography.bodyMedium, color = Tone.text, textAlign = TextAlign.Center)
+            }
         }
     }
 }
