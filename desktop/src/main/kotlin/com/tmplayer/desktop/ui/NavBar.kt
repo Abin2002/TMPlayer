@@ -312,8 +312,8 @@ private fun ProfileButton(
     onClick: () -> Unit,
 ) {
     val s = LocalStrings.current
-    // The first name, as short as the other names on the bar.
-    val name = account?.name?.substringBefore(' ').orEmpty()
+    // "You", as the phone's bar says: short like the other names, and never blank.
+    val name = s.navYou
     BarTooltip(s.navProfile, null) {
         NavCell(
             label = name,
