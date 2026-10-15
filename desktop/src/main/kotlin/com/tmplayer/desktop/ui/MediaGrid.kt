@@ -622,7 +622,8 @@ internal fun MediaTile(
     val key = SettingsStore.progressKey(item.chatId, item.messageId)
     val point: WatchPoint? = progress[key]
     val watched by state.watched.watched.collectAsState(initial = emptyMap())
-    val finished = key in watched
+    // A split film is watched once its last piece is.
+    val finished = SettingsStore.progressKey(item.watchedBy.chatId, item.watchedBy.messageId) in watched
     Poster(
         state = state,
         nav = nav,

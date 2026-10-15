@@ -658,7 +658,7 @@ fun MediaGridScreen(
                                             watched = watchProgress[
                                                 SettingsStore.progressKey(item.chatId, item.messageId),
                                             ],
-                                            finished = SettingsStore.progressKey(item.chatId, item.messageId) in watchedVideos,
+                                            finished = SettingsStore.progressKey(item.watchedBy.chatId, item.watchedBy.messageId) in watchedVideos,
                                             dense = dense,
                                             poster = shelved.key in posterKeys,
                                             selected = if (selecting) selected.containsKey(item.id) else null,
@@ -721,7 +721,7 @@ fun MediaGridScreen(
                                         watched = watchProgress[
                                             SettingsStore.progressKey(item.chatId, item.messageId),
                                         ],
-                                        finished = SettingsStore.progressKey(item.chatId, item.messageId) in watchedVideos,
+                                        finished = SettingsStore.progressKey(item.watchedBy.chatId, item.watchedBy.messageId) in watchedVideos,
                                         selected = if (selecting) selected.containsKey(item.id) else null,
                                         onClick = { if (selecting) toggle(item) else if (detailFirst) showingDetailsOf = item else onPlay(item) },
                                         onLongClick = if (selecting) null else {
@@ -795,7 +795,7 @@ fun MediaGridScreen(
                             watched = watchProgress[
                                 SettingsStore.progressKey(item.chatId, item.messageId),
                             ],
-                            finished = SettingsStore.progressKey(item.chatId, item.messageId) in watchedVideos,
+                            finished = SettingsStore.progressKey(item.watchedBy.chatId, item.watchedBy.messageId) in watchedVideos,
                             onSetWatched = { onSetWatched(item, it) },
                             onPlay = { onPlay(item) },
                             onSelectVideos = if (item.chatId != chatId) null else ({

@@ -82,6 +82,12 @@ data class MediaItem(
      */
     val extra: ExtraKind? = null,
 ) {
+    /**
+     * The file whose Watched mark stands for this tile: a split film's last piece, since the film
+     * is watched only once that is, and the file itself otherwise.
+     */
+    val watchedBy: MediaItem get() = parts.lastOrNull()?.takeIf { parts.size > 1 } ?: this
+
     /** This copy with the same [versions] list, for moving from one version to another. */
     fun asVersion(of: MediaItem): MediaItem = if (of.versions.isEmpty()) this else copy(versions = of.versions)
 

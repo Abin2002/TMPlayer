@@ -30,6 +30,16 @@ class SeriesShelfTest {
     private fun files(entries: List<ShelfEntry>) = entries.filterIsInstance<ShelfEntry.File>().map { it.item.fileName }
 
     @Test
+    fun `a split film is watched by its last piece`() {
+        val cd2 = video("Coast Run 2014 720p CD2.avi", size = 700L * 1024 * 1024)
+        val cd1 = video("Coast Run 2014 720p CD1.avi", size = 700L * 1024 * 1024)
+        val film = SeriesShelf.arrange(listOf(cd2, cd1)).filterIsInstance<ShelfEntry.File>().single().item
+        assertEquals(listOf(cd1.id, cd2.id), film.parts.map { it.id })
+        assertEquals(cd2.id, film.watchedBy.id)
+        assertEquals(cd2.id, cd2.watchedBy.id)
+    }
+
+    @Test
     fun `a file of two episodes ticks both when it is watched`() {
         val double = video("Harbour.Notes.S01E01E02.1080p.mkv")
         val e02 = video("Harbour.Notes.S01E02.720p.mkv")
