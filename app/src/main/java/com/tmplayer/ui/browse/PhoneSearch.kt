@@ -1,5 +1,21 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.theme.Motion
+import com.tmplayer.ui.components.riseIn
+import com.tmplayer.ui.components.rememberLessMotion
+import com.tmplayer.ui.components.pressScale
+import com.tmplayer.ui.components.Micro
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.material3.ripple
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -220,14 +236,16 @@ internal fun PhoneSearchScreen(
                     modifier = Modifier.weight(1f).then(fieldModifier).focusRequester(focus),
                 )
                 // Where the bar's magnifier was: the way back out.
+                val closePress = remember { MutableInteractionSource() }
                 Box(
                     Modifier
                         .size(BAR_HEIGHT - 8.dp)
+                        .pressScale(closePress)
                         .shadow(6.dp, CircleShape)
                         .clip(CircleShape)
                         .background(FloatingTone.menu)
                         .border(floatingBorder(), CircleShape)
-                        .clickable(role = Role.Button, onClick = onClose),
+                        .clickable(interactionSource = closePress, indication = ripple(), role = Role.Button, onClick = onClose),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(TmIcons.Close, contentDescription = s.searchClose, tint = Tone.text, modifier = Modifier.size(22.dp))
@@ -263,17 +281,28 @@ private fun SearchField(
     modifier: Modifier,
 ) {
     val s = LocalStrings.current
+    // While the field has the keyboard its edge and its magnifier take the accent, softly, so the
+    // eye finds where the typing goes.
+    var focused by remember { mutableStateOf(false) }
+    val edge by animateColorAsState(
+        if (focused) Tone.accent.copy(alpha = 0.6f) else Color.Transparent,
+        Motion.standard(Motion.Fast),
+        label = "searchEdge",
+    )
+    val glass by animateColorAsState(if (focused) Tone.accent else Tone.muted, Motion.standard(Motion.Fast), label = "searchGlass")
     Row(
         modifier
+            .onFocusChanged { focused = it.hasFocus }
             .height(BAR_HEIGHT - 4.dp)
             .shadow(6.dp, CircleShape)
             .clip(CircleShape)
             .background(FloatingTone.menu)
             .border(floatingBorder(), CircleShape)
+            .border(1.5.dp, edge, CircleShape)
             .padding(start = 16.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(TmIcons.Search, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(22.dp))
+        Icon(TmIcons.Search, contentDescription = null, tint = glass, modifier = Modifier.size(22.dp))
         Spacer(Modifier.width(10.dp))
         BasicTextField(
             value = text,
@@ -293,16 +322,41 @@ private fun SearchField(
                 }
             },
         )
-        when {
-            text.text.isNotEmpty() -> IconButton(onClick = { onText(TextFieldValue("")) }) {
-                Icon(TmIcons.Close, contentDescription = s.browseClearSearch, tint = Tone.muted)
-            }
-            onVoice != null -> IconButton(onClick = onVoice) {
-                Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice, tint = Tone.muted)
+        // Clear grows in as the first letter is typed and the microphone comes back as the last
+        // goes, one turning into the other rather than blinking.
+        val end = when {
+            text.text.isNotEmpty() -> FieldEnd.Clear
+            onVoice != null -> FieldEnd.Voice
+            else -> FieldEnd.None
+        }
+        val still = rememberLessMotion()
+        AnimatedContent(
+            targetState = end,
+            transitionSpec = {
+                if (still) {
+                    fadeIn(Motion.standard(Motion.Fast)) togetherWith fadeOut(Motion.standard(Motion.Fast))
+                } else {
+                    (fadeIn(Motion.standard(Motion.Fast)) + scaleIn(Micro.release(), initialScale = 0.5f)) togetherWith
+                        (fadeOut(Motion.standard(Motion.Fast)) + scaleOut(Motion.standard(Motion.Fast), targetScale = 0.5f))
+                }
+            },
+            label = "searchFieldEnd",
+        ) { shown ->
+            when (shown) {
+                FieldEnd.Clear -> IconButton(onClick = { onText(TextFieldValue("")) }) {
+                    Icon(TmIcons.Close, contentDescription = s.browseClearSearch, tint = Tone.muted)
+                }
+                FieldEnd.Voice -> IconButton(onClick = { onVoice?.invoke() }) {
+                    Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice, tint = Tone.muted)
+                }
+                FieldEnd.None -> Unit
             }
         }
     }
 }
+
+/** What sits at the field's end: Clear while there is text, else the microphone where there is one. */
+private enum class FieldEnd { Clear, Voice, None }
 
 /** What an empty search offers: recent chats, recent searches, and videos to carry on with. */
 @OptIn(ExperimentalFoundationApi::class)
@@ -341,7 +395,13 @@ private fun androidx.compose.foundation.lazy.LazyListScope.emptySearch(
     if (recent.isNotEmpty()) {
         item(key = "recent-h") {
             val s = LocalStrings.current
-            Row(Modifier.fillMaxWidth().padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier
+                    .then(if (com.tmplayer.ui.theme.Motion.reduced) Modifier else Modifier.animateItem())
+                    .fillMaxWidth()
+                    .padding(end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Box(Modifier.weight(1f)) { Heading(s.browseRecentSearches) }
                 TextButton(onClick = onClearAll) { Text(s.searchClearRecent) }
             }
@@ -350,6 +410,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.emptySearch(
             val s = LocalStrings.current
             Row(
                 Modifier
+                    // A search taken off folds away and the rest close up; one added fades in.
+                    .then(if (com.tmplayer.ui.theme.Motion.reduced) Modifier else Modifier.animateItem())
                     .fillMaxWidth()
                     .combinedClickable(onClick = { onPick(entry) }, onLongClick = { onRemove(entry) })
                     .padding(start = 16.dp, end = 4.dp)
@@ -442,7 +504,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.results(
         }
         shown.isEmpty() && !state.busy && state.error == null -> item(key = "none") {
             val s = LocalStrings.current
-            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Rises in a beat after the search settles, rather than snapping in over the skeletons.
+            Column(
+                Modifier.fillMaxWidth().riseIn().padding(horizontal = 16.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Icon(TmIcons.SearchRemove, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(32.dp))
                 val hidden = state.hiddenBy
                 if (hidden.isNotEmpty()) {

@@ -1,5 +1,10 @@
 package com.tmplayer.ui.browse
 
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -13,7 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import com.tmplayer.ui.components.TouchPullRefresh
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
@@ -393,7 +398,9 @@ private fun PhonePageFrame(
     Scaffold(
         modifier = if (pinned) Modifier else Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            if (pinned) {
+            if (section.isHome) {
+                // No title: Home's featured carousel is the top of the page.
+            } else if (pinned) {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
@@ -413,8 +420,21 @@ private fun PhonePageFrame(
             }
         },
     ) { padding ->
+        // Home runs up under the status bar, and is told how far (LocalUnderStatusBar).
+        val direction = androidx.compose.ui.platform.LocalLayoutDirection.current
+        val framePadding = if (section.isHome) {
+            PaddingValues(
+                start = padding.calculateStartPadding(direction),
+                end = padding.calculateEndPadding(direction),
+                bottom = padding.calculateBottomPadding(),
+            )
+        } else {
+            padding
+        }
+        val under = if (section.isHome) padding.calculateTopPadding() else 0.dp
         // The page's count under the title, where a phone's app bar puts a subtitle.
-        Column(Modifier.fillMaxSize().padding(padding)) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalUnderStatusBar provides under) {
+        Column(Modifier.fillMaxSize().padding(framePadding)) {
             if (count > 0) {
                 Text(
                     countLabel(section, count),
@@ -435,15 +455,32 @@ private fun PhonePageFrame(
                         pulling = false
                     }
                 }
-                PullToRefreshBox(
+                val pull = rememberPullToRefreshState()
+                TouchPullRefresh(
                     isRefreshing = pulling,
                     onRefresh = { pulling = true; refresh() },
                     modifier = Modifier.fillMaxSize(),
+                    state = pull,
+                    // On Home the spinner comes down below the status bar, not under it.
+                    indicator = {
+                        PullToRefreshDefaults.Indicator(
+                            state = pull,
+                            isRefreshing = pulling,
+                            modifier = Modifier.align(androidx.compose.ui.Alignment.TopCenter).padding(top = under),
+                        )
+                    },
                 ) { pane(section) }
             }
         }
+        }
     }
 }
+
+/**
+ * How far a page without a title (Home on a phone, whose featured carousel is its top) runs up
+ * under the status bar: the bar's height there, zero on every other page.
+ */
+internal val LocalUnderStatusBar = androidx.compose.runtime.compositionLocalOf { 0.dp }
 
 private const val HOME_PAGE = 0
 private const val CHATS_PAGE = 1

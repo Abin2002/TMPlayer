@@ -553,6 +553,7 @@ class PlayerControls(
             container.animate().cancel()
             container.visibility = View.VISIBLE
             container.animate().alpha(1f).setDuration(FADE_IN_MS).start()
+            slideEdges(showing = true)
             onVisibility(true)
             renderPlayPause()
             renderProgress()
@@ -600,7 +601,43 @@ class PlayerControls(
         container.animate().alpha(0f).setDuration(FADE_MS)
             .withEndAction { if (!shown) container.visibility = View.GONE }
             .start()
+        slideEdges(showing = false)
         onVisibility(false)
+    }
+
+    /**
+     * On a phone the controls do not only fade: the top bar drops the last few dp into place from
+     * above and the row at the foot rises the same into place from below, and they go back the way
+     * they came, so the controls read as arriving from the edges they live on. The row's children
+     * move rather than the row, since the corner offers measure themselves against the children
+     * less their own translation. A television (the remote is already on the bar), Reduce motion
+     * and the system's animations off keep the plain fade.
+     */
+    private fun slideEdges(showing: Boolean) {
+        if (isTv || com.tmplayer.ui.theme.Motion.reduced || !android.animation.ValueAnimator.areAnimatorsEnabled()) return
+        val travel = SLIDE_DP * container.resources.displayMetrics.density
+        // Motion.Standard's curve, as the Compose screens ease.
+        val ease = android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f)
+        val duration = if (showing) FADE_IN_MS else FADE_MS
+        val edges = buildList {
+            add(topBar to -travel)
+            val row = cluster as? android.view.ViewGroup
+            if (row != null) for (i in 0 until row.childCount) add(row.getChildAt(i) to travel)
+        }
+        for ((view, from) in edges) {
+            view.animate().cancel()
+            if (showing) view.translationY = from
+            view.animate().translationY(if (showing) 0f else from).setDuration(duration).setInterpolator(ease).start()
+        }
+    }
+
+    /** Puts the edges back where they rest, for a hide with no fade. */
+    private fun settleEdges() {
+        topBar.animate().cancel()
+        topBar.translationY = 0f
+        (cluster as? android.view.ViewGroup)?.let { row ->
+            for (i in 0 until row.childCount) row.getChildAt(i).let { it.animate().cancel(); it.translationY = 0f }
+        }
     }
 
     /** For picture in picture, where a fade would play out in a thumbnail nobody is touching. */
@@ -611,6 +648,7 @@ class PlayerControls(
         container.animate().cancel()
         container.alpha = 0f
         container.visibility = View.GONE
+        settleEdges()
         onVisibility(false)
     }
 
@@ -734,6 +772,9 @@ class PlayerControls(
 
         /** The row arrives a touch slower than it leaves, so it settles in rather than pops. */
         const val FADE_IN_MS = 250L
+
+        /** How far the top bar and the row at the foot travel as they fade in and out, in dp. */
+        const val SLIDE_DP = 10f
 
         /** Long enough to read the row and reach for something on it, short enough to get out. */
         const val TIMEOUT_MS = 3_500L

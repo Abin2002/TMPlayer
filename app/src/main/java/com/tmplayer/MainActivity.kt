@@ -108,6 +108,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.CompositionLocalProvider
+import com.tmplayer.ui.components.noteTouchOrigin
 import com.tmplayer.ui.theme.Motion
 import com.tmplayer.ui.theme.rememberReducedMotion
 import com.tmplayer.ui.browse.KeyPresses
@@ -308,7 +309,8 @@ class MainActivity : ComponentActivity() {
                 androidx.compose.runtime.CompositionLocalProvider(
                     com.tmplayer.ui.components.LocalSheetHost provides com.tmplayer.ui.components.PhoneSheetHost,
                 ) {
-                    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()) {
+                    // Where each tap lands, for a page it opens to grow out of (see PageMotion).
+                    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().noteTouchOrigin()) {
                         Root()
                         // Messages at the top, clear of the floating bar and the buttons at the foot.
                         TopMessageHost()
@@ -1206,7 +1208,12 @@ private fun Root() {
 
         // Home's rows, built here rather than inside Home so the TV home screen channels follow
         // them whichever screen is open.
-        val homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater, watchedVideos.values)
+        // On a phone Recently added is the featured carousel at the top of Home, worth having
+        // with one starred chat; elsewhere it is a row, which with one would repeat that chat's.
+        val homeRows = rememberHomeRows(
+            homeViewModel, chats, favorites, continueWatching, watchLater, watchedVideos.values,
+            recentMinStarred = if (FormFactor.isTv(context)) com.tmplayer.data.HomeRows.RECENT_MIN_STARRED else 1,
+        )
         val tvChannelsOn by settings.tvChannels.collectAsStateWithLifecycle(initialValue = null)
         TvHomeChannels(
             model = homeViewModel,

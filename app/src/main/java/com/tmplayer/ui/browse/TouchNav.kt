@@ -273,7 +273,9 @@ internal fun TouchNavHost(
             AnimatedVisibility(
                 visible = barShown,
                 modifier = Modifier.align(Alignment.BottomCenter),
-                enter = if (reduced) fadeIn(Motion.standard(0)) else slideInVertically(Motion.standard(Motion.Normal)) { it } + fadeIn(Motion.standard(Motion.Fast)),
+                // Back up on a spring, a touch of give as it lands, and away on a plain ease: the bar
+                // answers a pull at once and leaves without fuss.
+                enter = if (reduced) fadeIn(Motion.standard(0)) else slideInVertically(BAR_SPRING) { it } + fadeIn(Motion.standard(Motion.Fast)),
                 exit = if (reduced) fadeOut(Motion.standard(0)) else slideOutVertically(Motion.standard(Motion.Normal)) { it } + fadeOut(Motion.standard(Motion.Fast)),
             ) {
                 val shown = lastShown[0]
@@ -464,7 +466,7 @@ internal class BarVisibility {
 
 /** Whether TalkBack, or anything else exploring the screen by touch, is on, followed as it changes. */
 @Composable
-private fun rememberTouchExploration(): Boolean {
+internal fun rememberTouchExploration(): Boolean {
     val context = LocalContext.current
     val manager = remember(context) { context.getSystemService(AccessibilityManager::class.java) }
     var on by remember { mutableStateOf(manager?.isTouchExplorationEnabled == true) }
@@ -545,7 +547,16 @@ private fun FloatingBar(
                         IntOffset((slot.value * step).roundToInt(), 0)
                     }
                     .size(BUTTON_WIDTH, BUTTON_HEIGHT)
-                    .graphicsLayer { alpha = shown }
+                    .graphicsLayer {
+                        alpha = shown
+                        // Stretched a little along the way while it springs to another button and
+                        // round again as it lands: it reads as moving, not as being redrawn.
+                        if (!reduced) {
+                            val stretch = (kotlin.math.abs(slot.velocity) * STRETCH_PER_SPEED).coerceAtMost(STRETCH_MAX)
+                            scaleX = 1f + stretch
+                            scaleY = 1f - stretch / 3f
+                        }
+                    }
                     .clip(HIGHLIGHT_SHAPE)
                     .background(Tone.accent.copy(alpha = 0.16f)),
             )
@@ -830,6 +841,16 @@ private val POPOVER_ROW = 44.dp
 /** The popover's rows before the divider: the four lists and Settings; Update comes after it. */
 private const val POPOVER_LISTS = 5
 private val POPOVER_SHAPE = RoundedCornerShape(20.dp)
+
+/** The bar coming back: quick, with a little give as it lands. */
+private val BAR_SPRING = androidx.compose.animation.core.spring<IntOffset>(
+    dampingRatio = 0.82f,
+    stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow,
+)
+
+/** How much the highlight stretches per button a second it is moving, and the most it stretches. */
+private const val STRETCH_PER_SPEED = 0.025f
+private const val STRETCH_MAX = 0.14f
 
 /** How far a list has to be pushed up before the bar gets out of the way, so a nudge does not. */
 private const val HIDE_AFTER_PX = 48f

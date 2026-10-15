@@ -106,11 +106,14 @@ private fun SeriesPage(
     chatTitle: String?,
 ) {
     val touch = isTouch()
+    // On a phone the page grows out of the show's tile, and folds back towards it.
+    val motion = com.tmplayer.ui.components.rememberPageMotion(onDismiss)
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = motion.close,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
         if (ScreenshotBarsOverride.hidden) HideDialogBars()
+        motion.Frame {
         Box(Modifier.fillMaxSize().background(Tone.background)) {
             SeriesPanel(
                 series = series,
@@ -130,11 +133,12 @@ private fun SeriesPage(
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
                 // A remote has Back on it; a finger needs something to press.
-                onBack = onDismiss.takeIf { touch },
+                onBack = motion.close.takeIf { touch },
                 barInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top),
             )
             // Over the page, which is a window of its own above the app's.
             TopMessageHost()
+        }
         }
     }
 }
