@@ -183,6 +183,7 @@ internal fun HomeRowsView(
         )
         return
     }
+    RegisterRefresh(state, onRefresh)
     val header: @Composable () -> Unit = {
         PageHeader(
             BrowseTab.Home.heading,
@@ -220,7 +221,7 @@ internal fun HomeRowsView(
                 LazyColumn(
                     Modifier.fillMaxSize().homeEndScrolls(list),
                     state = list,
-                    contentPadding = PaddingValues(bottom = 24.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
                     items(rows, key = { it.key }, contentType = { it::class }) { row ->
@@ -335,7 +336,7 @@ private fun RowPage(
             LazyColumn(
                 Modifier.fillMaxSize().homeEndScrolls(list),
                 state = list,
-                contentPadding = PaddingValues(start = side, end = side, top = 8.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(start = side, end = side, top = 8.dp, bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 sections.forEachIndexed { at, (width, cells) ->

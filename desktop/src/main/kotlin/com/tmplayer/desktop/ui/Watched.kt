@@ -119,7 +119,7 @@ fun WatchedPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                     LazyVerticalGrid(
                         columns = GridCells.Adaptive(state.posterWidth),
                         state = grid,
-                        contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp),
+                        contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                         modifier = Modifier.fillMaxSize().navKeys(nav) { current.size },
@@ -213,7 +213,7 @@ fun WatchLaterPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                     LazyVerticalGrid(
                         columns = GridCells.Adaptive(state.posterWidth),
                         state = grid,
-                        contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp),
+                        contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                         modifier = Modifier.fillMaxSize().navKeys(nav) { current.size },

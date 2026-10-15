@@ -21,6 +21,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -127,6 +129,8 @@ import com.tmplayer.ui.browse.CourseHeader
 import com.tmplayer.ui.browse.rememberRecordItem
 import com.tmplayer.ui.nav.BackHandler
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.isMetaPressed
 import androidx.compose.ui.input.pointer.isShiftPressed
@@ -160,14 +164,19 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
     val maxSize by state.settings.maxSizeBytes.collectAsState(initial = null)
     val min = minSize
     val max = maxSize
-    Column(Modifier.fillMaxSize()) {
+    // The chat's own bar at the foot takes the floating bar's place; the lists clear it.
+    CompositionLocalProvider(com.tmplayer.ui.components.LocalBottomChrome provides ChatBarClearance) {
+    Box(Modifier.fillMaxSize()) {
         // Whether this chat's grid was last films and shows, so its placeholders take the shape of
         // the cards about to arrive, poster or wide, when a topic or a refresh loads it again.
         var postersLast by remember(chat.id) { mutableStateOf(false) }
         if (min == null || max == null) {
-            PageHeader(title = chat.title, subtitlePending = true)
-            VideoGridSkeleton(state.posterWidth, posters = false)
-            return@Column
+            Column(Modifier.fillMaxSize()) {
+                Spacer(Modifier.height(ChatTopClearance))
+                VideoGridSkeleton(state.posterWidth, posters = false)
+            }
+            ChatTopChrome(state, chat)
+            return@Box
         }
         val model = rememberViewModel(Triple(chat.id, min, max)) { MediaListViewModel(chat.id, min, max, onSearched = { state.settings.addRecentSearch(it) }, downloadedIds = { DownloadIndex.presentIds(state.settings) }, topicMemory = state.settings.topicMemory()) }
         val ui by model.state.collectAsState()
@@ -179,7 +188,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         // A show's seasons and episodes take the page, as they do from Home; Close comes back here.
         openSeries?.let { shown ->
             SeriesPage(state, shown, rememberSeriesWatch(state), onClose = { openSeries = null })
-            return@Column
+            return@Box
         }
         // The grid's keyboard focus, once the grid exists; the search field's Down arrow enters it.
         var gridNav by remember(chat.id) { mutableStateOf<KeyboardNav?>(null) }
@@ -192,36 +201,54 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         val sort by remember(chat.id) { state.settings.videoSort(chat.id) }.collectAsState(initial = com.tmplayer.data.VideoSort.DEFAULT)
         val sortScope = rememberCoroutineScope()
 
-        PageHeader(
-            title = chat.title,
-            // The count's line is always there: a placeholder while a topic loads, nothing in it
-            // after an error, so moving between topics never moves the page under the header.
-            subtitle = when (val shown = ui) {
-                is UiState.Content -> s.browseVideosCount(shown.value.items.size)
-                is UiState.Empty -> s.browseVideosCount(0)
-                is UiState.Error -> ""
-                is UiState.Loading -> null
-            },
-            subtitlePending = ui is UiState.Loading,
-            leading = {
-                IconButton(onClick = { state.closeChat() }) {
-                    Icon(TmIcons.ArrowBack, contentDescription = s.browseBackToChats)
-                }
-                ChatAvatar(chat.miniThumbnail, chat.photoFileId, chat.title, 40.dp)
-            },
-            actions = {
-                SearchField(query, { query = it }, s.browseSearchChat, state.searchFocus, Modifier.width(300.dp), onDown = { gridNav?.focus(0) })
-                PosterSizeStep(state)
-                VideoSortMenu(sort) { picked -> sortScope.launch { state.settings.setVideoSort(chat.id, picked) } }
-                IconButton(onClick = { model.load() }) { Icon(TmIcons.Refresh, contentDescription = s.commonRefresh) }
-            },
-        )
+        // The search folds into the bar at the foot: "/", Ctrl+F and the bar's magnifier open it.
+        var searching by remember(chat.id) { mutableStateOf(false) }
+        DisposableEffect(state, chat.id) {
+            state.searchOpener = {
+                searching = true
+                runCatching { state.searchFocus.requestFocus() }
+            }
+            onDispose { state.searchOpener = null }
+        }
+        LaunchedEffect(searching) {
+            if (!searching) return@LaunchedEffect
+            androidx.compose.runtime.withFrameNanos { }
+            runCatching { state.searchFocus.requestFocus() }
+        }
+        // F5 and Ctrl+R, the desktop's pull to refresh: Telegram has new posts since the listing ran.
+        RegisterRefresh(state) { model.load() }
+        val favourites by state.settings.favorites.collectAsState(initial = emptySet())
+        val favourite = chat.id in favourites
         val recent by state.settings.recentSearches.collectAsState(initial = emptyList())
         val scope = rememberCoroutineScope()
-        if (query.isBlank()) {
-            RecentSearchRow(recent, onPick = { query = it }, onClear = { scope.launch { state.settings.clearRecentSearches() } })
+        val chatBar: @Composable () -> Unit = {
+            ChatBar(
+                state = state,
+                searching = searching,
+                query = query,
+                onQuery = { query = it },
+                onOpenSearch = { searching = true },
+                onCloseSearch = {
+                    query = ""
+                    searching = false
+                },
+                onSearchDown = { gridNav?.focus(0) },
+                recent = recent,
+                onClearRecent = { scope.launch { state.settings.clearRecentSearches() } },
+                favourite = favourite,
+                // The star says it, filled or not; a message about it would only repeat that.
+                onToggleFavourite = { scope.launch { state.settings.toggleFavorite(chat.id) } },
+                sort = sort,
+                onSort = { picked -> sortScope.launch { state.settings.setVideoSort(chat.id, picked) } },
+                onRefresh = { model.load() },
+            )
         }
         val topicBar by model.topics.collectAsState()
+        // With no topics over it, the grid starts at the top of the page and scrolls up under
+        // Back and the chat's name, which float over it as on the phone.
+        val underChrome = topicBar == null
+        Column(Modifier.fillMaxSize()) {
+        if (!underChrome || ui !is UiState.Content) Spacer(Modifier.height(ChatTopClearance))
         topicBar?.let { bar ->
             com.tmplayer.ui.browse.TopicTabs(bar, model::selectTopic, Modifier.padding(bottom = 12.dp), edge = 24.dp)
         }
@@ -232,7 +259,9 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             val back = gridReturn
             val grid = rememberLazyGridState(back?.first ?: 0, back?.second ?: 0)
             LaunchedEffect(grid) { gridReturn = null }
+            val rowsGrid = rememberLazyGridState()
             LoadMoreNearEnd(grid, enabled = !content.endReached && !content.loadingMore) { model.loadMore() }
+            LoadMoreNearEnd(rowsGrid, enabled = !content.endReached && !content.loadingMore) { model.loadMore() }
             val ad = content.sponsored?.messages?.firstOrNull()
             // A show as one poster that opens its seasons, and copies of one film (720p, 1080p,
             // HEVC) as one poster with the rest a pick in its details. While searching, every
@@ -325,8 +354,17 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                     }
                 },
                 loadingMore = content.loadingMore,
+                rows = state.chatRows,
+                rowsGrid = rowsGrid,
+                topPadding = if (underChrome) ChatTopClearance else 8.dp,
+                bottomBar = chatBar,
             )
         }
+        }
+        ChatTopChrome(state, chat)
+        // While there is no grid to carry it (loading, empty, an error), the bar stands on its own.
+        if (ui !is UiState.Content) Box(Modifier.align(Alignment.BottomCenter)) { chatBar() }
+    }
     }
 }
 
@@ -355,12 +393,21 @@ internal fun VideoGrid(
      * move one column at a time; the videos after the posters are then smaller 16:9 cards.
      */
     posters: Set<String> = emptySet(),
+    /** The videos as rows of a small poster and the name ([Poster]'s row), in as many columns as fit. */
+    rows: Boolean = false,
+    /** The rows' own scroll, kept apart from the tiles' so each arrangement keeps its place. */
+    rowsGrid: LazyGridState = rememberLazyGridState(),
+    /** Room over the first row: more where the page's own buttons float over the grid's top. */
+    topPadding: Dp = 8.dp,
+    /** The page's own bar at the foot, which a selection's bar takes the place of while it is up. */
+    bottomBar: (@Composable () -> Unit)? = null,
 ) {
     val watch = if (series.isEmpty()) null else rememberSeriesWatch(state)
     // Every file on its own, episodes included: a chat lists what was posted, one by one.
     val cells by rememberUpdatedState(items)
     val headerItems by rememberUpdatedState(if (header != null) 1 else 0)
-    val nav = rememberKeyboardNav(remember(grid) { GridSurface(grid, { headerItems }, { cells.size }) })
+    val shown = if (rows) rowsGrid else grid
+    val nav = rememberKeyboardNav(remember(shown) { GridSurface(shown, { headerItems }, { cells.size }) })
     LaunchedEffect(nav) { onNav(nav) }
     val history by state.settings.downloadHistory.collectAsState(initial = emptyList())
     val index = remember(history) { history.associateBy { "${it.chatId}:${it.messageId}" } }
@@ -368,12 +415,28 @@ internal fun VideoGrid(
     BackHandler(enabled = selection.active) { selection.clear() }
     Box(Modifier.fillMaxSize()) {
       CompositionLocalProvider(LocalGridSelection provides selection, LocalDownloadIndex provides index) {
+        // Rows to tiles and back cross-fade rather than cut, so the switch reads as the same videos
+        // laid out again; each arrangement keeps its own scroll.
+        androidx.compose.animation.Crossfade(
+            targetState = rows,
+            animationSpec = Motion.standard(if (Motion.reduced) 0 else Motion.Normal),
+            label = "chatLayout",
+        ) { rows ->
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(if (posters.isEmpty()) state.posterWidth else state.posterWidth * POSTER_SHARE),
-            state = grid,
-            contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            columns = when {
+                rows -> GridCells.Adaptive(ROW_MIN_WIDTH)
+                posters.isEmpty() -> GridCells.Adaptive(state.posterWidth)
+                else -> GridCells.Adaptive(state.posterWidth * POSTER_SHARE)
+            },
+            state = if (rows) rowsGrid else grid,
+            contentPadding = PaddingValues(
+                start = if (rows) 16.dp else 24.dp,
+                end = if (rows) 24.dp else 32.dp,
+                top = topPadding,
+                bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current,
+            ),
+            horizontalArrangement = Arrangement.spacedBy(if (rows) 12.dp else 16.dp),
+            verticalArrangement = Arrangement.spacedBy(if (rows) 2.dp else 20.dp),
             modifier = Modifier.fillMaxSize().navKeys(nav) { cells.size },
         ) {
             if (header != null) {
@@ -382,9 +445,9 @@ internal fun VideoGrid(
             itemsIndexed(items, key = { _, it -> "media-${it.id}" }) { index, item ->
                 val show = series[item.id]
                 if (show != null && watch != null) {
-                    SeriesPoster(show, watch, onOpen = { onOpenSeries(show) }, nav = nav, index = index, poster = item.id in posters)
+                    SeriesPoster(show, watch, onOpen = { onOpenSeries(show) }, nav = nav, index = index, poster = item.id in posters, row = rows)
                 } else {
-                    MediaTile(state, item, chatTitle, nav, index, badge = badge(item), poster = item.id in posters)
+                    MediaTile(state, item, chatTitle, nav, index, badge = badge(item), poster = item.id in posters, row = rows)
                 }
             }
             if (loadingMore) {
@@ -395,15 +458,18 @@ internal fun VideoGrid(
                 }
             }
         }
+        }
       }
         VerticalScrollbar(
-            rememberScrollbarAdapter(grid),
+            rememberScrollbarAdapter(shown),
             Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(vertical = 4.dp),
         )
         // The selection bar takes the bottom centre while it is up.
-        if (!selection.active) ScrollToTop(grid)
+        if (!selection.active) ScrollToTop(shown)
         if (selection.active) {
             SelectionBar(state, selection, items, chatTitle, index, Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp))
+        } else if (bottomBar != null) {
+            Box(Modifier.align(Alignment.BottomCenter)) { bottomBar() }
         }
     }
 }
@@ -480,7 +546,7 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                         // A quarter wider than a poster: the card carries its title on the art.
                         columns = GridCells.Adaptive(state.posterWidth * CONTINUE_WIDTH),
                         state = grid,
-                        contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp),
+                        contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                         modifier = Modifier.fillMaxSize().navKeys(nav) { records.size },
@@ -614,6 +680,8 @@ internal fun MediaTile(
     badge: (@Composable () -> Unit)? = null,
     /** A film's 2:3 poster card ([SeriesShelf.isFilm]); the caller says, as only it knows the grid. */
     poster: Boolean = false,
+    /** A row of a chat's list: see [Poster]'s row. */
+    row: Boolean = false,
 ) {
     val s = LocalStrings.current
     // The grid's selection, when there is one, so the pane can start one with this poster.
@@ -646,10 +714,12 @@ internal fun MediaTile(
                 ),
             )
         },
+        row = row,
         art = {
-            if (poster) {
+            if (poster || row) {
                 val meta = com.tmplayer.ui.online.rememberMeta(item, showOnly = true)
-                PosterArt(item.miniThumbnail, item.thumbnailFileId, rememberCover(item), meta?.posterUrl, Modifier.fillMaxSize())
+                // A row's poster is small: no name set on a generated cover, the title is beside it.
+                PosterArt(item.miniThumbnail, item.thumbnailFileId, rememberCover(item), meta?.posterUrl, Modifier.fillMaxSize(), compactCover = row)
             } else {
                 // On Home, the show's or the film's own picture over the frame once a match arrives.
                 com.tmplayer.ui.online.OnlineArt(item, Modifier.fillMaxSize()) {
@@ -659,10 +729,10 @@ internal fun MediaTile(
         },
         subtitle = buildString {
             // A poster leads with the film's year and leaves the quality to the chip on its art.
-            if (poster) MediaName.parse(item.nameForParsing, item.caption).year?.let { append(it).append("  ·  ") }
+            if (poster || row) MediaName.parse(item.nameForParsing, item.caption).year?.let { append(it).append("  ·  ") }
             if (!poster && item.durationSec > 0) append(MediaMapper.formatDuration(item.durationSec)).append("  ·  ")
             append(if (item.versions.size > 1) s.detailVersions(item.versions.size) else MediaMapper.formatSize(item.sizeBytes))
-            if (!poster) item.qualityTags.firstOrNull()?.let { append("  ·  ").append(it) }
+            if (!poster || row) item.qualityTags.firstOrNull()?.let { append("  ·  ").append(it) }
             if (WatchedWords.showsWatched(point?.fraction, finished)) append("  ·  ").append(s.watchedBadge)
         },
     )
@@ -715,6 +785,11 @@ internal fun Poster(
      * Null keeps the menu, as Continue watching and Watched do.
      */
     onDetails: ((refocus: () -> Unit) -> Unit)? = null,
+    /**
+     * A row of a chat's list rather than a tile: a small 2:3 poster at the start with no badge on
+     * it, the name and the facts beside it, no card round it; a tint and an edge when ticked.
+     */
+    row: Boolean = false,
 ) {
     val s = LocalStrings.current
     val interaction = remember { MutableInteractionSource() }
@@ -774,8 +849,7 @@ internal fun Poster(
         }
     }
 
-    Column(
-        Modifier
+    val behaviour = Modifier
             .hoverable(interaction)
             .onPointerEvent(PointerEventType.Press) { event ->
                 val macContext = IS_MAC && event.keyboardModifiers.isCtrlPressed && event.buttons.isPrimaryPressed
@@ -826,7 +900,62 @@ internal fun Poster(
                 } else {
                     Modifier.clickable(interactionSource = interaction, indication = null, onClick = play)
                 },
-            ),
+            )
+    if (row) {
+        val shape = RoundedCornerShape(Corner.Medium)
+        Row(
+            behaviour
+                .fillMaxWidth()
+                .clip(shape)
+                .background(
+                    when {
+                        selected -> Tone.accent.copy(alpha = 0.12f)
+                        lifted || focused || menu -> Tone.surfaceHigh
+                        else -> Color.Transparent
+                    },
+                )
+                .then(if (selected || focused) Modifier.border(Focus.Ring, Tone.accent, shape) else Modifier)
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // The poster alone: the title and the facts beside it already say what a badge would.
+            Box(Modifier.width(ROW_POSTER).aspectRatio(2f / 3f).clip(RoundedCornerShape(Corner.Small))) {
+                art()
+                if (progress != null && progress > 0f) ProgressLine(progress, Modifier.align(Alignment.BottomCenter))
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                val title = remember(item) { SeriesShelf.tileTitle(item) }
+                Text(title, style = MaterialTheme.typography.titleSmall, color = Tone.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, style = MaterialTheme.typography.labelMedium, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            if (lifted || focused || menu) {
+                Surface(
+                    shape = CircleShape,
+                    color = Tone.accent,
+                    modifier = Modifier.size(36.dp).clickable { state.openPlayer(item, startFromBeginning = false) },
+                ) {
+                    Icon(TmIcons.PlaySolid, contentDescription = s.playerPlay, tint = Tone.onAccent, modifier = Modifier.padding(8.dp))
+                }
+            }
+            Box {
+                if (lifted || focused || menu) {
+                    IconButton(onClick = { openMenu() }) { Icon(TmIcons.MoreVert, contentDescription = s.commonMore) }
+                } else {
+                    Spacer(Modifier.size(48.dp))
+                }
+                if (details == null) {
+                    TileMenu(state, item, chatTitle, expanded = menu, onDismiss = {
+                        menu = false
+                        if (focused || nav?.current == index) runCatching { requester.requestFocus() }
+                    }, extra = extraMenu, watchedToggle = if (markToggle) finished else null, fileMenu = fileMenu)
+                }
+            }
+        }
+        return
+    }
+    Column(
+        behaviour,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Box(
@@ -1208,6 +1337,12 @@ private const val LOAD_AHEAD = 8
 
 /** A film or show poster's width, as a share of the toolbar's poster size step. */
 private const val POSTER_SHARE = 0.75f
+
+/** The poster of a row in a chat's list: small, since the row is for reading the name. */
+internal val ROW_POSTER = 56.dp
+
+/** The narrowest a column of rows gets before the list drops to fewer columns. */
+private val ROW_MIN_WIDTH = 440.dp
 
 /** How much wider a Continue watching card is than a poster. */
 private const val CONTINUE_WIDTH = 1.25f

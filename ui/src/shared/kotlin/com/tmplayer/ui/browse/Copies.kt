@@ -173,7 +173,9 @@ internal fun Versions(
             com.tmplayer.ui.components.BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, wide)
         }
         sheet.Sheet(onDismiss = { open = false }, fullScreen = true) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            // As tall as the list, so a host that is not the whole screen (the desktop's centred
+            // card) is no taller than it needs to be; a full screen sheet fills the rest itself.
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 CopiesHeader(
                     source = source,
                     title = SeriesShelf.tileTitle(item),

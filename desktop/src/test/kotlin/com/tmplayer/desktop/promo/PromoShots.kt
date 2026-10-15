@@ -58,7 +58,7 @@ import com.tmplayer.desktop.ui.PageHeader
 import com.tmplayer.desktop.ui.PosterSizeStep
 import com.tmplayer.desktop.ui.SearchField
 import com.tmplayer.desktop.ui.ShellState
-import com.tmplayer.desktop.ui.Sidebar
+import com.tmplayer.desktop.ui.NavFrame
 import com.tmplayer.desktop.ui.SignInScreen
 import com.tmplayer.desktop.ui.VideoGrid
 import com.tmplayer.desktop.ui.rememberKeyboardNav
@@ -544,11 +544,7 @@ class PromoShots {
 
     @Composable
     private fun withSidebar(page: @Composable () -> Unit) {
-        Row(Modifier.fillMaxSize()) {
-            Sidebar(shell, null, emptyList())
-            VerticalDivider(color = Tone.outline)
-            Box(Modifier.weight(1f).fillMaxHeight()) { page() }
-        }
+        NavFrame(shell, null, null) { page() }
     }
 
     private fun both(name: String, before: () -> Unit = {}, darkOnly: Boolean = false, width: Int = WIDTH, height: Int = HEIGHT, content: @Composable () -> Unit) {

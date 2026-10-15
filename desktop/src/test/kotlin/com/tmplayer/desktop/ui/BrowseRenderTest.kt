@@ -645,11 +645,7 @@ class BrowseRenderTest {
         ImageComposeScene(WIDTH, height, Density(1f)) {
             TmMaterialTheme(dark = dark) {
                 Surface(Modifier.fillMaxSize(), color = Tone.background) {
-                    Row(Modifier.fillMaxSize()) {
-                        Sidebar(shell, update, folders)
-                        VerticalDivider(color = Tone.outline)
-                        Box(Modifier.weight(1f).fillMaxHeight()) { page() }
-                    }
+                    NavFrame(shell, update, null) { page() }
                 }
             }
         }.use { scene ->

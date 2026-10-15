@@ -128,22 +128,27 @@ fun ChatsPage(
     }
 
     Column(Modifier.fillMaxSize()) {
+        // The phone pulls the list down to refresh it; here F5, Ctrl+R and the small button do.
+        val refresh = {
+            val waiting = model.refreshUnlessRateLimited()
+            if (waiting > 0) toast(s.chatsRefreshWait(waiting))
+        }
+        RegisterRefresh(state, refresh)
+        // The page's name alone, centred and large, as on the phone: the chips under it already
+        // say which slice of the list this is, and a line under the name said it again.
         PageHeader(
             title = if (favouritesOnly) s.navFavourites else section.heading,
-            subtitle = if (favouritesOnly) s.chatsFavouritesBlurb else section.blurb,
+            centred = true,
             actions = {
                 SearchField(
                     query = query,
                     onQuery = { query = it },
                     placeholder = s.chatsSearch,
                     focus = state.searchFocus,
-                    modifier = Modifier.width(320.dp),
+                    modifier = Modifier.widthIn(min = 160.dp, max = 280.dp),
                     onDown = { nav.focus(0) },
                 )
-                IconButton(onClick = {
-                    val waiting = model.refreshUnlessRateLimited()
-                    if (waiting > 0) toast(s.chatsRefreshWait(waiting))
-                }) {
+                IconButton(onClick = refresh) {
                     Icon(TmIcons.Refresh, contentDescription = s.commonRefresh)
                 }
             },
@@ -311,8 +316,11 @@ internal fun ChatList(
             // the heading and the chips above them. The rows sit 2 dp apart, so a hovered row and
             // the focused one beside it never run into one block.
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                horizontal = pageMargin() - ChatRowInset,
-                vertical = 8.dp,
+                start = pageMargin() - ChatRowInset,
+                end = pageMargin() - ChatRowInset,
+                top = 8.dp,
+                // Clear of the floating bar, so the last chat can be scrolled out from under it.
+                bottom = 8.dp + com.tmplayer.ui.components.LocalBottomChrome.current,
             ),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {

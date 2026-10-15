@@ -449,7 +449,7 @@ private fun Actions(
 }
 
 /** The everyday buttons a phone keeps under Play; see [Actions]' headlineOnly and [MoreActions]. */
-private val HEADLINE_ACTIONS = setOf(
+internal val HEADLINE_ACTIONS = setOf(
     DetailAction.MarkWatched,
     DetailAction.MarkUnwatched,
     DetailAction.AddWatchLater,

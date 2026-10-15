@@ -2,6 +2,9 @@ package com.tmplayer.desktop.ui
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -92,6 +95,8 @@ internal fun SeriesPoster(
     index: Int = 0,
     /** A 2:3 poster card, as in a chat's grid of films and shows. */
     poster: Boolean = false,
+    /** A row of a chat's list, as a video's row is drawn ([Poster]'s row). */
+    row: Boolean = false,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
@@ -99,8 +104,7 @@ internal fun SeriesPoster(
     val scale by animateFloatAsState(if (hovered || focused) 1.05f else 1f)
     val requester = remember { FocusRequester() }
     val progress = watch.progress(series)
-    Column(
-        Modifier
+    val behaviour = Modifier
             .hoverable(interaction)
             .then(if (nav != null) Modifier.navCell(nav, index, requester) else Modifier.focusRequester(requester))
             .onFocusChanged { focused = it.isFocused }
@@ -112,7 +116,41 @@ internal fun SeriesPoster(
                     false
                 }
             }
-            .clickable(interactionSource = interaction, indication = null, onClick = onOpen),
+            .clickable(interactionSource = interaction, indication = null, onClick = onOpen)
+    if (row) {
+        val shape = androidx.compose.foundation.shape.RoundedCornerShape(com.tmplayer.ui.theme.Corner.Medium)
+        androidx.compose.foundation.layout.Row(
+            behaviour
+                .fillMaxWidth()
+                .clip(shape)
+                .background(if (hovered || focused) Tone.surfaceHigh else androidx.compose.ui.graphics.Color.Transparent)
+                .then(if (focused) Modifier.border(com.tmplayer.ui.theme.Focus.Ring, Tone.accent, shape) else Modifier)
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier
+                    .width(ROW_POSTER)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(com.tmplayer.ui.theme.Corner.Small)),
+            ) {
+                SeriesArt(series, progress, Modifier.fillMaxWidth(), compact = true, poster = true)
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(series.title, style = MaterialTheme.typography.titleSmall, color = Tone.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(
+                    listOfNotNull(seriesSummary(series), seriesProgressLine(progress)).joinToString("  ·  "),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (progress.watched > 0) Tone.accent else Tone.muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        return
+    }
+    Column(
+        behaviour,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Box(

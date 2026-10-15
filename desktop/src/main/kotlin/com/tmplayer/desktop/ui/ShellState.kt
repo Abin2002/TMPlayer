@@ -40,6 +40,7 @@ import com.tmplayer.ui.browse.BrowseSection
 import com.tmplayer.ui.browse.BrowseTab
 import com.tmplayer.ui.browse.NavGroup
 import com.tmplayer.ui.browse.navGroupOf
+import com.tmplayer.ui.browse.onChatsPage
 import com.tmplayer.ui.nav.BackStack
 import com.tmplayer.ui.nav.isBackKey
 
@@ -303,8 +304,29 @@ class ShellState(
 
     /** Puts the cursor in the page's search field. Quietly nothing when the page has none. */
     fun focusSearch() {
+        // A chat keeps its search folded into the bar at its foot; opening it is the page's own.
+        searchOpener?.let {
+            it()
+            return
+        }
         runCatching { searchFocus.requestFocus() }
     }
+
+    /** Set by a page whose search field is not on screen until asked for (a chat's bar). */
+    var searchOpener: (() -> Unit)? = null
+
+    /**
+     * The page's own refresh, for F5 and Ctrl+R (Cmd+R): the phone pulls a list down to refresh it,
+     * which a mouse and a keyboard have no word for. Each page that can refresh sets it while it
+     * is on screen ([RegisterRefresh]); null where there is nothing to refresh.
+     */
+    var refreshAction: (() -> Unit)? = null
+
+    /** A chat's videos as rows of a small poster and the name, rather than tiles. */
+    var chatRows by mutableStateOf(false)
+
+    /** Whether the profile popover over the floating bar is open. */
+    var profileOpen by mutableStateOf(false)
 
     /**
      * Ends the app, set by the window. Ctrl+Q (Cmd+Q) reaches it from any page: a tiling window
@@ -339,6 +361,21 @@ class ShellState(
             command && event.key == Key.Comma -> {
                 go(Destination.Settings)
                 true
+            }
+            // The floating bar's first two places, by the number of their place on it.
+            command && event.key == Key.One -> {
+                go(Destination.Home)
+                true
+            }
+            command && event.key == Key.Two -> {
+                if (destination != Destination.Chats || openChat != null) {
+                    showChats(if (chatSection.onChatsPage) chatSection else BrowseSection.of(BrowseTab.Chats))
+                }
+                true
+            }
+            (command && event.key == Key.R) || (event.key == Key.F5 && !event.isAltPressed) -> {
+                refreshAction?.invoke()
+                refreshAction != null
             }
             else -> false
         }

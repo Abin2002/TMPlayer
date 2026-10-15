@@ -187,6 +187,12 @@ fun MediaDetailPanel(
     /** Another copy chosen from the film's copies list; see [MediaDetailScreen]. */
     onPickCopy: ((MediaItem) -> Unit)? = onOpenItem,
     copyStarted: (MediaItem) -> Boolean = { false },
+    /**
+     * Only the everyday buttons under Play (watched, watch later, download, the trailer), and the
+     * rest (the chat, the corrections, share, open elsewhere) centred at the foot of the panel, as
+     * a phone's video page has them. The desktop's pane asks for it; the TV keeps one row.
+     */
+    actionsAtFoot: Boolean = false,
 ) {
     val s = LocalStrings.current
     val corrections by com.tmplayer.data.VideoCorrections.state.collectAsState()
@@ -318,10 +324,10 @@ fun MediaDetailPanel(
             HeroPill(primary.label, primary.icon, primary.onSelect, Modifier.fillMaxWidth(), focusRequester = firstAction)
         }
         val others = buildList {
-            addAll(rows.drop(1))
+            addAll(rows.drop(1).filter { !actionsAtFoot || it.action in HEADLINE_ACTIONS })
             extras?.trailer?.let { trailer -> add(DetailRow(DetailAction.Play, s.metadataTrailer, TrailerIcon, onSelect = { trailers.open(trailer) })) }
             // Posters and overviews are off: one button to turn them on from here, as Settings can.
-            if (metadataOff) {
+            if (metadataOff && !actionsAtFoot) {
                 add(DetailRow(DetailAction.Play, s.metadataTurnOn, TmIcons.Info, s.metadataTurnOnDetail, onSelect = { online?.setEnabled(true) }))
             }
         }
@@ -350,6 +356,25 @@ fun MediaDetailPanel(
             MetaCastRow(extras.cast)
             MoreLikeThisRow(meta, extras, onOpenItem)
             if (metaOverview == null && (extras.cast.isNotEmpty() || extras.genres.isNotEmpty())) MetaCredit(meta)
+        }
+
+        if (actionsAtFoot) {
+            // Things done now and then, out of the way of Play.
+            val rest = buildList {
+                addAll(rows.drop(1).filter { it.action !in HEADLINE_ACTIONS })
+                if (metadataOff) {
+                    add(DetailRow(DetailAction.Play, s.metadataTurnOn, TmIcons.Info, s.metadataTurnOnDetail, onSelect = { online?.setEnabled(true) }))
+                }
+            }
+            if (rest.isNotEmpty()) {
+                FlowRow(
+                    Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    rest.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s)) }
+                }
+            }
         }
     }
 }
