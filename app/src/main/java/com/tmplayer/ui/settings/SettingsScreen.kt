@@ -280,6 +280,7 @@ fun SettingsScreen(
     val autoplayNext by settings.autoplayNext.collectAsStateWithLifecycle(initialValue = true)
     val resumeRewindMs by settings.resumeRewindMs.collectAsStateWithLifecycle(initialValue = ResumeRewind.DEFAULT_MS)
     val detailFirst by settings.detailFirst.collectAsStateWithLifecycle(initialValue = true)
+    val rememberSearches by settings.rememberSearches.collectAsStateWithLifecycle(initialValue = true)
     val wifiOnly by settings.wifiOnlyDownloads.collectAsStateWithLifecycle(initialValue = false)
     val saveMobileData by settings.saveMobileData.collectAsStateWithLifecycle(initialValue = false)
     val trickplayOn by settings.trickplay.collectAsStateWithLifecycle(initialValue = true)
@@ -672,6 +673,16 @@ fun SettingsScreen(
                         icon = TmIcons.Info,
                         checked = detailFirst,
                         onToggle = { scope.launch { settings.setDetailFirst(!detailFirst) } },
+                    )
+                }
+                item {
+                    // Off forgets the searches already kept, which is what switching it off is for.
+                    ToggleRow(
+                        title = s.settingsRememberSearches,
+                        subtitle = if (rememberSearches) s.settingsRememberSearchesOn else s.settingsRememberSearchesOff,
+                        icon = TmIcons.History,
+                        checked = rememberSearches,
+                        onToggle = { scope.launch { settings.setRememberSearches(!rememberSearches) } },
                     )
                 }
                 item {

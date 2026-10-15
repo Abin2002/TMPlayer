@@ -152,6 +152,7 @@ fun SettingsPage(
     var confirm by remember { mutableStateOf<Confirm?>(null) }
     val touchPrefs by settings.touchPrefs.collectAsState(initial = TouchPrefs())
     val detailFirst by settings.detailFirst.collectAsState(initial = true)
+    val rememberSearches by settings.rememberSearches.collectAsState(initial = true)
     val subtitleStyle by settings.subtitleStyle.collectAsState(initial = SubtitleStyle())
     val trackPrefs by settings.trackPreferences.collectAsState(initial = TrackPreferences())
     val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
@@ -232,6 +233,12 @@ fun SettingsPage(
                     if (detailFirst) s.settingsDetailFirstClickOn else s.settingsDetailFirstClickOff,
                     detailFirst,
                 ) { on -> scope.launch { settings.setDetailFirst(on) } }
+                // Off forgets the searches already kept, which is what switching it off is for.
+                Toggle(
+                    s.settingsRememberSearches,
+                    if (rememberSearches) s.settingsRememberSearchesOn else s.settingsRememberSearchesOff,
+                    rememberSearches,
+                ) { on -> scope.launch { settings.setRememberSearches(on) } }
                 Toggle(s.settingsAutoplayNext, s.settingsAutoplayDetail, autoplay) {
                     scope.launch { settings.setAutoplayNext(it) }
                 }
