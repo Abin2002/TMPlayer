@@ -44,6 +44,10 @@ Stable addresses that do not change between releases:
 - https://tmplayer.org/sitemap.xml: every page, in every language
 - https://github.com/dracu-lah/TMPlayer/releases: every release file with its SHA-256
 
+## Markdown
+
+Every English page has a Markdown copy of its text, without navigation: add `index.md` to a page's address (https://tmplayer.org/download/index.md), or `.md` to a release page's (https://tmplayer.org/changelog/1.26.0.md). A request that sends `Accept: text/markdown` for a page is redirected to it, and each page links it with `<link rel="alternate" type="text/markdown">`. https://tmplayer.org/llms-full.txt is all of them in one file. Both are written from the pages when the site is built.
+
 ## Optional
 
 - [Security](https://tmplayer.org/security/): how releases are built and how to check a download

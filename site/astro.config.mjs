@@ -2,6 +2,7 @@
 // directories with a trailing slash, HTML left as written, assets hashed under /_astro/.
 import { defineConfig } from 'astro/config';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import markdownTwins from './integrations/markdown-twins.mjs';
 
 // Writes the catalog keys the pages looked up, so scripts/site-i18n-check.py can tell which
 // en.json strings nothing uses any more.
@@ -22,7 +23,7 @@ export default defineConfig({
   build: { format: 'directory', inlineStylesheets: 'never' },
   compressHTML: false,
   outDir: 'dist',
-  integrations: [usedKeys],
+  integrations: [usedKeys, markdownTwins()],
   devToolbar: { enabled: false },
   // The stylesheet blocks the first paint, so it ships minified; the comments stay in
   // src/styles/styles.css, where they are read.

@@ -5,13 +5,15 @@
 // canonical, robots, author, Open Graph with the image's type and size, og:locale, the four
 // twitter: tags, the icons and the manifest. On a localized page it adds the hreflang alternates
 // with x-default, og:locale:alternate and the tm-langs block app.js reads for the language
-// suggestion. Page-specific extras (preconnects, JSON-LD) go in the "head" slot.
+// suggestion. An English page links its Markdown twin, which integrations/markdown-twins.mjs
+// writes after the build. Page-specific extras (preconnects, JSON-LD) go in the "head" slot.
 import cssUrl from '../styles/styles.css?url';
 import appUrl from '../scripts/app.js?url';
 import KaoNotice from '../components/KaoNotice.astro';
 import { buildString, jsStrings, published, text } from '../i18n/t';
 import { pageUrl } from '../i18n/links';
 import { ORIGIN, type PageId } from '../i18n/langs';
+import { twinUrl } from '../../integrations/markdown-twins.mjs';
 
 interface Props {
   /** a localized page: canonical, alternates and the picker follow from it */
@@ -65,6 +67,7 @@ const strings = lang.path ? jsStrings(lang) : {};
 <meta name="description" content={description}>
 {notFound ? <meta name="robots" content="noindex"> : <Fragment>
 <link rel="canonical" href={url}>
+{!lang.path && <link rel="alternate" type="text/markdown" href={twinUrl(url)}>}
 {localized && <Fragment>
 {published.map((o) => <link rel="alternate" hreflang={o.hreflang} href={ORIGIN + pageUrl(o, page!)}>)}
 <link rel="alternate" hreflang="x-default" href={ORIGIN + pageUrl(published[0], page!)}>
