@@ -444,7 +444,7 @@ fun BrowseScreen(
     // A phone lists chats as rows, always: tiles of chat pictures are for a television across the
     // room. History's videos keep the choice, and so does every list on a television.
     val chatLayout: (BrowseSection) -> CardLayout = { section -> if (touch && !section.listsVideos) CardLayout.List else layout }
-    val pane: @Composable (BrowseSection) -> Unit = { tab ->
+    val paneOf: @Composable (BrowseSection) -> Unit = { tab ->
         val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
         val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
         val showsWatchLater = tab.listsVideos && historyTab == HistoryTab.WatchLater
@@ -697,6 +697,12 @@ fun BrowseScreen(
         }
     }
 
+    // A phone's Home runs up under the status bar for its carousel (see LocalUnderStatusBar); while
+    // the chat list is still loading, or failed, what stands in its place keeps below the bar.
+    val pane: @Composable (BrowseSection) -> Unit = { tab ->
+        val under = if (tab.isHome && state !is UiState.Content) LocalUnderStatusBar.current else 0.dp
+        Box(Modifier.fillMaxSize().padding(top = under)) { paneOf(tab) }
+    }
     if (touch) {
         PhoneBrowse(
             refreshOf = { page ->
