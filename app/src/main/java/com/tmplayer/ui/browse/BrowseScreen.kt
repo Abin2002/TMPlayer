@@ -470,6 +470,7 @@ fun BrowseScreen(
                                 onArtWanted = onHomeArtWanted,
                                 onResume = openResume,
                                 onPlay = openMedia,
+                                onPlayNow = onPlayMedia,
                                 onHoldMedia = holdMedia,
                                 onSeeContinue = {
                                     pickHistory(HistoryTab.Continue)

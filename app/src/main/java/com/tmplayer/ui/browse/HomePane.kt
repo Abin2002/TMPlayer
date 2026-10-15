@@ -129,6 +129,12 @@ internal fun HomePane(
     onSeeWatchLater: () -> Unit = {},
     /** Download season and Download unwatched on a show's page; null leaves them out. */
     onDownloadSeason: ((SeasonDownloadRequest) -> Unit)? = null,
+    /**
+     * Starts a video at once, whatever "Open a video's page first" says: a show's page plays from
+     * its Play pill and its episodes. [onPlay] is a tile's, which may open the page first, and a
+     * page opened from the show's own Play sat behind the show and sent the viewer round again.
+     */
+    onPlayNow: (MediaItem, String) -> Unit = onPlay,
 ) {
     val s = LocalStrings.current
     if (rows.isEmpty()) {
@@ -322,7 +328,7 @@ internal fun HomePane(
         SeriesOpened(
             series = series,
             watch = watch,
-            onPlay = { onPlay(it, chatTitle(it.chatId)) },
+            onPlay = { onPlayNow(it, chatTitle(it.chatId)) },
             onDismiss = { opened.open(null) },
             onLongClick = { onHoldMedia(it, chatTitle(it.chatId)) },
             onDownload = onDownloadSeason,

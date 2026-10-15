@@ -167,13 +167,17 @@ internal fun SeriesPage(
         SeriesPanel(
             series = series,
             watch = watch,
-            // An episode's page first, as a poster opens it (Settings, "Open a video's page first").
-            onPlay = {
-                if (state.detailFirst) {
-                    state.openDetail(DetailRequest(it, state.chatTitleOf(it.chatId), outsideChat = true))
-                } else {
-                    state.openPlayer(it, startFromBeginning = false)
+            // The Play pill plays, always: it names the episode it starts, and one that opened
+            // the pane instead was pressed again and again for the same pane.
+            onPlay = { state.openPlayer(it, startFromBeginning = false) },
+            // An episode's card is a tile: its page first, as a poster opens it (Settings, "Open a
+            // video's page first"), and the card has the keyboard again when the pane closes.
+            onOpenEpisode = if (state.detailFirst) {
+                { episode, refocus ->
+                    state.openDetail(DetailRequest(episode, state.chatTitleOf(episode.chatId), outsideChat = true, onClosed = refocus))
                 }
+            } else {
+                null
             },
             contentPadding = PaddingValues(start = 32.dp, end = 32.dp, bottom = 24.dp),
             modifier = Modifier.fillMaxSize(),

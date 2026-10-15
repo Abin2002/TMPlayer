@@ -111,6 +111,7 @@ import com.tmplayer.data.SeriesSeason
 import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.VideoCopies
 import com.tmplayer.data.WatchPoint
+import com.tmplayer.i18n.L
 import com.tmplayer.data.copyQuality
 import com.tmplayer.data.Watching
 import com.tmplayer.player.StreamStats
@@ -544,6 +545,24 @@ private fun EpisodeLine(
     }
 }
 
+/**
+ * The show's play pill, naming what it starts: "Resume S01E04 · 12 min left" for an episode left
+ * part way (bare "Resume S01E04" while its length is unknown), "Continue S01E05" once earlier ones
+ * are watched, else "Play S01E01".
+ */
+fun seriesPlayLabel(code: String, point: WatchPoint?, anyWatched: Boolean): String {
+    val at = point?.positionMs ?: 0L
+    return when {
+        at > 0 && point != null && point.durationMs > at -> {
+            val minutes = ((point.durationMs - at + 59_999) / 60_000).coerceAtLeast(1)
+            L.seriesResumeLeft(minutes = minutes, code = code)
+        }
+        at > 0 -> L.seriesResume(code)
+        anyWatched -> L.seriesContinue(code)
+        else -> L.seriesPlay(code)
+    }
+}
+
 /** "Up next" or "Playing" beside an episode's label, in the accent. */
 @Composable
 private fun EpisodeBadge(label: String) {
@@ -577,6 +596,12 @@ private fun EpisodeBadge(label: String) {
  * and some is not, Download season and Download unwatched are two buttons side by side, so a
  * remote reaches both along the same line.
  *
+ * The bright pill always plays, whatever "Open a video's page first" says: it names the episode it
+ * starts ("Play S01E04", "Resume S01E04 · 12 min left"), and a press that opened a page instead
+ * would leave a viewer pressing Play again and getting the page again. An episode's own card is a
+ * tile like any other, so [onOpenEpisode] is where a platform sends it to that episode's page
+ * first; null plays it with [onPlay], as before.
+ *
  * [contentPadding] is the page's margin for the words and the rows; the backdrop runs full bleed
  * under it. [trailing] sits at the top end over the backdrop, for the platform's own close or back.
  */
@@ -594,6 +619,11 @@ fun SeriesPanel(
     },
     /** At the top end over the backdrop, for the platform's own close or back control. */
     trailing: @Composable () -> Unit = {},
+    /**
+     * An episode card's click or OK, when it opens the episode's page rather than playing it.
+     * Handed a way to put focus back on the card when that page closes. Null plays the episode.
+     */
+    onOpenEpisode: ((MediaItem, refocus: () -> Unit) -> Unit)? = null,
     /** Opens a video's detail, for "More like this"; null leaves that row out. */
     onOpenItem: ((MediaItem) -> Unit)? = onLongClick,
     /**
@@ -778,7 +808,6 @@ fun SeriesPanel(
             }
         }
         val actions: @Composable () -> Unit = {
-            val started = (watch.pointOf(target)?.positionMs ?: 0L) > 0
             val others = buildList {
                 extras?.trailer?.let { trailer -> add(Triple(s.metadataTrailer, TrailerIcon) { trailers.open(trailer) }) }
                 if (downloads) {
@@ -790,11 +819,7 @@ fun SeriesPanel(
             }
             val hero: @Composable (Modifier) -> Unit = { m ->
                 HeroPill(
-                    label = when {
-                        started -> s.seriesResume(target.code)
-                        progress.watched > 0 -> s.seriesContinue(target.code)
-                        else -> s.seriesPlay(target.code)
-                    },
+                    label = seriesPlayLabel(target.code, watch.pointOf(target), anyWatched = progress.watched > 0),
                     icon = TmIcons.Play,
                     onClick = { onPlay(copyOf(target, next?.item ?: watch.pick(target, progress))) },
                     modifier = m.then(downToUpNext).onPlaced { playPlaced = true }.onFocusChanged { playFocused = it.hasFocus },
@@ -881,16 +906,21 @@ fun SeriesPanel(
             }
             items(listed, key = { it.item.id }) { episode ->
                 val chosen = copyOf(episode, if (next != null && episode.sameAs(next)) next.item else watch.pick(episode, progress))
+                val rowFocus = remember { FocusRequester() }
                 EpisodeRow(
                     episode = episode,
                     point = watch.pointOf(episode),
                     finished = watch.finishedEpisode(episode),
                     upNext = next != null && episode.sameAs(next),
-                    onClick = { onPlay(chosen) },
+                    onClick = {
+                        val open = onOpenEpisode
+                        if (open != null) open(chosen) { runCatching { rowFocus.requestFocus() } } else onPlay(chosen)
+                    },
                     onLongClick = onLongClick?.let { { it(chosen) } },
                     chosen = chosen,
                     modifier = Modifier.padding(pad).widthIn(max = EPISODES_MAX),
-                    lineModifier = if (next != null && episode.sameAs(next)) Modifier.focusRequester(upNextFocus) else Modifier,
+                    lineModifier = (if (next != null && episode.sameAs(next)) Modifier.focusRequester(upNextFocus) else Modifier)
+                        .focusRequester(rowFocus),
                     name = EpisodeNames.listName(episode.season, episode.episode, names),
                 )
             }

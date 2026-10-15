@@ -20,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.rightClick
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.pressKey
@@ -110,6 +111,86 @@ class BrowseKeyboardTest {
                 DetailPaneHost(shell)
             }
         }
+    }
+
+    private val keepers = com.tmplayer.data.Series(
+        "lighthouse keepers", "The Lighthouse Keepers",
+        listOf(
+            com.tmplayer.data.SeriesSeason(
+                1,
+                (1..3).map { n ->
+                    com.tmplayer.data.SeriesEpisode(
+                        MediaItem(
+                            chatId = 2, messageId = 100L + n, fileId = 0, title = "The Lighthouse Keepers S01E0$n",
+                            sizeBytes = 300L * 1024 * 1024, durationSec = 1500, mimeType = "video/mp4", thumbnailFileId = 0,
+                            miniThumbnail = null, date = n, fileName = "The.Lighthouse.Keepers.S01E0$n.mkv",
+                        ),
+                        1, n,
+                    )
+                },
+            ),
+        ),
+    )
+
+    private fun androidx.compose.ui.test.ComposeUiTest.showWithPane() = setContent {
+        TmMaterialTheme(dark = true) {
+            Box(Modifier.size(1200.dp, 800.dp)) {
+                SeriesPage(shell, keepers, rememberSeriesWatch(shell), onClose = {})
+                DetailPaneHost(shell)
+            }
+        }
+    }
+
+    @Test
+    fun `a show's Play pill plays at once, never the episode's pane, whatever the page first setting`() = runComposeUiTest {
+        shell.detailFirst = true
+        showWithPane()
+        onNode(hasText("Play S01E01") and hasClickAction()).performClick()
+        waitForIdle()
+        assertEquals(null, shell.detail)
+        assertEquals(101L, shell.nowPlaying?.item?.messageId)
+        // Pressed again from the same page: it plays again, and no pane stacks up.
+        shell.closePlayer()
+        onNode(hasText("Play S01E01") and hasClickAction()).performClick()
+        waitForIdle()
+        assertEquals(null, shell.detail)
+        assertEquals(101L, shell.nowPlaying?.item?.messageId)
+    }
+
+    @Test
+    fun `an episode card opens its pane first, whose Play plays, and Esc puts focus back on the card`() = runComposeUiTest {
+        shell.detailFirst = true
+        showWithPane()
+        val card = hasText("Episode 2", substring = true) and hasClickAction()
+        onNode(androidx.compose.ui.test.hasScrollAction()).performScrollToNode(card)
+        onNode(card).performClick()
+        waitForIdle()
+        assertEquals(102L, shell.detail?.item?.messageId)
+        onNode(isFocused()).performKeyInput { pressKey(Key.Escape) }
+        waitForIdle()
+        assertEquals(null, shell.detail)
+        onNode(card).assertIsFocused()
+        // Opened again: its Play starts the episode rather than another pane.
+        onNode(card).performClick()
+        waitForIdle()
+        assertEquals(102L, shell.detail?.item?.messageId)
+        onNode(isFocused()).assert(hasText("Play"))
+        onNode(isFocused()).performKeyInput { pressKey(Key.Enter) }
+        waitForIdle()
+        assertEquals(null, shell.detail)
+        assertEquals(102L, shell.nowPlaying?.item?.messageId)
+    }
+
+    @Test
+    fun `with the page first off, an episode card plays at once`() = runComposeUiTest {
+        shell.detailFirst = false
+        showWithPane()
+        val card = hasText("Episode 3", substring = true) and hasClickAction()
+        onNode(androidx.compose.ui.test.hasScrollAction()).performScrollToNode(card)
+        onNode(card).performClick()
+        waitForIdle()
+        assertEquals(null, shell.detail)
+        assertEquals(103L, shell.nowPlaying?.item?.messageId)
     }
 
     @Test
