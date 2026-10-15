@@ -143,13 +143,23 @@ fun MediaDetailScreen(
         } else {
             StackedLayout(page, maxWidth, maxHeight)
         }
-        CloseButton(
-            onClose,
-            Modifier
-                .align(Alignment.TopEnd)
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(if (wide && !isTouch()) 24.dp else 12.dp),
-        )
+        if (com.tmplayer.ui.components.usesFloatingChrome()) {
+            // A phone's pages all leave by the round Back at the top start, so this one does too.
+            com.tmplayer.ui.components.FloatingBackButton(
+                TmIcons.ArrowBack,
+                LocalStrings.current.commonBack,
+                onClose,
+                Modifier.align(Alignment.TopStart),
+            )
+        } else {
+            CloseButton(
+                onClose,
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(if (wide && !isTouch()) 24.dp else 12.dp),
+            )
+        }
     }
 }
 
@@ -448,6 +458,11 @@ private fun CloseButton(onClose: () -> Unit, modifier: Modifier = Modifier) {
  */
 @Composable
 fun PageDiscButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    if (com.tmplayer.ui.components.usesFloatingChrome()) {
+        // On a phone, the same round floating button every other page's Back is.
+        com.tmplayer.ui.components.FloatingRoundButton(icon, label, onClick, modifier)
+        return
+    }
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()

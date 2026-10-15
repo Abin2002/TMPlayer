@@ -146,29 +146,35 @@ internal fun PhoneBrowse(
         search.submit(heard)
     }
 
+    val openSearch = {
+        // Back with the last query, all of it selected, so typing replaces it and the arrow keeps it.
+        searchText = searchText.copy(selection = TextRange(0, searchText.text.length))
+        searchOpen = true
+    }
     TouchBrowseShell(
-        account = account,
+        // The bar's own, for when no host above draws one (the screenshot fixture); in the app the
+        // host's bar is the one on screen, with the same destinations.
+        nav = TouchNav(
+            account = account,
+            favoriteCount = favourites.size,
+            downloadCount = downloadCount,
+            updateVersion = updateVersion,
+            onHome = { onPickTab(BrowseSection.of(BrowseTab.Home)) },
+            onChats = {
+                val back = BrowseSection.decode(lastChats)?.takeIf { it.isChats || it in sections }
+                onPickTab(back ?: BrowseSection.of(BrowseTab.Chats))
+            },
+            onSearch = openSearch,
+            onSettings = onOpenSettings,
+            onFavourites = { onPickTab(BrowseSection.of(BrowseTab.Favorites)) },
+            onDownloads = onOpenDownloads,
+            onHistory = onHistory,
+            onUpdate = onUpdate,
+        ),
         selected = tab,
-        favoriteCount = favourites.size,
-        downloadCount = downloadCount,
-        updateVersion = updateVersion,
-        onHome = { onPickTab(BrowseSection.of(BrowseTab.Home)) },
-        onChats = {
-            val back = BrowseSection.decode(lastChats)?.takeIf { it.isChats || it in sections }
-            onPickTab(back ?: BrowseSection.of(BrowseTab.Chats))
-        },
-        onFavourites = { onPickTab(BrowseSection.of(BrowseTab.Favorites)) },
-        onHistory = onHistory,
-        onOpenDownloads = onOpenDownloads,
-        onOpenSettings = onOpenSettings,
-        onUpdate = onUpdate,
         title = tab.heading,
         searchOpen = searchOpen,
-        onOpenSearch = {
-            // Back with the last query, all of it selected, so typing replaces it and the arrow keeps it.
-            searchText = searchText.copy(selection = TextRange(0, searchText.text.length))
-            searchOpen = true
-        },
+        onOpenSearch = openSearch,
         searchScreen = { field ->
             PhoneSearchScreen(
                 state = searchState,

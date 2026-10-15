@@ -380,7 +380,7 @@ fun BrowseScreen(
     val touch = !FormFactor.isTv(LocalContext.current)
     // The phone's lists end clear of the floating bar (TouchNav), which their container already
     // lifts above the navigation bar.
-    val insets = if (touch) TouchInsets.clearing(BAR_MARGIN + BAR_HEIGHT + BAR_GAP) else TvInsets
+    val insets = if (touch) TouchInsets.clearing(touchShellClearance(withActions = true)) else TvInsets
     // Fixed columns suit a screen whose size is known in advance; a phone's is not, and it turns
     // when the viewer does, so the grid is asked for a tile width instead and works out the rest.
     val tiles = if (touch) GridCells.Adaptive(TOUCH_TILE_MIN) else GridCells.Fixed(TILE_COLUMNS)

@@ -56,6 +56,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -97,64 +101,123 @@ import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingBorder
 import com.tmplayer.ui.theme.rememberReducedMotion
 
-/** Where the phone's floating bar can take the viewer. The profile button opens [ProfilePopover] instead. */
-internal enum class TouchDestination { Home, Chats, Search }
+/** Where the phone's floating bar can take the viewer, in the bar's order. The profile button opens [ProfilePopover] instead. */
+internal enum class TouchDestination { Home, Chats, Search, Settings }
+
+/** Which of the bar's buttons carries the sliding highlight for [current], or null for none. */
+internal fun barHighlightIndex(current: TouchDestination?): Int? = current?.ordinal
 
 /**
- * The touch shell: a top bar with the page's name and its own buttons, the page, and a floating
- * bar along the bottom with Home, Chats, Search and the viewer's picture.
+ * What the floating bar and the popover behind the picture show and do, the same on every page
+ * the bar is on. Built once, by whatever hosts the bar ([TouchNavHost]).
+ */
+@Immutable
+internal class TouchNav(
+    val account: Account?,
+    val favoriteCount: Int,
+    /** Downloads in flight, badged on the Downloads row and on the picture. */
+    val downloadCount: Int,
+    val updateVersion: String?,
+    val onHome: () -> Unit,
+    val onChats: () -> Unit,
+    val onSearch: () -> Unit,
+    val onSettings: () -> Unit,
+    val onFavourites: () -> Unit,
+    val onDownloads: () -> Unit,
+    val onHistory: (HistoryTab) -> Unit,
+    val onUpdate: () -> Unit,
+)
+
+/**
+ * What one page asks of the floating bar while it is the page on screen.
  *
- * There is no drawer. What it held moved: Home and Chats are on the bar, the Telegram folders
- * are chips on the Chats page, Search opens [searchScreen] over everything with its field growing
- * out of the bar's magnifier, and the rest (Favourites, Downloads, History, Watch later, Settings,
- * About, Update) is behind the picture, in [ProfilePopover].
+ * @param current the bar button lit for this page, or null for a page behind the picture.
+ * @param inProfile the picture is ringed: Favourites, History, Watch later and Downloads.
+ * @param hidden the bar steps out of the way for now (a search open, a selection under way)
+ *   while the page still keeps its room at the foot.
+ * @param actions the page's own buttons, in a small pill above the bar; null for none.
+ */
+internal class TouchPageSpec(
+    val current: TouchDestination?,
+    val inProfile: Boolean = false,
+    val hidden: Boolean = false,
+    val actions: (@Composable RowScope.() -> Unit)? = null,
+)
+
+/**
+ * The shared state of the one floating bar: which page is on screen ([pageKey]), what each page
+ * asked of the bar, and a search asked for from a page that has none of its own.
+ *
+ * One bar for every page, rather than a bar per page, is what lets its highlight slide from Home to
+ * Settings rather than blink, and what keeps it still while the pages under it change.
+ */
+@Stable
+internal class TouchChrome {
+    var pageKey by mutableStateOf<Any?>(null)
+    internal val specs = mutableStateMapOf<Any, TouchPageSpec>()
+
+    /** Set by the bar's magnifier on a page without a search; the browser opens its search and clears it. */
+    var searchAsked by mutableStateOf(false)
+
+    internal val bar = BarVisibility()
+}
+
+internal val LocalTouchChrome = staticCompositionLocalOf<TouchChrome?> { null }
+
+/** The key a page reports its [TouchPageSpec] under: the screen it belongs to. */
+internal val LocalTouchPageKey = staticCompositionLocalOf<Any> { DEFAULT_PAGE }
+
+/** The bar's shared-element scope, for the search field that grows out of its magnifier. */
+@OptIn(ExperimentalSharedTransitionApi::class)
+internal val LocalTouchShared = staticCompositionLocalOf<SharedTransitionScope?> { null }
+
+/**
+ * Tells the floating bar what this page wants of it, for as long as the page is composed.
+ * Nothing at all happens outside a [TouchNavHost].
+ */
+@Composable
+internal fun TouchPage(spec: TouchPageSpec?) {
+    val chrome = LocalTouchChrome.current ?: return
+    val key = LocalTouchPageKey.current
+    SideEffect {
+        if (spec == null) chrome.specs.remove(key) else chrome.specs[key] = spec
+    }
+    DisposableEffect(chrome, key) { onDispose { chrome.specs.remove(key) } }
+}
+
+/**
+ * The phone's floating bar, hosted once over every page: Home, Chats, Search, Settings and the
+ * viewer's picture, with the popover of Favourites, Downloads, History, Watch later and Update
+ * behind the picture.
  *
  * The bar floats, so it takes no room from the listing: it slides away as the list is pushed up
- * and comes back on the first pull down, at the top, on a change of page and on the way back from
- * the player. It never hides while TalkBack is on (a control that moves away is one a screen
- * reader cannot find again), and it is out of the way while the keyboard is up. How much of the
- * screen it keeps is [LocalBottomChrome], which the lists under it pad their ends by.
+ * and comes back on the first pull down, on a change of page and on the way back from the player.
+ * It never hides while TalkBack is on (a control that moves away is one a screen reader cannot
+ * find again), and it is out of the way while the keyboard is up. How much of the screen it keeps
+ * is [LocalBottomChrome], which the lists under it pad their ends by. A page with no
+ * [TouchPageSpec] (a chat, a Settings page, About) has no bar.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalLayoutApi::class)
 @Composable
-internal fun TouchBrowseShell(
-    account: Account?,
-    selected: BrowseSection,
-    favoriteCount: Int,
-    /** Downloads in flight, badged on the Downloads row and on the picture. */
-    downloadCount: Int,
-    updateVersion: String?,
-    onHome: () -> Unit,
-    onChats: () -> Unit,
-    onFavourites: () -> Unit,
-    onHistory: (HistoryTab) -> Unit,
-    onOpenDownloads: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onUpdate: () -> Unit,
-    /** The page's name in the top bar. */
-    title: String,
-    searchOpen: Boolean,
-    onOpenSearch: () -> Unit,
-    /**
-     * The search page, drawn over everything while [searchOpen]. [field] goes on its search field,
-     * which is what the bar's magnifier turns into.
-     */
-    searchScreen: @Composable (field: Modifier) -> Unit,
-    /** The top bar's own buttons. */
-    actions: @Composable RowScope.() -> Unit = {},
+internal fun TouchNavHost(
+    nav: TouchNav,
+    chrome: TouchChrome,
+    /** The page on screen: whatever [LocalTouchPageKey] its [TouchPage] reports under. */
+    pageKey: Any,
     content: @Composable () -> Unit,
 ) {
-    val s = LocalStrings.current
     val reduced = rememberReducedMotion() || Motion.reduced
-    val bar = remember { BarVisibility() }
+    val bar = chrome.bar
     var profileOpen by remember { mutableStateOf(false) }
+    SideEffect { chrome.pageKey = pageKey }
+    val spec = chrome.specs[pageKey]
 
     // Back closes the popover before it leaves the screen.
     BackHandler(enabled = profileOpen) { profileOpen = false }
 
     // The bar comes back whenever the page underneath changes: a bar left hidden across a change
     // of page has no pull-down to restore it on a page too short to scroll.
-    LaunchedEffect(selected, searchOpen) { bar.show() }
+    LaunchedEffect(pageKey, spec?.current, spec?.inProfile, spec?.hidden) { bar.show() }
     // And on the way back from the player, an activity coming forward rather than a recomposition.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -164,110 +227,207 @@ internal fun TouchBrowseShell(
     }
     val talkBack = rememberTouchExploration()
     val keyboard = WindowInsets.isImeVisible
-    val barShown = (bar.shown || talkBack) && !keyboard
+    val barShown = spec != null && !spec.hidden && (bar.shown || talkBack) && !keyboard
 
     val density = LocalDensity.current
     val navigationBar = with(density) { WindowInsets.navigationBars.getBottom(this).toDp() }
-    // What the bar keeps, measured from the bottom of the window.
-    val chrome = navigationBar + BAR_MARGIN + BAR_HEIGHT + BAR_GAP
+    // What the bar keeps, measured from the bottom of the window, with the pill of the page's own
+    // buttons over it when there is one.
+    val room = if (spec == null) 0.dp else navigationBar + touchShellClearance(withActions = spec.actions != null)
+
+    // The spec as it was when the bar was last out, so the bar does not redraw empty on its way out.
+    val lastShown = remember { arrayOf(TouchPageSpec(current = null)) }
+    if (spec != null && !spec.hidden) lastShown[0] = spec
 
     SharedTransitionLayout(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize()) {
-            // The top bar slides away with the list and back on the first pull down, the same as
-            // the floating bar at the foot.
-            val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-            LaunchedEffect(selected, title) { scrollBehavior.state.heightOffset = 0f }
-            CompositionLocalProvider(LocalBottomChrome provides chrome) {
-                Scaffold(
-                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).nestedScroll(bar.connection),
-                    topBar = {
-                        TopAppBar(
-                            scrollBehavior = scrollBehavior,
-                            title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                            actions = actions,
-                        )
-                    },
-                ) { padding ->
-                    Box(Modifier.fillMaxSize().padding(padding)) { content() }
-                }
+            CompositionLocalProvider(
+                LocalBottomChrome provides room,
+                LocalTouchChrome provides chrome,
+                LocalTouchShared provides this@SharedTransitionLayout,
+            ) {
+                Box(Modifier.fillMaxSize().nestedScroll(bar.connection)) { content() }
             }
 
             AnimatedVisibility(
-                visible = barShown && !searchOpen,
+                visible = barShown,
                 modifier = Modifier.align(Alignment.BottomCenter),
                 enter = if (reduced) fadeIn(Motion.standard(0)) else slideInVertically(Motion.standard(Motion.Normal)) { it } + fadeIn(Motion.standard(Motion.Fast)),
                 exit = if (reduced) fadeOut(Motion.standard(0)) else slideOutVertically(Motion.standard(Motion.Normal)) { it } + fadeOut(Motion.standard(Motion.Fast)),
             ) {
-                FloatingBar(
-                    current = when {
-                        selected.isHome -> TouchDestination.Home
-                        selected.onChatsPage -> TouchDestination.Chats
-                        else -> null
-                    },
-                    account = account,
-                    badged = downloadCount > 0 || updateVersion != null,
-                    onHome = onHome,
-                    onChats = onChats,
-                    onSearch = onOpenSearch,
-                    onSettings = onOpenSettings,
-                    onProfile = { profileOpen = true },
-                    searchButton = { modifier ->
-                        if (reduced) {
-                            SearchBarButton(modifier)
-                        } else {
-                            SearchBarButton(
-                                modifier.sharedBounds(
-                                    rememberSharedContentState(SEARCH_KEY),
-                                    animatedVisibilityScope = this@AnimatedVisibility,
-                                    resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
-                                ),
-                            )
-                        }
-                    },
-                )
+                val shown = lastShown[0]
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
+                    shown.actions?.let { actions ->
+                        // The page's own buttons: a small pill at the end, over the bar, so the top
+                        // of the screen holds nothing to press.
+                        Row(
+                            Modifier
+                                .padding(end = 16.dp, bottom = BAR_GAP)
+                                .height(ACTIONS_HEIGHT)
+                                .shadow(BAR_SHADOW, CircleShape)
+                                .clip(CircleShape)
+                                .background(FloatingTone.menu)
+                                .border(floatingBorder(), CircleShape)
+                                .padding(horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            content = actions,
+                        )
+                    }
+                    FloatingBar(
+                        current = shown.current,
+                        inProfile = shown.inProfile,
+                        account = nav.account,
+                        badged = nav.downloadCount > 0 || nav.updateVersion != null,
+                        onHome = nav.onHome,
+                        onChats = nav.onChats,
+                        onSearch = nav.onSearch,
+                        onSettings = nav.onSettings,
+                        onProfile = { profileOpen = true },
+                        searchButton = { modifier ->
+                            if (reduced) {
+                                SearchBarButton(modifier)
+                            } else {
+                                SearchBarButton(
+                                    modifier.sharedBounds(
+                                        rememberSharedContentState(SEARCH_KEY),
+                                        animatedVisibilityScope = this@AnimatedVisibility,
+                                        resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                                    ),
+                                )
+                            }
+                        },
+                    )
+                }
             }
 
             ProfilePopover(
                 open = profileOpen,
                 reduced = reduced,
-                favoriteCount = favoriteCount,
-                downloadCount = downloadCount,
-                updateVersion = updateVersion,
+                favoriteCount = nav.favoriteCount,
+                downloadCount = nav.downloadCount,
+                updateVersion = nav.updateVersion,
                 onDismiss = { profileOpen = false },
-                onFavourites = { profileOpen = false; onFavourites() },
-                onDownloads = { profileOpen = false; onOpenDownloads() },
-                onHistory = { profileOpen = false; onHistory(HistoryTab.Continue) },
-                onWatchLater = { profileOpen = false; onHistory(HistoryTab.WatchLater) },
-                onUpdate = { profileOpen = false; onUpdate() },
+                onFavourites = { profileOpen = false; nav.onFavourites() },
+                onDownloads = { profileOpen = false; nav.onDownloads() },
+                onHistory = { profileOpen = false; nav.onHistory(HistoryTab.Continue) },
+                onWatchLater = { profileOpen = false; nav.onHistory(HistoryTab.WatchLater) },
+                onUpdate = { profileOpen = false; nav.onUpdate() },
             )
+        }
+    }
+}
 
-            AnimatedVisibility(
-                visible = searchOpen,
-                enter = if (reduced) EnterTransition.None else fadeIn(Motion.standard(Motion.Normal)),
-                exit = if (reduced) ExitTransition.None else fadeOut(Motion.standard(Motion.Normal)),
-            ) {
-                val field = if (reduced) {
-                    Modifier
-                } else {
+/**
+ * The touch shell: the page's name along the top, the page, and the search page over everything
+ * while it is open. The floating bar is [TouchNavHost]'s, shared with Settings and Downloads; this
+ * tells it which page is up and what the page's own buttons are. Outside a host (the screenshot
+ * fixture) the shell hosts a bar of its own from [nav].
+ *
+ * The page's buttons ride in a small pill over the bar rather than in the top bar, so a large phone
+ * held in one hand reaches all of them; the top keeps only the title, which scrolls away with the
+ * list and back on the first pull down.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@Composable
+internal fun TouchBrowseShell(
+    nav: TouchNav,
+    selected: BrowseSection,
+    /** The page's name in the top bar. */
+    title: String,
+    searchOpen: Boolean,
+    onOpenSearch: () -> Unit,
+    /**
+     * The search page, drawn over everything while [searchOpen]. [field] goes on its search field,
+     * which is what the bar's magnifier turns into.
+     */
+    searchScreen: @Composable (field: Modifier) -> Unit,
+    /** The page's own buttons, in the pill over the bar. */
+    actions: (@Composable RowScope.() -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    val host = LocalTouchChrome.current
+    if (host == null) {
+        val own = remember { TouchChrome() }
+        TouchNavHost(nav, own, DEFAULT_PAGE) {
+            TouchBrowseShell(nav, selected, title, searchOpen, onOpenSearch, searchScreen, actions, content)
+        }
+        return
+    }
+    val reduced = rememberReducedMotion() || Motion.reduced
+
+    TouchPage(
+        TouchPageSpec(
+            current = when {
+                selected.isHome -> TouchDestination.Home
+                selected.onChatsPage -> TouchDestination.Chats
+                else -> null
+            },
+            inProfile = !selected.isHome && !selected.onChatsPage,
+            hidden = searchOpen,
+            actions = actions,
+        ),
+    )
+    // The bar's magnifier, pressed on a page (Settings, Downloads) that has no search of its own.
+    LaunchedEffect(host.searchAsked) {
+        if (host.searchAsked) {
+            host.searchAsked = false
+            onOpenSearch()
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        // The title slides away with the list and back on the first pull down, as the bar does.
+        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+        LaunchedEffect(selected, title) { scrollBehavior.state.heightOffset = 0f }
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                TopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                )
+            },
+        ) { padding ->
+            Box(Modifier.fillMaxSize().padding(padding)) { content() }
+        }
+
+        val shared = LocalTouchShared.current
+        AnimatedVisibility(
+            visible = searchOpen,
+            enter = if (reduced) EnterTransition.None else fadeIn(Motion.standard(Motion.Normal)),
+            exit = if (reduced) ExitTransition.None else fadeOut(Motion.standard(Motion.Normal)),
+        ) {
+            val field = if (reduced || shared == null) {
+                Modifier
+            } else {
+                with(shared) {
                     Modifier.sharedBounds(
                         rememberSharedContentState(SEARCH_KEY),
                         animatedVisibilityScope = this@AnimatedVisibility,
                         resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                     )
                 }
-                searchScreen(field)
             }
+            searchScreen(field)
         }
     }
 }
 
 /**
- * Whether the bar is out, from how the list under it is being moved: pushed up past [HIDE_AFTER]
+ * How much a page under the bar pads the end of its list by, the navigation bar not included:
+ * the bar, its margin and gap, and the pill of the page's own buttons when it has one.
+ */
+internal fun touchShellClearance(withActions: Boolean): Dp =
+    BAR_MARGIN + BAR_HEIGHT + BAR_GAP + if (withActions) ACTIONS_HEIGHT + BAR_GAP else 0.dp
+
+/**
+ * Whether the bar is out, from how the list under it is being moved: pushed up past [HIDE_AFTER_PX]
  * hides it, any pull back down shows it, and a pull at the very top (which nothing above consumes)
  * shows it too.
  */
 @Stable
-private class BarVisibility {
+internal class BarVisibility {
+
     var shown by mutableStateOf(true)
         private set
     private var travelled by mutableFloatStateOf(0f)
@@ -309,11 +469,13 @@ private fun rememberTouchExploration(): Boolean {
 /**
  * The floating bar: one rounded pill, clear of the screen's edge and the navigation bar, with a
  * soft shadow and the floating hairline. The current page's button carries a filled backing in
- * the accent, as a selected chip does.
+ * the accent, as a selected chip does. On a page behind the picture (Favourites, History, Watch
+ * later, Downloads) no button is lit and the picture wears an accent ring instead.
  */
 @Composable
 private fun FloatingBar(
     current: TouchDestination?,
+    inProfile: Boolean,
     account: Account?,
     badged: Boolean,
     onHome: () -> Unit,
@@ -338,12 +500,7 @@ private fun FloatingBar(
           Box(contentAlignment = Alignment.CenterStart) {
             // One highlight under the chosen page, sliding to the next one rather than blinking
             // off under one button and on under another, so the bar shows where the page went.
-            val index = when (current) {
-                TouchDestination.Home -> 0
-                TouchDestination.Chats -> 1
-                TouchDestination.Search -> 2
-                null -> null
-            }
+            val index = barHighlightIndex(current)
             val reduced = rememberReducedMotion() || Motion.reduced
             val x by androidx.compose.animation.core.animateDpAsState(
                 targetValue = (BUTTON + BAR_SPACING) * (index ?: 0),
@@ -372,15 +529,31 @@ private fun FloatingBar(
                     .clickable(role = Role.Button, onClick = onSearch)
                     .semantics { contentDescription = s.commonSearch },
             )
-            BarButton(TmIcons.Settings, s.navSettings, chosen = false, onClick = onSettings)
+            BarButton(TmIcons.Settings, s.navSettings, current == TouchDestination.Settings, onSettings)
             Box(
                 Modifier
                     .size(BUTTON)
                     .clip(CircleShape)
                     .clickable(role = Role.Button, onClick = onProfile)
-                    .semantics { contentDescription = s.navProfile },
+                    .semantics {
+                        contentDescription = s.navProfile
+                        selected = inProfile
+                    },
                 contentAlignment = Alignment.Center,
             ) {
+                // A ring round the picture while one of its pages is open: the lists behind it are
+                // somewhere the bar can say the viewer is, without lighting a button they are not on.
+                val ring by androidx.compose.animation.animateColorAsState(
+                    if (inProfile) Tone.accent else Color.Transparent,
+                    animationSpec = Motion.standard(if (rememberReducedMotion() || Motion.reduced) 0 else Motion.Fast),
+                    label = "profileRing",
+                )
+                Box(
+                    Modifier
+                        .size(PICTURE + 8.dp)
+                        .border(2.dp, ring, CircleShape)
+                        .background(if (inProfile) Tone.accent.copy(alpha = 0.16f) else Color.Transparent, CircleShape),
+                )
                 ProfilePicture(account, PICTURE)
                 if (badged) {
                     // News behind the picture: a download running, or an update to install.
@@ -579,10 +752,16 @@ internal val BAR_GAP = 8.dp
 
 private val BUTTON = 48.dp
 
+/** The pill of a page's own buttons over the bar: one row of 48 dp buttons. */
+internal val ACTIONS_HEIGHT = 48.dp
+
+/** The key a page reports under when nothing names it, which is the page outside any host. */
+internal const val DEFAULT_PAGE = "page"
+
 /** Between two of the bar's buttons. */
 private val BAR_SPACING = 4.dp
 private val PICTURE = 32.dp
-private val BAR_SHADOW = 8.dp
+internal val BAR_SHADOW = 8.dp
 private val POPOVER_WIDTH = 208.dp
 private val POPOVER_ROW = 44.dp
 private val POPOVER_SHAPE = RoundedCornerShape(20.dp)

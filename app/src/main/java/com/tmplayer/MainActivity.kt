@@ -90,6 +90,26 @@ import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.Tv
 import com.tmplayer.ui.auth.LoginScreen
 import com.tmplayer.ui.browse.BrowseScreen
+import com.tmplayer.ui.browse.TouchChrome
+import com.tmplayer.ui.browse.onChatsPage
+import com.tmplayer.ui.browse.TouchDestination
+import com.tmplayer.ui.browse.TouchNav
+import com.tmplayer.ui.browse.TouchNavHost
+import com.tmplayer.ui.browse.TouchPage
+import com.tmplayer.ui.browse.TouchPageSpec
+import com.tmplayer.ui.browse.TouchRoutes
+import com.tmplayer.ui.browse.LocalTouchPageKey
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.CompositionLocalProvider
+import com.tmplayer.ui.theme.Motion
+import com.tmplayer.ui.theme.rememberReducedMotion
 import com.tmplayer.ui.browse.KeyPresses
 import com.tmplayer.ui.browse.TvBrowseHint
 import com.tmplayer.ui.browse.BrowseSection
@@ -207,6 +227,37 @@ private const val SCREEN_MEDIA = "media"
 private const val SCREEN_SETTINGS = "settings"
 private const val SCREEN_DOWNLOADS = "downloads"
 private const val SCREEN_ABOUT = "about"
+
+/** The phone's screens as the bar and its transitions see them. */
+private object TouchScreens {
+    /** A screen's key: what its saved state and its say over the bar are kept under. */
+    fun key(screen: Screen): String = when (screen) {
+        is Screen.Chats -> SCREEN_CHATS
+        is Screen.Media -> SCREEN_MEDIA
+        is Screen.Settings -> SCREEN_SETTINGS
+        is Screen.Downloads -> SCREEN_DOWNLOADS
+        is Screen.About -> SCREEN_ABOUT
+    }
+
+    /**
+     * Where a screen stands along the bar, left to right, for which way the next one slides in:
+     * Home, Chats, Search, Settings, then the picture's pages. Null for a chat and About, which
+     * are not on the bar and change without a slide.
+     */
+    fun order(screen: Screen, tab: BrowseSection?): Int? = when (screen) {
+        is Screen.Chats -> when {
+            tab == null || tab.isHome -> 0
+            tab.onChatsPage -> 1
+            else -> 4
+        }
+        is Screen.Settings -> 3
+        is Screen.Downloads -> 4
+        is Screen.Media, is Screen.About -> null
+    }
+
+    /** How far a screen slides in as it fades: a twelfth of the width, as the browser's pages do. */
+    const val SLIDE_PART = 12
+}
 
 /**
  * A video that will not fit, and what the device is holding that the viewer could do something
@@ -631,6 +682,8 @@ private fun Root() {
     val device = remember { if (FormFactor.isTv(context)) "tv" else "phone" }
     // Where leaving the Downloads screen goes back to.
     var downloadsCameFrom by remember { mutableStateOf<Screen>(Screen.Chats) }
+    // Where leaving Settings goes back to: the page the bar's Settings was pressed on.
+    var settingsCameFrom by remember { mutableStateOf<Screen>(Screen.Chats) }
     // Whether the Downloads screen opens on its cached videos, which is how Settings' Cached
     // videos row reaches the list of them.
     var downloadsOnCached by remember { mutableStateOf(false) }
@@ -696,6 +749,11 @@ private fun Root() {
     // whatever this account happens to have, so there is nothing for the default saver to write.
     var pickedTabKey by rememberSaveable { mutableStateOf("") }
     val pickedTab = remember(pickedTabKey) { BrowseSection.decode(pickedTabKey) }
+    // The Chats page's chip (a folder or one of Telegram's filters) last open, for the bar's Chats.
+    var lastChatsKey by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(pickedTab) { if (pickedTab?.onChatsPage == true) lastChatsKey = pickedTabKey }
+    // The phone's one floating bar, shared by every page it is on.
+    val touchChrome = remember { TouchChrome() }
 
     // The account's Telegram folders, which become destinations of their own. Collected here
     // rather than inside the chat list's own state because they arrive on TDLib's schedule, not
@@ -1161,7 +1219,70 @@ private fun Root() {
             HomeLaunch.show.compareAndSet(ask, null)
         }
 
-        when (val current = screen) {
+        // Settings and Downloads, from the phone's bar, its popover, the chat list's menus and the
+        // notification. Back from either goes to the page they were opened from; moving between the
+        // two by the bar is a step sideways, so Back skips the other one rather than bouncing
+        // between them (TouchRoutes).
+        val openSettings: () -> Unit = {
+            if (screen !is Screen.Settings) {
+                settingsCameFrom = TouchRoutes.backTarget(
+                    to = Screen.Settings,
+                    from = screen,
+                    fromBack = if (screen is Screen.Downloads) downloadsCameFrom else null,
+                    toBack = settingsCameFrom,
+                    lateral = { it is Screen.Settings || it is Screen.Downloads },
+                    home = Screen.Chats,
+                )
+                settingsPage = null
+                screen = Screen.Settings
+            }
+        }
+        val openDownloads: () -> Unit = {
+            if (screen !is Screen.Downloads) {
+                downloadsCameFrom = TouchRoutes.backTarget(
+                    to = Screen.Downloads,
+                    from = screen,
+                    fromBack = if (screen is Screen.Settings) settingsCameFrom else null,
+                    toBack = downloadsCameFrom,
+                    lateral = { it is Screen.Settings || it is Screen.Downloads },
+                    home = Screen.Chats,
+                )
+            }
+            downloadsOnCached = false
+            screen = Screen.Downloads
+        }
+        val reducedMotion = rememberReducedMotion() || Motion.reduced
+        // A page of the browser, from Settings or Downloads: the browser comes back on it.
+        val browseTo: (BrowseSection) -> Unit = { section ->
+            pickedTabKey = BrowseSection.encode(section)
+            screen = Screen.Chats
+        }
+        val touchNav = TouchNav(
+            account = accountHeader,
+            favoriteCount = favorites.size,
+            downloadCount = activeDownloads.size,
+            updateVersion = offeredUpdate,
+            onHome = { browseTo(BrowseSection.of(BrowseTab.Home)) },
+            onChats = {
+                val back = BrowseSection.decode(lastChatsKey)
+                browseTo(back ?: BrowseSection.of(BrowseTab.Chats))
+            },
+            onSearch = {
+                screen = Screen.Chats
+                touchChrome.searchAsked = true
+            },
+            onSettings = openSettings,
+            onFavourites = { browseTo(BrowseSection.of(BrowseTab.Favorites)) },
+            onDownloads = openDownloads,
+            onHistory = { tab ->
+                scope.launch { settings.setHistoryTab(tab.name) }
+                browseTo(BrowseSection.of(BrowseTab.History))
+            },
+            onUpdate = { showUpdate = true },
+        )
+
+        val screens: @Composable (Screen) -> Unit = screens@{ current ->
+        when (current) {
             is Screen.Chats -> {
                 BrowseScreen(
                     // Held on its own loading state until the jump has been decided, so the
@@ -1185,12 +1306,8 @@ private fun Root() {
                     },
                     onOpenChat = { openChat(it) },
                     onResumeMedia = { resumeMedia(it) },
-                    onOpenSettings = { screen = Screen.Settings },
-                    onOpenDownloads = {
-                        downloadsCameFrom = Screen.Chats
-                        downloadsOnCached = false
-                        screen = Screen.Downloads
-                    },
+                    onOpenSettings = openSettings,
+                    onOpenDownloads = openDownloads,
                     downloadCount = activeDownloads.size,
                     updateVersion = offeredUpdate,
                     onUpdate = { showUpdate = true },
@@ -1382,14 +1499,23 @@ private fun Root() {
                     // so a full re-sync on the way out would be work nothing asked for.
                     chatsViewModel.refreshIfStale()
                     settingsPage = null
-                    screen = Screen.Chats
+                    screen = settingsCameFrom
                 }
                 BackHandler(onBack = leaveSettings)
                 val lock = appLock
                 // With no PIN there is nothing to ask, and a PIN set from inside Settings must not
                 // lock the viewer out of the page they set it on.
                 LaunchedEffect(lock?.pinSet) { if (lock?.pinSet == false) settingsUnlocked = true }
-                if (lock == null) return@Box
+                // The bar is on Settings' own list, lit on Settings; a page under it, or the PIN pad
+                // in front of it, has a back arrow instead.
+                TouchPage(
+                    if (lock != null && (!lock.pinSet || settingsUnlocked) && settingsPage == null) {
+                        TouchPageSpec(current = TouchDestination.Settings)
+                    } else {
+                        null
+                    },
+                )
+                if (lock == null) return@screens
                 if (lock.pinSet && !settingsUnlocked) {
                     PinPad(
                         settings = settings,
@@ -1398,7 +1524,7 @@ private fun Root() {
                         onDone = { settingsUnlocked = true },
                         onCancel = leaveSettings,
                     )
-                    return@Box
+                    return@screens
                 }
                 SettingsScreen(
                     chats = chats,
@@ -1423,6 +1549,40 @@ private fun Root() {
                 val leaveAbout = { screen = Screen.Settings }
                 BackHandler(onBack = leaveAbout)
                 AboutScreen(onBack = leaveAbout)
+            }
+        }
+        }
+
+        if (FormFactor.isTv(context)) {
+            screens(screen)
+        } else {
+            // The phone: one floating bar over every page it belongs to, and the pages changing
+            // under it the way Home and Chats do (see PhoneBrowse), each keeping its scroll.
+            val holder = rememberSaveableStateHolder()
+            TouchNavHost(nav = touchNav, chrome = touchChrome, pageKey = TouchScreens.key(screen)) {
+                AnimatedContent(
+                    targetState = screen,
+                    contentKey = { TouchScreens.key(it) },
+                    transitionSpec = {
+                        val from = TouchScreens.order(initialState, pickedTab)
+                        val to = TouchScreens.order(targetState, pickedTab)
+                        when {
+                            // A chat and About open as they always have, at once.
+                            from == null || to == null -> EnterTransition.None togetherWith ExitTransition.None
+                            reducedMotion -> fadeIn(Motion.standard(Motion.Fast)) togetherWith fadeOut(Motion.standard(Motion.Fast))
+                            else -> (
+                                fadeIn(Motion.standard(Motion.Normal)) +
+                                    slideInHorizontally(Motion.standard(Motion.Normal)) { width -> (if (to >= from) width else -width) / TouchScreens.SLIDE_PART }
+                                ) togetherWith fadeOut(Motion.standard(Motion.Fast))
+                        }
+                    },
+                    label = "phoneScreen",
+                ) { shown ->
+                    val key = TouchScreens.key(shown)
+                    holder.SaveableStateProvider(key) {
+                        CompositionLocalProvider(LocalTouchPageKey provides key) { screens(shown) }
+                    }
+                }
             }
         }
 
