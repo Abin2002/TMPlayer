@@ -97,7 +97,9 @@ fun BoxScope.TopMessageHost() {
     }
     AnimatedVisibility(
         visible = shown != null,
-        modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 8.dp, start = 24.dp, end = 24.dp),
+        // A television has no status bar but crops its edges: the pill keeps inside the overscan.
+        modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding()
+            .padding(top = if (isTouch()) 8.dp else com.tmplayer.ui.theme.Tv.SafeV, start = 24.dp, end = 24.dp),
         enter = fadeIn() + slideInVertically { -it / 2 },
         exit = fadeOut() + slideOutVertically { -it / 2 },
     ) {

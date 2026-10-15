@@ -711,7 +711,7 @@ fun MediaGridScreen(
                             state = listState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = padding,
-                            verticalArrangement = Arrangement.spacedBy(if (touch) 2.dp else 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(if (touch) 2.dp else 4.dp),
                         ) {
                             if (metaNotice) item(key = "meta-notice") { metaNoticeCard() }
                             if (course != null || loadedOnly) item(key = "course") { courseHeader() }
@@ -1432,7 +1432,7 @@ internal fun Header(
             ) {
                 Text(s.gridRecentSearchesLabel, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
                 for (recent in recentSearches) {
-                    Pill(recent, TmIcons.History) {
+                    Pill(recent, TmIcons.History, plain = true) {
                         // The row goes as soon as there is a query, so focus moves first, as Clear does.
                         runCatching { searchField.requestFocus() }
                         onQuery(recent)
@@ -1750,12 +1750,14 @@ private fun Pill(
     icon: ImageVector,
     tintWhenIdle: Color = Tone.text,
     showLabel: Boolean = true,
+    /** Plain words until the remote is on it: a recent search, with no box of its own. */
+    plain: Boolean = false,
     onClick: () -> Unit,
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val background by animateColorAsState(
-        targetValue = if (focused) Tone.focusFill else Tone.surfaceHigh,
+        targetValue = if (focused) Tone.focusFill else if (plain) Color.Transparent else Tone.surfaceHigh,
         animationSpec = tween(140),
         label = "pill",
     )
@@ -1774,7 +1776,7 @@ private fun Pill(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(icon, contentDescription = if (showLabel) null else label, tint = foreground, modifier = Modifier.size(22.dp))
+        Icon(icon, contentDescription = if (showLabel) null else label, tint = if (plain && !focused) Tone.muted else foreground, modifier = Modifier.size(22.dp))
         if (showLabel) {
             Text(label, style = MaterialTheme.typography.bodyLarge, color = foreground, maxLines = 1)
         }
@@ -2037,7 +2039,7 @@ private fun MediaRow(
         onLongClick = onLongClick,
         selected = selected,
         art = { artModifier ->
-            MediaArt(item, watched, artModifier, compact = touch, selected = selected, finished = finished, poster = true, thumb = touch)
+            MediaArt(item, watched, artModifier, compact = touch, selected = selected, finished = finished, poster = true, thumb = true)
         },
     ) {
         Text(
@@ -2102,8 +2104,8 @@ private fun SeriesRow(
 
 /**
  * The frame of a row in a chat's list: a small 2:3 [art] at the start and [text] taking the rest of
- * the width. On a phone a card with the system's own surface and ripple, since the focus border
- * only means anything to a remote.
+ * the width. No card behind a row on either: on a television the row the remote is on fills and
+ * takes the focus edge, the others are the poster and its words on the page's own background.
  */
 @Composable
 private fun ListRow(
@@ -2135,7 +2137,7 @@ private fun ListRow(
                     } else {
                         Modifier
                             .clip(RoundedCornerShape(Corner.Medium))
-                            .background(if (focused) Tone.surfaceHigh else Tone.surface)
+                            .background(if (focused) Tone.surfaceHigh else Color.Transparent)
                             .border(Focus.Edge, border, RoundedCornerShape(Corner.Medium))
                             .selectionEdge(selected, RoundedCornerShape(Corner.Medium))
                             .holdOrPress(interactions, onClick, onLongClick)
@@ -2441,7 +2443,7 @@ internal val TOUCH_EDGE = 16.dp
 /** How many rows from the bottom the next page is fetched in the list arrangement. */
 private const val LIST_LEAD = 4
 
-private val ROW_POSTER_WIDTH = 104.dp
+private val ROW_POSTER_WIDTH = 72.dp
 private val TOUCH_ROW_POSTER_WIDTH = 56.dp
 
 /**

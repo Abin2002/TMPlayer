@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -140,15 +141,18 @@ internal fun Versions(
             copyChat(item, item, chatTitle)?.let { s.detailCopyFrom(it) },
         ).joinToString("  ·  ")
     }
-    // A phone lists the copies in its bottom sheet, over the page; elsewhere they open in place.
-    val sheet = com.tmplayer.ui.components.LocalSheetHost.current?.takeIf { isTouch() }
-    val list: @Composable (Boolean) -> Unit = { withHeader ->
+    // A phone lists the copies in its bottom sheet, over the page, and a television on a page of
+    // their own over it; the desktop opens them in place.
+    val tv = !isTouch()
+    val sheet = com.tmplayer.ui.components.LocalSheetHost.current?.takeIf { !tv }
+    val list: @Composable (Boolean, androidx.compose.ui.focus.FocusRequester?) -> Unit = { withHeader, chosenFocus ->
         CopyChooser(
             header = withHeader,
             item = item,
             files = files,
             chatTitle = chatTitle,
             started = started,
+            chosenFocus = chosenFocus,
             onChoose = { copy ->
                 open = false
                 if (copy.id != item.id) onPick(copy.asVersion(item))
@@ -159,20 +163,30 @@ internal fun Versions(
         CopySummary(
             summary = summary,
             count = s.detailVersions(files.size),
-            action = if (open && sheet == null) s.detailCopyDone else s.detailCopyChange,
+            action = if (open && sheet == null && !tv) s.detailCopyDone else s.detailCopyChange,
             onClick = { open = !open },
         )
-        if (sheet == null) {
-            AnimatedVisibility(open) { list(true) }
+        if (sheet == null && !tv) {
+            AnimatedVisibility(open) { list(true, null) }
         }
     }
-    if (sheet != null && open) {
+    if ((sheet != null || tv) && open) {
         val cover = rememberCover(item)
         val wide = com.tmplayer.ui.online.rememberMeta(item, showOnly = true)?.wideUrl
         val source = remember(item.id, cover, wide) {
             com.tmplayer.ui.components.BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, wide)
         }
-        sheet.Sheet(onDismiss = { open = false }, fullScreen = true) {
+        if (tv) {
+            TvCopiesPage(
+                source = source,
+                title = SeriesShelf.tileTitle(item),
+                subtitle = copiesSubtitle(item, files, chatTitle, s),
+                onClose = { open = false },
+                list = { focus -> list(false, focus) },
+            )
+            return
+        }
+        sheet!!.Sheet(onDismiss = { open = false }, fullScreen = true) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 CopiesHeader(
                     source = source,
@@ -180,8 +194,49 @@ internal fun Versions(
                     subtitle = copiesSubtitle(item, files, chatTitle, s),
                     onClose = { open = false },
                 )
-                Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)) { list(false) }
+                Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)) { list(false, null) }
             }
+        }
+    }
+}
+
+/**
+ * A television's copies list: a page of its own over the details, the phone sheet's picture and
+ * title at its top, the copies under it, the remote landing on the one that plays. Back closes it,
+ * as the round Close at the top end does; a television has no sheet to drag away.
+ */
+@Composable
+private fun TvCopiesPage(
+    source: com.tmplayer.ui.components.BackdropSource,
+    title: String,
+    subtitle: String,
+    onClose: () -> Unit,
+    list: @Composable (androidx.compose.ui.focus.FocusRequester) -> Unit,
+) {
+    val chosen = remember { androidx.compose.ui.focus.FocusRequester() }
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onClose,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        // The picture and the title stay put and the copies scroll under them, so the remote
+        // walking down a long list never loses what the list is of.
+        Column(Modifier.fillMaxSize().background(com.tmplayer.ui.theme.FloatingTone.sheet)) {
+            CopiesHeader(source = source, title = title, subtitle = subtitle, onClose = onClose, tv = true)
+            Column(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = com.tmplayer.ui.theme.Tv.SafeH)
+                    .padding(bottom = com.tmplayer.ui.theme.Tv.SafeV),
+            ) { Column(Modifier.widthIn(max = 760.dp)) { list(chosen) } }
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        // The dialog's window takes a frame or two to be laid out and handed the focus.
+        repeat(5) {
+            kotlinx.coroutines.delay(60)
+            if (runCatching { chosen.requestFocus() }.isSuccess) return@LaunchedEffect
         }
     }
 }
@@ -192,9 +247,16 @@ internal fun Versions(
  * its foot, and a round close at the top end, the sheet having no handle to drag.
  */
 @Composable
-private fun CopiesHeader(source: com.tmplayer.ui.components.BackdropSource, title: String, subtitle: String, onClose: () -> Unit) {
+private fun CopiesHeader(
+    source: com.tmplayer.ui.components.BackdropSource,
+    title: String,
+    subtitle: String,
+    onClose: () -> Unit,
+    /** A television's: shorter, its words and Close inside the overscan, Close a focusable disc. */
+    tv: Boolean = false,
+) {
     val sheetColour = com.tmplayer.ui.theme.FloatingTone.sheet
-    Box(Modifier.fillMaxWidth().height(COPIES_HEADER).clipToBounds()) {
+    Box(Modifier.fillMaxWidth().height(if (tv) COPIES_HEADER_TV else COPIES_HEADER).clipToBounds()) {
         com.tmplayer.ui.components.ArtBackdrop(source, Modifier.matchParentSize())
         Box(
             Modifier
@@ -207,13 +269,22 @@ private fun CopiesHeader(source: com.tmplayer.ui.components.BackdropSource, titl
                     ),
                 ),
         )
-        com.tmplayer.ui.components.FloatingRoundButton(
-            TmIcons.Close,
-            LocalStrings.current.commonClose,
-            onClose,
-            Modifier.align(Alignment.TopEnd).padding(12.dp),
-        )
-        Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 20.dp, vertical = 12.dp)) {
+        if (tv) {
+            PageDiscButton(
+                TmIcons.Close,
+                LocalStrings.current.commonClose,
+                onClose,
+                Modifier.align(Alignment.TopEnd).padding(horizontal = com.tmplayer.ui.theme.Tv.SafeH, vertical = com.tmplayer.ui.theme.Tv.SafeV),
+            )
+        } else {
+            com.tmplayer.ui.components.FloatingRoundButton(
+                TmIcons.Close,
+                LocalStrings.current.commonClose,
+                onClose,
+                Modifier.align(Alignment.TopEnd).padding(12.dp),
+            )
+        }
+        Column(Modifier.align(Alignment.BottomStart).padding(horizontal = if (tv) com.tmplayer.ui.theme.Tv.SafeH else 20.dp, vertical = 12.dp)) {
             Text(
                 title,
                 style = MaterialTheme.typography.headlineSmall,
@@ -229,6 +300,9 @@ private fun CopiesHeader(source: com.tmplayer.ui.components.BackdropSource, titl
 
 /** How tall the copies sheet's picture is. */
 private val COPIES_HEADER = 220.dp
+
+/** A television's: a third of its 540dp height, so the first copies show under it. */
+private val COPIES_HEADER_TV = 190.dp
 
 /** "7 versions  ·  Film Club", or "7 versions  ·  in 3 chats". */
 private fun copiesSubtitle(item: MediaItem, files: List<Pair<MediaItem, List<MediaItem>>>, chatTitle: String, s: Messages): String {
@@ -255,6 +329,8 @@ private fun CopyChooser(
     files: List<Pair<MediaItem, List<MediaItem>>>,
     chatTitle: String,
     started: (MediaItem) -> Boolean,
+    /** Put on the copy that plays, for a remote to land on when the list opens. */
+    chosenFocus: androidx.compose.ui.focus.FocusRequester? = null,
     onChoose: (MediaItem) -> Unit,
 ) {
     val s = LocalStrings.current
@@ -321,6 +397,7 @@ private fun CopyChooser(
                     ).joinToString("  ·  "),
                     chosen = same.any { it.id == item.id },
                     onClick = { onChoose(copy) },
+                    focusRequester = chosenFocus?.takeIf { same.any { it.id == item.id } },
                 )
             }
         }
@@ -329,7 +406,15 @@ private fun CopyChooser(
 
 /** One copy in [CopyChooser]: a radio, its size as the title, and what it is under that. */
 @Composable
-private fun CopyOption(copy: MediaItem, title: String, what: String, facts: String, chosen: Boolean, onClick: () -> Unit) {
+private fun CopyOption(
+    copy: MediaItem,
+    title: String,
+    what: String,
+    facts: String,
+    chosen: Boolean,
+    onClick: () -> Unit,
+    focusRequester: androidx.compose.ui.focus.FocusRequester? = null,
+) {
     val s = LocalStrings.current
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
@@ -337,6 +422,7 @@ private fun CopyOption(copy: MediaItem, title: String, what: String, facts: Stri
     val shape = RoundedCornerShape(Corner.Medium)
     Row(
         Modifier
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
             .fillMaxWidth()
             .clip(shape)
             .background(
@@ -403,10 +489,10 @@ private fun CopySummary(summary: String, count: String, action: String, onClick:
         Modifier
             .fillMaxWidth()
             .clip(shape)
-            // A phone draws only the outline: a filled block here read as one more card on a page
-            // already made of them. The television keeps the fill its focus colour replaces.
-            .background(if (focused) Tone.focusFill else if (tv) Tone.surfaceHigh else Color.Transparent)
-            .then(if (tv) Modifier else Modifier.border(1.dp, Tone.outline, shape))
+            // Only the outline: a filled block here read as one more card on a page already made
+            // of them. On a television the focus fill takes the outline's place.
+            .background(if (focused) Tone.focusFill else Color.Transparent)
+            .then(if (focused) Modifier else Modifier.border(1.dp, Tone.outline, shape))
             .focusRing(focused, shape)
             .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = if (tv) 12.dp else 10.dp),
