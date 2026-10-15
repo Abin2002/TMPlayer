@@ -5,12 +5,13 @@
 // of a row line up whichever kind each card is.
 import Icon from './Icon.astro';
 import Shot, { type ShotProps } from './Shot.astro';
+import { SHOT_CARD } from './shot-sizes';
 
 interface Props { title: string; body?: string; shot?: ShotProps; shotIcon?: string }
 const { title, body, shot, shotIcon } = Astro.props;
 ---
 <div class="card">
-  {shot && <Shot {...shot} frame="card-shot" />}
+  {shot && <Shot sizes={SHOT_CARD} {...shot} frame="card-shot" />}
   {shotIcon && (
     <span class="card-shot card-shot-icon" aria-hidden="true">
       <Icon name={shotIcon} />

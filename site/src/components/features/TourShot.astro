@@ -6,6 +6,7 @@
 import Device from '../Device.astro';
 import Shot from '../Shot.astro';
 import type { Screen } from './GalleryShot.astro';
+import { deviceSizes } from '../shot-sizes';
 import { text } from '../../i18n/t';
 
 export interface Point { x: string; y: string; note: string }
@@ -15,7 +16,7 @@ const t = (k: string) => text(Astro.locals.lang, k);
 ---
 <figure class="shot tour-shot" id={id} data-reveal>
   <Device kind={shot.device}>
-    <Shot src={shot.src} light={shot.light} alt={t(shot.alt)} width={shot.width} height={shot.height} />
+    <Shot src={shot.src} light={shot.light} alt={t(shot.alt)} width={shot.width} height={shot.height} sizes={deviceSizes(shot.device)} />
     <div class="tour-marks" aria-hidden="true">
       {points.map((p) => <span style={`--x: ${p.x}; --y: ${p.y}`}></span>)}
     </div>
