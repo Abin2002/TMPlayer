@@ -107,7 +107,13 @@ fun ArtBackdrop(
                     )
                     step.picture?.let { SmallPicture(it, Modifier.align(Alignment.TopEnd)) }
                 }
-                else -> GeneratedCover(source.cover, Modifier.fillMaxSize(), showTitle = false)
+                // The colours alone: the cover's big number and chat initial sit in its top
+                // corners, where a page's Close or Back floats, and the page already says both.
+                else -> GeneratedCover(
+                    remember(source.cover) { source.cover.copy(number = null, chatInitial = null) },
+                    Modifier.fillMaxSize(),
+                    showTitle = false,
+                )
             }
         }
     }
