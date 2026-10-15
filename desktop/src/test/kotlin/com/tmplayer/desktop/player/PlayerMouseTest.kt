@@ -467,6 +467,24 @@ class PlayerMouseTest {
     }
 
     @Test
+    fun `watch again after the sleep timer stopped the video at its end opens it again`() = runComposeUiTest {
+        open()
+        onNodeWithTag("video").performMouseInput { rightClick(onPicture) }
+        onNodeWithText("Playback options").performClick()
+        onNodeWithText("Sleep timer").performClick()
+        onNodeWithText("End of this video").performClick()
+        waitForIdle()
+        engine.end()
+        waitForIdle()
+        assertEquals(1, engine.count("stop"))
+        onNodeWithText("Keep watching").performClick()
+        waitForIdle()
+        onNodeWithText("Watch again").performClick()
+        waitUntil(timeoutMillis = 5_000) { engine.count("open") == 2 && engine.state.value.opened }
+        assertEquals(0L, engine.state.value.positionMs)
+    }
+
+    @Test
     fun `the wheel over the shortcut sheet leaves the volume alone`() = runComposeUiTest {
         open()
         press(Key.Slash, shift = true)

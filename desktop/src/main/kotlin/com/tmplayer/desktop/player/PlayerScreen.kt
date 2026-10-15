@@ -1363,9 +1363,16 @@ fun PlayerScreen(
                 },
                 onBack = onBack,
                 onWatchAgain = {
-                    phase = Phase.Playing
-                    engine.seekTo(0)
-                    engine.play()
+                    if (engine.state.value.opened) {
+                        phase = Phase.Playing
+                        engine.seekTo(0)
+                        engine.play()
+                    } else {
+                        // "Still watching?" stopped the engine at the end (the sleep timer), and
+                        // a stopped engine has no file left to seek in: open it again from the start.
+                        reopenAt = 0L
+                        attempt++
+                    }
                     refocus()
                 },
                 onPlayNext = {
