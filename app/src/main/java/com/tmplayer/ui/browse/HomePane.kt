@@ -66,6 +66,7 @@ import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ShelfEntry
 import com.tmplayer.data.WatchLaterRecord
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.components.WithinMargins
 import com.tmplayer.ui.components.edgeFade
@@ -305,6 +306,7 @@ internal fun HomePane(
                 }
             }
         }
+        ScrollToTop(listState)
     }
 
     // Somewhere for the remote to stand the moment Home opens. Keyed on the first row, so a row

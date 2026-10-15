@@ -81,6 +81,7 @@ import com.tmplayer.ui.browse.FirstVideoCard
 import com.tmplayer.ui.browse.HomeViewModel
 import com.tmplayer.ui.browse.NewBadge
 import com.tmplayer.ui.browse.rememberHomeRows
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.UiState
 import com.tmplayer.ui.components.WithinMargins
 import com.tmplayer.ui.components.edgeFade
@@ -264,6 +265,7 @@ internal fun HomeRowsView(
                         }
                     }
                 }
+                ScrollToTop(list)
             }
         }
     }
@@ -333,8 +335,10 @@ private fun RowPage(
                     is HomeRow.Recent -> shelfSections(state, sizes, row.entries, { titles[it].orEmpty() }, onOpenSeries)
                 }
             }
+            val list = rememberLazyListState()
             LazyColumn(
                 Modifier.fillMaxSize(),
+                state = list,
                 contentPadding = PaddingValues(start = side, end = side, top = 8.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
@@ -350,6 +354,7 @@ private fun RowPage(
                     }
                 }
             }
+            ScrollToTop(list)
         }
     }
 }
