@@ -86,6 +86,7 @@ import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.Tv
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.Text as M3Text
 
@@ -143,6 +144,8 @@ internal fun HomePane(
      * page opened from the show's own Play sat behind the show and sent the viewer round again.
      */
     onPlayNow: (MediaItem, String) -> Unit = onPlay,
+    /** A video's page, whatever "Open a video's page first" says: the carousel's Details on a television. */
+    onDetails: (MediaItem, String) -> Unit = onHoldMedia,
 ) {
     val s = LocalStrings.current
     val touch = isTouch()
@@ -153,9 +156,10 @@ internal fun HomePane(
         Box(Modifier.fillMaxSize().padding(top = under)) { FirstVideoEmpty(onOpenSection) }
         return
     }
-    // On a phone, Recently added in starred chats is the featured carousel at the top rather than
-    // a row: present from the first frame whenever the row is, so nothing below it moves when it fills.
-    val recent = if (touch) rows.firstNotNullOfOrNull { it as? HomeRow.Recent } else null
+    // Recently added in starred chats is the featured carousel at the top rather than a row, on a
+    // phone and a television alike: present from the first frame whenever the row is, so nothing
+    // below it moves when it fills.
+    val recent = rows.firstNotNullOfOrNull { it as? HomeRow.Recent }
     val featured = rememberFeatured(recent)
     val carousel = recent != null && featured?.isEmpty() != true
     val listed = if (recent != null) rows.filterNot { it === recent } else rows
@@ -197,7 +201,7 @@ internal fun HomePane(
         ),
     ) {
         // Fixed from the window alone, so it is the same before and after the pages arrive.
-        val carouselHeight = featuredHeight(maxWidth, maxHeight - under) + under
+        val carouselHeight = if (touch) featuredHeight(maxWidth, maxHeight - under) + under else TV_FEATURED_HEIGHT
         val carouselPx = with(density) { carouselHeight.roundToPx() }
         val underPx = with(density) { under.roundToPx() }
         // While the carousel's picture is under the status bar the bar's icons go light over it;
@@ -216,10 +220,31 @@ internal fun HomePane(
         // A sheet or a dialog takes the window's focus, which is what stops the pages moving under it.
         val active = lifecycleState.isAtLeast(Lifecycle.State.RESUMED) && windowFocused && carouselOnScreen && shown && opened.series == null
         // Tiles here may wear the show's or the film's picture (see LocalOnlineArt); a chat's grid keeps frames.
+        val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+        val rowStep = with(density) { TV_DOWN_STEP.toPx() }
         CompositionLocalProvider(LocalOnlineArt provides true) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().then(
+                    if (touch) {
+                        Modifier
+                    } else {
+                        // Down from a row of tiles finds nothing when the next row is wholly below
+                        // the screen (the row's own lazy layout answers the search first), which
+                        // the carousel at the top made the usual case on Home: the list then moves
+                        // down by a row's height and the remote follows into the row that appeared.
+                        Modifier.onPreviewKeyEvent { event ->
+                            if (event.type != KeyEventType.KeyDown || event.key != Key.DirectionDown) return@onPreviewKeyEvent false
+                            if (focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down)) return@onPreviewKeyEvent true
+                            if (!listState.canScrollForward) return@onPreviewKeyEvent false
+                            scope.launch {
+                                listState.animateScrollBy(rowStep)
+                                focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down)
+                            }
+                            true
+                        }
+                    },
+                ),
                 contentPadding = PaddingValues(
                     top = if (!touch) Tv.FocusClearance else if (carousel) 0.dp else under + 4.dp,
                     bottom = bottom,
@@ -227,7 +252,22 @@ internal fun HomePane(
                 verticalArrangement = Arrangement.spacedBy(if (touch) ROW_GAP_TOUCH else ROW_GAP_TV),
             ) {
                 if (carousel) {
-                    item(key = FEATURED_KEY, contentType = FEATURED_KEY) {
+                    if (!touch) item(key = FEATURED_KEY, contentType = FEATURED_KEY) {
+                        TvFeaturedCarousel(
+                            picks = featured,
+                            height = carouselHeight,
+                            start = start,
+                            end = end,
+                            watch = watch,
+                            chatTitle = chatTitle,
+                            active = active,
+                            onPlay = onPlayNow,
+                            onDetails = { pick ->
+                                val series = pick.series
+                                if (series != null) opened.open(series) else onDetails(pick.item, chatTitle(pick.item.chatId))
+                            },
+                        )
+                    } else item(key = FEATURED_KEY, contentType = FEATURED_KEY) {
                         FeaturedCarousel(
                             picks = featured,
                             height = carouselHeight,
@@ -288,7 +328,19 @@ internal fun HomePane(
                             true
                         }
                     }
-                    Column {
+                    // On a television the first row under the carousel keeps the carousel whole
+                    // over it, as Home opens, rather than scrolling it half away for focus room.
+                    val keepCarousel = if (!touch && carousel && isFirst) {
+                        Modifier.onFocusChanged { state ->
+                            if (state.hasFocus) scope.launch {
+                                withFrameNanos {}
+                                listState.animateScrollToItem(0)
+                            }
+                        }
+                    } else {
+                        Modifier
+                    }
+                    Column(keepCarousel) {
                         RowHeading(
                             title,
                             start = start,
@@ -408,7 +460,15 @@ internal fun HomePane(
         is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> true
     }
     LaunchedEffect(firstKey, firstReady) {
-        if (!touch && firstReady) runCatching { first.requestFocus() }
+        if (!touch && firstReady) {
+            runCatching { first.requestFocus() }
+            // The focused row asks to be brought into view with room round it, which scrolled the
+            // carousel above it half away; Home opens at its top, the carousel whole over the row.
+            if (carousel) {
+                withFrameNanos { }
+                listState.scrollToItem(0)
+            }
+        }
     }
 
     opened.series?.let { series ->
@@ -712,6 +772,9 @@ private val STRIP_GAP = 12.dp
 
 /** The lazy key of the phone's featured carousel at the top of Home. */
 private const val FEATURED_KEY = "featured"
+
+/** How far Home moves down on a television when Down finds no row on screen below the remote. */
+private val TV_DOWN_STEP = 200.dp
 
 /**
  * The carousel's pages from the Recently added row [recent]: null while that row is still being
