@@ -88,7 +88,8 @@ fun AvatarStack(
     val s = LocalStrings.current
     val shown = chatIds.take(max)
     val more = chatIds.size - shown.size
-    val names = chatIds.mapNotNull { chats[it]?.title }.joinToString(", ")
+    // Each name isolated, so a Hebrew chat between two English ones does not reorder the list.
+    val names = chatIds.mapNotNull { chats[it]?.title }.joinToString(", ") { "\u2068$it\u2069" }
     Row(
         modifier.semantics { contentDescription = s.searchInChats(names) },
         verticalAlignment = Alignment.CenterVertically,
@@ -107,7 +108,7 @@ fun AvatarStack(
         val single = shown.singleOrNull()?.let { chats[it]?.title }
         val label = when {
             more > 0 -> s.searchAndMore(more)
-            single != null -> single
+            single != null -> "\u2068$single\u2069"
             else -> null
         }
         if (label != null) {

@@ -1,5 +1,11 @@
 package com.tmplayer.ui.browse
 
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import com.tmplayer.ui.nav.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import com.tmplayer.ui.components.chevronTowardsEnd
 import androidx.compose.foundation.background
@@ -285,13 +291,18 @@ fun BrowseScreen(
     // empty. Those are read from disk after the first frame, so the tab settles once they arrive;
     // an explicit pick always wins. [picked] is hoisted rather than remembered here because
     // opening a chat swaps this screen out of the composition.
-    // "Only my folders" (Settings): Telegram's default groups, Chats and Saved Messages, are left
-    // off the drawer and the rail, and a section that names them lands on Home instead.
     val groupsContext = LocalContext.current
     val groupsSettings = remember(groupsContext) { SettingsStore(groupsContext) }
-    val defaultsHidden by remember(groupsSettings) { groupsSettings.hideDefaultGroups }.collectAsState(initial = false)
-    val sections = remember(folders, defaultsHidden) { browseSections(folders, defaultsHidden) }
-    // The folders are then the only way into the chats, so they are not left folded.
+    val sections = remember(folders) { browseSections(folders) }
+    // Where Telegram puts "All chats" among the folder chips.
+    val mainListPosition by com.tmplayer.data.Td.mainListPosition.collectAsState()
+    // "Only my folders" is retired: somebody who had it on lands once on their first folder's chip.
+    LaunchedEffect(folders.isNotEmpty()) {
+        val first = folders.firstOrNull() ?: return@LaunchedEffect
+        if (runCatching { groupsSettings.takeOnlyFolders() }.getOrDefault(false)) {
+            onPickTab(BrowseSection.Folder(first.id, first.title))
+        }
+    }
     // How many chats have something unread in them, not how many messages are unread across them:
     // the badge sits beside "Chats", whose Unread chip lists those chats.
     val allChats = (state as? UiState.Content)?.value?.chats
@@ -302,7 +313,7 @@ fun BrowseScreen(
     // a folder deleted elsewhere and the heading never keeps a stale name.
     val tab = picked?.let { chosen ->
         when (chosen) {
-            is BrowseSection.Tab -> DefaultGroups.reachable(chosen, defaultsHidden)
+            is BrowseSection.Tab -> chosen
             is BrowseSection.Folder -> sections.filterIsInstance<BrowseSection.Folder>()
                 .firstOrNull { it.id == chosen.id }
                 ?: chosen.takeIf { folders.isEmpty() }
@@ -397,16 +408,16 @@ fun BrowseScreen(
                         ) { pickSort(chatSort.toggled) },
                     )
                 }
-                chatPageChips(sections, defaultsHidden).forEach { chip ->
+                chatPageChips(folders, mainListPosition).forEach { chip ->
                     when (chip) {
                         is ChatPageChip.Filter -> add(
-                            ChipSpec(chip.filter.name, chip.label, chip.filter.icon, selected = chip.isSelected(section, chatFilter)) {
+                            ChipSpec(chip.filter.name, chip.label, chip.icon, selected = chip.isSelected(section, chatFilter)) {
                                 pickFilter(chip.filter)
                                 onPickTab(BrowseSection.of(BrowseTab.Chats))
                             },
                         )
                         is ChatPageChip.Folder -> add(
-                            ChipSpec("folder-${chip.folder.id}", chip.label, TmIcons.Folder, selected = chip.isSelected(section, chatFilter)) {
+                            ChipSpec("folder-${chip.folder.id}", chip.label, chip.icon, selected = chip.isSelected(section, chatFilter)) {
                                 onPickTab(chip.folder)
                             },
                         )
@@ -467,7 +478,6 @@ fun BrowseScreen(
                                 },
                                 onOpenChat = { id -> data.chats.firstOrNull { it.id == id }?.let(onOpenChat) },
                                 noFavourites = favorites.isEmpty(),
-                                firstStep = remember(defaultsHidden, folders) { DefaultGroups.firstStep(defaultsHidden, folders) },
                                 onOpenSection = { onPickTab(it); query = "" },
                                 onOpenWatchLater = openLater,
                                 onLaterArtWanted = onHomeLaterArtWanted,
@@ -602,7 +612,6 @@ fun BrowseScreen(
                                     nothingPlayed = continueWatching.isEmpty() && watchedHistory.isEmpty(),
                                     start = insets.start,
                                     end = insets.end,
-                                    defaultsHidden = defaultsHidden,
                                 )
                             }
                             ChatSection(
@@ -736,7 +745,6 @@ fun BrowseScreen(
                 }
             },
             sections = sections,
-            defaultsHidden = defaultsHidden,
             favourites = favorites,
             downloadCount = downloadCount,
             updateVersion = updateVersion,
@@ -760,14 +768,29 @@ fun BrowseScreen(
             onMessage = onMessage,
         )
     } else {
-        Row(Modifier.fillMaxSize()) {
+        // The search across every chat: the rail's first item, and the remote's search key.
+        var tvSearchOpen by rememberSaveable { mutableStateOf(false) }
+        BackHandler(enabled = tvSearchOpen) { tvSearchOpen = false }
+        Row(
+            Modifier.fillMaxSize().onPreviewKeyEvent { event ->
+                if (event.type == KeyEventType.KeyDown && event.key == Key.Search) {
+                    tvSearchOpen = true
+                    true
+                } else {
+                    false
+                }
+            },
+        ) {
             NavRail(
-                selected = tab.navSection,
+                searchOpen = tvSearchOpen,
+                onOpenSearch = { tvSearchOpen = true },
+                selected = if (tvSearchOpen) null else tab.navSection,
                 sections = sections,
                 favoriteCount = favorites.size,
                 unreadCount = unreadChats,
                 onSelect = { picked ->
-                    onPickTab(if (picked.isChats) chatsDestination(sections, defaultsHidden) else picked)
+                    tvSearchOpen = false
+                    onPickTab(picked)
                     query = ""
                 },
                 onOpenSettings = onOpenSettings,
@@ -777,7 +800,24 @@ fun BrowseScreen(
                 onUpdate = onUpdate,
             )
 
-            Column(Modifier.fillMaxSize().padding(end = Tv.SafeH).keepsVerticalFocus()) { pane(tab) }
+            Column(Modifier.fillMaxSize().padding(end = Tv.SafeH).keepsVerticalFocus()) {
+                if (tvSearchOpen) {
+                    TvSearchPage(
+                        search = search,
+                        state = searchState,
+                        chats = (state as? UiState.Content)?.value?.chats.orEmpty(),
+                        favourites = favorites,
+                        homeRows = homeRows,
+                        watch = homeWatch,
+                        onOpenChat = onOpenChat,
+                        onOpenMedia = openMedia,
+                        onPlayMedia = onPlayMedia,
+                        onMessage = onMessage,
+                    )
+                } else {
+                    pane(tab)
+                }
+            }
         }
     }
 
@@ -871,7 +911,7 @@ fun BrowseScreen(
         TvConfirm(
             title = s.browseClearFavouritesTitle,
             message = s.browseClearFavouritesMessage(favorites.size),
-            detail = if (defaultsHidden) DefaultGroups.favouritesUntouched(hidden = true) else s.browseClearFavouritesDetail,
+            detail = s.browseClearFavouritesDetail,
             confirmLabel = s.commonClear,
             onConfirm = {
                 confirmClearFavorites = false
@@ -1391,7 +1431,10 @@ private val THUMBNAIL_HEIGHT = 54.dp
 
 @Composable
 private fun NavRail(
-    selected: BrowseSection,
+    /** The search page is open: its item is the current one, and no section is. */
+    searchOpen: Boolean,
+    onOpenSearch: () -> Unit,
+    selected: BrowseSection?,
     sections: List<BrowseSection>,
     favoriteCount: Int,
     unreadCount: Int,
@@ -1463,6 +1506,16 @@ private fun NavRail(
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
+            // Search first, where Nuvio and the system's own apps put it on a television.
+            RailItem(
+                reveal = reveal,
+                label = s.commonSearch,
+                icon = TmIcons.Search,
+                badge = null,
+                selected = searchOpen,
+                onClick = onOpenSearch,
+                modifier = if (searchOpen) Modifier.focusRequester(selectedFocus) else Modifier,
+            )
             navGroups(sections, withDownloads = false).flatMap { it.entries }.forEach { entry ->
                 if (entry is NavEntry.Section) {
                     RailItem(
