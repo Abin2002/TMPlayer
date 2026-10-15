@@ -573,6 +573,9 @@ fun PlayerScreen(
         for (second in AUTOPLAY_COUNTDOWN_SEC downTo 1) {
             phase = Phase.Countdown(next, second)
             delay(1_000)
+            // Cancel and Play now on the sheet end the countdown: the end has not changed, so
+            // nothing else stops this loop from bringing it back and moving on regardless.
+            if (phase != Phase.Countdown(next, second)) return@LaunchedEffect
         }
         autoplay(next)
     }
@@ -1246,11 +1249,16 @@ fun PlayerScreen(
                 chip = if (phase == Phase.Playing && status.buffering && !showControls) s.playerBuffering else null,
             )
 
+            // A button that goes away as it is clicked takes the keyboard with it, so each of
+            // these hands the keys back to the player, as the skip pill does.
             resumedFrom?.let { from ->
                 ResumeNotice(
                     from = from,
                     lifted = showControls,
-                    onStartOver = ::startOver,
+                    onStartOver = {
+                        startOver()
+                        refocus()
+                    },
                     onTimeout = { resumedFrom = null },
                 )
             }
@@ -1267,8 +1275,14 @@ fun PlayerScreen(
                     label = episodes.labelFor(next),
                     secondsLeft = ((nextUpIn.coerceAtLeast(0) + 999) / 1000).toInt(),
                     lifted = showControls,
-                    onPlayNow = { switchTo(next) },
-                    onHide = { nextUpDismissed = true },
+                    onPlayNow = {
+                        switchTo(next)
+                        refocus()
+                    },
+                    onHide = {
+                        nextUpDismissed = true
+                        refocus()
+                    },
                 )
             }
 
@@ -1330,15 +1344,25 @@ fun PlayerScreen(
                 phase = phase,
                 title = title,
                 subtitle = subtitle,
-                onRetry = { attempt++ },
+                onRetry = {
+                    attempt++
+                    refocus()
+                },
                 onBack = onBack,
                 onWatchAgain = {
                     phase = Phase.Playing
                     engine.seekTo(0)
                     engine.play()
+                    refocus()
                 },
-                onPlayNext = { switchTo(it) },
-                onCancelNext = { phase = Phase.Finished },
+                onPlayNext = {
+                    switchTo(it)
+                    refocus()
+                },
+                onCancelNext = {
+                    phase = Phase.Finished
+                    refocus()
+                },
                 onKeepWatching = { (phase as? Phase.StillWatching)?.let(::keepWatching) },
                 nextLabel = { episodes.labelFor(it) },
             )
