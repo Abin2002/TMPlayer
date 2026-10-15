@@ -1775,6 +1775,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             // has been answered.
             if (isPlaying && stillWatchingUp) {
                 stillWatchingUp = false
+                resumeHeldDownloads()
                 hideStatus()
             }
             // A long download before the first frame is still the viewer waiting on this screen,
@@ -2349,6 +2350,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     override fun finish() {
         val stranded = !handingOver && isTaskRoot && !isChangingConfigurations &&
             intent.getBooleanExtra(EXTRA_OUTSIDE_APP_TASK, false)
+        // Leaving from "Still watching?" is an answer too: somebody pressed Back.
+        resumeHeldDownloads()
         super.finish()
         if (stranded) {
             runCatching {
@@ -3392,8 +3395,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     private fun keepWatching(next: MediaItem?) {
         stillWatchingUp = false
-        downloadsHeldForTheCard.forEach { OfflineDownloads.resume(this, it) }
-        downloadsHeldForTheCard = emptyList()
+        resumeHeldDownloads()
         if (next != null) {
             playEpisode(next)
             return
@@ -3403,6 +3405,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         if (exo.playbackState == Player.STATE_IDLE) exo.prepare()
         exo.play()
         keepScreenOn(true)
+    }
+
+    /**
+     * Lets the queued downloads "Still watching?" paused carry on. Any answer counts, not only Keep
+     * watching: play from a headset, and Back or Go back, which otherwise left them paused in
+     * Downloads with nothing to say why.
+     */
+    private fun resumeHeldDownloads() {
+        downloadsHeldForTheCard.forEach { OfflineDownloads.resume(this, it) }
+        downloadsHeldForTheCard = emptyList()
     }
 
     /**
