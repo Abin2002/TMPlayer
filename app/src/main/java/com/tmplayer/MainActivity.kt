@@ -858,7 +858,16 @@ private fun Root() {
                     watchedStore.markWatched(
                         WatchedRecord.of(item, chatTitle, System.currentTimeMillis(), manual = true),
                     )
-                    settings.clearResumePosition(item.chatId, item.messageId)
+                    // Every copy of it in Continue watching, as Remove from Continue watching
+                    // does: the card stands for all of them (HomeRows.foldCopies), and clearing
+                    // only this one put the copy behind it straight back in its place.
+                    val inContinue = settings.continueWatching.first()
+                        .firstOrNull { it.chatId == item.chatId && it.messageId == item.messageId }
+                    if (inContinue != null) {
+                        settings.clearResumeCopies(inContinue)
+                    } else {
+                        settings.clearResumePosition(item.chatId, item.messageId)
+                    }
                 } else {
                     watchedStore.markUnwatched(item.chatId, item.messageId)
                 }
