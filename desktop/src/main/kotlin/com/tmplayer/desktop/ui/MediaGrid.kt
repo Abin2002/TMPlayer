@@ -187,6 +187,9 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             model.search(query.trim())
         }
         LaunchedEffect(chat.id) { state.settings.rememberChatOpened(chat.id) }
+        // This chat's own order, from the Sort menu in the header.
+        val sort by remember(chat.id) { state.settings.videoSort(chat.id) }.collectAsState(initial = com.tmplayer.data.VideoSort.DEFAULT)
+        val sortScope = rememberCoroutineScope()
 
         PageHeader(
             title = chat.title,
@@ -208,6 +211,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             actions = {
                 SearchField(query, { query = it }, s.browseSearchChat, state.searchFocus, Modifier.width(300.dp), onDown = { gridNav?.focus(0) })
                 PosterSizeStep(state)
+                VideoSortMenu(sort) { picked -> sortScope.launch { state.settings.setVideoSort(chat.id, picked) } }
                 IconButton(onClick = { model.load() }) { Icon(TmIcons.Refresh, contentDescription = s.commonRefresh) }
             },
         )
@@ -233,13 +237,29 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             // HEVC) as one poster with the rest a pick in its details. While searching, every
             // episode stands on its own so the one searched for can be found.
             val grouping = query.isBlank()
-            val arranged = remember(content.items, grouping) {
-                if (grouping) {
-                    com.tmplayer.data.SeriesShelf.arrange(content.items)
+            // The viewer's corrections redraw the grid at once; the chat's own sort applies
+            // except while searching, when the listing keeps the search's ranking.
+            val corrections by com.tmplayer.data.VideoCorrections.state.collectAsState()
+            val progress by state.settings.watchProgress.collectAsState(initial = emptyMap())
+            val watchedList by state.watched.watched.collectAsState(initial = emptyMap())
+            val shownSort = if (grouping) sort else com.tmplayer.data.VideoSort.DEFAULT
+            val arranged = remember(content.items, grouping, corrections, shownSort, progress, watchedList) {
+                val entries = if (grouping) {
+                    com.tmplayer.data.SeriesShelf.arrange(content.items, corrections)
                 } else {
-                    com.tmplayer.data.SeriesShelf.foldFilmCopies(content.items).map { com.tmplayer.data.ShelfEntry.File(it) }
+                    com.tmplayer.data.SeriesShelf.foldFilmCopies(content.items, corrections).map { com.tmplayer.data.ShelfEntry.File(it) }
                 }
+                com.tmplayer.data.VideoSorting.sort(entries, shownSort, { item ->
+                    val key = SettingsStore.progressKey(item.chatId, item.messageId)
+                    when {
+                        key in watchedList -> com.tmplayer.data.VideoSorting.Progress.Watched
+                        key in progress -> com.tmplayer.data.VideoSorting.Progress.InProgress
+                        else -> com.tmplayer.data.VideoSorting.Progress.Untouched
+                    }
+                })
             }
+            // The newest listing of a chat the kids lock allows, for the name check in Settings.
+            LaunchedEffect(content.items) { com.tmplayer.data.NameReport.remember(chat.id, content.items) }
             // Films and shows first as one block of 2:3 posters, then every other video, each in
             // the chat's own order, so tall and short cards meet in one row at most.
             val posters = remember(arranged) {
@@ -274,6 +294,8 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 arranged.filterIsInstance<com.tmplayer.data.ShelfEntry.Show>().associate { it.series.cover.id to it.series }
             }
             val metaNotice = grouping && metaNoticeShown(state)
+            // An order other than Newest is of the videos loaded so far while older pages remain.
+            val sortedLoaded = com.tmplayer.data.VideoSorting.sortsLoadedOnly(shownSort, content.endReached)
             MetaInviteDialog(state)
             VideoGrid(
                 state = state,
@@ -289,9 +311,12 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 onNav = { gridNav = it },
                 // Online metadata is on by default, so the first grid says once where posters come
                 // from; not while searching, when the listing is what was searched for.
-                header = if (ad == null && course == null && !metaNotice) null else {
+                header = if (ad == null && course == null && !metaNotice && !sortedLoaded) null else {
                     {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            if (sortedLoaded) {
+                                Text(s.gridSortLoadedNote(content.items.size), style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+                            }
                             if (metaNotice) MetaNoticeCard(state)
                             course?.let { CourseHeader(it, topicBar?.let { bar -> bar.nameOf(bar.selected) } ?: chat.title, onPlay = { item -> state.openPlayer(item, startFromBeginning = false) }) }
                             ad?.let { SponsoredCard(it, model) }

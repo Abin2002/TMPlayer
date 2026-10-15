@@ -128,6 +128,8 @@ fun SettingsPage(
     val settings = state.settings
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
+    // The developer rows, turned on from About (see DevOptions).
+    val developerOptions by settings.developerOptions.collectAsState(initial = false)
     // The app lock (CP57): a PIN being set, changed or removed takes the page's place.
     val appLock by settings.appLock.collectAsState(initial = AppLockSettings())
     var pinFlow by remember { mutableStateOf<DesktopPinFlow?>(null) }
@@ -569,6 +571,18 @@ fun SettingsPage(
                             toast(if (saved) s.logsSavedTo(file.absolutePath) else s.logsFailed)
                         }
                     }) { Text(s.logsSave) }
+                }
+                // Developers only (see DevOptions): how the last chat's file names were read.
+                if (developerOptions || DevOptions.forced) {
+                    Setting(s.logsNameReport, s.logsNameReportDetail) {
+                        OutlinedButton(onClick = {
+                            scope.launch {
+                                val file = withContext(Dispatchers.IO) { runCatching { saveNameCheck() } }
+                                file.onSuccess { toast(if (it == null) s.logsNameReportEmpty else s.logsNameReportSaved(it.absolutePath)) }
+                                    .onFailure { toast(s.logsFailed) }
+                            }
+                        }) { Text(s.logsNameReport) }
+                    }
                 }
                 Setting(s.settingsPrivacy, s.settingsPrivacyComputer) {
                     OutlinedButton(onClick = { OpenExternal.browse(About.PRIVACY) }) { Text(s.commonOpen) }
