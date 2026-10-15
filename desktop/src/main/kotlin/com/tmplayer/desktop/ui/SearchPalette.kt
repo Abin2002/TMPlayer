@@ -154,13 +154,12 @@ private sealed interface PaletteRow {
     }
 }
 
-/** The pages "Go to" offers: the side bar's places, Saved Messages among them. */
+/** The pages "Go to" offers: the side bar's places. */
 private enum class Place(val icon: ImageVector) {
     Home(TmIcons.Home),
     History(BrowseTab.History.icon),
     Favourites(TmIcons.StarOutline),
     Chats(BrowseTab.Chats.icon),
-    Saved(BrowseTab.Saved.icon),
     Downloads(TmIcons.Download),
     Settings(TmIcons.Settings),
     ;
@@ -170,7 +169,6 @@ private enum class Place(val icon: ImageVector) {
         History -> Destination.History.label
         Favourites -> Destination.Favourites.label
         Chats -> Destination.Chats.label
-        Saved -> BrowseTab.Saved.label
         Downloads -> Destination.Downloads.label
         Settings -> Destination.Settings.label
     }
@@ -180,7 +178,6 @@ private enum class Place(val icon: ImageVector) {
         History -> state.go(Destination.History)
         Favourites -> state.go(Destination.Favourites)
         Chats -> state.showChats(BrowseSection.of(BrowseTab.Chats))
-        Saved -> state.showChats(BrowseSection.of(BrowseTab.Saved))
         Downloads -> state.go(Destination.Downloads)
         Settings -> state.go(Destination.Settings)
     }

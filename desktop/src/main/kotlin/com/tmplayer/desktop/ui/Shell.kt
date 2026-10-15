@@ -78,14 +78,14 @@ import com.tmplayer.data.ChatFolderSummary
 import com.tmplayer.ui.browse.BrowseSection
 import com.tmplayer.ui.browse.NavBrand
 import com.tmplayer.ui.browse.NavEntry
-import com.tmplayer.ui.browse.NavGroupBody
-import com.tmplayer.ui.browse.NavGroupHeading
+import com.tmplayer.ui.browse.chatsDestination
+import com.tmplayer.ui.browse.navSection
+import com.tmplayer.ui.browse.onChatsPage
 import com.tmplayer.ui.browse.browseSections
 import com.tmplayer.ui.browse.navGroups
 import com.tmplayer.ui.browse.DefaultGroups
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.onboarding.Setup
-import com.tmplayer.ui.browse.rememberNavGroups
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.components.LocalToastHost
 import com.tmplayer.ui.components.rememberToast
@@ -314,7 +314,7 @@ private fun Browse(state: ShellState, player: PlayerContent) {
                                 else -> pages.SaveableStateProvider(state.destination.name) {
                                     when (state.destination) {
                                         Destination.Home -> HomePage(state, chats)
-                                        Destination.Chats -> ChatsPage(state, chats, favouritesOnly = false, showSections = !wide)
+                                        Destination.Chats -> ChatsPage(state, chats, favouritesOnly = false)
                                         Destination.Favourites -> ChatsPage(state, chats, favouritesOnly = true)
                                         Destination.History -> HistoryPage(state)
                                         Destination.Downloads -> DownloadsPage(state)
@@ -409,9 +409,10 @@ private fun Destination.icon(): ImageVector = when (this) {
 }
 
 /**
- * The wide side bar: the name and version, then Watch, Chats and the account's folders folding
- * under their headings, with Settings and Update pinned at the bottom. The grouping is the shared
- * one in :ui, so the phone's drawer and the television's rail fold the same entries the same way.
+ * The wide side bar: the name and version, then Home, History, Favourites, Chats and Downloads,
+ * with Settings and Update pinned at the bottom. The entries are the shared ones in :ui
+ * ([navGroups]), so the phone's drawer and the television's rail list the same places. The
+ * folders are chips on the Chats page, and Chats stays lit while one of them is open.
  */
 @Composable
 internal fun Sidebar(
@@ -420,7 +421,6 @@ internal fun Sidebar(
     folders: List<ChatFolderSummary> = Td.folders.collectAsState().value,
 ) {
     val s = LocalStrings.current
-    val groups = rememberNavGroups(state.currentGroup)
     val sections = remember(folders, state.hideDefaultGroups) { browseSections(folders, state.hideDefaultGroups) }
     val inFlight = rememberDownloadsInFlight()
     // Wide enough for a German or Malayalam label beside a badge, with room to breathe: the side
@@ -429,38 +429,21 @@ internal fun Sidebar(
         NavBrand(BuildInfo.VERSION, Modifier.padding(horizontal = 12.dp, vertical = 14.dp))
         Spacer(Modifier.height(12.dp))
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            navGroups(sections).forEach { (group, entries) ->
-                val open = groups.isOpen(group)
-                if (group.headed) {
-                    // A step of air above each heading, so Telegram and Folders read as groups
-                    // rather than two more rows of the list above them.
-                    Spacer(Modifier.height(10.dp))
-                    NavGroupHeading(
-                        group = group,
-                        open = open,
-                        toggleable = groups.canToggle(group),
-                        onToggle = { groups.toggle(group) },
-                        height = SIDEBAR_ROW,
-                    )
-                }
-                NavGroupBody(open) {
-                    entries.forEach { entry ->
-                        val target = entry.destination()
-                        SidebarItem(
-                            label = if (entry is NavEntry.Section) entry.section.label else s.navDownloads,
-                            icon = target?.icon() ?: (entry as NavEntry.Section).section.icon,
-                            badge = if (entry == NavEntry.Downloads && inFlight > 0) inFlight.toString() else null,
-                            selected = when {
-                                target != null -> state.destination == target
-                                else -> state.destination == Destination.Chats &&
-                                    state.chatSection == (entry as NavEntry.Section).section
-                            },
-                            onClick = {
-                                if (target != null) state.go(target) else state.showChats((entry as NavEntry.Section).section)
-                            },
-                        )
-                    }
-                }
+            navGroups(sections).flatMap { it.entries }.forEach { entry ->
+                val target = entry.destination()
+                SidebarItem(
+                    label = if (entry is NavEntry.Section) entry.section.label else s.navDownloads,
+                    icon = target?.icon() ?: (entry as NavEntry.Section).section.icon,
+                    badge = if (entry == NavEntry.Downloads && inFlight > 0) inFlight.toString() else null,
+                    selected = when {
+                        target != null -> state.destination == target
+                        else -> state.destination == Destination.Chats &&
+                            state.chatSection.navSection == (entry as NavEntry.Section).section
+                    },
+                    onClick = {
+                        if (target != null) state.go(target) else state.showChats(chatsTarget(state, sections))
+                    },
+                )
             }
         }
         HorizontalDivider(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), color = Tone.outline)
@@ -487,6 +470,15 @@ internal fun Sidebar(
             onClick = { state.go(Destination.Settings) },
         )
     }
+}
+
+/**
+ * Where Chats goes from the side bar or the rail: back to the chip that was open (Chats, or one of
+ * the folders), else to [chatsDestination], which is the first folder under "Only my folders".
+ */
+private fun chatsTarget(state: ShellState, sections: List<BrowseSection>): BrowseSection {
+    val open = state.chatSection
+    return if (open.onChatsPage && open in sections) open else chatsDestination(sections, state.hideDefaultGroups)
 }
 
 /** The page an entry opens when it is a page of its own; null for a slice of the chat list. */
@@ -566,23 +558,23 @@ private fun Rail(state: ShellState, update: NavUpdate?) {
         )
         val inFlight = rememberDownloadsInFlight()
         val folders by Td.folders.collectAsState()
-        val hidden = state.hideDefaultGroups
+        val sections = remember(folders, state.hideDefaultGroups) { browseSections(folders, state.hideDefaultGroups) }
         Destination.entries.forEach { destination ->
-            // With the default groups hidden the Chats page lists only the folders, so it is named
-            // for them, and with no folders there is nothing for it to show.
-            if (destination == Destination.Chats && hidden && folders.isEmpty()) return@forEach
-            val label = if (destination == Destination.Chats && hidden) s.navFolders else destination.label
+            // With "Only my folders" and no folders there is nothing for the Chats page to show.
+            if (destination == Destination.Chats && BrowseSection.of(BrowseTab.Chats) !in sections) return@forEach
+            val label = destination.label
             NavigationRailItem(
                 selected = state.destination == destination,
-                onClick = { state.go(destination) },
+                onClick = {
+                    if (destination == Destination.Chats) state.showChats(chatsTarget(state, sections)) else state.go(destination)
+                },
                 icon = {
                     if (destination == Destination.Downloads && inFlight > 0) {
                         BadgedBox(badge = { Badge { Text(inFlight.toString()) } }) {
                             Icon(destination.icon(), contentDescription = s.navInProgress(destination.label, inFlight))
                         }
                     } else {
-                        val icon = if (destination == Destination.Chats && hidden) TmIcons.Folder else destination.icon()
-                        Icon(icon, contentDescription = label)
+                        Icon(destination.icon(), contentDescription = label)
                     }
                 },
                 label = { Text(label.substringBefore(' ')) },

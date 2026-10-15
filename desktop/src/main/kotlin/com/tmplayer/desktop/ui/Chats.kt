@@ -81,6 +81,9 @@ import com.tmplayer.ui.browse.BrowseSection
 import com.tmplayer.ui.browse.BrowseTab
 import com.tmplayer.ui.browse.ChatListViewModel
 import com.tmplayer.ui.browse.browseSections
+import com.tmplayer.ui.browse.ChatPageChip
+import com.tmplayer.ui.browse.chatPageChips
+import com.tmplayer.ui.browse.isSelected
 import com.tmplayer.ui.browse.filterChats
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.theme.Avatar
@@ -99,8 +102,6 @@ fun ChatsPage(
     state: ShellState,
     model: ChatListViewModel,
     favouritesOnly: Boolean,
-    /** False beside the wide side bar, which lists Chats, Saved Messages and the folders itself. */
-    showSections: Boolean = true,
 ) {
     val s = LocalStrings.current
     val ui by model.state.collectAsState()
@@ -115,9 +116,10 @@ fun ChatsPage(
     var refocus by remember { mutableStateOf(state.takeChatToRefocus()) }
 
     // Home, History and Favourites have pages of their own.
-    val sections = remember(folders, state.hideDefaultGroups) {
-        browseSections(folders, state.hideDefaultGroups)
-            .filterNot { it.isHome || it.listsVideos || it == BrowseSection.of(BrowseTab.Favorites) }
+    // Telegram's own filters, then each folder: what the side bar's Telegram and Folders groups
+    // used to list, as one row of chips the Chats page and every folder page share.
+    val chips = remember(folders, state.hideDefaultGroups) {
+        chatPageChips(browseSections(folders, state.hideDefaultGroups), state.hideDefaultGroups)
     }
     val section = if (favouritesOnly) {
         BrowseSection.of(BrowseTab.Favorites)
@@ -146,24 +148,31 @@ fun ChatsPage(
                 }
             },
         )
-        if (!favouritesOnly && showSections) {
-            ChoiceChips(
-                sections.map { entry ->
-                    Choice(BrowseSection.encode(entry), entry.label, entry.icon, selected = entry == section) { state.showChats(entry) }
-                },
-            )
-        }
-        if (!favouritesOnly && section.isChats) {
+        if (!favouritesOnly) {
             ChoiceChips(
                 buildList {
-                    val sort = state.chatSort
-                    add(
-                        Choice("sort", sort.label, sort.icon, selected = false, description = s.browseSortBy(sort.label)) {
-                            state.chatSort = sort.toggled
-                        },
-                    )
-                    ChatFilter.entries.forEach { filter ->
-                        add(Choice(filter.name, filter.label, filter.icon, selected = filter == state.chatFilter) { state.chatFilter = filter })
+                    if (section.isChats) {
+                        val sort = state.chatSort
+                        add(
+                            Choice("sort", sort.label, sort.icon, selected = false, description = s.browseSortBy(sort.label)) {
+                                state.chatSort = sort.toggled
+                            },
+                        )
+                    }
+                    chips.forEach { chip ->
+                        val selected = chip.isSelected(section, state.chatFilter)
+                        add(
+                            when (chip) {
+                                // A filter is a filter of the Chats list, so from a folder it goes back there.
+                                is ChatPageChip.Filter -> Choice(chip.filter.name, chip.label, chip.filter.icon, selected) {
+                                    state.chatFilter = chip.filter
+                                    state.showChats(BrowseSection.of(BrowseTab.Chats))
+                                }
+                                is ChatPageChip.Folder -> Choice(BrowseSection.encode(chip.folder), chip.label, TmIcons.Folder, selected) {
+                                    state.showChats(chip.folder)
+                                }
+                            },
+                        )
                     }
                 },
             )
