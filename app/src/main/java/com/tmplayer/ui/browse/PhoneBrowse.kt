@@ -18,7 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import com.tmplayer.ui.components.TouchPullRefresh
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
@@ -456,7 +456,7 @@ private fun PhonePageFrame(
                     }
                 }
                 val pull = rememberPullToRefreshState()
-                PullToRefreshBox(
+                TouchPullRefresh(
                     isRefreshing = pulling,
                     onRefresh = { pulling = true; refresh() },
                     modifier = Modifier.fillMaxSize(),

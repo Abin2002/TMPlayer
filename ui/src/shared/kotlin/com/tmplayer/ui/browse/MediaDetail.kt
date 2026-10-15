@@ -97,6 +97,8 @@ data class DetailRow(
     val detail: String? = null,
     val destructive: Boolean = false,
     val onSelect: () -> Unit,
+    /** A download under way, 0 to 1, for the ring round its button; null for anything else. */
+    val progress: Float? = null,
 )
 
 /**

@@ -330,6 +330,10 @@ private fun cancelRow(s: Messages, entry: OfflineDownloads.Progress, run: () -> 
             OfflineDownloads.Stage.NoWifi -> s.gridNoWifiDetail
             else -> entry.fraction?.let { s.gridProgressKept(s.formatter.percent(it.toDouble())) }
         },
+        // The ring round the button, for the download that is actually moving.
+        progress = entry.fraction.takeIf {
+            entry.stage == OfflineDownloads.Stage.Running || entry.stage == OfflineDownloads.Stage.Moving
+        },
     )
 }
 
@@ -354,10 +358,13 @@ private fun DetailScreen(
 ) {
     val touch = isTouch()
     val first = remember { FocusRequester() }
+    // On a phone the page grows out of the tile that was tapped, and folds back towards it.
+    val motion = com.tmplayer.ui.components.rememberPageMotion(onDismiss)
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = motion.close,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
+        motion.Frame {
         androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         // Keyed by the video, so one opened from "More like this" starts at its top.
         androidx.compose.runtime.key(item.id) {
@@ -367,7 +374,7 @@ private fun DetailScreen(
                 watched = watched,
                 finished = finished,
                 rows = rows,
-                onClose = onDismiss,
+                onClose = motion.close,
                 modifier = if (touch) Modifier else Modifier.ignoreStrayRelease(),
                 firstAction = if (touch) null else first,
                 onOpenItem = onOpenItem,
@@ -379,6 +386,7 @@ private fun DetailScreen(
         }
         // Over the page, which is a window of its own above the app's.
         TopMessageHost()
+        }
         }
     }
 }

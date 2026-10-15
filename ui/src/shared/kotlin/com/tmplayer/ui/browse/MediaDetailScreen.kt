@@ -1,5 +1,6 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.components.riseIn
 import androidx.compose.foundation.background
 import com.tmplayer.ui.theme.trackedFor
 import androidx.compose.foundation.clickable
@@ -233,12 +234,12 @@ private fun CinemaLayout(page: DetailPage, height: Dp) {
                 Spacer(Modifier.height(if (tv) 24.dp else 12.dp))
                 // The words keep to the faded half; the buttons may run on under the picture.
                 Column(Modifier.fillMaxWidth(0.55f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    TitleBlock(page)
-                    FactsBlock(page)
+                    Box(Modifier.riseIn(0, enabled = !tv)) { TitleBlock(page) }
+                    Box(Modifier.riseIn(1, enabled = !tv)) { FactsBlock(page) }
                     synopsisOf(page)?.let { Synopsis(it, style = MaterialTheme.typography.bodyLarge, lines = if (tv) 3 else 2) }
                     ProtectedNote(page.item)
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Column(Modifier.riseIn(2, enabled = !tv), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     // A television keeps the everyday buttons beside Play and the rest at the foot
                     // of the page, as a phone does; Right walks along the first, Down reaches the rest.
                     Actions(page, onEpisodes = episodesButton(page.item, page.meta, episodes), headlineOnly = tv)
@@ -268,6 +269,7 @@ private fun StackedLayout(page: DetailPage, width: Dp, height: Dp) {
     val scroll = rememberScrollState()
     val episodes = remember { BringIntoViewRequester() }
     val reduced = rememberReducedMotion()
+    val touch = isTouch()
     val backdrop = tallBackdropHeight(width, height, online = page.meta?.wideUrl != null)
     Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
         // Under the status bar and the full width; the title sits on its foot, in the fade.
@@ -284,7 +286,8 @@ private fun StackedLayout(page: DetailPage, width: Dp, height: Dp) {
                 Modifier
                     .align(Alignment.BottomStart)
                     .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .padding(start = 16.dp, end = 16.dp, top = backdrop * 0.4f),
+                    .padding(start = 16.dp, end = 16.dp, top = backdrop * 0.4f)
+                    .riseIn(0, enabled = touch),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 TitleBlock(page)
@@ -298,11 +301,15 @@ private fun StackedLayout(page: DetailPage, width: Dp, height: Dp) {
         ) {
             Spacer(Modifier.height(0.dp))
             // Back up on the buttons from below with a remote or keys, the title above them shows too.
+            // The page arrives in reading order: the title, then the facts, Play and its buttons,
+            // the copies line and the overview, each a beat after the one above.
             Column(Modifier.revealFromTop(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                FactsBlock(page)
-                Actions(page, primaryFullWidth = true, onEpisodes = episodesButton(page.item, page.meta, episodes), headlineOnly = true)
-                Versions(page.item, page.onPickCopy, page.chatTitle, page.copyStarted)
-                synopsisOf(page)?.let { Synopsis(it) }
+                Box(Modifier.riseIn(1, enabled = touch)) { FactsBlock(page) }
+                Box(Modifier.riseIn(2, enabled = touch)) {
+                    Actions(page, primaryFullWidth = true, onEpisodes = episodesButton(page.item, page.meta, episodes), headlineOnly = true)
+                }
+                Box(Modifier.riseIn(3, enabled = touch)) { Versions(page.item, page.onPickCopy, page.chatTitle, page.copyStarted) }
+                synopsisOf(page)?.let { Box(Modifier.riseIn(4, enabled = touch)) { Synopsis(it) } }
                 ProtectedNote(page.item)
                 DetailBookmarks(page.bookmarks, page.onOpenBookmark)
             }
@@ -434,7 +441,7 @@ private fun Actions(
         if (tv) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 hero(Modifier)
-                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s)) }
+                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s), toggles = togglesOn(it.action), progress = it.progress) }
             }
         } else {
             hero(if (primaryFullWidth) Modifier.fillMaxWidth() else Modifier)
@@ -443,12 +450,19 @@ private fun Actions(
                 horizontalArrangement = Arrangement.spacedBy(4.dp, if (headlineOnly) Alignment.CenterHorizontally else Alignment.Start),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s)) }
+                others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s), toggles = togglesOn(it.action), progress = it.progress) }
             }
         }
         trailers.unopened?.let { TrailerQr(it, Modifier.padding(vertical = 8.dp)) }
         TrailerHost(trailers)
     }
+}
+
+/** Whether [action] turns something on (true), off (false), or is not a switch (null). */
+private fun togglesOn(action: DetailAction): Boolean? = when (action) {
+    DetailAction.MarkWatched, DetailAction.AddWatchLater -> true
+    DetailAction.MarkUnwatched, DetailAction.RemoveWatchLater -> false
+    else -> null
 }
 
 /** The everyday buttons a phone keeps under Play; see [Actions]' headlineOnly and [MoreActions]. */
@@ -487,7 +501,7 @@ private fun MoreActions(page: DetailPage) {
         horizontalArrangement = Arrangement.spacedBy(if (tv) 12.dp else 4.dp, Alignment.CenterHorizontally),
         verticalArrangement = Arrangement.spacedBy(if (tv) 12.dp else 8.dp),
     ) {
-        rest.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s)) }
+        rest.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s), toggles = togglesOn(it.action), progress = it.progress) }
     }
 }
 

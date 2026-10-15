@@ -30,6 +30,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import kotlinx.coroutines.delay
 import com.tmplayer.ui.theme.Motion
 import com.tmplayer.ui.theme.rememberReducedMotion
 
@@ -43,6 +47,9 @@ object Micro {
     /** How far an icon-only button sinks under a finger. */
     const val PressScale = 0.92f
 
+    /** How far a wide pill (Play, Resume) sinks: less, since a wide thing moves further at its ends. */
+    const val PillPressScale = 0.97f
+
     /** How far the star grows as it fills, before it settles back. */
     const val PopScale = 1.25f
 
@@ -53,20 +60,98 @@ object Micro {
     fun <T> release() = spring<T>(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium)
 
     /** The scale for a press, [pressed] or not, under [reduced] or not. */
-    fun pressTarget(pressed: Boolean, reduced: Boolean): Float = if (pressed && !reduced) PressScale else 1f
+    fun pressTarget(pressed: Boolean, reduced: Boolean, depth: Float = PressScale): Float = if (pressed && !reduced) depth else 1f
+
+    /** Between one block of a page rising in and the next, so they arrive in reading order. */
+    const val StaggerMs = 40
+
+    /** The most blocks that wait their turn: anything later arrives with the last of them. */
+    const val StaggerMax = 6
+
+    /** How far a block rises as it fades in. */
+    val Rise = 12.dp
+
+    /** How long [index] waits before rising in. */
+    fun staggerDelay(index: Int): Long = (index.coerceIn(0, StaggerMax) * StaggerMs).toLong()
+
+    /**
+     * The viewer's "Vibrate on tap" (TouchPrefs.haptics), set by the app from the stored choice.
+     * The system's own touch feedback switch is honoured on top of it by the platform.
+     */
+    @Volatile
+    var haptics: Boolean = true
+}
+
+/**
+ * A light tick for a toggle under the finger (the star, Watched, Watch later), on when [Micro.haptics]
+ * is: the answer a switch gives the hand as well as the eye. Call the result with true for
+ * something turned on and false for something turned off. Nothing on a television or a desktop.
+ */
+@Composable
+fun rememberToggleTick(): (Boolean) -> Unit {
+    val haptic = LocalHapticFeedback.current
+    val touch = isTouch()
+    return remember(haptic, touch) {
+        { on: Boolean ->
+            if (touch && Micro.haptics) {
+                haptic.performHapticFeedback(if (on) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
+            }
+        }
+    }
+}
+
+/**
+ * A light tick for a step the hand crosses: a pull past the point where letting go refreshes, a
+ * choice taken in a list. Off with [Micro.haptics], and off away from a touch screen.
+ */
+@Composable
+fun rememberStepTick(): () -> Unit {
+    val haptic = LocalHapticFeedback.current
+    val touch = isTouch()
+    return remember(haptic, touch) {
+        { if (touch && Micro.haptics) haptic.performHapticFeedback(HapticFeedbackType.SegmentTick) }
+    }
+}
+
+/**
+ * A block of a page arriving: it fades in as it rises [Micro.Rise] into place, [index] steps of
+ * [Micro.StaggerMs] after the first, so a page opening reads top to bottom (title, facts, Play,
+ * the buttons) rather than landing at once. Once per composition, so a block that stays does not
+ * rise again; nothing at all with less motion asked for, or where [enabled] is false (a television,
+ * where focus is already on its way to the first button).
+ */
+@Composable
+fun Modifier.riseIn(index: Int = 0, enabled: Boolean = true): Modifier {
+    val still = rememberLessMotion() || !enabled
+    val progress = remember { Animatable(if (still) 1f else 0f) }
+    LaunchedEffect(still) {
+        if (still) {
+            progress.snapTo(1f)
+            return@LaunchedEffect
+        }
+        delay(Micro.staggerDelay(index))
+        progress.animateTo(1f, tween(Motion.Normal, easing = Motion.Standard))
+    }
+    if (still) return this
+    val rise = with(LocalDensity.current) { Micro.Rise.toPx() }
+    return graphicsLayer {
+        val p = progress.value
+        alpha = p
+        translationY = (1f - p) * rise
+    }
 }
 
 /** True when the system or the app asks for less motion. */
 @Composable
 fun rememberLessMotion(): Boolean = rememberReducedMotion() || Motion.reduced
 
-/** Sinks this to [Micro.PressScale] while [interactions] holds a press, and springs it back up. */
+/** Sinks this to [depth] while [interactions] holds a press, and springs it back up. */
 @Composable
-fun Modifier.pressScale(interactions: InteractionSource): Modifier {
+fun Modifier.pressScale(interactions: InteractionSource, depth: Float = Micro.PressScale): Modifier {
     val reduced = rememberLessMotion()
     val pressed by interactions.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = Micro.pressTarget(pressed, reduced),
+        targetValue = Micro.pressTarget(pressed, reduced, depth),
         animationSpec = if (pressed) tween(Motion.Fast / 2) else Micro.release(),
         label = "press",
     )

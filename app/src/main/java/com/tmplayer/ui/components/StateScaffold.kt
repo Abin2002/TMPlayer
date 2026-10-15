@@ -305,7 +305,10 @@ fun BigEmpty(
         Modifier.fillMaxSize().padding(horizontal = if (touch) PhonePad.Side else 72.dp),
         contentAlignment = Alignment.Center,
     ) {
+        // On a phone it rises in rather than appearing, so a list emptying or a load failing
+        // reads as the page changing, not a flash.
         Column(
+            Modifier.riseIn(enabled = touch),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -357,7 +360,10 @@ fun BigError(message: String, onRetry: (() -> Unit)?) {
         Modifier.fillMaxSize().padding(horizontal = if (touch) PhonePad.Side else 72.dp),
         contentAlignment = Alignment.Center,
     ) {
+        // On a phone it rises in rather than appearing, so a list emptying or a load failing
+        // reads as the page changing, not a flash.
         Column(
+            Modifier.riseIn(enabled = touch),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
