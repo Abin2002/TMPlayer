@@ -347,47 +347,40 @@ class BrowseRenderTest {
         }
     }
 
-    /** "Videos in all chats": matching chats, then the videos a fake searchMessages found. */
+    /** The search palette (Ctrl+K): matching chats, then one card per video a fake searchMessages found. */
     @Test
-    fun allChatsSearch() = kotlinx.coroutines.runBlocking {
+    fun searchPalette() = kotlinx.coroutines.runBlocking {
         val chats = listOf(
             chat(2, "Harbour Lights fans", ChatKind.Group, 0, 0xFFF5A524.toInt()),
             chat(3, "Film Club", ChatKind.Channel, 0, 0xFFE5484D.toInt()),
             chat(7, "Harbour photos", ChatKind.Channel, 0, 0xFF0090FF.toInt()),
         )
         shell.noteChatTitles(chats)
-        val found = releaseItems(chatId = 3).filter { it.fileName.startsWith("Harbour") } +
-            releaseItems(chatId = 2).take(1).map {
-                val name = it.fileName.replace("S02E05", "S02E04")
-                it.copy(messageId = 900, fileName = name, title = name, date = it.date - 7 * 86_400)
-            }
-        val source = com.tmplayer.ui.browse.VideoSearchSource { query, _ ->
+        val found = releaseItems(chatId = 3) + releaseItems(chatId = 2).map { it.copy(messageId = it.messageId + 500) }
+        val briefs = chats.map(com.tmplayer.data.ChatBrief::of)
+        val source = com.tmplayer.ui.browse.VideoSearchSource { query, _, _ ->
             com.tmplayer.data.AllChatsPage(
                 found.filter { com.tmplayer.data.Fuzzy.score(it.fileName, query) > 0 },
                 com.tmplayer.data.AllChatsCursor(videoDone = true, documentDone = true),
+                briefs,
             )
         }
-        val page = source.page("harbour", com.tmplayer.data.AllChatsCursor())
-        val results = com.tmplayer.ui.browse.VideoSearchState(
-            query = "harbour",
-            videos = com.tmplayer.data.AllChatsSearch.merge(emptyList(), page.items),
-            endReached = page.cursor.done,
-        )
-        fun shot(videos: com.tmplayer.ui.browse.VideoSearchState, dark: Boolean = true) = render(dark = dark) {
-            Column(Modifier.fillMaxSize()) {
-                PageHeader("All chats", null)
-                com.tmplayer.ui.browse.SearchScopeToggle(
-                    com.tmplayer.data.SearchScope.AllVideos,
-                    {},
-                    Modifier.padding(start = 24.dp, bottom = 8.dp),
-                )
-                AllChatsResults(shell, "harbour", chats, setOf(2L), videos, onStar = {}, onLoadMore = {}, onRetry = {})
-            }
+        val model = com.tmplayer.ui.browse.GlobalSearchViewModel(source, known = { emptyList() }, settleMs = 0)
+        fun shot(dark: Boolean = true) = render(dark = dark) {
+            Box(Modifier.fillMaxSize()) { SearchPalette(shell, model, chats, onOpenSeries = {}) }
         }
-        save("desktop-search-all-dark.png", shot(results))
-        save("desktop-search-all-light.png", shot(results, dark = false))
-        save("desktop-search-all-searching.png", shot(com.tmplayer.ui.browse.VideoSearchState(query = "harbour", loading = true)))
-        save("desktop-search-all-none.png", shot(com.tmplayer.ui.browse.VideoSearchState(query = "harbour", endReached = true)))
+        save("desktop-search-palette-empty.png", shot())
+        shell.paletteQuery = androidx.compose.ui.text.input.TextFieldValue("harbour")
+        model.type("harbour")
+        kotlinx.coroutines.withTimeout(5_000) {
+            while (model.state.value.busy || model.state.value.groups.isEmpty()) kotlinx.coroutines.delay(20)
+        }
+        assertTrue(model.state.value.groups.isNotEmpty())
+        save("desktop-search-palette-dark.png", shot())
+        save("desktop-search-palette-light.png", shot(dark = false))
+        model.type("nothing like it at all")
+        kotlinx.coroutines.withTimeout(5_000) { while (model.state.value.busy) kotlinx.coroutines.delay(20) }
+        save("desktop-search-palette-none.png", shot())
     }
 
     @Test

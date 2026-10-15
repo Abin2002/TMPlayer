@@ -337,6 +337,32 @@ private fun Browse(state: ShellState, player: PlayerContent) {
             }
         }
 
+        // The search across every chat (Ctrl+K), over the page and the side bar alike.
+        val searchModel = rememberViewModel(Unit) {
+            com.tmplayer.ui.browse.GlobalSearchViewModel(onSearched = { state.settings.addRecentSearch(it) })
+        }
+        // What the device already holds is searched as well as what Telegram answers.
+        val resumed by state.settings.continueWatching.collectAsState(initial = emptyList())
+        val downloaded by state.settings.downloadHistory.collectAsState(initial = emptyList())
+        LaunchedEffect(resumed, downloaded) {
+            searchModel.alsoKnown = (resumed + downloaded).map { it.toMediaItem() }
+        }
+        LaunchedEffect(telegramConnected) { if (telegramConnected) searchModel.reconnected() }
+        var searchSeries by remember { mutableStateOf<com.tmplayer.data.Series?>(null) }
+        searchSeries?.let { shown ->
+            Box(Modifier.fillMaxSize().background(Tone.background)) {
+                SeriesPage(state, shown, rememberSeriesWatch(state), onClose = { searchSeries = null })
+            }
+        }
+        if (state.paletteOpen && state.nowPlaying == null) {
+            SearchPalette(
+                state = state,
+                search = searchModel,
+                chats = (chatsUi as? UiState.Content)?.value?.chats.orEmpty(),
+                onOpenSeries = { searchSeries = it },
+            )
+        }
+
         UpdatePopupHost(state)
         LowStorageQuestionHost(state)
         // The language card and What's new wait for the setup, as on the phone.
