@@ -127,6 +127,9 @@ import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.FormFactor
 import com.tmplayer.ui.components.FloatingBackButton
 import com.tmplayer.ui.components.FloatingBarIcon
+import com.tmplayer.ui.components.PopoverAnchor
+import com.tmplayer.ui.components.StarIcon
+import com.tmplayer.ui.components.rememberPopoverAnchor
 import com.tmplayer.ui.components.FloatingChrome
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.only
@@ -281,6 +284,7 @@ fun MediaGridScreen(
     // A phone has neither overscan to clear nor a fixed width to plan a grid against, so both of
     // those figures are asked for again below rather than assumed.
     val touch = !FormFactor.isTv(context)
+    val lessMotion = rememberReducedMotion() || Motion.reduced
     val edge = if (touch) TOUCH_EDGE else Tv.SafeH
     // The limits are part of the key: changing them in Settings has to rebuild the listing,
     // not leave a stale one filtered by the old bounds. Scoped to this screen rather than to the
@@ -320,7 +324,8 @@ fun MediaGridScreen(
             viewModel.search(query)
         }
     }
-    if (sorting) {
+    // A phone's Sort is a popover over the chat's bar, drawn by TouchMediaScaffold; a remote's is this panel.
+    if (sorting && !isTouch()) {
         VideoSortSheet(sort, onPick = { picked ->
             sorting = false
             recentScope.launch { recentStore.setVideoSort(chatId, picked) }
@@ -603,6 +608,10 @@ fun MediaGridScreen(
             // The phone's grid is compact but not captionless: two lines of the name under each
             // card, since the name is often the only thing telling two releases apart.
             val dense = touch && layout == CardLayout.Grid
+            // On a phone a new order, a search or a filter moves the cards to their new places and
+            // fades the newcomers in, rather than redrawing the list at once. Not past a few
+            // hundred, where the bookkeeping costs more than the motion is worth.
+            val animateCards = touch && !lessMotion && feed.size <= ANIMATED_ITEMS_MAX
             val gap = if (touch) TileGrid.TouchGap else TileGrid.TvGap
             val padding = PaddingValues(
                 start = edge,
@@ -659,6 +668,7 @@ fun MediaGridScreen(
                                 columns = columns,
                                 posterColumns = posterColumns,
                                 wideColumns = wideColumns,
+                                animate = animateCards,
                             ) { entry ->
                                     when (entry) {
                                         is MediaFeedEntry.Media -> {
@@ -724,6 +734,7 @@ fun MediaGridScreen(
                                     }
                                 },
                             ) { entry ->
+                              Box(if (animateCards) Modifier.animateItem() else Modifier, propagateMinConstraints = true) {
                                 when (entry) {
                                     is MediaFeedEntry.Media -> {
                                         val shelved = entry.item
@@ -765,6 +776,7 @@ fun MediaGridScreen(
                                         onReport = { handleReport(entry.item) },
                                     )
                                 }
+                              }
                             }
                         }
                     }
@@ -943,6 +955,18 @@ fun MediaGridScreen(
             recentSearches = recentSearches,
             onClearRecent = clearRecent,
             onSort = { sorting = true },
+            sortPopover = { anchor ->
+                VideoSortPopover(
+                    open = sorting,
+                    anchor = anchor,
+                    current = sort,
+                    onPick = { picked ->
+                        sorting = false
+                        recentScope.launch { recentStore.setVideoSort(chatId, picked) }
+                    },
+                    onDismiss = { sorting = false },
+                )
+            },
             topicTabs = topicBar?.let { bar ->
                 { TopicTabs(bar, viewModel::selectTopic, Modifier.padding(vertical = 6.dp), edge = edge) }
             },
@@ -1073,8 +1097,10 @@ internal fun TouchMediaScaffold(
     /** Offered as chips while the search is open and still empty. */
     recentSearches: List<String> = emptyList(),
     onClearRecent: () -> Unit = {},
-    /** Opens the Sort menu ([VideoSortSheet]); null leaves it out. */
+    /** Opens the Sort menu; null leaves it out. */
     onSort: (() -> Unit)? = null,
+    /** The Sort menu ([VideoSortPopover]), drawn over everything and grown out of the Sort button ([anchor]). */
+    sortPopover: (@Composable (anchor: PopoverAnchor) -> Unit)? = null,
     /** The topic row of a group with topics, under the title. Null for every other chat. */
     topicTabs: (@Composable () -> Unit)? = null,
     /** Opens with the search already showing, for the screenshot fixture. */
@@ -1122,7 +1148,10 @@ internal fun TouchMediaScaffold(
     }
     val recentShown = searching && query.isEmpty() && recentSearches.isNotEmpty() && selectionBar == null
     // What floats over the end of the grid, which the grid pads its last row clear of.
-    val room = under + FloatingChrome.clearance(compact) + if (recentShown) RECENT_ROW else 0.dp
+    val room = under + FloatingChrome.clearance(compact, labelled = !compact) + if (recentShown) RECENT_ROW else 0.dp
+    val sortAnchor = rememberPopoverAnchor()
+    // Each button's name under it, as on the main bar, unless the phone is on its side and short of height.
+    val caption: (String) -> String? = { if (compact) null else it }
 
     Box(Modifier.fillMaxSize()) {
         Scaffold(
@@ -1214,8 +1243,8 @@ internal fun TouchMediaScaffold(
                         rowModifier = Modifier.weight(1f),
                     )
                 }
-                else -> StickyActionBar(compact = compact) {
-                    FloatingBarIcon(TmIcons.Search, s.gridSearchThisChat, { searching = true })
+                else -> StickyActionBar(compact = compact, labelled = !compact) {
+                    FloatingBarIcon(TmIcons.Search, s.gridSearchThisChat, { searching = true }, caption = caption(s.commonSearch))
                     FloatingBarIcon(
                         icon = if (isFavorite) TmIcons.Star else TmIcons.StarOutline,
                         label = if (isFavorite) s.browseRemoveFavourite else s.browseAddFavourite,
@@ -1223,17 +1252,23 @@ internal fun TouchMediaScaffold(
                         // Only the filled star is coloured, so the outline sits with the others.
                         tint = if (isFavorite) Tone.accent else Tone.text,
                         checked = isFavorite,
+                        caption = caption(s.gridStarShort),
+                        // The star pops as it fills and dips as it empties.
+                        glyph = { StarIcon(isFavorite, TmIcons.Star, TmIcons.StarOutline, on = Tone.accent, off = Tone.text) },
                     )
-                    onSort?.let { FloatingBarIcon(TmIcons.Sort, s.gridSort, it) }
+                    onSort?.let { FloatingBarIcon(TmIcons.Sort, s.gridSort, it, modifier = sortAnchor.modifier, caption = caption(s.gridSort)) }
                     FloatingBarIcon(
                         icon = if (layout == CardLayout.Grid) TmIcons.List else TmIcons.Grid,
                         label = if (layout == CardLayout.Grid) s.browseShowAsRows else s.browseShowAsTiles,
                         onClick = onToggleLayout,
+                        caption = caption(if (layout == CardLayout.Grid) s.gridRowsShort else s.gridTilesShort),
                     )
                 }
             }
         }
     }
+
+    sortPopover?.invoke(sortAnchor)
 
     LaunchedEffect(searching) {
         if (!searching) return@LaunchedEffect
@@ -2457,6 +2492,9 @@ private val BAR_AVATAR = 40.dp
 /** The recent searches over the open search field: one row of chips. */
 private val RECENT_ROW = 48.dp
 
+/** The longest chat listing whose cards move to a new order rather than being redrawn in it. */
+private const val ANIMATED_ITEMS_MAX = 300
+
 /** How long a finger takes to press a tile's art down to [Motion.PressScale]. */
 private const val PRESS_MS = 100
 
@@ -2539,6 +2577,8 @@ internal fun LazyGridScope.shelfGrid(
     columns: Int,
     posterColumns: Int,
     wideColumns: Int,
+    /** Moves cards to their new places and fades new ones in ([animateItem]): a phone's, after a sort or a search. */
+    animate: Boolean = false,
     card: @Composable (MediaFeedEntry<ShelfEntry>) -> Unit,
 ) {
     gridItems(
@@ -2556,5 +2596,11 @@ internal fun LazyGridScope.shelfGrid(
                 else -> GridItemSpan(columns / wideColumns)
             }
         },
-    ) { entry -> card(entry) }
+    ) { entry ->
+        if (animate) {
+            Box(Modifier.animateItem(), propagateMinConstraints = true) { card(entry) }
+        } else {
+            card(entry)
+        }
+    }
 }

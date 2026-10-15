@@ -38,7 +38,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -463,7 +462,13 @@ private fun androidx.compose.foundation.lazy.LazyListScope.results(
                 group = group,
                 chats = briefs,
                 progress = progress,
-                modifier = Modifier.padding(horizontal = 8.dp).clip(RoundedCornerShape(12.dp)).clickable { onOpenGroup(group) },
+                // Results fade in as they arrive and slide to their places when the order or a
+                // filter changes, rather than the list redrawing at once.
+                modifier = Modifier
+                    .then(if (shown.size <= ANIMATED_RESULTS_MAX && !com.tmplayer.ui.theme.Motion.reduced) Modifier.animateItem() else Modifier)
+                    .padding(horizontal = 8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onOpenGroup(group) },
             )
         }
     }
@@ -524,16 +529,10 @@ private fun FilterSheet(state: GlobalSearchState, onFilters: (SearchFilters) -> 
     }
 }
 
+/** One choice in the sheet: no radio button, the chosen line tinted and ticked, as in the Sort popover. */
 @Composable
 private fun ChoiceLine(label: String, chosen: Boolean, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clickable(role = Role.RadioButton, onClick = onClick).padding(horizontal = 16.dp).height(48.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = chosen, onClick = null)
-        Spacer(Modifier.width(16.dp))
-        Text(label, style = MaterialTheme.typography.bodyLarge, color = Tone.text)
-    }
+    com.tmplayer.ui.components.ChoiceRow(label, icon = null, chosen = chosen, modifier = Modifier.padding(horizontal = 8.dp), onClick = onClick)
 }
 
 @Composable
@@ -569,5 +568,8 @@ private fun Note(text: String, spinner: Boolean = false, action: (@Composable ()
 private const val CONTINUE_SHOWN = 3
 
 private const val PAGE_LEAD = 6
+
+/** The longest list of results that slides to a new order rather than being redrawn in it. */
+private const val ANIMATED_RESULTS_MAX = 300
 
 private val SKELETONS = List(5) { it }

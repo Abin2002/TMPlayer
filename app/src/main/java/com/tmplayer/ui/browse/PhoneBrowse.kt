@@ -5,6 +5,21 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,7 +66,8 @@ import kotlinx.coroutines.launch
 /**
  * The phone's browser: [TouchBrowseShell] with the page for [tab], changing pages with a short
  * cross-fade and a nudge in the direction of travel, and the search page ([PhoneSearchScreen])
- * that the bar's magnifier opens.
+ * that the bar's magnifier opens. Home and Chats are one pager ([HomeChatsPager]): a sideways
+ * swipe goes from one to the other, with the bar's highlight following it.
  *
  * The search's text, its filters, its order and its scroll position are kept across a rotation
  * and across the process being stopped behind another app: the text and the list by the saved
@@ -151,6 +167,21 @@ internal fun PhoneBrowse(
         search.submit(heard)
     }
 
+    // The Chats half of the Home and Chats pager: the page itself, or the chip it was left on.
+    val chatsSection = if (tab.onChatsPage) tab else chatsPageOf(lastChats, sections)
+    // The pager while it is on screen, for the bar's highlight to follow a swipe.
+    val pagerRef = remember { mutableStateOf<PagerState?>(null) }
+    val barPosition: (() -> Float)? = if (swipePage(tab) != null) {
+        remember(pagerRef, swipePage(tab)) {
+            {
+                val pager = pagerRef.value
+                if (pager == null) (swipePage(tab) ?: 0).toFloat() else pager.currentPage + pager.currentPageOffsetFraction
+            }
+        }
+    } else {
+        null
+    }
+
     val openSearch = {
         // Back with the last query, all of it selected, so typing replaces it and the arrow keeps it.
         searchText = searchText.copy(selection = TextRange(0, searchText.text.length))
@@ -165,10 +196,7 @@ internal fun PhoneBrowse(
             downloadCount = downloadCount,
             updateVersion = updateVersion,
             onHome = { onPickTab(BrowseSection.of(BrowseTab.Home)) },
-            onChats = {
-                val back = BrowseSection.decode(lastChats)?.takeIf { it.isChats || it in sections }
-                onPickTab(back ?: BrowseSection.of(BrowseTab.Chats))
-            },
+            onChats = { onPickTab(chatsPageOf(lastChats, sections)) },
             onSearch = openSearch,
             onSettings = onOpenSettings,
             onFavourites = { onPickTab(BrowseSection.of(BrowseTab.Favorites)) },
@@ -177,7 +205,6 @@ internal fun PhoneBrowse(
             onUpdate = onUpdate,
         ),
         selected = tab,
-        title = tab.heading,
         searchOpen = searchOpen,
         onOpenSearch = openSearch,
         searchScreen = { field ->
@@ -214,11 +241,13 @@ internal fun PhoneBrowse(
             )
         },
         actions = actions,
+        barPosition = barPosition,
     ) {
         val order = remember(sections) { navGroups(sections).flatMap { it.entries }.filterIsInstance<NavEntry.Section>().map { it.section } }
         AnimatedContent(
             targetState = tab,
-            contentKey = { it.navSection },
+            // Home and Chats are one pager, swiped between; only leaving it for another page fades.
+            contentKey = { if (swipePage(it) != null) SWIPE_PAGES else it.navSection },
             transitionSpec = {
                 val from = order.indexOf(initialState.navSection)
                 val to = order.indexOf(targetState.navSection)
@@ -232,36 +261,24 @@ internal fun PhoneBrowse(
             },
             label = "phonePage",
         ) { page ->
-            // The page's count under the title, where a phone's app bar puts a subtitle.
-            Column(Modifier.fillMaxSize()) {
-                val count = countOf(page)
-                if (count > 0) {
-                    Text(
-                        countLabel(page, count),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Tone.muted,
-                        modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
-                    )
-                }
-                val refresh = refreshOf(page)
-                if (refresh == null) {
-                    pane(page)
-                } else {
-                    // TDLib answers through the list's own flow, so the spinner is a short
-                    // acknowledgement rather than a wait on the fetch itself.
-                    var pulling by remember { mutableStateOf(false) }
-                    LaunchedEffect(pulling) {
-                        if (pulling) {
-                            kotlinx.coroutines.delay(PULL_ACK_MS)
-                            pulling = false
-                        }
-                    }
-                    androidx.compose.material3.pulltorefresh.PullToRefreshBox(
-                        isRefreshing = pulling,
-                        onRefresh = { pulling = true; refresh() },
-                        modifier = Modifier.fillMaxSize(),
-                    ) { pane(page) }
-                }
+            val frame: @Composable (BrowseSection) -> Unit = { section ->
+                PhonePageFrame(
+                    section = section,
+                    count = if (section.onChatsPage) 0 else countOf(section),
+                    refresh = refreshOf(section),
+                    pane = pane,
+                )
+            }
+            if (swipePage(page) != null) {
+                HomeChatsPager(
+                    tab = tab,
+                    chats = chatsSection,
+                    onSettle = { section -> if (section != tab) onPickTab(section) },
+                    onState = { pagerRef.value = it },
+                    page = frame,
+                )
+            } else {
+                frame(page)
             }
         }
     }
@@ -293,6 +310,147 @@ private fun decodeFilters(raw: String): Pair<SearchFilters, SearchSort>? {
         ) to SearchSort.valueOf(parts[4])
     }.getOrNull()
 }
+
+/** Which page of the Home and Chats pager [section] is: 0 for Home, 1 for Chats or a folder, null for neither. */
+internal fun swipePage(section: BrowseSection): Int? = when {
+    section.isHome -> HOME_PAGE
+    section.onChatsPage -> CHATS_PAGE
+    else -> null
+}
+
+/** What page [page] of the pager shows: Home, or [chats], the chip the Chats page was left on. */
+internal fun swipeSection(page: Int, chats: BrowseSection): BrowseSection =
+    if (page == CHATS_PAGE) chats else BrowseSection.of(BrowseTab.Home)
+
+/**
+ * The Chats page to come back to: the chip it was left on ([lastChats], written down by
+ * [BrowseSection.encode]) when that folder is still there, else All chats.
+ */
+internal fun chatsPageOf(lastChats: String, sections: List<BrowseSection>): BrowseSection =
+    BrowseSection.decode(lastChats)?.takeIf { it.isChats || (it.onChatsPage && it in sections) } ?: BrowseSection.of(BrowseTab.Chats)
+
+/**
+ * Home and Chats side by side: a swipe from Home towards the end goes to Chats, one back from
+ * Chats returns to Home, and neither goes further. A row that scrolls sideways inside a page (a
+ * Home shelf, the chips) takes the swipe first; the page turns only once it can go no further, or
+ * when the swipe starts outside it. Both pages stay composed, so each keeps its scroll.
+ *
+ * The bar's buttons turn the pager too ([tab] changing); a swipe that settles on the other page
+ * makes it the browser's tab ([onSettle]). [onState] hands the pager up for the bar's highlight
+ * to follow the swipe.
+ */
+@Composable
+private fun HomeChatsPager(
+    tab: BrowseSection,
+    chats: BrowseSection,
+    onSettle: (BrowseSection) -> Unit,
+    onState: (PagerState?) -> Unit,
+    page: @Composable (BrowseSection) -> Unit,
+) {
+    val reduced = rememberReducedMotion() || Motion.reduced
+    val pager = rememberPagerState(initialPage = swipePage(tab) ?: HOME_PAGE) { SWIPE_PAGE_COUNT }
+    DisposableEffect(pager) {
+        onState(pager)
+        onDispose { onState(null) }
+    }
+    val target = swipePage(tab)
+    LaunchedEffect(target) {
+        if (target == null || target == pager.currentPage && pager.currentPageOffsetFraction == 0f) return@LaunchedEffect
+        if (reduced) pager.scrollToPage(target) else pager.animateScrollToPage(target)
+    }
+    val currentChats by rememberUpdatedState(chats)
+    val settle by rememberUpdatedState(onSettle)
+    LaunchedEffect(pager) {
+        snapshotFlow { pager.settledPage }.collect { settled -> settle(swipeSection(settled, currentChats)) }
+    }
+    HorizontalPager(
+        state = pager,
+        beyondViewportPageCount = 1,
+        key = { it },
+        modifier = Modifier.fillMaxSize(),
+    ) { index ->
+        page(swipeSection(index, chats))
+    }
+}
+
+/**
+ * One page of the phone's browser under its title. Home, Favourites and History keep the title
+ * that slides away with the list and back on the first pull down, with the count under it.
+ * The Chats page has its name larger and centred, and pinned: it and the chips under it stay put
+ * while the chat list scrolls beneath them.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PhonePageFrame(
+    section: BrowseSection,
+    count: Int,
+    refresh: (() -> Unit)?,
+    pane: @Composable (BrowseSection) -> Unit,
+) {
+    val s = LocalStrings.current
+    val pinned = section.onChatsPage
+    val scrollBehavior = if (pinned) TopAppBarDefaults.pinnedScrollBehavior() else TopAppBarDefaults.enterAlwaysScrollBehavior()
+    Scaffold(
+        modifier = if (pinned) Modifier else Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            if (pinned) {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            s.browseTabChats,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                )
+            } else {
+                TopAppBar(
+                    scrollBehavior = scrollBehavior,
+                    title = { Text(section.heading, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                )
+            }
+        },
+    ) { padding ->
+        // The page's count under the title, where a phone's app bar puts a subtitle.
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            if (count > 0) {
+                Text(
+                    countLabel(section, count),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Tone.muted,
+                    modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
+                )
+            }
+            if (refresh == null) {
+                pane(section)
+            } else {
+                // TDLib answers through the list's own flow, so the spinner is a short
+                // acknowledgement rather than a wait on the fetch itself.
+                var pulling by remember { mutableStateOf(false) }
+                LaunchedEffect(pulling) {
+                    if (pulling) {
+                        kotlinx.coroutines.delay(PULL_ACK_MS)
+                        pulling = false
+                    }
+                }
+                PullToRefreshBox(
+                    isRefreshing = pulling,
+                    onRefresh = { pulling = true; refresh() },
+                    modifier = Modifier.fillMaxSize(),
+                ) { pane(section) }
+            }
+        }
+    }
+}
+
+private const val HOME_PAGE = 0
+private const val CHATS_PAGE = 1
+private const val SWIPE_PAGE_COUNT = 2
+
+/** The content key of the Home and Chats pager, which a swipe between them does not change. */
+private const val SWIPE_PAGES = "home-chats"
 
 /** How far a page slides in as it fades: a twelfth of the width, a nudge rather than a swipe. */
 private const val SLIDE_PART = 12
