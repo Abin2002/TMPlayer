@@ -23,14 +23,15 @@ Key facts:
 - [Android TV](https://tmplayer.org/android-tv/): watching Telegram videos on Android TV and Google TV
 - [Fire TV](https://tmplayer.org/fire-tv/): installing on a Fire TV Stick, Cube or Fire TV Edition TV
 - [Formats](https://tmplayer.org/formats/): the containers, codecs and subtitle formats it plays
-- [Questions](https://tmplayer.org/faq/): streaming without waiting, which file to download, privacy, what it will not do
+- [Questions](https://tmplayer.org/faq/): Android TV, Fire TV, PC and Mac, price, safety, signing in with or without a phone, audio files (not listed: it plays videos only), streaming without waiting, which file to download, what it will not do
 - [Changelog](https://tmplayer.org/changelog/): every release, newest first, with a page per release and an RSS feed at https://tmplayer.org/changelog/feed.xml
 
 ## Guides
 
+- [Guides](https://tmplayer.org/guides/): the three guides below, one line each
 - [How to watch Telegram videos on Android TV](https://tmplayer.org/guides/telegram-videos-on-android-tv/)
 - [How to watch Telegram videos on Fire TV](https://tmplayer.org/guides/telegram-videos-on-fire-tv/)
-- [Telegram on your TV without casting](https://tmplayer.org/guides/telegram-on-tv-without-casting/)
+- [Telegram on your TV without casting](https://tmplayer.org/guides/telegram-on-tv-without-casting/): casting, screen mirroring, Telegram's Android app on the TV, Telegram Web in the TV's browser and a player on the TV, compared in a table
 
 ## For agents
 

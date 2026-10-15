@@ -28,7 +28,6 @@ const ld: Guide = {
   headline: 'How to watch Telegram videos on Android TV',
   description: 'Watch the videos in your own Telegram chats and channels on an Android TV or Google TV: install TMPlayer, scan a QR code with your phone, and press play.',
   datePublished: '2026-10-06',
-  dateModified: '2026-10-06',
   howTo: {
     totalTime: 'PT10M',
     steps: [
@@ -42,7 +41,7 @@ const ld: Guide = {
 ---
 <GuidePage page="guide_android_tv" title={t('guide_android_tv.how_to_watch_telegram_videos')} socialTitle={t('guide_android_tv.how_to_watch_telegram_videos_2')} description={t('guide_android_tv.watch_the_videos_in_your')} ld={ld}>
 
-  <PageHead lede={t('guide_android_tv.telegram_has_no_app_for')}>
+  <PageHead lede={t('guide_android_tv.telegram_has_no_app_for')} updated={ld.path}>
     <Crumbs slot="crumbs" here="Android TV" />
     <T slot="title" k="guide_android_tv.telegram_videos"><em slot="em1">{t('guide_android_tv.telegram_videos__em1')}</em></T>
     <Fragment slot="actions">

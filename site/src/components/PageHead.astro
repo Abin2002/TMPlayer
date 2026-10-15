@@ -1,15 +1,19 @@
 ---
 // The top of a page: the breadcrumb trail, the heading, the lede and, when the page has them, its
 // buttons. The lede is the `lede` string or a "lede" slot (for one with markup). Anything after
-// the buttons, such as the "on this page" links, goes in the default slot.
-interface Props { lede?: string }
-const { lede } = Astro.props;
+// the buttons, such as the "on this page" links, goes in the default slot. `updated` is the page's
+// English path, for an "Updated" line from its lastmod under the lede.
+import Updated from './Updated.astro';
+
+interface Props { lede?: string; updated?: string }
+const { lede, updated } = Astro.props;
 ---
 <section class="page-head">
   <div class="wrap page-head-wrap">
     <p class="crumbs"><slot name="crumbs" /></p>
     <h1><slot name="title" /></h1>
     <p class="page-lede">{lede}<slot name="lede" /></p>
+    {updated && <Updated path={updated} />}
     {Astro.slots.has('actions') && (
       <div class="page-actions">
         <slot name="actions" />
