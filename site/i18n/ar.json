@@ -94,7 +94,8 @@
     "footer": "تذييل الصفحة",
     "guides": "الأدلة",
     "community": "المجتمع",
-    "updated": "آخر تحديث: {time1}"
+    "updated": "آخر تحديث: {time1}",
+    "get_tmplayer_for_your_tv": "احصل على TMPlayer لتلفازك"
   },
   "ld": {
     "a_free_open_source_4a30": "مشغّل فيديو Telegram مجاني ومفتوح المصدر لأجهزة Android TV وهواتف Android وWindows وmacOS وLinux، يبث الفيديوهات الموجودة في محادثاتك.",
@@ -461,7 +462,10 @@
     "an_app_from_outside_the": "تطبيق من خارج المتجر يسجّل الدخول إلى Telegram يتطلب ثقة كبيرة. والنجمة تساعد الشخص التالي على اتخاذ قراره.",
     "download_tmplayer_free_the_apk": "نزّل ملف APK من TMPlayer مجانًا، مشغّل وسائط Telegram لأجهزة Android TV والهواتف، ومعه مثبّت لنظام Windows وملف AppImage لنظام Linux ونسخة تجريبية لنظام macOS.",
     "platforms": "المنصات",
-    "add_to_obtainium": "أضفه إلى Obtainium"
+    "add_to_obtainium": "أضفه إلى Obtainium",
+    "open_the_installer": "افتح ملف التثبيت",
+    "what_comes_next": "ما الخطوة التالية",
+    "join_the_telegram_channel_for_updates": "انضم إلى قناة Telegram لمتابعة التحديثات"
   },
   "install": {
     "how_to_install_tmplayer_on": "كيفية تثبيت TMPlayer على Android TV وWindows وmacOS وLinux",

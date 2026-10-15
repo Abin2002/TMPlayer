@@ -94,7 +94,8 @@
     "footer": "Footer",
     "guides": "Panduan",
     "community": "Komunitas",
-    "updated": "Diperbarui {time1}"
+    "updated": "Diperbarui {time1}",
+    "get_tmplayer_for_your_tv": "Pasang TMPlayer di TV kamu"
   },
   "ld": {
     "a_free_open_source_4a30": "Pemutar video Telegram gratis dan open source untuk Android TV, HP Android, Windows, macOS, dan Linux yang memutar video di obrolan kamu sendiri secara streaming.",
@@ -461,7 +462,10 @@
     "an_app_from_outside_the": "Aplikasi dari luar toko yang masuk ke Telegram butuh banyak kepercayaan. Bintang membantu orang berikutnya memutuskan.",
     "download_tmplayer_free_the_apk": "Unduh APK TMPlayer gratis, pemutar media Telegram untuk Android TV dan HP, plus installer Windows, AppImage Linux, dan versi pratinjau macOS.",
     "platforms": "Platform",
-    "add_to_obtainium": "Tambahkan ke Obtainium"
+    "add_to_obtainium": "Tambahkan ke Obtainium",
+    "open_the_installer": "Buka penginstal",
+    "what_comes_next": "Langkah berikutnya",
+    "join_the_telegram_channel_for_updates": "Gabung ke kanal Telegram untuk kabar terbaru"
   },
   "install": {
     "how_to_install_tmplayer_on": "Cara memasang TMPlayer di Android TV, Windows, macOS, Linux",

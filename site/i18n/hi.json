@@ -94,7 +94,8 @@
     "footer": "फ़ुटर",
     "guides": "गाइड",
     "community": "कम्युनिटी",
-    "updated": "अपडेट किया गया {time1}"
+    "updated": "अपडेट किया गया {time1}",
+    "get_tmplayer_for_your_tv": "अपने टीवी के लिए TMPlayer पाएँ"
   },
   "ld": {
     "a_free_open_source_4a30": "Android TV, Android फ़ोन, Windows, macOS और Linux के लिए मुफ़्त, ओपन सोर्स Telegram वीडियो प्लेयर, जो आपकी अपनी चैट के वीडियो स्ट्रीम करता है।",
@@ -461,7 +462,10 @@
     "an_app_from_outside_the": "स्टोर के बाहर का ऐप, जो Telegram में साइन इन करता है, बहुत भरोसा माँगता है। स्टार अगले व्यक्ति को फ़ैसला करने में मदद करता है।",
     "download_tmplayer_free_the_apk": "मुफ़्त TMPlayer APK डाउनलोड करें, Android TV और फ़ोन के लिए Telegram मीडिया प्लेयर, साथ में Windows इंस्टॉलर, Linux AppImage और macOS प्रीव्यू।",
     "platforms": "प्लेटफ़ॉर्म",
-    "add_to_obtainium": "Obtainium में जोड़ें"
+    "add_to_obtainium": "Obtainium में जोड़ें",
+    "open_the_installer": "इंस्टॉलर खोलें",
+    "what_comes_next": "आगे क्या करें",
+    "join_the_telegram_channel_for_updates": "अपडेट के लिए Telegram चैनल से जुड़ें"
   },
   "install": {
     "how_to_install_tmplayer_on": "Android TV, Windows, macOS, Linux पर TMPlayer कैसे इंस्टॉल करें",

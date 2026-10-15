@@ -94,7 +94,8 @@
     "footer": "Alt bilgi",
     "guides": "Rehberler",
     "community": "Topluluk",
-    "updated": "Güncellendi: {time1}"
+    "updated": "Güncellendi: {time1}",
+    "get_tmplayer_for_your_tv": "TV'niz için TMPlayer'ı edinin"
   },
   "ld": {
     "a_free_open_source_4a30": "Kendi sohbetlerindeki videoları akıtan, Android TV, Android telefonlar, Windows, macOS ve Linux için ücretsiz, açık kaynak bir Telegram video oynatıcı.",
@@ -461,7 +462,10 @@
     "an_app_from_outside_the": "Telegram'a giriş yapan, mağaza dışı bir uygulama çok güven ister. Yıldız, bir sonraki kişinin karar vermesine yardım eder.",
     "download_tmplayer_free_the_apk": "Android TV ve telefonlar için Telegram medya oynatıcı TMPlayer'ın ücretsiz APK'sını, Windows yükleyicisini, Linux AppImage'ını ve macOS önizlemesini indir.",
     "platforms": "Platformlar",
-    "add_to_obtainium": "Obtainium'a ekle"
+    "add_to_obtainium": "Obtainium'a ekle",
+    "open_the_installer": "Yükleyiciyi açın",
+    "what_comes_next": "Sırada ne var",
+    "join_the_telegram_channel_for_updates": "Güncellemeler için Telegram kanalına katılın"
   },
   "install": {
     "how_to_install_tmplayer_on": "TMPlayer Android TV, Windows, macOS, Linux'a nasıl kurulur",

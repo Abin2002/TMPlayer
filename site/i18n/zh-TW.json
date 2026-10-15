@@ -94,7 +94,8 @@
     "footer": "頁尾",
     "guides": "教學",
     "community": "社群",
-    "updated": "更新於 {time1}"
+    "updated": "更新於 {time1}",
+    "get_tmplayer_for_your_tv": "為你的電視安裝 TMPlayer"
   },
   "ld": {
     "a_free_open_source_4a30": "免費開源的 Telegram 影片播放器，支援 Android TV、Android 手機、Windows、macOS 與 Linux，可串流播放你自己聊天中的影片。",
@@ -461,7 +462,10 @@
     "an_app_from_outside_the": "來自商店以外、又要登入 Telegram 的 App，需要很高的信任。加星可以幫助下一個人做決定。",
     "download_tmplayer_free_the_apk": "免費下載 TMPlayer APK：Android TV 與手機上的 Telegram 媒體播放器，另有 Windows 安裝程式、Linux AppImage 與 macOS 預覽版。",
     "platforms": "平台",
-    "add_to_obtainium": "加入 Obtainium"
+    "add_to_obtainium": "加入 Obtainium",
+    "open_the_installer": "開啟安裝程式",
+    "what_comes_next": "接下來",
+    "join_the_telegram_channel_for_updates": "加入 Telegram 頻道，取得更新消息"
   },
   "install": {
     "how_to_install_tmplayer_on": "如何在 Android TV、Windows、macOS、Linux 上安裝 TMPlayer",

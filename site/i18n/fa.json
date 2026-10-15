@@ -94,7 +94,8 @@
     "footer": "پانوشت",
     "guides": "راهنماها",
     "community": "جامعه",
-    "updated": "به‌روزرسانی: {time1}"
+    "updated": "به‌روزرسانی: {time1}",
+    "get_tmplayer_for_your_tv": "TMPlayer را برای تلویزیون خود بگیرید"
   },
   "ld": {
     "a_free_open_source_4a30": "پخش‌کنندهٔ رایگان و متن‌باز ویدیوهای Telegram برای Android TV، گوشی Android، Windows، macOS و Linux که ویدیوهای چت‌های خودتان را پخش زنده می‌کند.",
@@ -461,7 +462,10 @@
     "an_app_from_outside_the": "برنامه‌ای از خارج از فروشگاه که وارد Telegram می‌شود اعتماد زیادی می‌خواهد. یک ستاره به نفر بعدی در تصمیم‌گیری کمک می‌کند.",
     "download_tmplayer_free_the_apk": "APK رایگان TMPlayer را دانلود کنید، پخش‌کنندهٔ رسانهٔ Telegram برای Android TV و گوشی، همراه با نصب‌کنندهٔ Windows، AppImage برای Linux و پیش‌نمایش macOS.",
     "platforms": "پلتفرم‌ها",
-    "add_to_obtainium": "افزودن به Obtainium"
+    "add_to_obtainium": "افزودن به Obtainium",
+    "open_the_installer": "نصب‌کننده را باز کنید",
+    "what_comes_next": "قدم بعدی",
+    "join_the_telegram_channel_for_updates": "برای به‌روزرسانی‌ها به کانال Telegram بپیوندید"
   },
   "install": {
     "how_to_install_tmplayer_on": "نحوهٔ نصب TMPlayer روی Android TV، Windows، macOS و Linux",

@@ -94,7 +94,8 @@
     "footer": "フッター",
     "guides": "ガイド",
     "community": "コミュニティ",
-    "updated": "{time1}更新"
+    "updated": "{time1}更新",
+    "get_tmplayer_for_your_tv": "テレビにTMPlayerを入れる"
   },
   "ld": {
     "a_free_open_source_4a30": "ご自身のチャットにある動画をストリーミング再生する、Android TV、Androidスマートフォン、Windows、macOS、Linux向けの無料のオープンソースTelegram動画プレーヤー。",
@@ -461,7 +462,10 @@
     "an_app_from_outside_the": "Telegramにサインインするストア外のアプリには、大きな信頼が求められます。スターは、次の人が判断する助けになります。",
     "download_tmplayer_free_the_apk": "Android TVとスマホ向けTelegramメディアプレーヤーTMPlayerの無料APK。Windowsインストーラー、LinuxのAppImage、macOSプレビュー版も。",
     "platforms": "対応環境",
-    "add_to_obtainium": "Obtainiumに追加"
+    "add_to_obtainium": "Obtainiumに追加",
+    "open_the_installer": "インストーラーを開く",
+    "what_comes_next": "次にすること",
+    "join_the_telegram_channel_for_updates": "Telegramチャンネルで最新情報を受け取る"
   },
   "install": {
     "how_to_install_tmplayer_on": "Android TV、Windows、macOS、LinuxへのTMPlayerのインストール",

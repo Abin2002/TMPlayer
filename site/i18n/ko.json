@@ -94,7 +94,8 @@
     "footer": "푸터",
     "guides": "가이드",
     "community": "커뮤니티",
-    "updated": "{time1} 업데이트"
+    "updated": "{time1} 업데이트",
+    "get_tmplayer_for_your_tv": "TV에 TMPlayer를 설치하세요"
   },
   "ld": {
     "a_free_open_source_4a30": "내 채팅의 동영상을 스트리밍하는 Android TV, Android 휴대폰, Windows, macOS, Linux용 무료 오픈 소스 Telegram 동영상 플레이어.",
@@ -461,7 +462,10 @@
     "an_app_from_outside_the": "Telegram에 로그인하는 스토어 밖의 앱은 큰 신뢰를 요구해요. 별은 다음 사람이 판단하는 데 도움이 돼요.",
     "download_tmplayer_free_the_apk": "Android TV와 휴대폰용 Telegram 미디어 플레이어 TMPlayer 무료 APK, Windows 설치 프로그램, Linux AppImage, macOS 미리보기.",
     "platforms": "플랫폼",
-    "add_to_obtainium": "Obtainium에 추가"
+    "add_to_obtainium": "Obtainium에 추가",
+    "open_the_installer": "설치 파일 열기",
+    "what_comes_next": "다음 단계",
+    "join_the_telegram_channel_for_updates": "업데이트 소식은 Telegram 채널에서 받아 보세요"
   },
   "install": {
     "how_to_install_tmplayer_on": "Android TV, Windows, macOS, Linux에 TMPlayer 설치하기",

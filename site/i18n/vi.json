@@ -94,7 +94,8 @@
     "footer": "Chân trang",
     "guides": "Hướng dẫn",
     "community": "Cộng đồng",
-    "updated": "Cập nhật {time1}"
+    "updated": "Cập nhật {time1}",
+    "get_tmplayer_for_your_tv": "Cài TMPlayer cho TV của bạn"
   },
   "ld": {
     "a_free_open_source_4a30": "Trình phát video Telegram miễn phí, mã nguồn mở cho Android TV, điện thoại Android, Windows, macOS và Linux, phát video trong các cuộc trò chuyện của chính bạn.",
@@ -461,7 +462,10 @@
     "an_app_from_outside_the": "Một ứng dụng ngoài cửa hàng mà lại đăng nhập vào Telegram đòi hỏi rất nhiều sự tin tưởng. Một ngôi sao giúp người sau quyết định.",
     "download_tmplayer_free_the_apk": "Tải APK TMPlayer miễn phí, trình phát media Telegram cho Android TV và điện thoại, cùng trình cài đặt Windows, AppImage cho Linux và bản xem trước cho macOS.",
     "platforms": "Nền tảng",
-    "add_to_obtainium": "Thêm vào Obtainium"
+    "add_to_obtainium": "Thêm vào Obtainium",
+    "open_the_installer": "Mở trình cài đặt",
+    "what_comes_next": "Bước tiếp theo",
+    "join_the_telegram_channel_for_updates": "Tham gia kênh Telegram để nhận tin cập nhật"
   },
   "install": {
     "how_to_install_tmplayer_on": "Cách cài TMPlayer trên Android TV, Windows, macOS, Linux",

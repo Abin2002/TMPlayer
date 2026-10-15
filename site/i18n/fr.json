@@ -94,7 +94,8 @@
     "footer": "Pied de page",
     "guides": "Guides",
     "community": "Communauté",
-    "updated": "Mis à jour {time1}"
+    "updated": "Mis à jour {time1}",
+    "get_tmplayer_for_your_tv": "Installez TMPlayer sur votre TV"
   },
   "ld": {
     "a_free_open_source_4a30": "Un lecteur vidéo Telegram gratuit et open source pour Android TV, téléphones Android, Windows, macOS et Linux, qui lit en streaming les vidéos de vos propres discussions.",
@@ -461,7 +462,10 @@
     "an_app_from_outside_the": "Une appli hors boutique qui se connecte à Telegram demande beaucoup de confiance. Une étoile aide la prochaine personne à décider.",
     "download_tmplayer_free_the_apk": "Téléchargez l'APK gratuit de TMPlayer, lecteur Telegram pour Android TV et téléphones, avec un installateur Windows, une AppImage Linux et un aperçu macOS.",
     "platforms": "Plateformes",
-    "add_to_obtainium": "Ajouter à Obtainium"
+    "add_to_obtainium": "Ajouter à Obtainium",
+    "open_the_installer": "Ouvrez le programme d'installation",
+    "what_comes_next": "Et ensuite",
+    "join_the_telegram_channel_for_updates": "Rejoignez la chaîne Telegram pour suivre les mises à jour"
   },
   "install": {
     "how_to_install_tmplayer_on": "Comment installer TMPlayer sur Android TV, Windows, macOS, Linux",
