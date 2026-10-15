@@ -29,6 +29,8 @@ data class AllChatsCursor(
 data class AllChatsPage(
     val items: List<MediaItem>,
     val cursor: AllChatsCursor,
+    /** The chats [items] came from, for their names and pictures. */
+    val chats: List<ChatBrief> = emptyList(),
 )
 
 /** The two halves of an all-chats search, as the screen draws them. */

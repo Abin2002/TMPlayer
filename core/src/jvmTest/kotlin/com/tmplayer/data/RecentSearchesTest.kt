@@ -29,11 +29,18 @@ class RecentSearchesTest {
     }
 
     @Test
-    fun `keeps only the last five`() {
+    fun `keeps only the last ten`() {
         var list = emptyList<String>()
-        for (word in listOf("one", "two", "three", "four", "five", "six")) list = RecentSearches.add(list, word)
+        val words = listOf("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven")
+        for (word in words) list = RecentSearches.add(list, word)
         assertEquals(RecentSearches.LIMIT, list.size)
-        assertEquals(listOf("six", "five", "four", "three", "two"), list)
+        assertEquals(words.drop(1).reversed(), list)
+    }
+
+    @Test
+    fun `removes one, whatever its case or spacing`() {
+        assertEquals(listOf("dark", "lost"), RecentSearches.remove(listOf("dark", "Harbour Notes", "lost"), " harbour   notes "))
+        assertEquals(listOf("dark"), RecentSearches.remove(listOf("dark"), "absent"))
     }
 
     @Test
@@ -65,8 +72,11 @@ class RecentSearchesTest {
         val dir = Files.createTempDirectory("tm-recent").toFile()
         val settings = SettingsStore(SettingsStore.openDataStore(dir.resolve(SettingsStore.FILE_NAME)))
         assertTrue(settings.recentSearches.first().isEmpty())
-        for (word in listOf("one", "two", "three", "four", "five", "six", "two")) settings.addRecentSearch(word)
-        assertEquals(listOf("two", "six", "five", "four", "three"), settings.recentSearches.first())
+        val words = listOf("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "two")
+        for (word in words) settings.addRecentSearch(word)
+        assertEquals(listOf("two", "eleven", "ten", "nine", "eight", "seven", "six", "five", "four", "three"), settings.recentSearches.first())
+        settings.removeRecentSearch("ten")
+        assertEquals(listOf("two", "eleven", "nine", "eight", "seven", "six", "five", "four", "three"), settings.recentSearches.first())
         settings.clearRecentSearches()
         assertTrue(settings.recentSearches.first().isEmpty())
     }

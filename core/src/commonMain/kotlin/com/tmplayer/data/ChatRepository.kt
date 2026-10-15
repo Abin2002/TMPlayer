@@ -11,6 +11,9 @@ import dev.g000sha256.tdl.dto.ChatListMain
 import dev.g000sha256.tdl.dto.ChatTypeBasicGroup
 import dev.g000sha256.tdl.dto.ChatTypeSupergroup
 import dev.g000sha256.tdl.dto.MessageTopicForum
+import dev.g000sha256.tdl.dto.SearchMessagesChatTypeFilterChannel
+import dev.g000sha256.tdl.dto.SearchMessagesChatTypeFilterGroup
+import dev.g000sha256.tdl.dto.SearchMessagesChatTypeFilterPrivate
 import dev.g000sha256.tdl.dto.SearchMessagesFilterAnimation
 import dev.g000sha256.tdl.dto.SearchMessagesFilterDocument
 import dev.g000sha256.tdl.dto.SearchMessagesFilterVideo
@@ -539,20 +542,35 @@ class ChatRepository(private val td: TdlClient) {
     }
 
     /**
-     * One page of the "Videos in all chats" search: Telegram's `searchMessages` across the main
-     * list, with the video filter and, beside it, the document filter, since most long videos are
-     * posted as files and Telegram matches a document search against the file name. Each keeps its
-     * own offset in [cursor]. A failure is thrown, so the caller can say the search failed rather
-     * than that nothing matched.
+     * One page of the search across every chat: Telegram's `searchMessages` with the video filter
+     * and, beside it, the document filter, since most long videos are posted as files and Telegram
+     * matches a document search against the file name. Each keeps its own offset in [cursor].
+     *
+     * [filters] decide the two things Telegram is asked rather than told afterwards: the kind of
+     * chat (its own chat type filter) and whether archived chats count. With them counted no chat
+     * list is named at all, which is how TDLib searches the archive along with the main list.
+     *
+     * The page carries a [ChatBrief] for each chat it found something in, read with `getChat`
+     * (from TDLib's memory, for a chat it has seen), so a result names and pictures its chat even
+     * when that chat is not in the list loaded on screen. A failure is thrown, so the caller can
+     * say the search failed, or wait out a flood wait, rather than say nothing matched.
      */
     suspend fun searchAllChats(
         query: String,
         cursor: AllChatsCursor = AllChatsCursor(),
         limit: Int = AllChatsSearch.PAGE_SIZE,
+        filters: SearchFilters = SearchFilters(),
     ): AllChatsPage = withContext(Dispatchers.IO) {
         coroutineScope {
+            val list = if (filters.includeArchived) null else ChatListMain()
+            val chatType = when (filters.chatType) {
+                SearchChatType.All -> null
+                SearchChatType.Channels -> SearchMessagesChatTypeFilterChannel()
+                SearchChatType.Groups -> SearchMessagesChatTypeFilterGroup()
+                SearchChatType.People -> SearchMessagesChatTypeFilterPrivate()
+            }
             fun ask(filter: dev.g000sha256.tdl.dto.SearchMessagesFilter, offset: String, done: Boolean) =
-                if (done) null else async { td.searchMessages(ChatListMain(), query, offset, limit, filter, null, 0, 0).value() }
+                if (done) null else async { td.searchMessages(list, query, offset, limit, filter, chatType, 0, 0).value() }
             val videos = ask(SearchMessagesFilterVideo(), cursor.videoOffset, cursor.videoDone)
             val documents = ask(SearchMessagesFilterDocument(), cursor.documentOffset, cursor.documentDone)
             val videoFound = videos?.await()
@@ -560,9 +578,16 @@ class ChatRepository(private val td: TdlClient) {
             val allowed = ChatGate.awaitReady()
             val messages = listOfNotNull(videoFound, documentFound).flatMap { it.messages.toList() }
                 .filter { KidsLock.allows(allowed, it.chatId) }
+            val myId = if (messages.isEmpty()) 0L else Td.myId()
+            val briefs = ArrayList<ChatBrief>()
             val items = messages.groupBy { it.chatId }.flatMap { (chatId, inChat) ->
-                val chatProtected = td.getChat(chatId).valueOrNull?.hasProtectedContent ?: false
-                MediaMapper.screen(inChat, chatProtected).items
+                val chat = td.getChat(chatId).valueOrNull
+                val screened = MediaMapper.screen(inChat, chat?.hasProtectedContent ?: false).items
+                if (chat != null && screened.isNotEmpty()) {
+                    val summary = summarise(chat, myId)
+                    briefs += ChatBrief(summary.id, summary.title, summary.kind, summary.photoFileId, summary.miniThumbnail)
+                }
+                screened
             }
             fun finished(found: dev.g000sha256.tdl.dto.FoundMessages?, was: Boolean) =
                 was || found == null || found.messages.isEmpty() || found.nextOffset.isEmpty()
@@ -575,6 +600,7 @@ class ChatRepository(private val td: TdlClient) {
                     videoDone = finished(videoFound, cursor.videoDone),
                     documentDone = finished(documentFound, cursor.documentDone),
                 ),
+                chats = briefs,
             )
         }
     }

@@ -95,6 +95,9 @@ private val VIDEO_SCALE = stringPreferencesKey("video_scale")
 /** The last few searches inside a chat, one per line, newest first. See [RecentSearches]. */
 private val RECENT_SEARCHES = stringPreferencesKey("recent_searches")
 
+/** "Remember searches" in Settings: on unless switched off, and switching it off forgets them. */
+private val REMEMBER_SEARCHES = booleanPreferencesKey("remember_searches")
+
 // The update check's memory, shared by the phone, the TV and the desktop. See [UpdateScheduler].
 private val UPDATE_NOTIFY = booleanPreferencesKey("update_notify")
 private val UPDATE_LAST_CHECK = longPreferencesKey("update_last_check")
@@ -1173,17 +1176,42 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
     // ---- recent searches --------------------------------------------------------------------
 
     /**
-     * What was searched for inside a chat lately, newest first, at most [RecentSearches.LIMIT].
-     * One list for every chat: a viewer looking for a show looks for it wherever it was posted.
+     * What was searched for lately, newest first, at most [RecentSearches.LIMIT]. One list for
+     * every search box: a chat's own and the search across every chat. A viewer looking for a show
+     * looks for it wherever it was posted.
      */
     val recentSearches: Flow<List<String>> = read { RecentSearches.decode(it[RECENT_SEARCHES]) }
 
+    /** Whether searches are kept at all. */
+    val rememberSearches: Flow<Boolean> = read { it[REMEMBER_SEARCHES] ?: true }
+
+    /** Turning it off forgets what is kept, which is what somebody switching it off wants. */
+    suspend fun setRememberSearches(value: Boolean) {
+        prefs.edit {
+            it[REMEMBER_SEARCHES] = value
+            if (!value) it.remove(RECENT_SEARCHES)
+        }
+    }
+
     suspend fun addRecentSearch(query: String) {
         prefs.edit { prefs ->
+            if (prefs[REMEMBER_SEARCHES] == false) return@edit
             val before = RecentSearches.decode(prefs[RECENT_SEARCHES])
             val after = RecentSearches.add(before, query)
             if (after != before) prefs[RECENT_SEARCHES] = RecentSearches.encode(after)
         }
+    }
+
+    suspend fun removeRecentSearch(query: String) {
+        prefs.edit { prefs ->
+            val after = RecentSearches.remove(RecentSearches.decode(prefs[RECENT_SEARCHES]), query)
+            if (after.isEmpty()) prefs.remove(RECENT_SEARCHES) else prefs[RECENT_SEARCHES] = RecentSearches.encode(after)
+        }
+    }
+
+    /** Puts back a list Clear all took, for its Undo. */
+    suspend fun restoreRecentSearches(searches: List<String>) {
+        prefs.edit { it[RECENT_SEARCHES] = RecentSearches.encode(searches.take(RecentSearches.LIMIT)) }
     }
 
     suspend fun clearRecentSearches() {
