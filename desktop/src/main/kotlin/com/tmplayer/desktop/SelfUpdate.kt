@@ -1,6 +1,7 @@
 package com.tmplayer.desktop
 
 import com.tmplayer.data.Release
+import com.tmplayer.data.UpdateFeed
 import com.tmplayer.data.UpdateWords
 import com.tmplayer.desktop.os.OsInfo
 import com.tmplayer.i18n.L
@@ -69,7 +70,8 @@ sealed interface UpdateProgress {
  *
  * - **MSI**: the new MSI is downloaded, then, once the app has quit, `msiexec /passive` installs it
  *   over this one (it is per user and keeps one upgrade code, so no administrator prompt) and the
- *   app starts again.
+ *   app starts again. Everything for it lives beside the install folder, never in it: see
+ *   [stageMsi].
  * - **Portable zip**: unpacked beside the current folder; once the app has quit the folders swap
  *   and the new one starts.
  * - **AppImage**: the new file replaces the old one straight away (the running copy keeps its
@@ -85,7 +87,7 @@ sealed interface UpdateProgress {
  */
 class SelfUpdate(
     val kind: InstallKind = detect(),
-    private val workDir: File = DesktopPaths.updatesDir,
+    private val workDir: File = workDirFor(kind),
 ) {
     private val _progress = MutableStateFlow<UpdateProgress>(UpdateProgress.Idle)
     val progress: StateFlow<UpdateProgress> = _progress.asStateFlow()
@@ -96,6 +98,9 @@ class SelfUpdate(
 
     /** Runs after the app has gone, on Windows: the install itself. */
     private var pendingHelper: List<String>? = null
+
+    /** Where [pendingHelper] runs: outside the install folder, which the MSI update removes. */
+    private var helperDir: File? = null
 
     /** Whether [release] has a package this install can update itself from, and a hash to check it by. */
     fun canUpdateTo(release: Release): Boolean {
@@ -123,7 +128,7 @@ class SelfUpdate(
     fun restart() {
         val helper = pendingHelper ?: relaunchCommand()
         if (helper != null) {
-            runCatching { startDetached(helper) }.onFailure { Logger.w(TAG, "could not start the restart helper: ${it.message}") }
+            runCatching { startDetached(helper, helperDir) }.onFailure { Logger.w(TAG, "could not start the restart helper: ${it.message}") }
         }
         quit()
     }
@@ -154,7 +159,7 @@ class SelfUpdate(
         }
 
         when (kind) {
-            InstallKind.WindowsMsi -> stageMsi(file)
+            InstallKind.WindowsMsi -> stageMsi(file, release.version)
             InstallKind.WindowsPortable -> stagePortable(file)
             InstallKind.AppImage -> replaceAppImage(file)
             InstallKind.Deb, InstallKind.Rpm -> installPackage(file)
@@ -163,18 +168,27 @@ class SelfUpdate(
         _progress.value = UpdateProgress.Ready(release.version)
     }
 
-    private fun stageMsi(msi: File) {
+    /**
+     * Writes the script that installs [msi] once the app has quit (`msi-update.ps1`, which says
+     * why it does what it does).
+     *
+     * jpackage's per user MSI installs to `%LOCALAPPDATA%\TMPlayer`, the same folder the app keeps
+     * its data in, and the old version's uninstall, which a major upgrade runs before installing
+     * the new one, deletes that whole folder. So the MSI, the script, its logs and the data while
+     * the install runs all go in [msiRoot], the folder beside it (issue #7).
+     */
+    private fun stageMsi(msi: File, version: String) {
         val exe = appLauncher() ?: error(L.updateNoExe)
-        val script = File(workDir, "update.ps1")
-        script.writeText(
-            """
-            |${'$'}ErrorActionPreference = 'SilentlyContinue'
-            |Wait-Process -Id ${OsInfo.pid} -Timeout 60
-            |Start-Process msiexec.exe -ArgumentList '/i', '"${psQuote(msi.absolutePath)}"', '/passive', '/norestart' -Wait
-            |Start-Process '${psQuote(exe.absolutePath)}'
-            |""".trimMargin(),
-        )
+        val installDir = exe.absoluteFile.parentFile ?: error(L.updateNoFolder)
+        val root = msiRoot(exe) ?: error(L.updateNoFolder)
+        if (inside(msi, installDir)) error(L.updateCouldNotSave)
+        root.mkdirs()
+        val script = File(root, "update.ps1")
+        // With a byte order mark: Windows PowerShell 5.1 reads a script without one in the ANSI code
+        // page, which garbles a user folder with letters outside it.
+        script.writeText("\uFEFF" + msiScript(OsInfo.pid, msi, exe, installDir, root, version))
         pendingHelper = powershell(script)
+        helperDir = root
     }
 
     private fun stagePortable(zip: File) {
@@ -308,6 +322,84 @@ class SelfUpdate(
         val UNREACHABLE: String get() = UpdateWords.UNREACHABLE
         val DAMAGED: String get() = UpdateWords.DAMAGED
 
+        /**
+         * The MSI's upgrade code, `upgradeUuid` in desktop/build.gradle.kts (SelfUpdateTest checks
+         * they agree): how the update script asks Windows Installer which version is installed.
+         */
+        internal const val UPGRADE_CODE = "6f1d3c0e-2b8a-4b7e-9d2c-7a1e5f4c3b21"
+
+        /** Left beside the install folder by a Windows update that did not install. Holds the version. */
+        internal const val FAILED_MARKER = "update-failed.txt"
+
+        /** Where a failed Windows update sends the viewer (the script opens it too, when no app is left). */
+        const val DOWNLOAD_PAGE = "https://tmplayer.org/download/"
+
+        /**
+         * The folder beside the MSI install folder (`%LOCALAPPDATA%\TMPlayer-update` next to
+         * `%LOCALAPPDATA%\TMPlayer`) that the Windows update downloads to and runs from. On the
+         * same drive as the install folder, so the data moves out and back by renaming.
+         */
+        internal fun msiRoot(launcher: File): File? {
+            val installDir = launcher.absoluteFile.parentFile ?: return null
+            val parent = installDir.parentFile ?: return null
+            return File(parent, installDir.name + "-update")
+        }
+
+        /** Where [SelfUpdate] downloads to: for the MSI, beside the install folder, never in it. */
+        private fun workDirFor(kind: InstallKind): File =
+            kind.takeIf { it == InstallKind.WindowsMsi }?.let { appLauncher() }?.let(::msiRoot)?.let { File(it, "download") }
+                ?: DesktopPaths.updatesDir
+
+        /** Whether [file] is [dir] or somewhere under it, ignoring case as Windows does. */
+        internal fun inside(file: File, dir: File): Boolean {
+            val path = file.absoluteFile.normalize().path
+            val base = dir.absoluteFile.normalize().path
+            return path.equals(base, ignoreCase = true) || path.startsWith(base + File.separator, ignoreCase = true)
+        }
+
+        /** `msi-update.ps1` with this update's values filled in. */
+        internal fun msiScript(pid: Long, msi: File, exe: File, installDir: File, root: File, version: String): String {
+            val template = SelfUpdate::class.java.getResource("msi-update.ps1")?.readText() ?: error("msi-update.ps1 is missing")
+            // jpackage's ProductVersion is the plain x.y.z, and the registry key it writes for the
+            // install folder's removal is HKCU\Software\<vendor>\<name>\<version>, both "TMPlayer".
+            val plain = version.removePrefix("v").substringBefore('-').substringBefore('+')
+            val values = mapOf(
+                "PID" to pid.toString(),
+                "MSI" to psQuote(msi.absolutePath),
+                "EXE" to psQuote(exe.absolutePath),
+                "INSTALL_DIR" to psQuote(installDir.absolutePath),
+                "ROOT" to psQuote(root.absolutePath),
+                "VERSION" to psQuote(plain),
+                "UPGRADE_CODE" to "{" + UPGRADE_CODE.uppercase() + "}",
+                "REGISTRY_KEY" to psQuote("HKCU:\\Software\\TMPlayer\\TMPlayer\\$plain"),
+                "MARKER" to FAILED_MARKER,
+            )
+            val filled = values.entries.fold(template) { text, (name, value) -> text.replace("@@$name@@", value) }
+            check(!Regex("@@[A-Z_]+@@").containsMatchIn(filled)) { "msi-update.ps1 has a value nobody fills in" }
+            // CRLF, as a script on Windows has it.
+            return filled.replace("\r\n", "\n").replace("\n", "\r\n")
+        }
+
+        /**
+         * The version a Windows update last failed to install, as its script left it, or null. A
+         * marker from a version this one has reached (the viewer installed it by hand) is cleared.
+         */
+        fun failedUpdate(): String? {
+            val marker = appLauncher()?.let(::msiRoot)?.let { File(it, FAILED_MARKER) } ?: return null
+            val version = runCatching { marker.takeIf { it.isFile }?.readText()?.trim() }.getOrNull()
+                ?.takeIf { it.isNotEmpty() } ?: return null
+            if (UpdateFeed.compare(BuildInfo.VERSION, version) >= 0) {
+                marker.delete()
+                return null
+            }
+            return version
+        }
+
+        /** The viewer has read [failedUpdate]'s message. */
+        fun dismissFailedUpdate() {
+            appLauncher()?.let(::msiRoot)?.let { File(it, FAILED_MARKER).delete() }
+        }
+
         /** Dropped into the portable zip's folder by CI, so the app knows it is not the MSI. */
         const val PORTABLE_MARKER = "portable.txt"
 
@@ -428,8 +520,9 @@ class SelfUpdate(
             "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", script.absolutePath,
         )
 
-        private fun startDetached(command: List<String>) {
+        private fun startDetached(command: List<String>, dir: File? = null) {
             ProcessBuilder(command)
+                .directory(dir)
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                 .redirectError(ProcessBuilder.Redirect.DISCARD)
                 .start()

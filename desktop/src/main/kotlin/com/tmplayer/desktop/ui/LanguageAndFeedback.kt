@@ -46,6 +46,7 @@ import com.tmplayer.desktop.os.OpenExternal
 import com.tmplayer.desktop.os.OsInfo
 import com.tmplayer.i18n.LanguageNotice
 import com.tmplayer.i18n.Translator
+import com.tmplayer.platform.Background
 import com.tmplayer.ui.auth.QrCode
 import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.i18n.LocalStrings
@@ -206,13 +207,56 @@ fun LanguageNoticeCard(language: String, onKeep: () -> Unit, onChange: () -> Uni
 }
 
 /**
- * The language card and "What's new", over the signed in window and never over the player. The
- * card waits for the update popup; "What's new" waits for it too, and shows once per version.
+ * A Windows update that did not install (issue #7): its script left a marker, and this says so
+ * once, with the way to the download page.
+ */
+@Composable
+fun UpdateFailedCard(version: String, onOpen: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    val s = LocalStrings.current
+    Column(
+        modifier.width(420.dp).floatingSurface().padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Icon(TmIcons.Info, contentDescription = null, tint = Tone.caution, modifier = Modifier.size(22.dp))
+            Text(s.updateDidNotFinish, style = MaterialTheme.typography.titleMedium)
+        }
+        Text(s.updateDidNotInstall(version), style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End)) {
+            TextButton(onClick = onDismiss) { Text(s.commonDismiss) }
+            Button(onClick = onOpen) { Text(s.commonOpen) }
+        }
+    }
+}
+
+/**
+ * The failed update card, the language card and "What's new", over the signed in window and never
+ * over the player. The cards wait for the update popup; "What's new" waits for it too, and shows
+ * once per version.
  */
 @Composable
 fun ShellNotices(state: ShellState, modifier: Modifier = Modifier) {
-    val notice = rememberLanguageNotice(state.settings)
     val playing = state.nowPlaying != null
+    val failed by produceState<String?>(null) { value = withContext(Dispatchers.IO) { SelfUpdate.failedUpdate() } }
+    var failedSeen by remember { mutableStateOf(false) }
+    val failedVersion = failed?.takeUnless { failedSeen }
+    if (failedVersion != null && !playing && !state.updatePopup) {
+        fun close() {
+            failedSeen = true
+            Background.scope.launch(Dispatchers.IO) { SelfUpdate.dismissFailedUpdate() }
+        }
+        UpdateFailedCard(
+            version = failedVersion,
+            onOpen = {
+                OpenExternal.browse(SelfUpdate.DOWNLOAD_PAGE)
+                close()
+            },
+            onDismiss = ::close,
+            modifier = modifier,
+        )
+        return
+    }
+    val notice = rememberLanguageNotice(state.settings)
     val whatsNew = rememberWhatsNew(state.settings, BuildInfo.VERSION, hold = playing || state.updatePopup)
     var picking by remember { mutableStateOf(false) }
     val language = notice.language
