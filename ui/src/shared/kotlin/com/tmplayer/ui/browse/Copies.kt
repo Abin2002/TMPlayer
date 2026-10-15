@@ -3,6 +3,8 @@ package com.tmplayer.ui.browse
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -122,14 +124,9 @@ internal fun Versions(
             copyChat(item, item, chatTitle)?.let { s.detailCopyFrom(it) },
         ).joinToString("  ·  ")
     }
-    Column(Modifier.widthIn(max = 640.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CopySummary(
-            summary = summary,
-            count = s.detailVersions(files.size),
-            action = if (open) s.detailCopyDone else s.detailCopyChange,
-            onClick = { open = !open },
-        )
-        AnimatedVisibility(open) {
+    // A phone lists the copies in its bottom sheet, over the page; elsewhere they open in place.
+    val sheet = com.tmplayer.ui.components.LocalSheetHost.current?.takeIf { isTouch() }
+    val list: @Composable () -> Unit = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     s.detailCopiesTitle,
@@ -154,6 +151,26 @@ internal fun Versions(
                     )
                 }
             }
+    }
+    Column(Modifier.widthIn(max = 640.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        CopySummary(
+            summary = summary,
+            count = s.detailVersions(files.size),
+            action = if (open && sheet == null) s.detailCopyDone else s.detailCopyChange,
+            onClick = { open = !open },
+        )
+        if (sheet == null) {
+            AnimatedVisibility(open) { list() }
+        }
+    }
+    if (sheet != null && open) {
+        sheet.Sheet(onDismiss = { open = false }) {
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 16.dp),
+            ) { list() }
         }
     }
 }
@@ -179,7 +196,10 @@ private fun CopySummary(summary: String, count: String, action: String, onClick:
         Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(if (focused) Tone.focusFill else Tone.surfaceHigh)
+            // A phone draws only the outline: a filled block here read as one more card on a page
+            // already made of them. The television keeps the fill its focus colour replaces.
+            .background(if (focused) Tone.focusFill else if (tv) Tone.surfaceHigh else Color.Transparent)
+            .then(if (tv) Modifier else Modifier.border(1.dp, Tone.outline, shape))
             .focusRing(focused, shape)
             .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = if (tv) 12.dp else 10.dp),

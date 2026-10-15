@@ -303,7 +303,12 @@ class MainActivity : ComponentActivity() {
         }
         noteRequestedScreen(intent)
         setContent {
-            TMPlayerTheme { Root() }
+            TMPlayerTheme {
+                // Shared screens (a video's copies) open their sheets as the phone's own sheet.
+                androidx.compose.runtime.CompositionLocalProvider(
+                    com.tmplayer.ui.components.LocalSheetHost provides com.tmplayer.ui.components.PhoneSheetHost,
+                ) { Root() }
+            }
         }
         if (savedInstanceState == null) playFromHomeScreen(intent)
     }

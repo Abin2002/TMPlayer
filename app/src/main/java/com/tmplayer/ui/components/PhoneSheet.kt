@@ -78,3 +78,12 @@ private object KeepScrollInSheet : NestedScrollConnection {
 
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = available
 }
+
+/** [PhoneSheet] as the shared screens' [SheetHost] (a video's copies list opens in it). */
+val PhoneSheetHost = SheetHost { onDismiss, content -> PhoneSheetForHost(onDismiss, content) }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PhoneSheetForHost(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    PhoneSheet(onDismissRequest = onDismiss, content = content)
+}
