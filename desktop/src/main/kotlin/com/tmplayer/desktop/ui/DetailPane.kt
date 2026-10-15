@@ -263,6 +263,16 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
             )
             IconButton(onClick = { close() }) { Icon(TmIcons.Close, contentDescription = s.commonClose) }
         }
+        // A film posted more than once opens on the copy that would play, and a copy chosen from
+        // its list is remembered for the video before the pane turns to it.
+        fun turnTo(copy: MediaItem) = state.openDetail(
+            DetailRequest(copy, state.chatTitleOf(copy.chatId).ifBlank { request.chatTitle }, request.outsideChat, request.selectThis, request.onClosed),
+        )
+        LaunchedEffect(item.id) {
+            if (item.versions.size <= 1) return@LaunchedEffect
+            val pick = runCatching { state.settings.copyToPlay(item) }.getOrNull() ?: return@LaunchedEffect
+            if (pick.id != item.id) turnTo(pick)
+        }
         // Keyed by the video, so "More like this" opening another starts it at the top.
         androidx.compose.runtime.key(item.id) {
             MediaDetailPanel(
@@ -283,6 +293,13 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
                     BookmarkJump.request(item.chatId, item.messageId, mark.positionMs)
                     state.openPlayer(item, startFromBeginning = false)
                 },
+                onPickCopy = { copy ->
+                    scope.launch {
+                        runCatching { state.settings.setCopyPick(copy) }
+                        turnTo(copy)
+                    }
+                },
+                copyStarted = { SettingsStore.progressKey(it.chatId, it.messageId) in progress },
             )
         }
     }

@@ -179,6 +179,9 @@ fun MediaDetailPanel(
     /** This video's bookmarks, listed under the actions; see [DetailBookmarks]. */
     bookmarks: List<Bookmark> = emptyList(),
     onOpenBookmark: ((Bookmark) -> Unit)? = null,
+    /** Another copy chosen from the film's copies list; see [MediaDetailScreen]. */
+    onPickCopy: ((MediaItem) -> Unit)? = onOpenItem,
+    copyStarted: (MediaItem) -> Boolean = { false },
 ) {
     val s = LocalStrings.current
     val parsed = remember(item) { MediaName.parse(item.nameForParsing, item.caption) }
@@ -313,7 +316,7 @@ fun MediaDetailPanel(
         TrailerHost(trailers)
 
         // A film the chat posted several times over: every copy by quality and size, one click away.
-        Versions(item, onOpenItem)
+        Versions(item, onPickCopy, chatTitle, copyStarted)
 
         DetailBookmarks(bookmarks, onOpenBookmark)
 
