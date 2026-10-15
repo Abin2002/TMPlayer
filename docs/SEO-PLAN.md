@@ -1,5 +1,17 @@
 # Search, AI answers and calls to action (CP72)
 
+**Status (2026-10-15, live through 16fdad5):** Phases 1 to 4 shipped. Phase 1: titles, descriptions
+and JSON-LD say what TMPlayer is without borrowing another app's name, and the FAQ says TMPlayer is
+not "TMP - Telegram Media Player". Phase 2: eight more FAQ answers (18 in all), the comparison
+table in the "without casting" guide, a /guides/ hub, a /desktop/ page, "Updated" dates. Phase 3:
+a header Download button, closing download cards, a phone bar after the page head (no pop-ups) and
+a next-steps panel after a download click. Phase 4: robots.txt names every AI crawler, Markdown
+twins with `Accept: text/markdown` redirects, llms-full.txt, and IndexNow on every site push (first
+run: 284 URLs, answered 200). Also: smaller screenshot copies for phones, the stylesheet minified,
+Lighthouse SEO, accessibility and best practices at 100 on production (performance 90 on the home
+page, 95 to 100 elsewhere), a real /favicon.ico, and every new string in all 20 languages.
+Phase 5 (measure) is due on 2026-11-12, 28 days after the deploy.
+
 A plan, not yet started. Written 2026-10-15 from the Search Console export of the last three
 months (Web, 2026-07-17 to 2026-10-14) and a look at what search engines and AI assistants
 reward in 2026. Each item says what changes, where, and how we will know it worked.
