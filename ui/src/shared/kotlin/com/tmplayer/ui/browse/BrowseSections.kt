@@ -27,7 +27,7 @@ enum class BrowseTab(val icon: ImageVector) {
     History(TmIcons.History),
     Favorites(TmIcons.StarOutline),
     /** Every chat, narrowed by the [ChatFilter] chips. */
-    Chats(TmIcons.List),
+    Chats(TmIcons.Chats),
     /** Saved Messages, apart from Chats because it is the video library most people keep. */
     Saved(TmIcons.Bookmark),
     ;
@@ -77,7 +77,7 @@ enum class BrowseTab(val icon: ImageVector) {
  * because it is the one that shows what every other chip leaves out.
  */
 enum class ChatFilter(val icon: ImageVector) {
-    All(TmIcons.List),
+    All(TmIcons.Chats),
     Unread(TmIcons.Unread),
     Channels(TmIcons.Channel),
     Groups(TmIcons.Group),
