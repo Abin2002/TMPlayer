@@ -9,6 +9,7 @@
 import cssUrl from '../styles/styles.css?url';
 import appUrl from '../scripts/app.js?url';
 import KaoNotice from '../components/KaoNotice.astro';
+import GetBar from '../components/GetBar.astro';
 import { buildString, jsStrings, published, text } from '../i18n/t';
 import { pageUrl } from '../i18n/links';
 import { ORIGIN, type PageId } from '../i18n/langs';
@@ -130,6 +131,7 @@ const strings = lang.path ? jsStrings(lang) : {};
 <a class="skip" href="#main">{text(lang, 'common.skip_to_content')}</a>
 {notice && <KaoNotice />}
 <slot />
+{page !== undefined && page !== 'download' && page !== 'install' && <GetBar />}
 {Object.keys(strings).length > 0 && <script type="application/json" id="tm-strings" set:html={json(strings)} is:inline></script>}
 <script is:inline src={appUrl}></script>
 <!--

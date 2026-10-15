@@ -15,6 +15,7 @@ import Panel from '../../../components/Panel.astro';
 import KeysTable from '../../../components/formats/KeysTable.astro';
 import KeysRow from '../../../components/formats/KeysRow.astro';
 import SponsorOffer from '../../../components/SponsorOffer.astro';
+import DownloadCard from '../../../components/DownloadCard.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -100,6 +101,7 @@ const listed = [
     </div>
     <p class="muted small section-note" data-reveal><T k="formats.picture_based_vobsub_files_cannot"><code slot="code1">.sub</code></T></p>
 
+    <DownloadCard />
     <SponsorOffer slim />
   </Band>
 

@@ -3,6 +3,7 @@
 // brand image and the sun drawn as one path. Security has its own later variant: a 32px image
 // decoded async and the sun drawn with rays.
 import Icon from '../Icon.astro';
+import NavCta from '../NavCta.astro';
 
 interface Props { variant?: 'policy' | 'security' }
 const security = Astro.props.variant === 'security';
@@ -10,9 +11,12 @@ const size = security ? 32 : 30;
 // The policy pages write the links with no space between them, security one per line; the visible
 // text differs only in that space.
 const nav = [
-  ['/', 'Home'], ['/features/', 'Features'], ['/download/', 'Download'], ['/install/', 'Install'],
-  ['/android-tv/', 'Android TV'], ['/faq/', 'Questions'],
+  ['/', 'Home'], ['/features/', 'Features'], ['/install/', 'Install'],
+  ['/android-tv/', 'Android TV'], ['/faq/', 'Questions'], ['/download/', 'Download'],
 ];
+// The page list's own Download link is the last row of the menu card on a phone, where the
+// Download button in the bar gives up its place (NavCta).
+const cls: Record<string, string> = { '/android-tv/': 'only-menu', '/download/': 'nav-dl' };
 ---
 <header class="site-header">
   <div class="wrap header-inner">
@@ -21,9 +25,10 @@ const nav = [
       <span class="brand-name">TMPlayer</span>
     </a>
     <nav class="nav-links" id="site-nav" aria-label="Primary">{nav.map(([href, label], i) => (
-      <>{security && i > 0 && ' '}<a class={href === '/android-tv/' ? 'only-menu' : undefined} href={href}>{label}</a></>
+      <>{security && i > 0 && ' '}<a class={cls[href]} href={href}>{label}</a></>
     ))}</nav>
     <div class="nav">
+      <NavCta href="/download/" label="Download" />
       <a class="nav-icon" href="https://github.com/dracu-lah/TMPlayer" rel="noopener" aria-label="TMPlayer on GitHub">
         <Icon name="github" />
         <span class="nav-icon-count is-loading" data-count="stars" data-count-skeleton aria-hidden="true"></span>

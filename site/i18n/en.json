@@ -93,7 +93,8 @@
     "back_to_top": "Back to top",
     "footer": "Footer",
     "guides": "Guides",
-    "community": "Community"
+    "community": "Community",
+    "get_tmplayer_for_your_tv": "Get TMPlayer for your TV"
   },
   "ld": {
     "a_free_open_source_4a30": "A free, open source Telegram video player for Android TV, Android phones, Windows, macOS and Linux that streams the videos in your own chats.",
@@ -403,6 +404,7 @@
     "win_msi_note": "It is not code signed yet, so SmartScreen may warn you: click {em1}, then {em2}.",
     "win_msi_note__em1": "More info",
     "win_msi_note__em2": "Run anyway",
+    "open_the_installer": "Open the installer",
     "tmplayer_version_windows_x64_msi": "TMPlayer-<version>-windows-x64.msi",
     "how_to_install_on_windows": "How to install on Windows",
     "macos_req": "Macs with Apple Silicon (M1 and later), macOS 26 Tahoe or newer. Intel Macs are not supported.",
@@ -421,6 +423,8 @@
     "a_pkgbuild_lives_in_it": "A PKGBUILD lives in {code1}. It builds from the {code2} on each release. The AppImage also runs on Arch.",
     "arch_pkgbuild_link": "The PKGBUILD",
     "how_to_install_on_linux": "How to install on Linux, and put it in the app menu",
+    "what_comes_next": "What comes next",
+    "join_the_telegram_channel_for_updates": "Join the Telegram channel for updates",
     "no_iphone_or_ipad": "There is no iPhone or iPad version.",
     "checksum_note": "The {a1} shows each file's SHA-256 beside it. Check a download with {code1} on Linux, {code2} on a Mac or {code3} on Windows: {a2}.",
     "checksum_note__a1": "release page",
