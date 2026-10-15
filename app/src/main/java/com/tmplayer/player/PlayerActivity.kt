@@ -2324,6 +2324,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * The position in the episode being left is saved on the way out.
      */
     fun playEpisode(item: MediaItem) {
+        // Once: a double tap on the next button, or a held next key on a slow stick, reached here
+        // again before this screen was gone and stacked a second player that Back then landed on.
+        if (handingOver) return
         handingOver = true
         startActivity(
             intent(this, item, chatTitle).putExtra(
