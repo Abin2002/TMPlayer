@@ -112,10 +112,17 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
         renderSpinner()
     }
 
-    /** While the row is up its play disc spins instead, in the same spot. */
+    /**
+     * While the row is up its play disc spins instead, in the same spot, and its play button
+     * says play or pause itself: a play or pause glyph still fading out gives way to it.
+     */
     fun controlsShown(up: Boolean) {
         controlsUp = up
         renderSpinner()
+        if (up && flash.visibility == View.VISIBLE) {
+            flash.animate().cancel()
+            flash.visibility = View.GONE
+        }
     }
 
     private fun renderSpinner() {
@@ -129,11 +136,19 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
 
     // ---- play and pause --------------------------------------------------------------------
 
-    /** The glyph for what just happened: [playing] true means the video has just started. */
+    /**
+     * The glyph for what just happened: [playing] true means the video has just started. It is
+     * the only sign of a toggle over the bare picture, so with the row up, whose own button has
+     * already changed, it is not drawn: the haptic still answers the finger.
+     */
     fun flashPlayPause(playing: Boolean) {
         haptic(confirm = true)
+        if (controlsUp) return
         flash.show(playing)
     }
+
+    /** Whether the play or pause glyph is on screen, for the tests. */
+    internal val playPauseShowing: Boolean get() = flash.visibility == View.VISIBLE
 
     // ---- text ---------------------------------------------------------------------------------
 

@@ -49,6 +49,20 @@ class PlayerFeedbackTest {
     private fun idle(ms: Long) = shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(ms))
 
     @Test
+    fun `the play and pause glyph shows over the bare picture only`() {
+        feedback.flashPlayPause(playing = false)
+        assertTrue(feedback.playPauseShowing)
+        // The row coming up takes over: its own button already says paused.
+        feedback.controlsShown(true)
+        assertEquals(false, feedback.playPauseShowing)
+        feedback.flashPlayPause(playing = true)
+        assertEquals(false, feedback.playPauseShowing)
+        feedback.controlsShown(false)
+        feedback.flashPlayPause(playing = true)
+        assertTrue(feedback.playPauseShowing)
+    }
+
+    @Test
     fun `a message shows its text and goes away by itself`() {
         feedback.message("1.5x")
         idle(100)

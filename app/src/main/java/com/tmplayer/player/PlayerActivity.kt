@@ -1043,15 +1043,21 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * Play or pause from the picture itself: a double tap in its middle, or a single tap where the
      * viewer has chosen that. A single tap that pauses also raises the row, the way a paused
      * player always shows where it is; one that resumes lets the row go.
+     *
+     * The big glyph is only for a toggle over the bare picture: with the row up before or after,
+     * its centre button has already morphed, and a glyph on top of it says the same thing twice.
      */
     private fun togglePlaybackFromPicture(fromSingleTap: Boolean) {
         val exo = player ?: return
         val nowPlaying = !exo.isPlaying
+        val rowWasUp = controlsUp
         if (nowPlaying) exo.play() else exo.pause()
-        feedback?.flashPlayPause(nowPlaying)
         if (fromSingleTap) {
             if (nowPlaying) controls?.hideAnimated() else controls?.show()
         }
+        val rowComesUp = fromSingleTap && !nowPlaying
+        if (rowWasUp || rowComesUp) return
+        feedback?.flashPlayPause(nowPlaying)
     }
 
     /**

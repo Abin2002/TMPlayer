@@ -104,6 +104,41 @@ class PlayerMouseTest {
     }
 
     @Test
+    fun `the play and pause glyph never shows over the controls`() = runComposeUiTest {
+        open()
+        mainClock.autoAdvance = false
+        // With the controls up, a click on the picture pauses and their own button says so.
+        onNodeWithTag("video").performMouseInput { moveTo(onPicture) }
+        mainClock.advanceTimeBy(100)
+        onNode(hasContentDescription("More")).assertExists()
+        onNodeWithTag("video").performMouseInput { click(onPicture) }
+        mainClock.advanceTimeBy(400)
+        assertEquals(false, engine.state.value.playing)
+        onNodeWithTag("play-pause-flash").assertDoesNotExist()
+        // Playing again with the controls let go: Space pauses over the bare picture, which brings
+        // the controls up at once, so the glyph does not show on top of them either.
+        onNodeWithTag("video").performMouseInput { click(onPicture) }
+        mainClock.advanceTimeBy(400)
+        assertEquals(true, engine.state.value.playing)
+        mainClock.advanceTimeBy(5_000)
+        onNode(hasContentDescription("More")).assertDoesNotExist()
+        onNode(isFocused()).performKeyInput { pressKey(Key.Spacebar) }
+        mainClock.advanceTimeBy(50)
+        assertEquals(false, engine.state.value.playing)
+        onNode(hasContentDescription("More")).assertExists()
+        onNodeWithTag("play-pause-flash").assertDoesNotExist()
+    }
+
+    @Test
+    fun `only the play and pause glyph gives way to the controls`() {
+        assertEquals(false, Flash(Flash.Kind.Pause, "", 1).showsWith(controlsVisible = true))
+        assertEquals(false, Flash(Flash.Kind.Play, "", 1).showsWith(controlsVisible = true))
+        assertEquals(true, Flash(Flash.Kind.Play, "", 1).showsWith(controlsVisible = false))
+        assertEquals(true, Flash(Flash.Kind.Text, "1.5x", 1).showsWith(controlsVisible = true))
+        assertEquals(true, Flash(Flash.Kind.SeekForward, "10s", 1).showsWith(controlsVisible = true))
+    }
+
+    @Test
     fun `a double click is fullscreen and never a pause`() = runComposeUiTest {
         open()
         mainClock.autoAdvance = false

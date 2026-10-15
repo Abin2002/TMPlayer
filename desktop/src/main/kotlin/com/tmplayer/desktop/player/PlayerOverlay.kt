@@ -906,7 +906,7 @@ internal fun BoxScope.FeedbackLayer(flash: Flash?, spinner: Boolean, chip: Strin
     }
     when (f.kind) {
         Flash.Kind.Play, Flash.Kind.Pause -> Box(
-            layer.align(Alignment.Center).size(72.dp).clip(CircleShape).background(PlayerTonalButton),
+            layer.align(Alignment.Center).testTag("play-pause-flash").size(72.dp).clip(CircleShape).background(PlayerTonalButton),
             contentAlignment = Alignment.Center,
         ) {
             Icon(if (f.kind == Flash.Kind.Play) TmIcons.PlaySolid else TmIcons.PauseSolid, null, tint = Color.White, modifier = Modifier.size(40.dp))

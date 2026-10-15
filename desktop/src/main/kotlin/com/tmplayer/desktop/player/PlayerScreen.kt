@@ -119,6 +119,15 @@ internal sealed interface Phase {
 /** One flash of feedback over the picture; [id] restarts the animation for a repeat. */
 internal data class Flash(val kind: Kind, val text: String, val id: Long) {
     enum class Kind { Play, Pause, SeekBack, SeekForward, Text, Volume }
+
+    /**
+     * Whether this flash is drawn while the controls are [controlsVisible]. The play and pause
+     * glyph exists to confirm a toggle nobody could otherwise see: with the controls up, their own
+     * play button has already changed, so the glyph would only say the same thing twice. A pause
+     * raises the controls at once, so the glyph also gives way the moment they arrive.
+     */
+    fun showsWith(controlsVisible: Boolean): Boolean =
+        !controlsVisible || (kind != Kind.Play && kind != Kind.Pause)
 }
 
 internal enum class MenuPage { Main, Audio, Subtitles, Speed, Shape, Sleep, Options, SubtitleStyle, Bookmarks, Copies }
@@ -1292,7 +1301,7 @@ fun PlayerScreen(
             ) }
 
             FeedbackLayer(
-                flash = flash,
+                flash = flash?.takeIf { it.showsWith(showControls) },
                 spinner = phase == Phase.Playing && status.buffering && !showControls,
                 chip = if (phase == Phase.Playing && status.buffering && !showControls) s.playerBuffering else null,
             )
