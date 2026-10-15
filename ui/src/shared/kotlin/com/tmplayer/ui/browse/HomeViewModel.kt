@@ -449,7 +449,10 @@ fun rememberHomeRows(
     val fresh by model.newEpisodes.collectAsState()
     LaunchedEffect(model, continueWatching, watched) { model.followShows(continueWatching, watched) }
     val starred = remember(chats, favourites) { HomeRows.favouriteChats(chats, favourites) }
-    return remember(continueWatching, watchLater, starred, loaded, recent, partial, fresh) {
+    // "Not the same video" pulls a copy out of its folded card at once, so the rows are built
+    // again when a correction changes.
+    val corrections by com.tmplayer.data.VideoCorrections.state.collectAsState()
+    return remember(continueWatching, watchLater, starred, loaded, recent, partial, fresh, corrections) {
         HomeRows.build(continueWatching, starred, loaded, recent, partial = partial, watchLater = watchLater, fresh = fresh)
     }
 }

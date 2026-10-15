@@ -258,6 +258,21 @@ class HomeRowsTest {
     }
 
     @Test
+    fun `continue watching keeps apart two copies the viewer said are not the same video`() {
+        val hd = video(1, "Loki.S02E05.1080p.WEB.x265.mkv")
+        val sd = video(2, "Loki.S02E05.720p.WEB.x264.mkv")
+        // An old record keeps only its title; a new one its file name too.
+        val records = listOf(resume(hd, updatedAt = 20), resume(sd, updatedAt = 10).copy(fileName = sd.fileName))
+        try {
+            assertEquals(1, HomeRows.foldCopies(records).size)
+            VideoCorrections.set(mapOf(hd.id to VideoCorrection(separate = true)))
+            assertEquals(2, HomeRows.foldCopies(records).size)
+        } finally {
+            VideoCorrections.set(emptyMap())
+        }
+    }
+
+    @Test
     fun `the watched list folds copies like continue watching, and unmarking the card covers them all`() {
         val hd = video(1, "Loki.S02E05.1080p.WEB.x265.mkv")
         val sd = video(2, "Loki.S02E05.720p.WEB.x264.mkv")

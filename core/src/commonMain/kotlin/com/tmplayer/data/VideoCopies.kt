@@ -39,8 +39,12 @@ object VideoCopies {
      * counts only when that title names a year or an episode: a quality marker alone ("Lecture
      * 1080p") is too little to call two old records one video.
      */
-    fun keyOf(record: ResumeRecord): String? =
-        if (record.fileName != null) keyOf(record.toMediaItem()) else keyOfTitle(record.title)
+    fun keyOf(record: ResumeRecord): String? = when {
+        // "Not the same video" on it: a copy of nothing, however its title reads.
+        VideoCorrections.current["${record.chatId}:${record.messageId}"]?.separate == true -> null
+        record.fileName != null -> keyOf(record.toMediaItem())
+        else -> keyOfTitle(record.title)
+    }
 
     /** The cautious key of a bare title, as [keyOf] reads an old record. */
     fun keyOfTitle(title: String): String? {

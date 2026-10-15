@@ -370,7 +370,9 @@ fun BrowseScreen(
     val pickHistory: (HistoryTab) -> Unit = { panelScope.launch { browseSettings.setHistoryTab(it.name) } }
     val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
     // History's Continue tab, with the copies of one film or episode as one card, as on Home.
-    val continuing = remember(continueWatching) { HomeRows.foldCopies(continueWatching) }
+    // Built again when the viewer says two of them are not the same video.
+    val corrections by com.tmplayer.data.VideoCorrections.state.collectAsState()
+    val continuing = remember(continueWatching, corrections) { HomeRows.foldCopies(continueWatching) }
     val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
     val showsWatchLater = tab.listsVideos && historyTab == HistoryTab.WatchLater
 
