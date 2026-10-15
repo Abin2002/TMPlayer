@@ -172,6 +172,9 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         val ui by model.state.collectAsState()
         var query by remember(chat.id) { mutableStateOf("") }
         var openSeries by remember(chat.id) { mutableStateOf<com.tmplayer.data.Series?>(null) }
+        // Where the grid stood when a show was opened over it: the grid is gone while the show is
+        // up, so closing the show would otherwise land back at the top of the chat.
+        var gridReturn by remember(chat.id) { mutableStateOf<Pair<Int, Int>?>(null) }
         // A show's seasons and episodes take the page, as they do from Home; Close comes back here.
         openSeries?.let { shown ->
             SeriesPage(state, shown, rememberSeriesWatch(state), onClose = { openSeries = null })
@@ -221,7 +224,9 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             VideoGridSkeleton(if (postersLast) state.posterWidth * POSTER_SHARE else state.posterWidth, posters = postersLast)
         }
         StateBox(ui, onRetry = { model.load() }, onAction = model::act, skeleton = skeleton) { content ->
-            val grid = rememberLazyGridState()
+            val back = gridReturn
+            val grid = rememberLazyGridState(back?.first ?: 0, back?.second ?: 0)
+            LaunchedEffect(grid) { gridReturn = null }
             LoadMoreNearEnd(grid, enabled = !content.endReached && !content.loadingMore) { model.loadMore() }
             val ad = content.sponsored?.messages?.firstOrNull()
             // A show as one poster that opens its seasons, and copies of one film (720p, 1080p,
@@ -274,7 +279,10 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 state = state,
                 items = cells,
                 series = shows,
-                onOpenSeries = { openSeries = it },
+                onOpenSeries = {
+                    gridReturn = grid.firstVisibleItemIndex to grid.firstVisibleItemScrollOffset
+                    openSeries = it
+                },
                 posters = posterIds,
                 chatTitle = chat.title,
                 grid = grid,

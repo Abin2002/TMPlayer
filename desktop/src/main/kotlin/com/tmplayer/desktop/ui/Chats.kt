@@ -121,6 +121,8 @@ fun ChatsPage(
     val scope = rememberCoroutineScope()
     val listState = if (favouritesOnly) androidx.compose.foundation.lazy.rememberLazyListState() else state.chatListState
     val nav = rememberKeyboardNav(remember(listState) { ListSurface(listState) })
+    // Back from a chat, the keyboard carries on from that chat's row rather than from nowhere.
+    var refocus by remember { mutableStateOf(state.takeChatToRefocus()) }
 
     // Home, History and Favourites have pages of their own.
     val sections = remember(folders, state.hideDefaultGroups) {
@@ -209,6 +211,11 @@ fun ChatsPage(
                     )
                 }
             } else {
+                LaunchedEffect(Unit) {
+                    val back = refocus ?: return@LaunchedEffect
+                    refocus = null
+                    nav.focus(visible.indexOfFirst { it.id == back })
+                }
                 ChatList(
                     chats = visible,
                     favourites = favourites,

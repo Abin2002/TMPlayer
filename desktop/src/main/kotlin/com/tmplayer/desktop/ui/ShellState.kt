@@ -232,6 +232,7 @@ class ShellState(
 
     fun go(to: Destination) {
         openChat = null
+        chatToRefocus = null
         detail = null
         if (to != Destination.Settings) settingsUnlocked = false
         destination = to
@@ -245,8 +246,15 @@ class ShellState(
     }
 
     fun closeChat() {
+        chatToRefocus = openChat?.id
         openChat = null
     }
+
+    /** The chat just closed, whose row takes the keyboard focus back on the list it came from. */
+    private var chatToRefocus: Long? = null
+
+    /** [chatToRefocus], once: the list that asks first gets it. */
+    fun takeChatToRefocus(): Long? = chatToRefocus.also { chatToRefocus = null }
 
     fun noteChatTitles(chats: List<ChatSummary>) {
         chats.forEach {

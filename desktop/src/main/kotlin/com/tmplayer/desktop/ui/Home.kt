@@ -158,6 +158,9 @@ internal fun HomeRowsView(
     var openRow by remember { mutableStateOf<String?>(null) }
     val titles = remember(chats) { chats.associate { it.id to it.title } }
     LaunchedEffect(titles) { state.noteChatTitles(chats) }
+    // Held above the show and "See all" pages, so coming back from either finds the rows where
+    // they were rather than at the top.
+    val list = rememberLazyListState()
     val shown = openSeries
     if (shown != null) {
         SeriesPage(state, shown, rememberSeriesWatch(state), onClose = { openSeries = null })
@@ -178,7 +181,6 @@ internal fun HomeRowsView(
         )
         return
     }
-    val list = rememberLazyListState()
     val header: @Composable () -> Unit = {
         PageHeader(
             BrowseTab.Home.heading,
