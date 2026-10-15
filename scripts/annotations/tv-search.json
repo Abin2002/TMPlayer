@@ -1,6 +1,6 @@
 {
   "source": "tv-search-dark.png",
-  "output": "site/screenshots/tv-search.webp",
+  "output": "site/public/screenshots/tv-search.webp",
   "crop": [
     64,
     160,

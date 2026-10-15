@@ -1,0 +1,96 @@
+---
+import Base from '../../layouts/Base.astro';
+import JsonLd from '../../components/JsonLd.astro';
+import HeaderPlain from '../../components/plain/HeaderPlain.astro';
+import FooterPlain from '../../components/plain/FooterPlain.astro';
+import PolicyPage from '../../components/plain/PolicyPage.astro';
+import PolicySection from '../../components/plain/PolicySection.astro';
+import { breadcrumb } from '../../components/breadcrumb';
+import { ENGLISH } from '../../i18n/langs';
+
+Astro.locals.lang = ENGLISH;
+---
+<Base path="/privacy/" title="Privacy policy - TMPlayer" description="What TMPlayer keeps on your phone, TV or computer, which services it contacts, what an opt-in crash report contains, and how to delete your data.">
+  <JsonLd slot="head" data={breadcrumb(['Privacy', '/privacy/'])} />
+  <HeaderPlain />
+  <PolicyPage eyebrow="Effective 15 October 2026" title="Privacy">
+    <p class="policy-lede">TMPlayer is an unofficial Telegram video player for Android phones, Android TV, Windows and Linux, with a macOS preview for Apple Silicon. It talks directly to Telegram from your device, using your own Telegram account. There is no TMPlayer account and no developer-operated backend.</p>
+
+    <PolicySection title="Who runs TMPlayer">
+      <p>TMPlayer is free, open source software written and published by one developer, Nevil (<a href="https://github.com/dracu-lah" rel="noopener">dracu-lah</a> on GitHub). For the little personal data this page describes, that developer is the controller. Contact: <a href="mailto:hello@tmplayer.org?subject=TMPlayer%20privacy">hello@tmplayer.org</a>.</p>
+    </PolicySection>
+
+    <PolicySection title="What stays on your device">
+      <p>Telegram's TDLib keeps your signed-in session, cached chat information, thumbnails and the parts of videos you have watched. TMPlayer keeps your settings, favourites, Continue watching positions, the videos you download, and an update package while it is being installed. None of it leaves the device except as this page describes.</p>
+      <ul>
+        <li><strong>Android phones and Android TV:</strong> everything, downloads included, is in TMPlayer's private app storage. Other apps cannot read it, and uninstalling TMPlayer removes all of it.</li>
+        <li><strong>Windows:</strong> the session and settings are in <code>%LOCALAPPDATA%\TMPlayer</code>, the watch cache in <code>%LOCALAPPDATA%\TMPlayer\Cache</code>, and downloads in <code>Downloads\TMPlayer</code>.</li>
+        <li><strong>Linux:</strong> the session is in <code>~/.local/share/TMPlayer</code>, settings in <code>~/.config/TMPlayer</code>, the watch cache in <code>~/.cache/TMPlayer</code>, and downloads in <code>~/Downloads/TMPlayer</code> (or your language's Downloads folder).</li>
+        <li><strong>macOS (a preview):</strong> the session and settings are in <code>~/Library/Application Support/TMPlayer</code>, the watch cache in <code>~/Library/Caches/TMPlayer</code>, and downloads in <code>~/Downloads/TMPlayer</code>.</li>
+        <li><strong>A storage location you chose (desktop):</strong> the cache, downloads and update packages move to <code>TMPlayer</code> inside that folder. The session and settings stay where they were.</li>
+      </ul>
+      <p>On Windows, macOS and Linux, uninstalling TMPlayer leaves these folders in place. Anyone who controls the device, or a rooted device, may be able to read them, so treat the device as a signed-in Telegram device.</p>
+      <p>While a video plays, its title appears in your system's media controls (MediaSession on Android, MPRIS on Linux, the media overlay on Windows), so the lock screen, notification shade, taskbar or a paired device may show it.</p>
+    </PolicySection>
+
+    <PolicySection title="Services TMPlayer contacts">
+      <ul>
+        <li><strong>Telegram</strong> handles sign-in, chat and channel lists, file metadata and media downloads, under <a href="https://telegram.org/privacy" rel="noopener">Telegram's privacy policy</a>. Where Telegram shows sponsored messages, TMPlayer reports to Telegram when one is seen and when it is clicked, as every Telegram app must.</li>
+        <li><strong>tmplayer.org</strong>, hosted by Vercel, is asked for one small file, <code>latest.json</code>, that names the newest release, when the app starts and every six hours while it runs. <strong>GitHub</strong> is asked instead when the site cannot be reached. Like any web request, it reveals your IP address, and it names the TMPlayer version you run. It carries nothing about your account. Settings can turn it off. An update is downloaded from GitHub only after you choose to update.</li>
+        <li><strong>Your device's speech-recognition provider (Android TV only)</strong> receives audio only when you deliberately start voice search.</li>
+        <li><strong>Sentry</strong> receives a crash report, and only if you have switched crash reporting on in Settings or agreed to send that one report. See below.</li>
+        <li><strong>OpenSubtitles.com</strong> is asked only when you choose Search online in the subtitle picker. A search sends the video's file name (or the parsed title, season and episode), its OpenSubtitles hash (a number made from its size and its first and last 64 KB, never the file itself) and the languages wanted. Signing in under Settings, Online subtitles sends your OpenSubtitles username and password to OpenSubtitles once; the password is not kept, only the session OpenSubtitles returns, and downloads count against your own OpenSubtitles account. Their <a href="https://www.opensubtitles.com/en/privacy" rel="noopener">privacy policy</a> applies. Searches and subtitles are cached on your device for at most six months, and Settings can clear them.</li>
+        <li><strong>SubDL</strong> is asked the same kind of search, with your own SubDL key, only if you have entered one under Settings, Online subtitles.</li>
+        <li><strong>TMDB, TVmaze and AniList</strong> are asked for posters and overviews. This is on by default and can be switched off under Settings, Posters and details. A lookup sends the video's cleaned-up title, and the year, season and episode read from its name, never the file or your account. Answers are cached on your device for at most six months, and Settings can clear them.</li>
+        <li><strong>TheIntroDB, IntroDB.app and AniSkip</strong> are asked where an episode's intro, recap and credits are, for the player's skip button, while online metadata and Skip intro buttons, in the same settings, are both on (they are by default). A request sends the id of the title the lookup matched (a TMDB, IMDb or TheTVDB id to TheIntroDB, an IMDb id to IntroDB.app when TheIntroDB has nothing, a MyAnimeList id to AniSkip), the season and episode, and for AniSkip the episode's length. Answers are cached on your device for at most a month.</li>
+      </ul>
+      <p>TMPlayer has no analytics SDK, no advertising SDK and no cross-app tracking. The developer never receives your Telegram credentials, chat list, filenames, viewing history or media.</p>
+    </PolicySection>
+
+    <PolicySection title="Crash reporting, only with your consent">
+      <p><strong>Off on a fresh install, and off again after signing out.</strong> With the switch off, no crash reporting library is started and no server is contacted. It exists on Android phones and Android TV only.</p>
+      <p>With the switch off, a crash is written to a file inside the app's private storage on your device, and nothing is sent. The next time TMPlayer starts, it asks whether to send that report. Send sends it once; ticking Always send also turns the switch on; Don't send deletes the file. A crash from an older version of the app is deleted without asking, and so is one waiting when you sign out.</p>
+      <p>With it on, or when you choose Send, a crash sends exactly this to <a href="https://sentry.io" rel="noopener">Sentry</a>, which stores it on the developer's behalf in its EU region (Frankfurt, Germany):</p>
+      <ul>
+        <li>the exception and its stack trace, with file paths and anything that looks like a video file name replaced before sending;</li>
+        <li>the TMPlayer version and build number;</li>
+        <li>the operating system name and version (for example Android 14);</li>
+        <li>the device manufacturer and model (for example Xiaomi 23021RAA2Y).</li>
+      </ul>
+      <p>Everything else the Sentry library would normally attach is removed on the device before the report is sent: device name and identifier, installation identifier, timezone, language, battery, memory, storage, screen, network type, boot time, app permissions, tags and breadcrumbs. No chat names, search terms or viewing history are included, and the IP address is not stored as personal data.</p>
+      <p><strong>Legal basis:</strong> your consent, given by switching it on or by choosing Send for one report. <strong>Withdrawing it:</strong> switch it off in Settings and reporting stops at once; a crash that happens after that is dropped even if it was already being prepared. <strong>Retention:</strong> Sentry deletes each report automatically after at most 90 days. To have reports you sent deleted sooner, email the address above with the approximate date and device model.</p>
+    </PolicySection>
+
+    <PolicySection title="Delete your data">
+      <ul>
+        <li><strong>Sign out</strong> (Settings) logs out of Telegram on this device and clears TDLib's database, the watch cache, your settings (the theme stays), favourites, Continue watching and the watched list. Your downloads are kept unless you tick <em>Also delete my downloads</em>.</li>
+        <li><strong>Settings</strong> also deletes individual downloads, clears Continue watching and clears favourites.</li>
+        <li><strong>Android:</strong> uninstalling removes everything TMPlayer stored.</li>
+        <li><strong>Windows, macOS and Linux:</strong> after uninstalling, delete the folders listed above, and the <code>TMPlayer</code> folder in your Downloads or chosen storage location.</li>
+        <li><strong>Your Telegram account</strong> is Telegram's, not TMPlayer's. To delete it, use <a href="https://telegram.org/deactivate" rel="noopener">telegram.org/deactivate</a>.</li>
+      </ul>
+    </PolicySection>
+
+    <PolicySection title="This website">
+      <p>The website, hosted by Vercel, sets no cookies. It counts page views with Vercel Web Analytics, served from this domain as a first-party proxy to Vercel Web Analytics and processed by Vercel, which stores no cookie and no identifier that follows you between visits, and records only the page, the referrer, the campaign tag in the link (the support page link carries one, such as <code>utm_source=about</code>, so the app's links can be told apart; it names a button, never you) and coarse device and country information. There is no advertising script, no tag manager and nothing that can recognise you on another website.</p>
+      <p>The pages that show release information ask the public GitHub API for it when you open them, so GitHub sees that request. Hosting and network providers keep ordinary connection logs under their own policies.</p>
+      <p>Your browser keeps a few choices for this website in its own local storage: the theme, the language you picked, and whether you closed the Keep Android Open notice. They never leave your device and are not sent to anyone. That notice is written by this site; its links open <a href="https://keepandroidopen.org/" rel="noopener">keepandroidopen.org</a> only when you follow them, and nothing is loaded from that site.</p>
+    </PolicySection>
+
+    <PolicySection title="Processors and your rights">
+      <p>The services that handle data for TMPlayer are <a href="https://sentry.io/privacy/" rel="noopener">Sentry</a> (crash reports, only if you opt in), <a href="https://vercel.com/legal/privacy-policy" rel="noopener">Vercel</a> (the website and the update file) and <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub</a> (downloads, the update fallback and release information). Telegram acts under its own policy, not on the developer's behalf, and so do OpenSubtitles and SubDL when you use online subtitles.</p>
+      <p>Where data protection law such as the GDPR applies to you, you can ask for access to, correction of or deletion of personal data the developer holds, withdraw consent at any time, and complain to the data protection authority where you live. Since the developer holds no account data, in practice this means crash reports; write to <a href="mailto:hello@tmplayer.org?subject=TMPlayer%20privacy">hello@tmplayer.org</a>.</p>
+    </PolicySection>
+
+    <PolicySection title="Changes">
+      <p>Material changes update the effective date above and are listed here.</p>
+      <ul>
+        <li><strong>15 October 2026:</strong> adds macOS, a preview from 1.26.0, and where it keeps its data.</li>
+        <li><strong>13 October 2026:</strong> lists the poster and overview lookups (TMDB, TVmaze, AniList) and the skip intro times (TheIntroDB, IntroDB.app, AniSkip), both on by default and switched off under Settings, Posters and details.</li>
+        <li><strong>6 October 2026:</strong> covers phones, Windows and Linux as well as Android TV; lists exactly what a crash report keeps and how long; adds where data lives on each platform, the system media controls, sponsored message reporting, what the update check reveals, how to delete your data, processors and your rights.</li>
+        <li><strong>5 October 2026:</strong> first version.</li>
+      </ul>
+    </PolicySection>
+  </PolicyPage>
+  <FooterPlain signing />
+</Base>

@@ -23,3 +23,8 @@ captures/
 # Python bytecode from the scripts in scripts/
 __pycache__/
 /promo-art-src/
+
+# Astro site build
+site/dist/
+site/node_modules/
+site/.astro/

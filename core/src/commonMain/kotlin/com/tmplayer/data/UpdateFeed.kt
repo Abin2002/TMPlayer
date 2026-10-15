@@ -21,7 +21,7 @@ data class ReleaseAsset(
 /**
  * The newest TMPlayer release, as every target reads it.
  *
- * [assets] is keyed the way `site/latest.json` keys it ("android-universal", "windows-x64-msi",
+ * [assets] is keyed the way `site/public/latest.json` keys it ("android-universal", "windows-x64-msi",
  * "linux-x64-appimage" and so on, see [UpdateFeed.keyFor]), whichever source it came from, so
  * picking a package is the same lookup on the phone and on a computer. A key is simply absent when
  * a release does not carry that file, as the per-ABI APKs, the portable zip, the deb, the rpm and

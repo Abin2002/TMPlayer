@@ -1,0 +1,204 @@
+---
+// The stored theme, applied before the first paint. With no stored choice nothing is set and the stylesheet follows prefers-color-scheme, which is the system theme.
+
+import Base from '../../../layouts/Base.astro';
+import BgArt from '../../../components/BgArt.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import ToTop from '../../../components/ToTop.astro';
+import T from '../../../components/T.astro';
+import Icon from '../../../components/Icon.astro';
+import PageHead from '../../../components/PageHead.astro';
+import JsonLd from '../../../components/JsonLd.astro';
+import { breadcrumb } from '../../../components/breadcrumb';
+import Band from '../../../components/Band.astro';
+import Shot from '../../../components/Shot.astro';
+import Platform from '../../../components/download/Platform.astro';
+import AbiRow from '../../../components/download/AbiRow.astro';
+import Panel from '../../../components/Panel.astro';
+import StarCard from '../../../components/StarCard.astro';
+import { langPaths } from '../../../i18n/paths';
+import { text } from '../../../i18n/t';
+import { l as link } from '../../../i18n/links';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props;
+Astro.locals.lang = lang;
+const t = (k: string) => text(lang, k);
+const l = (href: string) => link(lang, href);
+
+const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
+
+---
+<Base page="download" title={t('download.download_tmplayer_for_android_tv')} description={t('download.download_tmplayer_free_the_apk')}>
+  {/*
+    The page reads the release from the GitHub API, and every download button goes to github.com,
+    which hands the file over from GitHub's asset host. Opening those connections early takes the
+    DNS and TLS time off the first click.
+  */}
+  <Fragment slot="preconnect">
+    <link rel="preconnect" href="https://api.github.com" crossorigin>
+    <link rel="preconnect" href="https://github.com">
+    <link rel="preconnect" href="https://release-assets.githubusercontent.com">
+    <link rel="dns-prefetch" href="https://objects.githubusercontent.com">
+  </Fragment>
+  <Fragment slot="head">
+    <JsonLd data={breadcrumb(['Download', '/download/'])} />
+  </Fragment>
+{/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
+<BgArt />
+
+<Header page="download" />
+
+<main id="main">
+
+  <PageHead lede={t('download.for_android_tv_phones_windows')}>
+    <Fragment slot="crumbs"><T k="download.download"><a href={l('/')} slot="a1">{t('download.download__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
+    <Fragment slot="title">{t('common.download')}{' '}<em>TMPlayer</em></Fragment>
+    <Fragment slot="actions">
+      {/*
+        The filled button is drawn by app.js once it knows which system this is, and only then:
+        with scripting off there is no guess to make, and the platform list below does the job.
+      */}
+      <a class="btn btn-filled" id="os-download" href="#platforms" hidden>
+        <Icon name="download-btn" />
+        <span id="os-download-label">{t('common.download')}</span>
+      </a>
+      <a class="btn btn-outline" href={l('/install/')}>{t('download.how_to_install_it')} <Icon name="arrow-right-sm" /></a>
+    </Fragment>
+    <p class="os-note" id="os-note" role="status" hidden></p>
+    <nav class="platform-jump" aria-label={t('download.platforms')}>
+      <a href="#android">{t('download.android_phone')}</a>
+      <a href="#android-tv">Android TV</a>
+      <a href="#windows">Windows</a>
+      <a href="#macos" data-mac-jump hidden>macOS</a>
+      <a href="#linux">Linux</a>
+    </nav>
+  </PageHead>
+
+  <Band wave id="download" labelledby="download-h" title={t('download.every_platform_one_release')} tonal body>
+    <T slot="sub" k="download.every_file_comes_from_one_github"><a href="https://about.signpath.io/" rel="noopener" slot="a1">{t('download.every_file_comes_from_one_github__a1')}</a><a href="/signing/" slot="a2">{t('download.every_file_comes_from_one_github__a2')}</a></T>
+
+        {/*
+          The version line is drawn before GitHub has answered, in the shape the answer will take.
+          Every row below is already a working link to the latest release page. The file names
+          carry the version, so GitHub's latest/download/<name> form cannot be written into the
+          markup; app.js reads the release list instead and swaps in the file itself, its size and
+          its real name. With scripting off the rows stay as they are and still get you there.
+        */}
+        <div class="release-card release-strip" id="release-card" aria-busy="true">
+          <div class="release-head">
+            <div>
+              <p class="release-label">{t('download.latest_release')}</p>
+              <p class="release-version" id="release-version"><span class="skeleton sk-version js-only"></span><noscript><a href={LATEST} rel="noopener">On GitHub</a></noscript></p>
+            </div>
+            <p class="release-date" id="release-date"><span class="skeleton sk-date js-only"></span></p>
+          </div>
+          <div id="release-status" class="status" role="status" hidden></div>
+        </div>
+
+        <div class="platforms" id="platforms">
+
+          <Platform id="android" icon="phone-panel" tone="yes" title={t('download.android_phone')} req={t('download.android_8_0_and_above')}>
+            <AbiRow asset="apk-universal">
+              <T slot="name" k="download.universal_apk"><span class="badge badge-quiet" slot="span1">{t('download.universal_apk__span1')}</span></T>
+              <Fragment slot="note">{t('download.one_file_for_every_phone')}</Fragment>
+              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_universal_apk')}</p>
+            </AbiRow>
+            <a slot="foot" href={l('/install/#android')}>{t('download.how_to_install_on_a')}</a>
+            <Fragment slot="after">
+            <p class="platform-badges"><a class="store-badge" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener"><Shot src="/badges/obtainium.png" width="161" height="48" alt={t('download.add_to_obtainium')} /></a></p>
+            <p class="platform-note"><T k="download.kao_note"><a href="https://keepandroidopen.org/" target="_blank" rel="noopener" slot="a1">{t('download.kao_note__a1')}</a></T></p>
+            </Fragment>
+          </Platform>
+
+          <Platform id="android-tv" icon="tv-card" tone="play" title="Android TV" req={t('download.android_tv_8_0_and')}>
+            <AbiRow asset="apk-universal">
+              <T slot="name" k="download.universal_apk"><span class="badge badge-quiet" slot="span1">{t('download.universal_apk__span1')}</span></T>
+              <T slot="note" k="download.tv_note"><code slot="code1">tmplayer.org/apk</code></T>
+              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_universal_apk')}</p>
+            </AbiRow>
+            <Fragment slot="foot"><a href={l('/install/#android-tv')}>{t('download.how_to_install_on_a_2')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/android-tv/')}>{t('download.made_for_the_tv')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/fire-tv/')}>{t('download.fire_tv_guide')}</a></Fragment>
+          </Platform>
+
+          <Platform id="windows" icon="windows-panel" tone="browse" title="Windows" req={t('download.windows_10_and_11_64')} computer>
+            <div slot="before" class="callout">
+              <p><T k="download.win_cmd_steps"><em slot="em1">{t('download.win_cmd_steps__em1')}</em><em slot="em2">{t('download.win_cmd_steps__em2')}</em><a href={l('/install/#windows')} slot="a1">{t('download.win_cmd_steps__a1')}</a></T></p>
+              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+            </div>
+            <AbiRow asset="win-msi">
+              <Fragment slot="name">{t('download.win_msi_name')}</Fragment>
+              <T slot="note" k="download.win_msi_note"><em slot="em1">{t('download.win_msi_note__em1')}</em><em slot="em2">{t('download.win_msi_note__em2')}</em></T>
+              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_windows_x64_msi')}</p>
+            </AbiRow>
+            <a slot="foot" href={l('/install/#windows')}>{t('download.how_to_install_on_windows')}</a>
+          </Platform>
+
+          {/*
+            The macOS card arrives with the first release that has a DMG. The site deploys before
+            that release does, so the card starts hidden and app.js shows it only once the latest
+            release carries a macos-arm64.dmg: until then it would offer a file that does not exist.
+          */}
+          <Platform id="macos" icon="laptop-panel" tone="play" title="macOS" req={t('download.macos_req')} computer hidden>
+            <AbiRow asset="mac-dmg">
+              <Fragment slot="name">DMG <span class="badge badge-quiet">{t('download.preview')}</span></Fragment>
+              <T slot="note" k="download.mac_dmg_note"><em slot="em1">{t('download.mac_dmg_note__em1')}</em><em slot="em2">{t('download.mac_dmg_note__em2')}</em><em slot="em3">{t('download.mac_dmg_note__em3')}</em><em slot="em4">{t('download.mac_dmg_note__em4')}</em></T>
+              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_macos_arm64_dmg')}</p>
+            </AbiRow>
+            <a slot="foot" href={l('/install/#macos')}>{t('download.how_to_install_on_macos')}</a>
+          </Platform>
+
+          <Platform id="linux" icon="terminal-panel" tone="no" title="Linux" req={t('download.x86_64_with_glibc_2')} computer>
+            <AbiRow asset="linux-appimage">
+              <Fragment slot="name">AppImage <span class="badge badge-quiet">{t('download.any_distribution')}</span></Fragment>
+              <Fragment slot="note">{t('download.one_file_that_runs_on')}</Fragment>
+              <pre slot="file" class="abi-cmd"><code>chmod +x <span data-file>TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
+            </AbiRow>
+            <AbiRow href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" label={t('download.arch_pkgbuild_link')}>
+              <Fragment slot="name">{t('download.arch_linux')}</Fragment>
+              <T slot="note" k="download.a_pkgbuild_lives_in_it"><code slot="code1">desktop/packaging/aur</code><code slot="code2">linux-x64.tar.xz</code></T>
+            </AbiRow>
+            <a slot="foot" href={l('/install/#linux')}>{t('download.how_to_install_on_linux')}</a>
+          </Platform>
+
+        </div>
+
+        <div class="later">
+          <p>{t('download.no_iphone_or_ipad')}</p>
+        </div>
+
+        <p class="muted small section-note"><T k="download.checksum_note"><a href={LATEST} rel="noopener" slot="a1">{t('download.checksum_note__a1')}</a><code slot="code1">sha256sum</code><code slot="code2">shasum -a 256</code><code slot="code3">Get-FileHash</code><a href="/security/#verify" slot="a2">{t('download.checksum_note__a2')}</a></T></p>
+
+        <details id="release-notes-wrap" hidden>
+          <summary>{t('download.release_notes')}</summary>
+          <pre class="notes" id="release-notes"></pre>
+        </details>
+
+        <section class="previous" id="previous-wrap" aria-labelledby="previous-h" hidden>
+          <h3 id="previous-h">{t('download.previous_releases')}</h3>
+          <ul class="previous-list" id="previous-list"></ul>
+          <p class="muted small"><a href="https://github.com/dracu-lah/TMPlayer/releases" rel="noopener">{t('download.all_releases_on_github')}</a></p>
+        </section>
+  </Band>
+
+  <Band wave labelledby="before-h" title={t('download.before_you_open_the_file')} sub={t('download.worth_knowing_about_any_app')}>
+    <div class="two-col" data-reveal>
+      <Panel kind="yes" title={t('download.what_you_are_getting')}>
+          <li><T k="download.on_a_tv_stick_box"><strong slot="strong1">{t('download.on_a_tv_stick_box__strong1')}</strong></T></li>
+          <li><T k="download.with_the_same_library_and"><strong slot="strong1">{t('download.with_the_same_library_and__strong1')}</strong></T></li>
+          <li><T k="download.every_release_links_the_source"><strong slot="strong1">{t('download.every_release_links_the_source__strong1')}</strong></T></li>
+      </Panel>
+      <Panel kind="no" title={t('download.what_it_will_not_do')}>
+          {['download.it_is_not_in_a', 'download.it_comes_with_no_media', 'download.no_store_updates_tmplayer_looks'].map((k) => <li>{t(k)}</li>)}
+      </Panel>
+    </div>
+  </Band>
+
+  <StarCard wave tonal lede={t('download.an_app_from_outside_the')} codes talk />
+
+</main>
+
+<ToTop />
+
+<Footer />
+</Base>

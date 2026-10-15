@@ -1,0 +1,187 @@
+== /
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+content-type: text/html; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /privacy
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+HTTP 308
+location: /privacy/
+== /privacy/
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+content-type: text/html; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /es/features/
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+content-type: text/html; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /index.html
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+HTTP 308
+location: /
+== /latest.json
+access-control-allow-origin: *
+cache-control: public, max-age=300
+content-type: application/json; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /install.ps1
+access-control-allow-origin: *
+cache-control: public, max-age=300
+content-type: text/plain; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /fonts/OFL-Poppins.txt
+access-control-allow-origin: *
+cache-control: public, max-age=31536000, immutable
+content-type: text/plain; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /screenshots/desktop-grid-light.webp
+access-control-allow-origin: *
+cache-control: public, max-age=86400, stale-while-revalidate=604800
+content-type: image/webp
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /badges/obtainium.png
+access-control-allow-origin: *
+cache-control: public, max-age=86400, stale-while-revalidate=604800
+content-type: image/png
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /styles.css
+access-control-allow-origin: *
+cache-control: public, max-age=300, stale-while-revalidate=3600
+content-type: text/css; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /app.js
+access-control-allow-origin: *
+cache-control: public, max-age=300, stale-while-revalidate=3600
+content-type: application/javascript; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /og.png
+access-control-allow-origin: *
+cache-control: public, max-age=86400, stale-while-revalidate=604800
+content-type: image/png
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /site.webmanifest
+access-control-allow-origin: *
+cache-control: public, max-age=86400, stale-while-revalidate=604800
+content-type: application/manifest+json; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /sitemap.xml
+access-control-allow-origin: *
+cache-control: public, max-age=3600, stale-while-revalidate=86400
+content-type: application/xml
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /robots.txt
+access-control-allow-origin: *
+cache-control: public, max-age=3600, stale-while-revalidate=86400
+content-type: text/plain; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /llms.txt
+access-control-allow-origin: *
+cache-control: public, max-age=3600, stale-while-revalidate=86400
+content-type: text/plain; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /changelog/feed.xml
+access-control-allow-origin: *
+cache-control: public, max-age=3600, stale-while-revalidate=86400
+content-type: application/xml
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /apk
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+HTTP 308
+location: /apk/
+== /apk/
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain
+HTTP 307
+location: https://github.com/dracu-lah/TMPlayer/releases/download/v1.26.0/TMPlayer-1.26.0-universal.apk
+== /nope/
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+content-type: text/html; charset=utf-8
+HTTP 404
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /af11d0ad703ff8c5a7006d0ccd768528.txt
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain; charset=utf-8
+HTTP 200
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+== /.well-known/security.txt
+access-control-allow-origin: *
+cache-control: public, max-age=0, must-revalidate
+content-type: text/plain; charset=utf-8
+HTTP 200

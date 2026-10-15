@@ -70,7 +70,7 @@ Open [tmplayer.org/download](https://tmplayer.org/download/) on the phone, downl
 it and allow the install. [Obtainium](https://github.com/ImranR98/Obtainium) can also install it
 straight from the releases and keep it up to date:
 
-<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer"><img src="site/badges/obtainium.png" width="161" height="48" alt="Get it on Obtainium" /></a>
+<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer"><img src="site/public/badges/obtainium.png" width="161" height="48" alt="Get it on Obtainium" /></a>
 
 ### Windows
 

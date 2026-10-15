@@ -1,0 +1,99 @@
+---
+import GuidePage from '../../../../components/guides/GuidePage.astro';
+import PageHead from '../../../../components/PageHead.astro';
+import Crumbs from '../../../../components/guides/Crumbs.astro';
+import Action from '../../../../components/guides/Action.astro';
+import Band from '../../../../components/Band.astro';
+import FitPanels from '../../../../components/guides/FitPanels.astro';
+import Steps from '../../../../components/Steps.astro';
+import Step from '../../../../components/Step.astro';
+import Cards from '../../../../components/Cards.astro';
+import Card from '../../../../components/Card.astro';
+import MoreHelp from '../../../../components/guides/MoreHelp.astro';
+import T from '../../../../components/T.astro';
+import type { Guide } from '../../../../components/guides/ld';
+import { langPaths } from '../../../../i18n/paths';
+import { text } from '../../../../i18n/t';
+import { l as link } from '../../../../i18n/links';
+
+export const getStaticPaths = langPaths;
+const { lang } = Astro.props;
+Astro.locals.lang = lang;
+const t = (k: string) => text(lang, k);
+const l = (href: string) => link(lang, href);
+
+const ld: Guide = {
+  path: '/guides/telegram-videos-on-android-tv/',
+  crumb: 'Telegram videos on Android TV',
+  headline: 'How to watch Telegram videos on Android TV',
+  description: 'Watch the videos in your own Telegram chats and channels on an Android TV or Google TV: install TMPlayer, scan a QR code with your phone, and press play.',
+  datePublished: '2026-10-06',
+  dateModified: '2026-10-06',
+  howTo: {
+    totalTime: 'PT10M',
+    steps: [
+      { id: 'tv-1', name: 'Check the television', text: 'Android TV or Google TV on Android 8.0 or above. Most TVs and sticks sold since 2018 qualify.' },
+      { id: 'tv-2', name: 'Install TMPlayer', text: 'Fetch the universal APK on the TV with the free Downloader app, send it from a phone with Send files to TV, or install it with adb.' },
+      { id: 'tv-3', name: 'Sign in with a QR code', text: 'Open TMPlayer and scan the code: in Telegram on your phone, Settings, Devices, Link Desktop Device.' },
+      { id: 'tv-4', name: 'Pick a chat and press play', text: 'TMPlayer lists the videos in your chats and channels. A video starts within seconds and keeps downloading while it plays.' },
+    ],
+  },
+};
+---
+<GuidePage page="guide_android_tv" title={t('guide_android_tv.how_to_watch_telegram_videos')} socialTitle={t('guide_android_tv.how_to_watch_telegram_videos_2')} description={t('guide_android_tv.watch_the_videos_in_your')} ld={ld}>
+
+  <PageHead lede={t('guide_android_tv.telegram_has_no_app_for')}>
+    <Crumbs slot="crumbs" here="Android TV" />
+    <T slot="title" k="guide_android_tv.telegram_videos"><em slot="em1">{t('guide_android_tv.telegram_videos__em1')}</em></T>
+    <Fragment slot="actions">
+      <Action filled href="#steps">{t('fire_tv.show_me_the_steps')}</Action>
+      <Action href={l('/download/')}>{t('home.download_tmplayer')}</Action>
+    </Fragment>
+  </PageHead>
+
+  <Band wave tonal id="fit" title={t('guide_android_tv.what_you_need')}>
+    <FitPanels
+      yes={{ title: t('guide_android_tv.you_need'), items: [
+        t('guide_android_tv.an_android_tv_or_google'),
+        t('guide_android_tv.your_telegram_account_signed_in'),
+        t('guide_android_tv.a_network_connection_wi_fi'),
+      ] }}
+      no={{ title: t('guide_android_tv.you_do_not_need'), items: [
+        t('guide_android_tv.a_bot_a_server_or'),
+        t('guide_android_tv.to_move_any_files_the'),
+        t('guide_android_tv.a_computer_unless_you_prefer'),
+      ] }}
+    />
+  </Band>
+
+  <Band wave body id="steps" title={t('guide_android_tv.four_steps')} sub={t('guide_android_tv.you_do_the_first_three')}>
+    <Steps>
+      <Step id="tv-1" title={t('guide_android_tv.check_the_television')}>
+        <p><T k="guide_android_tv.open_and_look_for_the"><em slot="em1">{t('guide_android_tv.open_and_look_for_the__em1')}</em><em slot="em2">{t('guide_android_tv.open_and_look_for_the__em2')}</em><em slot="em3">{t('guide_android_tv.open_and_look_for_the__em3')}</em></T></p>
+      </Step>
+      <Step id="tv-2" title={t('guide_android_tv.install_tmplayer')}>
+        <p><T k="guide_android_tv.play_store_apk"><em slot="em1">Downloader</em><code slot="code1">tmplayer.org/apk</code></T></p>
+        <p><T k="guide_android_tv.prefer_a_phone_or_a"><a href={l('/install/#android-tv')} slot="a1">{t('guide_android_tv.prefer_a_phone_or_a__a1')}</a></T></p>
+      </Step>
+      <Step id="tv-3" title={t('guide_android_tv.sign_in_with_a_qr')}>
+        <p><T k="guide_android_tv.open_tmplayer_it_shows_a"><em slot="em1">{t('guide_android_tv.open_tmplayer_it_shows_a__em1')}</em><em slot="em2">{t('guide_android_tv.open_tmplayer_it_shows_a__em2')}</em><em slot="em3">{t('guide_android_tv.open_tmplayer_it_shows_a__em3')}</em></T></p>
+      </Step>
+      <Step id="tv-4" title={t('install.pick_a_chat_and_press')}>
+        <p>{t('guide_android_tv.your_chats_channels_and_saved')}</p>
+      </Step>
+    </Steps>
+  </Band>
+
+  <Band wave tonal id="tips" title={t('guide_android_tv.worth_knowing')}>
+    <Cards>
+      <Card title={t('guide_android_tv.subtitles_and_audio_tracks')}><T k="guide_android_tv.mkv_mp4_avi_and_ts"><a href={l('/formats/')} slot="a1">{t('guide_android_tv.mkv_mp4_avi_and_ts__a1')}</a></T></Card>
+      <Card title={t('guide_android_tv.series_play_on')}>{t('guide_android_tv.when_an_episode_ends_the')}</Card>
+      <Card title={t('guide_android_tv.slow_connection')}>{t('guide_android_tv.turn_on_the_mode_that')}</Card>
+    </Cards>
+  </Band>
+
+  <MoreHelp>
+    <T k="guide_android_tv.questions_about_privacy_and_what"><a href={l('/faq/')} slot="a1">{t('guide_android_tv.questions_about_privacy_and_what__a1')}</a><a href="/security/" slot="a2">{t('guide_android_tv.questions_about_privacy_and_what__a2')}</a><a href={l('/guides/telegram-videos-on-fire-tv/')} slot="a3">{t('guide_android_tv.questions_about_privacy_and_what__a3')}</a></T>
+  </MoreHelp>
+
+</GuidePage>

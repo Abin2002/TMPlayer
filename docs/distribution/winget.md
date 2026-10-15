@@ -27,13 +27,13 @@ manifests/d/dracu-lah/TMPlayer/1.24.0/dracu-lah.TMPlayer.locale.en-US.yaml
   `ALLUSERS` property, which is what makes it per user. jpackage MSIs take `/quiet` like any WiX
   MSI, so winget's silent install works.
 - **ProductCode `{3718F8E0-3706-3384-95B0-E511D72F4561}`**, read from the 1.24.0 MSI itself
-  (downloaded 2026-10-09, sha256 matched `site/latest.json` and the GitHub asset digest, Property
+  (downloaded 2026-10-09, sha256 matched `site/public/latest.json` and the GitHub asset digest, Property
   table parsed). jpackage derives a new
   ProductCode for every version, so it changes each release; the **UpgradeCode
   `{6F1D3C0E-2B8A-4B7E-9D2C-7A1E5F4C3B21}`** is the fixed one from `desktop/build.gradle.kts`
   (`upgradeUuid`) and never changes. winget uses the ProductCode to tell which version is
   installed, so it must be right for each version.
-- **InstallerSha256** is `5D1CD29C...FE7715`, the same hash as `site/latest.json`, upper case as
+- **InstallerSha256** is `5D1CD29C...FE7715`, the same hash as `site/public/latest.json`, upper case as
   winget writes it.
 - **Publisher in Apps and Features is `TMPlayer`** (the MSI's Manufacturer, from `vendor =
   "TMPlayer"`), while the manifest's `Publisher` is `dracu-lah`. That is allowed; the

@@ -59,8 +59,8 @@ gh release download v<v> -p 'TMPlayer-<v>-universal.apk'
 gh attestation verify TMPlayer-<v>-universal.apk --repo dracu-lah/TMPlayer
 ```
 
-Also check `site/latest.json` and the changelog commit the run pushed (`git pull`, then
-`jq . site/latest.json`), and the Telegram post on t.me/tmplayerapp (U06 is the same check for
+Also check `site/public/latest.json` and the changelog commit the run pushed (`git pull`, then
+`jq . site/public/latest.json`), and the Telegram post on t.me/tmplayerapp (U06 is the same check for
 1.22.1, still open). Depends on the release: yes.
 
 ### 4. CP12: bump the AUR PKGBUILD

@@ -1,0 +1,21 @@
+---
+// The language menu in the header: every published language, each linking to this page in it.
+import Icon from './Icon.astro';
+import { buildString, published } from '../i18n/t';
+import { pageUrl } from '../i18n/links';
+import type { PageId } from '../i18n/langs';
+
+interface Props { page: PageId }
+const lang = Astro.locals.lang;
+const label = `${buildString(lang, 'build.language')}: ${lang.name}`;
+---
+{published.length > 1 && (
+<details class="lang-picker">
+  <summary class="lang-picker-btn" aria-label={label} title={label}><Icon name="globe" /><span class="lang-picker-code" aria-hidden="true">{lang.hreflang.toUpperCase()}</span></summary>
+  <ul class="lang-picker-menu">
+    {published.map((other) => (
+    <li><a href={pageUrl(other, Astro.props.page)} hreflang={other.hreflang} lang={other.tag} data-lang-pick={other.hreflang} aria-current={other === lang ? 'true' : undefined}>{other.name}</a></li>
+    ))}
+  </ul>
+</details>
+)}

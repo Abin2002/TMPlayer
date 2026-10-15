@@ -32,4 +32,4 @@ chromium-browser --headless=new --disable-gpu --no-sandbox --hide-scrollbars \
     "http://127.0.0.1:$port/scripts/og-card.html" 2>/dev/null
 magick "$tmp/og.png" -strip -depth 8 -define png:color-type=2 "$root/site/og.png"
 
-echo "wrote site/icon-512.png and site/og.png"
+echo "wrote site/public/icon-512.png and site/public/og.png"

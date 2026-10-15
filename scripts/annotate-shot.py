@@ -18,7 +18,7 @@ default --raw directory, under the file name the spec's "source" gives.
 Spec:
   {
     "source": "tv-sign-in-dark.png",          raw capture, relative to --raw
-    "output": "site/screenshots/tv-sign-in.webp",   relative to the repository
+    "output": "site/public/screenshots/tv-sign-in.webp",   relative to the repository
     "crop": [x, y, width, height],            in the raw capture's pixels; default the whole frame
     "width": 1200,                            output width; default the crop's own width. Height
                                               follows the crop's aspect ratio. Going past the

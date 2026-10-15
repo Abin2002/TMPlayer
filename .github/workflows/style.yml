@@ -31,17 +31,33 @@ jobs:
           fi
           echo "Clean: no em or en dashes in tracked files."
 
-  site-i18n:
-    name: Site translations are current
+  site:
+    name: Site builds, and its translations and links are consistent
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
 
-      # The localized site under site/<lang>/, the English catalog site/i18n/en.json, the
-      # language picker and the sitemap alternates are all generated from the English pages by
-      # scripts/build-site-i18n.py and committed. This fails when a page, app.js or a catalog was
-      # edited without running it, or when a page carries text with no data-i18n key, so stale
-      # or half-English output never reaches the site. The script needs only the standard library.
-      - name: Check the generated site
-        run: python3 scripts/build-site-i18n.py --check
+      # tmplayer.org is an Astro site in site/ (docs/ASTRO-MIGRATION.md). Vercel builds it from the
+      # same commit; this builds it first, so a page that does not compile, a catalog key nothing
+      # uses or a page using a key en.json lacks, a translation that lost a {placeholder}, or a
+      # broken internal link fails here rather than on the live site. pnpm and Node come from
+      # site/package.json (packageManager, engines).
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: site/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: site/pnpm-lock.yaml
+      - name: Install
+        run: pnpm -C site install --frozen-lockfile
+      - name: Type check
+        run: pnpm -C site check
+      - name: Build
+        run: pnpm -C site build
+      - name: Catalogs match the pages and app.js
+        run: python3 scripts/site-i18n-check.py
+      - name: Internal links resolve
+        run: python3 scripts/site-links.py
