@@ -9,6 +9,7 @@ import ToTop from '../../../components/ToTop.astro';
 import T from '../../../components/T.astro';
 import Icon from '../../../components/Icon.astro';
 import PageHead from '../../../components/PageHead.astro';
+import DownloadCard from '../../../components/DownloadCard.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
@@ -85,6 +86,8 @@ const webPage = {
   </Band>
   <Band wave id="new" title={t('translate.a_new_language')}>
     <p class="muted small section-note" data-reveal><T k="translate.naming_the_language_and_saying"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('translate.naming_the_language_and_saying__a1')}</a></T></p>
+
+    <DownloadCard />
   </Band>
 
 </main>

@@ -16,6 +16,7 @@ import Band from '../../../components/Band.astro';
 import Shot from '../../../components/Shot.astro';
 import Platform from '../../../components/download/Platform.astro';
 import AbiRow from '../../../components/download/AbiRow.astro';
+import NextSteps from '../../../components/download/NextSteps.astro';
 import Panel from '../../../components/Panel.astro';
 import StarCard from '../../../components/StarCard.astro';
 import { langPaths } from '../../../i18n/paths';
@@ -164,6 +165,9 @@ const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
           </Platform>
 
         </div>
+
+        {/* Opened by app.js under whichever download was pressed. */}
+        <NextSteps />
 
         <div class="later">
           <p>{t('download.no_iphone_or_ipad')}</p>

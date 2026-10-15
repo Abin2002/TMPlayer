@@ -552,13 +552,43 @@ summary {
   text-decoration: none;
 }
 
+/* ---------- The Download button ----------
+
+   A filled pill at the start of the controls, the same height as the round buttons beside it so
+   the row keeps one line. It takes the place of the page list's Download link wherever both would
+   be on screen; under 640px the bar has no room for it next to the brand, the language and
+   the two round buttons, so it goes and the link comes back as the last row of the menu card,
+   filled the same way. A phone reader who scrolls on gets the download bar at the bottom too. */
 .nav a.nav-cta {
-  margin-left: 4px;
-  background: var(--primary-container);
-  color: var(--on-primary-container);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  height: 46px;
+  margin-inline-end: 4px;
+  padding-block: 0;
+  padding-inline: 15px 18px;
+  background: var(--primary);
+  color: var(--on-primary);
   font-weight: 600;
+  white-space: nowrap;
 }
-.nav a.nav-cta:hover { background: var(--primary); color: var(--on-primary); }
+.nav a.nav-cta:hover { background: var(--primary); color: var(--on-primary); box-shadow: var(--shadow-accent); }
+.nav a.nav-cta svg { flex: none; }
+/* On the download page it is the page you are on: tonal, like the current page in the list. */
+.nav a.nav-cta[aria-current="page"],
+.nav a.nav-cta[aria-current="page"]:hover {
+  background: var(--surface-container);
+  color: var(--on-surface);
+  box-shadow: none;
+}
+.nav-links a.nav-dl { display: none; }
+@media (max-width: 639px) {
+  .nav a.nav-cta { display: none; }
+  .nav-links a.nav-dl { display: block; }
+  .nav-links a.nav-dl:not([aria-current]) { background: var(--primary); color: var(--on-primary); font-weight: 600; }
+  .js .nav-links a.nav-dl { margin-top: 4px; text-align: center; }
+}
 
 
 /* The theme control. Two icons in one button: whichever theme is showing, the
@@ -1949,7 +1979,7 @@ kbd {
 /* Two links the bar does not have room for on a desktop, and the menu does. Hiding a page
    behind a button is worse than four names being the sensible limit of a header row. */
 .only-menu { display: none; }
-@media (max-width: 900px) { .only-menu { display: block; } }
+@media (max-width: 1080px) { .only-menu { display: block; } }
 
 /* ---------- Skeletons ----------
 
@@ -2154,9 +2184,11 @@ a.card:active,
 
 /* ---------- The menu ----------
 
-   Below 900px the five page names do not fit beside the mark, the star and the theme control,
-   and a strip that scrolls sideways only tells you the rest exists if you happen to push it. So
-   a phone gets what a phone expects: a button, and the pages as a list under it.
+   At 1080px and under the page names do not fit beside the mark, the Download button, the star,
+   the language and the theme control (in German, Russian or Ukrainian they ran off the edge at
+   900px even before the Download button came), and a strip that scrolls sideways only tells you
+   the rest exists if you happen to push it. So a phone or a tablet gets what it expects: a
+   button, and the pages as a list under it. Just above that, the links draw a little closer.
 
    The button is drawn only when there is script to work it. Without script the links stay where
    they are, on a second row in a tray of their own, which is a working header rather than a
@@ -2189,7 +2221,11 @@ a.card:active,
   border-color: transparent;
 }
 
-@media (max-width: 900px) {
+@media (min-width: 1081px) and (max-width: 1199px) {
+  .nav-links a { padding-inline: 12px; }
+}
+
+@media (max-width: 1080px) {
   /* No script: the pages take a second row, in a tray of their own that scrolls sideways. Four
      names loose on top of the background art read as spare text rather than as navigation. */
   .header-inner { flex-wrap: wrap; row-gap: 8px; min-height: 0; padding-block: 10px; position: relative; }
@@ -2879,7 +2915,7 @@ a[lang="ar"] { font-family: "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif; 
 [dir="rtl"] .lang-picker,
 [dir="rtl"] .theme-toggle,
 [dir="rtl"] .nav-icon { margin-left: 0; margin-right: 4px; }
-@media (max-width: 900px) {
+@media (max-width: 1080px) {
   [dir="rtl"] .nav { margin-left: 0; margin-right: auto; }
 }
 
@@ -3077,4 +3113,113 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
   .js .menu-btn { width: 40px; height: 40px; margin-left: 2px; }
   .lang-picker-btn { height: 40px; padding: 0 8px; }
   .brand { gap: 8px; }
+}
+
+/* The download card on /fire-tv/ has its button alone, which the even columns of a support card
+   would stretch across the whole card on a wide screen. */
+@media (min-width: 640px) {
+  .get-card .support-actions > .btn:only-child { justify-self: center; min-width: 260px; }
+}
+
+/* ---------- What comes next, on the download page ----------
+
+   The panel app.js opens under the download that was just pressed: the next steps for that
+   platform, then the channel and the star. It is part of the page, not a layer over it, so it
+   pushes what follows down rather than covering anything. In the centred page head it keeps its
+   text to the start edge and a readable width. */
+.next-steps {
+  margin-top: 16px;
+  padding: clamp(18px, 3vw, 26px);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-l);
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  text-align: start;
+}
+.next-steps[hidden] { display: none; }
+.page-head .next-steps { max-width: 720px; margin: 20px auto 0; }
+.next-steps-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--on-surface);
+  font-size: 1.12rem;
+  font-weight: 600;
+}
+.next-steps .next-steps-h { margin-bottom: 14px; }
+.next-steps-h svg { flex: none; color: var(--primary); }
+.next-steps p { margin: 0; }
+.next-steps .tour-list li > div > * + * { margin-top: 6px; }
+.next-step-h { color: var(--on-surface); font-weight: 600; }
+.next-steps em { font-style: normal; font-weight: 600; color: var(--on-surface); }
+.next-steps pre.code { margin: 8px 0; }
+.next-steps .next-lede { margin-bottom: 14px; }
+.next-steps .next-more { margin-top: 14px; font-size: 0.92rem; }
+/* Inside a platform card the row's note and the card's install link are right there already. */
+.platform .next-steps .next-lede,
+.platform .next-steps .next-more { display: none; }
+.next-steps .callout { margin-top: 16px; }
+.next-steps .callout em { color: inherit; }
+.next-follow {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--outline-variant);
+}
+.next-follow .btn { justify-content: center; text-align: center; }
+@media (min-width: 640px) { .next-follow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- The download bar on a phone ----------
+
+   One row at the bottom of the screen, on phones only, once the reader is past the hero or the
+   page head (app.js puts .is-on on it and .get-bar-on on the root). While it shows, the page gets
+   the same height of room at its foot and the back to top button stands on top of it, so the
+   footer and the button stay in reach. It slides up, or simply appears under reduced motion. */
+.get-bar { display: none; }
+@media (max-width: 699px) {
+  .get-bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 35;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 60px;
+    padding-block: 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    padding-inline: var(--gutter) calc(var(--gutter) - 12px);
+    border-top: 1px solid var(--outline-variant);
+    background: var(--surface-container-high);
+    color: var(--on-surface);
+    box-shadow: 0 -6px 20px rgb(0 0 0 / 0.12);
+    visibility: hidden;
+    transform: translate3d(0, 100%, 0);
+    transition: transform 0.3s var(--ease-emphasised), visibility 0s linear 0.3s;
+  }
+  .get-bar[hidden] { display: none; }
+  .get-bar.is-on { visibility: visible; transform: none; transition-delay: 0s; }
+  .get-bar p { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 0.92rem; font-weight: 600; line-height: 1.3; }
+  .get-bar .get-bar-go { flex: none; min-height: 44px; padding: 0 18px; justify-content: center; }
+  .get-bar-close {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--shape-full);
+    background: transparent;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+  }
+  .get-bar-close:hover { background: var(--surface-container-highest); color: var(--on-surface); }
+  .get-bar-on body { padding-bottom: calc(61px + env(safe-area-inset-bottom, 0px)); }
+  .get-bar-on .to-top { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .get-bar { transition: none; transform: none; }
 }

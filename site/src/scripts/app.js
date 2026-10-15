@@ -1003,7 +1003,7 @@ var tmT = (function () {
 
 /* The menu, on a phone.
 
-   Below 900px the pages do not fit beside the mark and the two controls, so they
+   At 1080px and under the pages do not fit beside the mark and the controls, so they
    move into a card the button opens. The button is drawn only when this script
    has run, which the js class on the root says: without it the stylesheet leaves
    the links on a second row, where they still work. */
@@ -1051,11 +1051,11 @@ var tmT = (function () {
     }
   });
 
-  /* Turning a phone on its side can put the layout back over 900px, where the
+  /* Turning a tablet on its side can put the layout back over 1080px, where the
      links belong in the bar again and a card left open would be a card floating
      under a row that already lists them. */
   window.addEventListener('resize', function () {
-    if (open() && window.innerWidth > 900) { set(false); }
+    if (open() && window.innerWidth > 1080) { set(false); }
   });
 
   set(false);
@@ -1179,6 +1179,113 @@ var tmT = (function () {
     });
   });
 
+})();
+
+
+/* The download bar on a phone (src/components/GetBar.astro). It comes up only once the hero or the
+   page head has scrolled out of view, so it is never there on arrival, and goes again when the
+   reader scrolls back up to the page's own buttons. The stylesheet draws it only at phone width;
+   the width is checked here too, so the page never gets the room at its foot without the bar.
+   Closing it is remembered under one key for every page and language. A browser without
+   IntersectionObserver or storage simply never shows it. */
+(function () {
+  'use strict';
+
+  var bar = document.getElementById('get-bar');
+  // On the home page the hero's words and its button, not the devices under them.
+  var head = document.querySelector('main .hero-inner, main .page-head');
+  if (!bar || !head || !window.IntersectionObserver || !window.matchMedia) { return; }
+  var KEY = 'tm-get-closed';
+  try {
+    if (localStorage.getItem(KEY)) { return; }
+  } catch (e) { return; }
+
+  var root = document.documentElement;
+  var phone = window.matchMedia('(max-width: 699px)');
+  var past = false;
+
+  function paint() {
+    var on = past && phone.matches;
+    bar.classList.toggle('is-on', on);
+    root.classList.toggle('get-bar-on', on);
+  }
+
+  bar.hidden = false;
+  var observer = new IntersectionObserver(function (entries) {
+    var entry = entries[entries.length - 1];
+    past = !entry.isIntersecting && entry.boundingClientRect.bottom <= 0;
+    paint();
+  });
+  observer.observe(head);
+  if (phone.addEventListener) { phone.addEventListener('change', paint); }
+
+  bar.querySelector('[data-get-close]').addEventListener('click', function () {
+    try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    observer.disconnect();
+    past = false;
+    paint();
+    bar.hidden = true;
+    // The button that had the focus is gone, so the focus goes to the start of the content
+    // rather than back to the top of the document.
+    var main = document.getElementById('main');
+    if (main) {
+      main.setAttribute('tabindex', '-1');
+      main.focus({ preventScroll: true });
+    }
+  });
+})();
+
+
+/* What comes next, on the download page (src/components/download/NextSteps.astro). A click on a
+   download that hands over a file, rather than the release page it links to until the release
+   list has loaded, opens the panel under that row, or under the page head's button, with the steps
+   for that platform. The download itself goes ahead as usual: the file is an attachment, so the
+   page stays where it is and the panel is there when the reader looks back. */
+(function () {
+  'use strict';
+
+  var panel = document.getElementById('next-steps');
+  if (!panel || !panel.closest) { return; }
+  var heading = document.getElementById('next-steps-h');
+  var FILE = /\/releases\/download\//;
+
+  /* A row's platform is its card. The page head's button is the reader's own system, the card with
+     the "your device" badge; failing that, the kind of file says it. */
+  function platformOf(link) {
+    var card = link.closest('.platform');
+    if (card) { return card.id; }
+    var yours = document.querySelector('.platform .platform-yours:not([hidden])');
+    if (yours) { return yours.closest('.platform').id; }
+    var href = link.getAttribute('href') || '';
+    if (/\.apk$/i.test(href)) { return 'android'; }
+    if (/\.msi$/i.test(href)) { return 'windows'; }
+    if (/\.dmg$/i.test(href)) { return 'macos'; }
+    if (/\.appimage$/i.test(href)) { return 'linux'; }
+    return null;
+  }
+
+  function open(link) {
+    var id = platformOf(link);
+    var block = id ? panel.querySelector('[data-next="' + id + '"]') : null;
+    if (!block) { return; }
+    Array.prototype.forEach.call(panel.querySelectorAll('[data-next]'), function (node) {
+      node.hidden = node !== block;
+    });
+    var card = link.closest('.platform');
+    var list = card ? card.querySelector('.abi-list') : null;
+    var actions = link.closest('.page-actions');
+    var anchor = list || actions;
+    if (!anchor) { return; }
+    anchor.parentNode.insertBefore(panel, anchor.nextSibling);
+    // A heading one level under the place it lands: the platform card's h3, or the page's h1.
+    heading.setAttribute('aria-level', list ? '4' : '2');
+    panel.hidden = false;
+  }
+
+  document.addEventListener('click', function (event) {
+    var link = event.target.closest ? event.target.closest('a[data-dl], #os-download') : null;
+    if (link && FILE.test(link.href)) { open(link); }
+  });
 })();
 
 
