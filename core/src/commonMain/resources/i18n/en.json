@@ -564,6 +564,7 @@
     "phone_invalid": "That number isn't one Telegram recognises. Include the country code, as in +44.",
     "signed_out": "Telegram signed this device out. Sign in again to carry on.",
     "tdlib_parameters": "TDLib rejected its parameters: {message}",
+    "tdlib_unavailable": "TDLib, the part of TMPlayer that talks to Telegram, could not start on this device. Please report this with the message: {message}",
     "unsupported_sign_in_step": "This account needs a step TMPlayer can't do. Finish signing in in the Telegram app first, then try again.",
     "wrong_code": "Wrong code",
     "wrong_password": "Wrong password"
@@ -1768,6 +1769,7 @@
     "sending": "Sending…",
     "sign_in": "Sign in",
     "start_over": "Start over",
+    "unreachable": "Still can't reach Telegram. Check your internet connection, and any firewall or VPN that might be blocking it, then try again.",
     "use_phone": "Log in by phone number",
     "use_qr": "Use a QR code instead"
   },

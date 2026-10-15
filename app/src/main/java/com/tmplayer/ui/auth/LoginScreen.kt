@@ -144,7 +144,9 @@ fun LoginScreen(
         is AuthState.Password ->
             PasswordPane(state, submitError, onSubmitPassword, onStartOver)
         is AuthState.Ready -> ConnectingPane(s.loginSigningInStatus)
-        is AuthState.Failed -> BigError(state.message, onRetry = null)
+        // Starting over is the way out of every failure here, including a client that could not
+        // start at all, which it tries again.
+        is AuthState.Failed -> BigError(state.message, onRetry = onStartOver)
     }
 }
 
