@@ -705,6 +705,8 @@ private fun Root() {
     // middle of it means nothing is being prepared any more, and restoring true would leave every
     // video on the screen refusing to open.
     var preparing by remember { mutableStateOf(false) }
+    // Whether a video from a stored list is being looked up again before it plays (see openStored).
+    var openingStored by remember { mutableStateOf(false) }
 
     // Everything unfinished: coming down, waiting its turn, held or failed. That is the number
     // the drawer badges, because every one of them is a video the viewer is still owed. Held here
@@ -856,7 +858,16 @@ private fun Root() {
                     watchedStore.markWatched(
                         WatchedRecord.of(item, chatTitle, System.currentTimeMillis(), manual = true),
                     )
-                    settings.clearResumePosition(item.chatId, item.messageId)
+                    // Every copy of it in Continue watching, as Remove from Continue watching
+                    // does: the card stands for all of them (HomeRows.foldCopies), and clearing
+                    // only this one put the copy behind it straight back in its place.
+                    val inContinue = settings.continueWatching.first()
+                        .firstOrNull { it.chatId == item.chatId && it.messageId == item.messageId }
+                    if (inContinue != null) {
+                        settings.clearResumeCopies(inContinue)
+                    } else {
+                        settings.clearResumePosition(item.chatId, item.messageId)
+                    }
                 } else {
                     watchedStore.markUnwatched(item.chatId, item.messageId)
                 }
@@ -865,26 +876,40 @@ private fun Root() {
         toast(if (watched) L.mainMarkedWatched(title = item.title) else L.mainMarkedUnwatched(title = item.title))
     }
 
+    /** [openStored] once its guard is up. */
+    suspend fun openStoredNow(stored: MediaItem, chatTitle: String) {
+        settings.rememberChatOpened(stored.chatId)
+        // In the Downloads folder: it plays from there, and asking Telegram first would only
+        // be a wait, and offline a long one.
+        if (LocalDownloads.fileFor(settings, stored.chatId, stored.messageId) != null) {
+            play(stored, chatTitle = chatTitle)
+            return
+        }
+        // The stored row carries a file id from whichever TDLib instance wrote it, which is
+        // not a number this one can necessarily use. Asking Telegram for the message again
+        // returns a current id and tells TDLib where the file came from, without which it
+        // will not download it. The stored row is the fallback, and it is enough whenever the
+        // video is already on the device.
+        val fresh = Td.refreshMedia(stored.chatId, stored.messageId)
+        play(fresh ?: stored, chatTitle = chatTitle)
+    }
+
     /**
      * Plays a video from a list kept on this device (Continue watching, Previously watched), which
      * counts as a visit to its chat for the next launch.
      */
     fun openStored(stored: MediaItem, chatTitle: String) {
+        // The same guard [play] keeps, over the wait for Telegram in [openStoredNow]: [play] only starts
+        // counting once that answer is back, so two quick presses on a Continue watching card
+        // both got through and opened the player twice.
+        if (openingStored || preparing) return
+        openingStored = true
         scope.launch {
-            settings.rememberChatOpened(stored.chatId)
-            // In the Downloads folder: it plays from there, and asking Telegram first would only
-            // be a wait, and offline a long one.
-            if (LocalDownloads.fileFor(settings, stored.chatId, stored.messageId) != null) {
-                play(stored, chatTitle = chatTitle)
-                return@launch
+            try {
+                openStoredNow(stored, chatTitle)
+            } finally {
+                openingStored = false
             }
-            // The stored row carries a file id from whichever TDLib instance wrote it, which is
-            // not a number this one can necessarily use. Asking Telegram for the message again
-            // returns a current id and tells TDLib where the file came from, without which it
-            // will not download it. The stored row is the fallback, and it is enough whenever the
-            // video is already on the device.
-            val fresh = Td.refreshMedia(stored.chatId, stored.messageId)
-            play(fresh ?: stored, chatTitle = chatTitle)
         }
     }
 

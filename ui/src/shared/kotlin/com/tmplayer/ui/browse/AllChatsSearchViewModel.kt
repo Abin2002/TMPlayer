@@ -23,9 +23,14 @@ fun interface VideoSearchSource {
     suspend fun page(query: String, cursor: AllChatsCursor): AllChatsPage
 
     companion object {
-        /** The signed in account, through TDLib's `searchMessages`. */
+        /**
+         * The signed in account, through TDLib's `searchMessages`. Only once there is a
+         * connection, given up on after a while: TDLib holds a search until it can reach
+         * Telegram, and offline that left "Searching" spinning with no end and no Retry.
+         */
         val Telegram = VideoSearchSource { query, cursor ->
-            ChatRepository(Td.awaitAuthorizedSession().client).searchAllChats(query, cursor)
+            val session = Td.awaitConnectedSessionOrNull() ?: throw java.io.IOException()
+            ChatRepository(session.client).searchAllChats(query, cursor)
         }
     }
 }

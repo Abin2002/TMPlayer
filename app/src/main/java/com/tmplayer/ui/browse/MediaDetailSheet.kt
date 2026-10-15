@@ -116,12 +116,17 @@ internal fun MediaDetailOpened(
         }
     }
     var confirmingRemove by remember { mutableStateOf(false) }
+    // The prompt stays up until the file has gone, and a second press on Remove meanwhile deleted
+    // nothing more but said "could not be removed" after "Removed".
+    var removing by remember { mutableStateOf(false) }
     if (confirmingRemove) {
         TvConfirm(
             title = s.gridRemoveDownloadTitle,
             message = s.gridRemoveDownloadMessage(item.title),
             confirmLabel = s.commonRemove,
             onConfirm = {
+                if (removing) return@TvConfirm
+                removing = true
                 scope.launch {
                     val record = settings.downloadRecord(item.chatId, item.messageId)
                     val removed = record != null && LocalDownloads.delete(settings, record)
