@@ -40,6 +40,37 @@ where the result does not yet look like the answer.
 Still missing from the data, and asked of the user below: which queries each page ranks for, the
 Page indexing report, and Bing.
 
+## Competitors (checked 2026-10-15)
+
+Telegram has no TV app of its own, so the results for these queries are third-party apps, mostly
+on Google Play, and how-to articles that suggest casting, mirroring or sideloading Telegram:
+
+| App | Where | Note |
+|---|---|---|
+| TMP - Telegram Media Player | Google Play `com.tmp.com`, Amazon | developer "T.M.P", 100,000+ installs, cached listings last updated 2020 to 2021; recommended by Spanish and Italian how-tos |
+| VelaTV - Telegram Media Player | Google Play `com.velatv.app` | uses the same generic phrase in its name |
+| TvGramPlayer | Google Play `com.network.tvgramplayer.playstore` | the "tvgramplayer" query (12 impressions, position 11) |
+| Telegram Video Player: TvGram | Google Play `dev.vishnuv.tvgram` | |
+| Echogram - Telegram Player | Google Play `com.liori.echogram` | MKV, subtitle and audio tracks, Cast and DLNA |
+| KiloGram | APK sites | a full Telegram client for Android TV, TDLib, PIN lock |
+| Tevegram | APKMirror | a full Telegram client for Android TV, last listed 2024 |
+
+What this changes:
+
+- **"TMP" is someone else's name, and "Telegram Media Player" is a generic phrase several apps
+  use.** Many "tmp ..." and "telegram media player" searches are people looking for the older TMP
+  app. So the site describes TMPlayer as a Telegram media player in lowercase, never claims "TMP"
+  or "Telegram Media Player" as its own name (no `alternateName`), and answers the confusion head
+  on: the FAQ asks "Is TMPlayer the same app as TMP - Telegram Media Player?" and says no, and
+  `llms.txt` says the same. That earns the clicks honestly and keeps clear of passing off.
+- **Every competitor is on Google Play; TMPlayer is not.** Play listings rank for app queries and
+  carry ratings and install counts that a website cannot show. A Play (and Amazon Appstore)
+  listing is the largest gap in reach, and a product decision for the user, not a site change
+  (`docs/distribution/` has the drafts).
+- **A fair comparison table** in the "without casting" guide can name these apps by what they
+  are (a full Telegram client, a player, a casting tool) and what each needs, without claims about
+  their quality. Facts to be checked against each listing on the day it is written.
+
 ## How search and AI answers work now (sources at the end)
 
 - Google says AI Overviews and AI Mode run on its normal Search systems, with "query fan-out"
@@ -71,32 +102,33 @@ about 60 characters and every description 120 to 160 (CLAUDE.md).
 | Page | Now | Proposed |
 |---|---|---|
 | `/` title | TMPlayer: free, unofficial Telegram video player for Android TV and PC (73) | TMPlayer: unofficial Telegram media player for TV and PC (56) |
-| `/` description | Stream the videos in your own Telegram chats on ... | TMPlayer (Telegram Media Player) streams the videos in your own Telegram chats on Android TV, phones, Windows, macOS and Linux. Free, open source, no ads. |
-| `/` hero line | A free, unofficial Telegram video player that starts in seconds ... | TMPlayer, short for Telegram Media Player, is a free, unofficial video player that starts in seconds and downloads while you watch. |
+| `/` description | Stream the videos in your own Telegram chats on ... | TMPlayer is a free Telegram media player that streams the videos in your own chats on Android TV, phones, Windows, macOS and Linux. Open source, no ads. |
+| `/` hero line | A free, unofficial Telegram video player that starts in seconds ... | TMPlayer is a free, unofficial Telegram media player that starts in seconds and downloads while you watch. |
 | `/download/` title | Download TMPlayer for Android TV, Windows, macOS and Linux | Download TMPlayer APK for Android TV, Windows, Mac, Linux (57) |
-| `/download/` description | Download TMPlayer free: the APK for ... | Download the free TMPlayer (Telegram Media Player) APK for Android TV and phones, plus a Windows installer, a Linux AppImage and a macOS preview. |
+| `/download/` description | Download TMPlayer free: the APK for ... | Download the free TMPlayer APK, a Telegram media player for Android TV and phones, plus a Windows installer, a Linux AppImage and a macOS preview. |
 | `/android-tv/` title | TMPlayer: unofficial Telegram video player for Android TV and Google TV | Telegram on Android TV: watch your chat videos with TMPlayer (59) |
 | `/fire-tv/` title | How to install TMPlayer on Fire TV Stick and Fire TV Cube | Telegram on Fire TV Stick: how to install TMPlayer (50) |
 
-"Unofficial" stays in the home title: "Telegram Media Player" in capitals reads like Telegram's own
-product, and that confusion is worth less than the click.
+"Unofficial" stays in the home title, and "Telegram media player" is written in lowercase as a
+description, never as a name (see Competitors: TMP - Telegram Media Player is another app).
 
-Entity work, same phase:
+Entity work, same phase (done 2026-10-15):
 
-- JSON-LD on `/`: `alternateName: ["Telegram Media Player", "TMP"]` on the SoftwareApplication,
-  WebSite and Organization (today it is one long sentence, which is not what the field is for).
-  Add both to `NO_TRANSLATE` in `site/src/i18n/ld.ts` so they are never translated; the old
-  sentence's `ld.*` key is then unused and leaves every catalog (a removal, not a translation).
-- `/download/` and `/android-tv/` get a SoftwareApplication of their own (they only carry a
-  BreadcrumbList): name, alternateName, `softwareVersion` and `downloadUrl` from
-  `releases.json`, `operatingSystem`, `offers` at 0. No ratings: there are none to show, and made
-  up ones are a manual action waiting to happen.
-- One sentence for what TMPlayer is, used word for word in: the GitHub repository description,
-  the README's first line, `site.webmanifest`, `llms.txt`, the Telegram channel bio, and any
-  listing (user does the GitHub description and the channel bio; I do the files).
+- JSON-LD on `/`: the `alternateName` sentence is removed, and no alternate name replaces it.
+  The old sentence's `ld.*` key left every catalog (a removal, not a translation).
+- `/download/` and `/android-tv/` get a SoftwareApplication of their own (they only carried a
+  BreadcrumbList): name, `softwareVersion` from `releases.json`, `downloadUrl`,
+  `operatingSystem`, `offers` at 0 (`site/src/lib/app-ld.ts`). No ratings: there are none to
+  show, and made up ones are a manual action waiting to happen.
+- The FAQ answers "Is TMPlayer the same app as TMP - Telegram Media Player?".
+- One sentence for what TMPlayer is, used word for word in the README, `site.webmanifest` and
+  `llms.txt`: "TMPlayer is a free, open source, unofficial Telegram media player that plays the
+  videos in your own Telegram chats on Android TV, Fire TV, Android phones, Windows, macOS and
+  Linux, while they are still downloading." The user puts the same sentence in the GitHub
+  repository description and the Telegram channel bio.
 
-Done when: Search Console shows "telegram media player" at position 1 to 2 and CTR on `/download/`
-above 10 per cent, 28 days after the change.
+Done when: CTR on `/download/` is above 10 per cent and "telegram player" moves from position 7.7
+into the top 5, 28 days after the change.
 
 ### Phase 2: answer the questions people ask (content)
 

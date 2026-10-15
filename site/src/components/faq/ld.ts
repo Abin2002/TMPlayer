@@ -83,6 +83,14 @@ export const faqLd = {
         "@type": "Answer",
         "text": "No. It is an unofficial, independent app, not affiliated with, endorsed by or connected to Telegram FZ-LLC. It uses TDLib, Telegram's own open source client library."
       }
+    },
+    {
+      "@type": "Question",
+      "name": "Is TMPlayer the same app as TMP - Telegram Media Player?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. TMP - Telegram Media Player is a different app from another developer, listed on Google Play since before TMPlayer existed. TMPlayer is a separate, open source app with its own code, made by dracu-lah, and its downloads come only from this site and its GitHub releases. Several apps call themselves a Telegram media player, so check the developer before you install one."
+      }
     }
   ]
 };

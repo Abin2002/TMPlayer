@@ -1,8 +1,8 @@
 # TMPlayer
 
-> TMPlayer (Telegram Media Player) is a free, open source, unofficial app that plays the videos in your own Telegram chats on Android TV, Fire TV, Android phones, Windows, macOS and Linux, while they are still downloading. You sign in to your own Telegram account by scanning a QR code; it has no server and no bot, the app talks to Telegram directly. It is not affiliated with Telegram.
+> TMPlayer is a free, open source, unofficial Telegram media player that plays the videos in your own Telegram chats on Android TV, Fire TV, Android phones, Windows, macOS and Linux, while they are still downloading. You sign in to your own Telegram account by scanning a QR code; it has no server and no bot, the app talks to Telegram directly. It is not affiliated with Telegram.
 
-Also called: Telegram Media Player, TMP. Licence: GPL-3.0.
+Licence: GPL-3.0. Not the same app as "TMP - Telegram Media Player" on Google Play (com.tmp.com), which is made by another developer; several apps describe themselves as a Telegram media player.
 
 Key facts:
 

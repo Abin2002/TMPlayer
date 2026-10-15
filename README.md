@@ -6,7 +6,7 @@
 
 <p align="center">Your Telegram videos, on the TV, in your hand and on your computer. Start watching before the download finishes.</p>
 
-<p align="center"><sub>TMPlayer (Telegram Media Player) is a free, open source, unofficial app that plays the videos in your own Telegram chats on Android TV, Fire TV, Android phones, Windows, macOS and Linux, while they are still downloading.</sub></p>
+<p align="center"><sub>TMPlayer is a free, open source, unofficial Telegram media player that plays the videos in your own Telegram chats on Android TV, Fire TV, Android phones, Windows, macOS and Linux, while they are still downloading.</sub></p>
 
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" />
