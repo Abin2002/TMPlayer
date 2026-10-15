@@ -152,6 +152,7 @@ object Backups {
         "preferred_subtitle_language" to Kind.TEXT,
         "player_haptics" to Kind.BOOL,
         "player_tap_plays_pauses" to Kind.BOOL,
+        "quality_habit" to Kind.TEXT,
         "reduce_motion" to Kind.BOOL,
         "remove_after_watching" to Kind.BOOL,
         "rewind_on_resume_ms" to Kind.LONG,
@@ -177,7 +178,8 @@ object Backups {
     /**
      * The memories that travel, by the prefix of their stored names: the audio and subtitle choice
      * per series, the speed per series, chat or topic, the subtitle and audio offsets per file, and
-     * the forum topic last opened per group. A new memory joins by adding its prefix here.
+     * the forum topic last opened per group and the copy chosen per video. A new memory joins by
+     * adding its prefix here.
      */
     val MEMORY: Map<String, Kind> = mapOf(
         "audio_" to Kind.TEXT,
@@ -186,6 +188,7 @@ object Backups {
         "speed_" to Kind.FLOAT,
         "delay_" to Kind.TEXT,
         "topic_" to Kind.LONG,
+        "copy_pick_" to Kind.TEXT,
     )
 
     private const val FAVOURITES_KEY = "favorite_chats"

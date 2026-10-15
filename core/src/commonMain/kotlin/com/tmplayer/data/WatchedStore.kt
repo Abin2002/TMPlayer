@@ -33,6 +33,9 @@ data class WatchedRecord(
     val watchedAt: Long,
     /** True when the viewer pressed "Mark as watched", false when the player saw the end. */
     val manual: Boolean,
+    /** The file's name and its caption's first line, as [ResumeRecord.fileName] keeps them; null on an older line. */
+    val fileName: String? = null,
+    val caption: String? = null,
 ) {
     val key: String get() = SettingsStore.progressKey(chatId, messageId)
 
@@ -47,7 +50,8 @@ data class WatchedRecord(
         thumbnailFileId = 0,
         miniThumbnail = null,
         date = 0,
-        fileName = title,
+        fileName = fileName ?: title,
+        caption = caption.orEmpty(),
     )
 
     internal fun encode(): String = listOf(
@@ -58,6 +62,9 @@ data class WatchedRecord(
         chatTitle.replace(SEP, ' '),
         sizeBytes.toString(),
         durationSec.toString(),
+        // Appended: a build that reads seven fields reads this line as it always did.
+        fileName.orEmpty().replace(SEP, ' '),
+        caption.orEmpty().replace(SEP, ' '),
     ).joinToString(SEP.toString())
 
     companion object {
@@ -75,6 +82,8 @@ data class WatchedRecord(
             durationSec = item.durationSec,
             watchedAt = watchedAt,
             manual = manual,
+            fileName = item.fileName.ifBlank { null },
+            caption = item.caption.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() },
         )
 
         /** Rebuilds a record, or null for a line this build cannot trust. */
@@ -97,6 +106,8 @@ data class WatchedRecord(
                 chatTitle = parts[4],
                 sizeBytes = parts[5].toLongOrNull() ?: 0L,
                 durationSec = parts[6].toIntOrNull() ?: 0,
+                fileName = parts.getOrNull(7)?.takeIf { it.isNotBlank() },
+                caption = parts.getOrNull(8)?.takeIf { it.isNotBlank() },
             )
         }
     }

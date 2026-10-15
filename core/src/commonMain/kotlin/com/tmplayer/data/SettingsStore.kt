@@ -1558,6 +1558,25 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
     }
 
     /**
+     * The copy of a film posted more than once to play without asking: [VideoCopies.pick] over
+     * [item]'s versions with this install's pick, places and habit. [item] itself when it has no
+     * other copies. The answer carries the same versions, so the page and the player can still
+     * list them.
+     */
+    suspend fun copyToPlay(item: MediaItem): MediaItem {
+        val copies = item.versions.takeIf { it.size > 1 } ?: return item
+        val started = continueWatching.first().mapTo(HashSet()) { progressKey(it.chatId, it.messageId) }
+        val picked = VideoCopies.pick(
+            copies,
+            chosen = copyPickFor(item),
+            started = { progressKey(it.chatId, it.messageId) in started },
+            habit = qualityHabitNow(),
+            language = com.tmplayer.player.TrackLanguages.normalise(trackPreferencesNow().audioLanguage),
+        ) ?: return item
+        return picked.asVersion(item)
+    }
+
+    /**
      * Remembers [copy] as the one to play for its video, from the copies list or the player's
      * quality button, so the next open plays it and the next episode is chosen like it.
      */
@@ -1778,19 +1797,16 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             if (positionMs < ResumeRules.MIN_POSITION_MS) return@edit
             // In the credits: there is nothing worth resuming.
             if (!ResumeRules.keeps(positionMs, durationMs)) {
-                val title = description?.let(ResumeRecord::titleOf) ?: ResumeRecord.titleOf(prefs[metaKey(chatId, messageId)])
+                val played = recordOf(prefs, chatId, messageId, description)?.toMediaItem()
                 prefs.remove(key)
                 prefs.remove(durationKey(chatId, messageId))
                 prefs.remove(metaKey(chatId, messageId))
-                // Finished in this copy is finished in all of them.
-                forgetCopies(prefs, chatId, messageId, title)
+                // Finished in this copy is finished in all of them: an older place in another copy
+                // would otherwise come back to Continue watching in its stead.
+                if (played != null) forgetCopies(prefs, played)
             } else {
-                // The place belongs to the video: once per copy per run, the other copies' places
-                // go, so a switch of quality carries the place along rather than leaving two.
-                if (claimed.add(progressKey(chatId, messageId))) {
-                    val title = description?.let(ResumeRecord::titleOf) ?: ResumeRecord.titleOf(prefs[metaKey(chatId, messageId)])
-                    forgetCopies(prefs, chatId, messageId, title)
-                }
+                // Only this copy's own line is written. The other copies keep theirs, and the
+                // newest of them is the one read (VideoCopies.resumeOf, HomeRows.foldCopies).
                 prefs[key] = positionMs
                 if (durationMs > 0) prefs[durationKey(chatId, messageId)] = durationMs
                 if (description != null) prefs[metaKey(chatId, messageId)] = description
@@ -1799,30 +1815,27 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         }
     }
 
-    /**
-     * The copies whose place this store has already handed to the one being written in this run,
-     * so the sweep in [forgetCopies] runs once per copy played rather than on every heartbeat.
-     */
-    private val claimed = java.util.Collections.synchronizedSet(HashSet<String>())
+    /** The record [description] describes for the ids, else the one stored for them, or null. */
+    private fun recordOf(prefs: Preferences, chatId: Long, messageId: Long, description: String?): ResumeRecord? {
+        val ids = progressKey(chatId, messageId)
+        return description?.let { ResumeRecord.decode(ids, it, 0L, 0L) }
+            ?: ResumeRecord.decode(ids, prefs[metaKey(chatId, messageId)], 0L, 0L)
+    }
 
     /**
-     * Removes the places of every other copy of the video [title] names, in this chat or any other:
-     * see [VideoCopies.superseded]. Nothing happens for a title that names no film or episode.
+     * Removes the places of every other copy of [played], in this chat or any other: whatever
+     * [VideoCopies.sameVideo] calls the same video. The copy's own line is the caller's to remove.
      */
-    private fun forgetCopies(prefs: MutablePreferences, chatId: Long, messageId: Long, title: String?) {
-        if (title.isNullOrBlank()) return
-        val stored = prefs.asMap().keys.mapNotNull { key ->
+    private fun forgetCopies(prefs: MutablePreferences, played: MediaItem) {
+        val copies = prefs.asMap().keys.mapNotNull { key ->
             val ids = key.name.removePrefixOrNull("meta_") ?: return@mapNotNull null
-            val parts = ids.split('_').takeIf { it.size == 2 } ?: return@mapNotNull null
-            val chat = parts[0].toLongOrNull() ?: return@mapNotNull null
-            val message = parts[1].toLongOrNull() ?: return@mapNotNull null
-            val other = ResumeRecord.titleOf(prefs[stringPreferencesKey(key.name)]) ?: return@mapNotNull null
-            Triple(chat, message, other)
-        }
-        for ((chat, message) in VideoCopies.superseded(chatId, messageId, title, stored)) {
-            prefs.remove(resumeKey(chat, message))
-            prefs.remove(durationKey(chat, message))
-            prefs.remove(metaKey(chat, message))
+            ResumeRecord.decode(ids, prefs[stringPreferencesKey(key.name)], 0L, 0L)
+        }.filter { it.messageId != played.messageId || it.chatId != played.chatId }
+            .filter { VideoCopies.sameVideo(played, it) }
+        for (copy in copies) {
+            prefs.remove(resumeKey(copy.chatId, copy.messageId))
+            prefs.remove(durationKey(copy.chatId, copy.messageId))
+            prefs.remove(metaKey(copy.chatId, copy.messageId))
         }
     }
 
@@ -1928,16 +1941,17 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /**
      * Forgets where one video was left: this copy's place, and the place of any other copy of the
-     * same video, since a place belongs to the video ([VideoCopies]). [title] names the video when
-     * this copy has no place of its own to read it from (Start over on a copy never played).
+     * same video ([VideoCopies.sameVideo]), so Start over or Mark as watched on one copy does not
+     * leave another's older place to resume from. [item] names the video when this copy has no
+     * place of its own to read it from (Start over on a copy never played).
      */
-    suspend fun clearResumePosition(chatId: Long, messageId: Long, title: String? = null) {
+    suspend fun clearResumePosition(chatId: Long, messageId: Long, item: MediaItem? = null) {
         prefs.edit {
-            val named = title ?: ResumeRecord.titleOf(it[metaKey(chatId, messageId)])
+            val played = item ?: recordOf(it, chatId, messageId, null)?.toMediaItem()
             it.remove(resumeKey(chatId, messageId))
             it.remove(durationKey(chatId, messageId))
             it.remove(metaKey(chatId, messageId))
-            forgetCopies(it, chatId, messageId, named)
+            if (played != null) forgetCopies(it, played)
         }
     }
 

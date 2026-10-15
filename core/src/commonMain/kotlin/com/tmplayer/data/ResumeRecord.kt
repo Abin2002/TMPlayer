@@ -27,6 +27,13 @@ data class ResumeRecord(
     val localPath: String? = null,
     /** The tracks and speed it was playing with, on a line written since resume kept them. */
     val state: ResumeState? = null,
+    /**
+     * The file's own name and the first line of its caption, on a line written since records kept
+     * them; null on an older line. [title] alone can be a caption's "S02E04" or a bare
+     * "harbour_notes_720p", and copies of one video ([VideoCopies]) are told apart by these.
+     */
+    val fileName: String? = null,
+    val caption: String? = null,
 ) {
     val fraction: Float
         get() = if (durationMs <= 0) 0f else (positionMs.toFloat() / durationMs).coerceIn(0f, 1f)
@@ -46,7 +53,8 @@ data class ResumeRecord(
         thumbnailFileId = 0,
         miniThumbnail = null,
         date = 0,
-        fileName = title,
+        fileName = fileName ?: title,
+        caption = caption.orEmpty(),
     )
 
     companion object {
@@ -63,6 +71,9 @@ data class ResumeRecord(
         /** And a [ResumeState] after the path, which is left empty when there is none. */
         private const val FIELDS_WITH_STATE = 8
 
+        /** And the file name and the caption's first line after the state, either left empty. */
+        private const val FIELDS_WITH_NAME = 10
+
         fun encode(
             fileId: Int,
             title: String,
@@ -72,6 +83,8 @@ data class ResumeRecord(
             updatedAt: Long,
             localPath: String? = null,
             state: ResumeState? = null,
+            fileName: String? = null,
+            caption: String? = null,
         ): String = buildList {
             add(fileId.toString())
             add(title.replace(SEP, ' '))
@@ -82,8 +95,15 @@ data class ResumeRecord(
             // Appended rather than slotted in, so a line without either is exactly what older
             // builds wrote and read, and a line with them is still read field for field up to here.
             val path = localPath?.takeIf { it.isNotBlank() }?.replace(SEP, ' ')
-            if (path != null || state != null) add(path.orEmpty())
-            if (state != null) add(state.encode())
+            val name = fileName?.takeIf { it.isNotBlank() }?.replace(SEP, ' ')
+            val line = caption?.lineSequence()?.map { it.trim() }?.firstOrNull { it.isNotEmpty() }?.replace(SEP, ' ')
+            val named = name != null || line != null
+            if (path != null || state != null || named) add(path.orEmpty())
+            if (state != null || named) add(state?.encode().orEmpty())
+            if (named) {
+                add(name.orEmpty())
+                add(line.orEmpty())
+            }
         }.joinToString(SEP.toString())
 
         /**
@@ -94,10 +114,6 @@ data class ResumeRecord(
          */
         fun updatedAtOf(encoded: String?): Long? =
             encoded?.split(SEP)?.getOrNull(5)?.toLongOrNull()
-
-        /** Just the title out of an encoded line, for matching copies of one video ([VideoCopies]). */
-        fun titleOf(encoded: String?): String? =
-            encoded?.split(SEP)?.getOrNull(1)?.takeIf { it.isNotBlank() }
 
         /**
          * Rebuilds a record, or returns null when the stored line cannot be trusted.
@@ -118,7 +134,11 @@ data class ResumeRecord(
             val messageId = ids[1].toLongOrNull() ?: return null
 
             val parts = encoded.split(SEP)
-            if (parts.size != FIELDS && parts.size != FIELDS_WITH_PATH && parts.size != FIELDS_WITH_STATE) return null
+            if (parts.size != FIELDS && parts.size != FIELDS_WITH_PATH && parts.size != FIELDS_WITH_STATE &&
+                parts.size != FIELDS_WITH_NAME
+            ) {
+                return null
+            }
             val fileId = parts[0].toIntOrNull() ?: return null
             if (fileId <= 0) return null
             val title = parts[1]
@@ -136,7 +156,9 @@ data class ResumeRecord(
                 durationMs = durationMs,
                 updatedAt = parts[5].toLongOrNull() ?: 0L,
                 localPath = parts.getOrNull(6)?.takeIf { it.isNotBlank() },
-                state = parts.getOrNull(7)?.let(ResumeState::decode),
+                state = parts.getOrNull(7)?.takeIf { it.isNotBlank() }?.let(ResumeState::decode),
+                fileName = parts.getOrNull(8)?.takeIf { it.isNotBlank() },
+                caption = parts.getOrNull(9)?.takeIf { it.isNotBlank() },
             )
         }
     }

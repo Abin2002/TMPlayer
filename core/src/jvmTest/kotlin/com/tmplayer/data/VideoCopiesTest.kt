@@ -35,7 +35,7 @@ class VideoCopiesTest {
 
     private fun describe(item: MediaItem, at: Long) = ResumeRecord.encode(
         fileId = item.fileId, title = item.title, chatTitle = "Films", sizeBytes = item.sizeBytes,
-        durationSec = item.durationSec, updatedAt = at,
+        durationSec = item.durationSec, updatedAt = at, fileName = item.fileName,
     )
 
     private val hd = video(1, 10, "Night.Train.2019.1080p.WEB-DL.x265.mkv")
@@ -66,47 +66,80 @@ class VideoCopiesTest {
     }
 
     @Test
-    fun `writing a place supersedes the other copies only`() {
-        val stored = listOf(Triple(1L, 10L, hd.title), Triple(2L, 50L, uhd.title), Triple(1L, 12L, other.title))
-        assertEquals(listOf(1L to 10L, 2L to 50L), VideoCopies.superseded(1, 11, sd.title, stored))
-        assertEquals(emptyList<Pair<Long, Long>>(), VideoCopies.superseded(1, 30, "Birthday highlights.mp4", stored))
+    fun `a place carries over as it is, scaled for another frame rate, and not into another cut`() {
+        assertEquals(600_000L, VideoCopies.carryOver(600_000, 7_200_000, 7_250_000))
+        // 25 fps against 23.976: four per cent shorter, so the same scene comes four per cent sooner.
+        assertEquals(576_000L, VideoCopies.carryOver(600_000, 7_200_000, 6_912_000))
+        assertNull(VideoCopies.carryOver(600_000, 7_200_000, 8_400_000))
+        assertEquals(600_000L, VideoCopies.carryOver(600_000, 0, 8_400_000))
+        val extended = video(3, 70, "Night.Train.2019.Extended.1080p.mkv").copy(durationSec = 9_000)
+        val records = listOf(ResumeRecord(1, 10, 10, hd.title, "Films", 0, 0, 1_200_000, 7_200_000, updatedAt = 100))
+        assertNull(VideoCopies.resumeOf(extended, records))
+    }
+
+    @Test
+    fun `old records only count as copies when their title names a year or an episode`() {
+        // A caption's bare code, or a name whose only tag is its quality, groups nothing.
+        val caption = ResumeRecord(1, 20, 20, "S02E04", "Shows", 0, 0, 600_000, 2_400_000, updatedAt = 1)
+        val plain = ResumeRecord(1, 21, 21, "Lecture 1080p", "Class", 0, 0, 600_000, 2_400_000, updatedAt = 2)
+        val plainToo = ResumeRecord(1, 22, 22, "Lecture 720p", "Class", 0, 0, 600_000, 2_400_000, updatedAt = 3)
+        assertNull(VideoCopies.keyOf(caption))
+        assertNull(VideoCopies.keyOf(plain))
+        assertEquals(listOf(caption, plain, plainToo), HomeRows.foldCopies(listOf(caption, plain, plainToo)))
+        // A record that kept its file name and caption is read like the video itself.
+        val named = caption.copy(fileName = "harbour_notes_720p.mkv", caption = "Harbour Notes S02E04")
+        assertEquals(VideoCopies.keyOf(named.toMediaItem()), VideoCopies.keyOf(named))
+        assertEquals("episode:harbour notes|2|4", VideoCopies.keyOf(named))
+    }
+
+    @Test
+    fun `a record keeps the file name and caption, and reads older lines as before`() {
+        val line = ResumeRecord.encode(9, "S02E04", "Shows", 1, 2, 3, fileName = "harbour_notes_720p.mkv", caption = "Harbour Notes S02E04\nmore")
+        val record = ResumeRecord.decode("1_2", line, 10, 20)!!
+        assertEquals("harbour_notes_720p.mkv", record.fileName)
+        assertEquals("Harbour Notes S02E04", record.caption)
+        assertNull(record.state)
+        val old = ResumeRecord.decode("1_2", ResumeRecord.encode(9, "S02E04", "Shows", 1, 2, 3), 10, 20)!!
+        assertNull(old.fileName)
+        assertEquals("S02E04", old.toMediaItem().fileName)
     }
 
     // ---- the store, and what was stored before ----------------------------------------------
 
     @Test
-    fun `places written before the change stay, and the newest wins on open`() = runBlocking {
+    fun `places stay per copy, and the newest wins on open`() = runBlocking {
         val settings = store()
-        // Two copies of one film, both with a place, as earlier builds left them: written raw,
-        // since a build with this change never leaves two.
+        // Two copies of one film, both with a place, as earlier builds left them.
         settings.restoreEntries {
             mapOf(
                 "resume_1_10" to 1_200_000L, "duration_1_10" to 7_200_000L, "meta_1_10" to describe(hd, 100),
                 "resume_2_50" to 3_000_000L, "duration_2_50" to 7_200_000L, "meta_2_50" to describe(uhd, 200),
             )
         }
-        // Nothing is dropped by reading: both places are still there.
+        // Nothing is moved or dropped by reading: both places are still there.
         assertEquals(2, settings.continueWatching.first().size)
         assertEquals(3_000_000L, settings.resumeRecordFor(sd)?.positionMs)
         assertEquals(3_000_000L, settings.resumeRecordFor(hd)?.positionMs)
         assertEquals(3_000_000L - ResumeRewind.DEFAULT_MS, settings.resumeStartFor(hd))
         assertNull(settings.resumeRecordFor(other))
-        // The first place written for the video then takes over from both.
-        settings.saveResumePosition(1, 10, 3_100_000, 7_200_000, describe(hd, 300))
-        assertEquals(listOf(10L), settings.continueWatching.first().map { it.messageId })
+        // Continue watching shows the film once, at its newest place.
+        val folded = HomeRows.foldCopies(settings.continueWatching.first())
+        assertEquals(listOf(50L), folded.map { it.messageId })
     }
 
     @Test
-    fun `switching copy mid play moves the place and leaves one card`() = runBlocking {
+    fun `switching copy mid play carries the place and leaves one card`() = runBlocking {
         val settings = store()
         settings.saveResumePosition(1, 10, 1_800_000, 7_200_000, describe(hd, 100))
         settings.saveResumePosition(1, 12, 600_000, 7_200_000, describe(other, 110))
         // The viewer switches to the 720p at 30:00: it opens there, then carries on.
         assertEquals(1_800_000L, settings.resumeRecordFor(sd)?.positionMs)
         settings.saveResumePosition(1, 11, 1_810_000, 7_200_000, describe(sd, 120))
-        val left = settings.continueWatching.first()
-        assertEquals(listOf(11L, 12L), left.map { it.messageId })
+        val folded = HomeRows.foldCopies(settings.continueWatching.first())
+        assertEquals(listOf(11L, 12L), folded.map { it.messageId })
         assertEquals(1_810_000L, settings.resumeRecordFor(hd)?.positionMs)
+        // The 1080p's own line is still there, untouched.
+        assertEquals(1_800_000L, settings.resumePosition(1, 10))
     }
 
     @Test
@@ -114,13 +147,14 @@ class VideoCopiesTest {
         val settings = store()
         settings.saveResumePosition(1, 10, 1_800_000, 7_200_000, describe(hd, 100))
         settings.saveResumePosition(2, 50, 2_000_000, 7_200_000, describe(uhd, 200))
-        settings.clearResumePosition(sd.chatId, sd.messageId, sd.title)
-        assertEquals(emptyList<ResumeRecord>(), settings.continueWatching.first())
+        settings.saveResumePosition(1, 12, 600_000, 7_200_000, describe(other, 210))
+        settings.clearResumePosition(sd.chatId, sd.messageId, sd)
+        assertEquals(listOf(12L), settings.continueWatching.first().map { it.messageId })
 
         settings.saveResumePosition(1, 10, 1_800_000, 7_200_000, describe(hd, 300))
         // The credits of the 4K copy.
         settings.saveResumePosition(2, 50, 7_000_000, 7_200_000, describe(uhd, 400))
-        assertEquals(emptyList<ResumeRecord>(), settings.continueWatching.first())
+        assertEquals(listOf(12L), settings.continueWatching.first().map { it.messageId })
     }
 
     // ---- which copy plays --------------------------------------------------------------------
@@ -142,6 +176,20 @@ class VideoCopiesTest {
         assertEquals(newest, VideoCopies.pick(remote))
         // A pick that no longer exists (the message was deleted) is passed over.
         assertEquals(full, VideoCopies.pick(remote, chosen = "1:999", habit = habit))
+    }
+
+    @Test
+    fun `the viewer's audio language comes before the usual quality, and leads the next episode`() {
+        val tamil = video(1, 30, "Film.2020.Tamil.720p.mkv", date = 100)
+        val hindi = video(1, 31, "Film.2020.Hindi.1080p.mkv", date = 200)
+        val habit = QualityHabit(mapOf(1080 to 5))
+        assertEquals(tamil, VideoCopies.pick(listOf(tamil, hindi), habit = habit, language = "ta"))
+        assertEquals(hindi, VideoCopies.pick(listOf(tamil, hindi), habit = habit, language = "fr"))
+        val next = listOf(
+            video(1, 40, "Show.S01E02.Hindi.720p.mkv"),
+            video(1, 41, "Show.S01E02.Tamil.1080p.mkv"),
+        )
+        assertEquals(41L, EpisodeCopies.closest(video(1, 39, "Show.S01E01.Tamil.720p.mkv"), next)?.messageId)
     }
 
     @Test
