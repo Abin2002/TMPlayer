@@ -326,7 +326,13 @@ fun MediaDetailPanel(
             }
         }
         if (others.isNotEmpty()) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Centred under Play on a phone, as on a video's page and a show's.
+            val centred = isTouch()
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, if (centred) Alignment.CenterHorizontally else Alignment.Start),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s)) }
             }
         }

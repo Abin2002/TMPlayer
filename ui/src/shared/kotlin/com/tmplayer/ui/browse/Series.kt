@@ -835,7 +835,12 @@ fun SeriesPanel(
                 } else {
                     hero(if (wide) Modifier else Modifier.fillMaxWidth())
                     if (others.isNotEmpty()) {
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // Under a full width Play, centred on it, as on a video's page.
+                        FlowRow(
+                            Modifier.then(if (wide) Modifier else Modifier.fillMaxWidth()),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, if (wide) Alignment.Start else Alignment.CenterHorizontally),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
                             others.forEach { (label, icon, run) -> RoundAction(label, icon, run, short = roundLabel(label, s)) }
                         }
                     }
