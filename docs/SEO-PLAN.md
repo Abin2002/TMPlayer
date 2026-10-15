@@ -65,8 +65,8 @@ What this changes:
   `llms.txt` says the same. That earns the clicks honestly and keeps clear of passing off.
 - **Every competitor is on Google Play; TMPlayer is not.** Play listings rank for app queries and
   carry ratings and install counts that a website cannot show. A Play (and Amazon Appstore)
-  listing is the largest gap in reach, and a product decision for the user, not a site change
-  (`docs/distribution/` has the drafts).
+  listing would be the largest gap in reach, but it is not planned for now (user, 2026-10-15), so
+  the site carries the weight: the download page, the install steps and the FAQ.
 - **A fair comparison table** in the "without casting" guide can name these apps by what they
   are (a full Telegram client, a player, a casting tool) and what each needs, without claims about
   their quality. Facts to be checked against each listing on the day it is written.
@@ -277,8 +277,10 @@ Keep what moved, revert what did not.
    proper canonical" rows, exported. It shows whether the translated pages are indexed at all.
 3. **The Vercel firewall settings** (Firewall, Bot Protection and Attack Challenge Mode: on or off).
 4. **Bing**: the Queries and Pages tabs of Search Performance, and the AI Performance export once it has a month of data.
-5. **Decisions**: training bots allowed (recommended) or not; Burmese and Malay worth translating;
-   the header button and the phone bar approved as described.
+5. **Decisions** (user, 2026-10-15: "do everything that's best"): training bots stay allowed;
+   smaller image copies for phones, originals kept; the header button, phone bar and download
+   panel built as described; Claude translates the catalogs directly; no Google Play listing for
+   now.
 
 ## Sources
 
