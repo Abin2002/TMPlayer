@@ -564,6 +564,7 @@
     "phone_invalid": "لا يتعرف Telegram على هذا الرقم. أدرج رمز الدولة، مثل +44.",
     "signed_out": "سجّل Telegram خروج هذا الجهاز. سجّل الدخول مجددًا للمتابعة.",
     "tdlib_parameters": "رفضت TDLib معاملاتها: {message}",
+    "tdlib_unavailable": "تعذّر تشغيل TDLib، وهو جزء TMPlayer الذي يتواصل مع Telegram، على هذا الجهاز. يُرجى الإبلاغ عن ذلك مع هذه الرسالة: {message}",
     "unsupported_sign_in_step": "يحتاج هذا الحساب إلى خطوة لا يستطيع TMPlayer تنفيذها. أكمل تسجيل الدخول في تطبيق Telegram أولًا، ثم حاول مجددًا.",
     "wrong_code": "رمز خاطئ",
     "wrong_password": "كلمة مرور خاطئة"
@@ -1768,6 +1769,7 @@
     "sending": "جارٍ الإرسال…",
     "sign_in": "تسجيل الدخول",
     "start_over": "البدء من جديد",
+    "unreachable": "ما زال الوصول إلى Telegram متعذرًا. تحقق من اتصالك بالإنترنت ومن أي جدار حماية أو VPN قد يحجبه، ثم حاول مجددًا.",
     "use_phone": "تسجيل الدخول برقم الهاتف",
     "use_qr": "استخدم رمز QR بدلًا من ذلك"
   },
@@ -2018,6 +2020,7 @@
     "could_not_save": "تعذّر حفظ التنزيل",
     "damaged": "كان التنزيل تالفًا ولم يُثبَّت.",
     "did_not_finish": "لم يكتمل التحديث.",
+    "did_not_install": "لم يُثبَّت التحديث إلى TMPlayer {version}. تسجيل دخولك وإعداداتك محفوظة. نزّل المثبّت من tmplayer.org وشغّله لإكمال التحديث.",
     "downloading": "جارٍ تنزيل {size} من GitHub. أبقِ هذه الشاشة ظاهرة.",
     "downloading_percent": "جارٍ التنزيل، {percent}",
     "downloading_plain": "جارٍ التنزيل",

@@ -564,6 +564,7 @@
     "phone_invalid": "Telegram ne reconnaît pas ce numéro. Indiquez l'indicatif du pays, par exemple +33.",
     "signed_out": "Telegram a déconnecté cet appareil. Reconnectez-vous pour continuer.",
     "tdlib_parameters": "TDLib a rejeté ses paramètres : {message}",
+    "tdlib_unavailable": "TDLib, la partie de TMPlayer qui communique avec Telegram, n'a pas pu démarrer sur cet appareil. Signalez-le avec ce message : {message}",
     "unsupported_sign_in_step": "Ce compte nécessite une étape que TMPlayer ne peut pas effectuer. Terminez d'abord la connexion dans l'application Telegram, puis réessayez.",
     "wrong_code": "Code incorrect",
     "wrong_password": "Mot de passe incorrect"
@@ -1768,6 +1769,7 @@
     "sending": "Envoi…",
     "sign_in": "Se connecter",
     "start_over": "Recommencer",
+    "unreachable": "Toujours impossible de joindre Telegram. Vérifiez votre connexion internet, ainsi qu'un pare-feu ou un VPN qui pourrait la bloquer, puis réessayez.",
     "use_phone": "Se connecter par numéro de téléphone",
     "use_qr": "Utiliser plutôt un QR code"
   },
@@ -2018,6 +2020,7 @@
     "could_not_save": "Impossible d'enregistrer le téléchargement",
     "damaged": "Le téléchargement était endommagé et n'a pas été installé.",
     "did_not_finish": "La mise à jour ne s'est pas terminée.",
+    "did_not_install": "La mise à jour vers TMPlayer {version} ne s'est pas installée. Votre connexion et vos réglages sont conservés. Téléchargez le programme d'installation sur tmplayer.org et lancez-le pour terminer.",
     "downloading": "Téléchargement de {size} depuis GitHub. Laissez cet écran affiché.",
     "downloading_percent": "Téléchargement, {percent}",
     "downloading_plain": "Téléchargement",

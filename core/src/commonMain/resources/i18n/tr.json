@@ -564,6 +564,7 @@
     "phone_invalid": "Bu numara Telegram'ın tanıdığı bir numara değil. Ülke kodunu ekle, örneğin +90.",
     "signed_out": "Telegram bu cihazın oturumunu kapattı. Devam etmek için yeniden oturum aç.",
     "tdlib_parameters": "TDLib parametrelerini reddetti: {message}",
+    "tdlib_unavailable": "TMPlayer'ın Telegram ile konuşan parçası TDLib bu cihazda başlatılamadı. Lütfen şu mesajla bildir: {message}",
     "unsupported_sign_in_step": "Bu hesap, TMPlayer'ın yapamadığı bir adım gerektiriyor. Önce Telegram uygulamasında oturum açmayı tamamla, sonra tekrar dene.",
     "wrong_code": "Yanlış kod",
     "wrong_password": "Yanlış parola"
@@ -1768,6 +1769,7 @@
     "sending": "Gönderiliyor…",
     "sign_in": "Oturum aç",
     "start_over": "Baştan başla",
+    "unreachable": "Telegram'a hâlâ ulaşılamıyor. İnternet bağlantını ve onu engelliyor olabilecek bir güvenlik duvarı veya VPN'i kontrol et, sonra tekrar dene.",
     "use_phone": "Telefon numarasıyla giriş yap",
     "use_qr": "Bunun yerine QR kod kullan"
   },
@@ -2018,6 +2020,7 @@
     "could_not_save": "İndirme kaydedilemedi",
     "damaged": "İndirme hasarlıydı ve kurulmadı.",
     "did_not_finish": "Güncelleme tamamlanmadı.",
+    "did_not_install": "TMPlayer {version} güncellemesi yüklenmedi. Oturumun ve ayarların korunuyor. Tamamlamak için yükleyiciyi tmplayer.org'dan indirip çalıştır.",
     "downloading": "GitHub'dan {size} indiriliyor. Bunu ekranda tut.",
     "downloading_percent": "İndiriliyor, {percent}",
     "downloading_plain": "İndiriliyor",

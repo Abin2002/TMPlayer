@@ -564,6 +564,7 @@
     "phone_invalid": "Telegram 不認得這個號碼。請加上國碼，例如 +886。",
     "signed_out": "Telegram 已讓這台裝置登出。請重新登入以繼續。",
     "tdlib_parameters": "TDLib 拒絕了它的參數：{message}",
+    "tdlib_unavailable": "TDLib（TMPlayer 中與 Telegram 溝通的部分）無法在這台裝置上啟動。請附上以下訊息回報：{message}",
     "unsupported_sign_in_step": "這個帳號需要 TMPlayer 無法完成的步驟。請先在 Telegram 應用程式中完成登入，然後再試一次。",
     "wrong_code": "驗證碼錯誤",
     "wrong_password": "密碼錯誤"
@@ -1768,6 +1769,7 @@
     "sending": "傳送中…",
     "sign_in": "登入",
     "start_over": "重新開始",
+    "unreachable": "仍然無法連上 Telegram。請檢查你的網路連線，以及可能阻擋連線的防火牆或 VPN，然後再試一次。",
     "use_phone": "用電話號碼登入",
     "use_qr": "改用 QR 碼"
   },
@@ -2018,6 +2020,7 @@
     "could_not_save": "無法儲存下載內容",
     "damaged": "下載的檔案已損毀，未進行安裝。",
     "did_not_finish": "更新未完成。",
+    "did_not_install": "更新到 TMPlayer {version} 沒有安裝成功。你的登入和設定都已保留。請從 tmplayer.org 下載安裝程式並執行以完成更新。",
     "downloading": "正在從 GitHub 下載 {size}。請保持此畫面開啟。",
     "downloading_percent": "下載中，{percent}",
     "downloading_plain": "下載中",

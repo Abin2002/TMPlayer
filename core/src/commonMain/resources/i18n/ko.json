@@ -564,6 +564,7 @@
     "phone_invalid": "Telegram에서 인식하지 못하는 번호예요. +82처럼 국가 번호를 포함해 주세요.",
     "signed_out": "Telegram에서 이 기기를 로그아웃했어요. 계속하려면 다시 로그인해 주세요.",
     "tdlib_parameters": "TDLib에서 매개변수를 거부했어요: {message}",
+    "tdlib_unavailable": "Telegram과 통신하는 TMPlayer의 구성 요소 TDLib을 이 기기에서 시작하지 못했어요. 다음 메시지와 함께 알려 주세요: {message}",
     "unsupported_sign_in_step": "이 계정에는 TMPlayer가 처리할 수 없는 단계가 필요해요. 먼저 Telegram 앱에서 로그인을 마친 다음 다시 시도해 주세요.",
     "wrong_code": "코드가 올바르지 않아요",
     "wrong_password": "비밀번호가 올바르지 않아요"
@@ -1768,6 +1769,7 @@
     "sending": "보내는 중…",
     "sign_in": "로그인",
     "start_over": "처음부터 다시",
+    "unreachable": "아직 Telegram에 연결할 수 없어요. 인터넷 연결과, 연결을 막고 있을 수 있는 방화벽이나 VPN을 확인한 뒤 다시 시도해 주세요.",
     "use_phone": "전화번호로 로그인",
     "use_qr": "대신 QR 코드 사용"
   },
@@ -2018,6 +2020,7 @@
     "could_not_save": "다운로드를 저장할 수 없었어요",
     "damaged": "다운로드가 손상되어 설치하지 않았어요.",
     "did_not_finish": "업데이트를 마치지 못했어요.",
+    "did_not_install": "TMPlayer {version} 업데이트가 설치되지 않았어요. 로그인과 설정은 그대로 남아 있어요. tmplayer.org에서 설치 프로그램을 내려받아 실행하면 마무리돼요.",
     "downloading": "GitHub에서 {size}를 다운로드하는 중이에요. 이 화면을 유지하세요.",
     "downloading_percent": "다운로드 중, {percent}",
     "downloading_plain": "다운로드 중",

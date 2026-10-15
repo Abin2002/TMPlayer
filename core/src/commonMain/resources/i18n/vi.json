@@ -564,6 +564,7 @@
     "phone_invalid": "Telegram không nhận ra số này. Hãy thêm mã quốc gia, ví dụ +84.",
     "signed_out": "Telegram đã đăng xuất thiết bị này. Hãy đăng nhập lại để tiếp tục.",
     "tdlib_parameters": "TDLib từ chối các tham số: {message}",
+    "tdlib_unavailable": "TDLib, phần của TMPlayer giao tiếp với Telegram, không khởi động được trên thiết bị này. Hãy báo lỗi kèm thông báo: {message}",
     "unsupported_sign_in_step": "Tài khoản này cần một bước mà TMPlayer không thực hiện được. Hãy hoàn tất đăng nhập trong ứng dụng Telegram trước, rồi thử lại.",
     "wrong_code": "Sai mã",
     "wrong_password": "Sai mật khẩu"
@@ -1768,6 +1769,7 @@
     "sending": "Đang gửi…",
     "sign_in": "Đăng nhập",
     "start_over": "Bắt đầu lại",
+    "unreachable": "Vẫn không kết nối được tới Telegram. Hãy kiểm tra kết nối internet, cùng tường lửa hoặc VPN có thể đang chặn nó, rồi thử lại.",
     "use_phone": "Đăng nhập bằng số điện thoại",
     "use_qr": "Dùng mã QR"
   },
@@ -2018,6 +2020,7 @@
     "could_not_save": "Không lưu được bản tải",
     "damaged": "Bản tải bị hỏng và chưa được cài đặt.",
     "did_not_finish": "Cập nhật chưa hoàn tất.",
+    "did_not_install": "Bản cập nhật lên TMPlayer {version} chưa được cài. Đăng nhập và cài đặt của bạn vẫn được giữ. Hãy tải trình cài đặt từ tmplayer.org và chạy nó để hoàn tất.",
     "downloading": "Đang tải {size} từ GitHub. Hãy giữ màn hình này.",
     "downloading_percent": "Đang tải, {percent}",
     "downloading_plain": "Đang tải",

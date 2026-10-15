@@ -564,6 +564,7 @@
     "phone_invalid": "Telegramが認識できない番号です。+81のように国番号を付けてください。",
     "signed_out": "Telegramからこの端末がログアウトされました。続けるには、もう一度ログインしてください。",
     "tdlib_parameters": "TDLibがパラメータを拒否しました: {message}",
+    "tdlib_unavailable": "Telegramと通信するTMPlayerの部品TDLibを、この端末で起動できませんでした。次のメッセージを添えて報告してください: {message}",
     "unsupported_sign_in_step": "このアカウントには、TMPlayerでは行えない手順が必要です。先にTelegramアプリでログインを完了してから、もう一度試してください。",
     "wrong_code": "コードが違います",
     "wrong_password": "パスワードが違います"
@@ -1768,6 +1769,7 @@
     "sending": "送信中…",
     "sign_in": "ログイン",
     "start_over": "最初からやり直す",
+    "unreachable": "まだTelegramに接続できません。インターネット接続と、接続をブロックしている可能性のあるファイアウォールやVPNを確認してから、もう一度試してください。",
     "use_phone": "電話番号でログイン",
     "use_qr": "代わりにQRコードを使う"
   },
@@ -2018,6 +2020,7 @@
     "could_not_save": "ダウンロードを保存できませんでした",
     "damaged": "ダウンロードが破損していたため、インストールされませんでした。",
     "did_not_finish": "アップデートが完了しませんでした。",
+    "did_not_install": "TMPlayer {version}へのアップデートをインストールできませんでした。サインインと設定はそのまま残っています。tmplayer.orgからインストーラーをダウンロードして実行し、完了してください。",
     "downloading": "GitHubから{size}をダウンロード中です。この画面を表示したままにしてください。",
     "downloading_percent": "ダウンロード中、{percent}",
     "downloading_plain": "ダウンロード中",

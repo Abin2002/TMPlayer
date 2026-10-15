@@ -564,6 +564,7 @@
     "phone_invalid": "Telegram non riconosce quel numero. Includi il prefisso internazionale, come +39.",
     "signed_out": "Telegram ha disconnesso questo dispositivo. Accedi di nuovo per continuare.",
     "tdlib_parameters": "TDLib ha rifiutato i suoi parametri: {message}",
+    "tdlib_unavailable": "TDLib, la parte di TMPlayer che comunica con Telegram, non è riuscita ad avviarsi su questo dispositivo. Segnalalo con questo messaggio: {message}",
     "unsupported_sign_in_step": "Questo account richiede un passaggio che TMPlayer non può eseguire. Completa prima l'accesso nell'app Telegram, poi riprova.",
     "wrong_code": "Codice errato",
     "wrong_password": "Password errata"
@@ -1768,6 +1769,7 @@
     "sending": "Invio…",
     "sign_in": "Accedi",
     "start_over": "Ricomincia",
+    "unreachable": "Telegram ancora non è raggiungibile. Controlla la connessione internet e un eventuale firewall o VPN che potrebbe bloccarla, poi riprova.",
     "use_phone": "Accedi con il numero di telefono",
     "use_qr": "Usa invece un codice QR"
   },
@@ -2018,6 +2020,7 @@
     "could_not_save": "Impossibile salvare il download",
     "damaged": "Il download era danneggiato e non è stato installato.",
     "did_not_finish": "L'aggiornamento non è terminato.",
+    "did_not_install": "L'aggiornamento a TMPlayer {version} non è stato installato. L'accesso e le impostazioni restano. Scarica il programma di installazione da tmplayer.org ed eseguilo per completare.",
     "downloading": "Download di {size} da GitHub. Tieni questa schermata aperta.",
     "downloading_percent": "Download, {percent}",
     "downloading_plain": "Download",

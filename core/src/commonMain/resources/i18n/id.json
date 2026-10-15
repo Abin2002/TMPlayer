@@ -564,6 +564,7 @@
     "phone_invalid": "Nomor itu tidak dikenali Telegram. Sertakan kode negara, seperti +62.",
     "signed_out": "Telegram mengeluarkan perangkat ini. Masuk lagi untuk melanjutkan.",
     "tdlib_parameters": "TDLib menolak parameternya: {message}",
+    "tdlib_unavailable": "TDLib, bagian TMPlayer yang berbicara dengan Telegram, tidak bisa dimulai di perangkat ini. Laporkan dengan pesan ini: {message}",
     "unsupported_sign_in_step": "Akun ini membutuhkan langkah yang tidak bisa dilakukan TMPlayer. Selesaikan dulu proses masuk di aplikasi Telegram, lalu coba lagi.",
     "wrong_code": "Kode salah",
     "wrong_password": "Kata sandi salah"
@@ -1768,6 +1769,7 @@
     "sending": "Mengirim…",
     "sign_in": "Masuk",
     "start_over": "Mulai lagi",
+    "unreachable": "Masih tidak bisa menjangkau Telegram. Periksa koneksi internet, serta firewall atau VPN yang mungkin memblokirnya, lalu coba lagi.",
     "use_phone": "Masuk dengan nomor telepon",
     "use_qr": "Pakai kode QR saja"
   },
@@ -2018,6 +2020,7 @@
     "could_not_save": "Tidak bisa menyimpan unduhan",
     "damaged": "Unduhan rusak dan tidak dipasang.",
     "did_not_finish": "Pembaruan tidak selesai.",
+    "did_not_install": "Pembaruan ke TMPlayer {version} tidak terpasang. Login dan pengaturanmu tetap tersimpan. Unduh penginstal dari tmplayer.org dan jalankan untuk menyelesaikannya.",
     "downloading": "Mengunduh {size} dari GitHub. Biarkan ini tetap di layar.",
     "downloading_percent": "Mengunduh, {percent}",
     "downloading_plain": "Mengunduh",
