@@ -8,6 +8,7 @@ export const PAGES = {
   download: 'download/',
   install: 'install/',
   android_tv: 'android-tv/',
+  desktop: 'desktop/',
   fire_tv: 'fire-tv/',
   faq: 'faq/',
   formats: 'formats/',

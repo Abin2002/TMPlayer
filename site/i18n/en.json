@@ -190,7 +190,8 @@
     "telegram_on_your_tv_bb50": "Telegram on your TV without casting",
     "watch_telegram_videos_on_3a48": "Watch Telegram videos on a television without casting or mirroring your phone: a player on the TV itself signs in to your account and streams the videos in your chats.",
     "is_tmplayer_the_same_a78e": "Is TMPlayer the same app as TMP - Telegram Media Player?",
-    "no_tmp_telegram_media_b63c": "No. TMP - Telegram Media Player is a different app from another developer, listed on Google Play since before TMPlayer existed. TMPlayer is a separate, open source app with its own code, made by dracu-lah, and its downloads come only from this site and its GitHub releases. Several apps call themselves a Telegram media player, so check the developer before you install one."
+    "no_tmp_telegram_media_b63c": "No. TMP - Telegram Media Player is a different app from another developer, listed on Google Play since before TMPlayer existed. TMPlayer is a separate, open source app with its own code, made by dracu-lah, and its downloads come only from this site and its GitHub releases. Several apps call themselves a Telegram media player, so check the developer before you install one.",
+    "windows_macos_and_linux_218b": "Windows, macOS and Linux"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer features: stream Telegram videos on TV and PC",
@@ -1037,6 +1038,31 @@
     "tmplayer_does_not_provide_media__a1": "The questions",
     "watch_telegram_videos_on_a": "Watch Telegram videos on a TV without casting or mirroring your phone: a player on the TV signs in to your account and streams the videos in your chats.",
     "telegram_on_your_tv_without_2": "Telegram on your TV without casting"
+  },
+  "desktop": {
+    "title": "TMPlayer: Telegram video player for Windows, Mac and Linux",
+    "description": "A free, unofficial Telegram video player for Windows, macOS and Linux. Sign in with a QR code and play the videos in your chats through mpv while they download.",
+    "a_telegram_video_player": "A Telegram video player {em1}",
+    "a_telegram_video_player__em1": "for Windows, Mac and Linux",
+    "lede": "TMPlayer is a free, open source and unofficial Telegram media player. On a computer it signs in to your own account, shows the videos in your chats as posters and plays them while they download.",
+    "the_app_on_a_computer": "The app on a computer",
+    "built_with": "It is built with Compose Multiplatform and plays through mpv, which comes inside the app: there is nothing else to install.",
+    "sign_in_and_updates": "Signing in and updates",
+    "updates": "It looks for a new release when it starts and every six hours, and installs nothing until you press the button. On Windows the new MSI installs in place, on Linux the AppImage replaces itself, and on a Mac it opens the release page. Every download is checked against its SHA-256 first.",
+    "install_it": "Install it on your computer",
+    "win_body": "Paste this line into PowerShell: it downloads the MSI from GitHub, checks it against the published checksum and installs TMPlayer for your user. Or download the MSI and open it yourself.",
+    "linux_body": "One AppImage for any distribution: make it executable and open it. On Arch, build the PKGBUILD in the repository with {code1}.",
+    "every_step": "Every step",
+    "keys_note": "On a Mac, Cmd takes the place of Ctrl. Press {kbd1} in the player for all of them, or see {a1}.",
+    "keys_note__a1": "the full table",
+    "yes_mac": "Macs with Apple Silicon on macOS 26 or newer, as a preview",
+    "yes_linux": "Linux on 64-bit x86, any distribution with glibc 2.38 or newer",
+    "no_iphone": "No iPhone or iPad version.",
+    "no_intel": "Not Intel Macs, and not a macOS older than 26.",
+    "no_arm_linux": "Not Linux on ARM, such as a Raspberry Pi: 64-bit x86 only for now.",
+    "star_lede": "A desktop app that grew out of a TV app. If it plays your Telegram videos well, a star tells the next person it is worth a try.",
+    "features_link": "{a1}: installing, signing in, updates and the computers it runs on.",
+    "features_link__a1": "All about the desktop app"
   },
   "js": {
     "kind_universal_apk": "Universal APK",

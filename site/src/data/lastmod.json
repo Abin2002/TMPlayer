@@ -33,7 +33,7 @@
   },
   {
     "path": "/features/",
-    "lastmod": "2026-10-14",
+    "lastmod": "2026-10-15",
     "changefreq": "monthly",
     "priority": "0.9",
     "images": [
@@ -148,6 +148,26 @@
       {
         "loc": "https://tmplayer.org/screenshots/tv-next-episode.webp",
         "title": "The next episode countdown in the TMPlayer player on Android TV"
+      }
+    ]
+  },
+  {
+    "path": "/desktop/",
+    "lastmod": "2026-10-15",
+    "changefreq": "monthly",
+    "priority": "0.8",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-grid.webp",
+        "title": "Playable videos in a Telegram chat, in the TMPlayer desktop app on Windows, macOS and Linux"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-grid-light.webp",
+        "title": "Playable videos in a Telegram chat, in the TMPlayer desktop app, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-player.webp",
+        "title": "The TMPlayer desktop player, played through mpv, with its subtitle, audio and speed controls"
       }
     ]
   },
