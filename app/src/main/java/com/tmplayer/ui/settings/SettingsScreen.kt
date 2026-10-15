@@ -129,7 +129,6 @@ import com.tmplayer.data.SizeFilter
 import com.tmplayer.data.StorageSplit
 import com.tmplayer.data.SupportReminder
 import com.tmplayer.data.Td
-import com.tmplayer.ui.browse.DefaultGroups
 import com.tmplayer.data.ThemeChoice
 import com.tmplayer.data.UiScale
 import com.tmplayer.data.UpdateWords
@@ -207,9 +206,6 @@ private sealed interface Prompt {
     data object ClearWatched : Prompt
     data object ClearFavorites : Prompt
     data object SignOut : Prompt
-
-    /** "Only my folders" going on, with the favourites it strands counted. Off needs no prompt. */
-    data object HideDefaultGroups : Prompt
 
     /** A backup file picked, with what restoring it would change. */
     data class Restore(val plan: RestorePlan) : Prompt
@@ -303,7 +299,6 @@ fun SettingsScreen(
     val storedFavorites by settings.favorites.collectAsStateWithLifecycle(initialValue = emptySet())
     val allowedChats by com.tmplayer.data.ChatGate.allowed.collectAsStateWithLifecycle()
     val favorites = remember(storedFavorites, allowedChats) { com.tmplayer.data.KidsLock.favourites(storedFavorites, allowedChats) }
-    val defaultsHidden by settings.hideDefaultGroups.collectAsStateWithLifecycle(initialValue = false)
     val liveFolders by Td.folders.collectAsStateWithLifecycle()
     val folders = accountFolders ?: liveFolders
     val lastChatId by settings.lastChatId.collectAsStateWithLifecycle(initialValue = 0L)
@@ -966,27 +961,6 @@ fun SettingsScreen(
                         subtitle = s.formatter.sizeRange(minSize, maxSize),
                         icon = TmIcons.List,
                         onClick = { editingSizes = true },
-                    )
-                }
-
-                // Telegram's default groups, Chats and Saved Messages, off the sidebar. On asks first
-                // (the favourites it strands are counted); off is one press back and asks nothing.
-                item {
-                    ToggleRow(
-                        title = s.groupsSetting,
-                        subtitle = DefaultGroups.settingDetail(defaultsHidden, folders.size),
-                        icon = TmIcons.Folder,
-                        checked = defaultsHidden,
-                        onToggle = {
-                            if (defaultsHidden) {
-                                scope.launch {
-                                    settings.setHideDefaultGroups(false)
-                                    toast(s.groupsShownToast)
-                                }
-                            } else {
-                                prompt = Prompt.HideDefaultGroups
-                            }
-                        },
                     )
                 }
 
@@ -1846,29 +1820,10 @@ fun SettingsScreen(
             onDismiss = { prompt = null },
         )
 
-        Prompt.HideDefaultGroups -> {
-            val unreachable = remember(favorites, chats) { DefaultGroups.unreachableFavorites(favorites, chats) }
-            val words = DefaultGroups.prompt(unreachable.size, folders.size)
-            TvConfirm(
-                title = words.title,
-                message = words.message,
-                detail = words.detail,
-                confirmLabel = words.confirm,
-                onConfirm = {
-                    prompt = null
-                    scope.launch {
-                        settings.setHideDefaultGroups(true, unstar = unreachable)
-                        toast(s.groupsHiddenToast)
-                    }
-                },
-                onDismiss = { prompt = null },
-            )
-        }
-
         Prompt.ClearFavorites -> TvConfirm(
             title = s.settingsClearFavouritesTitle,
             message = s.settingsClearFavouritesMessage(favorites.size),
-            detail = DefaultGroups.favouritesUntouched(defaultsHidden),
+            detail = s.settingsClearFavouritesUntouched,
             confirmLabel = s.commonClear,
             onConfirm = {
                 prompt = null

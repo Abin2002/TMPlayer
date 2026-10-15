@@ -17,9 +17,6 @@ import com.tmplayer.i18n.Strings
  * in before this existed never does, and a fresh sign in always does. Settings can run it again.
  */
 enum class SetupStep {
-    /** Which chats the sidebar lists: everything, or only the account's Telegram folders. */
-    Library,
-
     /** Posters and overviews looked up online by the cleaned title, or plain tiles. */
     Posters,
 
@@ -45,8 +42,6 @@ enum class SetupStep {
 
 /** One answer on a [SetupStep]. */
 enum class SetupChoice(val step: SetupStep) {
-    Everything(SetupStep.Library),
-    OnlyFolders(SetupStep.Library),
     PostersOn(SetupStep.Posters),
     PostersOff(SetupStep.Posters),
     KeepWhilePlaying(SetupStep.Storage),
@@ -71,12 +66,11 @@ enum class SetupChoice(val step: SetupStep) {
      * theirs, since a frame of the app says nothing about what is kept or fetched.
      */
     val screenshot: Boolean
-        get() = step == SetupStep.Library || step == SetupStep.Posters || step == SetupStep.Performance
+        get() = step == SetupStep.Posters || step == SetupStep.Performance
 }
 
 /** The settings the setup reads and writes, as they are now. */
 data class SetupValues(
-    val onlyFolders: Boolean,
     val posters: Boolean,
     val lowStorage: Boolean,
     val lighter: Boolean = false,
@@ -84,7 +78,6 @@ data class SetupValues(
 ) {
     /** The answer on [step] that matches what is set, the one a remote starts on. */
     fun current(step: SetupStep): SetupChoice = when (step) {
-        SetupStep.Library -> if (onlyFolders) SetupChoice.OnlyFolders else SetupChoice.Everything
         SetupStep.Posters -> if (posters) SetupChoice.PostersOn else SetupChoice.PostersOff
         SetupStep.Storage -> if (lowStorage) SetupChoice.LowStorage else SetupChoice.KeepWhilePlaying
         SetupStep.Performance -> if (lighter) SetupChoice.Lighter else SetupChoice.FullQuality
@@ -98,9 +91,8 @@ data class SetupValues(
 object Setup {
 
     /**
-     * The steps this account, this build and this device get. Library only when the account has
-     * Telegram folders (with none there is nothing to choose between); Posters only where the
-     * build looks them up at all; Storage wherever Low storage mode exists; Performance on every
+     * The steps this build and this device get. Posters only where the build looks them up at
+     * all; Storage wherever Low storage mode exists; Performance on every
      * device; Mobile data only on a phone, the one device that is ever on a metered connection
      * for long.
      *
@@ -110,7 +102,6 @@ object Setup {
      * so nothing is asked twice.
      */
     fun steps(
-        folderCount: Int,
         posters: Boolean,
         storage: Boolean = STORAGE_STEP,
         device: Boolean = false,
@@ -118,7 +109,6 @@ object Setup {
         phone: Boolean = false,
     ): List<SetupStep> =
         buildList {
-            if (folderCount > 0) add(SetupStep.Library)
             if (posters) add(SetupStep.Posters)
             if (device) add(SetupStep.Device) else if (storage) add(SetupStep.Storage)
             if (!(device && devicePerformance)) add(SetupStep.Performance)
@@ -207,7 +197,6 @@ data class SetupCopy(val title: String, val body: String)
 data class ChoiceCopy(val title: String, val detail: String)
 
 fun Strings.setupCopy(step: SetupStep): SetupCopy = when (step) {
-    SetupStep.Library -> SetupCopy(setupLibraryTitle, setupLibraryBody)
     SetupStep.Posters -> SetupCopy(setupPostersTitle, setupPostersBody)
     SetupStep.Storage -> SetupCopy(setupStorageTitle, setupStorageBody)
     SetupStep.Performance -> SetupCopy(setupPerformanceTitle, setupPerformanceBody)
@@ -217,8 +206,6 @@ fun Strings.setupCopy(step: SetupStep): SetupCopy = when (step) {
 }
 
 fun Strings.choiceCopy(choice: SetupChoice): ChoiceCopy = when (choice) {
-    SetupChoice.Everything -> ChoiceCopy(setupLibraryEverything, setupLibraryEverythingDetail)
-    SetupChoice.OnlyFolders -> ChoiceCopy(setupLibraryFolders, setupLibraryFoldersDetail)
     SetupChoice.PostersOn -> ChoiceCopy(setupPostersOn, setupPostersOnDetail)
     SetupChoice.PostersOff -> ChoiceCopy(setupPostersOff, setupPostersOffDetail)
     SetupChoice.KeepWhilePlaying -> ChoiceCopy(setupStorageNormal, setupStorageNormalDetail)

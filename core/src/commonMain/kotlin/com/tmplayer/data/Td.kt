@@ -135,6 +135,13 @@ object Td {
     val folders: StateFlow<List<ChatFolderSummary>> = _folders.asStateFlow()
 
     /**
+     * Where Telegram puts "All chats" among [folders]: 0 is first, which is where it is unless
+     * the viewer moved it (a Premium account can). The Chats page's chips follow it.
+     */
+    private val _mainListPosition = MutableStateFlow(0)
+    val mainListPosition: StateFlow<Int> = _mainListPosition.asStateFlow()
+
+    /**
      * Videos posted, edited into a message or deleted while the app is open, as TDLib reports
      * them, for every chat. Nothing is fetched to produce these: a post arrives with its message,
      * an edit is reported only when the new content is a video, and a deletion is passed on as the
@@ -293,6 +300,7 @@ object Td {
             }
             val folders = launch {
                 td.chatFoldersUpdates.collect { update ->
+                    _mainListPosition.value = update.mainChatListPosition
                     _folders.value = update.chatFolders.map { folder ->
                         // The name is formatted text because Telegram lets a folder carry custom
                         // emoji. Only the plain characters are kept: the rail draws its own icon,
@@ -301,6 +309,7 @@ object Td {
                         ChatFolderSummary(
                             id = folder.id,
                             title = folder.name.text.text.trim().ifBlank { L.chatsUntitledFolder(folder.id.toString()) },
+                            icon = folder.icon.name,
                         )
                     }
                 }
@@ -362,6 +371,7 @@ object Td {
             connection.cancel()
             folders.cancel()
             _folders.value = emptyList()
+            _mainListPosition.value = 0
             cachedMyId = 0L
             // Cancelled with the rest of the generation: a client closed while the primer is
             // still waiting on TDLib would otherwise leak a coroutine holding a dead client.

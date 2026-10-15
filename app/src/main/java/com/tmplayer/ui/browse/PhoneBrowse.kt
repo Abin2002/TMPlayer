@@ -65,7 +65,6 @@ internal fun PhoneBrowse(
     countOf: (BrowseSection) -> Int,
     actions: @Composable RowScope.() -> Unit,
     sections: List<BrowseSection>,
-    defaultsHidden: Boolean,
     favourites: Set<Long>,
     downloadCount: Int,
     updateVersion: String?,
@@ -157,7 +156,7 @@ internal fun PhoneBrowse(
         onHome = { onPickTab(BrowseSection.of(BrowseTab.Home)) },
         onChats = {
             val back = BrowseSection.decode(lastChats)?.takeIf { it.isChats || it in sections }
-            onPickTab(back ?: chatsDestination(sections, defaultsHidden))
+            onPickTab(back ?: BrowseSection.of(BrowseTab.Chats))
         },
         onFavourites = { onPickTab(BrowseSection.of(BrowseTab.Favorites)) },
         onHistory = onHistory,

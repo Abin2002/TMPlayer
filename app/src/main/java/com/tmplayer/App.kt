@@ -209,16 +209,6 @@ class App : Application() {
  * the theme. The storage step draws its own picture, so it has none.
  */
 private fun setupDrawable(choice: SetupChoice, tv: Boolean, dark: Boolean): Int = when (choice) {
-    SetupChoice.Everything -> when {
-        tv -> R.drawable.setup_library_everything_tv
-        dark -> R.drawable.setup_library_everything_dark
-        else -> R.drawable.setup_library_everything
-    }
-    SetupChoice.OnlyFolders -> when {
-        tv -> R.drawable.setup_library_folders_tv
-        dark -> R.drawable.setup_library_folders_dark
-        else -> R.drawable.setup_library_folders
-    }
     SetupChoice.PostersOn -> when {
         tv -> R.drawable.setup_posters_on_tv
         dark -> R.drawable.setup_posters_on_dark

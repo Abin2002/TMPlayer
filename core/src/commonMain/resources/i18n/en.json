@@ -128,6 +128,7 @@
     "empty_watched": "Nothing watched yet. Videos you finish, or mark as watched, appear here.",
     "favourite": "Favourite",
     "filter_all": "All",
+    "filter_all_chats": "All chats",
     "filter_archived": "Archived",
     "filter_channels": "Channels",
     "filter_groups": "Groups",

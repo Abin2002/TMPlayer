@@ -74,6 +74,7 @@ import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ShelfEntry
 import com.tmplayer.data.WatchLaterRecord
+import com.tmplayer.ui.browse.BrowseSection
 import com.tmplayer.ui.browse.BrowseTab
 import com.tmplayer.ui.browse.ChatListViewModel
 import com.tmplayer.ui.browse.ContinueCardArt
@@ -199,22 +200,17 @@ internal fun HomeRowsView(
             header()
             if (rows.isEmpty()) {
                 // Nothing played and nothing starred: a first run, so say how to get a first video in:
-                // through Saved Messages, or with the default groups hidden, through a folder.
-                val folders by com.tmplayer.data.Td.folders.collectAsState()
-                val step = remember(state.hideDefaultGroups, folders) {
-                    com.tmplayer.ui.browse.DefaultGroups.firstStep(state.hideDefaultGroups, folders)
-                }
+                // forward it to Saved Messages, which the button opens.
                 Box(
                     Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(32.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    val target = step.target
                     FirstVideoCard(
                         title = s.homeFirstTitle,
-                        body = step.body,
+                        body = s.homeFirstBody,
                         more = s.homeFirstMore,
-                        button = step.button?.takeIf { target != null },
-                        onButton = { target?.let(state::showChats) },
+                        button = s.homeFirstOpenSaved,
+                        onButton = { state.showChats(BrowseSection.of(BrowseTab.Saved)) },
                     )
                 }
                 return@Column

@@ -40,10 +40,9 @@ class NavGroupsTest {
         val sections = browseSections(listOf(ChatFolderSummary(3, "Films"), ChatFolderSummary(7, "Family")))
         val listed = navGroups(sections).flatMap { it.entries }.filterIsInstance<NavEntry.Section>().map { it.section }
         assertFalse(listed.any { it is BrowseSection.Folder })
-        val chips = chatPageChips(sections, hideDefaultGroups = false)
-        assertEquals(ChatFilter.entries.map { ChatPageChip.Filter(it) }, chips.take(ChatFilter.entries.size))
-        assertEquals(listOf("Films", "Family"), chips.drop(ChatFilter.entries.size).map { it.label })
-        assertEquals(listOf("Films", "Family"), chatPageChips(sections, hideDefaultGroups = true).map { it.label })
+        val chips = chatPageChips(listOf(ChatFolderSummary(3, "Films"), ChatFolderSummary(7, "Family")))
+        assertEquals(ChatPageChip.Filter(ChatFilter.All), chips.first())
+        assertEquals(listOf("Films", "Family"), chips.filterIsInstance<ChatPageChip.Folder>().map { it.label })
         val films = BrowseSection.Folder(3, "Films")
         assertEquals(BrowseSection.of(BrowseTab.Chats), films.navSection)
         assertTrue(chips.last { it is ChatPageChip.Folder && it.folder.id == 3 }.isSelected(films, ChatFilter.All))
@@ -99,5 +98,33 @@ class NavGroupsTest {
         NavGroupState.toggle(NavGroup.Folders)
         NavGroupState.reset()
         assertEquals(NavGroupState.DEFAULT_OPEN, NavGroupState.open.value)
+    }
+
+    @Test
+    fun `the chips follow Telegram's tab bar, then the filters no folder already is`() {
+        val folders = listOf(
+            ChatFolderSummary(1, "Unread", icon = "Unread"),
+            ChatFolderSummary(2, "Films", icon = "Custom"),
+            ChatFolderSummary(3, "Channels", icon = "Channels"),
+            ChatFolderSummary(4, "Bots", icon = "Bots"),
+        )
+        // "All chats" where Telegram puts it: second here, as a Premium account may have moved it.
+        val chips = chatPageChips(folders, mainListPosition = 1)
+        assertEquals(listOf("Unread", "All chats", "Films", "Channels", "Bots"), chips.take(5).map { it.label })
+        // No second Unread or Channels; Groups, People and Archived are TMPlayer's own.
+        assertEquals(
+            listOf(ChatFilter.Groups, ChatFilter.People, ChatFilter.Archived),
+            chips.drop(5).map { (it as ChatPageChip.Filter).filter },
+        )
+        assertEquals(com.tmplayer.ui.icons.TmIcons.Unread, chips.first().icon)
+        // A position past the end is the end, and no folders is "All chats" and every filter.
+        assertEquals(ChatPageChip.Filter(ChatFilter.All), chatPageChips(folders, mainListPosition = 99)[4])
+        assertEquals(ChatFilter.entries.map { ChatPageChip.Filter(it) }, chatPageChips(emptyList()))
+    }
+
+    @Test
+    fun `a folder named like a filter stands for it, by name too`() {
+        val chips = chatPageChips(listOf(ChatFolderSummary(5, "groups", icon = "Custom")))
+        assertFalse(chips.any { it == ChatPageChip.Filter(ChatFilter.Groups) })
     }
 }

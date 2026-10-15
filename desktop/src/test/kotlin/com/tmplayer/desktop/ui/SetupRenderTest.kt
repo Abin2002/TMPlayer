@@ -85,7 +85,7 @@ class SetupRenderTest {
         },
     )
 
-    // What an account with folders on a device that is fine gets: Device takes Storage's place only on a low-end one.
+    // What a device that is fine gets: Device takes Storage's place only on a low-end one.
     private val all = SetupStep.entries.filter { it != SetupStep.Device }
 
     @After
@@ -137,7 +137,7 @@ class SetupRenderTest {
     fun walkedFromTheKeyboard() = runComposeUiTest {
         val online = MetaFixture.install("on")
         val back = BackStack()
-        val setup = SetupState(listOf(SetupStep.Library, SetupStep.Posters, SetupStep.Storage))
+        val setup = SetupState(listOf(SetupStep.Posters, SetupStep.Storage, SetupStep.Performance))
         var done = false
         setContent {
             CompositionLocalProvider(LocalBackStack provides back) {
@@ -154,37 +154,37 @@ class SetupRenderTest {
         }
 
         waitForIdle()
-        awaitFocus(card("Show everything"))
+        awaitFocus(card("Posters on"))
         // Right to the other answer, Enter picks it: the setting changes and the step moves on.
         press(Key.DirectionRight)
-        onNode(card("Only my folders")).assertIsFocused()
+        onNode(card("Posters off")).assertIsFocused()
         press(Key.Enter)
         waitForIdle()
-        assertEquals(SetupStep.Posters, setup.step)
-        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.hideDefaultGroups.first() } }
-        awaitFocus(card("Posters on"))
+        assertEquals(SetupStep.Storage, setup.step)
+        waitUntil(timeoutMillis = WRITE_MS) { !online.settings.value.enabled }
+        awaitFocus(card("Keep what plays"))
 
-        // Back returns to the library step, on the answer now set.
+        // Back returns to the posters step, on the answer now set.
         back.handleBack()
         waitForIdle()
-        assertEquals(SetupStep.Library, setup.step)
-        awaitFocus(card("Only my folders"))
+        assertEquals(SetupStep.Posters, setup.step)
+        awaitFocus(card("Posters off"))
         press(Key.DirectionLeft)
         press(Key.Enter)
         waitForIdle()
-        waitUntil(timeoutMillis = WRITE_MS) { !runBlocking { settings.hideDefaultGroups.first() } }
+        waitUntil(timeoutMillis = WRITE_MS) { online.settings.value.enabled }
 
-        // Skip leaves posters as they are.
-        onNode(hasText("Skip") and hasClickAction()).performClick()
-        waitForIdle()
+        // Low storage mode, then Skip on the last step leaves it as it is and finishes.
         assertEquals(SetupStep.Storage, setup.step)
-        assertTrue(online.settings.value.enabled)
         awaitFocus(card("Keep what plays"))
         press(Key.DirectionRight)
         press(Key.Enter)
         waitForIdle()
-        assertTrue("finished after the last step", done)
+        assertEquals(SetupStep.Performance, setup.step)
         waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.lowStorageMode.first() } }
+        onNode(hasText("Skip") and hasClickAction()).performClick()
+        waitForIdle()
+        assertTrue("finished after the last step", done)
     }
 
     /**
@@ -262,7 +262,6 @@ class SetupRenderTest {
         onNode(hasText("Skip all") and hasClickAction()).performClick()
         waitForIdle()
         assertTrue(done)
-        assertFalse(runBlocking { settings.hideDefaultGroups.first() })
         assertFalse(runBlocking { settings.lowStorageMode.first() })
         assertTrue(online.settings.value.enabled)
     }

@@ -18,45 +18,37 @@ import java.nio.file.Files
 class SetupTest {
 
     @Test
-    fun `an account with folders gets every step, in order`() {
-        assertEquals(
-            listOf(SetupStep.Library, SetupStep.Posters, SetupStep.Storage, SetupStep.Performance),
-            Setup.steps(folderCount = 2, posters = true, storage = true),
-        )
-    }
-
-    @Test
-    fun `no folders, no library step`() {
+    fun `every step, in order`() {
         assertEquals(
             listOf(SetupStep.Posters, SetupStep.Storage, SetupStep.Performance),
-            Setup.steps(folderCount = 0, posters = true, storage = true),
+            Setup.steps(posters = true, storage = true),
         )
     }
 
     @Test
     fun `a build without online lookups has no posters step`() {
         assertEquals(
-            listOf(SetupStep.Library, SetupStep.Storage, SetupStep.Performance),
-            Setup.steps(folderCount = 1, posters = false, storage = true),
+            listOf(SetupStep.Storage, SetupStep.Performance),
+            Setup.steps(posters = false, storage = true),
         )
-        assertEquals(listOf(SetupStep.Performance), Setup.steps(folderCount = 0, posters = false, storage = false))
+        assertEquals(listOf(SetupStep.Performance), Setup.steps(posters = false, storage = false))
     }
 
     @Test
     fun `a low-end device gets the Device step in Storage's place, never both`() {
         assertEquals(
-            listOf(SetupStep.Library, SetupStep.Posters, SetupStep.Device),
-            Setup.steps(folderCount = 2, posters = true, storage = true, device = true),
+            listOf(SetupStep.Posters, SetupStep.Device),
+            Setup.steps(posters = true, storage = true, device = true),
         )
-        assertEquals(listOf(SetupStep.Device), Setup.steps(folderCount = 0, posters = false, storage = false, device = true))
-        assertFalse(SetupStep.Device in Setup.steps(folderCount = 2, posters = true, device = false))
+        assertEquals(listOf(SetupStep.Device), Setup.steps(posters = false, storage = false, device = true))
+        assertFalse(SetupStep.Device in Setup.steps(posters = true, device = false))
     }
 
     @Test
     fun `a Device step with only Low storage mode to offer leaves Performance to ask`() {
         assertEquals(
             listOf(SetupStep.Posters, SetupStep.Device, SetupStep.Performance),
-            Setup.steps(folderCount = 0, posters = true, device = true, devicePerformance = false),
+            Setup.steps(posters = true, device = true, devicePerformance = false),
         )
     }
 
@@ -64,10 +56,10 @@ class SetupTest {
     fun `Mobile data is asked on a phone only, last`() {
         assertEquals(
             listOf(SetupStep.Posters, SetupStep.Storage, SetupStep.Performance, SetupStep.MobileData),
-            Setup.steps(folderCount = 0, posters = true, phone = true),
+            Setup.steps(posters = true, phone = true),
         )
-        assertFalse(SetupStep.MobileData in Setup.steps(folderCount = 0, posters = true, phone = false))
-        assertEquals(SetupStep.MobileData, Setup.steps(folderCount = 0, posters = false, device = true, phone = true).last())
+        assertFalse(SetupStep.MobileData in Setup.steps(posters = true, phone = false))
+        assertEquals(SetupStep.MobileData, Setup.steps(posters = false, device = true, phone = true).last())
     }
 
     @Test
@@ -80,7 +72,7 @@ class SetupTest {
 
     @Test
     fun `Performance starts on what is set, Mobile data on saving`() {
-        val lighter = SetupValues(onlyFolders = false, posters = true, lowStorage = false, lighter = true, saveData = false)
+        val lighter = SetupValues(posters = true, lowStorage = false, lighter = true, saveData = false)
         assertEquals(SetupChoice.Lighter, lighter.current(SetupStep.Performance))
         assertEquals(SetupChoice.SaveData, lighter.current(SetupStep.MobileData))
         assertEquals(SetupChoice.FullQuality, lighter.copy(lighter = false).current(SetupStep.Performance))
@@ -89,14 +81,14 @@ class SetupTest {
     @Test
     fun `the Device step starts on Apply, and has no pictures`() {
         assertEquals(listOf(SetupChoice.ApplyRecommended, SetupChoice.NotNow), SetupStep.Device.choices)
-        assertEquals(SetupChoice.ApplyRecommended, SetupValues(onlyFolders = true, posters = false, lowStorage = true).current(SetupStep.Device))
+        assertEquals(SetupChoice.ApplyRecommended, SetupValues(posters = false, lowStorage = true).current(SetupStep.Device))
         assertFalse(SetupChoice.ApplyRecommended.screenshot)
     }
 
     @Test
     fun `the storage step is on for every platform`() {
         assertTrue(Setup.STORAGE_STEP)
-        assertTrue(SetupStep.Storage in Setup.steps(folderCount = 0, posters = false))
+        assertTrue(SetupStep.Storage in Setup.steps(posters = false))
     }
 
     @Test
@@ -143,18 +135,18 @@ class SetupTest {
 
     @Test
     fun `Skip and picking walk on and finish after the last step`() {
-        val setup = SetupState(listOf(SetupStep.Library, SetupStep.Posters, SetupStep.Storage))
-        assertEquals(SetupStep.Library, setup.step)
+        val setup = SetupState(listOf(SetupStep.Posters, SetupStep.Storage, SetupStep.Performance))
+        assertEquals(SetupStep.Posters, setup.step)
         assertTrue(setup.isFirst)
         assertTrue(setup.canSkipAll)
         assertTrue(setup.next())
-        assertEquals(SetupStep.Posters, setup.step)
-        assertTrue(setup.next())
         assertEquals(SetupStep.Storage, setup.step)
+        assertTrue(setup.next())
+        assertEquals(SetupStep.Performance, setup.step)
         assertTrue(setup.isLast)
         assertFalse("Skip all says no more than Skip on the last step", setup.canSkipAll)
         assertFalse("done", setup.next())
-        assertEquals(SetupStep.Storage, setup.step)
+        assertEquals(SetupStep.Performance, setup.step)
     }
 
     @Test
@@ -186,23 +178,22 @@ class SetupTest {
             assertTrue(step.choices.first().recommended)
             assertFalse(step.choices.last().recommended)
         }
-        val defaults = SetupValues(onlyFolders = false, posters = true, lowStorage = false)
+        val defaults = SetupValues(posters = true, lowStorage = false)
         for (step in SetupStep.entries) assertEquals(step.choices.first(), defaults.current(step))
     }
 
     @Test
     fun `the answer a remote starts on is the one set now`() {
-        val set = SetupValues(onlyFolders = true, posters = false, lowStorage = true)
-        assertEquals(SetupChoice.OnlyFolders, set.current(SetupStep.Library))
+        val set = SetupValues(posters = false, lowStorage = true)
         assertEquals(SetupChoice.PostersOff, set.current(SetupStep.Posters))
         assertEquals(SetupChoice.LowStorage, set.current(SetupStep.Storage))
     }
 
     @Test
-    fun `screenshots for library, posters and performance, drawings for storage and mobile data`() {
+    fun `screenshots for posters and performance, drawings for storage and mobile data`() {
         assertEquals(
             setOf(
-                SetupChoice.Everything, SetupChoice.OnlyFolders, SetupChoice.PostersOn, SetupChoice.PostersOff,
+                SetupChoice.PostersOn, SetupChoice.PostersOff,
                 SetupChoice.FullQuality, SetupChoice.Lighter,
             ),
             SetupChoice.entries.filter { it.screenshot }.toSet(),

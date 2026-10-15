@@ -129,13 +129,6 @@ class ShellState(
      * [SettingsStore] at start and writes each change there, as the phone and the TV do.
      */
     /**
-     * "Only my folders" (Settings): Telegram's default groups, Chats and Saved Messages, are off
-     * the side bar and the narrow window's section chips. Mirrored from [SettingsStore] by the
-     * shell, as the chips are, so every page reads one value.
-     */
-    var hideDefaultGroups by mutableStateOf(false)
-
-    /**
      * Whether the app lock's PIN (CP57) has been given for this visit to Settings. Leaving for any
      * other page forgets it, so Settings asks again next time.
      */

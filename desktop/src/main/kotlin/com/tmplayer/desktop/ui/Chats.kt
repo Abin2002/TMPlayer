@@ -116,11 +116,11 @@ fun ChatsPage(
     var refocus by remember { mutableStateOf(state.takeChatToRefocus()) }
 
     // Home, History and Favourites have pages of their own.
-    // Telegram's own filters, then each folder: what the side bar's Telegram and Folders groups
-    // used to list, as one row of chips the Chats page and every folder page share.
-    val chips = remember(folders, state.hideDefaultGroups) {
-        chatPageChips(browseSections(folders, state.hideDefaultGroups), state.hideDefaultGroups)
-    }
+    // Telegram's own folder tab bar (All chats where Telegram puts it, then each folder in
+    // Telegram's order), then the filters no folder already is: one row the Chats page and every
+    // folder page share.
+    val mainListPosition by Td.mainListPosition.collectAsState()
+    val chips = remember(folders, mainListPosition) { chatPageChips(folders, mainListPosition) }
     val section = if (favouritesOnly) {
         BrowseSection.of(BrowseTab.Favorites)
     } else {
@@ -164,11 +164,11 @@ fun ChatsPage(
                         add(
                             when (chip) {
                                 // A filter is a filter of the Chats list, so from a folder it goes back there.
-                                is ChatPageChip.Filter -> Choice(chip.filter.name, chip.label, chip.filter.icon, selected) {
+                                is ChatPageChip.Filter -> Choice(chip.filter.name, chip.label, chip.icon, selected) {
                                     state.chatFilter = chip.filter
                                     state.showChats(BrowseSection.of(BrowseTab.Chats))
                                 }
-                                is ChatPageChip.Folder -> Choice(BrowseSection.encode(chip.folder), chip.label, TmIcons.Folder, selected) {
+                                is ChatPageChip.Folder -> Choice(BrowseSection.encode(chip.folder), chip.label, chip.icon, selected) {
                                     state.showChats(chip.folder)
                                 }
                             },

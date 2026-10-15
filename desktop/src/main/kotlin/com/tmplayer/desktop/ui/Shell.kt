@@ -78,12 +78,10 @@ import com.tmplayer.data.ChatFolderSummary
 import com.tmplayer.ui.browse.BrowseSection
 import com.tmplayer.ui.browse.NavBrand
 import com.tmplayer.ui.browse.NavEntry
-import com.tmplayer.ui.browse.chatsDestination
 import com.tmplayer.ui.browse.navSection
 import com.tmplayer.ui.browse.onChatsPage
 import com.tmplayer.ui.browse.browseSections
 import com.tmplayer.ui.browse.navGroups
-import com.tmplayer.ui.browse.DefaultGroups
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.onboarding.Setup
 import com.tmplayer.ui.components.AppLogo
@@ -202,25 +200,13 @@ private fun Browse(state: ShellState, player: PlayerContent) {
     DisposableEffect(chats) { onDispose { chats.reset() } }
     LaunchedEffect(Unit) { chats.refreshIfStale() }
     LaunchedEffect(state) { state.settings.detailFirst.collect { state.detailFirst = it } }
-    // "Only my folders", mirrored into the shell for every page to read.
-    LaunchedEffect(state) {
-        state.settings.hideDefaultGroups.collect {
-            state.hideDefaultGroups = it
-            // The folders are then the only way into the chats, so they are not left folded.
-            if (it) com.tmplayer.ui.browse.NavGroupState.unfold(com.tmplayer.ui.browse.NavGroup.Folders)
-        }
-    }
-    // A section the option has hidden is not left on screen: the Chats page moves to the first
-    // folder, or with none, the window goes Home. The chip over Chats is kept as it was.
+    // "Only my folders" is retired: somebody who had it on finds their first folder's chip picked
+    // on the Chats page, once, and nothing hidden.
     val shellFolders by Td.folders.collectAsState()
-    LaunchedEffect(state.hideDefaultGroups, shellFolders, state.chatSection) {
-        if (!state.hideDefaultGroups || !DefaultGroups.isDefault(state.chatSection)) return@LaunchedEffect
-        val first = shellFolders.firstOrNull()
-        val onChats = state.destination == Destination.Chats
-        if (first != null) {
+    LaunchedEffect(shellFolders.isNotEmpty()) {
+        val first = shellFolders.firstOrNull() ?: return@LaunchedEffect
+        if (runCatching { state.settings.takeOnlyFolders() }.getOrDefault(false)) {
             state.pickChatSection(BrowseSection.Folder(first.id, first.title))
-        } else if (onChats) {
-            state.go(Destination.Home)
         }
     }
     // The chips over Chats and History: the saved choice first, then every change written back.
@@ -368,7 +354,7 @@ private fun Browse(state: ShellState, player: PlayerContent) {
         // The language card and What's new wait for the setup, as on the phone.
         if (!setupPending) ShellNotices(state, Modifier.align(Alignment.BottomEnd).padding(24.dp))
         if (setupPending) {
-            SetupOverlay(state, chatsUi is UiState.Content, shellFolders.size, (chatsUi as? UiState.Content)?.value?.chats.orEmpty())
+            SetupOverlay(state, chatsUi is UiState.Content)
         }
         // The quick tour on its own (CP69): taken from the offer, or opened from Settings.
         val tour by state.settings.tourState.collectAsState(initial = com.tmplayer.data.SettingsStore.TourState.Done)
@@ -421,7 +407,7 @@ internal fun Sidebar(
     folders: List<ChatFolderSummary> = Td.folders.collectAsState().value,
 ) {
     val s = LocalStrings.current
-    val sections = remember(folders, state.hideDefaultGroups) { browseSections(folders, state.hideDefaultGroups) }
+    val sections = remember(folders) { browseSections(folders) }
     val inFlight = rememberDownloadsInFlight()
     // Wide enough for a German or Malayalam label beside a badge, with room to breathe: the side
     // bar is the frame of every page, and a cramped frame makes the whole window feel cramped.
@@ -473,12 +459,12 @@ internal fun Sidebar(
 }
 
 /**
- * Where Chats goes from the side bar or the rail: back to the chip that was open (Chats, or one of
- * the folders), else to [chatsDestination], which is the first folder under "Only my folders".
+ * Where Chats goes from the side bar or the rail: back to the chip that was open (All chats, a
+ * filter or one of the folders), else to All chats.
  */
 private fun chatsTarget(state: ShellState, sections: List<BrowseSection>): BrowseSection {
     val open = state.chatSection
-    return if (open.onChatsPage && open in sections) open else chatsDestination(sections, state.hideDefaultGroups)
+    return if (open.onChatsPage && open in sections) open else BrowseSection.of(BrowseTab.Chats)
 }
 
 /** The page an entry opens when it is a page of its own; null for a slice of the chat list. */
@@ -558,10 +544,8 @@ private fun Rail(state: ShellState, update: NavUpdate?) {
         )
         val inFlight = rememberDownloadsInFlight()
         val folders by Td.folders.collectAsState()
-        val sections = remember(folders, state.hideDefaultGroups) { browseSections(folders, state.hideDefaultGroups) }
+        val sections = remember(folders) { browseSections(folders) }
         Destination.entries.forEach { destination ->
-            // With "Only my folders" and no folders there is nothing for the Chats page to show.
-            if (destination == Destination.Chats && BrowseSection.of(BrowseTab.Chats) !in sections) return@forEach
             val label = destination.label
             NavigationRailItem(
                 selected = state.destination == destination,
@@ -613,12 +597,11 @@ private fun Rail(state: ShellState, update: NavUpdate?) {
 }
 
 /**
- * The setup after sign in (CP67) over the whole window, once the chat list is in (it brings the
- * folder list with it) or after a wait for one that is slow to come. Browse is drawn under it, so
- * the list is ready when the setup ends.
+ * The setup after sign in (CP67) over the whole window, once the chat list is in or after a wait
+ * for one that is slow to come. Browse is drawn under it, so the list is ready when the setup ends.
  */
 @Composable
-private fun SetupOverlay(state: ShellState, chatsLoaded: Boolean, folderCount: Int, chats: List<com.tmplayer.data.ChatSummary>) {
+private fun SetupOverlay(state: ShellState, chatsLoaded: Boolean) {
     val scope = rememberCoroutineScope()
     var waitedOut by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -640,21 +623,17 @@ private fun SetupOverlay(state: ShellState, chatsLoaded: Boolean, folderCount: I
         }
         val steps = remember {
             Setup.steps(
-                folderCount,
                 posters = com.tmplayer.online.OnlineMetadata.current != null,
                 device = recommendations.isNotEmpty(),
                 // The desktop is only ever offered Low storage mode there, so Performance stays.
                 devicePerformance = false,
             )
         }
-        val favourites by state.settings.favorites.collectAsState(initial = emptySet())
-        val unreachable = remember(favourites, chats) { DefaultGroups.unreachableFavorites(favourites, chats) }
         // The choices, then the quick tour (CP69); with no choices to make, the tour alone.
         com.tmplayer.ui.onboarding.SetupAndTour(
             state.settings,
             steps,
             onDone = finish,
-            unreachableFavourites = unreachable,
             fit = fit,
             recommendations = recommendations,
         )

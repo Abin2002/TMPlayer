@@ -57,10 +57,17 @@ class SetupFlagTest {
         val settings = store()
         settings.armSetup()
         settings.setLowStorageMode(true)
-        settings.setHideDefaultGroups(true)
         settings.markSetupDone()
         settings.replaySetup()
         assertTrue(settings.lowStorageMode.first())
-        assertTrue(settings.hideDefaultGroups.first())
+    }
+
+    @Test
+    fun `only my folders is read once and forgotten`() = runBlocking {
+        val settings = store()
+        assertFalse(settings.takeOnlyFolders())
+        settings.storeOnlyFoldersForTest(true)
+        assertTrue(settings.takeOnlyFolders())
+        assertFalse(settings.takeOnlyFolders())
     }
 }

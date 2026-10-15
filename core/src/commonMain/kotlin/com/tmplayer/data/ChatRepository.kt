@@ -115,10 +115,12 @@ data class ChatSummary(
  * One of the viewer's Telegram folders, as much of it as a tab needs.
  *
  * The rules that decide what is in a folder are deliberately not here. TDLib evaluates them and
- * answers what is in each folder, so this carries only what has to be drawn on a rail item.
+ * answers what is in each folder, so this carries only what has to be drawn on a chip: the name,
+ * and [icon], the name of the folder's icon in Telegram ("Unread", "Channels", "Groups",
+ * "Private", "Bots", "Custom" and the rest), empty when Telegram gave none.
  */
 @androidx.compose.runtime.Immutable
-data class ChatFolderSummary(val id: Int, val title: String)
+data class ChatFolderSummary(val id: Int, val title: String, val icon: String = "")
 
 /**
  * Puts a chat list in the order Telegram itself would draw it.

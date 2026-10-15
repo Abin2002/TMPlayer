@@ -234,22 +234,15 @@ sealed interface BrowseSection {
  * Every place the browser can show, Home first, then the viewer's folders.
  *
  * The sidebar offers the fixed entries ([navGroups]): Home, History, Favourites and Chats. The
- * folders are not sidebar entries any more but chips on the Chats page ([chatPageChips]), so they
- * are listed here for the page to find a remembered folder by, not for a rail to draw. Saved
- * Messages has no entry of its own: it is a chat among the others, and the People chip lists it.
- *
- * With [hideDefaultGroups] ("Only my folders") Chats is still there while the account has folders,
- * and its page then lists only them; with no folders it goes, since it would lead nowhere.
+ * folders are not sidebar entries but chips on the Chats page ([chatPageChips]), so they are
+ * listed here for the page to find a remembered folder by, not for a rail to draw. Saved Messages
+ * has no entry of its own: it is a chat among the others, and the People chip lists it.
  */
-fun browseSections(
-    folders: List<ChatFolderSummary>,
-    /** "Only my folders" in Settings: the Chats page lists the folders and none of Telegram's own lists. */
-    hideDefaultGroups: Boolean = false,
-): List<BrowseSection> = buildList {
+fun browseSections(folders: List<ChatFolderSummary>): List<BrowseSection> = buildList {
     add(BrowseSection.of(BrowseTab.Home))
     add(BrowseSection.of(BrowseTab.History))
     add(BrowseSection.of(BrowseTab.Favorites))
-    if (!hideDefaultGroups || folders.isNotEmpty()) add(BrowseSection.of(BrowseTab.Chats))
+    add(BrowseSection.of(BrowseTab.Chats))
     folders.forEach { add(BrowseSection.Folder(it.id, it.title)) }
 }
 
@@ -265,34 +258,67 @@ val BrowseSection.onChatsPage: Boolean
     get() = isChats || this is BrowseSection.Folder
 
 /**
- * Where pressing Chats in a sidebar goes: the Chats list, or with "Only my folders" on, the first
- * folder, since the page then has no list of its own.
+ * One chip over the Chats page: "All chats" or one of TMPlayer's own filters ([Filter]), or one
+ * of the account's Telegram folders ([Folder]), whose [Folder.iconName] is the icon Telegram gave
+ * it.
  */
-fun chatsDestination(sections: List<BrowseSection>, hideDefaultGroups: Boolean): BrowseSection =
-    if (hideDefaultGroups) sections.firstOrNull { it is BrowseSection.Folder } ?: BrowseSection.of(BrowseTab.Chats) else BrowseSection.of(BrowseTab.Chats)
-
-/** One chip over the Chats page: one of Telegram's own filters, or one of the account's folders. */
 @androidx.compose.runtime.Immutable
 sealed interface ChatPageChip {
     val label: String
+    val icon: ImageVector
 
     data class Filter(val filter: ChatFilter) : ChatPageChip {
-        override val label: String get() = filter.label
+        override val label: String get() = if (filter == ChatFilter.All) L.browseFilterAllChats else filter.label
+        override val icon: ImageVector get() = filter.icon
     }
 
-    data class Folder(val folder: BrowseSection.Folder) : ChatPageChip {
+    data class Folder(val folder: BrowseSection.Folder, val iconName: String = "") : ChatPageChip {
         override val label: String get() = folder.name
+        override val icon: ImageVector get() = folderIcon(iconName)
     }
 }
 
 /**
- * The chips over the Chats page, in order: the [ChatFilter]s (All, Unread, Channels, Groups,
- * People, Archived), then each Telegram folder, which is what the sidebar used to list. With
- * "Only my folders" the filters are left out and the folders are the page.
+ * The glyph for a Telegram folder's icon name: the four Telegram suggests for its own folders
+ * (Unread, Channels, Groups, Private) and a star for Favorite get the app's own icons for the same
+ * things; every other name, the emoji-like ones a person picks, is a folder.
  */
-fun chatPageChips(sections: List<BrowseSection>, hideDefaultGroups: Boolean): List<ChatPageChip> =
-    (if (hideDefaultGroups) emptyList() else ChatFilter.entries.map { ChatPageChip.Filter(it) }) +
-        sections.filterIsInstance<BrowseSection.Folder>().map { ChatPageChip.Folder(it) }
+fun folderIcon(name: String): ImageVector = when (name) {
+    "Unread" -> TmIcons.Unread
+    "Channels" -> TmIcons.Channel
+    "Groups" -> TmIcons.Group
+    "Private" -> TmIcons.Person
+    "Favorite" -> TmIcons.StarOutline
+    else -> TmIcons.Folder
+}
+
+/** The one of TMPlayer's filters a Telegram folder already is, by its icon or its name. */
+private fun filterOf(folder: ChatFolderSummary): ChatFilter? {
+    val byIcon = when (folder.icon) {
+        "Unread" -> ChatFilter.Unread
+        "Channels" -> ChatFilter.Channels
+        "Groups" -> ChatFilter.Groups
+        "Private" -> ChatFilter.People
+        else -> null
+    }
+    return byIcon ?: ChatFilter.entries.firstOrNull { it != ChatFilter.All && it.label.equals(folder.title.trim(), ignoreCase = true) }
+}
+
+/**
+ * The chips over the Chats page, as Telegram's own folder tab bar has them: "All chats" at
+ * [mainListPosition] (where Telegram puts the main list, first unless the viewer moved it) among
+ * the account's [folders] in Telegram's order, its suggested folders (Unread, Personal, Groups,
+ * Channels, Bots) included when the viewer added them. Then TMPlayer's own filters (Unread,
+ * Channels, Groups, People, Archived) that no folder already is, so there is never a second
+ * "Unread"; Archived is always there, since a Telegram folder never lists the archive.
+ */
+fun chatPageChips(folders: List<ChatFolderSummary>, mainListPosition: Int = 0): List<ChatPageChip> {
+    val tabs: MutableList<ChatPageChip> = folders.mapTo(ArrayList()) { ChatPageChip.Folder(BrowseSection.Folder(it.id, it.title), it.icon) }
+    tabs.add(mainListPosition.coerceIn(0, tabs.size), ChatPageChip.Filter(ChatFilter.All))
+    val covered = folders.mapNotNull(::filterOf).toSet()
+    val extras = ChatFilter.entries.filter { it != ChatFilter.All && it !in covered }.map { ChatPageChip.Filter(it) }
+    return tabs + extras
+}
 
 /** Whether [chip] is the one lit for [section] under [filter]. */
 fun ChatPageChip.isSelected(section: BrowseSection, filter: ChatFilter): Boolean = when (this) {

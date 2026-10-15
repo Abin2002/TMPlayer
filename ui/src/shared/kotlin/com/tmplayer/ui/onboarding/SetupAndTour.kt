@@ -14,8 +14,8 @@ import com.tmplayer.ui.components.deviceForm
 /**
  * What a fresh sign in walks through (CP69): the setup's choices ([SetupScreen]), then the quick
  * tour ([TourScreen]), on one count. Skip all, on either part, ends both. Back from the tour's first
- * page goes to the setup's last step. With no setup steps (a build without posters, an account
- * without folders, on a device where nothing else applies) it is the tour alone.
+ * page goes to the setup's last step. With no setup steps (a build without posters, on a
+ * device where nothing else applies) it is the tour alone.
  *
  * [onDone] is called once, at the end: the host marks the setup and the tour done.
  */
@@ -25,7 +25,6 @@ fun SetupAndTour(
     steps: List<SetupStep>,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
-    unreachableFavourites: Set<Long> = emptySet(),
     fit: DeviceFit = DeviceFit.Fine,
     recommendations: List<Recommendation> = emptyList(),
 ) {
@@ -42,7 +41,6 @@ fun SetupAndTour(
             setup,
             onDone = { touring = true },
             modifier = modifier,
-            unreachableFavourites = unreachableFavourites,
             fit = fit,
             recommendations = recommendations,
             total = total,
