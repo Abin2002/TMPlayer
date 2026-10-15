@@ -42,6 +42,7 @@ import com.tmplayer.data.CopyHandoff
 import com.tmplayer.data.MediaFacts
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.MediaMapper
+import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.VideoCopies
 import com.tmplayer.data.copyQuality
 import com.tmplayer.i18n.Messages
@@ -138,34 +139,16 @@ internal fun Versions(
     // A phone lists the copies in its bottom sheet, over the page; elsewhere they open in place.
     val sheet = com.tmplayer.ui.components.LocalSheetHost.current?.takeIf { isTouch() }
     val list: @Composable () -> Unit = {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    s.detailCopiesTitle,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Tone.muted,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-                files.forEach { (lead, same) ->
-                    // The row stands for every post of its file: the one playing if it is among them.
-                    val copy = same.firstOrNull { it.id == item.id } ?: lead
-                    CopyRow(
-                        copy = copy,
-                        // The chat on every row, not only when the copies span several: which
-                        // channel a copy came from is half of what tells two of them apart.
-                        detail = listOfNotNull(
-                            copyDetail(copy, s, copyChat(copy, item, chatTitle), same.any(started)),
-                            postedAgain(same, s),
-                        ).joinToString("  ·  "),
-                        sound = copySound(copy),
-                        fileName = copy.fileName.ifBlank { null },
-                        chosen = same.any { it.id == item.id },
-                        onClick = {
-                            open = false
-                            if (copy.id != item.id) onPick(copy.asVersion(item))
-                        },
-                    )
-                }
-            }
+        CopyChooser(
+            item = item,
+            files = files,
+            chatTitle = chatTitle,
+            started = started,
+            onChoose = { copy ->
+                open = false
+                if (copy.id != item.id) onPick(copy.asVersion(item))
+            },
+        )
     }
     Column(Modifier.widthIn(max = 640.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CopySummary(
@@ -187,6 +170,150 @@ internal fun Versions(
                     .padding(bottom = 16.dp),
             ) { list() }
         }
+    }
+}
+
+/**
+ * Every copy of [item] to choose from, each thing said once: the title and "7 versions" and the
+ * chat over the list (or "in 3 chats"), then the copies grouped under their quality, best first,
+ * "1080p", "720p", then the ones whose name states none. A row is only what sets it apart: its size,
+ * then what it is (source, codec, languages, audio), its length, its date where the dates differ,
+ * and its chat where they span several. No box round a row; the one that plays is tinted. The
+ * file's whole name stays on the page's About.
+ */
+@Composable
+private fun CopyChooser(
+    item: MediaItem,
+    files: List<Pair<MediaItem, List<MediaItem>>>,
+    chatTitle: String,
+    started: (MediaItem) -> Boolean,
+    onChoose: (MediaItem) -> Unit,
+) {
+    val s = LocalStrings.current
+    val rows = remember(files, item.id) {
+        files.map { (lead, same) -> (same.firstOrNull { it.id == item.id } ?: lead) to same }
+            .sortedWith(
+                compareByDescending<Pair<MediaItem, List<MediaItem>>> { VideoCopies.heightOf(it.first) ?: 0 }
+                    .thenByDescending { it.first.sizeBytes },
+            )
+    }
+    val datesDiffer = remember(rows) { rows.map { it.first.date / 86_400 }.distinct().size > 1 }
+    val chatOf: (MediaItem) -> String? = { copyChat(it, item, chatTitle) }
+    val chats = remember(rows) { rows.mapNotNull { chatOf(it.first) }.distinct() }
+    // Quality first, as the group's one heading; the copies whose name states none come last.
+    val groups = remember(rows) {
+        rows.groupBy { (copy, _) -> VideoCopies.heightOf(copy)?.let { copy.copyQuality() } }.entries
+            .sortedBy { it.key == null }
+    }
+    Column {
+        Text(
+            SeriesShelf.tileTitle(item),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = Tone.text,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            listOfNotNull(
+                s.detailVersions(rows.size),
+                if (chats.size > 1) s.detailCopyInChats(chats.size) else chats.firstOrNull(),
+            ).joinToString("  ·  "),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Tone.muted,
+            modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),
+        )
+        groups.forEach { (quality, group) ->
+            Text(
+                quality ?: s.detailCopyOther,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = Tone.accent,
+                modifier = Modifier.padding(start = 4.dp, top = 16.dp, bottom = 4.dp),
+            )
+            group.forEach { (copy, same) ->
+                val facts = MediaFacts.of(copy)
+                CopyOption(
+                    copy = copy,
+                    title = copy.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) } ?: copyHeading(copy),
+                    what = listOfNotNull(
+                        facts.source,
+                        facts.videoCodec,
+                        facts.dynamicRange,
+                        copySound(copy),
+                    ).joinToString("  ·  "),
+                    facts = listOfNotNull(
+                        copy.durationSec.takeIf { it > 0 }?.let { s.formatter.duration(it.toLong()) },
+                        copy.date.takeIf { datesDiffer && it > 0 }?.let { s.detailCopyPosted(s.formatter.date(it * 1000L)) },
+                        chatOf(copy)?.takeIf { chats.size > 1 }?.let { s.detailCopyFrom(it) },
+                        when (copy.locality) {
+                            MediaItem.Locality.Downloaded -> s.gridBadgeDownloaded
+                            MediaItem.Locality.Cached -> s.detailCopyOnDevice
+                            MediaItem.Locality.Remote -> null
+                        },
+                        s.detailCopyStarted.takeIf { same.any(started) },
+                        postedAgain(same, s),
+                    ).joinToString("  ·  "),
+                    chosen = same.any { it.id == item.id },
+                    onClick = { onChoose(copy) },
+                )
+            }
+        }
+    }
+}
+
+/** One copy in [CopyChooser]: a radio, its size as the title, and what it is under that. */
+@Composable
+private fun CopyOption(copy: MediaItem, title: String, what: String, facts: String, chosen: Boolean, onClick: () -> Unit) {
+    val s = LocalStrings.current
+    val tv = !isTouch()
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val shape = RoundedCornerShape(Corner.Medium)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(
+                when {
+                    focused -> Tone.focusFill
+                    chosen -> Tone.accent.copy(alpha = 0.12f)
+                    else -> Color.Transparent
+                },
+            )
+            .focusRing(focused, shape)
+            .semantics {
+                selected = chosen
+                contentDescription = s.seriesCopy(copyHeading(copy))
+            }
+            .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, role = Role.RadioButton, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        val ink = if (focused) Tone.onFocusFill else Tone.text
+        RadioMark(chosen, focused)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = ink)
+            if (what.isNotEmpty()) Text(what, style = MaterialTheme.typography.bodySmall, color = if (focused) ink else Tone.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (facts.isNotEmpty()) Text(facts, style = MaterialTheme.typography.bodySmall, color = if (focused) ink.copy(alpha = 0.8f) else Tone.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+        if (!copy.canBeSaved) Icon(TmIcons.Lock, contentDescription = null, tint = if (focused) ink else Tone.muted, modifier = Modifier.size(18.dp))
+    }
+}
+
+/** The round mark of a choice: a ring, filled at its centre on the chosen one. */
+@Composable
+private fun RadioMark(chosen: Boolean, focused: Boolean, modifier: Modifier = Modifier) {
+    val ink = if (focused) Tone.onFocusFill else Tone.text
+    Box(
+        modifier
+            .size(20.dp)
+            .clip(CircleShape)
+            .border(2.dp, if (chosen) (if (focused) ink else Tone.accent) else ink.copy(alpha = 0.5f), CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (chosen) Box(Modifier.size(10.dp).clip(CircleShape).background(if (focused) ink else Tone.accent))
     }
 }
 
@@ -275,15 +402,7 @@ internal fun CopyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         val ink = if (focused) Tone.onFocusFill else Tone.text
-        Box(
-            Modifier
-                .size(20.dp)
-                .clip(CircleShape)
-                .border(2.dp, if (chosen) (if (focused) ink else Tone.accent) else ink.copy(alpha = 0.5f), CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (chosen) Box(Modifier.size(10.dp).clip(CircleShape).background(if (focused) ink else Tone.accent))
-        }
+        RadioMark(chosen, focused)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(heading, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (sound != null) {

@@ -347,6 +347,7 @@
     "copy_in_chats": "{count, plural, one {in # chat} other {in # chats}}",
     "copy_no_saving": "Saving off",
     "copy_on_device": "On this device",
+    "copy_other": "Quality not stated",
     "copy_posted": "Posted {date}",
     "copy_posted_times": "{count, plural, =2 {posted twice} one {posted once} other {posted # times}}",
     "copy_started": "Started",
