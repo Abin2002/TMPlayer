@@ -126,6 +126,17 @@ import com.tmplayer.data.CardLayout
 import com.tmplayer.data.DiskInfo
 import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.FormFactor
+import com.tmplayer.ui.components.FloatingBackButton
+import com.tmplayer.ui.components.FloatingBarIcon
+import com.tmplayer.ui.components.FloatingChrome
+import com.tmplayer.ui.components.FloatingPageTitle
+import com.tmplayer.ui.components.LocalBottomChrome
+import com.tmplayer.ui.components.StickyActionBar
+import com.tmplayer.ui.components.rememberCompactChrome
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.withFrameNanos
 import com.tmplayer.data.LocalDownloads
 import com.tmplayer.data.MediaFeedEntry
 import com.tmplayer.data.MediaItem
@@ -596,7 +607,7 @@ fun MediaGridScreen(
                 // A television crops its outermost few percent, so the last row needs
                 // clearance or its titles are cut off the bottom of the panel. A phone crops
                 // nothing but does put a gesture bar over the last row.
-                bottom = if (touch) navigationBarPadding() + 16.dp else Tv.SafeV + 16.dp,
+                bottom = if (touch) maxOf(navigationBarPadding(), LocalBottomChrome.current) + 16.dp else Tv.SafeV + 16.dp,
             )
 
             // The strip only belongs there while the remote is somewhere in the listing, and a
@@ -933,6 +944,7 @@ fun MediaGridScreen(
                     )
                 }
             },
+            onLeaveSelection = { leaveSelection() },
             content = {
                 // The circular arrow stays in the overflow too, because a listing that is empty or
                 // in an error state has nothing to drag.
@@ -1021,11 +1033,14 @@ fun MediaGridScreen(
 }
 
 /**
- * The phone's version of this screen's chrome: a real app bar.
+ * The phone's version of this screen's chrome, laid out for a phone held in one hand.
  *
- * Everything lives in the bar: an arrow, the chat's own picture, its name, and the actions as
- * icons. Search expands to fill the bar the way it does on the chat list, so the two screens are
- * searched the same way.
+ * The top keeps only what is read: the chat's own picture and its name beside the round Back,
+ * scrolling away with the grid and back on the first pull down. Everything pressed is at the foot,
+ * in a sticky bar that stays put while the grid scrolls: Search, the star, Sort, rows or tiles,
+ * and Refresh. Search turns that bar into the field, which rides up with the keyboard and back
+ * down when it closes; the recent searches sit just above it. A selection turns it into the
+ * selection's bar, and Back into Close.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1047,23 +1062,23 @@ internal fun TouchMediaScaffold(
     onClearRecent: () -> Unit = {},
     /** Opens the Sort menu ([VideoSortSheet]); null leaves it out. */
     onSort: (() -> Unit)? = null,
-    /** The topic row of a group with topics, under the bar. Null for every other chat. */
+    /** The topic row of a group with topics, under the title. Null for every other chat. */
     topicTabs: (@Composable () -> Unit)? = null,
     /** Opens with the search already showing, for the screenshot fixture. */
     startSearching: Boolean = false,
     /**
-     * The contextual bar shown while videos are being ticked, which takes the whole of the app bar
-     * rather than sitting under it: that is what every phone list does when a selection starts, and
-     * leaving the ordinary bar in place would leave a back arrow that quietly abandons the picks.
+     * The selection's bar, shown in place of the sticky bar while videos are being ticked; Back
+     * becomes Close ([onLeaveSelection]) meanwhile.
      */
     selectionBar: (@Composable () -> Unit)? = null,
+    onLeaveSelection: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val s = LocalStrings.current
     var searching by rememberSaveable { mutableStateOf(startSearching) }
     val field = remember { FocusRequester() }
-    // The bar is a lot of a phone screen to spend on chrome while scrolling, so it leaves on the
-    // way down and comes back on the first flick up.
+    // The title is a lot of a phone screen to spend while scrolling, so it leaves on the way down
+    // and comes back on the first flick up. The buttons at the foot stay.
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     // On a Fire tablet the keyboard is where dictation lives, so the mic button opens it instead.
@@ -1077,28 +1092,31 @@ internal fun TouchMediaScaffold(
         onQuery(it)
         onSubmit()
     }
-
-    // Back leaves the search first and the chat second, which is the order a phone user means it.
-    BackHandler(enabled = searching) {
+    val closeSearch = {
         searching = false
         onQuery("")
         onSubmit()
     }
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            if (selectionBar != null) selectionBar() else TopAppBar(
-                scrollBehavior = scrollBehavior,
-                title = {
-                    if (searching) {
-                        MediaSearchField(
-                            query = query,
-                            onQueryChange = { onQuery(it); onSubmit() },
-                            onVoiceSearch = startVoice,
-                            modifier = Modifier.focusRequester(field),
-                        )
-                    } else {
+    // Back leaves the search first and the chat second, which is the order a phone user means it.
+    BackHandler(enabled = searching) { closeSearch() }
+
+    val compact = rememberCompactChrome()
+    val density = LocalDensity.current
+    // Measured from the bottom of the window: the keyboard when it is up, else the navigation bar.
+    val under = with(density) {
+        maxOf(WindowInsets.navigationBars.getBottom(this), WindowInsets.ime.getBottom(this)).toDp()
+    }
+    val recentShown = searching && query.isEmpty() && recentSearches.isNotEmpty() && selectionBar == null
+    // What floats over the end of the grid, which the grid pads its last row clear of.
+    val room = under + FloatingChrome.clearance(compact) + if (recentShown) RECENT_ROW else 0.dp
+
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                FloatingPageTitle(
+                    title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             MediaPreview(
                                 miniThumbnail = chatMiniThumbnail,
@@ -1116,61 +1134,44 @@ internal fun TouchMediaScaffold(
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            if (searching) {
-                                searching = false
-                                onQuery("")
-                                onSubmit()
-                            } else {
-                                onBack()
-                            }
-                        },
-                    ) {
-                        M3Icon(
-                            TmIcons.ArrowBack,
-                            contentDescription = if (searching) s.browseCloseSearch else s.gridBackToChats,
-                        )
-                    }
-                },
-                actions = {
-                    if (searching) return@TopAppBar
-                    IconButton(onClick = { searching = true }) {
-                        M3Icon(TmIcons.Search, contentDescription = s.gridSearchThisChat)
-                    }
-                    IconButton(onClick = onToggleFavorite) {
-                        M3Icon(
-                            if (isFavorite) TmIcons.Star else TmIcons.StarOutline,
-                            contentDescription = if (isFavorite) {
-                                s.browseRemoveFavourite
-                            } else {
-                                s.browseAddFavourite
-                            },
-                            // Only the filled star is coloured. The outline is left to the bar's
-                            // own action colour, so it sits with the other two icons.
-                            tint = if (isFavorite) Tone.accent else LocalContentColor.current,
-                        )
-                    }
-                    // Two icons and a menu, not four icons. A phone app bar has around 200dp to
-                    // divide between the title and the actions, and four of them ellipsise the
-                    // chat's name on a 1080p panel.
-                    BarOverflow(
-                        listOfNotNull(
-                            onSort?.let { s.gridSort to it },
-                            (if (layout == CardLayout.Grid) s.browseShowAsRows else s.browseShowAsTiles)
-                                to onToggleLayout,
-                            s.commonRefresh to onRefresh,
-                        ),
-                    )
-                },
-            )
-        },
-    ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            if (searching && query.isEmpty() && recentSearches.isNotEmpty()) {
+                    },
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            // The grid runs to the foot of the window, under the bar that floats over it.
+            contentWindowInsets = WindowInsets.statusBars,
+        ) { padding ->
+            Column(Modifier.fillMaxSize().padding(padding)) {
+                if (selectionBar == null) topicTabs?.invoke()
+                CompositionLocalProvider(LocalBottomChrome provides room) {
+                    Box(Modifier.fillMaxSize()) { content() }
+                }
+            }
+        }
+
+        FloatingBackButton(
+            icon = when {
+                selectionBar != null -> TmIcons.Close
+                else -> TmIcons.ArrowBack
+            },
+            label = when {
+                selectionBar != null -> s.gridStopSelecting
+                searching -> s.browseCloseSearch
+                else -> s.gridBackToChats
+            },
+            onClick = {
+                when {
+                    selectionBar != null -> onLeaveSelection()
+                    searching -> closeSearch()
+                    else -> onBack()
+                }
+            },
+            modifier = Modifier.align(Alignment.TopStart),
+        )
+
+        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+            if (recentShown) {
+                // Just over the field, where the thumb already is.
                 TouchRecentSearches(
                     searches = recentSearches,
                     onPick = {
@@ -1180,18 +1181,47 @@ internal fun TouchMediaScaffold(
                     onClear = onClearRecent,
                 )
             }
-            if (selectionBar == null) topicTabs?.invoke()
-            Box(Modifier.fillMaxSize()) { content() }
+            when {
+                selectionBar != null -> selectionBar()
+                searching -> StickyActionBar(compact = compact, fill = true) {
+                    FloatingBarIcon(TmIcons.ArrowBack, s.browseCloseSearch, closeSearch)
+                    MediaSearchField(
+                        query = query,
+                        onQueryChange = { onQuery(it); onSubmit() },
+                        onVoiceSearch = startVoice,
+                        modifier = Modifier.focusRequester(field),
+                        rowModifier = Modifier.weight(1f),
+                    )
+                }
+                else -> StickyActionBar(compact = compact) {
+                    FloatingBarIcon(TmIcons.Search, s.gridSearchThisChat, { searching = true })
+                    FloatingBarIcon(
+                        icon = if (isFavorite) TmIcons.Star else TmIcons.StarOutline,
+                        label = if (isFavorite) s.browseRemoveFavourite else s.browseAddFavourite,
+                        onClick = onToggleFavorite,
+                        // Only the filled star is coloured, so the outline sits with the others.
+                        tint = if (isFavorite) Tone.accent else Tone.text,
+                        checked = isFavorite,
+                    )
+                    onSort?.let { FloatingBarIcon(TmIcons.Sort, s.gridSort, it) }
+                    FloatingBarIcon(
+                        icon = if (layout == CardLayout.Grid) TmIcons.List else TmIcons.Grid,
+                        label = if (layout == CardLayout.Grid) s.browseShowAsRows else s.browseShowAsTiles,
+                        onClick = onToggleLayout,
+                    )
+                    FloatingBarIcon(TmIcons.Refresh, s.commonRefresh, onRefresh)
+                }
+            }
         }
     }
 
     LaunchedEffect(searching) {
         if (!searching) return@LaunchedEffect
-        // Search is reached from a bar that may be half off the top of the screen by the time it
-        // is pressed, and a field nobody can see is a field nobody can type into. Putting the bar
-        // back down is part of opening the search, not a separate gesture.
+        // The field is the bar at the foot, so it is on screen whatever the grid has done; the
+        // keyboard comes up with it and the field rides up on top of the keyboard.
         scrollBehavior.state.heightOffset = 0f
-        field.requestFocus()
+        withFrameNanos { }
+        runCatching { field.requestFocus() }
     }
 }
 
@@ -1201,15 +1231,17 @@ private fun MediaSearchField(
     onQueryChange: (String) -> Unit,
     onVoiceSearch: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    rowModifier: Modifier = Modifier,
 ) {
     val s = LocalStrings.current
     // Not a Material SearchBar: that component owns the whole top of the screen, arrow and
-    // suggestion sheet included, and this search sits inside an app bar that already has both. It
+    // suggestion sheet included, and this search sits inside the sticky bar at the foot. It
     // borrows the shape and the colour so it still reads as a search bar.
     Surface(
         shape = M3MaterialTheme.shapes.extraLarge,
         color = Tone.surfaceHigh,
         contentColor = Tone.text,
+        modifier = rowModifier.padding(end = 4.dp),
     ) {
         Row(
             Modifier
@@ -1397,8 +1429,8 @@ internal fun Header(
 }
 
 /**
- * The phone's recent searches: a scrolling row of chips under the open search bar, with Clear at
- * the end. Shown only while the field is empty, which is when a chip saves typing.
+ * The phone's recent searches: a scrolling row of chips just over the open search field, with
+ * Clear at the end. Shown only while the field is empty, which is when a chip saves typing.
  */
 @Composable
 private fun TouchRecentSearches(
@@ -1448,33 +1480,33 @@ private fun SelectionBar(
     val label = s.gridSelectedCount(count)
 
     if (isTouch()) {
-        TopAppBar(
-            title = { M3Text(label, style = M3MaterialTheme.typography.titleMedium) },
-            navigationIcon = {
-                IconButton(onClick = onCancel) {
-                    M3Icon(TmIcons.Close, contentDescription = s.gridStopSelecting)
-                }
-            },
-            actions = {
-                TextButton(onClick = onSelectAll) { M3Text(s.gridSelectAll) }
-                // Words, not a bare arrow: this is the one control on the bar that acts on the
-                // ticked videos, and a corner glyph would say nothing about what it starts.
-                if (onDownload != null) Button(
-                    onClick = onDownload,
-                    enabled = count > 0,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    modifier = Modifier.padding(end = 8.dp),
-                ) {
-                    M3Icon(
-                        TmIcons.Download,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    M3Text(s.gridDownloadSelected)
-                }
-            },
-        )
+        // At the foot, where the sticky bar was; Close is the round button at the top start.
+        StickyActionBar(compact = rememberCompactChrome(), fill = true) {
+            M3Text(
+                label,
+                style = M3MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f).padding(start = 14.dp),
+            )
+            TextButton(onClick = onSelectAll) { M3Text(s.gridSelectAll, maxLines = 1) }
+            // Words, not a bare arrow: this is the one control on the bar that acts on the
+            // ticked videos, and a corner glyph would say nothing about what it starts.
+            if (onDownload != null) Button(
+                onClick = onDownload,
+                enabled = count > 0,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.padding(end = 2.dp),
+            ) {
+                M3Icon(
+                    TmIcons.Download,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                M3Text(s.gridDownloadSelected, maxLines = 1)
+            }
+        }
         return
     }
 
@@ -2366,6 +2398,9 @@ private const val TOUCH_ART_SHARE = 0.4f
 
 /** The chat's picture in the app bar, at Material's own app-bar avatar size. */
 private val BAR_AVATAR = 40.dp
+
+/** The recent searches over the open search field: one row of chips. */
+private val RECENT_ROW = 48.dp
 
 /** How long a finger takes to press a tile's art down to [Motion.PressScale]. */
 private const val PRESS_MS = 100

@@ -135,7 +135,7 @@ fun FloatingPageTitle(
     TopAppBar(
         title = title,
         // The button's room: it is drawn over the page, not in this bar, so it stays when this goes.
-        navigationIcon = { Spacer(Modifier.width(FloatingChrome.Button + 4.dp)) },
+        navigationIcon = { Spacer(Modifier.width(FloatingChrome.Button + 12.dp)) },
         scrollBehavior = scrollBehavior,
     )
 }

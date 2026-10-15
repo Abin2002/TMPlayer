@@ -31,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material3.Icon as M3Icon
 import androidx.compose.material3.Text as M3Text
 import androidx.compose.runtime.Composable
@@ -178,19 +179,21 @@ fun AboutScreen(onBack: () -> Unit) {
     }
 
     if (touch) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { M3Text(s.aboutTitle) },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            M3Icon(TmIcons.ArrowBack, contentDescription = s.aboutBackToSettings)
-                        }
-                    },
-                )
-            },
-        ) { padding ->
-            Box(Modifier.fillMaxSize().padding(padding)) { list() }
+        // Its name along the top beside the round Back, as on every other page of Settings.
+        val scroll = androidx.compose.material3.TopAppBarDefaults.enterAlwaysScrollBehavior()
+        Box(Modifier.fillMaxSize()) {
+            Scaffold(
+                modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
+                topBar = { com.tmplayer.ui.components.FloatingPageTitle({ M3Text(s.aboutTitle) }, scroll) },
+            ) { padding ->
+                Box(Modifier.fillMaxSize().padding(padding)) { list() }
+            }
+            com.tmplayer.ui.components.FloatingBackButton(
+                TmIcons.ArrowBack,
+                s.aboutBackToSettings,
+                onBack,
+                Modifier.align(androidx.compose.ui.Alignment.TopStart),
+            )
         }
     } else {
         list()
