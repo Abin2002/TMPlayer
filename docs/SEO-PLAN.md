@@ -179,8 +179,9 @@ The site today: download is a plain nav link; four pages have no download button
 - **IndexNow on every site change, not only releases.** A small job on pushes to `main` that touch
   `site/` pings IndexNow with the URLs whose content changed, so Bing (and through it ChatGPT
   search and Copilot) sees a change within hours.
-- **Bing Webmaster Tools** (user, once): verify the site, import from Search Console, submit the
-  sitemap, then read the AI Performance report every month next to Search Console.
+- **Bing Webmaster Tools** is set up (data from 2026-10-09; the first four days: 34 impressions,
+  3 clicks, about 9 per cent CTR, roughly a fortieth of Google's daily volume). Check the sitemap
+  is submitted there, then read the AI Performance report every month next to Search Console.
 - **Third-party presence** (user, ongoing): assistants cite what others say about you. Listings
   where people look for apps like this, all with the same sentence and link: AlternativeTo, the
   awesome-android-tv and awesome-telegram lists on GitHub, an XDA Developers thread, Reddit
@@ -202,7 +203,7 @@ Keep what moved, revert what did not.
    currently not indexed", "Duplicate without user-selected canonical" or "Alternate page with
    proper canonical" rows, exported. It shows whether the translated pages are indexed at all.
 3. **The Vercel firewall settings** (Firewall, Bot Protection and Attack Challenge Mode: on or off).
-4. **Bing Webmaster Tools** set up (Phase 4), and its AI Performance export after a month.
+4. **Bing**: the Queries and Pages tabs of Search Performance, the sitemap status, and the AI Performance export once it has a month of data.
 5. **Decisions**: training bots allowed (recommended) or not; Burmese and Malay worth translating;
    the header button and the phone bar approved as described.
 
