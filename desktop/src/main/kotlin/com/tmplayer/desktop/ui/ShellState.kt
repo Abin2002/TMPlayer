@@ -19,6 +19,11 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import com.tmplayer.data.ChatSummary
+import com.tmplayer.data.CopyHandoff
+import com.tmplayer.platform.Background
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.tmplayer.data.DownloadRunner
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.SettingsStore
@@ -277,7 +282,17 @@ class ShellState(
      *   off, if anywhere.
      */
     fun openPlayer(item: MediaItem, startFromBeginning: Boolean) {
-        nowPlaying = PlayRequest(item, startFromBeginning, chatTitleOf(item.chatId))
+        if (item.versions.size <= 1) {
+            nowPlaying = PlayRequest(item, startFromBeginning, chatTitleOf(item.chatId))
+            return
+        }
+        // A film posted more than once plays the copy chosen for the viewer (VideoCopies.pick),
+        // and the player is handed the others for its Copies menu.
+        CopyHandoff.offer(item.versions, item.versions.associate { it.chatId to chatTitleOf(it.chatId) }.filterValues { it.isNotBlank() })
+        Background.scope.launch {
+            val picked = runCatching { settings.copyToPlay(item) }.getOrDefault(item)
+            withContext(Dispatchers.Main) { nowPlaying = PlayRequest(picked, startFromBeginning, chatTitleOf(picked.chatId)) }
+        }
     }
 
     fun closePlayer() {

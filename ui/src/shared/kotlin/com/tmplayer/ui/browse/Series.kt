@@ -109,7 +109,9 @@ import com.tmplayer.data.SeriesEpisode
 import com.tmplayer.data.SeriesProgress
 import com.tmplayer.data.SeriesSeason
 import com.tmplayer.data.SeriesShelf
+import com.tmplayer.data.VideoCopies
 import com.tmplayer.data.WatchPoint
+import com.tmplayer.data.copyQuality
 import com.tmplayer.data.Watching
 import com.tmplayer.player.StreamStats
 import com.tmplayer.ui.components.MediaArt
@@ -362,11 +364,11 @@ fun SeasonTabs(
  * fetched for it. An episode posted with no thumbnail gets its generated cover, with its number set
  * large, so a long season of bare files still reads as a numbered set.
  *
- * An episode the chat holds in several copies (350 MB, 600 MB, 1.8 GB) is still one card. The row
- * plays [chosen], the copy most like the one the viewer watched last, and a line of chips under it
- * names every copy by its quality and size so another can be picked with [onCopy].
+ * An episode the chat holds in several copies (350 MB, 600 MB, 1.8 GB) is still one card, which
+ * plays [chosen] and names its quality in the line of facts. Which copy is the show's choice, made
+ * once for every episode with [QualityPicker] on the show's page and by the player's copy button
+ * while watching, not a row of chips under every card.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EpisodeRow(
     episode: SeriesEpisode,
@@ -377,7 +379,6 @@ fun EpisodeRow(
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
     chosen: MediaItem = episode.item,
-    onCopy: ((MediaItem) -> Unit)? = null,
     /** The episode playing, in the player's episode list: tinted and badged as such. */
     current: Boolean = false,
     /**
@@ -385,7 +386,7 @@ fun EpisodeRow(
      * watched that way. Off elsewhere, where OK only plays.
      */
     holdOk: Boolean = false,
-    /** Hung on the row itself rather than on the copies under it, for focus to land on. */
+    /** Hung on the row itself, for focus to land on. */
     lineModifier: Modifier = Modifier,
     /**
      * The episode's name from TMDB or TVmaze ([com.tmplayer.online.EpisodeNames.listName]), or
@@ -393,62 +394,34 @@ fun EpisodeRow(
      */
     name: String? = null,
 ) {
-    val tv = !isTouch()
     val shape = RoundedCornerShape(Corner.Medium)
     val card = modifier
         .fillMaxWidth()
         .clip(shape)
         .background(if (current) Tone.accent.copy(alpha = 0.14f) else Tone.surface)
         .border(1.dp, if (current) Tone.accent.copy(alpha = 0.5f) else Tone.outline, shape)
-    if (episode.copies.size <= 1 || onCopy == null) {
-        EpisodeLine(episode, chosen, point, finished, upNext, onClick, card.then(lineModifier), onLongClick, current, holdOk, name)
-        return
-    }
-    // DOWN from the row goes to the chip of the copy it plays, not to whichever chip sits nearest
-    // the row's middle (which, on a wide television row, was the last one).
-    val chips = remember(episode.copies.size) { List(episode.copies.size) { FocusRequester() } }
-    val landing = chips[episode.copies.indexOfFirst { it.id == chosen.id }.coerceAtLeast(0)]
-    Column(card) {
-        EpisodeLine(episode, chosen, point, finished, upNext, onClick, lineModifier.focusProperties { down = landing }, onLongClick, current, holdOk, name)
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(
-                    // Under the text, past the picture and the row's own padding and gap.
-                    start = if (tv) EPISODE_ART_TV + 10.dp + 16.dp else EPISODE_ART_TOUCH + 8.dp + 12.dp,
-                    end = 8.dp,
-                    bottom = 10.dp,
-                ),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            episode.copies.forEachIndexed { at, copy ->
-                CopyChip(copy, chosen = copy.id == chosen.id, onClick = { onCopy(copy) }, modifier = Modifier.focusRequester(chips[at]))
-            }
-        }
-    }
+    EpisodeLine(episode, chosen, point, finished, upNext, onClick, card.then(lineModifier), onLongClick, current, holdOk, name)
 }
 
 /**
- * One copy of an episode or a film, by its quality and size: "1080p · 1.8 GB", in a round chip.
- * Under the remote it takes the focus fill, as every other television control does.
+ * A choice of one among a few short labels, as a round chip: a show's quality ("1080p"), with
+ * [description] read out for it. Under the remote it takes the focus fill, as every other
+ * television control does.
  */
 @Composable
-internal fun CopyChip(copy: MediaItem, chosen: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val s = LocalStrings.current
+internal fun CopyChip(label: String, chosen: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, description: String = label) {
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
-    val label = EpisodeCopies.label(copy)
     val shape = CircleShape
     Text(
         label,
-        style = MaterialTheme.typography.labelMedium,
+        style = if (tv) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium,
         fontWeight = if (chosen) FontWeight.SemiBold else FontWeight.Normal,
         color = when {
             focused -> Tone.onFocusFill
             chosen -> Tone.accent
-            else -> Tone.muted
+            else -> Tone.text
         },
         maxLines = 1,
         modifier = modifier
@@ -456,24 +429,57 @@ internal fun CopyChip(copy: MediaItem, chosen: Boolean, onClick: () -> Unit, mod
             .background(
                 when {
                     focused -> Tone.focusFill
-                    chosen -> Tone.accent.copy(alpha = 0.14f)
-                    else -> Color.Transparent
+                    chosen -> Tone.accent.copy(alpha = 0.18f)
+                    else -> Tone.surfaceHigh
                 },
             )
             .focusRing(focused, shape)
-            .border(
-                1.dp,
-                when {
-                    focused -> Color.Transparent
-                    chosen -> Tone.accent.copy(alpha = 0.6f)
-                    else -> Tone.muted.copy(alpha = 0.4f)
-                },
-                shape,
-            )
-            .semantics { contentDescription = s.seriesCopy(label) }
+            .border(1.dp, if (chosen && !focused) Tone.accent.copy(alpha = 0.6f) else Color.Transparent, shape)
+            .semantics {
+                contentDescription = description
+                selected = chosen
+            }
             .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = if (tv) 5.dp else 3.dp),
+            .padding(horizontal = 14.dp, vertical = if (tv) 8.dp else 6.dp),
     )
+}
+
+/**
+ * A show posted in more than one quality: "Quality" and a chip for each ("1080p", "720p"), the one
+ * the episodes play marked. One choice for the whole show, since whoever picks the 720p of one
+ * episode wants the 720p of the next; nothing at all for a show posted in one quality.
+ */
+@Composable
+fun QualityPicker(heights: List<Int>, selected: Int?, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+    if (heights.size < 2) return
+    val s = LocalStrings.current
+    Row(
+        modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(s.seriesQuality, style = MaterialTheme.typography.labelLarge, color = Tone.muted, maxLines = 1, modifier = Modifier.padding(end = 4.dp))
+        heights.forEach { height ->
+            val label = qualityLabel(height)
+            CopyChip(label, chosen = height == selected, onClick = { onSelect(height) }, description = s.seriesQualityPick(label))
+        }
+    }
+}
+
+/** "1080p", "4K": a picture height as a quality chip names it. */
+internal fun qualityLabel(height: Int): String = if (height >= 2160) "4K" else "${height}p"
+
+/**
+ * The copy of [episode] nearest the show's chosen [height]: the same quality where the episode has
+ * it, else the closest, the lower on a tie. [fallback] for an episode with one copy, or none with
+ * a quality to compare.
+ */
+internal fun copyAt(episode: SeriesEpisode, height: Int?, fallback: MediaItem): MediaItem {
+    if (height == null || episode.copies.size <= 1) return fallback
+    return episode.copies
+        .mapNotNull { copy -> VideoCopies.heightOf(copy)?.let { copy to it } }
+        .minWithOrNull(compareBy<Pair<MediaItem, Int>> { kotlin.math.abs(it.second - height) }.thenBy { it.second })
+        ?.first ?: fallback
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -585,6 +591,8 @@ private fun EpisodeLine(
                 ?.let { s.seriesStoppedAt(StreamStats.formatClock(it.positionMs)) }
             val meta = listOfNotNull(
                 MediaMapper.formatDuration(item.durationSec).ifEmpty { null },
+                // Which of the episode's copies the card plays, where it has more than one.
+                item.takeIf { episode.copies.size > 1 && VideoCopies.heightOf(it) != null }?.copyQuality(),
                 MediaMapper.formatSize(item.sizeBytes).ifEmpty { null },
                 stopped ?: s.seriesWatchedLabel.takeIf { finished },
             ).joinToString("  ·  ")
@@ -677,6 +685,15 @@ fun SeriesPanel(
         mutableIntStateOf(next?.season ?: series.seasons.first().number)
     }
     val shown = series.seasons.firstOrNull { it.number == season } ?: series.seasons.first()
+    // The qualities the show was posted in, highest first, and the one its episodes play: the
+    // viewer's pick here, else that of the copy they watched last, else of the newest upload.
+    val heights = remember(series) {
+        series.episodes.flatMap { it.copies }.mapNotNull(VideoCopies::heightOf).distinct().sortedDescending()
+    }
+    var pickedHeight by rememberSaveable(series.key) { mutableStateOf<Int?>(null) }
+    val height = pickedHeight ?: (progress.like ?: next?.item ?: series.cover).let(VideoCopies::heightOf)
+    fun copyOf(episode: SeriesEpisode, fallback: MediaItem) =
+        if (pickedHeight == null) fallback else copyAt(episode, pickedHeight, fallback)
     val playFocus = remember { FocusRequester() }
     // Whether Play holds focus, and whether the viewer has pressed a key on the page yet: Play is
     // asked for until it has focus or a key has gone elsewhere. Not "until anything has focus":
@@ -844,7 +861,7 @@ fun SeriesPanel(
                         else -> s.seriesPlay(target.code)
                     },
                     icon = TmIcons.Play,
-                    onClick = { onPlay(next?.item ?: watch.pick(target, progress)) },
+                    onClick = { onPlay(copyOf(target, next?.item ?: watch.pick(target, progress))) },
                     modifier = m.then(downToUpNext).onPlaced { playPlaced = true }.onFocusChanged { playFocused = it.hasFocus },
                     focusRequester = playFocus,
                 )
@@ -923,11 +940,12 @@ fun SeriesPanel(
                 Column(Modifier.fillMaxWidth().padding(pad), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     seasonPicker(shown.number) { season = it }
                     if (ranges.isNotEmpty()) EpisodeRanges(ranges = ranges, selected = rangeAt, onSelect = { rangeAt = it })
+                    QualityPicker(heights, selected = height?.takeIf { it in heights }, onSelect = { pickedHeight = it })
                     Spacer(Modifier.height(2.dp))
                 }
             }
             items(listed, key = { it.item.id }) { episode ->
-                val chosen = if (next != null && episode.sameAs(next)) next.item else watch.pick(episode, progress)
+                val chosen = copyOf(episode, if (next != null && episode.sameAs(next)) next.item else watch.pick(episode, progress))
                 EpisodeRow(
                     episode = episode,
                     point = watch.pointOf(episode),
@@ -936,7 +954,6 @@ fun SeriesPanel(
                     onClick = { onPlay(chosen) },
                     onLongClick = onLongClick?.let { { it(chosen) } },
                     chosen = chosen,
-                    onCopy = onPlay,
                     modifier = Modifier.padding(pad).widthIn(max = EPISODES_MAX),
                     lineModifier = if (next != null && episode.sameAs(next)) Modifier.focusRequester(upNextFocus) else Modifier,
                     name = EpisodeNames.listName(episode.season, episode.episode, names),

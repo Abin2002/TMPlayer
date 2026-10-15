@@ -11,8 +11,9 @@ import kotlin.math.ln
  * Channels post the same episode more than once, in the sizes their viewers ask for: a 350 MB
  * copy for a phone, a 600 MB one, a 1.8 GB one for a television. Often the file names are the
  * same and only the size tells them apart. Whoever chose the small copy of episode one wants the
- * small copy of episode two, so the next copy is the one most like the last: the same markers
- * in the name where the name has any (720p, 1080p, x265), else the nearest size.
+ * small copy of episode two, so the next copy is the one most like the last: the same audio
+ * language where the name says one, then the same markers in the name where the name has any
+ * (720p, 1080p, x265), else the nearest size.
  */
 object EpisodeCopies {
 
@@ -29,8 +30,12 @@ object EpisodeCopies {
     ): T? {
         if (candidates.size <= 1) return candidates.firstOrNull()
         val wanted = markers(likeName)
+        // The same audio first: a Tamil copy of episode one leads to the Tamil copy of episode two
+        // whatever its size, and only then the same quality.
+        val language = VideoCopies.languagesIn(likeName)
         return candidates.withIndex().minWithOrNull(
-            compareByDescending<IndexedValue<T>> { (_, it) -> (markers(nameOf(it)) intersect wanted).size }
+            compareByDescending<IndexedValue<T>> { (_, it) -> if (language.isEmpty()) 0 else (VideoCopies.languagesIn(nameOf(it)) intersect language).size }
+                .thenByDescending { (_, it) -> (markers(nameOf(it)) intersect wanted).size }
                 .thenBy { (_, it) -> sizeGap(likeSize, sizeOf(it)) }
                 .thenBy { it.index },
         )?.value

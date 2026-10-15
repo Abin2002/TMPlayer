@@ -210,7 +210,7 @@ object HomeRows {
         inProgress: Set<String> = emptySet(),
     ): List<ShelfEntry> {
         fun copyOfContinuing(item: MediaItem): Boolean =
-            continuing.isNotEmpty() && SeriesShelf.sameVideoKey(item)?.let { "${item.chatId}|$it" in continuing } == true
+            continuing.isNotEmpty() && VideoCopies.keyOf(item)?.let { it in continuing } == true
         fun episode(item: MediaItem): Boolean = SeriesShelf.episodeOf(item).episode != null
         val fresh = items
             .filterNot { item ->
@@ -277,9 +277,12 @@ object HomeRows {
         return (listOf(record) + records.filter { copyKeyOf(it) == key }).distinctBy { it.chatId to it.messageId }
     }
 
-    /** Which film or episode [record] is a copy of, within its chat; null for a video that names neither. */
-    private fun copyKeyOf(record: ResumeRecord): String? =
-        SeriesShelf.sameVideoKey(record.toMediaItem())?.let { "${record.chatId}|$it" }
+    /**
+     * Which film or episode [record] is a copy of, in any chat ([VideoCopies.keyOf]), or null for a
+     * video that names neither. An old record is read cautiously: its title alone has to name a
+     * year or an episode, so a caption's bare "S02E04" never folds a whole show into one card.
+     */
+    private fun copyKeyOf(record: ResumeRecord): String? = VideoCopies.keyOf(record)
 
     /** The same key [SettingsStore.progressKey] writes, so a resume record and a video match. */
     private fun keyOf(chatId: Long, messageId: Long) = SettingsStore.progressKey(chatId, messageId)

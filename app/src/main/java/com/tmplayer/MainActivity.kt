@@ -57,6 +57,7 @@ import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.AppLockSession
 import com.tmplayer.data.FormFactor
+import com.tmplayer.data.CopyHandoff
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.LowStorageOffers
 import com.tmplayer.data.RoomOnDisk
@@ -718,7 +719,11 @@ private fun Root() {
      * The preparation itself, split out only so [play] can wrap the whole of it in one pending
      * state without every early return having to remember to clear it.
      */
-    suspend fun playNow(item: MediaItem, confirmed: Boolean, chatTitle: String) {
+    suspend fun playNow(requested: MediaItem, confirmed: Boolean, requestedChat: String) {
+        // A film posted more than once plays the copy chosen for the viewer (VideoCopies.pick):
+        // the one they picked, one on the device, the one they started, their usual quality.
+        val item = runCatching { settings.copyToPlay(requested) }.getOrDefault(requested)
+        val chatTitle = if (item.chatId == requested.chatId) requestedChat else CopyHandoff.chatTitleOf(item) ?: requestedChat
         // Off the main thread for the whole of the decision. Everything between here and the plan
         // is blocking work: two stat() calls to see whether the file is on disk, a statvfs() for
         // the free space, a walk of every download record, and a TDLib round trip per record to

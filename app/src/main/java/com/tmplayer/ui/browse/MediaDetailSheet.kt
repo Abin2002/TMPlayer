@@ -115,6 +115,14 @@ internal fun MediaDetailOpened(
             DiskSpace.read(context, java.io.File(context.filesDir, AndroidPaths.DOWNLOADS)).freeBytes
         }
     }
+    // A film posted more than once opens on the copy that would play (see SettingsStore.copyToPlay),
+    // so the page, its facts and Play all speak of the same file. Settled by the time it has run
+    // once: the copy it turns to picks itself again.
+    androidx.compose.runtime.LaunchedEffect(item.id) {
+        if (item.versions.size <= 1 || onOpenItem == null) return@LaunchedEffect
+        val pick = runCatching { settings.copyToPlay(item) }.getOrNull() ?: return@LaunchedEffect
+        if (pick.id != item.id) onOpenItem(pick)
+    }
     var confirmingRemove by remember { mutableStateOf(false) }
     // The prompt stays up until the file has gone, and a second press on Remove meanwhile deleted
     // nothing more but said "could not be removed" after "Removed".
@@ -199,7 +207,7 @@ internal fun MediaDetailOpened(
             // to resume from.
             DetailAction.StartOver -> { {
                 scope.launch {
-                    runCatching { settings.clearResumePosition(item.chatId, item.messageId) }
+                    runCatching { settings.clearResumePosition(item.chatId, item.messageId, item) }
                     onDismiss()
                     onPlay()
                 }
@@ -259,7 +267,13 @@ internal fun MediaDetailOpened(
         val bookmarkStore = remember(context) { BookmarkStore(context) }
         val bookmarks by remember(item.chatId, item.messageId) { bookmarkStore.bookmarks(item.chatId, item.messageId) }
             .collectAsStateWithLifecycle(initialValue = emptyList())
-        DetailScreen(item, chatTitle, watched, finished, rows, onDismiss, onOpenItem, bookmarks) { mark ->
+        val progress by remember(settings) { settings.watchProgress }.collectAsStateWithLifecycle(initialValue = emptyMap())
+        // Remembered for the video before the page turns, or the turn would pick the old copy again.
+        val onPickCopy: ((MediaItem) -> Unit)? = onOpenItem?.let { open ->
+            { copy: MediaItem -> scope.launch { runCatching { settings.setCopyPick(copy) }; open(copy) }; Unit }
+        }
+        val started: (MediaItem) -> Boolean = { SettingsStore.progressKey(it.chatId, it.messageId) in progress }
+        DetailScreen(item, chatTitle, watched, finished, rows, onDismiss, onOpenItem, bookmarks, onPickCopy, started) { mark ->
             // The player takes the position on opening this video, in place of its resume point.
             BookmarkJump.request(item.chatId, item.messageId, mark.positionMs)
             onDismiss()
@@ -340,6 +354,8 @@ private fun DetailScreen(
     onDismiss: () -> Unit,
     onOpenItem: ((MediaItem) -> Unit)?,
     bookmarks: List<Bookmark>,
+    onPickCopy: ((MediaItem) -> Unit)?,
+    copyStarted: (MediaItem) -> Boolean,
     onOpenBookmark: (Bookmark) -> Unit,
 ) {
     val touch = isTouch()
@@ -362,6 +378,8 @@ private fun DetailScreen(
                 onOpenItem = onOpenItem,
                 bookmarks = bookmarks,
                 onOpenBookmark = onOpenBookmark,
+                onPickCopy = onPickCopy,
+                copyStarted = copyStarted,
             )
         }
     }

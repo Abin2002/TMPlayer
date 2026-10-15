@@ -258,7 +258,7 @@ class HomeRowsTest {
     }
 
     @Test
-    fun `copies of one episode fold, other episodes and other chats stay apart`() {
+    fun `copies of one episode fold, in this chat and others, and other episodes stay apart`() {
         val e1hd = video(1, "Loki.S02E05.1080p.WEB.x265.mkv")
         val e1sd = video(1, "Loki.S02E05.720p.WEB.x264.mkv")
         val e2 = video(1, "Loki.S02E06.720p.WEB.x264.mkv")
@@ -274,13 +274,14 @@ class HomeRowsTest {
             resume(clip2, updatedAt = 5),
         )
         val folded = HomeRows.foldCopies(records)
-        assertEquals(listOf(e1hd, e2, elsewhere, clip, clip2).map { it.messageId }, folded.map { it.messageId })
+        // The 480p posted in another chat is the same episode: one card for it, as for the 720p.
+        assertEquals(listOf(e1hd, e2, clip, clip2).map { it.messageId }, folded.map { it.messageId })
         // Out of order, the newest copy still wins, in the place the first of them held.
         val kept = HomeRows.foldCopies(listOf(resume(e1sd, updatedAt = 1), resume(e1hd, updatedAt = 9)))
         assertEquals(listOf(e1hd.messageId), kept.map { it.messageId })
-        // Removing the folded card takes both copies, and nothing else.
+        // Removing the folded card takes every copy, and nothing else.
         assertEquals(
-            setOf(e1hd.messageId, e1sd.messageId),
+            setOf(e1hd.messageId, e1sd.messageId, elsewhere.messageId),
             HomeRows.copiesOf(records[0], records).map { it.messageId }.toSet(),
         )
         assertEquals(listOf(clip.messageId), HomeRows.copiesOf(records[4], records).map { it.messageId })

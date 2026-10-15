@@ -188,6 +188,10 @@ data class MediaItem(
             topicId == other.topicId &&
             extra == other.extra &&
             parts.size == other.parts.size &&
+            // By id: a copy found since (a new upload of the film) has to reach the tile and the
+            // page, and comparing whole copies would compare their copies' thumbnails over again.
+            versions.size == other.versions.size &&
+            versions.indices.all { versions[it].id == other.versions[it].id } &&
             miniThumbnail.contentEquals(other.miniThumbnail)
     }
 
@@ -212,6 +216,7 @@ data class MediaItem(
         result = 31 * result + (extra?.hashCode() ?: 0)
         result = 31 * result + parts.size
         result = 31 * result + (miniThumbnail?.contentHashCode() ?: 0)
+        result = 31 * result + versions.fold(0) { acc, copy -> 31 * acc + copy.id.hashCode() }
         return result
     }
 }

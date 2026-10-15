@@ -1,5 +1,10 @@
 package com.tmplayer.desktop.player
 
+import com.tmplayer.ui.browse.copyHeading
+import com.tmplayer.ui.browse.copyDetail
+import com.tmplayer.data.copyQuality
+import com.tmplayer.data.VideoCopies
+import com.tmplayer.data.CopyHandoff
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
@@ -126,8 +131,19 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 
 /** What a menu entry asks for, beyond the plain [PlayerAction]s. */
+/**
+ * The copies of the video playing ([copies], itself among them) and which is playing, for the
+ * menu's Copies page. Handed down as a local: the menu is opened from five places in the overlay.
+ */
+internal data class PlayerCopies(val copies: List<MediaItem> = emptyList(), val playing: String = "")
+
+internal val LocalPlayerCopies = androidx.compose.runtime.staticCompositionLocalOf { PlayerCopies() }
+
 internal sealed interface MenuAction {
     data class Do(val action: PlayerAction) : MenuAction
+
+    /** Another copy of the video, played from the same moment. */
+    data class SwitchCopy(val copy: MediaItem) : MenuAction
     data class Track(val type: TrackType, val track: MediaTrack?) : MenuAction
     data class Speed(val speed: Float) : MenuAction
     data class Shape(val scale: VideoScale) : MenuAction
@@ -695,6 +711,7 @@ internal fun PlayerMenu(
     onAction: (MenuAction) -> Unit,
 ) {
     val s = LocalStrings.current
+    val copies = LocalPlayerCopies.current
     fun pick(action: MenuAction) {
         onClose()
         onAction(action)
@@ -740,6 +757,11 @@ internal fun PlayerMenu(
         }
         when (menu.page) {
             MenuPage.Main -> {
+                // A video posted more than once: which copy is playing, and the way to another.
+                if (copies.copies.size > 1) {
+                    val playing = copies.copies.firstOrNull { it.id == copies.playing }
+                    Entry(s.playerCopies, trailing = playing?.copyQuality()) { page(MenuPage.Copies) }
+                }
                 if (alwaysOnTopAvailable) Entry(s.playerAlwaysOnTop, trailing = s.playerKeyCommandT(commandKey(s))) { pick(MenuAction.Do(PlayerAction.AlwaysOnTop)) }
                 Entry(s.playerPlaybackOptions) { page(MenuPage.Options) }
                 Entry(s.playerSubtitleStyleAndTiming) { page(MenuPage.SubtitleStyle) }
@@ -816,6 +838,16 @@ internal fun PlayerMenu(
             }
             MenuPage.Speed -> PlaybackSpeed.CHOICES.forEach { speed ->
                 Entry(PlaybackSpeed.label(speed), checked = kotlin.math.abs(speed - status.speed) < 0.001f) { pick(MenuAction.Speed(speed)) }
+            }
+            MenuPage.Copies -> {
+                val spans = VideoCopies.spansChats(copies.copies)
+                copies.copies.forEach { copy ->
+                    val chat = if (spans) CopyHandoff.chatTitleOf(copy) else null
+                    val line = listOf(copyHeading(copy), copyDetail(copy, s.messages, chat)).filter { it.isNotBlank() }.joinToString("  ·  ")
+                    Entry(line, checked = copy.id == copies.playing) {
+                        if (copy.id == copies.playing) onClose() else pick(MenuAction.SwitchCopy(copy))
+                    }
+                }
             }
             MenuPage.Shape -> VideoScale.entries.forEach { shape ->
                 Entry(shape.label, checked = shape == status.scale) { pick(MenuAction.Shape(shape)) }

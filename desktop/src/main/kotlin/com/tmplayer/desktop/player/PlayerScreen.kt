@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -65,6 +66,8 @@ import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedStore
 import com.tmplayer.data.Bookmark
 import com.tmplayer.data.BookmarkJump
+import com.tmplayer.data.VideoCopies
+import com.tmplayer.data.CopyHandoff
 import com.tmplayer.data.BookmarkStore
 import com.tmplayer.desktop.DesktopPrefs
 import com.tmplayer.desktop.WatchedWords
@@ -118,7 +121,7 @@ internal data class Flash(val kind: Kind, val text: String, val id: Long) {
     enum class Kind { Play, Pause, SeekBack, SeekForward, Text, Volume }
 }
 
-internal enum class MenuPage { Main, Audio, Subtitles, Speed, Shape, Sleep, Options, SubtitleStyle, Bookmarks }
+internal enum class MenuPage { Main, Audio, Subtitles, Speed, Shape, Sleep, Options, SubtitleStyle, Bookmarks, Copies }
 
 /** Where an open menu hangs: at the cursor for a right click, or under a button. */
 internal data class MenuAt(val page: MenuPage, val anchor: Anchor, val at: Offset = Offset.Zero) {
@@ -134,7 +137,7 @@ internal data class MenuAt(val page: MenuPage, val anchor: Anchor, val at: Offse
         MenuPage.Subtitles -> if (anchor == Anchor.Subtitles) null else MenuPage.Main
         MenuPage.Speed -> if (anchor == Anchor.Speed) null else MenuPage.Main
         MenuPage.Sleep, MenuPage.Shape -> MenuPage.Options
-        MenuPage.Options, MenuPage.Bookmarks -> MenuPage.Main
+        MenuPage.Options, MenuPage.Bookmarks, MenuPage.Copies -> MenuPage.Main
         MenuPage.SubtitleStyle -> if (anchor == Anchor.Subtitles) MenuPage.Subtitles else MenuPage.Main
     }
 }
@@ -228,6 +231,17 @@ fun PlayerScreen(
     var attempt by remember { mutableIntStateOf(0) }
     var phase by remember { mutableStateOf<Phase>(Phase.Loading(s.playerOpeningVideo)) }
     var episodes by remember { mutableStateOf(Episodes()) }
+    // Every copy of the video playing that the player knows of: what the opening page handed over
+    // (CopyHandoff, possibly across chats) and, for an episode, its copies once the show is found.
+    val copies = remember(current.item.id, episodes) {
+        val here = current.item
+        val episode = episodes.series?.episodes?.firstOrNull { ep -> ep.copies.any { it.id == here.id } }
+        (CopyHandoff.copiesOf(here) + episode?.copies.orEmpty() + here).distinctBy { it.id }
+    }
+    LaunchedEffect(current.item.id) {
+        val here = current.item
+        runCatching { settings.notePlayedQuality(copies.firstOrNull { it.id == here.id } ?: here) }
+    }
     var resumedFrom by remember { mutableStateOf<Long?>(null) }
     var autoplayNext by remember { mutableStateOf(true) }
     var nextUpDismissed by remember { mutableStateOf(false) }
@@ -338,10 +352,11 @@ fun PlayerScreen(
         // page opens the video at its moment, once.
         val start = reopenAt ?: BookmarkJump.take(item.chatId, item.messageId) ?: if (ignoreSavedPosition) {
             // Start over forgets the old place: a short watch from here leaves a saved one alone.
-            runCatching { settings.clearResumePosition(item.chatId, item.messageId) }
+            runCatching { settings.clearResumePosition(item.chatId, item.messageId, item) }
             0L
         } else runCatching {
-            settings.resumeStart(item.chatId, item.messageId)
+            // Whichever copy of the video was played last: a switch of quality carries on.
+            settings.resumeStartFor(item)
         }.getOrDefault(0L)
         val reopening = reopenAt != null
         reopenAt = null
@@ -454,10 +469,13 @@ fun PlayerScreen(
             durationSec = it.durationSec.takeIf { d -> d > 0 } ?: (duration / 1000).toInt(),
             updatedAt = System.currentTimeMillis(),
             state = resumeState(engine.tracks.value, s.speed),
+            // So the record can be told from other videos' and matched to this one's copies.
+            fileName = it.fileName,
+            caption = it.caption,
         )
         playerScope.launch {
             runCatching {
-                if (forget) settings.clearResumePosition(it.chatId, it.messageId)
+                if (forget) settings.clearResumePosition(it.chatId, it.messageId, it)
                 else settings.saveResumePosition(it.chatId, it.messageId, position, duration, description)
             }
         }
@@ -490,6 +508,22 @@ fun PlayerScreen(
     fun switchTo(next: MediaItem) {
         saveResume(current, engine.state.value, leaving = true)
         current = current.episode(next)
+    }
+
+    /**
+     * Plays another copy of the video in place of this one, from the same moment
+     * ([VideoCopies.carryOver]), and remembers it for the video and the next episode.
+     */
+    fun switchCopy(copy: MediaItem) {
+        if (copy.id == current.item.id) return
+        val s = engine.state.value
+        val from = s.durationMs.takeIf { it > 0 } ?: current.item.durationSec * 1000L
+        VideoCopies.carryOver(s.positionMs, from, copy.durationSec * 1000L)?.takeIf { it > 0 }?.let {
+            BookmarkJump.request(copy.chatId, copy.messageId, it)
+        }
+        playerScope.launch { runCatching { settings.setCopyPick(copy) } }
+        CopyHandoff.offer(copies)
+        switchTo(copy)
     }
 
     /** [switchTo] for an episode nobody asked for, counted towards "Still watching?". */
@@ -1162,7 +1196,7 @@ fun PlayerScreen(
                 current.chatTitle.takeIf { it.isNotBlank() },
             ).joinToString("  ·  ")
 
-            PlayerOverlay(
+            CompositionLocalProvider(LocalPlayerCopies provides PlayerCopies(copies, current.item.id)) { PlayerOverlay(
                 visible = showControls,
                 status = status,
                 title = title,
@@ -1231,6 +1265,7 @@ fun PlayerScreen(
                             showFlash(Flash.Kind.Text, if (ignoreClicks) s.playerClicksIgnored else s.playerClicksWork)
                         }
                         MenuAction.CopyLink -> copyLink()
+                        is MenuAction.SwitchCopy -> switchCopy(action.copy)
                         MenuAction.Download -> showFlash(Flash.Kind.Text, current.download())
                         MenuAction.OpenElsewhere -> openElsewhere()
                         MenuAction.Details -> showDetails = true
@@ -1254,7 +1289,7 @@ fun PlayerScreen(
                 } else {
                     null
                 },
-            )
+            ) }
 
             FeedbackLayer(
                 flash = flash,

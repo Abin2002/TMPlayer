@@ -68,6 +68,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.tmplayer.App
 import com.tmplayer.R
 import com.tmplayer.data.ChatRepository
+import com.tmplayer.data.CopyHandoff
+import com.tmplayer.data.VideoCopies
+import com.tmplayer.data.copyQuality
 import com.tmplayer.data.LocalDownloads
 import com.tmplayer.data.start
 import com.tmplayer.data.pauseAll
@@ -624,6 +627,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             onCycleOrientation = ::cycleOrientation,
             onPlayEpisode = ::playEpisode,
             onEpisodes = ::openEpisodes,
+            onCopies = ::openCopies,
             onBack = ::finish,
             onMore = ::showOverflow,
             onRemainingToggled = { remaining ->
@@ -737,6 +741,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         observeConnectivity()
         startResumeHeartbeat()
         findEpisodes()
+        findCopies()
         findSkipTimes()
 
         // Reading the saved position is a disk hit; do it off the main thread and seek once it
@@ -746,7 +751,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         lifecycleScope.launch {
             // A bookmark chosen on the detail page opens the video at its moment, once.
             resumeMs = BookmarkJump.take(chatId, messageId)
-                ?: runCatching { settings.resumeStart(chatId, messageId) }.getOrDefault(0L)
+                // Whichever copy of the video was played last: a switch of quality, or the 720p
+                // started on the phone and the 1080p opened on the television, carries on.
+                ?: runCatching { settings.resumeStartFor(currentItem()) }.getOrDefault(0L)
             if (resumeMs > 0) {
                 player?.seekTo(resumeMs)
                 resumeNotice = L.playerResumingFrom(Translator.messages.formatter.clock(resumeMs))
@@ -1137,6 +1144,79 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     fun episodeLabel(next: Boolean, tag: EpisodeTag?): String {
         tag ?: return if (next) L.playerNext else L.playerPrevious
         return if (next) L.playerNextUp(tag.label) else L.playerPreviousUp(tag.label)
+    }
+
+    // ---- copies ------------------------------------------------------------------------------
+
+    /**
+     * Every copy of the video playing that this player knows of, itself among them: the ones the
+     * page that opened it handed over ([CopyHandoff], which may span chats), an episode's copies
+     * once the show is found, and for a film whatever a search of the chat for its title turns up.
+     */
+    private var copies: List<MediaItem> = emptyList()
+
+    private fun findCopies() {
+        val here = currentItem()
+        setCopies(CopyHandoff.copiesOf(here))
+        // The quality played counts towards the one chosen for the viewer next time.
+        val played = copies.firstOrNull { it.id == here.id } ?: here
+        App.backgroundScope.launch { runCatching { settings.notePlayedQuality(played) } }
+        if (VideoCopies.keyOf(here) == null) return
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                episodes.collect { steps ->
+                    val episode = steps.series?.episodes?.firstOrNull { ep -> ep.copies.any { it.id == here.id } }
+                    if (episode != null) setCopies(copies + episode.copies)
+                }
+            }
+        }
+        if (chatId == 0L || SeriesShelf.episodeOf(here).episode != null) return
+        lifecycleScope.launch {
+            val session = Td.awaitAuthorizedSession()
+            val title = SeriesShelf.episodeOf(here).title.ifBlank { return@launch }
+            val found = runCatching { ChatRepository(session.client).mediaPage(chatId, query = title).items }.getOrNull().orEmpty()
+            val key = VideoCopies.keyOf(here)
+            setCopies(copies + found.filter { VideoCopies.keyOf(it) == key })
+        }
+    }
+
+    /** Takes [list] as the copies, and names the one playing on the copy button when there is a choice. */
+    private fun setCopies(list: List<MediaItem>) {
+        val here = currentItem()
+        val all = (list + here).distinctBy { it.id }
+        copies = all
+        // The listed copy carries Telegram's picture size, which the start arguments do not.
+        val playing = all.firstOrNull { it.id == here.id } ?: here
+        controls?.setCopy(if (all.size > 1) playing.copyQuality() else null)
+    }
+
+    /** The chat a copy is in, by name, for the copies list and for the player it opens. */
+    private fun copyChatTitle(copy: MediaItem): String =
+        if (copy.chatId == chatId) chatTitle else CopyHandoff.chatTitleOf(copy).orEmpty()
+
+    /** The copy button: every copy, the one playing ticked; choosing another plays it from here. */
+    fun openCopies() {
+        val list = copies.takeIf { it.size > 1 } ?: return
+        showSheet { it.showCopies(list, currentItem().id, ::copyChatTitle, ::switchCopy) }
+    }
+
+    /**
+     * Plays [copy] in place of the copy playing, at the same moment ([VideoCopies.carryOver]
+     * allowing for a copy a little longer or shorter), and remembers it as the copy for this video
+     * and the quality for the next episode. The place is per copy: this one keeps its own line,
+     * and the new copy's is read as the newest from then on.
+     */
+    private fun switchCopy(copy: MediaItem) {
+        if (copy.id == currentItem().id) return
+        val at = player?.currentPosition ?: 0L
+        val from = player?.duration?.takeIf { it > 0 } ?: durationSec * 1000L
+        VideoCopies.carryOver(at, from, copy.durationSec * 1000L)?.takeIf { it > 0 }?.let {
+            BookmarkJump.request(copy.chatId, copy.messageId, it)
+        }
+        App.backgroundScope.launch { runCatching { settings.setCopyPick(copy) } }
+        // The new player finds the same list, chats and all.
+        CopyHandoff.offer(copies, copies.associate { it.chatId to copyChatTitle(it) }.filterValues { it.isNotBlank() })
+        playEpisode(copy, copyChatTitle(copy).ifBlank { chatTitle })
     }
 
     /** The video playing, as the chat lists it, for the series view's grouping. */
@@ -2330,13 +2410,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * [onCreate] against one file, and a second path through that is a second place to go wrong.
      * The position in the episode being left is saved on the way out.
      */
-    fun playEpisode(item: MediaItem) {
+    fun playEpisode(item: MediaItem) = playEpisode(item, chatTitle)
+
+    /** [playEpisode] for a video in another chat, a copy found by a search across chats. */
+    private fun playEpisode(item: MediaItem, inChat: String) {
         // Once: a double tap on the next button, or a held next key on a slow stick, reached here
         // again before this screen was gone and stacked a second player that Back then landed on.
         if (handingOver) return
         handingOver = true
         startActivity(
-            intent(this, item, chatTitle).putExtra(
+            intent(this, item, inChat).putExtra(
                 EXTRA_OUTSIDE_APP_TASK,
                 inPictureInPicture || intent.getBooleanExtra(EXTRA_OUTSIDE_APP_TASK, false),
             ),
@@ -2378,7 +2461,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private fun onVideoEnded() {
         recordFinished()
         lifecycleScope.launch {
-            settings.clearResumePosition(chatId, messageId)
+            settings.clearResumePosition(chatId, messageId, currentItem())
             val next = _episodes.value.next
             val autoplay = runCatching { settings.autoplayNextNow() }.getOrDefault(true)
             hideNextUp()
@@ -3510,7 +3593,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private fun startOver() {
         val exo = player ?: return
         // A short watch from here leaves a saved place alone, so starting over forgets it.
-        lifecycleScope.launch { settings.clearResumePosition(chatId, messageId) }
+        lifecycleScope.launch { settings.clearResumePosition(chatId, messageId, currentItem()) }
         exo.seekTo(0)
         exo.playWhenReady = true
         showGestureFeedback(L.playerFromTheStart)
@@ -3859,7 +3942,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     store.markUnwatched(item.chatId, item.messageId)
                 } else {
                     store.markWatched(WatchedRecord.of(item, title, System.currentTimeMillis(), manual = true))
-                    settings.clearResumePosition(item.chatId, item.messageId)
+                    settings.clearResumePosition(item.chatId, item.messageId, item)
                 }
             }
         }
@@ -4657,6 +4740,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         val store = settings
         val chat = chatId
         val message = messageId
+        val here = currentItem()
         // Written with the position so "Continue watching" can offer the video back without the
         // chat it came from being loaded, or still being in the list at all.
         val description = ResumeRecord.encode(
@@ -4669,6 +4753,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             // The tracks and speed go with the position. A restore still waiting on the track
             // list is what this video is meant to play with, so that is written, not the defaults.
             state = resumeTracks?.copy(speed = playbackSpeed) ?: resumeState(exo),
+            // So the record can be told from other videos' and matched to this one's copies.
+            fileName = mediaFileName,
+            caption = mediaCaption,
         )
         if (watched && leaving && !watchedHere) {
             watchedHere = true
@@ -4677,7 +4764,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         val forget = watched || markedWatchedHere
         App.backgroundScope.launch {
             runCatching {
-                if (forget) store.clearResumePosition(chat, message)
+                if (forget) store.clearResumePosition(chat, message, here)
                 else store.saveResumePosition(chat, message, position, duration, description)
             }
         }
@@ -4759,7 +4846,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             App.backgroundScope.launch {
                 runCatching {
                     store.markWatched(record)
-                    settings.clearResumePosition(chat, message)
+                    settings.clearResumePosition(chat, message, currentItem())
                 }
             }
             showGestureFeedback(L.playerMarkedWatched)
@@ -4977,6 +5064,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         fun intent(context: Context, item: MediaItem, chatTitle: String = ""): Intent =
             Intent(context, PlayerActivity::class.java).apply {
+                // A film's other copies go with it, for the player's copy button.
+                if (item.versions.size > 1) CopyHandoff.offer(item.versions, mapOf(item.chatId to chatTitle).filterValues { it.isNotBlank() })
                 putExtra(EXTRA_FILE_ID, item.fileId)
                 putExtra(EXTRA_SIZE, item.sizeBytes)
                 putExtra(EXTRA_DURATION, item.durationSec)

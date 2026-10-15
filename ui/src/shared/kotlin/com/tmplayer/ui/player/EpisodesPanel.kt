@@ -214,7 +214,6 @@ fun EpisodesPanel(
                         onClick = { actions.onPlay(chosen) },
                         onLongClick = { actions.onToggleWatched(chosen) },
                         chosen = chosen,
-                        onCopy = actions.onPlay,
                         current = isPlaying,
                         holdOk = true,
                         name = com.tmplayer.online.EpisodeNames.listName(episode.season, episode.episode, names),

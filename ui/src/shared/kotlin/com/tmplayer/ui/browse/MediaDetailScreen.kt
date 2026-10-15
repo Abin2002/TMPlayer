@@ -123,12 +123,19 @@ fun MediaDetailScreen(
     /** This video's bookmarks, under the actions; each opens the player at its moment. */
     bookmarks: List<Bookmark> = emptyList(),
     onOpenBookmark: ((Bookmark) -> Unit)? = null,
+    /**
+     * Another copy of the film chosen from its copies list ([Versions]); the platform remembers
+     * the choice for the video and turns the page to it. [onOpenItem] when not given.
+     */
+    onPickCopy: ((MediaItem) -> Unit)? = onOpenItem,
+    /** Whether a copy has a place saved, for the "Started" in its row. */
+    copyStarted: (MediaItem) -> Boolean = { false },
 ) {
     val meta = rememberMeta(item)
     val extras = rememberMetaExtras(meta)
     val cover = rememberCover(item)
     val source = remember(item.id, cover, meta?.wideUrl) { BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, meta?.wideUrl) }
-    val page = DetailPage(item, chatTitle, watched, finished, rows, meta, extras, source, firstAction, onOpenItem, bookmarks, onOpenBookmark)
+    val page = DetailPage(item, chatTitle, watched, finished, rows, meta, extras, source, firstAction, onOpenItem, bookmarks, onOpenBookmark, onPickCopy, copyStarted)
     BoxWithConstraints(modifier.fillMaxSize().background(Tone.background)) {
         val wide = maxWidth > maxHeight
         if (wide) {
@@ -160,6 +167,8 @@ private class DetailPage(
     val onOpenItem: ((MediaItem) -> Unit)?,
     val bookmarks: List<Bookmark>,
     val onOpenBookmark: ((Bookmark) -> Unit)?,
+    val onPickCopy: ((MediaItem) -> Unit)?,
+    val copyStarted: (MediaItem) -> Boolean,
 )
 
 @Composable
@@ -206,7 +215,7 @@ private fun CinemaLayout(page: DetailPage, height: Dp) {
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Actions(page, onEpisodes = episodesButton(page.item, page.meta, episodes))
-                    Versions(page.item, page.onOpenItem)
+                    Versions(page.item, page.onPickCopy, page.chatTitle, page.copyStarted)
                 }
                 Spacer(Modifier.height(if (tv) 8.dp else 4.dp))
             }
@@ -264,9 +273,9 @@ private fun StackedLayout(page: DetailPage, width: Dp, height: Dp) {
             Column(Modifier.revealFromTop(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 FactsBlock(page)
                 Actions(page, primaryFullWidth = true, onEpisodes = episodesButton(page.item, page.meta, episodes))
+                Versions(page.item, page.onPickCopy, page.chatTitle, page.copyStarted)
                 synopsisOf(page)?.let { Synopsis(it) }
                 ProtectedNote(page.item)
-                Versions(page.item, page.onOpenItem)
                 DetailBookmarks(page.bookmarks, page.onOpenBookmark)
             }
             BelowTheFold(page.item, page.meta, page.extras, page.onOpenItem, Modifier.bringIntoViewRequester(episodes))
@@ -401,30 +410,6 @@ private fun Actions(
         }
         trailers.unopened?.let { TrailerQr(it, Modifier.padding(vertical = 8.dp)) }
         TrailerHost(trailers)
-    }
-}
-
-/**
- * The other copies of this film in the chat, by quality and size, the one on the page marked:
- * "720p · 900 MB", "1080p · HEVC · 1.8 GB". Choosing one turns the page to it, so Play, the
- * download line and the facts all speak of that copy. Nothing when the film was posted once.
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-internal fun Versions(item: MediaItem, onOpenItem: ((MediaItem) -> Unit)?) {
-    if (item.versions.size <= 1 || onOpenItem == null) return
-    val s = LocalStrings.current
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            s.detailVersions(item.versions.size),
-            style = MaterialTheme.typography.labelLarge,
-            color = Tone.muted,
-        )
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item.versions.forEach { copy ->
-                CopyChip(copy, chosen = copy.id == item.id, onClick = { if (copy.id != item.id) onOpenItem(copy.asVersion(item)) })
-            }
-        }
     }
 }
 
