@@ -2070,17 +2070,72 @@ private fun ChipRow(
 
 @Composable
 private fun TouchChip(chip: ChipSpec) {
+    TouchFilterChip(chip.label, chip.icon, chip.selected, chip.description, chip.onClick)
+}
+
+/**
+ * One of the phone's chips, as History's tabs and the Chats page's filters draw them: also what
+ * Downloads switches its tabs with, so the pages behind the picture look alike.
+ */
+@Composable
+internal fun TouchFilterChip(
+    label: String,
+    icon: ImageVector,
+    selected: Boolean,
+    description: String? = null,
+    onClick: () -> Unit,
+) {
     androidx.compose.material3.FilterChip(
-        selected = chip.selected,
-        onClick = chip.onClick,
-        label = { M3Text(chip.label, maxLines = 1) },
+        selected = selected,
+        onClick = onClick,
+        label = { M3Text(label, maxLines = 1) },
         // A pill, like the television's chips and every other chip in the app.
         shape = CircleShape,
         leadingIcon = {
-            M3Icon(chip.icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            M3Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
         },
-        modifier = chip.description?.let { words -> Modifier.semantics { contentDescription = words } } ?: Modifier,
+        modifier = description?.let { words -> Modifier.semantics { contentDescription = words } } ?: Modifier,
     )
+}
+
+/**
+ * A row of [TouchFilterChip]s that scrolls sideways, spaced and inset as History's tabs are.
+ */
+@Composable
+internal fun TouchChipStrip(content: @Composable RowScope.() -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(start = TouchInsets.start, end = TouchInsets.end, top = 4.dp, bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
+}
+
+/**
+ * A History card's artwork (the video's thumbnail, the show's or film's picture, or its generated
+ * cover) with the play mark and, when [fraction] is above nothing, the progress line: for a row
+ * outside History that should look like one of History's, such as a download.
+ */
+@Composable
+internal fun VideoRecordArt(item: MediaItem, title: String, fraction: Float = 0f, modifier: Modifier = Modifier) {
+    val text = VideoCardText(
+        key = "${item.chatId}_${item.messageId}",
+        title = title,
+        detail = "",
+        chatTitle = "",
+        chatId = item.chatId,
+        fraction = fraction,
+        item = item,
+    )
+    Box(modifier.width(THUMBNAIL_WIDTH).height(THUMBNAIL_HEIGHT)) {
+        ContinueArt(text, Modifier.fillMaxSize(), badge = 34.dp)
+        if (fraction > 0f) {
+            ProgressLine(fraction, Modifier.align(Alignment.BottomCenter), inset = 6.dp)
+        }
+    }
 }
 
 @Composable

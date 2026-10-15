@@ -16,7 +16,12 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -112,12 +117,28 @@ fun FloatingBackButton(
         onClick = onClick,
         modifier = modifier
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
-            .padding(start = FloatingChrome.Inset, top = FloatingChrome.Inset / 2),
+            .padding(start = FloatingChrome.Inset, top = 10.dp),
     )
 }
 
-/** How much room the round Back button takes at the top start, for a title drawn beside it. */
-val FloatingBackSlot: Dp = FloatingChrome.Inset + FloatingChrome.Button + 8.dp
+/**
+ * The title along the top of a page that has a [FloatingBackButton]: the page's name beside the
+ * button, with nothing to press, scrolling away with the list ([scrollBehavior]) and back on the
+ * first pull down. The button stays where it is.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FloatingPageTitle(
+    title: @Composable () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+) {
+    TopAppBar(
+        title = title,
+        // The button's room: it is drawn over the page, not in this bar, so it stays when this goes.
+        navigationIcon = { Spacer(Modifier.width(FloatingChrome.Button + 4.dp)) },
+        scrollBehavior = scrollBehavior,
+    )
+}
 
 /**
  * A page's own actions, in a pill at the foot of the screen that stays put while the page scrolls.

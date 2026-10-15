@@ -63,6 +63,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch as M3Switch
 import androidx.compose.material3.Text as M3Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.tmplayer.ui.components.FloatingBackButton
+import com.tmplayer.ui.components.FloatingPageTitle
+import com.tmplayer.ui.components.LocalBottomChrome
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -503,7 +508,7 @@ fun SettingsScreen(
             // The app bar already clears the status bar on a phone, so the list only owes the
             // gesture bar at the bottom.
             top = if (touch) 4.dp else Tv.SafeV,
-            bottom = if (touch) insets.calculateBottomPadding() + 32.dp else 40.dp,
+            bottom = if (touch) maxOf(insets.calculateBottomPadding(), LocalBottomChrome.current) + 32.dp else 40.dp,
         ),
         // The gap between two rows of a phone's preference list is a divider's worth of nothing,
         // not a card margin.
@@ -1651,29 +1656,23 @@ fun SettingsScreen(
         return
     }
 
-    if (touch) {
-        // The phone needs an app bar: a heading that scrolls away with the list leaves no way off
-        // this screen but the hardware Back. On a page the arrow goes back to the list, the same
-        // as the hardware key.
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { M3Text(page?.let(::titleOf) ?: s.settingsTitle) },
-                    navigationIcon = {
-                        IconButton(onClick = { if (page != null) closePage() else onBack() }) {
-                            M3Icon(
-                                TmIcons.ArrowBack,
-                                contentDescription = if (page != null) {
-                                    s.aboutBackToSettings
-                                } else {
-                                    s.settingsBackToChats
-                                },
-                            )
-                        }
-                    },
-                )
-            },
-        ) { padding ->
+    if (touch && page != null) {
+        // A page: its name along the top beside the round Back, which goes back to the list, the
+        // same as the hardware key. The floating bar is the list's, not the page's.
+        val pageScroll = TopAppBarDefaults.enterAlwaysScrollBehavior()
+        Box(Modifier.fillMaxSize()) {
+            Scaffold(
+                modifier = Modifier.nestedScroll(pageScroll.nestedScrollConnection),
+                topBar = { FloatingPageTitle({ M3Text(titleOf(page!!)) }, pageScroll) },
+            ) { padding ->
+                Box(Modifier.fillMaxSize().padding(padding)) { list() }
+            }
+            FloatingBackButton(TmIcons.ArrowBack, s.aboutBackToSettings, { closePage() }, Modifier.align(Alignment.TopStart))
+        }
+    } else if (touch) {
+        // The list: its name along the top in the same bar Home and Chats have, and no arrow, since
+        // the floating bar is the way to everywhere else.
+        Scaffold(topBar = { TopAppBar(title = { M3Text(s.settingsTitle) }) }) { padding ->
             Box(Modifier.fillMaxSize().padding(padding)) { list() }
         }
     } else {

@@ -1,6 +1,29 @@
 package com.tmplayer.ui.downloads
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.tmplayer.ui.browse.BarOverflow
+import com.tmplayer.ui.browse.LocalTouchChrome
+import com.tmplayer.ui.browse.TouchChipStrip
+import com.tmplayer.ui.browse.TouchFilterChip
+import com.tmplayer.ui.browse.TouchPage
+import com.tmplayer.ui.browse.TouchPageSpec
+import com.tmplayer.ui.browse.VideoRecordArt
+import com.tmplayer.ui.components.FloatingBackButton
+import com.tmplayer.ui.components.FloatingBarIcon
+import com.tmplayer.ui.components.FloatingChrome
+import com.tmplayer.ui.components.FloatingPageTitle
+import com.tmplayer.ui.components.LocalBottomChrome
+import com.tmplayer.ui.components.StickyActionBar
+import com.tmplayer.ui.components.rememberCompactChrome
+import com.tmplayer.ui.components.usesFloatingChrome
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -468,265 +491,292 @@ fun DownloadsScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Tone.background,
-        // A television crops its outer few percent, and this screen is stock Material laid out to
-        // the panel's edge, so on a TV the whole of it moves inside the overscan margin.
-        modifier = if (isTouch()) {
-            Modifier
-        } else {
-            Modifier.background(Tone.background).padding(horizontal = Tv.SafeH, vertical = Tv.SafeV)
-        },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (picking) {
-                            if (chosen.isEmpty()) L.downloadsSelectVideos else L.downloadsSelected(count = chosen.size)
+    // What every tab lists, shared by the phone's page and the television's.
+    val body: LazyListScope.() -> Unit = body@{
+        if (tab == ONGOING) {
+            if (active.isNotEmpty()) {
+                item {
+                    QueueHeading(
+                        title = queueHeading(active),
+                        // Only worth offering on a real queue. With one video the card's
+                        // own button says the same thing an inch further down the screen.
+                        bulk = if (active.size > 1) {
+                            if (active.any { it.busy }) L.commonPauseAll else L.commonResumeAll
                         } else {
-                            L.downloadsTitle
+                            null
+                        },
+                        onBulk = {
+                            if (active.any { it.busy }) {
+                                OfflineDownloads.pauseAll(context)
+                            } else {
+                                OfflineDownloads.resumeAll(context)
+                            }
                         },
                     )
-                },
-                navigationIcon = {
-                    // While picking, the arrow leaves the selection rather than the screen: that
-                    // is what Back does here, and the two must not disagree.
-                    val backFocus = remember { MutableInteractionSource() }
-                    IconButton(
-                        onClick = { if (picking) leavePicking() else onBack() },
-                        interactionSource = backFocus,
-                        modifier = Modifier.tvFocusRing(backFocus, CircleShape),
-                    ) {
-                        Icon(
-                            if (picking) TmIcons.Close else TmIcons.ArrowBack,
-                            contentDescription = if (picking) L.downloadsLeaveSelection else L.commonBack,
+                }
+                items(active, key = { "active_${it.fileId}" }) { progress ->
+                    ActiveDownloadCard(
+                        progress = progress,
+                        // Where it stands among the videos still to be fetched, so a
+                        // waiting row can say how long the wait is.
+                        //
+                        // Looked up from the map built once above rather than worked out
+                        // per row: the progress ticker rebuilds this list once a second
+                        // for as long as anything is downloading.
+                        place = queuePlaces[progress.fileId] ?: -1,
+                        onPause = { OfflineDownloads.pause(context, progress.fileId) },
+                        onResume = { OfflineDownloads.resume(context, progress.fileId) },
+                        onCancel = { OfflineDownloads.cancel(context, progress.fileId) },
+                    )
+                }
+            } else {
+                item {
+                    // Given a height of its own: BigEmpty fills what it is given, and
+                    // inside a LazyColumn that is nothing, so it would collapse to a line.
+                    Box(emptyStateHeight(0.7f)) {
+                        BigEmpty(
+                            L.downloadsEmptyDownloading,
+                            icon = TmIcons.Download,
                         )
                     }
+                }
+            }
+            return@body
+        }
+
+        if (tab == CACHED) {
+            item {
+                Text(
+                    L.downloadsCachedNote,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 4.dp),
+                )
+            }
+            items(cachedRows, key = { it.key }) { row ->
+                DownloadCard(
+                    row = row,
+                    picking = false,
+                    checked = false,
+                    onPlay = { onPlay(row.record) },
+                    onShare = { saveToDownloads(row) },
+                    onDelete = { confirmingDelete = row },
+                    onToggle = {},
+                    onHold = null,
+                )
+            }
+            if (counted && cachedRows.isEmpty()) {
+                item {
+                    Box(emptyStateHeight(0.6f)) {
+                        BigEmpty(
+                            L.downloadsEmptyCached,
+                            icon = TmIcons.Download,
+                        )
+                    }
+                }
+            }
+            return@body
+        }
+
+        item {
+            StorageSummary(
+                split = split,
+                freeBytes = disk.freeBytes,
+                totalBytes = disk.totalBytes,
+            )
+        }
+        item {
+            RemoveAfterWatchingRow(removeAfterWatching) { on ->
+                // Turning it on is asked first: from then on files go without a press.
+                // Turning it off deletes nothing, so it just happens.
+                if (on) {
+                    confirmingRemoveAfterWatching = true
+                } else {
+                    scope.launch { settings.setRemoveAfterWatching(false) }
+                }
+            }
+        }
+        items(shown, key = { it.key }) { row ->
+            DownloadCard(
+                row = row,
+                picking = picking,
+                checked = row.key in picked,
+                onPlay = {
+                    // A part downloaded one carries on downloading; anything else plays.
+                    if (row.partial) saveToDownloads(row) else onPlay(row.record)
                 },
-                actions = {
-                    if (picking) {
-                        // Everything the list is showing, and never more than that.
-                        TextAction(L.downloadsSelectAll, enabled = chosen.size < shown.size) {
-                            picked = shown.map { it.key }.toSet()
-                        }
-                        return@TopAppBar
-                    }
-                    if (rows.isNotEmpty() && tab == COMPLETED) {
-                        TextAction(L.downloadsSelect) { picking = true }
-                    }
-                    // Offered on the rows and nothing else: a screen headed "Downloads" must not
-                    // carry a button that empties the cache and the previews too.
-                    if (rows.isNotEmpty() && tab == COMPLETED) {
-                        TextAction(L.downloadsDeleteAll) { confirmingClearAll = true }
-                    }
+                onShare = { share(listOf(row)) },
+                onDelete = { if (row.missing) removeMissing(row) else confirmingDelete = row },
+                onToggle = {
+                    picked = if (row.key in picked) picked - row.key else picked + row.key
+                },
+                // A hold is how a list of anything on a phone starts a selection, and it
+                // saves walking to the top bar for the first tick.
+                onHold = {
+                    picking = true
+                    picked = picked + row.key
                 },
             )
-        },
-        bottomBar = {
-            // Only while picking, and only with something picked: a bar of disabled buttons is a
-            // bar that has to be read before it can be ignored.
-            if (!picking || chosen.isEmpty()) return@Scaffold
-            Surface(color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 3.dp) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    PrimaryAction(L.commonShare, TmIcons.Share) { share(chosen) }
-                    SecondaryAction(
-                        label = L.commonDelete,
-                        icon = TmIcons.Delete,
-                        onClick = { confirmingDeleteMany = true },
-                        danger = true,
+        }
+        if (counted && shown.isEmpty()) {
+            item {
+                Box(emptyStateHeight(0.6f)) {
+                    BigEmpty(
+                        L.downloadsEmptyDownloaded(folder = LegacyDownloads.FOLDER),
+                        icon = TmIcons.Download,
                     )
                 }
             }
-        },
-    ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            // Fixed above the list rather than scrolled with it: switching between the two has to
-            // be possible from anywhere in either.
-            TabRow(selectedTabIndex = tab) {
-                // A tab is the one widget here whose shape really is the full rectangle it is
-                // given, so the ring follows that rather than pretending it is a pill.
-                val ongoingFocus = remember { MutableInteractionSource() }
-                Tab(
-                    selected = tab == ONGOING,
-                    onClick = { tab = ONGOING },
-                    interactionSource = ongoingFocus,
-                    modifier = Modifier.tvFocusRing(ongoingFocus, RectangleShape),
-                    text = {
-                        TabLabel(if (active.isEmpty()) L.downloadsTabDownloading else L.downloadsTabDownloadingCount(count = active.size))
-                    },
-                )
-                val completedFocus = remember { MutableInteractionSource() }
-                Tab(
-                    selected = tab == COMPLETED,
-                    onClick = { tab = COMPLETED },
-                    interactionSource = completedFocus,
-                    modifier = Modifier.tvFocusRing(completedFocus, RectangleShape),
-                    text = {
-                        TabLabel(if (rows.isEmpty()) L.downloadsTabDownloaded else L.downloadsTabDownloadedCount(count = rows.size))
-                    },
-                )
-                val cachedFocus = remember { MutableInteractionSource() }
-                Tab(
-                    selected = tab == CACHED,
-                    onClick = { tab = CACHED },
-                    interactionSource = cachedFocus,
-                    modifier = Modifier.tvFocusRing(cachedFocus, RectangleShape),
-                    text = {
-                        TabLabel(if (cachedRows.isEmpty()) L.downloadsTabCached else L.downloadsTabCachedCount(count = cachedRows.size))
-                    },
-                )
-            }
+        }
+    }
+    val listState = rememberLazyListState()
+    val tabLabel = { which: Int ->
+        when (which) {
+            ONGOING -> if (active.isEmpty()) L.downloadsTabDownloading else L.downloadsTabDownloadingCount(count = active.size)
+            COMPLETED -> if (rows.isEmpty()) L.downloadsTabDownloaded else L.downloadsTabDownloadedCount(count = rows.size)
+            else -> if (cachedRows.isEmpty()) L.downloadsTabCached else L.downloadsTabCachedCount(count = cachedRows.size)
+        }
+    }
 
-            val listState = rememberLazyListState()
-            Box(Modifier.fillMaxSize()) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 24.dp),
-                ) {
-                    if (tab == ONGOING) {
-                        if (active.isNotEmpty()) {
-                            item {
-                                QueueHeading(
-                                    title = queueHeading(active),
-                                    // Only worth offering on a real queue. With one video the card's
-                                    // own button says the same thing an inch further down the screen.
-                                    bulk = if (active.size > 1) {
-                                        if (active.any { it.busy }) L.commonPauseAll else L.commonResumeAll
-                                    } else {
-                                        null
-                                    },
-                                    onBulk = {
-                                        if (active.any { it.busy }) {
-                                            OfflineDownloads.pauseAll(context)
-                                        } else {
-                                            OfflineDownloads.resumeAll(context)
-                                        }
-                                    },
-                                )
-                            }
-                            items(active, key = { "active_${it.fileId}" }) { progress ->
-                                ActiveDownloadCard(
-                                    progress = progress,
-                                    // Where it stands among the videos still to be fetched, so a
-                                    // waiting row can say how long the wait is.
-                                    //
-                                    // Looked up from the map built once above rather than worked out
-                                    // per row: the progress ticker rebuilds this list once a second
-                                    // for as long as anything is downloading.
-                                    place = queuePlaces[progress.fileId] ?: -1,
-                                    onPause = { OfflineDownloads.pause(context, progress.fileId) },
-                                    onResume = { OfflineDownloads.resume(context, progress.fileId) },
-                                    onCancel = { OfflineDownloads.cancel(context, progress.fileId) },
-                                )
-                            }
-                        } else {
-                            item {
-                                // Given a height of its own: BigEmpty fills what it is given, and
-                                // inside a LazyColumn that is nothing, so it would collapse to a line.
-                                Box(emptyStateHeight(0.7f)) {
-                                    BigEmpty(
-                                        L.downloadsEmptyDownloading,
-                                        icon = TmIcons.Download,
-                                    )
-                                }
-                            }
-                        }
-                        return@LazyColumn
-                    }
-
-                    if (tab == CACHED) {
-                        item {
-                            Text(
-                                L.downloadsCachedNote,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 4.dp),
-                            )
-                        }
-                        items(cachedRows, key = { it.key }) { row ->
-                            DownloadCard(
-                                row = row,
-                                picking = false,
-                                checked = false,
-                                onPlay = { onPlay(row.record) },
-                                onShare = { saveToDownloads(row) },
-                                onDelete = { confirmingDelete = row },
-                                onToggle = {},
-                                onHold = null,
-                            )
-                        }
-                        if (counted && cachedRows.isEmpty()) {
-                            item {
-                                Box(emptyStateHeight(0.6f)) {
-                                    BigEmpty(
-                                        L.downloadsEmptyCached,
-                                        icon = TmIcons.Download,
-                                    )
-                                }
-                            }
-                        }
-                        return@LazyColumn
-                    }
-
-                    item {
-                        StorageSummary(
-                            split = split,
-                            freeBytes = disk.freeBytes,
-                            totalBytes = disk.totalBytes,
-                        )
-                    }
-                    item {
-                        RemoveAfterWatchingRow(removeAfterWatching) { on ->
-                            // Turning it on is asked first: from then on files go without a press.
-                            // Turning it off deletes nothing, so it just happens.
-                            if (on) {
-                                confirmingRemoveAfterWatching = true
+    if (usesFloatingChrome()) {
+        PhoneDownloads(
+            title = L.downloadsTitle,
+            tab = tab,
+            tabLabel = tabLabel,
+            onTab = { tab = it },
+            picking = picking,
+            chosenCount = chosen.size,
+            canSelect = rows.isNotEmpty() && tab == COMPLETED,
+            allChosen = chosen.size >= shown.size,
+            onBack = onBack,
+            onSelect = { picking = true },
+            onDeleteAll = { confirmingClearAll = true },
+            onLeavePicking = { leavePicking() },
+            onSelectAll = { picked = shown.map { it.key }.toSet() },
+            onShareChosen = { share(chosen) },
+            onDeleteChosen = { confirmingDeleteMany = true },
+            listState = listState,
+            body = body,
+        )
+    } else {
+        Scaffold(
+            containerColor = Tone.background,
+            // A television crops its outer few percent, and this screen is stock Material laid out to
+            // the panel's edge, so on a TV the whole of it moves inside the overscan margin.
+            modifier = if (isTouch()) {
+                Modifier
+            } else {
+                Modifier.background(Tone.background).padding(horizontal = Tv.SafeH, vertical = Tv.SafeV)
+            },
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            if (picking) {
+                                if (chosen.isEmpty()) L.downloadsSelectVideos else L.downloadsSelected(count = chosen.size)
                             } else {
-                                scope.launch { settings.setRemoveAfterWatching(false) }
-                            }
-                        }
-                    }
-                    items(shown, key = { it.key }) { row ->
-                        DownloadCard(
-                            row = row,
-                            picking = picking,
-                            checked = row.key in picked,
-                            onPlay = {
-                                // A part downloaded one carries on downloading; anything else plays.
-                                if (row.partial) saveToDownloads(row) else onPlay(row.record)
-                            },
-                            onShare = { share(listOf(row)) },
-                            onDelete = { if (row.missing) removeMissing(row) else confirmingDelete = row },
-                            onToggle = {
-                                picked = if (row.key in picked) picked - row.key else picked + row.key
-                            },
-                            // A hold is how a list of anything on a phone starts a selection, and it
-                            // saves walking to the top bar for the first tick.
-                            onHold = {
-                                picking = true
-                                picked = picked + row.key
+                                L.downloadsTitle
                             },
                         )
-                    }
-                    if (counted && shown.isEmpty()) {
-                        item {
-                            Box(emptyStateHeight(0.6f)) {
-                                BigEmpty(
-                                    L.downloadsEmptyDownloaded(folder = LegacyDownloads.FOLDER),
-                                    icon = TmIcons.Download,
-                                )
-                            }
+                    },
+                    navigationIcon = {
+                        // While picking, the arrow leaves the selection rather than the screen: that
+                        // is what Back does here, and the two must not disagree.
+                        val backFocus = remember { MutableInteractionSource() }
+                        IconButton(
+                            onClick = { if (picking) leavePicking() else onBack() },
+                            interactionSource = backFocus,
+                            modifier = Modifier.tvFocusRing(backFocus, CircleShape),
+                        ) {
+                            Icon(
+                                if (picking) TmIcons.Close else TmIcons.ArrowBack,
+                                contentDescription = if (picking) L.downloadsLeaveSelection else L.commonBack,
+                            )
                         }
+                    },
+                    actions = {
+                        if (picking) {
+                            // Everything the list is showing, and never more than that.
+                            TextAction(L.downloadsSelectAll, enabled = chosen.size < shown.size) {
+                                picked = shown.map { it.key }.toSet()
+                            }
+                            return@TopAppBar
+                        }
+                        if (rows.isNotEmpty() && tab == COMPLETED) {
+                            TextAction(L.downloadsSelect) { picking = true }
+                        }
+                        // Offered on the rows and nothing else: a screen headed "Downloads" must not
+                        // carry a button that empties the cache and the previews too.
+                        if (rows.isNotEmpty() && tab == COMPLETED) {
+                            TextAction(L.downloadsDeleteAll) { confirmingClearAll = true }
+                        }
+                    },
+                )
+            },
+            bottomBar = {
+                // Only while picking, and only with something picked: a bar of disabled buttons is a
+                // bar that has to be read before it can be ignored.
+                if (!picking || chosen.isEmpty()) return@Scaffold
+                Surface(color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 3.dp) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        PrimaryAction(L.commonShare, TmIcons.Share) { share(chosen) }
+                        SecondaryAction(
+                            label = L.commonDelete,
+                            icon = TmIcons.Delete,
+                            onClick = { confirmingDeleteMany = true },
+                            danger = true,
+                        )
                     }
                 }
-                ScrollToTop(listState)
+            },
+        ) { padding ->
+            Column(Modifier.fillMaxSize().padding(padding)) {
+                // Fixed above the list rather than scrolled with it: switching between the two has
+                // to be possible from anywhere in either.
+                TabRow(selectedTabIndex = tab) {
+                    // A tab is the one widget here whose shape really is the full rectangle it is
+                    // given, so the ring follows that rather than pretending it is a pill.
+                    val ongoingFocus = remember { MutableInteractionSource() }
+                    Tab(
+                        selected = tab == ONGOING,
+                        onClick = { tab = ONGOING },
+                        interactionSource = ongoingFocus,
+                        modifier = Modifier.tvFocusRing(ongoingFocus, RectangleShape),
+                        text = { TabLabel(tabLabel(ONGOING)) },
+                    )
+                    val completedFocus = remember { MutableInteractionSource() }
+                    Tab(
+                        selected = tab == COMPLETED,
+                        onClick = { tab = COMPLETED },
+                        interactionSource = completedFocus,
+                        modifier = Modifier.tvFocusRing(completedFocus, RectangleShape),
+                        text = { TabLabel(tabLabel(COMPLETED)) },
+                    )
+                    val cachedFocus = remember { MutableInteractionSource() }
+                    Tab(
+                        selected = tab == CACHED,
+                        onClick = { tab = CACHED },
+                        interactionSource = cachedFocus,
+                        modifier = Modifier.tvFocusRing(cachedFocus, RectangleShape),
+                        text = { TabLabel(tabLabel(CACHED)) },
+                    )
+                }
+
+                Box(Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 24.dp),
+                        content = body,
+                    )
+                    ScrollToTop(listState)
+                }
             }
         }
     }
@@ -1013,6 +1063,7 @@ private fun RowCard(
     // the rest of the time the remote lands straight on the buttons, and the hold-to-select
     // shortcut stays what it always was, a touch gesture, with the Select button covering it.
     val dpadFocusable = onClick != null || isTouch()
+    val phone = usesFloatingChrome()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -1032,17 +1083,19 @@ private fun RowCard(
                         )
                 },
             ),
-        shape = RoundedCornerShape(Corner.Large),
+        // A phone's card is History's: its large shape, its fill, no edge but a chosen one.
+        shape = if (phone) MaterialTheme.shapes.large else RoundedCornerShape(Corner.Large),
         // The same fill the Continue watching cards use, not the scheme's surfaceVariant: that
         // one sits a shade above the window on a dark theme, so a screenful reads as pale panels
         // floating on the background rather than as the app's own cards.
         colors = CardDefaults.cardColors(containerColor = Tone.surface),
-        border = BorderStroke(
-            if (accent != null) 2.dp else 1.dp,
-            accent ?: MaterialTheme.colorScheme.outlineVariant,
-        ),
+        border = when {
+            accent != null -> BorderStroke(2.dp, accent)
+            phone -> null
+            else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        },
     ) {
-        Column(Modifier.padding(16.dp)) { content() }
+        Column(if (phone) Modifier.padding(horizontal = 20.dp, vertical = 16.dp) else Modifier.padding(16.dp)) { content() }
     }
 }
 
@@ -1172,6 +1225,16 @@ private fun DownloadCard(
             if (picking) {
                 Checkbox(checked = checked, onCheckedChange = { onToggle() })
                 Spacer(Modifier.width(8.dp))
+            }
+            if (usesFloatingChrome()) {
+                // History's thumbnail, so a download reads as the same kind of thing as a video
+                // in Continue watching: the picture, or the generated cover until there is one.
+                VideoRecordArt(
+                    item = row.record.toMediaItem(),
+                    title = row.title,
+                    fraction = if (row.partial && row.totalBytes > 0) (row.bytes.toFloat() / row.totalBytes).coerceIn(0f, 1f) else 0f,
+                )
+                Spacer(Modifier.width(16.dp))
             }
             Column(Modifier.weight(1f)) {
                 Text(
@@ -1369,6 +1432,116 @@ private fun LazyItemScope.emptyStateHeight(fraction: Float): Modifier =
 @Composable
 private fun TabLabel(text: String) {
     Text(text, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+}
+
+/**
+ * Downloads on a phone, drawn like the pages behind the picture it is reached from (History is the
+ * model): its name along the top beside the round Back, the three tabs as History's chips, cards
+ * shaped like History's, and the floating bar along the foot with the picture ringed. Select and
+ * Delete all ride in the small pill over the bar, so nothing to press is at the top.
+ *
+ * A selection takes the bar's place with one of its own: the count, Select all, Share and Delete,
+ * with Close where Back was. Outside the app's bar (the screenshot fixture) the pill's buttons sit
+ * in a sticky bar of their own.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PhoneDownloads(
+    title: String,
+    tab: Int,
+    tabLabel: (Int) -> String,
+    onTab: (Int) -> Unit,
+    picking: Boolean,
+    chosenCount: Int,
+    canSelect: Boolean,
+    allChosen: Boolean,
+    onBack: () -> Unit,
+    onSelect: () -> Unit,
+    onDeleteAll: () -> Unit,
+    onLeavePicking: () -> Unit,
+    onSelectAll: () -> Unit,
+    onShareChosen: () -> Unit,
+    onDeleteChosen: () -> Unit,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    body: LazyListScope.() -> Unit,
+) {
+    val s = LocalStrings.current
+    val hosted = LocalTouchChrome.current != null
+    val actions: (@Composable RowScope.() -> Unit)? = if (canSelect && !picking) {
+        {
+            FloatingBarIcon(TmIcons.Checklist, s.downloadsSelect, onSelect)
+            // Behind the dots: a button that empties the list should take two presses, not one.
+            BarOverflow(listOf(s.downloadsDeleteAll to onDeleteAll))
+        }
+    } else {
+        null
+    }
+    TouchPage(TouchPageSpec(current = null, inProfile = true, hidden = picking, actions = actions))
+
+    val compact = rememberCompactChrome()
+    val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    // The list's end clears whatever floats over it: the selection's bar, the app's bar, or the
+    // sticky bar standing in for it.
+    val bottom = when {
+        picking || (!hosted && actions != null) -> navigationBar + FloatingChrome.clearance(compact)
+        else -> maxOf(LocalBottomChrome.current, navigationBar) + 16.dp
+    }
+    val scroll = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    Box(Modifier.fillMaxSize().background(Tone.background)) {
+        Scaffold(
+            containerColor = Tone.background,
+            modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
+            topBar = { FloatingPageTitle({ Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) }, scroll) },
+            // The list runs to the foot of the window, under the bars that float over it.
+            contentWindowInsets = WindowInsets.statusBars,
+        ) { padding ->
+            Column(Modifier.fillMaxSize().padding(padding)) {
+                TouchChipStrip {
+                    TouchFilterChip(tabLabel(ONGOING), TmIcons.Download, tab == ONGOING) { onTab(ONGOING) }
+                    TouchFilterChip(tabLabel(COMPLETED), TmIcons.CheckCircle, tab == COMPLETED) { onTab(COMPLETED) }
+                    TouchFilterChip(tabLabel(CACHED), TmIcons.Clock, tab == CACHED) { onTab(CACHED) }
+                }
+                Box(Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = bottom),
+                        content = body,
+                    )
+                    ScrollToTop(listState)
+                }
+            }
+        }
+
+        FloatingBackButton(
+            icon = if (picking) TmIcons.Close else TmIcons.ArrowBack,
+            // While picking, the button leaves the selection rather than the screen: that is what
+            // Back does here, and the two must not disagree.
+            label = if (picking) s.downloadsLeaveSelection else s.commonBack,
+            onClick = if (picking) onLeavePicking else onBack,
+            modifier = Modifier.align(Alignment.TopStart),
+        )
+
+        if (picking) {
+            StickyActionBar(Modifier.align(Alignment.BottomCenter), compact = compact, fill = true) {
+                Text(
+                    if (chosenCount == 0) s.downloadsSelectVideos else s.downloadsSelected(count = chosenCount),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Tone.text,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f).padding(start = 14.dp),
+                )
+                // Everything the list is showing, and never more than that.
+                TextButton(onClick = onSelectAll, enabled = !allChosen) { Text(s.downloadsSelectAll, maxLines = 1) }
+                FloatingBarIcon(TmIcons.Share, s.commonShare, onShareChosen, enabled = chosenCount > 0)
+                FloatingBarIcon(TmIcons.Delete, s.commonDelete, onDeleteChosen, tint = MaterialTheme.colorScheme.error, enabled = chosenCount > 0)
+            }
+        } else if (!hosted && actions != null) {
+            StickyActionBar(Modifier.align(Alignment.BottomCenter), compact = compact, content = actions)
+        }
+    }
 }
 
 /** The three tabs, as indices, because that is what [TabRow] counts in. */
