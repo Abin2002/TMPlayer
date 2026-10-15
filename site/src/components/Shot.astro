@@ -8,22 +8,39 @@
 // attribute when the reader presses the toggle. `frame` is the class of the <picture> around it,
 // which a card or a step uses to crop the shot. Other attributes (class, fetchpriority) go on the
 // img in the order given.
+//
+// A screenshot also carries a srcset of its smaller copies (scripts/site-shot-variants.py makes
+// them, from the widths in data/shot-widths.json) with `sizes` saying how wide it is drawn, so a
+// phone is not sent a 1920 px file for a 340 px picture. The original stays the largest entry and
+// the src, so width and height still describe it. Without `sizes` there is no srcset: a browser
+// that has to assume the full viewport would pick a copy as large as the original anyway.
 import type { HTMLAttributes } from 'astro/types';
+import shotWidths from '../data/shot-widths.json';
 
-export interface ShotProps { src: string; alt: string; width: number | string; height: number | string; light?: string }
+export interface ShotProps { src: string; alt: string; width: number | string; height: number | string; light?: string; sizes?: string }
 interface Props extends ShotProps, Omit<HTMLAttributes<'img'>, keyof ShotProps | 'loading' | 'decoding'> {
   frame?: string;
   lazy?: boolean;
   decoding?: 'async' | false;
 }
-const { light, frame, lazy = true, decoding = 'async', ...img } = Astro.props;
+const { light, frame, lazy = true, decoding = 'async', sizes, ...img } = Astro.props;
 const loading = lazy ? 'lazy' : undefined;
+
+const widths: number[] = (shotWidths as Record<string, number[]>)[String(img.width)] ?? [];
+const srcset = (file: string) => {
+  if (!sizes || !widths.length || !file.startsWith('/screenshots/') || !file.endsWith('.webp')) return undefined;
+  const stem = file.slice(0, -'.webp'.length);
+  return [...widths.map((w) => `${stem}-${w}w.webp ${w}w`), `${file} ${img.width}w`].join(', ');
+};
+const imgSet = srcset(img.src);
+const lightSet = light ? srcset(light) : undefined;
+const imgSizes = imgSet ? sizes : undefined;
 ---
 {light || frame ? (
   <picture class={frame}>
-    {light && <source data-theme-src srcset={light} media="(prefers-color-scheme: light)">}
-    <img {...img} loading={loading} decoding={decoding || undefined}>
+    {light && <source data-theme-src srcset={lightSet ?? light} sizes={lightSet ? sizes : undefined} media="(prefers-color-scheme: light)">}
+    <img {...img} srcset={imgSet} sizes={imgSizes} loading={loading} decoding={decoding || undefined}>
   </picture>
 ) : (
-  <img {...img} loading={loading} decoding={decoding || undefined}>
+  <img {...img} srcset={imgSet} sizes={imgSizes} loading={loading} decoding={decoding || undefined}>
 )}
