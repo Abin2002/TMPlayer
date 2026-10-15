@@ -2811,7 +2811,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             KeyEvent.KEYCODE_DPAD_CENTER,
             KeyEvent.KEYCODE_ENTER,
             KeyEvent.KEYCODE_SPACE,
-            -> togglePlayback()
+            // Once per press: a held key repeats, and each repeat flipped playback back again.
+            -> if (event.repeatCount == 0) togglePlayback()
             else -> return false
         }
         return true
