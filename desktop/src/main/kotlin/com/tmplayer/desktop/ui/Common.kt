@@ -148,6 +148,8 @@ fun RecentSearchRow(searches: List<String>, onPick: (String) -> Unit, onClear: (
                 onClick = { onPick(recent) },
                 label = { Text(recent, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 icon = { Icon(TmIcons.History, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                // Long searches share what the row has left, cut short, so Clear stays on screen.
+                modifier = Modifier.weight(1f, fill = false),
             )
         }
         TextButton(onClick = onClear) { Text(s.commonClear) }
