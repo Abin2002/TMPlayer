@@ -368,8 +368,9 @@ compose.desktop {
                 perUserInstall = true
                 // %LOCALAPPDATA%\Programs\TMPlayer, not %LOCALAPPDATA%\TMPlayer: that one is where the
                 // app keeps its sign in, settings and cache, and jpackage's MSI deletes its whole
-                // install folder on uninstall, which every upgrade runs first (issue #7).
-                installationPath = "Programs\\TMPlayer"
+                // install folder on uninstall, which every upgrade runs first (issue #7). A forward
+                // slash: a backslash is lost on the way to WiX, which made "ProgramsTMPlayer".
+                installationPath = "Programs/TMPlayer"
                 dirChooser = false
                 upgradeUuid = "6f1d3c0e-2b8a-4b7e-9d2c-7a1e5f4c3b21"
             }
