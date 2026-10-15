@@ -43,11 +43,13 @@ suspend fun setWatched(
     watched: Boolean,
     now: Long = System.currentTimeMillis(),
 ) {
+    // Every copy of the video the tile stands for: off Watch later when it is watched, unticked
+    // when it is not.
     if (watched) {
-        store.markWatched(WatchedRecord.of(item, chatTitle, now, manual = true))
+        store.markWatched(WatchedRecord.of(item, chatTitle, now, manual = true), copies = item.versions)
         settings.clearResumePosition(item.chatId, item.messageId)
     } else {
-        store.markUnwatched(item.chatId, item.messageId)
+        store.markUnwatched(item.chatId, item.messageId, copies = item.versions)
     }
 }
 

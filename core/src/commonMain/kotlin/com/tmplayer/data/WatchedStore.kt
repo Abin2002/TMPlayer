@@ -158,15 +158,18 @@ class WatchedStore(private val store: DataStore<Preferences>) {
      * Records [record] as watched. A manual mark is never downgraded to an automatic one: if the
      * viewer said so first, the player finishing it later keeps their word and the new time.
      *
-     * Either way the video is done with, so it leaves [watchLater] in the same edit.
+     * Either way the video is done with, so it leaves [watchLater] in the same edit, and so do
+     * its [copies] (the same film or episode posted elsewhere, [MediaItem.versions]): one Watch
+     * later card left behind for a copy would offer a finished video again.
      */
-    suspend fun markWatched(record: WatchedRecord) {
+    suspend fun markWatched(record: WatchedRecord, copies: List<MediaItem> = emptyList()) {
         store.edit { prefs ->
             val key = keyOf(record.chatId, record.messageId)
             val before = WatchedRecord.decode(record.key, prefs[key])
             val kept = if (before?.manual == true && !record.manual) record.copy(manual = true) else record
             prefs[key] = kept.encode()
             prefs.remove(WatchLaterStore.keyOf(record.chatId, record.messageId))
+            for (copy in copies) prefs.remove(WatchLaterStore.keyOf(copy.chatId, copy.messageId))
             evictOldest(prefs)
         }
         // The player saw it through to the end: a good moment, and a finished watch for the
@@ -174,8 +177,15 @@ class WatchedStore(private val store: DataStore<Preferences>) {
         if (!record.manual) SupportReminder.watchFinished(record.key)
     }
 
-    suspend fun markUnwatched(chatId: Long, messageId: Long) {
-        store.edit { it.remove(keyOf(chatId, messageId)) }
+    /**
+     * Takes the mark off, and off every one of [copies] too: a copy still marked kept the folded
+     * card ticked, so Mark as unwatched seemed to do nothing.
+     */
+    suspend fun markUnwatched(chatId: Long, messageId: Long, copies: List<MediaItem> = emptyList()) {
+        store.edit { prefs ->
+            prefs.remove(keyOf(chatId, messageId))
+            for (copy in copies) prefs.remove(keyOf(copy.chatId, copy.messageId))
+        }
     }
 
     /** Empties the list. Keys are collected first: the map cannot be walked while it is written. */

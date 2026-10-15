@@ -37,6 +37,23 @@ class WatchedStoreTest {
         assertEquals(listOf(2L), store.history.first().map { it.messageId })
     }
 
+    private fun copy(messageId: Long) = MediaItem(
+        chatId = -100L, messageId = messageId, fileId = 7, title = "Harbour Notes", sizeBytes = 1_000, durationSec = 1_400,
+        mimeType = "video/mp4", thumbnailFileId = 0, miniThumbnail = null, date = 0, fileName = "Harbour.Notes.2024.mkv",
+    )
+
+    @Test
+    fun `marking watched takes every copy off watch later, and unmarking clears every copy`() = runBlocking {
+        val copies = listOf(copy(1), copy(2), copy(3))
+        copies.forEach { store.watchLater.add(WatchLaterRecord.of(it, "Show", addedAt = 5)) }
+        store.markWatched(record(3, at = 20), copies = copies)
+        assertTrue(store.watchLater.items.first().isEmpty())
+
+        store.markWatched(record(2, at = 30))
+        store.markUnwatched(-100L, 3L, copies = copies)
+        assertTrue(store.history.first().isEmpty())
+    }
+
     @Test
     fun `finishing a video the viewer already marked keeps it marked by hand`() = runBlocking {
         store.markWatched(record(1, at = 10, manual = true))

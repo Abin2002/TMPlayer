@@ -861,8 +861,10 @@ private fun Root() {
         App.backgroundScope.launch {
             runCatching {
                 if (watched) {
+                    // Every copy leaves Watch later with it.
                     watchedStore.markWatched(
                         WatchedRecord.of(item, chatTitle, System.currentTimeMillis(), manual = true),
+                        copies = item.versions,
                     )
                     // Every copy of it in Continue watching, as Remove from Continue watching
                     // does: the card stands for all of them (HomeRows.foldCopies), and clearing
@@ -875,7 +877,8 @@ private fun Root() {
                         settings.clearResumePosition(item.chatId, item.messageId)
                     }
                 } else {
-                    watchedStore.markUnwatched(item.chatId, item.messageId)
+                    // Every copy's mark, or one still marked keeps the folded card ticked.
+                    watchedStore.markUnwatched(item.chatId, item.messageId, copies = item.versions)
                 }
             }
         }
