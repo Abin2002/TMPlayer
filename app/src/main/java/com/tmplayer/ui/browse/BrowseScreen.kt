@@ -109,9 +109,6 @@ import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedWhen
-import com.tmplayer.data.AllChatsSearch
-import com.tmplayer.data.SearchResults
-import com.tmplayer.data.SearchScope
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.derivedStateOf
@@ -179,7 +176,7 @@ import androidx.compose.ui.graphics.graphicsLayer
  * Every tab but two is a list of chats; Continue watching and Previously watched are lists of
  * videos, so they count videos.
  */
-private fun countLabel(section: BrowseSection, count: Int): String =
+internal fun countLabel(section: BrowseSection, count: Int): String =
     if (section.listsVideos) L.browseVideosCount(count) else L.browseChatsCount(count)
 
 // BrowseTab, BrowseSection, browseSections and filterChats live in :ui (BrowseSections.kt).
@@ -278,8 +275,10 @@ fun BrowseScreen(
     onMessage: (String) -> Unit = {},
     /** Where "Videos in all chats" asks: Telegram, or the promo fixture's demo results. */
     videoSearch: VideoSearchSource = VideoSearchSource.Telegram,
-    /** Remembers a search that found videos, for the recent-search chips. */
+    /** Remembers a search worth keeping, for the recent searches. */
     onSearched: (suspend (String) -> Unit)? = null,
+    /** About, from the phone's profile popover. */
+    onOpenAbout: () -> Unit = {},
 ) {
     val s = LocalStrings.current
     // An unfinished video wins the landing tab, otherwise Recent, so the first screen is never
@@ -293,7 +292,6 @@ fun BrowseScreen(
     val defaultsHidden by remember(groupsSettings) { groupsSettings.hideDefaultGroups }.collectAsState(initial = false)
     val sections = remember(folders, defaultsHidden) { browseSections(folders, defaultsHidden) }
     // The folders are then the only way into the chats, so they are not left folded.
-    LaunchedEffect(defaultsHidden) { if (defaultsHidden) NavGroupState.unfold(NavGroup.Folders) }
     // How many chats have something unread in them, not how many messages are unread across them:
     // the badge sits beside "Chats", whose Unread chip lists those chats.
     val allChats = (state as? UiState.Content)?.value?.chats
@@ -323,22 +321,18 @@ fun BrowseScreen(
     var confirmClearFavorites by remember { mutableStateOf(false) }
     // The video whose detail panel is open, with its chat's name, from Home or the search.
     var detail by remember { mutableStateOf<Pair<MediaItem, String>?>(null) }
-    var searchScope by rememberSaveable { mutableStateOf(SearchScope.Chats) }
-    val allSearch: AllChatsSearchViewModel = viewModel(
-        key = "all-chats-search",
+    // The search across every chat (CP73): the phone's search page and the television's.
+    val search: GlobalSearchViewModel = viewModel(
+        key = "global-search",
         factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                AllChatsSearchViewModel(videoSearch, onSearched) as T
+                GlobalSearchViewModel(videoSearch, onSearched) as T
         },
     )
+    val searchState by search.state.collectAsState()
     val panelScope = rememberCoroutineScope()
     val panelContext = LocalContext.current
-    val searchingVideos = searchScope == SearchScope.AllVideos && !tab.isHome && !tab.listsVideos
-    LaunchedEffect(searchingVideos, query) {
-        allSearch.search(if (searchingVideos) query else "")
-    }
-    val videoResults by allSearch.state.collectAsState()
     // A hold, the info key or a right click: the quick menu, which leads to the page by Details.
     var held by remember { mutableStateOf<Pair<MediaItem, String>?>(null) }
     val holdMedia: (MediaItem, String) -> Unit = { item, title -> held = item to title }
@@ -373,7 +367,9 @@ fun BrowseScreen(
     // a television, a drawer behind a hamburger on a phone. Everything below the chrome is the
     // same composition either way, told only how much room it has and how far in it may start.
     val touch = !FormFactor.isTv(LocalContext.current)
-    val insets = if (touch) TouchInsets else TvInsets
+    // The phone's lists end clear of the floating bar (TouchNav), which their container already
+    // lifts above the navigation bar.
+    val insets = if (touch) TouchInsets.clearing(BAR_MARGIN + BAR_HEIGHT + BAR_GAP) else TvInsets
     // Fixed columns suit a screen whose size is known in advance; a phone's is not, and it turns
     // when the viewer does, so the grid is asked for a tile width instead and works out the rest.
     val tiles = if (touch) GridCells.Adaptive(TOUCH_TILE_MIN) else GridCells.Fixed(TILE_COLUMNS)
@@ -382,22 +378,39 @@ fun BrowseScreen(
     // chip) must not pull focus down to its first row: the viewer is still choosing.
     var chipsFocused by remember { mutableStateOf(false) }
     val listMayTakeFocus: () -> Boolean = { !chipsFocused }
-    val chatChips: @Composable () -> Unit = {
+    // The Chats page's chips: the order, Telegram's own filters, then each folder, which is where
+    // the folders went when they left the sidebar. A folder chip is a section of its own, so the
+    // folder picked is remembered the way the page is.
+    val chatChips: @Composable (BrowseSection) -> Unit = { section ->
         ChipRow(
             insets = insets,
             onFocus = { chipsFocused = it },
             chips = buildList {
-                add(
-                    ChipSpec(
-                        key = SORT_CHIP,
-                        label = chatSort.label,
-                        icon = chatSort.icon,
-                        selected = false,
-                        description = s.browseSortBy(chatSort.label),
-                    ) { pickSort(chatSort.toggled) },
-                )
-                ChatFilter.entries.forEach { filter ->
-                    add(ChipSpec(filter.name, filter.label, filter.icon, selected = filter == chatFilter) { pickFilter(filter) })
+                if (section.isChats) {
+                    add(
+                        ChipSpec(
+                            key = SORT_CHIP,
+                            label = chatSort.label,
+                            icon = chatSort.icon,
+                            selected = false,
+                            description = s.browseSortBy(chatSort.label),
+                        ) { pickSort(chatSort.toggled) },
+                    )
+                }
+                chatPageChips(sections, defaultsHidden).forEach { chip ->
+                    when (chip) {
+                        is ChatPageChip.Filter -> add(
+                            ChipSpec(chip.filter.name, chip.label, chip.filter.icon, selected = chip.isSelected(section, chatFilter)) {
+                                pickFilter(chip.filter)
+                                onPickTab(BrowseSection.of(BrowseTab.Chats))
+                            },
+                        )
+                        is ChatPageChip.Folder -> add(
+                            ChipSpec("folder-${chip.folder.id}", chip.label, TmIcons.Folder, selected = chip.isSelected(section, chatFilter)) {
+                                onPickTab(chip.folder)
+                            },
+                        )
+                    }
                 }
             },
         )
@@ -414,7 +427,10 @@ fun BrowseScreen(
         )
     }
 
-    val pane: @Composable () -> Unit = {
+    val pane: @Composable (BrowseSection) -> Unit = { tab ->
+        val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
+        val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
+        val showsWatchLater = tab.listsVideos && historyTab == HistoryTab.WatchLater
         StateScaffold(
             state,
             onRetry = onRetry,
@@ -571,38 +587,13 @@ fun BrowseScreen(
                                 query = query,
                                 insets = insets,
                                 onQuery = { query = it },
-                                scope = searchScope,
-                                onScope = { searchScope = it },
                             )
-                            Spacer(Modifier.height(if (tab.isChats) 4.dp else 20.dp))
+                            Spacer(Modifier.height(if (tab.onChatsPage) 4.dp else 20.dp))
                         }
                         // Up from the top of the list reaches the chips, and Up again the search.
-                        if (tab.isChats && !(searchingVideos && query.isNotBlank())) chatChips()
+                        if (tab.onChatsPage) chatChips(tab)
 
-                        if (searchingVideos && query.isNotBlank()) {
-                            AllChatsResults(
-                                results = remember(data.chats, query, videoResults) {
-                                    AllChatsSearch.split(
-                                        query = query,
-                                        chats = data.chats,
-                                        videos = videoResults.videos,
-                                        loadingVideos = videoResults.loading,
-                                        endReached = videoResults.endReached,
-                                    )
-                                },
-                                state = videoResults,
-                                watch = homeWatch,
-                                chatTitle = { id -> data.chats.firstOrNull { it.id == id }?.title.orEmpty() },
-                                favorites = favorites,
-                                insets = insets,
-                                onOpenChat = onOpenChat,
-                                onHoldChat = { chatMenu = it },
-                                onPlay = openMedia,
-                                onHold = holdMedia,
-                                onLoadMore = allSearch::loadMore,
-                                onRetry = allSearch::retry,
-                            )
-                        } else if (visible.isEmpty()) {
+                        if (visible.isEmpty()) {
                             EmptyTab(tab, query, chatFilter)
                         } else {
                             // A first run's chat list says how to get a first video in (CP42).
@@ -689,42 +680,22 @@ fun BrowseScreen(
     }
 
     if (touch) {
-        val voiceSearch = rememberVoiceSearch(s.browseVoicePromptChat) { query = it }
-        // Continue watching lists videos held on this device, so it counts those instead. Keep the
-        // chat count remembered: the same filter and fuzzy ranking already run inside the pane
-        // below, and an unremembered copy here costs a second full pass on every keystroke.
-        val chats = (state as? UiState.Content)?.value?.chats
-        val count = if (tab.isHome) {
-            0
-        } else if (showsContinue) {
-            continuing.size
-        } else if (showsWatched) {
-            watchedHistory.size
-        } else if (showsWatchLater) {
-            watchLater.size
-        } else {
-            remember(chats, tab, favorites, query, chatFilter, chatSort) {
-                chats?.let { filterChats(it, tab, favorites, query, chatFilter, chatSort).size } ?: 0
-            }
-        }
-        TouchBrowseShell(
+        PhoneBrowse(
+            tab = tab,
             account = (state as? UiState.Content)?.value?.account ?: account,
-            selected = tab,
-            sections = sections,
-            favoriteCount = favorites.size,
-            unreadCount = unreadChats,
-            onSelect = { onPickTab(it); query = "" },
-            onOpenSettings = onOpenSettings,
-            onOpenDownloads = onOpenDownloads,
-            downloadCount = downloadCount,
-            updateVersion = updateVersion,
-            onUpdate = onUpdate,
-            title = tab.heading,
-            // Continue watching is a list of videos held on this device, and the box searches
-            // chats. Offering it there would be a field that filters nothing.
-            searchQuery = if (tab.listsVideos || tab.isHome) null else query,
-            onSearchQueryChange = { query = it },
-            onVoiceSearch = voiceSearch,
+            pane = pane,
+            countOf = { section ->
+                val chats = (state as? UiState.Content)?.value?.chats
+                when {
+                    section.isHome -> 0
+                    section.listsVideos -> when (historyTab) {
+                        HistoryTab.Continue -> continuing.size
+                        HistoryTab.Watched -> watchedHistory.size
+                        HistoryTab.WatchLater -> watchLater.size
+                    }
+                    else -> chats?.let { filterChats(it, section, favorites, query, chatFilter, chatSort).size } ?: 0
+                }
+            },
             actions = actions@{
                 // Home is rows of tiles whatever the arrangement, so it only offers a refresh.
                 if (tab.isHome) {
@@ -764,30 +735,41 @@ fun BrowseScreen(
                     )
                 }
             },
-            content = {
-                // The tab's count under the title, where a phone's app bar puts a subtitle.
-                // Nowhere else on the screen says how much is in the tab.
-                Column(Modifier.fillMaxSize()) {
-                    if (count > 0 && query.isBlank()) {
-                        M3Text(
-                            countLabel(tab, count),
-                            style = M3MaterialTheme.typography.bodySmall,
-                            color = Tone.muted,
-                            modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
-                        )
-                    }
-                    pane()
-                }
-            },
+            sections = sections,
+            defaultsHidden = defaultsHidden,
+            favourites = favorites,
+            downloadCount = downloadCount,
+            updateVersion = updateVersion,
+            onPickTab = { onPickTab(it); query = "" },
+            onHistory = { pickHistory(it); onPickTab(BrowseSection.of(BrowseTab.History)) },
+            onOpenDownloads = onOpenDownloads,
+            onOpenSettings = onOpenSettings,
+            onOpenAbout = onOpenAbout,
+            onUpdate = onUpdate,
+            search = search,
+            searchState = searchState,
+            chats = (state as? UiState.Content)?.value?.chats.orEmpty(),
+            continueWatching = continuing,
+            watchLater = watchLater,
+            homeArt = homeArt,
+            watch = homeWatch,
+            onOpenChat = onOpenChat,
+            onOpenMedia = openMedia,
+            onPlayMedia = onPlayMedia,
+            onResume = openResume,
+            onMessage = onMessage,
         )
     } else {
         Row(Modifier.fillMaxSize()) {
             NavRail(
-                selected = tab,
+                selected = tab.navSection,
                 sections = sections,
                 favoriteCount = favorites.size,
                 unreadCount = unreadChats,
-                onSelect = { onPickTab(it); query = "" },
+                onSelect = { picked ->
+                    onPickTab(if (picked.isChats) chatsDestination(sections, defaultsHidden) else picked)
+                    query = ""
+                },
                 onOpenSettings = onOpenSettings,
                 onOpenDownloads = onOpenDownloads,
                 downloadCount = downloadCount,
@@ -795,7 +777,7 @@ fun BrowseScreen(
                 onUpdate = onUpdate,
             )
 
-            Column(Modifier.fillMaxSize().padding(end = Tv.SafeH).keepsVerticalFocus()) { pane() }
+            Column(Modifier.fillMaxSize().padding(end = Tv.SafeH).keepsVerticalFocus()) { pane(tab) }
         }
     }
 
@@ -1469,66 +1451,29 @@ private fun NavRail(
         RailBrand(reveal)
         Spacer(Modifier.height(14.dp))
 
-        val groups = rememberNavGroups(current = navGroupOf(selected))
-
         // Scrolls, and takes whatever height is left after the bottom cluster: Settings and the
-        // update item. A plain Column clips what it cannot fit, so with every group open and a
-        // few folders anything past the fold would be unreachable.
+        // update item. Focus moving down inside a scrolling column brings the focused item into
+        // view, so the rail scrolls as a side effect of pressing down.
         //
-        // The remote never has to think about it: focus moving down inside a scrolling column
-        // brings the focused item into view, so the rail scrolls as a side effect of pressing down.
+        // Home, History, Favourites and Chats, the shared list in :ui, with no headings: the
+        // folders are chips on the Chats page and Saved Messages is a chat among the others.
+        // Downloads is pinned at the foot beside Settings.
         Column(
             Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // Watch with no heading, then Chats and the account's folders, each folding under a
-            // heading OK toggles.
-            // The grouping is the shared one in :ui, so the phone's drawer and the desktop's side
-            // bar fold the same entries the same way. A folded group's rows are not composed, so
-            // D-pad down from its heading goes straight on to the next heading.
-            // Downloads is pinned at the foot beside Settings, not folded into Watch.
-            navGroups(sections, withDownloads = false).forEach { (group, entries) ->
-                val open = groups.isOpen(group)
-                if (group.headed) RailGroupHeading(
-                    reveal = reveal,
-                    label = group.label,
-                    open = open,
-                    toggleable = groups.canToggle(group),
-                    onToggle = { groups.toggle(group) },
-                )
-                AnimatedVisibility(
-                    visible = open,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut(),
-                ) {
-                    Column {
-                        entries.forEach { entry ->
-                            when (entry) {
-                                NavEntry.Downloads -> RailItem(
-                                    reveal = reveal,
-                                    label = s.navDownloads,
-                                    icon = TmIcons.Download,
-                                    // How many videos are coming down right now. A download outlives
-                                    // the screen it was started from, and a television has no
-                                    // notification shade to say one is still running, so this mark
-                                    // is the only place that says it at all.
-                                    badge = downloadCount.takeIf { it > 0 }?.toString(),
-                                    selected = false,
-                                    onClick = onOpenDownloads,
-                                )
-                                is NavEntry.Section -> RailItem(
-                                    reveal = reveal,
-                                    label = entry.section.label,
-                                    icon = entry.section.icon,
-                                    badge = navBadge(entry.section, favoriteCount, unreadCount),
-                                    selected = entry.section == selected,
-                                    onClick = { onSelect(entry.section) },
-                                    modifier = if (entry.section == selected) Modifier.focusRequester(selectedFocus) else Modifier,
-                                )
-                            }
-                        }
-                    }
+            navGroups(sections, withDownloads = false).flatMap { it.entries }.forEach { entry ->
+                if (entry is NavEntry.Section) {
+                    RailItem(
+                        reveal = reveal,
+                        label = entry.section.label,
+                        icon = entry.section.icon,
+                        badge = navBadge(entry.section, favoriteCount, unreadCount),
+                        selected = entry.section == selected,
+                        onClick = { onSelect(entry.section) },
+                        modifier = if (entry.section == selected) Modifier.focusRequester(selectedFocus) else Modifier,
+                    )
                 }
             }
         }
@@ -1601,94 +1546,6 @@ private fun RailBrand(reveal: Float) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-        }
-    }
-}
-
-/**
- * The heading over a group of rail items, which OK folds and unfolds.
- *
- * Quiet like the old unfocusable headings, muted text and a small chevron, until focus lands on it,
- * when it fills the way a rail item does. The group holding the current tab cannot fold, so its
- * heading is a plain label the remote passes straight over, exactly as every heading used to be.
- *
- * On a folded rail ([reveal] 0) the words give way to a short rule under the icons, so the
- * groups still read as groups.
- */
-@Composable
-private fun RailGroupHeading(
-    reveal: Float,
-    label: String,
-    open: Boolean,
-    toggleable: Boolean,
-    onToggle: () -> Unit,
-) {
-    val s = LocalStrings.current
-    val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
-    val background by animateColorAsState(
-        targetValue = if (focused) Tone.focusFill else Color.Transparent,
-        animationSpec = tween(FOCUS_FADE_MS),
-        label = "railHeadingBackground",
-    )
-    val foreground by animateColorAsState(
-        targetValue = if (focused) Tone.onFocusFill else Tone.muted,
-        animationSpec = tween(FOCUS_FADE_MS),
-        label = "railHeadingForeground",
-    )
-    // Folded, the chevron points along the line towards its end: left in a right-to-left interface.
-    val turn by animateFloatAsState(if (open) 0f else chevronTowardsEnd(), label = "railHeadingChevron")
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = RAIL_GAP / 2)
-            .height(RAIL_ROW)
-            .clip(RoundedCornerShape(Corner.Small))
-            .background(background)
-            .focusRing(focused, RoundedCornerShape(Corner.Small))
-            .then(
-                if (toggleable) {
-                    Modifier
-                        .clickable(interactionSource = interactions, indication = null, onClick = onToggle)
-                        .semantics { stateDescription = if (open) s.navOpen else s.navFolded }
-                } else {
-                    Modifier
-                },
-            )
-            .padding(horizontal = RAIL_INSET),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-            if (reveal < 1f) {
-                Box(
-                    Modifier
-                        .size(width = RAIL_ICON, height = 1.dp)
-                        .alpha(1f - reveal)
-                        .background(Tone.outline),
-                )
-            }
-            if (reveal > 0f) {
-                Row(Modifier.fillMaxWidth().alpha(reveal), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        label,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = if (focused) FontWeight.SemiBold else FontWeight.Medium,
-                        color = foreground,
-                        maxLines = 1,
-                        softWrap = false,
-                        overflow = if (reveal < 1f) TextOverflow.Clip else TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    if (toggleable) {
-                        Icon(
-                            TmIcons.ChevronDown,
-                            contentDescription = null,
-                            tint = foreground,
-                            modifier = Modifier.size(22.dp).rotate(turn),
-                        )
-                    }
-                }
-            }
         }
     }
 }
@@ -2027,8 +1884,6 @@ private fun SearchRow(
     query: String,
     insets: BrowseInsets,
     onQuery: (String) -> Unit,
-    scope: SearchScope = SearchScope.Chats,
-    onScope: (SearchScope) -> Unit = {},
 ) {
     val s = LocalStrings.current
     // On Fire TV the voice button opens the keyboard, which the remote's mic dictates into.
@@ -2813,127 +2668,6 @@ private fun EmptyTab(tab: BrowseSection, query: String, filter: ChatFilter = Cha
     BigEmpty(message, icon = icon)
 }
 
-/**
- * "Videos in all chats", answered in two parts: the chats whose names match, as the rows they are
- * everywhere else, then the videos Telegram found across every chat, as the tiles a chat's grid
- * uses. A video plays on OK or a tap; holding it, or the info key, opens its detail panel.
- */
-@Composable
-private fun AllChatsResults(
-    results: SearchResults,
-    state: VideoSearchState,
-    watch: SeriesWatch,
-    chatTitle: (Long) -> String,
-    favorites: Set<Long>,
-    insets: BrowseInsets,
-    onOpenChat: (ChatSummary) -> Unit,
-    onHoldChat: (ChatSummary) -> Unit,
-    onPlay: (MediaItem, String) -> Unit,
-    onHold: (MediaItem, String) -> Unit,
-    onLoadMore: () -> Unit,
-    onRetry: () -> Unit,
-) {
-    val s = LocalStrings.current
-    val touch = isTouch()
-    val gridState = rememberLazyGridState()
-    val gap = if (touch) 8.dp else 16.dp
-    Box(Modifier.fillMaxSize()) {
-        LazyVerticalGrid(
-            columns = if (touch) GridCells.Adaptive(RESULT_TILE_MIN) else GridCells.Fixed(RESULT_COLUMNS),
-            state = gridState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = insets.start,
-                end = insets.end,
-                top = if (touch) 0.dp else Tv.FocusClearance,
-                bottom = insets.bottom,
-            ),
-            horizontalArrangement = Arrangement.spacedBy(gap),
-            verticalArrangement = Arrangement.spacedBy(gap),
-        ) {
-            if (results.chats.isNotEmpty()) {
-                item(key = "h-chats", span = { GridItemSpan(maxLineSpan) }) { ResultsHeading(s.browseSearchResultsChats) }
-                gridItems(results.chats, key = { "c-${it.id}" }, span = { GridItemSpan(maxLineSpan) }) { chat ->
-                    ChatRow(
-                        chat = chat,
-                        favorite = chat.id in favorites,
-                        opensOnLaunch = false,
-                        onClick = { onOpenChat(chat) },
-                        onHold = { onHoldChat(chat) },
-                    )
-                }
-            }
-            item(key = "h-videos", span = { GridItemSpan(maxLineSpan) }) { ResultsHeading(s.browseSearchResultsVideos) }
-            val error = state.error
-            when {
-                error != null -> item(key = "failed", span = { GridItemSpan(maxLineSpan) }) {
-                    ResultsNote(s.browseSearchVideosFailed(error)) {
-                        TmSecondaryButton(onClick = onRetry) { M3Text(s.commonRetry) }
-                    }
-                }
-                state.loading -> item(key = "searching", span = { GridItemSpan(maxLineSpan) }) {
-                    ResultsNote(s.browseSearchVideosSearching, spinner = true)
-                }
-                results.videos.isEmpty() -> item(key = "none", span = { GridItemSpan(maxLineSpan) }) {
-                    ResultsNote(s.browseSearchVideosNone(results.query))
-                }
-                else -> gridItems(results.videos, key = { "v-${it.id}" }) { item ->
-                    MediaCard(
-                        item = item,
-                        watched = watch.point(item),
-                        finished = watch.finished(item),
-                        dense = touch,
-                        onClick = { onPlay(item, chatTitle(item.chatId)) },
-                        onLongClick = { onHold(item, chatTitle(item.chatId)) },
-                        onFocused = {},
-                    )
-                }
-            }
-            if (state.loadingMore) {
-                item(key = "more", span = { GridItemSpan(maxLineSpan) }) { ResultsNote(s.gridLoadingMore, spinner = true) }
-            }
-        }
-        ScrollToTop(gridState)
-    }
-    // The next page well before the last row, the way a chat's grid pages.
-    val nearEnd by remember {
-        derivedStateOf {
-            val last = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            last >= gridState.layoutInfo.totalItemsCount - RESULT_LEAD
-        }
-    }
-    LaunchedEffect(gridState, results.videos.size) {
-        snapshotFlow { nearEnd }.collect { if (it && results.videos.isNotEmpty()) onLoadMore() }
-    }
-}
-
-@Composable
-private fun ResultsHeading(text: String) {
-    if (isTouch()) {
-        M3Text(text, style = M3MaterialTheme.typography.titleMedium, color = Tone.text, modifier = Modifier.padding(top = 8.dp))
-    } else {
-        Text(text, style = MaterialTheme.typography.titleLarge, color = Tone.text, modifier = Modifier.padding(top = 8.dp))
-    }
-}
-
-@Composable
-private fun ResultsNote(text: String, spinner: Boolean = false, action: (@Composable () -> Unit)? = null) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (spinner) Spinner(size = 20.dp, strokeWidth = 2.dp)
-        M3Text(text, style = M3MaterialTheme.typography.bodyLarge, color = Tone.muted, modifier = Modifier.weight(1f, fill = false))
-        action?.invoke()
-    }
-}
-
-/** The search's video tiles: a phone's dense grid, four across on a television. */
-private val RESULT_TILE_MIN = 120.dp
-private const val RESULT_COLUMNS = 4
-private const val RESULT_LEAD = 8
-
 private const val RECENT_COUNT = 8
 private const val FOCUS_FADE_MS = 140
 
@@ -3035,7 +2769,10 @@ private fun Modifier.bleed(by: Dp): Modifier = layout { measurable, constraints 
     layout(constraints.maxWidth, placeable.height - extra * 2) { placeable.place(-extra, -extra) }
 }
 
-private class BrowseInsets(val start: Dp, val end: Dp, val top: Dp, val bottom: Dp)
+private class BrowseInsets(val start: Dp, val end: Dp, val top: Dp, val bottom: Dp) {
+    /** The same insets with [extra] more at the bottom, for something floating over the end of the list. */
+    fun clearing(extra: Dp) = BrowseInsets(start, end, top, bottom + extra)
+}
 
 private val TvInsets = BrowseInsets(start = 28.dp, end = Tv.FocusClearance, top = Tv.SafeV, bottom = Tv.SafeV)
 private val TouchInsets = BrowseInsets(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
