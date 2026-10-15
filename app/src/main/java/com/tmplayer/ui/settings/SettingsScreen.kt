@@ -1483,7 +1483,7 @@ fun SettingsScreen(
                 // Who is signed in, first, on the page's own background: a header, not one more
                 // row to press, so it sits in line with the rows' icons rather than in a card.
                 if (account != null) {
-                    item(key = "account") { AccountHeader(account) }
+                    settingsNote { AccountHeader(account) }
                 }
                 item {
                     ActionRow(
@@ -1596,9 +1596,8 @@ fun SettingsScreen(
                     )
                 }
 
-                // A page of its own would hold this one row, so it stays on the list, last.
-                sectionTitle { s.settingsAccount }
-                item {
+                // Last, under the cards rather than in one: the one press here that ends the session.
+                settingsNote {
                     SignOutButton(
                         label = s.settingsSignOut,
                         onClick = { prompt = Prompt.SignOut },
@@ -2735,38 +2734,39 @@ private fun SubtitlePreview(style: SubtitleStyle, modifier: Modifier = Modifier)
     }
 }
 
-/** The signed in account at the top of Settings: picture, name and @username, no card around it. */
+/**
+ * The signed in account at the top of Settings, above the cards and centred: the picture large,
+ * the name and @username under it.
+ */
 @Composable
 private fun AccountHeader(account: com.tmplayer.data.Account) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    Column(
+        Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         com.tmplayer.ui.components.MediaPreview(
             miniThumbnail = account.miniThumbnail,
             thumbnailFileId = account.photoFileId,
             fallbackLabel = account.name,
-            modifier = Modifier.size(56.dp).clip(CircleShape),
+            modifier = Modifier.padding(bottom = 8.dp).size(96.dp).clip(CircleShape),
         )
-        Column(Modifier.weight(1f)) {
+        Text(
+            account.name,
+            style = MaterialTheme.typography.titleLarge,
+            color = Tone.text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (account.username.isNotBlank()) {
+            // Isolated left to right, or an Arabic or Persian interface draws "name@".
             Text(
-                account.name,
-                style = MaterialTheme.typography.titleLarge,
-                color = Tone.text,
+                "\u2066@${account.username}\u2069",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Tone.muted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (account.username.isNotBlank()) {
-                // Isolated left to right, or an Arabic or Persian interface draws "name@".
-                Text(
-                    "\u2066@${account.username}\u2069",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Tone.muted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
         }
     }
 }
@@ -2777,7 +2777,7 @@ private fun AccountHeader(account: com.tmplayer.data.Account) {
  */
 @Composable
 private fun SignOutButton(label: String, onClick: () -> Unit) {
-    Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+    Box(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 12.dp)) {
         androidx.compose.material3.Button(
             onClick = onClick,
             modifier = Modifier.fillMaxWidth().height(48.dp),
