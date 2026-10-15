@@ -4,9 +4,11 @@
 # Why it is this careful (issue #7): jpackage's per user MSI deletes its whole install folder on
 # uninstall (util:RemoveFolderEx on INSTALLDIR), and a major upgrade runs the old version's
 # uninstall first (RemoveExistingProducts before CostInitialize), outside any rollback. The install
-# folder is %LOCALAPPDATA%\TMPlayer, which is also where the app keeps its sign in, its settings
-# and its cache, and where the update used to download the MSI and this script to. The old
-# version's uninstall deleted the very MSI being installed, so the new version never arrived.
+# folder was %LOCALAPPDATA%\TMPlayer up to 1.26.0, which is also where the app keeps its sign in,
+# its settings and its cache, and where the update used to download the MSI and this script to.
+# The old version's uninstall deleted the very MSI being installed, so the new version never
+# arrived. Later versions install to %LOCALAPPDATA%\Programs\TMPlayer, so the launcher this
+# update ends with can be in another folder than the one it started from (Find-Launcher).
 #
 # So this script, the MSI, the logs and the kept data all live in the folder beside the install
 # folder (TMPlayer-update), never inside it; the data is moved out for the install and back after;
@@ -106,6 +108,17 @@ function Restore-Data {
     if (-not @(Get-ChildItem -LiteralPath $Kept -Force)) { Remove-Item -LiteralPath $Kept -Force -ErrorAction SilentlyContinue }
 }
 
+# Where the MSI put the launcher: where it was, or in the install folder of 1.26.1 and later.
+function Find-Launcher {
+    if (Test-Path -LiteralPath $Exe) { return $Exe }
+    $name = Split-Path -Leaf $Exe
+    foreach ($dir in (Join-Path $env:LOCALAPPDATA 'Programs\TMPlayer'), (Join-Path $env:LOCALAPPDATA 'TMPlayer')) {
+        $candidate = Join-Path $dir $name
+        if (Test-Path -LiteralPath $candidate) { return $candidate }
+    }
+    return $null
+}
+
 # The version Windows Installer has for this upgrade code, or null.
 function Get-InstalledVersion {
     try {
@@ -126,7 +139,7 @@ function Get-InstalledVersion {
 # The new version is in place: its launcher is there, and the MSI's own registry key for this
 # version exists (or Windows Installer reports the version).
 function Test-NewVersion {
-    if (-not (Test-Path -LiteralPath $Exe)) { return $false }
+    if (-not (Find-Launcher)) { return $false }
     if (Test-Path -LiteralPath $RegistryKey) { return $true }
     $found = Get-InstalledVersion
     Say "Windows Installer reports version '$found'"
@@ -183,9 +196,10 @@ if ($installed) {
     Set-Content -LiteralPath $Marker -Value $Version -Encoding ASCII
 }
 
-if (Test-Path -LiteralPath $Exe) {
-    Say "Starting $Exe"
-    Start-Process -FilePath $Exe -WorkingDirectory $InstallDir
+$launcher = Find-Launcher
+if ($launcher) {
+    Say "Starting $launcher"
+    Start-Process -FilePath $launcher -WorkingDirectory (Split-Path -Parent $launcher)
 } else {
     Say "TMPlayer is not installed; opening $DownloadPage"
     Start-Process $DownloadPage

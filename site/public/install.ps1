@@ -259,20 +259,61 @@ function Install-TMPlayer {
         $log = Join-Path ([IO.Path]::GetTempPath()) "TMPlayer-$version-install.log"
         $installLabel = "Installing TMPlayer $version"
         if (-not $live) { Write-Step '[ .. ]' 'Cyan' $installLabel }
-        $run = Start-Process -FilePath 'msiexec.exe' -ArgumentList @('/i', "`"$file`"", '/passive', '/norestart', '/l*', "`"$log`"") -PassThru
-        # Without this, Windows PowerShell 5.1 can report no exit code for a process it did not -Wait on.
-        $null = $run.Handle
-        $tick = 0
-        $installWatch = [Diagnostics.Stopwatch]::StartNew()
-        while (-not $run.WaitForExit(100)) {
-            if ($live) {
-                $mark = '[ ' + $spinner[$tick % $spinner.Count] + '  ]'
-                Write-Live $mark 'Cyan' "$installLabel  $(Format-Time $installWatch.Elapsed.TotalSeconds)"
-                $tick++
+        # A running copy holds its files open, and the upgrade would stop half way.
+        if (Get-Process -Name 'TMPlayer' -ErrorAction SilentlyContinue) {
+            throw 'TMPlayer is running. Close it (also from the notification area) and run the command again.'
+        }
+        # Up to 1.26.0 the MSI installed into %LOCALAPPDATA%\TMPlayer, the folder the app keeps its
+        # sign in, settings and cache in, and its uninstall, which an upgrade runs first, deletes
+        # that whole folder. So when such an install is there, the data steps aside for the install
+        # and comes back after it. Later versions install to %LOCALAPPDATA%\Programs\TMPlayer.
+        $dataDir = Join-Path $env:LOCALAPPDATA 'TMPlayer'
+        $aside = Join-Path $env:LOCALAPPDATA 'TMPlayer-kept'
+        $setAside = New-Object System.Collections.Generic.List[string]
+        function Restore-Aside {
+            foreach ($name in $setAside) {
+                $to = Join-Path $dataDir $name
+                if (Test-Path -LiteralPath $to) { continue }
+                New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+                Move-Item -LiteralPath (Join-Path $aside $name) -Destination $to -ErrorAction SilentlyContinue
+            }
+            if ((Test-Path -LiteralPath $aside) -and -not @(Get-ChildItem -LiteralPath $aside -Force)) {
+                Remove-Item -LiteralPath $aside -Force -ErrorAction SilentlyContinue
             }
         }
-        $run.WaitForExit()
-        $code = $run.ExitCode
+        try {
+            if (Test-Path -LiteralPath (Join-Path $dataDir 'TMPlayer.exe')) {
+                New-Item -ItemType Directory -Force -Path $aside | Out-Null
+                foreach ($item in @(Get-ChildItem -LiteralPath $dataDir -Force)) {
+                    # What the old MSI installed stays for its uninstall; everything else is data.
+                    if ($item.PSIsContainer -and @('app', 'runtime') -contains $item.Name) { continue }
+                    if (-not $item.PSIsContainer -and @('.exe', '.ico') -contains $item.Extension) { continue }
+                    try {
+                        Move-Item -LiteralPath $item.FullName -Destination (Join-Path $aside $item.Name) -ErrorAction Stop
+                    } catch {
+                        throw "Your settings could not be kept safe for the upgrade ($($item.Name) is in use). Close TMPlayer and run the command again."
+                    }
+                    $setAside.Add($item.Name)
+                }
+            }
+            $run = Start-Process -FilePath 'msiexec.exe' -ArgumentList @('/i', "`"$file`"", '/passive', '/norestart', '/l*', "`"$log`"") -PassThru
+            # Without this, Windows PowerShell 5.1 can report no exit code for a process it did not -Wait on.
+            $null = $run.Handle
+            $tick = 0
+            $installWatch = [Diagnostics.Stopwatch]::StartNew()
+            while (-not $run.WaitForExit(100)) {
+                if ($live) {
+                    $mark = '[ ' + $spinner[$tick % $spinner.Count] + '  ]'
+                    Write-Live $mark 'Cyan' "$installLabel  $(Format-Time $installWatch.Elapsed.TotalSeconds)"
+                    $tick++
+                }
+            }
+            $run.WaitForExit()
+            $code = $run.ExitCode
+        } finally {
+            # Also on a failed install or Ctrl+C: the data goes home whatever happened.
+            Restore-Aside
+        }
         Remove-Item -Path $file -ErrorAction SilentlyContinue
         # 3010 is "installed, a restart would finish it", which TMPlayer never needs.
         if ($code -ne 0 -and $code -ne 3010) {

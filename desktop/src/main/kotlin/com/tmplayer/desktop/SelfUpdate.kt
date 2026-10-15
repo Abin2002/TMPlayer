@@ -172,10 +172,12 @@ class SelfUpdate(
      * Writes the script that installs [msi] once the app has quit (`msi-update.ps1`, which says
      * why it does what it does).
      *
-     * jpackage's per user MSI installs to `%LOCALAPPDATA%\TMPlayer`, the same folder the app keeps
+     * Up to 1.26.0 the MSI installed to `%LOCALAPPDATA%\TMPlayer`, the same folder the app keeps
      * its data in, and the old version's uninstall, which a major upgrade runs before installing
-     * the new one, deletes that whole folder. So the MSI, the script, its logs and the data while
-     * the install runs all go in [msiRoot], the folder beside it (issue #7).
+     * the new one, deletes that whole folder. Later versions install to
+     * `%LOCALAPPDATA%\Programs\TMPlayer`, but the uninstall still deletes whatever is in the
+     * install folder, so the MSI, the script, its logs and any data while the install runs all go
+     * in [msiRoot], the folder beside it (issue #7).
      */
     private fun stageMsi(msi: File, version: String) {
         val exe = appLauncher() ?: error(L.updateNoExe)
@@ -335,8 +337,8 @@ class SelfUpdate(
         const val DOWNLOAD_PAGE = "https://tmplayer.org/download/"
 
         /**
-         * The folder beside the MSI install folder (`%LOCALAPPDATA%\TMPlayer-update` next to
-         * `%LOCALAPPDATA%\TMPlayer`) that the Windows update downloads to and runs from. On the
+         * The folder beside the MSI install folder (`%LOCALAPPDATA%\Programs\TMPlayer-update` next
+         * to `%LOCALAPPDATA%\Programs\TMPlayer`) that the Windows update downloads to and runs from. On the
          * same drive as the install folder, so the data moves out and back by renaming.
          */
         internal fun msiRoot(launcher: File): File? {
