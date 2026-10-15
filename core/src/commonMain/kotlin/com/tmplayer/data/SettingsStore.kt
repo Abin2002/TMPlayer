@@ -1712,7 +1712,11 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             // Still inside the few seconds the resume rewound: the place saved before stands, or
             // opening and closing a video would walk it back by the rewind every time.
             val positionMs = ResumeRewind.kept(prefs[key], positionMs, ResumeRewind.sanitise(prefs[RESUME_REWIND]))
-            // In the first three minutes, or in the credits: there is nothing worth resuming.
+            // In the first three minutes there is nothing new worth resuming, but a place saved
+            // before stands: reopening a film and closing it again, or a beat that lands before
+            // the resume seek, must not wipe it. Starting over clears it on purpose instead.
+            if (positionMs < ResumeRules.MIN_POSITION_MS) return@edit
+            // In the credits: there is nothing worth resuming.
             if (!ResumeRules.keeps(positionMs, durationMs)) {
                 prefs.remove(key)
                 prefs.remove(durationKey(chatId, messageId))

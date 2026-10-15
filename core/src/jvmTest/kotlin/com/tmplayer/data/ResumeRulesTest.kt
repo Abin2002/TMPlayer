@@ -133,6 +133,10 @@ class ResumeRulesTest {
         assertEquals(SyncDelays(300, -100), settings.syncDelays(5, 9))
         assertEquals(1, settings.continueWatching.first().size)
 
+        // Reopened and closed again inside three minutes: the place saved before stands.
+        settings.saveResumePosition(5, 9, 15_000L, episode, line(state))
+        assertEquals(600_000L, settings.resumeRecord(5, 9)!!.positionMs)
+
         // The next beat, ten seconds on and at a new speed, replaces it.
         settings.saveResumePosition(5, 9, 610_000L, episode, line(state.copy(speed = 2f)))
         assertEquals(2f, settings.resumeRecord(5, 9)!!.state?.speed)

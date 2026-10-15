@@ -3458,6 +3458,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** Back to the first frame, for a viewer who did not want the saved position. */
     private fun startOver() {
         val exo = player ?: return
+        // A short watch from here leaves a saved place alone, so starting over forgets it.
+        lifecycleScope.launch { settings.clearResumePosition(chatId, messageId) }
         exo.seekTo(0)
         exo.playWhenReady = true
         showGestureFeedback(L.playerFromTheStart)

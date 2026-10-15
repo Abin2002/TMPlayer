@@ -335,7 +335,11 @@ fun PlayerScreen(
         // A saved position opens a few seconds early, as Settings has it ([ResumeRewind]); Keep
         // watching reopens exactly where the file stopped, and a bookmark chosen on the detail
         // page opens the video at its moment, once.
-        val start = reopenAt ?: BookmarkJump.take(item.chatId, item.messageId) ?: if (ignoreSavedPosition) 0L else runCatching {
+        val start = reopenAt ?: BookmarkJump.take(item.chatId, item.messageId) ?: if (ignoreSavedPosition) {
+            // Start over forgets the old place: a short watch from here leaves a saved one alone.
+            runCatching { settings.clearResumePosition(item.chatId, item.messageId) }
+            0L
+        } else runCatching {
             settings.resumeStart(item.chatId, item.messageId)
         }.getOrDefault(0L)
         val reopening = reopenAt != null
@@ -864,6 +868,8 @@ fun PlayerScreen(
         engine.seekTo(0)
         engine.play()
         resumedFrom = null
+        // A short watch from here leaves a saved place alone, so starting over forgets it.
+        playerScope.launch { runCatching { settings.clearResumePosition(current.item.chatId, current.item.messageId) } }
         showFlash(Flash.Kind.Text, L.playerFromStart)
     }
 
