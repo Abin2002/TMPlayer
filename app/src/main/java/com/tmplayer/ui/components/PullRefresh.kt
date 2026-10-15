@@ -5,12 +5,15 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -30,9 +33,17 @@ internal fun TouchPullRefresh(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
+    state: PullToRefreshState = rememberPullToRefreshState(),
+    /** Material's spinner at the top centre unless a page places its own (Home, under the status bar). */
+    indicator: @Composable BoxScope.() -> Unit = {
+        PullToRefreshDefaults.Indicator(
+            state = state,
+            isRefreshing = isRefreshing,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+    },
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val state = rememberPullToRefreshState()
     val still = rememberLessMotion()
     val tick = rememberStepTick()
     val busy by rememberUpdatedState(isRefreshing)
@@ -47,6 +58,7 @@ internal fun TouchPullRefresh(
         onRefresh = onRefresh,
         modifier = modifier,
         state = state,
+        indicator = indicator,
     ) {
         Box(
             Modifier

@@ -297,7 +297,8 @@ fun TvChoiceRow(
             .fillMaxWidth()
             .heightIn(min = 52.dp)
             .clip(shape)
-            .background(if (focused) Tone.focusFill else Tone.surface)
+            // The current choice tinted as well as ticked, as the phone's popover draws it.
+            .background(if (focused) Tone.focusFill else if (selected == true) Tone.accent.copy(alpha = 0.14f) else Tone.surface)
             .focusRing(focused, shape)
             .clickable(
                 interactionSource = interactions,

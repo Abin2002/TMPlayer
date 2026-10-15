@@ -482,6 +482,11 @@ fun MediaGridScreen(
         refreshing = false
     }
 
+    // Whether the remote is in the heading (the search, the favourite, rows or tiles, Sort): a
+    // switch of arrangement made there leaves it there, on the button just pressed.
+    var headerHasFocus by remember { mutableStateOf(false) }
+    val laidOut = remember { arrayOf(layout) }
+
     val listing: @Composable () -> Unit = {
         StateScaffold(
             state,
@@ -721,7 +726,7 @@ fun MediaGridScreen(
                             state = listState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = padding,
-                            verticalArrangement = Arrangement.spacedBy(if (touch) 2.dp else 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(if (touch) 2.dp else 4.dp),
                         ) {
                             if (metaNotice) item(key = "meta-notice") { metaNoticeCard() }
                             if (course != null || loadedOnly) item(key = "course") { courseHeader() }
@@ -903,8 +908,12 @@ fun MediaGridScreen(
             // Switching arrangement rebuilds the list, taking the focused card with it, so the
             // first item has to be asked for again or the remote is left with nowhere to go. Only
             // on a remote: on a phone this would highlight a card nobody pointed at.
+            // The rows or tiles button pressed in the heading keeps the remote, though: the list
+            // under it changes, and the button is where the viewer is looking to press it again.
             LaunchedEffect(list.items.firstOrNull()?.id, layout, touch) {
-                if (!touch) runCatching { firstItem.requestFocus() }
+                val switchedHere = laidOut[0] != layout && headerHasFocus
+                laidOut[0] = layout
+                if (!touch && !switchedHere) runCatching { firstItem.requestFocus() }
             }
 
             // Fetch the next page well before the user reaches the bottom row. The lead is counted
@@ -1012,6 +1021,7 @@ fun MediaGridScreen(
                 )
             } else {
                 Header(
+                    modifier = Modifier.onFocusChanged { headerHasFocus = it.hasFocus },
                     chatTitle = chatTitle,
                     chatPhotoFileId = chatPhotoFileId,
                     chatMiniThumbnail = chatMiniThumbnail,
@@ -1369,6 +1379,7 @@ internal fun Header(
     alwaysShowRecent: Boolean = false,
     /** Opens the Sort menu ([VideoSortSheet]); null leaves it out. */
     onSort: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
     val s = LocalStrings.current
     // On Fire TV the voice button opens the keyboard, which the remote's mic dictates into.
@@ -1378,7 +1389,7 @@ internal fun Header(
         onSubmit()
     }
 
-    Column(Modifier.padding(start = edge, end = edge, top = Tv.SafeV, bottom = 12.dp)) {
+    Column(modifier.padding(start = edge, end = edge, top = Tv.SafeV, bottom = 12.dp)) {
         // The same picture the chat was picked by, so it is obvious which one this listing is.
         Row(verticalAlignment = Alignment.CenterVertically) {
             // The way out, drawn. The remote's Back key works, but Back is the key stick owners
@@ -1444,6 +1455,7 @@ internal fun Header(
                 label = if (isFavorite) s.gridRemoveFavouriteShort else s.gridAddFavouriteShort,
                 icon = if (isFavorite) TmIcons.Star else TmIcons.StarOutline,
                 tintWhenIdle = if (isFavorite) Tone.accent else Tone.text,
+                starred = isFavorite,
                 onClick = onToggleFavorite,
             )
             // Which arrangement suits a chat depends on the chat: tiles for visual browsing,
@@ -1469,7 +1481,7 @@ internal fun Header(
             ) {
                 Text(s.gridRecentSearchesLabel, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
                 for (recent in recentSearches) {
-                    Pill(recent, TmIcons.History) {
+                    Pill(recent, TmIcons.History, plain = true) {
                         // The row goes as soon as there is a query, so focus moves first, as Clear does.
                         runCatching { searchField.requestFocus() }
                         onQuery(recent)
@@ -1787,19 +1799,35 @@ private fun Pill(
     icon: ImageVector,
     tintWhenIdle: Color = Tone.text,
     showLabel: Boolean = true,
+    /** Plain words until the remote is on it: a recent search, with no box of its own. */
+    plain: Boolean = false,
+    /** The favourite pill's: the star pops as it fills ([StarIcon]) instead of a plain icon. */
+    starred: Boolean? = null,
     onClick: () -> Unit,
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val background by animateColorAsState(
-        targetValue = if (focused) Tone.focusFill else Tone.surfaceHigh,
+        targetValue = if (focused) Tone.focusFill else if (plain) Color.Transparent else Tone.surfaceHigh,
         animationSpec = tween(140),
         label = "pill",
     )
     val foreground = if (focused) Tone.onFocusFill else tintWhenIdle
+    // A remote's answer to a press is the focus moving, so the pill the remote lands on grows a
+    // touch, as a card does; nothing sinks, since nothing is under a finger.
+    val lessMotion = com.tmplayer.ui.components.rememberLessMotion()
+    val scale by animateFloatAsState(
+        if (focused && !lessMotion) PILL_FOCUS_SCALE else 1f,
+        Motion.standard(Motion.Fast),
+        label = "pillScale",
+    )
 
     Row(
         Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .height(48.dp)
             .clip(CircleShape)
             .background(background)
@@ -1811,12 +1839,19 @@ private fun Pill(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(icon, contentDescription = if (showLabel) null else label, tint = foreground, modifier = Modifier.size(22.dp))
+        if (starred != null) {
+            StarIcon(starred, TmIcons.Star, TmIcons.StarOutline, on = foreground, off = foreground, size = 22.dp)
+        } else {
+            Icon(icon, contentDescription = if (showLabel) null else label, tint = if (plain && !focused) Tone.muted else foreground, modifier = Modifier.size(22.dp))
+        }
         if (showLabel) {
             Text(label, style = MaterialTheme.typography.bodyLarge, color = foreground, maxLines = 1)
         }
     }
 }
+
+/** How much a pill in a chat's header grows under the remote: less than a card, being small. */
+private const val PILL_FOCUS_SCALE = 1.06f
 
 /**
  * The whole name of whatever the remote is standing on, along the bottom corner.
@@ -2074,7 +2109,7 @@ private fun MediaRow(
         onLongClick = onLongClick,
         selected = selected,
         art = { artModifier ->
-            MediaArt(item, watched, artModifier, compact = touch, selected = selected, finished = finished, poster = true, thumb = touch)
+            MediaArt(item, watched, artModifier, compact = touch, selected = selected, finished = finished, poster = true, thumb = true)
         },
     ) {
         Text(
@@ -2139,8 +2174,8 @@ private fun SeriesRow(
 
 /**
  * The frame of a row in a chat's list: a small 2:3 [art] at the start and [text] taking the rest of
- * the width. On a phone a card with the system's own surface and ripple, since the focus border
- * only means anything to a remote.
+ * the width. No card behind a row on either: on a television the row the remote is on fills and
+ * takes the focus edge, the others are the poster and its words on the page's own background.
  */
 @Composable
 private fun ListRow(
@@ -2172,7 +2207,7 @@ private fun ListRow(
                     } else {
                         Modifier
                             .clip(RoundedCornerShape(Corner.Medium))
-                            .background(if (focused) Tone.surfaceHigh else Tone.surface)
+                            .background(if (focused) Tone.surfaceHigh else Color.Transparent)
                             .border(Focus.Edge, border, RoundedCornerShape(Corner.Medium))
                             .selectionEdge(selected, RoundedCornerShape(Corner.Medium))
                             .holdOrPress(interactions, onClick, onLongClick)
@@ -2478,7 +2513,7 @@ internal val TOUCH_EDGE = 16.dp
 /** How many rows from the bottom the next page is fetched in the list arrangement. */
 private const val LIST_LEAD = 4
 
-private val ROW_POSTER_WIDTH = 104.dp
+private val ROW_POSTER_WIDTH = 72.dp
 private val TOUCH_ROW_POSTER_WIDTH = 56.dp
 
 /**

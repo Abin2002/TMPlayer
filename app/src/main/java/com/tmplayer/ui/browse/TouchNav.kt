@@ -466,7 +466,7 @@ internal class BarVisibility {
 
 /** Whether TalkBack, or anything else exploring the screen by touch, is on, followed as it changes. */
 @Composable
-private fun rememberTouchExploration(): Boolean {
+internal fun rememberTouchExploration(): Boolean {
     val context = LocalContext.current
     val manager = remember(context) { context.getSystemService(AccessibilityManager::class.java) }
     var on by remember { mutableStateOf(manager?.isTouchExplorationEnabled == true) }

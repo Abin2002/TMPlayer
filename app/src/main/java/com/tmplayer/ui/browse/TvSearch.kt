@@ -155,7 +155,7 @@ internal fun TvSearchScreen(
                 Spacer(Modifier.height(8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(end = Tv.SafeH)) {
                     items(pills, key = { it }) { pill ->
-                        TvPill(pill, if (recentSearches.isNotEmpty()) TmIcons.History else TmIcons.Search) {
+                        TvPill(pill, if (recentSearches.isNotEmpty()) TmIcons.History else TmIcons.Search, plain = true) {
                             onText(pill)
                             onSubmit(pill)
                         }
@@ -283,23 +283,35 @@ private fun MicOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** A round pill a remote can land on: a recent search, a suggestion, a filter. [chosen] fills it with the accent. */
+/**
+ * A round pill a remote can land on: a recent search, a suggestion, a filter. [chosen] fills it with
+ * the accent; [plain] (the recent searches and suggestions) is words and an icon with no box until
+ * the remote is on it, as the phone draws them.
+ */
 @Composable
-private fun TvPill(label: String, icon: ImageVector?, chosen: Boolean = false, onClick: () -> Unit) {
+private fun TvPill(label: String, icon: ImageVector?, chosen: Boolean = false, plain: Boolean = false, onClick: () -> Unit) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val fill by animateColorAsState(
         when {
             focused -> Tone.focusFill
             chosen -> Tone.accent.copy(alpha = 0.22f)
+            plain -> Color.Transparent
             else -> Tone.surfaceHigh
         },
         Motion.standard(Motion.Fast),
         label = "tvPill",
     )
     val ink = if (focused) Tone.onFocusFill else Tone.text
+    // The pill the remote lands on grows a touch, as the chat header's pills do.
+    val lessMotion = rememberReducedMotion() || Motion.reduced
+    val scale by animateFloatAsState(if (focused && !lessMotion) 1.06f else 1f, Motion.standard(Motion.Fast), label = "tvPillScale")
     Row(
         Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .height(48.dp)
             .clip(CircleShape)
             .background(fill)
@@ -309,7 +321,7 @@ private fun TvPill(label: String, icon: ImageVector?, chosen: Boolean = false, o
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        if (icon != null) Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
+        if (icon != null) Icon(icon, contentDescription = null, tint = if (plain && !focused) Tone.muted else ink, modifier = Modifier.size(20.dp))
         Text(label, style = MaterialTheme.typography.bodyLarge, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

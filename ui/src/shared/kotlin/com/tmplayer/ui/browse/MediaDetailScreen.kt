@@ -240,7 +240,9 @@ private fun CinemaLayout(page: DetailPage, height: Dp) {
                     ProtectedNote(page.item)
                 }
                 Column(Modifier.riseIn(2, enabled = !tv), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Actions(page, onEpisodes = episodesButton(page.item, page.meta, episodes))
+                    // A television keeps the everyday buttons beside Play and the rest at the foot
+                    // of the page, as a phone does; Right walks along the first, Down reaches the rest.
+                    Actions(page, onEpisodes = episodesButton(page.item, page.meta, episodes), headlineOnly = tv)
                     Versions(page.item, page.onPickCopy, page.chatTitle, page.copyStarted)
                 }
                 Spacer(Modifier.height(if (tv) 8.dp else 4.dp))
@@ -248,6 +250,7 @@ private fun CinemaLayout(page: DetailPage, height: Dp) {
             // Just under the first screen, so a long list never pushes the title off the top.
             Box(Modifier.widthIn(max = 720.dp)) { DetailBookmarks(page.bookmarks, page.onOpenBookmark) }
             BelowTheFold(page.item, page.meta, page.extras, page.onOpenItem, Modifier.bringIntoViewRequester(episodes))
+            if (tv) MoreActions(page)
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -492,10 +495,11 @@ private fun MoreActions(page: DetailPage) {
         }
     }
     if (rest.isEmpty()) return
+    val tv = !isTouch()
     FlowRow(
         Modifier.fillMaxWidth().padding(top = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (tv) 12.dp else 4.dp, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(if (tv) 12.dp else 8.dp),
     ) {
         rest.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s), toggles = togglesOn(it.action), progress = it.progress) }
     }

@@ -123,6 +123,9 @@ object HomeRows {
      * @param partial the starred chats whose fetch stopped short of their oldest video.
      * @param watchLater the Watch later list, newest first.
      * @param fresh the new episodes of the shows in progress, as [NewEpisodes.collect] lists them.
+     * @param recentMinStarred the starred chats it takes for Recently added: [RECENT_MIN_STARRED],
+     *   or one on a phone, where the row is the featured carousel ([HomeFeatured]) rather than a
+     *   repeat of the one chat's own row.
      */
     fun build(
         continueWatching: List<ResumeRecord>,
@@ -132,6 +135,7 @@ object HomeRows {
         partial: Set<Long> = emptySet(),
         watchLater: List<WatchLaterRecord> = emptyList(),
         fresh: List<NewEpisode> = emptyList(),
+        recentMinStarred: Int = RECENT_MIN_STARRED,
     ): List<HomeRow> = buildList {
         val seen = HashSet<String>()
 
@@ -146,7 +150,7 @@ object HomeRows {
         val inContinue = HashSet(seen)
 
         val starred = favourites.distinctBy { it.id }
-        if (starred.size >= RECENT_MIN_STARRED) {
+        if (starred.size >= recentMinStarred.coerceAtLeast(1)) {
             val starredIds = starred.mapTo(HashSet()) { it.id }
             if (recent == null) {
                 add(HomeRow.Recent(emptyList(), loaded = false))
