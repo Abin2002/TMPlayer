@@ -59,7 +59,9 @@ changed.
 - **URLs end in a slash.** `vercel.json` sets `trailingSlash` and `cleanUrls`, and Astro builds
   with `trailingSlash: 'always'`, so `/privacy` redirects to `/privacy/`. Canonicals, `og:url`,
   sitemap `<loc>`s and internal links all use the slash form; a canonical that points at a
-  redirect is ignored by Google.
+  redirect is ignored by Google. The one exception is a URL whose last segment has a dot: Vercel
+  takes it for a file and answers `/changelog/1.26.0/` with a 308 to `/changelog/1.26.0`, so the
+  release pages are named without the slash everywhere (`releaseUrl()` in `site/src/lib/releases.ts`).
 - **Every page's head** comes from `site/src/layouts/Base.astro`, which writes the canonical,
   `robots`, `author`, the Open Graph tags with the image's type, width and height, `og:locale`,
   the four `twitter:` tags, the icons, the manifest and, on localized pages, the hreflang
@@ -80,7 +82,7 @@ changed.
   and the releases from `releases.json`. A new indexable page gets an entry in `lastmod.json`.
 - **Releases.** The release job runs `scripts/release-data.py`, which writes
   `site/src/data/releases.json`; the site renders `/changelog/`, the RSS feed, one page per
-  release at `/changelog/<version>/` (BlogPosting JSON-LD) and the sitemap's release entries from
+  release at `/changelog/<version>` (BlogPosting JSON-LD) and the sitemap's release entries from
   it. Do not hand-edit `releases.json`; rerun the script. Release notes are the tag message, so a
   good tag message is the SEO text for that release.
 - **Caching** lives in `site/vercel.json`. Fonts are immutable (their names never change content),

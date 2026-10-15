@@ -49,8 +49,11 @@ export const releases: Release[] = (data as Raw[])
   })
   .sort((a, b) => compareKeys(versionKey(b.version), versionKey(a.version)) || b.date.getTime() - a.date.getTime());
 
+// A release page's URL has no trailing slash: Vercel takes the dot in the version for a file
+// extension and answers /changelog/1.26.0/ with a 308 to /changelog/1.26.0, so the canonical,
+// the sitemap and every link name the address that answers 200.
 export function releaseUrl(version: string): string {
-  return `${PAGE_URL}${version}/`;
+  return `${PAGE_URL}${version}`;
 }
 
 export function hasMac(version: string): boolean {

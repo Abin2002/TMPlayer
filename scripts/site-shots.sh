@@ -15,7 +15,7 @@ mkdir -p "$out"
 if [ $# -eq 0 ]; then
   set -- / /features/ /download/ /install/ /android-tv/ /fire-tv/ /faq/ /formats/ /translate/ \
     /guides/telegram-videos-on-android-tv/ /guides/telegram-videos-on-fire-tv/ \
-    /guides/telegram-on-tv-without-casting/ /changelog/ /changelog/1.26.0/ /legal/ /privacy/ \
+    /guides/telegram-on-tv-without-casting/ /changelog/ /changelog/1.26.0 /legal/ /privacy/ \
     /security/ /signing/ /support/ /no-such-page/ \
     /ar/ /ar/download/ /fa/ /fa/features/ /zh/ /ja/ /hi/ /ml/ /de/ /de/features/
 fi

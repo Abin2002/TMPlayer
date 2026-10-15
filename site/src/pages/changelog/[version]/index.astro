@@ -51,7 +51,7 @@ const get = latest
   ? 'This is the newest release. Installed copies offer it on their own; a new install starts from the download page.'
   : "A newer release is out. Installed copies move straight to it, and its files are the ones the download page offers. This release's own files stay on GitHub.";
 ---
-<Shell path={`/changelog/${v}/`} title={`TMPlayer ${v} release notes: what's new`} description={description} ogType="article" publishedTime={r.iso}>
+<Shell path={`/changelog/${v}`} title={`TMPlayer ${v} release notes: what's new`} description={description} ogType="article" publishedTime={r.iso}>
   <Fragment slot="head">
     <JsonLd data={breadcrumb(['Changelog', PAGE_URL], [`TMPlayer ${v}`, url])} />
     <JsonLd data={post} />
@@ -86,8 +86,8 @@ const get = latest
 <SponsorOffer release lede={`Glad ${v} reached you.`} />
 {(older || newer) && (
       <nav class="release-nav" aria-label="Other releases">
-        {older && <a class="release-nav-older" href={`/changelog/${older.version}/`} rel="prev"><span class="muted small">Older</span>TMPlayer {older.version}</a>}
-        {newer && <a class="release-nav-newer" href={`/changelog/${newer.version}/`} rel="next"><span class="muted small">Newer</span>TMPlayer {newer.version}</a>}
+        {older && <a class="release-nav-older" href={`/changelog/${older.version}`} rel="prev"><span class="muted small">Older</span>TMPlayer {older.version}</a>}
+        {newer && <a class="release-nav-newer" href={`/changelog/${newer.version}`} rel="next"><span class="muted small">Newer</span>TMPlayer {newer.version}</a>}
       </nav>
 )}
 

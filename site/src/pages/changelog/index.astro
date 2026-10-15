@@ -51,7 +51,7 @@ const oldest = releases.length ? releases[releases.length - 1].version : 'the fi
 {releases.map((r) => (
         <article class="changelog-entry" id={`v${r.version}`} aria-labelledby={`v${r.version}-h`}>
           <header class="changelog-entry-head">
-            <h2 id={`v${r.version}-h`}><a href={`/changelog/${r.version}/`}>TMPlayer {r.version}</a></h2>
+            <h2 id={`v${r.version}-h`}><a href={`/changelog/${r.version}`}>TMPlayer {r.version}</a></h2>
             <p class="changelog-meta"><time datetime={r.day}>{humanDate(r.date)}</time><span class="sep" aria-hidden="true">&middot;</span><a href={r.url} rel="noopener">On GitHub</a></p>
           </header>
           <div class="changelog-notes">

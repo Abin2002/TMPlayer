@@ -593,7 +593,7 @@ jobs:
           KEY="af11d0ad703ff8c5a7006d0ccd768528"
           curl -sS -o /dev/null -w "IndexNow answered %{http_code}\n" --max-time 30 \
             -H "Content-Type: application/json; charset=utf-8" \
-            -d "{\"host\":\"tmplayer.org\",\"key\":\"$KEY\",\"keyLocation\":\"https://tmplayer.org/$KEY.txt\",\"urlList\":[\"https://tmplayer.org/\",\"https://tmplayer.org/download/\",\"https://tmplayer.org/changelog/\",\"https://tmplayer.org/changelog/$VERSION/\"]}" \
+            -d "{\"host\":\"tmplayer.org\",\"key\":\"$KEY\",\"keyLocation\":\"https://tmplayer.org/$KEY.txt\",\"urlList\":[\"https://tmplayer.org/\",\"https://tmplayer.org/download/\",\"https://tmplayer.org/changelog/\",\"https://tmplayer.org/changelog/$VERSION\"]}" \
             https://api.indexnow.org/indexnow
 
       # The announcement on the Telegram channel, by the release bot. It lives in this job rather

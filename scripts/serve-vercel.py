@@ -4,7 +4,8 @@
 Reads vercel.json (by default the one in the served directory, else site/vercel.json) and applies
 what the site relies on:
 
-  cleanUrls + trailingSlash   any path without a dot -> 308 with a slash (before redirects), /x.html -> 308 /x/, /index.html -> 308 /
+  cleanUrls + trailingSlash   any path without a dot -> 308 with a slash (before redirects), a slash after a
+                              dotted last segment -> 308 without it (/changelog/1.26.0/ -> /changelog/1.26.0), /x.html -> 308 /x/, /index.html -> 308 /
   redirects                   /apk -> 307 (permanent: false) or 308 to the destination
   headers                     every rule whose source matches, in file order, later ones winning
   404                         404.html with status 404 for anything missing
@@ -110,6 +111,9 @@ def make_handler(root, cfg):
             last = path.rsplit("/", 1)[-1]
             if slash and not path.endswith("/") and "." not in last:
                 return self.redirect(308, path + "/" + query)
+            seg = path.rstrip("/").rsplit("/", 1)[-1]
+            if slash and path.endswith("/") and path != "/" and "." in seg and not seg.startswith("."):
+                return self.redirect(308, path.rstrip("/") + query)  # /changelog/1.26.0/ -> /changelog/1.26.0
             for rx, r in redirect_rules:
                 if rx.match(path):
                     return self.redirect(307 if not r.get("permanent", True) else 308, r["destination"])
@@ -121,6 +125,8 @@ def make_handler(root, cfg):
                     target += "/"
                 return self.redirect(308, target + query)
             f = self.file(path.lstrip("/"))
+            if f is None and not path.endswith("/"):
+                f = self.file(path.lstrip("/") + "/index.html")  # a dotted directory, served without its slash
             if f is not None and not path.endswith("/"):
                 return self.send(200, f.read_bytes(), content_type(f), path=path)
             if path.endswith("/"):

@@ -2660,7 +2660,7 @@ a.card:hover .card-go svg { transform: translateX(4px); }
 .changelog-notes strong { color: var(--on-surface); font-weight: 600; }
 .changelog-foot { text-align: center; }
 
-/* A release's own page (/changelog/<version>/): the notes card, a card on how to get it, and the
+/* A release's own page (/changelog/<version>): the notes card, a card on how to get it, and the
    neighbouring releases either side, older on the start edge and newer on the end edge. */
 .release-article, .release-get { margin-bottom: 16px; }
 .release-notes-h { margin: 0 0 12px; font-size: clamp(1.15rem, 2vw, 1.35rem); letter-spacing: -0.015em; }

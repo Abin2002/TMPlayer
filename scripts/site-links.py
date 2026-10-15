@@ -57,8 +57,11 @@ def main():
             return True
         f = dist / p.lstrip("/")
         if p.endswith("/"):
+            seg = p.rstrip("/").rsplit("/", 1)[-1]
+            if "." in seg and not seg.startswith("."):
+                return False  # Vercel answers a dotted path's slash form with a 308 to the slashless one
             return (f / "index.html").is_file()
-        return f.is_file()
+        return f.is_file() or (f / "index.html").is_file()
 
     def check(page):
         rel = "/" + str(page.relative_to(dist))
