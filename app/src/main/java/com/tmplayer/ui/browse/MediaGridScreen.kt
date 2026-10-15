@@ -626,52 +626,120 @@ fun MediaGridScreen(
                     .fillMaxSize()
                     .onFocusChanged { listHasFocus = it.hasFocus },
             ) {
+                // Rows to tiles and back cross-fade rather than cut, so the switch reads as the
+                // same videos laid out again. Each arrangement keeps its own scroll state.
+                androidx.compose.animation.Crossfade(
+                    targetState = layout,
+                    animationSpec = Motion.standard(if (Motion.reduced) 0 else Motion.Normal),
+                    label = "chatLayout",
+                ) { layout ->
                 when (layout) {
-                    CardLayout.Grid -> LazyVerticalGrid(
-                        columns = GridCells.Fixed(columns),
-                        state = gridState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = padding,
-                        horizontalArrangement = Arrangement.spacedBy(gap),
-                        verticalArrangement = Arrangement.spacedBy(gap),
-                    ) {
-                        if (metaNotice) {
-                            item(key = "meta-notice", span = { GridItemSpan(maxLineSpan) }) { metaNoticeCard() }
+                        CardLayout.Grid -> LazyVerticalGrid(
+                            columns = GridCells.Fixed(columns),
+                            state = gridState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = padding,
+                            horizontalArrangement = Arrangement.spacedBy(gap),
+                            verticalArrangement = Arrangement.spacedBy(gap),
+                        ) {
+                            if (metaNotice) {
+                                item(key = "meta-notice", span = { GridItemSpan(maxLineSpan) }) { metaNoticeCard() }
+                            }
+                            if (course != null || loadedOnly) {
+                                item(key = "course", span = { GridItemSpan(maxLineSpan) }) { courseHeader() }
+                            }
+                            shelfGrid(
+                                feed = feed,
+                                posterKeys = posterKeys,
+                                columns = columns,
+                                posterColumns = posterColumns,
+                                wideColumns = wideColumns,
+                            ) { entry ->
+                                    when (entry) {
+                                        is MediaFeedEntry.Media -> {
+                                            val shelved = entry.item
+                                            if (shelved is ShelfEntry.Show) {
+                                                SeriesCard(
+                                                    series = shelved.series,
+                                                    progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
+                                                    fresh = remember(shelved.series, watch) { watch.newEpisodes(shelved.series) > 0 },
+                                                    onClick = { openSeries.open(shelved.series) },
+                                                    dense = dense,
+                                                    poster = true,
+                                                    onFocused = { standingOn = shelved.series.cover },
+                                                    modifier = focusOf(shelved),
+                                                )
+                                            } else {
+                                            val item = (shelved as ShelfEntry.File).item
+                                            MediaCard(
+                                                item = item,
+                                                watched = watchProgress[
+                                                    SettingsStore.progressKey(item.chatId, item.messageId),
+                                                ],
+                                                finished = SettingsStore.progressKey(item.watchedBy.chatId, item.watchedBy.messageId) in watchedVideos,
+                                                dense = dense,
+                                                poster = shelved.key in posterKeys,
+                                                selected = if (selecting) selected.containsKey(item.id) else null,
+                                                onClick = { if (selecting) toggle(item) else if (detailFirst) showingDetailsOf = item else onPlay(item) },
+                                                onLongClick = if (selecting) null else {
+                                                    { heldMenuOf = item }
+                                                },
+                                                onFocused = { standingOn = item },
+                                                modifier = focusOf(shelved),
+                                            )
+                                            }
+                                        }
+                                        is MediaFeedEntry.Sponsored -> SponsoredCard(
+                                            item = entry.item,
+                                            onFullyVisible = {
+                                                viewModel.markSponsoredViewed(entry.item.messageId)
+                                            },
+                                            onOpen = { openSponsored(entry.item, false) },
+                                            onOpenMedia = { openSponsored(entry.item, true) },
+                                            onReport = { handleReport(entry.item) },
+                                        )
+                                    }
+                            }
                         }
-                        if (course != null || loadedOnly) {
-                            item(key = "course", span = { GridItemSpan(maxLineSpan) }) { courseHeader() }
-                        }
-                        shelfGrid(
-                            feed = feed,
-                            posterKeys = posterKeys,
-                            columns = columns,
-                            posterColumns = posterColumns,
-                            wideColumns = wideColumns,
-                        ) { entry ->
+    
+                        CardLayout.List -> LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = padding,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            if (metaNotice) item(key = "meta-notice") { metaNoticeCard() }
+                            if (course != null || loadedOnly) item(key = "course") { courseHeader() }
+                            items(
+                                items = feed,
+                                key = {
+                                    when (it) {
+                                        is MediaFeedEntry.Media -> it.item.key
+                                        is MediaFeedEntry.Sponsored -> "sponsor-${it.item.messageId}"
+                                    }
+                                },
+                            ) { entry ->
                                 when (entry) {
                                     is MediaFeedEntry.Media -> {
                                         val shelved = entry.item
                                         if (shelved is ShelfEntry.Show) {
-                                            SeriesCard(
+                                            SeriesRow(
                                                 series = shelved.series,
                                                 progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
                                                 fresh = remember(shelved.series, watch) { watch.newEpisodes(shelved.series) > 0 },
                                                 onClick = { openSeries.open(shelved.series) },
-                                                dense = dense,
-                                                poster = true,
                                                 onFocused = { standingOn = shelved.series.cover },
                                                 modifier = focusOf(shelved),
                                             )
                                         } else {
                                         val item = (shelved as ShelfEntry.File).item
-                                        MediaCard(
+                                        MediaRow(
                                             item = item,
+                                            captionLine = MediaMapper.captionLine(item, repeatedCaptions),
                                             watched = watchProgress[
                                                 SettingsStore.progressKey(item.chatId, item.messageId),
                                             ],
                                             finished = SettingsStore.progressKey(item.watchedBy.chatId, item.watchedBy.messageId) in watchedVideos,
-                                            dense = dense,
-                                            poster = shelved.key in posterKeys,
                                             selected = if (selecting) selected.containsKey(item.id) else null,
                                             onClick = { if (selecting) toggle(item) else if (detailFirst) showingDetailsOf = item else onPlay(item) },
                                             onLongClick = if (selecting) null else {
@@ -692,66 +760,6 @@ fun MediaGridScreen(
                                         onReport = { handleReport(entry.item) },
                                     )
                                 }
-                        }
-                    }
-
-                    CardLayout.List -> LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = padding,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        if (metaNotice) item(key = "meta-notice") { metaNoticeCard() }
-                        if (course != null || loadedOnly) item(key = "course") { courseHeader() }
-                        items(
-                            items = feed,
-                            key = {
-                                when (it) {
-                                    is MediaFeedEntry.Media -> it.item.key
-                                    is MediaFeedEntry.Sponsored -> "sponsor-${it.item.messageId}"
-                                }
-                            },
-                        ) { entry ->
-                            when (entry) {
-                                is MediaFeedEntry.Media -> {
-                                    val shelved = entry.item
-                                    if (shelved is ShelfEntry.Show) {
-                                        SeriesRow(
-                                            series = shelved.series,
-                                            progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
-                                            fresh = remember(shelved.series, watch) { watch.newEpisodes(shelved.series) > 0 },
-                                            onClick = { openSeries.open(shelved.series) },
-                                            onFocused = { standingOn = shelved.series.cover },
-                                            modifier = focusOf(shelved),
-                                        )
-                                    } else {
-                                    val item = (shelved as ShelfEntry.File).item
-                                    MediaRow(
-                                        item = item,
-                                        captionLine = MediaMapper.captionLine(item, repeatedCaptions),
-                                        watched = watchProgress[
-                                            SettingsStore.progressKey(item.chatId, item.messageId),
-                                        ],
-                                        finished = SettingsStore.progressKey(item.watchedBy.chatId, item.watchedBy.messageId) in watchedVideos,
-                                        selected = if (selecting) selected.containsKey(item.id) else null,
-                                        onClick = { if (selecting) toggle(item) else if (detailFirst) showingDetailsOf = item else onPlay(item) },
-                                        onLongClick = if (selecting) null else {
-                                            { heldMenuOf = item }
-                                        },
-                                        onFocused = { standingOn = item },
-                                        modifier = focusOf(shelved),
-                                    )
-                                    }
-                                }
-                                is MediaFeedEntry.Sponsored -> SponsoredCard(
-                                    item = entry.item,
-                                    onFullyVisible = {
-                                        viewModel.markSponsoredViewed(entry.item.messageId)
-                                    },
-                                    onOpen = { openSponsored(entry.item, false) },
-                                    onOpenMedia = { openSponsored(entry.item, true) },
-                                    onReport = { handleReport(entry.item) },
-                                )
                             }
                         }
                     }
@@ -1238,15 +1246,16 @@ private fun MediaSearchField(
     // suggestion sheet included, and this search sits inside the sticky bar at the foot. It
     // borrows the shape and the colour so it still reads as a search bar.
     Surface(
-        shape = M3MaterialTheme.shapes.extraLarge,
-        color = Tone.surfaceHigh,
+        // The sticky bar is the field's own pill: a second, lighter pill inside it read as two
+        // controls stacked, so this one draws no fill of its own.
+        color = Color.Transparent,
         contentColor = Tone.text,
         modifier = rowModifier.padding(end = 4.dp),
     ) {
         Row(
             Modifier
                 .padding(
-                    start = 16.dp,
+                    start = 4.dp,
                     // A trailing icon brings its own room with it; without one the text would run
                     // into the rounded end of the field.
                     end = if (query.isEmpty() && onVoiceSearch == null) 16.dp else 4.dp,
@@ -1439,11 +1448,19 @@ private fun TouchRecentSearches(
     onClear: () -> Unit,
 ) {
     val s = LocalStrings.current
+    // On a panel of its own: over the list the chips would sit on whatever rows are behind them,
+    // and neither would read.
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = Tone.surfaceHigh,
+        shadowElevation = 6.dp,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = TOUCH_EDGE).padding(bottom = 8.dp),
+    ) {
     Row(
         Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = TOUCH_EDGE, vertical = 4.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -1455,6 +1472,7 @@ private fun TouchRecentSearches(
             )
         }
         TextButton(onClick = onClear) { M3Text(s.commonClear) }
+    }
     }
 }
 
