@@ -48,7 +48,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tmplayer.data.ChatSummary
-import com.tmplayer.data.VideoSort
 import com.tmplayer.desktop.os.OsInfo
 import com.tmplayer.ui.components.FloatingBarIcon
 import com.tmplayer.ui.components.FloatingChrome
@@ -72,7 +71,7 @@ import com.tmplayer.ui.theme.floatingBorder
 internal val ChatTopClearance: Dp = 16.dp + FloatingChrome.Button + 12.dp
 
 /** How much of the foot of the page the chat's bar keeps, its margin and a gap included. */
-internal val ChatBarClearance: Dp = 16.dp + FloatingChrome.Bar + 8.dp
+internal val ChatBarClearance: Dp = 16.dp + FloatingChrome.LabelledBar + 8.dp
 
 /** Back and the chat's picture and name, floating at the top start of the page. */
 @Composable
@@ -128,8 +127,8 @@ internal fun ChatBar(
     onClearRecent: () -> Unit,
     favourite: Boolean,
     onToggleFavourite: () -> Unit,
-    sort: VideoSort,
-    onSort: (VideoSort) -> Unit,
+    onSort: () -> Unit,
+    sortAnchor: com.tmplayer.ui.components.PopoverAnchor,
     onRefresh: () -> Unit,
 ) {
     val s = LocalStrings.current
@@ -188,7 +187,8 @@ internal fun ChatBar(
             }
         } else {
             BarPill {
-                BarIcon(TmIcons.Search, s.gridSearchThisChat, "${command}F", onOpenSearch)
+                // Each with its name under it, as the phone's bar has them.
+                BarIcon(TmIcons.Search, s.gridSearchThisChat, "${command}F", onOpenSearch, caption = s.commonSearch)
                 BarTooltip(if (favourite) s.browseRemoveFavourite else s.browseAddFavourite, null) {
                     FloatingBarIcon(
                         icon = if (favourite) TmIcons.Star else TmIcons.StarOutline,
@@ -197,14 +197,20 @@ internal fun ChatBar(
                         // Only the filled star is coloured, so the outline sits with the others.
                         tint = if (favourite) Tone.accent else Tone.text,
                         checked = favourite,
+                        caption = s.browseFavourite,
+                        // The star pops as it fills: the answer to the press, with no message.
+                        glyph = {
+                            com.tmplayer.ui.components.StarIcon(favourite, TmIcons.Star, TmIcons.StarOutline, on = Tone.accent, off = Tone.text)
+                        },
                     )
                 }
-                BarTooltip(s.gridSort, null) { VideoSortMenu(sort, onSort) }
+                BarIcon(TmIcons.Sort, s.gridSort, null, onSort, caption = s.gridSort, modifier = sortAnchor.modifier)
                 BarIcon(
                     if (state.chatRows) TmIcons.Grid else TmIcons.List,
                     if (state.chatRows) s.browseShowAsTiles else s.browseShowAsRows,
                     null,
                     { state.chatRows = !state.chatRows },
+                    caption = if (state.chatRows) s.browseAsTiles else s.browseAsRows,
                 )
                 if (!state.chatRows) {
                     // The desktop's own: a window has room for larger posters, or for more of them.
@@ -225,7 +231,7 @@ internal fun ChatBar(
 private fun BarPill(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     Row(
         modifier
-            .height(FloatingChrome.Bar)
+            .height(FloatingChrome.LabelledBar)
             .shadow(FloatingChrome.Shadow, CircleShape)
             .clip(CircleShape)
             .background(FloatingTone.menu)
@@ -237,8 +243,16 @@ private fun BarPill(modifier: Modifier = Modifier, content: @Composable RowScope
 }
 
 @Composable
-private fun BarIcon(icon: ImageVector, label: String, shortcut: String?, onClick: () -> Unit, enabled: Boolean = true) {
-    BarTooltip(label, shortcut) { FloatingBarIcon(icon, label, onClick, enabled = enabled) }
+private fun BarIcon(
+    icon: ImageVector,
+    label: String,
+    shortcut: String?,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    caption: String? = null,
+    modifier: Modifier = Modifier,
+) {
+    BarTooltip(label, shortcut) { FloatingBarIcon(icon, label, onClick, modifier = modifier, enabled = enabled, caption = caption) }
 }
 
 @Composable

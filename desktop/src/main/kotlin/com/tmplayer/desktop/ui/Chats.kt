@@ -86,6 +86,7 @@ import com.tmplayer.ui.browse.chatPageChips
 import com.tmplayer.ui.browse.isSelected
 import com.tmplayer.ui.browse.filterChats
 import com.tmplayer.ui.components.rememberToast
+import com.tmplayer.ui.components.pressScale
 import com.tmplayer.ui.theme.Avatar
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.launch
@@ -265,12 +266,42 @@ internal fun ChoiceChips(choices: List<Choice>) {
     ) {
         items(choices, key = { it.key }) { choice ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // A pick cross-fades the chip into its chosen colours rather than switching them,
+                // and the chip gives a little under the press, as on the phone.
+                val press = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                val scheme = MaterialTheme.colorScheme
+                val container by androidx.compose.animation.animateColorAsState(
+                    if (choice.selected) scheme.secondaryContainer else androidx.compose.ui.graphics.Color.Transparent,
+                    com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+                    label = "chipBack",
+                )
+                val ink by androidx.compose.animation.animateColorAsState(
+                    if (choice.selected) scheme.onSecondaryContainer else scheme.onSurfaceVariant,
+                    com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+                    label = "chipInk",
+                )
+                val glyph by androidx.compose.animation.animateColorAsState(
+                    if (choice.selected) scheme.onSecondaryContainer else scheme.primary,
+                    com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+                    label = "chipIcon",
+                )
                 FilterChip(
                     selected = choice.selected,
                     onClick = choice.onClick,
                     label = { Text(choice.label, maxLines = 1) },
-                    leadingIcon = { Icon(choice.icon, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                    modifier = choice.description?.let { words -> Modifier.semantics { contentDescription = words } } ?: Modifier,
+                    leadingIcon = { com.tmplayer.ui.components.SwapIcon(choice.icon, glyph, size = 18.dp) },
+                    colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                        containerColor = container,
+                        selectedContainerColor = container,
+                        labelColor = ink,
+                        selectedLabelColor = ink,
+                        iconColor = glyph,
+                        selectedLeadingIconColor = glyph,
+                    ),
+                    interactionSource = press,
+                    modifier = Modifier.pressScale(press).then(
+                        choice.description?.let { words -> Modifier.semantics { contentDescription = words } } ?: Modifier,
+                    ),
                 )
                 // The order is a different kind of control from the filters after it.
                 if (choice.key == "sort") Box(Modifier.width(1.dp).height(24.dp).background(Tone.outline))
@@ -328,7 +359,8 @@ internal fun ChatList(
                 ChatRow(
                     chat = chat,
                     favourite = chat.id in favourites,
-                    modifier = Modifier.navCell(nav, index),
+                    // A chat that moves (pinned, a new post) slides to its place rather than jumping.
+                    modifier = Modifier.animateItem().navCell(nav, index),
                     onOpen = { onOpen(chat) },
                     onStar = { onStar(chat) },
                     actions = actions,

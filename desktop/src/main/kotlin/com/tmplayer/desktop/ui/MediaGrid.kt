@@ -219,6 +219,8 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         RegisterRefresh(state) { model.load() }
         val favourites by state.settings.favorites.collectAsState(initial = emptySet())
         val favourite = chat.id in favourites
+        var sorting by remember(chat.id) { mutableStateOf(false) }
+        val sortAnchor = com.tmplayer.ui.components.rememberPopoverAnchor()
         val recent by state.settings.recentSearches.collectAsState(initial = emptyList())
         val scope = rememberCoroutineScope()
         val chatBar: @Composable () -> Unit = {
@@ -238,8 +240,8 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 favourite = favourite,
                 // The star says it, filled or not; a message about it would only repeat that.
                 onToggleFavourite = { scope.launch { state.settings.toggleFavorite(chat.id) } },
-                sort = sort,
-                onSort = { picked -> sortScope.launch { state.settings.setVideoSort(chat.id, picked) } },
+                onSort = { sorting = true },
+                sortAnchor = sortAnchor,
                 onRefresh = { model.load() },
             )
         }
@@ -364,6 +366,16 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         ChatTopChrome(state, chat)
         // While there is no grid to carry it (loading, empty, an error), the bar stands on its own.
         if (ui !is UiState.Content) Box(Modifier.align(Alignment.BottomCenter)) { chatBar() }
+        VideoSortPopover(
+            open = sorting,
+            anchor = sortAnchor,
+            current = sort,
+            onPick = { picked ->
+                sorting = false
+                if (picked != sort) sortScope.launch { state.settings.setVideoSort(chat.id, picked) }
+            },
+            onDismiss = { sorting = false },
+        )
     }
     }
 }
@@ -444,10 +456,13 @@ internal fun VideoGrid(
             }
             itemsIndexed(items, key = { _, it -> "media-${it.id}" }) { index, item ->
                 val show = series[item.id]
-                if (show != null && watch != null) {
-                    SeriesPoster(show, watch, onOpen = { onOpenSeries(show) }, nav = nav, index = index, poster = item.id in posters, row = rows)
-                } else {
-                    MediaTile(state, item, chatTitle, nav, index, badge = badge(item), poster = item.id in posters, row = rows)
+                // A new order (a sort, a correction) moves the cards to their places.
+                Box(Modifier.animateItem()) {
+                    if (show != null && watch != null) {
+                        SeriesPoster(show, watch, onOpen = { onOpenSeries(show) }, nav = nav, index = index, poster = item.id in posters, row = rows)
+                    } else {
+                        MediaTile(state, item, chatTitle, nav, index, badge = badge(item), poster = item.id in posters, row = rows)
+                    }
                 }
             }
             if (loadingMore) {
@@ -719,7 +734,9 @@ internal fun MediaTile(
             if (poster || row) {
                 val meta = com.tmplayer.ui.online.rememberMeta(item, showOnly = true)
                 // A row's poster is small: no name set on a generated cover, the title is beside it.
-                PosterArt(item.miniThumbnail, item.thumbnailFileId, rememberCover(item), meta?.posterUrl, Modifier.fillMaxSize(), compactCover = row)
+                val cover = rememberCover(item)
+                val shown = if (row) remember(cover) { cover.copy(title = "") } else cover
+                PosterArt(item.miniThumbnail, item.thumbnailFileId, shown, meta?.posterUrl, Modifier.fillMaxSize(), compactCover = row)
             } else {
                 // On Home, the show's or the film's own picture over the frame once a match arrives.
                 com.tmplayer.ui.online.OnlineArt(item, Modifier.fillMaxSize()) {

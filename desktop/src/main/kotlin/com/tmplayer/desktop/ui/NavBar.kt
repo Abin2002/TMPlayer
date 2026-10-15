@@ -88,6 +88,8 @@ import com.tmplayer.ui.browse.BrowseTab
 import com.tmplayer.ui.browse.HistoryTab
 import com.tmplayer.ui.browse.onChatsPage
 import com.tmplayer.ui.components.LocalBottomChrome
+import com.tmplayer.ui.components.captionStyle
+import com.tmplayer.ui.components.pressScale
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.nav.BackHandler
@@ -100,8 +102,9 @@ import com.tmplayer.ui.theme.rememberReducedMotion
 /**
  * The window's navigation, the phone's floating bar brought to the desktop: one rounded pill
  * centred at the foot of the page, floating over it with the floating hairline and a soft shadow,
- * holding Home, Chats, Search (the Ctrl+K palette), Settings and the viewer's picture, which opens
- * their own lists (Favourites, Downloads, History, Watch later, and Update when there is one).
+ * holding Home, Chats, Search (the Ctrl+K palette) and the viewer's picture, which opens their own
+ * lists and Settings (Favourites, Downloads, History, Watch later, Settings, and Update when there
+ * is one), the phone's bar and popover as they are now.
  *
  * It replaces the side bar of earlier versions, so the desktop and the phone are one app: the
  * pages get the whole width of the window, and the same places sit in the same order. A pointer
@@ -145,7 +148,7 @@ fun NavFrame(
 }
 
 /** Which of the bar's buttons the page on screen lights, or null for none (a page behind the picture). */
-internal enum class NavPlace { Home, Chats, Search, Settings }
+internal enum class NavPlace { Home, Chats, Search }
 
 /** The bar's lit button for where the window is. */
 internal fun navPlaceOf(state: ShellState): NavPlace? = when {
@@ -154,15 +157,14 @@ internal fun navPlaceOf(state: ShellState): NavPlace? = when {
     else -> when (state.destination) {
         Destination.Home -> NavPlace.Home
         Destination.Chats -> NavPlace.Chats
-        Destination.Settings -> NavPlace.Settings
-        Destination.Favourites, Destination.History, Destination.Downloads -> null
+        Destination.Settings, Destination.Favourites, Destination.History, Destination.Downloads -> null
     }
 }
 
 /** True on the pages behind the picture, which then wears a ring. */
 private fun inProfile(state: ShellState): Boolean =
     !state.paletteOpen && state.openChat == null &&
-        state.destination in setOf(Destination.Favourites, Destination.History, Destination.Downloads)
+        state.destination in setOf(Destination.Favourites, Destination.History, Destination.Downloads, Destination.Settings)
 
 /** The command key as the OS names it, for the tooltips. */
 private val COMMAND = if (OsInfo.isMac) "⌘" else "Ctrl+"
@@ -219,9 +221,6 @@ private fun NavBar(
                         state.showChats(if (open.onChatsPage) open else BrowseSection.of(BrowseTab.Chats))
                     }
                     NavButton(TmIcons.Search, s.commonSearch, "${COMMAND}K", current == NavPlace.Search) { state.paletteOpen = !state.paletteOpen }
-                    NavButton(TmIcons.Settings, s.navSettings, if (OsInfo.isMac) "⌘," else "Ctrl+,", current == NavPlace.Settings) {
-                        state.go(Destination.Settings)
-                    }
                     ProfileButton(
                         account = account,
                         ringed = inProfile(state),
@@ -267,12 +266,14 @@ private fun NavCell(
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
-    // The icon and its name take the accent as the highlight lands under them.
+    // The icon and its name take the accent as the highlight lands under them; the cell sinks a
+    // little under the press, as the phone's buttons do.
     val tint by animateColorAsState(if (chosen) Tone.accent else Tone.text, Motion.standard(Motion.Fast), label = "navIcon")
     val ink by animateColorAsState(if (chosen) Tone.accent else Tone.muted, Motion.standard(Motion.Fast), label = "navLabel")
     Column(
         modifier
             .size(NAV_ITEM, NAV_ITEM_HEIGHT)
+            .pressScale(interactions)
             .clip(RoundedCornerShape(NAV_ITEM_HEIGHT / 2))
             .then(if (focused) Modifier.border(2.dp, Tone.accent, RoundedCornerShape(NAV_ITEM_HEIGHT / 2)) else Modifier)
             .clickable(interactionSource = interactions, indication = androidx.compose.foundation.LocalIndication.current, role = role, onClick = onClick)
@@ -284,12 +285,12 @@ private fun NavCell(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        glyph(tint)
-        Spacer(Modifier.height(3.dp))
+        // One height for every glyph, the ringed picture included, so the names sit on one line.
+        Box(Modifier.size(GLYPH_SLOT), contentAlignment = Alignment.Center) { glyph(tint) }
+        Spacer(Modifier.height(2.dp))
         Text(
             label,
-            fontSize = 10.sp,
-            lineHeight = 12.sp,
+            style = captionStyle(),
             fontWeight = if (chosen) FontWeight.SemiBold else FontWeight.Medium,
             color = ink,
             maxLines = 1,
@@ -439,6 +440,7 @@ private fun BoxScope.ProfilePopover(state: ShellState, update: NavUpdate?, ancho
                 PopoverRow(TmIcons.Download, s.navDownloads, inFlight.takeIf { it > 0 }?.toString(), onClick = close { state.go(Destination.Downloads) })
                 PopoverRow(TmIcons.History, s.browseTabHistory, null, onClick = close { state.showHistory(HistoryTab.Continue) })
                 PopoverRow(TmIcons.Clock, s.browseTabWatchLater, null, onClick = close { state.showHistory(HistoryTab.WatchLater) })
+                PopoverRow(TmIcons.Settings, s.navSettings, null, shortcut = if (OsInfo.isMac) "⌘," else "Ctrl+,", onClick = close { state.go(Destination.Settings) })
                 if (update != null) {
                     // Amber, as on the television's rail and the phone's popover: the one row that is news.
                     HorizontalDivider(Modifier.padding(horizontal = 14.dp, vertical = 4.dp), color = Tone.outline)
@@ -457,6 +459,8 @@ private fun PopoverRow(
     badge: String?,
     modifier: Modifier = Modifier,
     ink: Color = Tone.text,
+    /** The key that does the same, said quietly at the row's end. */
+    shortcut: String? = null,
     onClick: () -> Unit,
 ) {
     val interactions = remember { MutableInteractionSource() }
@@ -475,6 +479,7 @@ private fun PopoverRow(
     ) {
         Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
         Text(label, style = MaterialTheme.typography.bodyMedium, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        if (shortcut != null) Text(shortcut, style = MaterialTheme.typography.labelSmall, color = Tone.muted)
         if (badge != null) {
             Text(
                 badge,
@@ -535,7 +540,8 @@ private val NAV_PADDING = 6.dp
 private val NAV_HEIGHT = NAV_ITEM_HEIGHT + NAV_PADDING * 2
 private val NAV_MARGIN = 16.dp
 private val NAV_SHADOW = 10.dp
-private val PICTURE = 24.dp
+private val PICTURE = 22.dp
+private val GLYPH_SLOT = 28.dp
 private val POPOVER_WIDTH = 232.dp
 private val POPOVER_ROW = 40.dp
 private val POPOVER_SHAPE = RoundedCornerShape(20.dp)
