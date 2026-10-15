@@ -21,6 +21,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -709,6 +710,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 TrackPickerFragment.isOpen(supportFragmentManager)
             holdControls()
             if (!pickerOpen) controls?.focusRow()
+        }
+        // The manifest opts into the new back dispatch, and from Android 13 that means Back never
+        // arrives in [dispatchKeyEvent] as a key: it comes here, and without this a locked screen,
+        // the next-up card or the row up all ended the film on the first press.
+        onBackPressedDispatcher.addCallback(this) {
+            if (!peelOneOverlay()) finish()
         }
         subtitleView.setApplyEmbeddedStyles(true)
         applySubtitleStyle()
@@ -2720,6 +2727,28 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             }
         }
         return super.dispatchKeyEvent(event)
+    }
+
+    /**
+     * Back as the dispatcher delivers it: the same peeling [dispatchKeyEvent] does for the key on
+     * older Androids, the unlock pill, then the next-up card, then the row. True when something
+     * took the press, false when Back is for the film itself.
+     */
+    private fun peelOneOverlay(): Boolean {
+        if (locked) {
+            showUnlockPill()
+            return true
+        }
+        if (nextUpHasTheRemote()) {
+            nextUpDismissed = true
+            hideNextUp()
+            return true
+        }
+        if (statusOverlay.visibility != View.VISIBLE && controlsUp) {
+            controls?.hideAnimated()
+            return true
+        }
+        return false
     }
 
     /** The number row and the numpad, as one digit; null for every other key. */
