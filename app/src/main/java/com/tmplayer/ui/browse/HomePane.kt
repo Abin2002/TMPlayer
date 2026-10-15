@@ -2,6 +2,14 @@ package com.tmplayer.ui.browse
 
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.foundation.background
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -137,12 +145,20 @@ internal fun HomePane(
     onPlayNow: (MediaItem, String) -> Unit = onPlay,
 ) {
     val s = LocalStrings.current
+    val touch = isTouch()
+    // On a phone the page runs up under the status bar (see LocalUnderStatusBar).
+    val under = if (touch) LocalUnderStatusBar.current else 0.dp
     if (rows.isEmpty()) {
         // Nothing played and nothing starred: a first run, so say how to get a first video in.
-        FirstVideoEmpty(onOpenSection)
+        Box(Modifier.fillMaxSize().padding(top = under)) { FirstVideoEmpty(onOpenSection) }
         return
     }
-    val touch = isTouch()
+    // On a phone, Recently added in starred chats is the featured carousel at the top rather than
+    // a row: present from the first frame whenever the row is, so nothing below it moves when it fills.
+    val recent = if (touch) rows.firstNotNullOfOrNull { it as? HomeRow.Recent } else null
+    val featured = rememberFeatured(recent)
+    val carousel = recent != null && featured?.isEmpty() != true
+    val listed = if (recent != null) rows.filterNot { it === recent } else rows
     val first = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
     // Kept across a turn of the phone: the show is looked up again in the rows once they are back.
@@ -161,19 +177,75 @@ internal fun HomePane(
         HomeLaunch.show.compareAndSet(ask, null)
     }
 
-    Box(Modifier.fillMaxSize()) {
+    // Asked for as the row would be when it first came on screen, and again after a refresh.
+    if (recent != null) LaunchedEffect(recent.key, recent.loaded) { if (!recent.loaded) onRowShown(recent) }
+    val density = LocalDensity.current
+
+    // On a phone Home shares a pager with Chats and stays composed beside it: only while most of
+    // it is on screen does the carousel move on or the status bar take its colours from it.
+    var shown by remember { mutableStateOf(true) }
+    BoxWithConstraints(
+        Modifier.fillMaxSize().then(
+            if (touch) {
+                Modifier.onGloballyPositioned { coordinates ->
+                    val width = coordinates.size.width
+                    shown = width > 0 && coordinates.boundsInWindow().width > width / 2f
+                }
+            } else {
+                Modifier
+            },
+        ),
+    ) {
+        // Fixed from the window alone, so it is the same before and after the pages arrive.
+        val carouselHeight = featuredHeight(maxWidth, maxHeight - under) + under
+        val carouselPx = with(density) { carouselHeight.roundToPx() }
+        val underPx = with(density) { under.roundToPx() }
+        // While the carousel's picture is under the status bar the bar's icons go light over it;
+        // once it has scrolled away the rows pass under a strip of the page's own ground.
+        val pictureShown = carousel && !featured.isNullOrEmpty()
+        val overArt by remember(pictureShown, carouselPx, underPx) {
+            derivedStateOf {
+                pictureShown && listState.firstVisibleItemIndex == 0 &&
+                    listState.firstVisibleItemScrollOffset < carouselPx - underPx
+            }
+        }
+        if (touch) StatusIconsOverArt(overArt && shown)
+        val lifecycle = LocalLifecycleOwner.current.lifecycle
+        val lifecycleState by lifecycle.currentStateFlow.collectAsState()
+        val carouselOnScreen by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+        // A sheet or a dialog takes the window's focus, which is what stops the pages moving under it.
+        val active = lifecycleState.isAtLeast(Lifecycle.State.RESUMED) && windowFocused && carouselOnScreen && shown && opened.series == null
         // Tiles here may wear the show's or the film's picture (see LocalOnlineArt); a chat's grid keeps frames.
         CompositionLocalProvider(LocalOnlineArt provides true) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
-                    top = if (touch) 4.dp else Tv.FocusClearance,
+                    top = if (!touch) Tv.FocusClearance else if (carousel) 0.dp else under + 4.dp,
                     bottom = bottom,
                 ),
                 verticalArrangement = Arrangement.spacedBy(if (touch) ROW_GAP_TOUCH else ROW_GAP_TV),
             ) {
-                items(rows, key = { it.key }, contentType = { it::class }) { row ->
+                if (carousel) {
+                    item(key = FEATURED_KEY, contentType = FEATURED_KEY) {
+                        FeaturedCarousel(
+                            picks = featured,
+                            height = carouselHeight,
+                            under = under,
+                            start = start,
+                            end = end,
+                            watch = watch,
+                            chatTitle = chatTitle,
+                            active = active,
+                            onPlay = onPlayNow,
+                            onDetails = { pick ->
+                                val series = pick.series
+                                if (series != null) opened.open(series) else onHoldMedia(pick.item, chatTitle(pick.item.chatId))
+                            },
+                        )
+                    }
+                }
+                items(listed, key = { it.key }, contentType = { it::class }) { row ->
                     val loaded = when (row) {
                         is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> true
                         is HomeRow.Chat -> row.loaded
@@ -181,7 +253,7 @@ internal fun HomePane(
                     }
                     // Asked for when the row first comes on screen, and again after a refresh empties it.
                     LaunchedEffect(row.key, loaded) { if (!loaded) onRowShown(row) }
-                    val isFirst = row === rows.first()
+                    val isFirst = row === listed.first()
                     val title = when (row) {
                         is HomeRow.Continue -> s.homeRowContinue
                         is HomeRow.WatchLater -> s.homeRowWatchLater
@@ -309,13 +381,28 @@ internal fun HomePane(
                 }
             }
         }
+        if (touch && under > 0.dp) {
+            val ground by androidx.compose.animation.core.animateFloatAsState(
+                if (overArt) 0f else 1f,
+                com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+                label = "statusGround",
+            )
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(under)
+                    .graphicsLayer { alpha = ground }
+                    .background(Tone.background),
+            )
+        }
         ScrollToTop(listState)
     }
 
     // Somewhere for the remote to stand the moment Home opens. Keyed on the first row, so a row
     // arriving above (Continue appearing after a first play) moves focus to the new top.
-    val firstKey = rows.first().key
-    val firstReady = when (val top = rows.first()) {
+    val firstKey = listed.firstOrNull()?.key
+    val firstReady = when (val top = listed.firstOrNull()) {
+        null -> false
         is HomeRow.Chat -> top.loaded
         is HomeRow.Recent -> top.loaded
         is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> true
@@ -622,3 +709,31 @@ private val TILE_GAP_TV = 12.dp
 /** Between a row's poster strip and its strip of cards, on a phone. */
 private val STRIP_GAP = 12.dp
 
+
+/** The lazy key of the phone's featured carousel at the top of Home. */
+private const val FEATURED_KEY = "featured"
+
+/**
+ * The carousel's pages from the Recently added row [recent]: null while that row is still being
+ * asked for (the carousel then holds its frame with a stand-in), empty for nothing to feature.
+ * Ranked once per fill, those with a sharp online picture first ([HomeFeatured.rank]), off the
+ * main thread since that reads the metadata cache; a refresh keeps the pages up until new ones
+ * are ready.
+ */
+@Composable
+private fun rememberFeatured(recent: HomeRow.Recent?): List<com.tmplayer.data.FeaturedPick>? {
+    val online = com.tmplayer.online.OnlineMetadata.current
+    val base = remember(recent) { recent?.takeIf { it.loaded }?.let { com.tmplayer.data.HomeFeatured.pick(it.entries) } }
+    var ranked by remember { mutableStateOf<List<com.tmplayer.data.FeaturedPick>?>(null) }
+    LaunchedEffect(base, online) {
+        val picks = base ?: return@LaunchedEffect
+        ranked = if (picks.isEmpty()) {
+            picks
+        } else {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                com.tmplayer.data.HomeFeatured.rank(picks) { sharpOnline(it, online) }
+            }
+        }
+    }
+    return ranked
+}

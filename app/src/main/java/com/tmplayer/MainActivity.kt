@@ -1206,7 +1206,12 @@ private fun Root() {
 
         // Home's rows, built here rather than inside Home so the TV home screen channels follow
         // them whichever screen is open.
-        val homeRows = rememberHomeRows(homeViewModel, chats, favorites, continueWatching, watchLater, watchedVideos.values)
+        // On a phone Recently added is the featured carousel at the top of Home, worth having
+        // with one starred chat; elsewhere it is a row, which with one would repeat that chat's.
+        val homeRows = rememberHomeRows(
+            homeViewModel, chats, favorites, continueWatching, watchLater, watchedVideos.values,
+            recentMinStarred = if (FormFactor.isTv(context)) com.tmplayer.data.HomeRows.RECENT_MIN_STARRED else 1,
+        )
         val tvChannelsOn by settings.tvChannels.collectAsStateWithLifecycle(initialValue = null)
         TvHomeChannels(
             model = homeViewModel,

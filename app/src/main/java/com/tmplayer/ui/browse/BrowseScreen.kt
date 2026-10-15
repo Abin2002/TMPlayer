@@ -49,6 +49,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import com.tmplayer.ui.icons.TmIcons
@@ -444,7 +445,7 @@ fun BrowseScreen(
     // A phone lists chats as rows, always: tiles of chat pictures are for a television across the
     // room. History's videos keep the choice, and so does every list on a television.
     val chatLayout: (BrowseSection) -> CardLayout = { section -> if (touch && !section.listsVideos) CardLayout.List else layout }
-    val pane: @Composable (BrowseSection) -> Unit = { tab ->
+    val paneOf: @Composable (BrowseSection) -> Unit = { tab ->
         val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
         val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
         val showsWatchLater = tab.listsVideos && historyTab == HistoryTab.WatchLater
@@ -697,6 +698,12 @@ fun BrowseScreen(
         }
     }
 
+    // A phone's Home runs up under the status bar for its carousel (see LocalUnderStatusBar); while
+    // the chat list is still loading, or failed, what stands in its place keeps below the bar.
+    val pane: @Composable (BrowseSection) -> Unit = { tab ->
+        val under = if (tab.isHome && state !is UiState.Content) LocalUnderStatusBar.current else 0.dp
+        Box(Modifier.fillMaxSize().padding(top = under)) { paneOf(tab) }
+    }
     if (touch) {
         PhoneBrowse(
             refreshOf = { page ->
@@ -1988,6 +1995,42 @@ private fun SearchRow(
 
 private const val SORT_CHIP = "sort"
 
+/** How wide the fade is at a chip row's scrolled ends on a television. */
+private val CHIP_EDGE_FADE = 40.dp
+
+/**
+ * Fades this sideways scroller out over [fade] at the start while it is scrolled from its start,
+ * and at the end while there is more past it, so a chip half out of view reads as going on rather
+ * than as cut off. Nothing changes on a row that fits.
+ */
+internal fun Modifier.fadeScrolledEdges(scroll: androidx.compose.foundation.ScrollState, fade: Dp): Modifier =
+    graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+        .drawWithContent {
+            drawContent()
+            val width = fade.toPx().coerceAtMost(size.width / 2)
+            val rtl = layoutDirection == LayoutDirection.Rtl
+            val atStart = scroll.value > 0
+            val atEnd = scroll.value < scroll.maxValue
+            // Left and right on screen, which in a right-to-left row are the end and the start.
+            val left = if (rtl) atEnd else atStart
+            val right = if (rtl) atStart else atEnd
+            if (left) {
+                drawRect(
+                    androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color.Transparent, Color.Black), startX = 0f, endX = width),
+                    size = androidx.compose.ui.geometry.Size(width, size.height),
+                    blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
+                )
+            }
+            if (right) {
+                drawRect(
+                    androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color.Black, Color.Transparent), startX = size.width - width, endX = size.width),
+                    topLeft = androidx.compose.ui.geometry.Offset(size.width - width, 0f),
+                    size = androidx.compose.ui.geometry.Size(width, size.height),
+                    blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
+                )
+            }
+        }
+
 /**
  * One chip over Chats or History: a filter, a tab, or the sort toggle (which is never "selected",
  * since it shows the order in use rather than one of several to pick).
@@ -2023,12 +2066,16 @@ private fun ChipRow(
     // whichever chip happens to sit nearest the row the focus left.
     val chosen = remember { FocusRequester() }
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val scroll = rememberScrollState()
     Row(
         Modifier
             .fillMaxWidth()
             .onFocusChanged { onFocus(it.hasFocus) }
             .then(if (touch || chips.none { it.selected }) Modifier else Modifier.focusRestorer(chosen))
-            .horizontalScroll(rememberScrollState())
+            // On a television a chip scrolled past the start used to stop dead at the rail's edge,
+            // cut in half; the row fades out at whichever end has more chips past it instead.
+            .then(if (touch) Modifier else Modifier.fadeScrolledEdges(scroll, CHIP_EDGE_FADE))
+            .horizontalScroll(scroll)
             .padding(
                 start = insets.start,
                 end = insets.end,

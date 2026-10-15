@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -2845,12 +2846,22 @@ private fun AccountHeader(account: com.tmplayer.data.Account) {
  */
 @Composable
 private fun SignOutButton(label: String, onClick: () -> Unit) {
+    // A remote has no pointer to show where it is, and Material's button barely changes on focus:
+    // on a television it stays dimmed until the remote is on it, then fills and takes a ring, so
+    // nobody presses Sign out without seeing that it is the button about to be pressed.
+    val tv = !isTouch()
+    val interactions = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
     Box(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 12.dp)) {
         androidx.compose.material3.Button(
             onClick = onClick,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            interactionSource = interactions,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .then(if (tv && focused) Modifier.border(3.dp, Tone.text, CircleShape) else Modifier),
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = Tone.danger,
+                containerColor = if (tv && !focused) Tone.danger.copy(alpha = 0.4f) else Tone.danger,
                 contentColor = androidx.compose.material3.MaterialTheme.colorScheme.onError,
             ),
         ) {
