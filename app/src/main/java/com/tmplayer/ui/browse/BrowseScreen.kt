@@ -900,7 +900,8 @@ fun BrowseScreen(
     if (confirmClearHistory) {
         TvConfirm(
             title = s.browseClearContinueTitle,
-            message = s.browseClearContinueMessage(continueWatching.size),
+            // The cards the tab shows, copies of one video folded into one, as its count says.
+            message = s.browseClearContinueMessage(continuing.size),
             detail = s.browseClearContinueDetail,
             confirmLabel = s.commonClear,
             onConfirm = {
