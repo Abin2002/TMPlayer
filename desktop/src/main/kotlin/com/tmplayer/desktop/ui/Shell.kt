@@ -70,6 +70,7 @@ import com.tmplayer.data.Td
 import com.tmplayer.ui.browse.ChatListViewModel
 import com.tmplayer.ui.browse.BrowseTab
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.text.style.TextOverflow
@@ -286,6 +287,14 @@ private fun Browse(state: ShellState, player: PlayerContent) {
         state.go(Destination.Home)
     }
 
+    // A chat opened from a page takes that page's place, so the page is kept here while the chat
+    // is open: back from the chat finds its search, its tab and its scroll as they were. Going
+    // to another page from the side bar forgets them, as before.
+    val pages = rememberSaveableStateHolder()
+    LaunchedEffect(state.destination) {
+        Destination.entries.filter { it != state.destination }.forEach { pages.removeState(it.name) }
+    }
+
     Box(Modifier.fillMaxSize()) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val wide = maxWidth >= SIDEBAR_FROM
@@ -302,18 +311,20 @@ private fun Browse(state: ShellState, player: PlayerContent) {
                             val open = state.openChat
                             when {
                                 open != null -> MediaGridPage(state, open)
-                                else -> when (state.destination) {
-                                    Destination.Home -> HomePage(state, chats)
-                                    Destination.Chats -> ChatsPage(state, chats, favouritesOnly = false, showSections = !wide)
-                                    Destination.Favourites -> ChatsPage(state, chats, favouritesOnly = true)
-                                    Destination.History -> HistoryPage(state)
-                                    Destination.Downloads -> DownloadsPage(state)
-                                    Destination.Settings -> LockedSettings(state) {
-                                        SettingsPage(
-                                            state,
-                                            BuildInfo.VERSION,
-                                            chatList = (chatsUi as? UiState.Content)?.value?.chats.orEmpty(),
-                                        )
+                                else -> pages.SaveableStateProvider(state.destination.name) {
+                                    when (state.destination) {
+                                        Destination.Home -> HomePage(state, chats)
+                                        Destination.Chats -> ChatsPage(state, chats, favouritesOnly = false, showSections = !wide)
+                                        Destination.Favourites -> ChatsPage(state, chats, favouritesOnly = true)
+                                        Destination.History -> HistoryPage(state)
+                                        Destination.Downloads -> DownloadsPage(state)
+                                        Destination.Settings -> LockedSettings(state) {
+                                            SettingsPage(
+                                                state,
+                                                BuildInfo.VERSION,
+                                                chatList = (chatsUi as? UiState.Content)?.value?.chats.orEmpty(),
+                                            )
+                                        }
                                     }
                                 }
                             }
