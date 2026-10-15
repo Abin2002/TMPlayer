@@ -398,13 +398,15 @@ fun DownloadsScreen(
      * The record is only forgotten once the file has actually gone. Forgetting it regardless would
      * leave bytes on the disk with nothing on this screen pointing at them, which is the one state
      * this screen exists to prevent.
+     *
+     * @return whether it went, so a file that would not delete is said rather than left on the
+     *   list without a word.
      */
-    suspend fun removeOne(row: DownloadRow): Unit = withContext(Dispatchers.IO) {
+    suspend fun removeOne(row: DownloadRow): Boolean = withContext(Dispatchers.IO) {
         val record = row.record
         // A download in the folder is deleted there, through the index; TDLib does not have it.
         if (!row.cached && record.localPath != null) {
-            LocalDownloads.delete(settings, record)
-            return@withContext
+            return@withContext LocalDownloads.delete(settings, record)
         }
         // The same resolution [measure] reads with: the saved id stops answering after a restart,
         // and a delete through it removes nothing while the row still leaves the list.
@@ -412,12 +414,13 @@ fun DownloadsScreen(
             .getOrDefault(record.fileId)
         runCatching { Td.deleteFile(fileId) }
         val left = runCatching { Td.localDownloadedBytes(fileId) }.getOrDefault(0L)
-        if (left > 0) return@withContext
+        if (left > 0) return@withContext false
         if (row.cached) {
             settings.forgetCachedVideo(record.chatId, record.messageId)
         } else {
             settings.forgetDownload(record.chatId, record.messageId)
         }
+        true
     }
 
     /**
@@ -440,7 +443,7 @@ fun DownloadsScreen(
 
     fun delete(row: DownloadRow) {
         scope.launch {
-            removeOne(row)
+            if (!removeOne(row)) toast(L.downloadsDeleteFailed(file = row.title))
             refresh(history)
         }
     }
@@ -456,7 +459,8 @@ fun DownloadsScreen(
 
     fun deleteMany(these: List<DownloadRow>) {
         scope.launch {
-            for (row in these) removeOne(row)
+            val stuck = these.filterNot { removeOne(it) }
+            stuck.firstOrNull()?.let { toast(L.downloadsDeleteFailed(file = it.title)) }
             leavePicking()
             refresh(history)
         }
@@ -782,7 +786,8 @@ fun DownloadsScreen(
                 scope.launch {
                     // The downloads, one at a time, and nothing else. Each is only forgotten
                     // once its bytes have actually gone.
-                    for (row in rows) removeOne(row)
+                    val stuck = rows.filterNot { removeOne(it) }
+                    stuck.firstOrNull()?.let { toast(L.downloadsDeleteFailed(file = it.title)) }
                     refresh(history)
                 }
             },
