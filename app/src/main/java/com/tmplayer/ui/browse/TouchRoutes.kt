@@ -5,10 +5,10 @@ internal object TouchRoutes {
     /**
      * Where Back from [to] should go, when [to] was opened from [from].
      *
-     * Settings and Downloads are side by side on the bar ([lateral]): stepping from one to the
+     * Settings and Downloads sit side by side behind the bar's picture ([lateral]): stepping from one to the
      * other is a change of page, not a step deeper, so Back from the second goes where Back from
      * the first went ([fromBack]) rather than bouncing between the two. When that is [to] itself
-     * (Downloads opened from Settings' Cached videos row, then Settings on the bar), [to] keeps the
+     * (Downloads opened from Settings' Cached videos row, then Settings from the popover), [to] keeps the
      * Back it had ([toBack]). Anything that would still land on a side page falls back to [home].
      */
     fun <T> backTarget(to: T, from: T, fromBack: T?, toBack: T?, lateral: (T) -> Boolean, home: T): T {

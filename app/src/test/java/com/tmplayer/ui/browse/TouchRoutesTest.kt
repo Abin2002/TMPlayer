@@ -24,26 +24,56 @@ class TouchRoutesTest {
 
     @Test
     fun `a step sideways keeps the Back of the page it was taken from`() {
-        // A chat, Not enough space, Downloads, then Settings on the bar: Back from Settings is the chat.
+        // A chat, Not enough space, Downloads, then Settings from the popover: Back from Settings is the chat.
         assertEquals("chat", back(to = "settings", from = "downloads", fromBack = "chat"))
         assertEquals("browse", back(to = "downloads", from = "settings", fromBack = "browse"))
     }
 
     @Test
     fun `Settings and Downloads never send Back to each other`() {
-        // Downloads from Settings' Cached videos row, then Settings on the bar: Settings keeps its own Back.
+        // Downloads from Settings' Cached videos row, then Settings from the popover: Settings keeps its own Back.
         assertEquals("chat", back(to = "settings", from = "downloads", fromBack = "settings", toBack = "chat"))
         assertEquals("browse", back(to = "settings", from = "downloads", fromBack = "settings", toBack = null))
         assertEquals("browse", back(to = "settings", from = "downloads", fromBack = "settings", toBack = "downloads"))
     }
 
     @Test
-    fun `the highlight follows the bar's order, Settings fourth`() {
+    fun `the highlight follows the bar's order, the picture fourth`() {
         assertEquals(0, barHighlightIndex(TouchDestination.Home))
         assertEquals(1, barHighlightIndex(TouchDestination.Chats))
         assertEquals(2, barHighlightIndex(TouchDestination.Search))
-        assertEquals(3, barHighlightIndex(TouchDestination.Settings))
         assertNull(barHighlightIndex(null))
+        // Settings is behind the picture now, with Favourites, History and Downloads.
+        assertEquals(3, PROFILE_SLOT)
+        assertEquals(PROFILE_SLOT, barHighlightIndex(null, inProfile = true))
+        assertEquals(0, barHighlightIndex(TouchDestination.Home, inProfile = true))
+    }
+
+    @Test
+    fun `Home and Chats are the two pages of the swipe, and nothing else is`() {
+        val home = BrowseSection.of(BrowseTab.Home)
+        val chats = BrowseSection.of(BrowseTab.Chats)
+        val folder = BrowseSection.Folder(7, "Films")
+        assertEquals(0, swipePage(home))
+        assertEquals(1, swipePage(chats))
+        assertEquals(1, swipePage(folder))
+        assertNull(swipePage(BrowseSection.of(BrowseTab.Favorites)))
+        assertNull(swipePage(BrowseSection.of(BrowseTab.History)))
+        assertEquals(home, swipeSection(0, folder))
+        // The Chats page comes back on the chip it was left on.
+        assertEquals(folder, swipeSection(1, folder))
+    }
+
+    @Test
+    fun `the Chats page comes back on its last chip while that folder is still there`() {
+        val folder = BrowseSection.Folder(7, "Films")
+        val chats = BrowseSection.of(BrowseTab.Chats)
+        val sections = listOf(BrowseSection.of(BrowseTab.Home), chats, folder)
+        assertEquals(folder, chatsPageOf(BrowseSection.encode(folder), sections))
+        assertEquals(chats, chatsPageOf(BrowseSection.encode(BrowseSection.Folder(9, "Gone")), sections))
+        assertEquals(chats, chatsPageOf("", sections))
+        // Never a page that is not on the Chats page.
+        assertEquals(chats, chatsPageOf(BrowseSection.encode(BrowseSection.of(BrowseTab.History)), sections))
     }
 
     @Test

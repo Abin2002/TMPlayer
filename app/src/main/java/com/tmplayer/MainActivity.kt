@@ -93,7 +93,6 @@ import com.tmplayer.ui.auth.LoginScreen
 import com.tmplayer.ui.browse.BrowseScreen
 import com.tmplayer.ui.browse.TouchChrome
 import com.tmplayer.ui.browse.onChatsPage
-import com.tmplayer.ui.browse.TouchDestination
 import com.tmplayer.ui.browse.TouchNav
 import com.tmplayer.ui.browse.TouchNavHost
 import com.tmplayer.ui.browse.TouchPage
@@ -694,7 +693,7 @@ private fun Root() {
     val device = remember { if (FormFactor.isTv(context)) "tv" else "phone" }
     // Where leaving the Downloads screen goes back to.
     var downloadsCameFrom by remember { mutableStateOf<Screen>(Screen.Chats) }
-    // Where leaving Settings goes back to: the page the bar's Settings was pressed on.
+    // Where leaving Settings goes back to: the page the profile popover's Settings was picked on.
     var settingsCameFrom by remember { mutableStateOf<Screen>(Screen.Chats) }
     // Whether the Downloads screen opens on its cached videos, which is how Settings' Cached
     // videos row reaches the list of them.
@@ -1508,11 +1507,11 @@ private fun Root() {
                 // With no PIN there is nothing to ask, and a PIN set from inside Settings must not
                 // lock the viewer out of the page they set it on.
                 LaunchedEffect(lock?.pinSet) { if (lock?.pinSet == false) settingsUnlocked = true }
-                // The bar is on Settings' own list, lit on Settings; a page under it, or the PIN pad
-                // in front of it, has a back arrow instead.
+                // The bar is on Settings' own list, with the picture lit, since Settings is behind it;
+                // a page under it, or the PIN pad in front of it, has a back arrow instead.
                 TouchPage(
                     if (lock != null && (!lock.pinSet || settingsUnlocked) && settingsPage == null) {
-                        TouchPageSpec(current = TouchDestination.Settings)
+                        TouchPageSpec(current = null, inProfile = true)
                     } else {
                         null
                     },

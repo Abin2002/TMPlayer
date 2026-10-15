@@ -1,6 +1,15 @@
 package com.tmplayer.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -58,6 +67,9 @@ object FloatingChrome {
     val Bar = 56.dp
     val CompactBar = 48.dp
 
+    /** The sticky bar when its icons carry a caption under them. */
+    val LabelledBar = 60.dp
+
     /** Between the sticky bar and the navigation bar (or the keyboard). */
     val Margin = 12.dp
 
@@ -70,7 +82,8 @@ object FloatingChrome {
     val Shadow = 8.dp
 
     /** How much a list under a sticky bar pads its end by, the navigation bar not included. */
-    fun clearance(compact: Boolean): Dp = Margin + (if (compact) CompactBar else Bar) + Gap
+    fun clearance(compact: Boolean, labelled: Boolean = false): Dp =
+        Margin + (if (compact) CompactBar else if (labelled) LabelledBar else Bar) + Gap
 }
 
 /** True on a phone, where pages carry the floating chrome; the television and the desktop keep their own. */
@@ -88,14 +101,16 @@ fun FloatingRoundButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val interactions = remember { MutableInteractionSource() }
     Box(
         modifier
+            .pressScale(interactions)
             .size(FloatingChrome.Button)
             .shadow(FloatingChrome.Shadow, CircleShape)
             .clip(CircleShape)
             .background(FloatingTone.menu)
             .border(floatingBorder(), CircleShape)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(interactionSource = interactions, indication = ripple(), role = Role.Button, onClick = onClick)
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
@@ -153,6 +168,8 @@ fun StickyActionBar(
     modifier: Modifier = Modifier,
     compact: Boolean = false,
     fill: Boolean = false,
+    /** Its icons carry captions ([FloatingBarIcon]'s caption): the bar is [FloatingChrome.LabelledBar] high. */
+    labelled: Boolean = false,
     content: @Composable RowScope.() -> Unit,
 ) {
     Box(
@@ -164,7 +181,7 @@ fun StickyActionBar(
     ) {
         Row(
             (if (fill) Modifier.fillMaxWidth() else Modifier)
-                .height(if (compact) FloatingChrome.CompactBar else FloatingChrome.Bar)
+                .height(if (compact) FloatingChrome.CompactBar else if (labelled) FloatingChrome.LabelledBar else FloatingChrome.Bar)
                 .shadow(FloatingChrome.Shadow, CircleShape)
                 .clip(CircleShape)
                 .background(FloatingTone.menu)
@@ -184,7 +201,13 @@ fun rememberCompactChrome(): Boolean {
     return with(density) { height.toDp() } < COMPACT_BELOW
 }
 
-/** One icon in a sticky bar or an action pill: a 48 dp target around a 24 dp glyph, named for a screen reader. */
+/**
+ * One icon in a sticky bar or an action pill: a 48 dp target around a 24 dp glyph, named for a
+ * screen reader. It sinks under the finger ([pressScale]), and a new [icon] grows in where the old
+ * one shrinks away ([SwapIcon]). With a [caption] the glyph has its name in small type under it,
+ * as a tab bar does, and the button widens to fit it (the bar is then [StickyActionBar]'s labelled
+ * height).
+ */
 @Composable
 fun FloatingBarIcon(
     icon: ImageVector,
@@ -195,12 +218,19 @@ fun FloatingBarIcon(
     /** Set for a toggle (the star): read out as on or off. */
     checked: Boolean? = null,
     enabled: Boolean = true,
+    /** A word under the glyph; null for the glyph alone. */
+    caption: String? = null,
+    /** Draws the glyph in place of [icon], for one that animates on its own (the star). */
+    glyph: (@Composable () -> Unit)? = null,
 ) {
+    val interactions = remember { MutableInteractionSource() }
+    val ink = if (enabled) tint else tint.copy(alpha = 0.38f)
     Box(
         modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .then(if (caption == null) Modifier.size(48.dp) else Modifier.height(52.dp).widthIn(min = 52.dp))
+            .pressScale(interactions)
+            .clip(if (caption == null) CircleShape else RoundedCornerShape(16.dp))
+            .clickable(interactionSource = interactions, indication = ripple(), enabled = enabled, role = Role.Button, onClick = onClick)
             .semantics {
                 contentDescription = label
                 role = Role.Button
@@ -208,7 +238,19 @@ fun FloatingBarIcon(
             },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription = null, tint = if (enabled) tint else tint.copy(alpha = 0.38f), modifier = Modifier.size(24.dp))
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = if (caption == null) 0.dp else 6.dp)) {
+            if (glyph != null) glyph() else SwapIcon(icon, ink)
+            if (caption != null) {
+                Text(
+                    caption,
+                    style = captionStyle(),
+                    color = ink,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
+        }
     }
 }
 
