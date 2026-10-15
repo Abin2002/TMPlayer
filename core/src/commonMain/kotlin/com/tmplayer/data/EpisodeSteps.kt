@@ -104,6 +104,40 @@ object EpisodeNeighbours {
         )
     }
 
+    /** Pages of a chat read at most for one lookup: forty messages of each kind a page. */
+    const val MAX_PAGES = 8
+
+    /**
+     * [around], read from the chat a page at a time: the search for [show] first, then the plain
+     * listing when that finds no neighbour at all, for a chat that names its files some other way.
+     * Each keeps paging until both neighbours are found, its results run out or [MAX_PAGES] is
+     * read, so an episode posted more than a page away from the one playing is still found.
+     * [fetch] answers one page for a query from the cursors given, or null when it failed.
+     */
+    suspend fun lookUp(
+        current: MediaItem,
+        show: String,
+        fetch: suspend (query: String, cursors: MediaCursors) -> MediaPage?,
+    ): EpisodeSteps {
+        var best = EpisodeSteps(current = tagOf(current))
+        for (query in listOf(show, "")) {
+            val items = mutableListOf<MediaItem>()
+            var cursors = MediaCursors()
+            var steps = best
+            for (read in 0 until MAX_PAGES) {
+                val page = fetch(query, cursors) ?: break
+                items += page.items
+                steps = around(current, items)
+                if (steps.previous != null && steps.next != null) return steps
+                if (page.endReached || page.cursors.allDone || page.cursors == cursors) break
+                cursors = page.cursors
+            }
+            if (steps.previous != null || steps.next != null) return steps
+            best = steps
+        }
+        return best
+    }
+
     /**
      * The show a video belongs to, as its own name or caption says, or null for a film: what the
      * chat is searched for. A bare "E5" counts once a show is named with it.

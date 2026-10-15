@@ -331,7 +331,8 @@ class TelegramPlayerMedia(
 
     /**
      * The chat searched for the show's name first, then listed plainly when that finds no
-     * neighbour. A video that names no episode, not even a bare "E5", is a film and asks nothing.
+     * neighbour, a page at a time until both are found ([EpisodeNeighbours.lookUp]). A video that
+     * names no episode, not even a bare "E5", is a film and asks nothing.
      */
     override suspend fun episodes(): Episodes {
         val tag = EpisodeNeighbours.tagOf(item)
@@ -342,11 +343,10 @@ class TelegramPlayerMedia(
         // In a group with topics, the neighbours are looked for in this video's own topic.
         val topic = item.topicId.takeIf { it != 0 }
             ?: runCatching { repository.topicOf(item.chatId, item.messageId) }.getOrDefault(0)
-        suspend fun page(query: String) = runCatching { repository.mediaPage(item.chatId, query = query, topicId = topic).items }
-            .onFailure { Logger.w(TAG, "Episode lookup failed", it) }.getOrNull().orEmpty()
-        val steps = EpisodeNeighbours.around(item, page(show))
-        if (steps.previous != null || steps.next != null) return steps
-        return EpisodeNeighbours.around(item, page(""))
+        return EpisodeNeighbours.lookUp(item, show) { query, cursors ->
+            runCatching { repository.mediaPage(item.chatId, cursors, query = query, topicId = topic) }
+                .onFailure { Logger.w(TAG, "Episode lookup failed", it) }.getOrNull()
+        }
     }
 
     override fun episode(other: MediaItem): PlayerMedia =

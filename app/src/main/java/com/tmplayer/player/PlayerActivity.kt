@@ -2281,11 +2281,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             // the plain listing below would step into whichever section posted last.
             val topic = here.topicId.takeIf { it != 0 }
                 ?: runCatching { repository.topicOf(chatId, messageId) }.getOrDefault(0)
-            suspend fun page(query: String) =
-                runCatching { repository.mediaPage(chatId, query = query, topicId = topic).items }.getOrNull().orEmpty()
-            var steps = EpisodeNeighbours.around(here, page(show))
-            if (steps.previous == null && steps.next == null) {
-                steps = EpisodeNeighbours.around(here, page(""))
+            // A page at a time until both neighbours are found: an episode posted a page away
+            // from this one is still the next one.
+            val steps = EpisodeNeighbours.lookUp(here, show) { query, cursors ->
+                runCatching { repository.mediaPage(chatId, cursors, query = query, topicId = topic) }.getOrNull()
             }
             _episodes.value = steps
             // The providers' episode names, where lookups are on: a label first, then a better one.

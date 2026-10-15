@@ -24,6 +24,42 @@ class EpisodeStepsTest {
         caption = caption,
     )
 
+    /** A chat answered forty at a time, newest first, as the lookup reads it. */
+    private fun pages(all: List<MediaItem>, size: Int = 40): suspend (String, MediaCursors) -> MediaPage? = { query, cursors ->
+        val matching = all.filter { query.isBlank() || it.fileName.contains(query.replace(' ', '.'), ignoreCase = true) }
+        val from = cursors.video.toInt()
+        val until = minOf(from + size, matching.size)
+        MediaPage(matching.subList(from, until), MediaCursors(video = until.toLong()), endReached = until >= matching.size)
+    }
+
+    @Test
+    fun `the lookup keeps reading pages until both neighbours are found`() = kotlinx.coroutines.test.runTest {
+        // E05 playing, E04 the newest post, E06 posted a hundred videos further back.
+        val e04 = video("Harbour.Notes.S01E04.mkv")
+        val e05 = video("Harbour.Notes.S01E05.mkv")
+        val filler = (1..100).map { video("Unrelated.Clip.$it.mkv") }
+        val e06 = video("Harbour.Notes.S01E06.mkv")
+        val chat = listOf(e04, e05) + filler + e06
+        // The plain listing, as for a chat that names its files so the search misses them.
+        var reads = 0
+        val plain: suspend (String, MediaCursors) -> MediaPage? = { query, cursors ->
+            if (query.isNotBlank()) MediaPage(emptyList(), MediaCursors(), endReached = true) else { reads++; pages(chat)(query, cursors) }
+        }
+        val steps = EpisodeNeighbours.lookUp(e05, "Harbour Notes", plain)
+        assertEquals(e04.id, steps.previous?.id)
+        assertEquals(e06.id, steps.next?.id)
+        assertEquals(3, reads)
+    }
+
+    @Test
+    fun `the lookup stops at the end of the results, with the one neighbour there is`() = kotlinx.coroutines.test.runTest {
+        val e01 = video("Harbour.Notes.S01E01.mkv")
+        val e02 = video("Harbour.Notes.S01E02.mkv")
+        val steps = EpisodeNeighbours.lookUp(e01, "Harbour Notes", pages(listOf(e02, e01)))
+        assertNull(steps.previous)
+        assertEquals(e02.id, steps.next?.id)
+    }
+
     @Test
     fun `a split film plays on from one piece to the next`() {
         com.tmplayer.i18n.Translator.use(com.tmplayer.i18n.Languages.ENGLISH)
