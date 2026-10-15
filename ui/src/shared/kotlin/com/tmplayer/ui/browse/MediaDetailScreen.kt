@@ -136,7 +136,10 @@ fun MediaDetailScreen(
     val meta = rememberMeta(item)
     val extras = rememberMetaExtras(meta)
     val cover = rememberCover(item)
-    val source = remember(item.id, cover, meta?.wideUrl) { BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, meta?.wideUrl) }
+    // A record's item (opened from Continue watching, say) carries no thumbnail: its picture is
+    // looked up, as the card it was opened from did.
+    val art = rememberArtItem(item)
+    val source = remember(item.id, art, cover, meta?.wideUrl) { BackdropSource(art.miniThumbnail, art.thumbnailFileId, cover, meta?.wideUrl) }
     val page = DetailPage(item, chatTitle, watched, finished, rows, meta, extras, source, firstAction, onOpenItem, bookmarks, onOpenBookmark, onPickCopy, copyStarted)
     BoxWithConstraints(modifier.fillMaxSize().background(Tone.background)) {
         val wide = maxWidth > maxHeight

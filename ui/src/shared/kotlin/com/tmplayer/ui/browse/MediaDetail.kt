@@ -208,7 +208,10 @@ fun MediaDetailPanel(
     val trailers = rememberTrailerLauncher()
 
     val cover = rememberCover(item)
-    val source = remember(item.id, cover, meta?.wideUrl) { BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, meta?.wideUrl) }
+    // A record's item (opened from Continue watching, say) carries no thumbnail: its picture is
+    // looked up, as the card it was opened from did.
+    val art = rememberArtItem(item)
+    val source = remember(item.id, art, cover, meta?.wideUrl) { BackdropSource(art.miniThumbnail, art.thumbnailFileId, cover, meta?.wideUrl) }
     val facts = remember(item) { MediaFacts.of(item) }
     val online = OnlineMetadata.current
     val metadataOff = online != null && poster == null && overview == null && !online.settings.collectAsState().value.enabled

@@ -68,3 +68,20 @@ fun rememberRecordItem(chatId: Long, messageId: Long, fallback: MediaItem): Medi
         if (item.locality == fallback.locality) item else item.withLocality(fallback.locality)
     }
 }
+
+/**
+ * True for an item that cannot draw a picture of its own: no thumbnail file and no inline preview,
+ * as a saved record's item (Continue watching, Watch later, Watched) has. A real message has
+ * a positive id; a promo or test item without one is left alone.
+ */
+internal fun lacksArt(item: MediaItem): Boolean =
+    item.thumbnailFileId <= 0 && (item.miniThumbnail?.isEmpty() ?: true) && item.messageId > 0
+
+/**
+ * [item] for its pictures: itself when it carries a thumbnail, else the video as Telegram describes
+ * it ([rememberRecordItem]), so a page opened from a saved record's card shows the thumbnail that
+ * card showed rather than the generated cover.
+ */
+@Composable
+fun rememberArtItem(item: MediaItem): MediaItem =
+    if (lacksArt(item)) rememberRecordItem(item.chatId, item.messageId, item) else item

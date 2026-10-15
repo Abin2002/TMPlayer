@@ -173,8 +173,9 @@ internal fun Versions(
     if ((sheet != null || tv) && open) {
         val cover = rememberCover(item)
         val wide = com.tmplayer.ui.online.rememberMeta(item, showOnly = true)?.wideUrl
-        val source = remember(item.id, cover, wide) {
-            com.tmplayer.ui.components.BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, wide)
+        val art = rememberArtItem(item)
+        val source = remember(item.id, art, cover, wide) {
+            com.tmplayer.ui.components.BackdropSource(art.miniThumbnail, art.thumbnailFileId, cover, wide)
         }
         if (tv) {
             TvCopiesPage(
