@@ -7,7 +7,7 @@ import type { Lang } from './langs';
 
 const NO_TRANSLATE = new Set(['TMPlayer', 'Telegram', 'GitHub', 'nevil.dev', 'Nevil', 'dracu-lah',
   'Infoek.cz', 'Android TV', 'Android', 'Windows', 'Linux', 'macOS', 'DMG', 'Fire TV', 'Flatpak',
-  'AppImage', 'Telegram group', 'Obtainium', 'Downloader', 'mpv']);
+  'AppImage', 'Telegram group', 'Obtainium', 'Downloader', 'mpv', 'Telegram Media Player', 'TMP']);
 const LD_TEXT_KEYS = new Set(['name', 'alternateName', 'description', 'text', 'headline',
   'featureList', 'about', 'abstract', 'acceptedAnswer']);
 const LD_URL_KEYS = new Set(['url', 'item', '@id', 'mainEntityOfPage']);

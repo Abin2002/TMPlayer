@@ -1,6 +1,8 @@
 # TMPlayer
 
-> TMPlayer is a free, open source (GPL-3.0), unofficial Telegram video player for Android TV, Android phones, Windows, macOS (Apple Silicon, a preview) and Linux. You sign in to your own Telegram account by scanning a QR code, and it plays the videos in your own chats and channels while they are still downloading. It has no server and no bot: the app talks to Telegram directly. It is not affiliated with Telegram.
+> TMPlayer (Telegram Media Player) is a free, open source, unofficial app that plays the videos in your own Telegram chats on Android TV, Fire TV, Android phones, Windows, macOS and Linux, while they are still downloading. You sign in to your own Telegram account by scanning a QR code; it has no server and no bot, the app talks to Telegram directly. It is not affiliated with Telegram.
+
+Also called: Telegram Media Player, TMP. Licence: GPL-3.0.
 
 Key facts:
 
@@ -29,6 +31,17 @@ Key facts:
 - [How to watch Telegram videos on Android TV](https://tmplayer.org/guides/telegram-videos-on-android-tv/)
 - [How to watch Telegram videos on Fire TV](https://tmplayer.org/guides/telegram-videos-on-fire-tv/)
 - [Telegram on your TV without casting](https://tmplayer.org/guides/telegram-on-tv-without-casting/)
+
+## For agents
+
+Stable addresses that do not change between releases:
+
+- https://tmplayer.org/latest.json: the newest version, its release notes, and the download URL, SHA-256 and size of each platform's file (what installed copies check for updates)
+- https://tmplayer.org/apk: redirects to the newest universal Android APK (phones, Android TV, Fire TV)
+- https://tmplayer.org/install.ps1: the Windows installer script, run as `irm https://tmplayer.org/install.ps1 | iex`
+- https://tmplayer.org/changelog/feed.xml: RSS feed of releases
+- https://tmplayer.org/sitemap.xml: every page, in every language
+- https://github.com/dracu-lah/TMPlayer/releases: every release file with its SHA-256
 
 ## Optional
 

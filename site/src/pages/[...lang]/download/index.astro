@@ -11,6 +11,7 @@ import Icon from '../../../components/Icon.astro';
 import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
+import { appLd } from '../../../lib/app-ld';
 import Band from '../../../components/Band.astro';
 import Shot from '../../../components/Shot.astro';
 import Platform from '../../../components/download/Platform.astro';
@@ -44,6 +45,7 @@ const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
   </Fragment>
   <Fragment slot="head">
     <JsonLd data={breadcrumb(['Download', '/download/'])} />
+    <JsonLd data={appLd()} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />

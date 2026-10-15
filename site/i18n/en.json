@@ -1,10 +1,10 @@
 {
   "home": {
-    "tmplayer_free_unofficial_telegram_video": "TMPlayer: free, unofficial Telegram video player for Android TV and PC",
+    "tmplayer_free_unofficial_telegram_video": "TMPlayer: unofficial Telegram media player for TV and PC",
     "free_and_open_source_for": "Free and open source, for Android, Windows, Mac and Linux",
     "your_telegram_videos": "Your {svg1} Telegram videos, {em1}",
     "your_telegram_videos__em1": "on the TV",
-    "a_free_unofficial_telegram_video": "A free, unofficial Telegram video player that starts in seconds and downloads while you watch.",
+    "a_free_unofficial_telegram_video": "TMPlayer, short for Telegram Media Player, is a free, unofficial video player that starts in seconds and downloads while you watch.",
     "download_tmplayer": "Download TMPlayer",
     "get_it": "Get it",
     "android_phones_and_tvs_windows": "Android phones and TVs, Windows, macOS and Linux. {a1} {span1} {a2}",
@@ -52,7 +52,7 @@
     "support_no_ads": "TMPlayer has no ads of our own (Telegram's sponsored messages appear in public channels, as Telegram requires) and no paid tier. If it saves you some bother, a coffee or a monthly sponsorship pays for the time that goes into it. It is voluntary and unlocks nothing: every feature is free for everyone.",
     "sponsor_on_github": "Sponsor on GitHub",
     "buy_me_a_coffee": "Buy me a coffee",
-    "stream_the_videos_in_your": "Stream the videos in your own Telegram chats on Android TV, Android phones, Windows, macOS and Linux. Free, open source, and it plays while it downloads.",
+    "stream_the_videos_in_your": "TMPlayer (Telegram Media Player) streams the videos in your own Telegram chats on Android TV, phones, Windows, macOS and Linux. Free, open source, no ads.",
     "tmplayer_a_telegram_media_player": "TMPlayer, a Telegram media player for the videos in your own chats, on a television and on a phone.",
     "tv_home_hero_alt": "TMPlayer's Home on a television: demo films and shows to continue, each with the time left, above posters recently added to starred chats.",
     "phone_show_page_alt": "A show's page in TMPlayer on a phone: the demo series Skybound Academy with its artwork, its overview and a button to resume the second episode.",
@@ -96,7 +96,6 @@
     "community": "Community"
   },
   "ld": {
-    "tmplayer_a_telegram_video_fd4d": "TMPlayer, a Telegram video player for Android TV, Android phones, Windows, macOS and Linux",
     "a_free_open_source_4a30": "A free, open source Telegram video player for Android TV, Android phones, Windows, macOS and Linux that streams the videos in your own chats.",
     "sign_in_to_your_3466": "Sign in to your own Telegram account by scanning a QR code",
     "play_videos_straight_from_c304": "Play videos straight from your chats and channels while they are still downloading",
@@ -367,7 +366,7 @@
     "tv_home_screen_alt": "The Android TV home screen with a TMPlayer row of demo films and shows recently added to starred chats, Saltwater Lanterns in focus."
   },
   "download": {
-    "download_tmplayer_for_android_tv": "Download TMPlayer for Android TV, Windows, macOS and Linux",
+    "download_tmplayer_for_android_tv": "Download TMPlayer APK for Android TV, Windows, Mac, Linux",
     "download": "{a1}{span1}Download",
     "download__a1": "Home",
     "for_android_tv_phones_windows": "For Android TV, phones, Windows, Linux and Apple Silicon Macs. Free, no account, straight from GitHub.",
@@ -441,7 +440,7 @@
     "it_comes_with_no_media": "It comes with no media. It only shows what is already in your chats.",
     "no_store_updates_tmplayer_looks": "No store updates. TMPlayer looks for a new version itself and offers it in the side bar instead; the Windows installer and the AppImage update in place from there.",
     "an_app_from_outside_the": "An app from outside the store that signs into Telegram asks for a lot of trust. A star helps the next person decide.",
-    "download_tmplayer_free_the_apk": "Download TMPlayer free: the APK for Android TV and phones, a Windows installer, an AppImage for Linux and a macOS preview for Apple Silicon.",
+    "download_tmplayer_free_the_apk": "Download the free TMPlayer (Telegram Media Player) APK for Android TV and phones, plus a Windows installer, a Linux AppImage and a macOS preview.",
     "platforms": "Platforms",
     "add_to_obtainium": "Add to Obtainium"
   },
@@ -596,7 +595,7 @@
     "pick_a_chat_and_press": "Pick a chat and press play"
   },
   "android_tv": {
-    "tmplayer_unofficial_telegram_video_player": "TMPlayer: unofficial Telegram video player for Android TV and Google TV",
+    "tmplayer_unofficial_telegram_video_player": "Telegram on Android TV: watch your chat videos with TMPlayer",
     "a_telegram_video_player": "A Telegram video player {em1}",
     "a_telegram_video_player__em1": "built for the remote",
     "designed_for_a_d_pad": "Designed for a D-pad first: a rail you reach without looking, cards you read from the sofa, and clear focus.",
@@ -643,7 +642,7 @@
     "videos_from_a_telegram_chat": "Videos from a Telegram chat shown on Android TV as a grid of tiles carrying running times and file sizes."
   },
   "fire_tv": {
-    "how_to_install_tmplayer_on": "How to install TMPlayer on Fire TV Stick and Fire TV Cube",
+    "how_to_install_tmplayer_on": "Telegram on Fire TV Stick: how to install TMPlayer",
     "install_tmplayer": "Install TMPlayer {em1}",
     "install_tmplayer__em1": "on Fire TV",
     "fire_tv_sticks_the_fire": "Fire TV Sticks, the Fire TV Cube and Fire TV Edition televisions run Android underneath, so the same APK installs on them. It takes about ten minutes, once.",

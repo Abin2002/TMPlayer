@@ -1,7 +1,7 @@
 {
   "name": "TMPlayer",
   "short_name": "TMPlayer",
-  "description": "An open source Telegram media player for Android TV, phones, Windows, macOS and Linux that signs into your own Telegram account by QR code and streams the videos already in your chats.",
+  "description": "TMPlayer (Telegram Media Player) is a free, open source, unofficial app that plays the videos in your own Telegram chats on Android TV, Fire TV, Android phones, Windows, macOS and Linux, while they are still downloading.",
   "start_url": "/",
   "scope": "/",
   "id": "/",

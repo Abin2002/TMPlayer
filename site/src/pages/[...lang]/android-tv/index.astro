@@ -11,6 +11,7 @@ import Icon from '../../../components/Icon.astro';
 import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
+import { appLd } from '../../../lib/app-ld';
 import Band from '../../../components/Band.astro';
 import Cards from '../../../components/Cards.astro';
 import Card from '../../../components/Card.astro';
@@ -49,6 +50,7 @@ const features = [
 <Base page="android_tv" title={t('android_tv.tmplayer_unofficial_telegram_video_player')} description={t('android_tv.watch_telegram_videos_on_android')}>
   <Fragment slot="head">
     <JsonLd data={breadcrumb(['Android TV', '/android-tv/'])} />
+    <JsonLd data={appLd()} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />

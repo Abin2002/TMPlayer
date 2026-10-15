@@ -3,6 +3,7 @@
 // The site's own shape, so a search engine can offer the five pages under the home page rather than the home page alone. Every entry here is a real page with its own copy on it.
 // Who publishes the site: the logo and the profiles Google may show beside the site name.
 
+import { LATEST_VERSION } from '../../lib/app-ld';
 import Base from '../../layouts/Base.astro';
 import BgArt from '../../components/BgArt.astro';
 import Header from '../../components/Header.astro';
@@ -34,7 +35,7 @@ const ld0 = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "TMPlayer",
-  "alternateName": "TMPlayer, a Telegram video player for Android TV, Android phones, Windows, macOS and Linux",
+  "alternateName": ["Telegram Media Player", "TMP"],
   "description": "A free, open source Telegram video player for Android TV, Android phones, Windows, macOS and Linux that streams the videos in your own chats.",
   "url": "https://tmplayer.org/",
   "image": "https://tmplayer.org/og.png?v=4",
@@ -50,6 +51,7 @@ const ld0 = {
   ],
   "applicationCategory": "MultimediaApplication",
   "applicationSubCategory": "Video player",
+  "softwareVersion": LATEST_VERSION,
   "operatingSystem": "Android 8.0 and above (phones and Android TV), Windows 10 and 11 (64-bit), Linux (x86_64), macOS 26 and newer on Apple Silicon (a preview)",
   "downloadUrl": "https://tmplayer.org/download/",
   "installUrl": "https://tmplayer.org/install/",
@@ -93,6 +95,7 @@ const ld1 = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "TMPlayer",
+  "alternateName": ["Telegram Media Player", "TMP"],
   "url": "https://tmplayer.org/",
   "inLanguage": "en",
   "hasPart": [
@@ -137,6 +140,7 @@ const ld2 = {
   "@type": "Organization",
   "@id": "https://tmplayer.org/#org",
   "name": "TMPlayer",
+  "alternateName": ["Telegram Media Player", "TMP"],
   "url": "https://tmplayer.org/",
   "logo": "https://tmplayer.org/icon-512.png",
   "email": "hello@tmplayer.org",
