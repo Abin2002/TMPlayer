@@ -1189,6 +1189,7 @@ private fun MediaSearchField(
                             style = M3MaterialTheme.typography.bodyLarge,
                             color = Tone.muted,
                             maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                     inner()
