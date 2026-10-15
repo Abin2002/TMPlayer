@@ -21,6 +21,7 @@ Key facts:
 - [Download](https://tmplayer.org/download/): the APK for Android TV and phones, the Windows installer, the macOS DMG and the Linux AppImage
 - [How to install](https://tmplayer.org/install/): Android TV with the Downloader app and `tmplayer.org/apk`, Android phones, Windows with one PowerShell line (`irm https://tmplayer.org/install.ps1 | iex`) or the MSI installer, Linux with the AppImage, macOS with the DMG and "Open Anyway" in Privacy and Security on the first launch
 - [Android TV](https://tmplayer.org/android-tv/): watching Telegram videos on Android TV and Google TV
+- [Windows, macOS and Linux](https://tmplayer.org/desktop/): the desktop app, a Telegram video player for a computer built with Compose Multiplatform and played through mpv: signing in by QR code, streaming while downloading, self update, the main keyboard shortcuts, and which computers it runs on (no iPhone or iPad version)
 - [Fire TV](https://tmplayer.org/fire-tv/): installing on a Fire TV Stick, Cube or Fire TV Edition TV
 - [Formats](https://tmplayer.org/formats/): the containers, codecs and subtitle formats it plays
 - [Questions](https://tmplayer.org/faq/): streaming without waiting, which file to download, privacy, what it will not do

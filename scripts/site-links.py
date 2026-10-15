@@ -20,8 +20,8 @@ from urllib.parse import unquote, urljoin, urlsplit
 ROOT = Path(__file__).resolve().parent.parent
 PREFIXES = ["es", "pt", "fr", "de", "it", "pl", "ru", "uk", "tr", "id", "vi", "ar", "fa", "zh", "zh-tw",
             "ja", "ko", "hi", "bn", "ml"]
-LOCALIZED = {"/", "/features/", "/download/", "/install/", "/android-tv/", "/fire-tv/", "/faq/", "/formats/",
-             "/translate/", "/guides/telegram-videos-on-android-tv/", "/guides/telegram-videos-on-fire-tv/",
+LOCALIZED = {"/", "/features/", "/download/", "/install/", "/android-tv/", "/desktop/", "/fire-tv/", "/faq/",
+             "/formats/", "/translate/","/guides/telegram-videos-on-android-tv/", "/guides/telegram-videos-on-fire-tv/",
              "/guides/telegram-on-tv-without-casting/"}
 ATTRS = {"href", "src", "poster", "data-theme-src", "data-dark-src", "srcset"}
 
