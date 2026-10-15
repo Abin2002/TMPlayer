@@ -783,7 +783,6 @@
     "row_play_pause": "Play or pause",
     "row_quit": "Quit",
     "row_screenshot": "Screenshot, without subtitles",
-    "row_search": "Search videos and chats",
     "row_seek_10s": "Seek 10 s",
     "row_seek_1min": "Seek 1 min",
     "row_seek_5min": "Seek 5 min",
@@ -1435,9 +1434,7 @@
     "palette_hint": "Up and Down to move, Enter to open, {mod}+Enter to play, Esc to close",
     "recent_cleared": "Recent searches cleared",
     "remove_recent": "Remove “{query}” from recent searches",
-    "results_count": "{count, plural, one {# result} other {# results}}",
     "search_for": "Search for “{word}”",
-    "searching": "Searching every chat…",
     "show_all_chats": "{count, plural, one {Show # chat} other {Show all # chats}}",
     "size_range": "{min} to {max}",
     "sort": "Sort",
@@ -1448,8 +1445,7 @@
     "still_searching": "Still searching…",
     "suggestions": "From your starred chats",
     "undo": "Undo",
-    "videos_heading": "Videos",
-    "voice_keyboard": "Type or dictate with the remote"
+    "videos_heading": "Videos"
   },
   "series": {
     "all_watched": "All watched",
