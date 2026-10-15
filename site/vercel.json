@@ -112,11 +112,51 @@
       ]
     },
     {
-      "source": "/(sitemap\\.xml|robots\\.txt|llms\\.txt|changelog/feed\\.xml)",
+      "source": "/(sitemap\\.xml|robots\\.txt|llms\\.txt|llms-full\\.txt|changelog/feed\\.xml)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Vary",
+          "value": "Accept, Accept-Encoding"
+        }
+      ]
+    },
+    {
+      "source": "/index.md",
+      "headers": [
+        {
+          "key": "Link",
+          "value": "<https://tmplayer.org/>; rel=\"canonical\""
+        }
+      ]
+    },
+    {
+      "source": "/:page(.+)/index.md",
+      "headers": [
+        {
+          "key": "Link",
+          "value": "<https://tmplayer.org/:page/>; rel=\"canonical\""
+        }
+      ]
+    },
+    {
+      "source": "/changelog/:version(\\d+\\.\\d+\\.\\d+)\\.md",
+      "headers": [
+        {
+          "key": "Link",
+          "value": "<https://tmplayer.org/changelog/:version>; rel=\"canonical\""
         }
       ]
     }
@@ -130,6 +170,42 @@
     {
       "source": "/apk/",
       "destination": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.26.0/TMPlayer-1.26.0-universal.apk",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": ".*text/markdown.*"
+        }
+      ],
+      "destination": "/index.md",
+      "permanent": false
+    },
+    {
+      "source": "/:page((?![a-z]{2}(?:-[a-z]+)?/)[a-z0-9-]+(?:/[a-z0-9-]+)*)/",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": ".*text/markdown.*"
+        }
+      ],
+      "destination": "/:page/index.md",
+      "permanent": false
+    },
+    {
+      "source": "/changelog/:version(\\d+\\.\\d+\\.\\d+)",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": ".*text/markdown.*"
+        }
+      ],
+      "destination": "/changelog/:version.md",
       "permanent": false
     }
   ]

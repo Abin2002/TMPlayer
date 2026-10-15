@@ -17,6 +17,7 @@ pnpm -C site build      # writes site/dist/
 | `src/pages/[...lang]/` | the localized pages; each renders in English at `/` and once per published language (`/es/`, `/zh-tw/`, ...) |
 | `src/pages/<page>/`, `src/pages/404.astro` | the English-only pages (legal, privacy, security, signing, support, changelog) |
 | `src/pages/sitemap.xml.ts`, `src/pages/changelog/feed.xml.ts` | the sitemap and the release feed |
+| `integrations/markdown-twins.mjs` | after the build, the Markdown twin of every English page and `llms-full.txt` (below) |
 | `src/layouts/Base.astro` | `<html>`, the whole `<head>` (SEO, Open Graph, hreflang), the notice bar and the scripts |
 | `src/components/` | Header, Footer, the language picker, `<T>` and `<Icon>`, and the pieces pages share |
 | `src/icons/*.svg` | every inline SVG, once, used as `<Icon name="...">` |
@@ -26,6 +27,33 @@ pnpm -C site build      # writes site/dist/
 | `src/styles/styles.css`, `src/scripts/app.js` | the stylesheet and the script, served under `/_astro/` with a content hash |
 | `i18n/<tag>.json` | the string catalogs; `en.json` is the source, the others are translations |
 | `public/` | files served as they are: `latest.json` (the apps' update feed), `install.ps1`, screenshots, fonts, icons, `llms.txt`, `robots.txt` |
+
+## Markdown for assistants
+
+After each build, `integrations/markdown-twins.mjs` turns the `<main>` of every built English
+page into Markdown next to it: `/download/` at `/download/index.md`, and a release page, whose
+address has no slash, at `/changelog/1.26.0.md`. Navigation, the notice bar, scripts and controls
+are left out; headings, text, lists, tables, links (made absolute) and image alt text stay. They
+come from `dist/`, not from the sources, so they never say anything the page does not, and a new
+English page gets one with no extra work. `dist/llms-full.txt` is all of them joined in sitemap
+order. Translated pages have none.
+
+Each English page links its twin with `<link rel="alternate" type="text/markdown">` (`Base.astro`),
+and `vercel.json` redirects a page request that sends `Accept: text/markdown` to it. That is a
+redirect, not a rewrite, because Vercel applies rewrites only after looking for a file, and every
+page is a file. The rule takes a two letter first segment for a language, so an English page is
+never named with two letters (`site-links.py` checks). The twins are served as
+`text/markdown; charset=utf-8` with `Vary: Accept` and a `Link: rel="canonical"` header pointing
+at the page.
+
+## IndexNow
+
+`.github/workflows/indexnow.yml` runs on every push to `main` that touches `site/`: it waits for
+Vercel's commit status to say the push is deployed, then `scripts/indexnow-site.py` posts the
+pages whose `lastmod` in `src/data/lastmod.json` changed (with their translations, from the live
+sitemap) and every page of a language whose catalog changed. So a page reaches IndexNow when its
+`lastmod` moves, which is one more reason to move it with the content. Releases ping from the
+release job. `--dry-run` prints the URLs without sending them.
 
 ## Adding a string
 
@@ -58,5 +86,5 @@ the picker, the hreflang alternates and the sitemap once the catalog is complete
 
 ```sh
 python3 scripts/site-i18n-check.py   # catalogs against the pages and app.js (after a build)
-python3 scripts/site-links.py        # every internal link in dist/ resolves
+python3 scripts/site-links.py        # every internal link in dist/ resolves, every English page has its twin
 ```

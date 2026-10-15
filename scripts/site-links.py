@@ -5,6 +5,9 @@
     redirect in site/vercel.json (such as /apk), or to Vercel's own /_vercel/ paths
   - a page under a language prefix (/es/, /zh-tw/, ...) links to the same language's copy of every
     localized page, never to the English one, as the site always has
+  - every English page links its Markdown twin (<link rel="alternate" type="text/markdown">) and the
+    twin is in dist/, and no translated page links one; an English page's first path segment is
+    never two letters, which vercel.json's Accept: text/markdown redirect takes for a language
 
 Usage: scripts/site-links.py [dist-dir]
 """
@@ -30,8 +33,15 @@ class Links(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.out = []
+        self.markdown = []
+        self.lang = None
 
     def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "html":
+            self.lang = a.get("lang")
+        if tag == "link" and a.get("rel") == "alternate" and a.get("type") == "text/markdown":
+            self.markdown.append(a.get("href") or "")
         if "data-lang-pick" in dict(attrs):
             return  # the language picker links every language's copy on purpose
         for k, v in attrs:
@@ -75,6 +85,17 @@ def main():
         parser = Links()
         parser.feed(page.read_text(encoding="utf-8"))
         bad = []
+        english = parser.lang == "en" and page.name == "index.html"
+        if english and not parser.markdown:
+            bad.append(f"{url}\tno markdown\t<link rel=alternate type=text/markdown> is missing")
+        if not english and parser.markdown:
+            bad.append(f"{url}\tmarkdown\tonly English pages have a Markdown twin")
+        for value in parser.markdown:
+            twin = urlsplit(urljoin("https://tmplayer.org" + url, value))
+            if twin.netloc != "tmplayer.org" or not (dist / unquote(twin.path).lstrip("/")).is_file():
+                bad.append(f"{url}\tbroken\t<link type=text/markdown href={value}>")
+        if english and re.match(r"^/[a-z]{2}(?:-[a-z]+)?/", url):
+            bad.append(f"{url}\tmarkdown\ttwo letter first segment: vercel.json takes it for a language")
         for tag, attr, value in parser.out:
             if re.match(r"^(?:[a-z][a-z0-9+.-]*:|//|#)", value):
                 continue

@@ -101,7 +101,13 @@ changed.
   site for AI assistants: when a page is added, renamed or its claims change, update it too. The
   home page carries `Organization` JSON-LD (logo, `sameAs` profiles); a new official profile goes
   there. `site/public/.well-known/security.txt` expires on the date in it, so renew it before
-  then. `site/public/<key>.txt` is the IndexNow key the release job pings with; do not delete it.
+  then. `site/public/<key>.txt` is the IndexNow key the release job and the IndexNow workflow
+  ping with; do not delete it. The workflow pings on every push to `main` under `site/`, once
+  Vercel has deployed it, with the pages whose `lastmod` changed, so move it with the content.
+  Every English page has a Markdown twin (`/download/index.md`, `/changelog/1.26.0.md`) and
+  `/llms-full.txt` joins them; both are written from the built pages by
+  `site/integrations/markdown-twins.mjs`, so never write or edit one by hand. `robots.txt` names
+  the AI crawlers only to allow them, training ones included (user, 2026-10-15).
   `site/public/latest.json` is the installed apps' update feed: only the release job writes it.
 - **Download page** keeps its `preconnect` hints to GitHub's API, github.com and
   `release-assets.githubusercontent.com`, the host the release files are served from.
