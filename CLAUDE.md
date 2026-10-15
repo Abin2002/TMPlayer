@@ -22,7 +22,10 @@ Where they live and who reads them:
 - `site/public/screenshots/` is the site, referenced from the pages under `site/src/pages/`, the
   sitemap's image entries in `site/src/data/lastmod.json` and `site/public/site.webmanifest`.
   Changing a file name means changing all three (`grep -rn` the old name under `site/src`), and the
-  manifest carries a `"type": "image/webp"` next to each one.
+  manifest carries a `"type": "image/webp"` next to each one. Phones are sent smaller copies
+  (`<name>-<width>w.webp`, made from the original with the same encoding, the original never
+  touched): after adding or retaking a site screenshot, run
+  `python3 scripts/site-shot-variants.py <name>` (`--check` lists missing copies).
 
 Two images are deliberately still PNG. `site/public/og.png` is the social preview, and the crawlers that
 fetch it (WhatsApp and LinkedIn among them) cannot be relied on to decode WebP, so a link would
