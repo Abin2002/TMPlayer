@@ -70,6 +70,17 @@ data class MediaItem(
      * episode inside the topic the viewer was browsing.
      */
     val topicId: Int = 0,
+    /**
+     * Every piece of a film cut into several files ("CD1", "CD2"), this one first, in order, when
+     * this is the first piece: see [SeriesShelf.arrange]. Played one after another as one video.
+     * Empty for a whole file. Like [versions], arranging's answer and not part of equality.
+     */
+    val parts: List<MediaItem> = emptyList(),
+    /**
+     * Set when this file is a trailer, a teaser or a sample posted beside a film rather than the
+     * film: never folded into it, listed after it, and labelled. See [SeriesShelf.arrange].
+     */
+    val extra: ExtraKind? = null,
 ) {
     /** This copy with the same [versions] list, for moving from one version to another. */
     fun asVersion(of: MediaItem): MediaItem = if (of.versions.isEmpty()) this else copy(versions = of.versions)
@@ -134,6 +145,19 @@ data class MediaItem(
     }
 
     /**
+     * [nameForParsing] read by [MediaName.parse] with the caption as a second source, once per item:
+     * grouping, keying and naming all ask for it, and a chat's listing asks for every file.
+     */
+    val parsedName: ParsedName by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        MediaName.parse(nameForParsing, caption)
+    }
+
+    /** The same without the caption, for a caption the chat puts under every post. */
+    val parsedNameAlone: ParsedName by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        if (caption.isBlank()) parsedName else MediaName.parse(nameForParsing)
+    }
+
+    /**
      * Everything a search inside a chat is matched against: Telegram finds a video by its caption
      * as well as by its file name, so ranking by the name alone threw away every video it found
      * through the words under it.
@@ -162,6 +186,8 @@ data class MediaItem(
             width == other.width &&
             height == other.height &&
             topicId == other.topicId &&
+            extra == other.extra &&
+            parts.size == other.parts.size &&
             miniThumbnail.contentEquals(other.miniThumbnail)
     }
 
@@ -183,6 +209,8 @@ data class MediaItem(
         result = 31 * result + width
         result = 31 * result + height
         result = 31 * result + topicId
+        result = 31 * result + (extra?.hashCode() ?: 0)
+        result = 31 * result + parts.size
         result = 31 * result + (miniThumbnail?.contentHashCode() ?: 0)
         return result
     }

@@ -1,5 +1,6 @@
 package com.tmplayer.data
 
+import com.tmplayer.i18n.L
 import java.util.Locale
 
 /**
@@ -76,7 +77,7 @@ data class SeriesProgress(
 }
 
 /**
- * Folds a chat's videos into one tile per show.
+ * Folds a chat's videos into one tile per show, and the copies of one film into one tile.
  *
  * Grouped on the cleaned title, lower-cased and stripped of punctuation, so "Harbour.Notes.S01E01"
  * and "Harbour Notes - 02" land together. A show needs [MIN_EPISODES] episodes before it earns a
@@ -87,6 +88,12 @@ data class SeriesProgress(
  * a bare "E05" the parser would not trust on its own, a caption titled in another script or by a
  * shorter name ("Family Full House Episode 5" for "Family Full House With Rohit Sharma").
  *
+ * A name is a guess, so the name alone never folds two files together; the facts have to agree
+ * too, as [SameVideo] weighs them: the same file, matching lengths, or a year with no length to
+ * contradict it. A remake (the same title, another year) stays apart. A trailer, a teaser or a sample is an extra ([MediaItem.extra]): never folded in,
+ * listed straight after its film. A film cut into "CD1" and "CD2" is one video with
+ * [MediaItem.parts]. What the viewer corrected by hand ([VideoCorrections]) wins over all of it.
+ *
  * Order follows the chat: a show sits where its newest file would have been, so the listing still
  * reads newest first and nothing jumps when the Series view is turned on.
  */
@@ -94,9 +101,46 @@ object SeriesShelf {
 
     const val MIN_EPISODES = 2
 
-    /** The parse a file is grouped by: its name first, its caption second. */
-    fun episodeOf(item: MediaItem): ParsedName =
-        MediaName.parse(item.nameForParsing, item.caption)
+    /** A file at least this long is the feature a short file of the same name was posted beside. */
+    const val FEATURE_SEC = 20 * 60
+
+    /**
+     * The parse a file is grouped by: the title the viewer gave it ([VideoCorrection.title]), else
+     * its name first and its caption second ([MediaItem.parsedName], read once per item). With
+     * [trustCaption] false the caption is left out: a line the chat puts under every post says
+     * nothing about which video this one is.
+     */
+    fun episodeOf(
+        item: MediaItem,
+        corrections: Map<String, VideoCorrection> = VideoCorrections.current,
+        trustCaption: Boolean = true,
+    ): ParsedName {
+        val renamed = corrections[item.id]?.title
+        return when {
+            renamed != null -> MediaName.parse(renamed)
+            trustCaption -> item.parsedName
+            else -> item.parsedNameAlone
+        }
+    }
+
+    /**
+     * Which files may be copies of [item], before any evidence is weighed ([SameVideo]): the same
+     * film (title and year) or the same episode, a split film's pieces sharing one key. Null for a
+     * file that may be nobody's copy: one the viewer set apart, an extra, or a name with nothing
+     * to key on.
+     */
+    internal fun candidateKey(
+        item: MediaItem,
+        corrections: Map<String, VideoCorrection> = VideoCorrections.current,
+        name: ParsedName = episodeOf(item, corrections),
+    ): String? {
+        if (corrections[item.id]?.separate == true || name.extra != null) return null
+        filmKeyOf(item, name)?.let { return it }
+        val key = keyOf(name.title).ifEmpty { return null }
+        name.airDate?.let { return "date:$key|$it" }
+        val episode = name.episode ?: return null
+        return "episode:$key|${name.season ?: 1}|$episode"
+    }
 
     /** "harbour notes" for "Harbour.Notes", "Harbour Notes:" and "HARBOUR NOTES". */
     fun keyOf(title: String): String =
@@ -115,12 +159,83 @@ object SeriesShelf {
         val alternates: List<String>,
     )
 
-    fun arrange(items: List<MediaItem>): List<ShelfEntry> {
-        val strict = items.map { item ->
-            val name = episodeOf(item)
+    /**
+     * Where every file of a listing goes, worked out once for [arrange] and [foldFilmCopies].
+     *
+     * [shown] is what a file's tile stands for when that is not the file alone: the copy that leads
+     * a folded film (with its [MediaItem.versions] and [MediaItem.parts]), or the file labelled as
+     * an extra. [group] names the folded video a file belongs to, so it is listed once. [after]
+     * holds the extras listed straight after a group or a file, and [attached] the extras so placed.
+     */
+    private class Plan(
+        val showOf: Array<String?>,
+        val shows: Map<String, Series>,
+        val shown: Map<String, MediaItem>,
+        val group: Map<String, String>,
+        val after: Map<String, List<MediaItem>>,
+        val attached: Set<String>,
+    )
+
+    /**
+     * [items] as a chat's shelf: shows, folded films, extras after their films, the rest as files.
+     *
+     * @param corrections the viewer's own ([VideoCorrections.current] unless a caller holds them).
+     * @param durationOf a file's length in seconds, 0 when unknown, for the evidence [SameVideo]
+     *   weighs: the stated one by default, the player's learned one first where a caller has it.
+     */
+    fun arrange(
+        items: List<MediaItem>,
+        corrections: Map<String, VideoCorrection> = VideoCorrections.current,
+        durationOf: (MediaItem) -> Int = SameVideo.statedLength,
+    ): List<ShelfEntry> {
+        val plan = plan(items, corrections, durationOf)
+        val placed = HashSet<String>()
+        val out = ArrayList<ShelfEntry>(items.size)
+        items.forEachIndexed { index, item ->
+            val show = plan.showOf[index]
+            if (show != null) {
+                if (placed.add("show:$show")) out += ShelfEntry.Show(plan.shows.getValue(show))
+                return@forEachIndexed
+            }
+            emit(item, plan, placed) { out += ShelfEntry.File(it) }
+        }
+        return out
+    }
+
+    /**
+     * One file's tile and the extras listed after it, unless it is an extra already listed after
+     * its film, or a copy of a video already listed.
+     */
+    private inline fun emit(item: MediaItem, plan: Plan, placed: HashSet<String>, add: (MediaItem) -> Unit) {
+        if (item.id in plan.attached) return
+        val group = plan.group[item.id] ?: item.id
+        if (!placed.add("video:$group")) return
+        add(plan.shown[item.id] ?: item)
+        plan.after[group]?.forEach { extra -> if (placed.add("extra:${extra.id}")) add(extra) }
+    }
+
+    private fun plan(
+        items: List<MediaItem>,
+        corrections: Map<String, VideoCorrection>,
+        durationOf: (MediaItem) -> Int,
+    ): Plan {
+        // A caption line the chat puts under most of its posts says nothing about which video a
+        // post is, so a file whose caption opens with one is read by its name alone.
+        val repeated = MediaMapper.repeatedCaptionLines(items)
+        val trusted = items.map { item -> repeated.isEmpty() || firstLine(item)?.lowercase()?.let { it !in repeated } != false }
+        val names = items.mapIndexed { index, item -> episodeOf(item, corrections, trusted[index]) }
+        val separate = items.map { corrections[it.id]?.separate == true }
+        val strict = items.indices.map { index ->
+            val item = items[index]
+            val name = names[index]
             val key = keyOf(name.title)
             val number = name.episode
-            if (key.isEmpty() || number == null) null else Found(item, key, name, number, alternatesOf(item, key))
+            if (key.isEmpty() || number == null || name.extra != null) {
+                null
+            } else {
+                val alternates = if (corrections[item.id]?.title != null || !trusted[index]) emptyList() else alternatesOf(item, key)
+                Found(item, key, name, number, alternates)
+            }
         }
         // A show is two episodes or more, not two files: three copies of one episode are one.
         val showKeys = strict.filterNotNull()
@@ -142,9 +257,11 @@ object SeriesShelf {
                 ?: key
         }
 
-        // Everything else gets a second look, now that the chat has said which shows it holds.
+        // Everything else gets a second look, now that the chat has said which shows it holds. A
+        // file the viewer renamed, or one that is a trailer, is read only as it now reads.
         val placedUnder = items.indices.map { index ->
-            val found = strict[index] ?: loose(items[index])
+            val readLoosely = corrections[items[index].id]?.title == null && names[index].extra == null && trusted[index]
+            val found = strict[index] ?: if (readLoosely && showKeys.isNotEmpty()) loose(items[index]) else null
             when {
                 found == null -> null
                 found.key in showKeys -> alias.getValue(found.key).let { key ->
@@ -155,34 +272,74 @@ object SeriesShelf {
         }
         val shows = placedUnder.filterNotNull()
             .groupBy { it.key }
-            .mapValues { (key, files) -> series(key, files) }
+            .mapValues { (key, files) -> series(key, files, separate = { corrections[it.id]?.separate == true }, durationOf) }
+        val showOf = Array(items.size) { placedUnder[it]?.key }
 
         // What is left over and names a film, or one episode of a show the chat has no more of:
-        // copies of it (a 720p and a 1080p of Loki S02E05) fold into one tile.
-        fun copyKey(index: Int): String? = filmKey(items[index])
-            ?: strict[index]?.let { "episode:${it.key}|${it.name.season ?: 1}|${it.episode}" }
-        val films = items.indices
-            .filter { placedUnder[it] == null }
-            .mapNotNull { index -> copyKey(index)?.let { index to it } }
-            .groupBy({ it.second }, { items[it.first] })
-            .filterValues { it.size >= 2 }
-            .mapValues { (_, copies) -> copies.sortedWith(compareByDescending<MediaItem> { it.date }.thenBy { it.messageId }) }
-
-        val placed = HashSet<String>()
-        return items.mapIndexedNotNull { index, item ->
-            val key = placedUnder[index]?.key
-            val show = key?.let { shows[it] }
-            val copies = if (show == null) copyKey(index) else null
-            val film = copies?.let { films[it] }
-            when {
-                film != null -> {
-                    if (placed.add("film:$copies")) ShelfEntry.File(film.first().copy(versions = film)) else null
+        // copies of it (a 720p and a 1080p of Loki S02E05) fold into one tile, where the evidence
+        // says they are copies.
+        val loose = items.indices.filter { showOf[it] == null }
+        val shown = HashMap<String, MediaItem>()
+        val group = HashMap<String, String>()
+        loose.mapNotNull { index -> candidateKey(items[index], corrections, names[index])?.let { it to index } }
+            .groupBy({ it.first }, { it.second })
+            .forEach { (key, members) ->
+                // An episode's code or its air date says which one it is as surely as a year
+                // says which film.
+                val dated = names[members.first()].year != null || key.startsWith("episode:") || key.startsWith("date:")
+                SameVideo.videosOf(members.map { items[it] to names[it] }, dated, durationOf).forEachIndexed { n, video ->
+                    if (video.members.size < 2) return@forEachIndexed
+                    video.members.forEach { member ->
+                        group[member.id] = "$key#$n"
+                        shown[member.id] = video.lead
+                    }
                 }
-                show == null -> ShelfEntry.File(item)
-                placed.add(key) -> ShelfEntry.Show(show)
-                else -> null
+            }
+
+        // Extras: a short file beside a feature of the same name, labelled by its name ("Trailer")
+        // or as an extra, listed straight after the first feature of that name, never folded. A
+        // name that says "Trailer" needs something to back it (a feature beside it, a short length
+        // or a small size), so a film titled "The Sample Room" stays a film; a short with a year of
+        // its own and no such word is a short film, not an extra.
+        fun titleKey(index: Int) = keyOf(names[index].title)
+        val featureOf = HashMap<String, String>()
+        for (index in loose) {
+            val item = items[index]
+            if (names[index].extra != null || strict[index] != null) continue
+            if (!isFeature(shown[item.id] ?: item, durationOf)) continue
+            val key = titleKey(index).ifEmpty { continue }
+            featureOf.putIfAbsent(key, group[item.id] ?: item.id)
+        }
+        val after = HashMap<String, MutableList<MediaItem>>()
+        val attached = HashSet<String>()
+        for (index in loose) {
+            val item = items[index]
+            if (item.id in group || separate[index] || strict[index] != null) continue
+            val length = durationOf(item)
+            val short = length in 1 until SameVideo.SHORT_SEC
+            val feature = titleKey(index).takeIf { it.isNotEmpty() }?.let { featureOf[it] }
+            val small = item.sizeBytes in 1 until SameVideo.FEATURE_BYTES
+            val word = names[index].extra?.takeIf { feature != null || short || small }
+            val kind = word ?: ExtraKind.Extra.takeIf { short && feature != null && names[index].year == null } ?: continue
+            val labelled = item.copy(extra = kind)
+            shown[item.id] = labelled
+            if (feature != null && feature != item.id) {
+                after.getOrPut(feature) { ArrayList() } += labelled
+                attached += item.id
             }
         }
+        return Plan(showOf, shows, shown, group, after, attached)
+    }
+
+    private fun firstLine(item: MediaItem): String? =
+        item.caption.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
+
+
+    /** Long enough to be the film a trailer is posted beside, or, with no length stated, big enough. */
+    private fun isFeature(item: MediaItem, durationOf: (MediaItem) -> Int): Boolean {
+        val pieces = item.parts.ifEmpty { listOf(item) }.map(durationOf)
+        val length = if (pieces.any { it <= 0 }) 0 else pieces.sum()
+        return if (length > 0) length >= FEATURE_SEC else item.sizeBytes >= SameVideo.FEATURE_BYTES
     }
 
     /**
@@ -190,31 +347,41 @@ object SeriesShelf {
      * chat's grid lists. Episodes stay one tile apiece, in the chat's order, since a chat lists
      * what was posted; only a film posted five times over (720p, 1080p, HEVC, a small x264) is one
      * tile, its [MediaItem.versions] the copies, newest first. It sits where its newest copy was.
+     * A split film is one tile too, and an extra is labelled and follows its film, as in [arrange].
      */
-    fun foldFilmCopies(items: List<MediaItem>): List<MediaItem> {
-        val grouped = arrange(items).mapNotNull { (it as? ShelfEntry.File)?.item?.takeIf { item -> item.versions.size > 1 } }
-        if (grouped.isEmpty()) return items
-        val groupOf = HashMap<String, MediaItem>()
-        grouped.forEach { film -> film.versions.forEach { groupOf[it.id] = film } }
+    fun foldFilmCopies(
+        items: List<MediaItem>,
+        corrections: Map<String, VideoCorrection> = VideoCorrections.current,
+        durationOf: (MediaItem) -> Int = SameVideo.statedLength,
+    ): List<MediaItem> {
+        val plan = plan(items, corrections, durationOf)
+        if (plan.shown.isEmpty()) return items
         val placed = HashSet<String>()
-        return items.mapNotNull { item ->
-            val film = groupOf[item.id] ?: return@mapNotNull item
-            if (placed.add(film.id)) film else null
+        val out = ArrayList<MediaItem>(items.size)
+        items.forEachIndexed { index, item ->
+            // An episode of a show stays the file it is here; only the shelf folds shows.
+            if (plan.showOf[index] != null) out += item else emit(item, plan, placed) { out += it }
         }
+        return out
     }
 
     /**
-     * What makes [item] a copy of another file: the same film (see [filmKey]) or the same episode
-     * of the same show, whatever its size or quality. Null for a video that names neither, which
-     * is never a copy of anything. The key [arrange] folds copies on, for a file read alone.
+     * A candidate key only: files that might be copies of each other share it (the same film by
+     * title and year, the same episode, the same air date), whatever their size or quality. It is
+     * not the answer. Whether two files are one video takes evidence a file read alone cannot give
+     * (lengths, the same file forwarded), which [SameVideo.group] weighs over a whole listing, and
+     * two files with one key can be two videos there. Key nothing stored on it: saved data stays
+     * per message.
+     *
+     * Null for a video that names nothing to key on, which is never a copy of anything, for one
+     * the viewer set apart ([VideoCorrection.separate]), and for a trailer or a sample. A piece of
+     * a split film carries its number ("night train|2019|part2"), since each piece plays on its own.
      */
     fun sameVideoKey(item: MediaItem): String? {
-        filmKey(item)?.let { return it }
-        val name = episodeOf(item)
-        val episode = name.episode ?: return null
-        val key = keyOf(name.title)
-        if (key.isEmpty()) return null
-        return "episode:$key|${name.season ?: 1}|$episode"
+        val corrections = VideoCorrections.current
+        val name = episodeOf(item, corrections)
+        val key = candidateKey(item, corrections, name) ?: return null
+        return if (name.part != null) "$key|part${name.part}" else key
     }
 
     /**
@@ -229,31 +396,50 @@ object SeriesShelf {
 
     /**
      * The name a video's tile goes by, wherever a tile is drawn: a chat's grid, Home, Continue
-     * watching, Watched and Watch later. The film's name for a tile of several copies ([filmTitle]),
-     * the cleaned file name for a release ([MediaName.tileTitle]), and the title as it is for a
-     * video named by its caption, since a person wrote that and nothing in it is a release tag.
+     * watching, Watched and Watch later. The viewer's own title where they gave one, the film's
+     * name for a tile of several copies or pieces ([filmTitle]), the cleaned file name for a
+     * release ([MediaName.tileTitle]), and the title as it is for a video named by its caption,
+     * since a person wrote that and nothing in it is a release tag. An extra says what it is:
+     * "Night Train (2019) · Trailer".
      *
      * Works on an item rebuilt from a saved record as well (`ResumeRecord.toMediaItem()` and the
      * like), whose file name is the title that was stored, so a record written before this existed
      * reads as cleanly as a fresh one and nothing stored changes.
      */
-    fun tileTitle(item: MediaItem): String = when {
-        item.versions.size > 1 -> filmTitle(item)
-        item.fileName.isBlank() || MediaMapper.isGenericName(item.fileName) -> item.title
-        else -> MediaName.tileTitle(item.fileName, item.caption) ?: item.title
+    fun tileTitle(item: MediaItem): String {
+        val renamed = VideoCorrections.current[item.id]?.title
+        val title = when {
+            renamed != null -> renamed
+            item.versions.size > 1 || item.parts.size > 1 -> filmTitle(item)
+            item.fileName.isBlank() || MediaMapper.isGenericName(item.fileName) -> item.title
+            else -> MediaName.tileTitle(item.fileName, item.caption) ?: item.title
+        }
+        val extra = item.extra ?: return title
+        return L.messages.gridExtraTitle(title, extraLabel(extra))
+    }
+
+    /** "Trailer", "Sample": what an extra is, in the viewer's language. */
+    fun extraLabel(kind: ExtraKind): String = when (kind) {
+        ExtraKind.Trailer -> L.gridExtraTrailer
+        ExtraKind.Teaser -> L.gridExtraTeaser
+        ExtraKind.Promo -> L.gridExtraPromo
+        ExtraKind.Sample -> L.gridExtraSample
+        ExtraKind.Extra -> L.gridExtraOther
     }
 
     /**
-     * Whether [item] is a film, which a grid draws as a 2:3 poster card: several copies of one
-     * film, or a release name that states a year and no episode. Everything else, a clip, a
-     * lecture, a screen recording or a file named by its caption, is a video and stays a wide
-     * card that shows what the file is.
+     * Whether [item] is a film, which a grid draws as a 2:3 poster card: several copies or pieces of
+     * one film, or a release name (or the viewer's own title) that states a year and no episode.
+     * Everything else, a clip, a lecture, a screen recording, a trailer or a file named by its
+     * caption, is a video and stays a wide card that shows what the file is.
      */
     fun isFilm(item: MediaItem): Boolean {
-        if (item.versions.size > 1) return true
-        if (item.fileName.isBlank() || MediaMapper.isGenericName(item.fileName)) return false
-        val name = MediaName.parse(item.fileName, item.caption)
-        return !name.isSeries && name.year != null && name.title.isNotBlank()
+        if (item.extra != null) return false
+        if (item.versions.size > 1 || item.parts.size > 1) return true
+        val renamed = VideoCorrections.current[item.id]?.title
+        if (renamed == null && (item.fileName.isBlank() || MediaMapper.isGenericName(item.fileName))) return false
+        val name = if (renamed != null) MediaName.parse(renamed) else MediaName.parse(item.fileName, item.caption)
+        return !name.isSeries && name.extra == null && name.year != null && name.title.isNotBlank()
     }
 
     /** Whether [entry] is drawn as a poster: a show, or a film ([isFilm]). */
@@ -267,15 +453,14 @@ object SeriesShelf {
      * instead; [tileTitle] where the name reads as nothing.
      */
     fun posterTitle(item: MediaItem): String =
-        MediaName.parse(item.nameForParsing, item.caption).title.ifBlank { tileTitle(item) }
+        episodeOf(item).title.ifBlank { tileTitle(item) }
 
     /**
      * What makes two files the same film: the title read off the name, and the year. A file names
      * a film only when it carries a year or a quality marker (1080p, x265), so two clips that share
      * a plain name ("Lecture", "Video") are never taken for copies of one another.
      */
-    private fun filmKey(item: MediaItem): String? {
-        val name = episodeOf(item)
+    private fun filmKeyOf(item: MediaItem, name: ParsedName): String? {
         if (name.isSeries) return null
         val key = keyOf(name.title)
         if (key.isEmpty()) return null
@@ -322,17 +507,24 @@ object SeriesShelf {
         ).map(::keyOf).filter { it.isNotEmpty() && it != key }.distinct()
     }
 
-    private fun series(key: String, files: List<Found>): Series {
+    private fun series(key: String, files: List<Found>, separate: (MediaItem) -> Boolean, durationOf: (MediaItem) -> Int): Series {
         // A release with no season (the fansub form, a bare "Ep 04") is season one, unless every
         // file that does name a season names the same one.
         val named = files.mapNotNull { it.name.season }.distinct()
         val defaultSeason = named.singleOrNull() ?: 1
         val episodes = files
             .groupBy { (it.name.season ?: defaultSeason) to it.episode }
-            .map { (number, copies) ->
-                // Copies of one episode (720p and 1080p) under one row, the newer first.
-                val sorted = copies.map { it.item }.sortedWith(compareByDescending<MediaItem> { it.date }.thenBy { it.messageId })
-                SeriesEpisode(sorted.first(), number.first, number.second, sorted)
+            .flatMap { (number, copies) ->
+                // Copies of one episode (720p and 1080p) under one row, the newer first; a copy
+                // whose length says it is something else, or that the viewer set apart, a row of
+                // its own under the same number.
+                val (apart, rest) = copies.partition { separate(it.item) }
+                val rows = SameVideo.videosOf(rest.map { it.item to it.name }, dated = true, durationOf).map { it.members } +
+                    apart.map { listOf(it.item) }
+                rows.filter { it.isNotEmpty() }.map { members ->
+                    val sorted = members.sortedWith(compareByDescending<MediaItem> { it.date }.thenBy { it.messageId })
+                    SeriesEpisode(sorted.first(), number.first, number.second, sorted)
+                }
             }
         val seasons = episodes
             .groupBy { it.season }
@@ -346,6 +538,7 @@ object SeriesShelf {
             ?: titles.first()
         return Series(key = key, title = title, seasons = seasons)
     }
+
 
     /**
      * Where the viewer is in [series]. An episode counts as watched when any copy of it is, and
@@ -396,6 +589,6 @@ object SeriesShelf {
         return like?.let { EpisodeCopies.closest(it, episode.copies) } ?: episode.item
     }
 
-    private val NOT_WORD = Regex("""[^\p{L}\p{N}]+""")
+    private val NOT_WORD = Regex("""[^\p{L}\p{M}\p{N}]+""")
     private val SPACES = Regex("""\s+""")
 }

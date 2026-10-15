@@ -213,6 +213,9 @@ private fun metaKey(chatId: Long, messageId: Long) =
 /** The forum topic last browsed in one group, so it opens where the viewer left it. 0 is all. */
 private fun topicKey(chatId: Long) = longPreferencesKey("topic_$chatId")
 
+/** The order a chat's videos are listed in, per chat. See [VideoSort]. */
+private fun videoSortKey(chatId: Long) = stringPreferencesKey("vsort_$chatId")
+
 /** The subtitle and audio offsets the viewer set for one file. See [SyncDelays]. */
 private fun delayKey(chatId: Long, messageId: Long) =
     stringPreferencesKey("delay_${chatId}_$messageId")
@@ -397,6 +400,41 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     suspend fun forgetLastChat() {
         prefs.edit { it.remove(LAST_CHAT) }
+    }
+
+    // ---- a chat's own order, and the viewer's corrections ------------------------------------
+
+    /** How [chatId]'s videos are ordered: [VideoSort.Newest] until the viewer picks another. */
+    fun videoSort(chatId: Long): Flow<VideoSort> = read { VideoSort.decode(it[videoSortKey(chatId)]) }
+
+    suspend fun setVideoSort(chatId: Long, sort: VideoSort) {
+        prefs.edit { if (sort == VideoSort.DEFAULT) it.remove(videoSortKey(chatId)) else it[videoSortKey(chatId)] = sort.name }
+    }
+
+    /** Every [VideoCorrection], by [MediaItem.id]. See [VideoCorrections]. */
+    val corrections: Flow<Map<String, VideoCorrection>> = read { prefs ->
+        prefs.asMap().mapNotNull { (key, value) ->
+            val id = VideoCorrections.idOf(key.name) ?: return@mapNotNull null
+            val correction = VideoCorrection.decode(value as? String)
+            if (correction.isEmpty) null else id to correction
+        }.toMap()
+    }
+
+    /**
+     * Replaces the correction for each of [items] with what [change] makes of it; an empty one is
+     * removed. Every copy of a folded tile is passed together, so a rename or a wrong match holds
+     * whichever copy the tile is showing.
+     */
+    suspend fun correct(items: List<MediaItem>, change: (VideoCorrection) -> VideoCorrection) {
+        val now = VideoCorrections.current
+        val updated = items.distinctBy { it.id }.map { it to change(now[it.id] ?: VideoCorrection()) }
+        prefs.edit { prefs ->
+            for ((item, correction) in updated) {
+                val key = stringPreferencesKey(VideoCorrections.keyName(item.chatId, item.messageId))
+                if (correction.isEmpty) prefs.remove(key) else prefs[key] = correction.encode()
+            }
+        }
+        updated.forEach { (item, correction) -> VideoCorrections.put(item.id, correction) }
     }
 
     /**

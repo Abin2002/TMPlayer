@@ -1,5 +1,6 @@
 package com.tmplayer.data
 
+import com.tmplayer.i18n.L
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.ln
@@ -40,15 +41,19 @@ object EpisodeCopies {
         closest(nameOf(like), like.sizeBytes, candidates, ::nameOf) { it.sizeBytes }
 
     /**
-     * What tells one copy from another on its chip: "1080p · HEVC · 1.8 GB". The resolution comes
+     * What tells one copy from another on its chip: "Tamil · 1080p · HEVC · 1.8 GB". The language
+     * the name states comes first, since a dub is the difference that matters most; the resolution
      * from the name, else from the picture size Telegram states (most copies named only by their
-     * episode still carry it); the codec only from the name. The size alone when neither says
-     * anything about the picture.
+     * episode still carry it); the codec only from the name. The size alone when nothing says
+     * anything about the picture. Several pieces of a split film are counted ("2 parts").
      */
     fun label(item: MediaItem): String {
         val facts = MediaFacts.read(nameOf(item), item.width, item.height)
         val resolution = MediaMapper.qualityTags(nameOf(item)).firstOrNull() ?: facts.resolution
-        return listOfNotNull(resolution, facts.videoCodec, MediaMapper.formatSize(item.sizeBytes).ifEmpty { null })
+        val language = facts.languages.singleOrNull()?.let { L.messages.formatter.trackLanguage(it) }
+        val parts = item.parts.size.takeIf { it > 1 }?.let { L.gridPartsCount(it) }
+        val size = item.parts.ifEmpty { listOf(item) }.sumOf { it.sizeBytes.coerceAtLeast(0) }
+        return listOfNotNull(language, resolution, facts.videoCodec, parts, MediaMapper.formatSize(size).ifEmpty { null })
             .joinToString("  ·  ")
     }
 
