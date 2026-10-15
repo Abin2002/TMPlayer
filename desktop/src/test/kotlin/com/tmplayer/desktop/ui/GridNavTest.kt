@@ -54,6 +54,9 @@ class GridNavTest {
         assertEquals(4, GridNav.move(4, NavKey.Down, columns = 1, count = 5))
         assertEquals(3, GridNav.move(3, NavKey.Right, columns = 1, count = 5))
         assertEquals(-1, GridNav.move(0, NavKey.Down, columns = 1, count = 0))
+        // Home and End are the top and the bottom of a list, not the ends of a one cell row.
+        assertEquals(0, GridNav.move(3, NavKey.RowStart, columns = 1, count = 5))
+        assertEquals(4, GridNav.move(1, NavKey.RowEnd, columns = 1, count = 5))
     }
 
     @Test

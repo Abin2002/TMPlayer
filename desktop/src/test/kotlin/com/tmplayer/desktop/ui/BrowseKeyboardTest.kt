@@ -311,6 +311,11 @@ class BrowseKeyboardTest {
         assertEquals(setOf(30L), starred)
         onNode(isFocused()).performKeyInput { pressKey(Key.Enter) }
         assertEquals(30L, opened?.id)
+        // Home alone is the top of a list, scrolled to; End the bottom.
+        onNode(isFocused()).performKeyInput { pressKey(Key.MoveHome) }
+        onNode(row(1)).assertIsFocused()
+        onNode(isFocused()).performKeyInput { pressKey(Key.MoveEnd) }
+        onNode(row(30)).assertIsFocused()
     }
 
     @Test

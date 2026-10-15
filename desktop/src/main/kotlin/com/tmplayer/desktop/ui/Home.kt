@@ -218,7 +218,7 @@ internal fun HomeRowsView(
             BoxWithConstraints(Modifier.fillMaxSize()) {
                 val sizes = CardSizes.of(state.posterWidth, maxWidth - side * 2)
                 LazyColumn(
-                    Modifier.fillMaxSize(),
+                    Modifier.fillMaxSize().homeEndScrolls(list),
                     state = list,
                     contentPadding = PaddingValues(bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -333,7 +333,7 @@ private fun RowPage(
             }
             val list = rememberLazyListState()
             LazyColumn(
-                Modifier.fillMaxSize(),
+                Modifier.fillMaxSize().homeEndScrolls(list),
                 state = list,
                 contentPadding = PaddingValues(start = side, end = side, top = 8.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),

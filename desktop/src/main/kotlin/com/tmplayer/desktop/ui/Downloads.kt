@@ -148,7 +148,7 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                 state = list,
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxSize().padding(end = 12.dp),
+                modifier = Modifier.fillMaxSize().padding(end = 12.dp).homeEndScrolls(list),
             ) {
                 item(key = "h-active") { Section(s.downloadsDownloading) }
                 if (queue.isEmpty()) {

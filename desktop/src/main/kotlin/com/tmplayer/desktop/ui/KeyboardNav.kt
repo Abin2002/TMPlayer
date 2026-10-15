@@ -23,6 +23,7 @@ import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import kotlinx.coroutines.CoroutineScope
@@ -55,8 +56,10 @@ object GridNav {
             NavKey.Up -> if (row > 0) at - cols else at
             // Into a short last row, the cell nearest below.
             NavKey.Down -> if (row < lastRow) minOf(at + cols, count - 1) else at
-            NavKey.RowStart -> rowStart
-            NavKey.RowEnd -> rowEnd
+            // A list's row is one cell, where Home and End going nowhere read as broken: in a list
+            // they are the top and the bottom, as in every list on the desktop.
+            NavKey.RowStart -> if (cols == 1) 0 else rowStart
+            NavKey.RowEnd -> if (cols == 1) count - 1 else rowEnd
             NavKey.First -> 0
             NavKey.Last -> count - 1
             NavKey.PageUp -> if (row == 0) at else at - minOf(rows, row) * cols
@@ -137,6 +140,25 @@ class KeyboardNav(private val surface: NavSurface, private val scope: CoroutineS
         val target = GridNav.move(current, key, surface.columns(), count, rows)
         if (target != current) focus(target)
         return true
+    }
+}
+
+/**
+ * Home and End on a page's list whose cells are not walked by a [KeyboardNav] (Home's rows, the
+ * Downloads list): the list scrolls to its top or its end. Bubbles up after the focused cell has
+ * had the key, so a cell or a strip that uses Home itself keeps it.
+ */
+@Composable
+fun Modifier.homeEndScrolls(list: LazyListState): Modifier {
+    val scope = rememberCoroutineScope()
+    return onKeyEvent { event ->
+        if (event.type != KeyEventType.KeyDown || event.isAltPressed || event.isShiftPressed) return@onKeyEvent false
+        when (event.key) {
+            Key.MoveHome -> scope.launch { list.scrollToItem(0) }
+            Key.MoveEnd -> scope.launch { list.scrollToItem((list.layoutInfo.totalItemsCount - 1).coerceAtLeast(0)) }
+            else -> return@onKeyEvent false
+        }
+        true
     }
 }
 
