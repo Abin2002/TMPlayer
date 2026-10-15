@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -128,7 +129,6 @@ internal fun TouchBrowseShell(
     onHistory: (HistoryTab) -> Unit,
     onOpenDownloads: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenAbout: () -> Unit,
     onUpdate: () -> Unit,
     /** The page's name in the top bar. */
     title: String,
@@ -208,6 +208,7 @@ internal fun TouchBrowseShell(
                     onHome = onHome,
                     onChats = onChats,
                     onSearch = onOpenSearch,
+                    onSettings = onOpenSettings,
                     onProfile = { profileOpen = true },
                     searchButton = { modifier ->
                         if (reduced) {
@@ -228,7 +229,6 @@ internal fun TouchBrowseShell(
             ProfilePopover(
                 open = profileOpen,
                 reduced = reduced,
-                account = account,
                 favoriteCount = favoriteCount,
                 downloadCount = downloadCount,
                 updateVersion = updateVersion,
@@ -237,8 +237,6 @@ internal fun TouchBrowseShell(
                 onDownloads = { profileOpen = false; onOpenDownloads() },
                 onHistory = { profileOpen = false; onHistory(HistoryTab.Continue) },
                 onWatchLater = { profileOpen = false; onHistory(HistoryTab.WatchLater) },
-                onSettings = { profileOpen = false; onOpenSettings() },
-                onAbout = { profileOpen = false; onOpenAbout() },
                 onUpdate = { profileOpen = false; onUpdate() },
             )
 
@@ -320,6 +318,7 @@ private fun FloatingBar(
     onHome: () -> Unit,
     onChats: () -> Unit,
     onSearch: () -> Unit,
+    onSettings: () -> Unit,
     onProfile: () -> Unit,
     searchButton: @Composable (Modifier) -> Unit,
 ) {
@@ -344,6 +343,7 @@ private fun FloatingBar(
                     .clickable(role = Role.Button, onClick = onSearch)
                     .semantics { contentDescription = s.commonSearch },
             )
+            BarButton(TmIcons.Settings, s.navSettings, chosen = false, onClick = onSettings)
             Box(
                 Modifier
                     .size(BUTTON)
@@ -414,16 +414,15 @@ private fun ProfilePicture(account: Account?, size: Dp) {
 }
 
 /**
- * What the drawer used to hold, behind the viewer's picture: a card that grows out of the bottom
- * end corner over a dimmed screen. The account at the top (picture, name, @username), then
- * Favourites, Downloads, History, Watch later, Settings, About, and Update when there is one.
+ * The viewer's own lists, behind their picture: a small card that grows out of the bottom end
+ * corner over a dimmed screen, with Favourites, Downloads, History, Watch later, and Update when
+ * there is one. Settings has its own button on the bar, and the account and About are in Settings.
  * A tap outside, Back, or picking a row closes it.
  */
 @Composable
 private fun ProfilePopover(
     open: Boolean,
     reduced: Boolean,
-    account: Account?,
     favoriteCount: Int,
     downloadCount: Int,
     updateVersion: String?,
@@ -432,8 +431,6 @@ private fun ProfilePopover(
     onDownloads: () -> Unit,
     onHistory: () -> Unit,
     onWatchLater: () -> Unit,
-    onSettings: () -> Unit,
-    onAbout: () -> Unit,
     onUpdate: () -> Unit,
 ) {
     val s = LocalStrings.current
@@ -449,7 +446,13 @@ private fun ProfilePopover(
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
         )
     }
-    Box(Modifier.fillMaxSize().navigationBarsPadding().padding(bottom = BAR_MARGIN + BAR_HEIGHT + BAR_GAP, end = 16.dp, start = 16.dp)) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(top = 8.dp, bottom = BAR_MARGIN + BAR_HEIGHT + BAR_GAP, end = 16.dp, start = 16.dp),
+    ) {
         AnimatedVisibility(
             visible = open,
             modifier = Modifier.align(Alignment.BottomEnd),
@@ -474,64 +477,48 @@ private fun ProfilePopover(
                     // Taps inside the card stay inside it rather than reaching the scrim.
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                     .verticalScroll(rememberScrollState())
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 4.dp),
             ) {
-                Row(
-                    Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    ProfilePicture(account, 48.dp)
-                    Column(Modifier.weight(1f, fill = false)) {
-                        Text(
-                            account?.name ?: s.browseSignedIn,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Tone.text,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        account?.username?.takeIf { it.isNotBlank() }?.let { username ->
-                            // Isolated left to right, or an Arabic or Persian interface draws "name@".
-                            Text(
-                                "⁦@$username⁩",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Tone.muted,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
+                val rows = buildList<@Composable (Modifier) -> Unit> {
+                    add { m -> PopoverRow(TmIcons.StarOutline, s.browseTabFavourites, favoriteCount.takeIf { it > 0 }?.toString(), modifier = m, onClick = onFavourites) }
+                    add { m -> PopoverRow(TmIcons.Download, s.navDownloads, downloadCount.takeIf { it > 0 }?.toString(), modifier = m, onClick = onDownloads) }
+                    add { m -> PopoverRow(TmIcons.History, s.browseTabHistory, null, modifier = m, onClick = onHistory) }
+                    add { m -> PopoverRow(TmIcons.Clock, s.browseTabWatchLater, null, modifier = m, onClick = onWatchLater) }
+                    if (updateVersion != null) {
+                        // Amber, as on the television's rail and the desktop's side bar: the one row that is news.
+                        add { m -> PopoverRow(TmIcons.Refresh, s.navUpdate, updateVersion, ink = Tone.caution, modifier = m, onClick = onUpdate) }
                     }
                 }
-                HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-                PopoverRow(TmIcons.StarOutline, s.browseTabFavourites, favoriteCount.takeIf { it > 0 }?.toString(), onClick = onFavourites)
-                PopoverRow(TmIcons.Download, s.navDownloads, downloadCount.takeIf { it > 0 }?.toString(), onClick = onDownloads)
-                PopoverRow(TmIcons.History, s.browseTabHistory, null, onClick = onHistory)
-                PopoverRow(TmIcons.Clock, s.browseTabWatchLater, null, onClick = onWatchLater)
-                HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-                if (updateVersion != null) {
-                    // Amber, as on the television's rail and the desktop's side bar: the one row that is news.
-                    PopoverRow(TmIcons.Refresh, s.navUpdate, updateVersion, ink = Tone.caution, onClick = onUpdate)
+                rows.take(4).forEach { it(Modifier) }
+                if (rows.size > 4) {
+                    HorizontalDivider(Modifier.padding(horizontal = 14.dp, vertical = 2.dp))
+                    rows.drop(4).forEach { it(Modifier) }
                 }
-                PopoverRow(TmIcons.Settings, s.navSettings, null, onClick = onSettings)
-                PopoverRow(TmIcons.Info, s.aboutTitleShort, null, onClick = onAbout)
             }
         }
     }
 }
 
 @Composable
-private fun PopoverRow(icon: ImageVector, label: String, badge: String?, ink: Color = Tone.text, onClick: () -> Unit) {
+private fun PopoverRow(
+    icon: ImageVector,
+    label: String,
+    badge: String?,
+    ink: Color = Tone.text,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .height(POPOVER_ROW)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(22.dp))
-        Text(label, style = MaterialTheme.typography.bodyLarge, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         if (badge != null) {
             Text(
                 badge,
@@ -561,9 +548,9 @@ internal val BAR_GAP = 8.dp
 private val BUTTON = 48.dp
 private val PICTURE = 32.dp
 private val BAR_SHADOW = 8.dp
-private val POPOVER_WIDTH = 320.dp
-private val POPOVER_ROW = 52.dp
-private val POPOVER_SHAPE = RoundedCornerShape(28.dp)
+private val POPOVER_WIDTH = 248.dp
+private val POPOVER_ROW = 44.dp
+private val POPOVER_SHAPE = RoundedCornerShape(20.dp)
 
 /** How far a list has to be pushed up before the bar gets out of the way, so a nudge does not. */
 private const val HIDE_AFTER_PX = 48f

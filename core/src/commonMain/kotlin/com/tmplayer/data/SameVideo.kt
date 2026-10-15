@@ -137,6 +137,10 @@ object SameVideo {
         }
     }
 
+    /** Whether [item]'s own file name says what it is, rather than only its (possibly borrowed) caption. */
+    private fun namedByFile(item: MediaItem): Boolean =
+        item.fileName.isNotBlank() && !MediaMapper.isGenericName(item.fileName)
+
     /** Pieces of one cut are about the same size: none more than twice another. Unknown sizes pass. */
     private fun alikeInSize(pieces: List<MediaItem>): Boolean {
         val sizes = pieces.map { it.sizeBytes }.filter { it > 0 }
@@ -146,9 +150,16 @@ object SameVideo {
 
     /** Whether two candidates are one video: see [SameVideo] for the rules. */
     private fun sameVideo(a: Candidate, b: Candidate, dated: Boolean): Boolean {
-        // Videos sent together in one album are different videos, whatever their names say.
+        // Channels send a film's 720p, 1080p and 4K together as one album, so an album is no
+        // reason to keep files apart. What is: a file named only by the caption it borrowed from
+        // the album's first post ([MediaMapper.shareAlbumCaptions]), since every such file reads
+        // as the same title and episode whatever it holds.
         val albums = a.members.mapNotNullTo(HashSet()) { it.albumId.takeIf { id -> id != 0L } }
-        if (b.members.any { it.albumId != 0L && it.albumId in albums }) return false
+        if (b.members.any { it.albumId != 0L && it.albumId in albums } &&
+            (a.members + b.members).any { !namedByFile(it) }
+        ) {
+            return false
+        }
         if (!a.split && !b.split && a.lead.fileId != 0 && a.lead.fileId == b.lead.fileId) return true
         val x = a.durationSec
         val y = b.durationSec

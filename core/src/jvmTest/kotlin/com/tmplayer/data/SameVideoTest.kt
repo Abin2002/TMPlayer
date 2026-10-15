@@ -48,12 +48,22 @@ class SameVideoTest {
         }
 
     @Test
-    fun `videos sent together in one album are never copies of each other`() {
+    fun `a film's qualities sent together as one album are copies`() {
         val a = video("Night Lantern (2022) 720p.mkv", size = 900 * MB).copy(albumId = 55)
         val b = video("Night.Lantern.2022.1080p.mkv", size = 2_000 * MB).copy(albumId = 55)
-        assertEquals(2, SameVideo.group(listOf(a, b), emptyMap()).size)
-        // Out of an album, the same two are copies.
-        assertEquals(1, SameVideo.group(listOf(a.copy(albumId = 0), b.copy(albumId = 0)), emptyMap()).size)
+        assertEquals(1, SameVideo.group(listOf(a, b), emptyMap()).size)
+    }
+
+    @Test
+    fun `album files named only by the borrowed caption stay apart`() {
+        val shared = MediaMapper.shareAlbumCaptions(
+            listOf(
+                video("", caption = "Harbour Notes S01E01").copy(albumId = 9),
+                video("video.mp4").copy(albumId = 9),
+                video("VID_20241013_120000.mp4").copy(albumId = 9),
+            ),
+        )
+        assertEquals(3, SameVideo.group(shared, emptyMap()).size)
     }
 
     @Test

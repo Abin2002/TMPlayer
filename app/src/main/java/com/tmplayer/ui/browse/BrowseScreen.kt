@@ -283,8 +283,6 @@ fun BrowseScreen(
     videoSearch: VideoSearchSource = VideoSearchSource.Telegram,
     /** Remembers a search worth keeping, for the recent searches. */
     onSearched: (suspend (String) -> Unit)? = null,
-    /** About, from the phone's profile popover. */
-    onOpenAbout: () -> Unit = {},
 ) {
     val s = LocalStrings.current
     // An unfinished video wins the landing tab, otherwise Recent, so the first screen is never
@@ -755,7 +753,6 @@ fun BrowseScreen(
             onHistory = { pickHistory(it); onPickTab(BrowseSection.of(BrowseTab.History)) },
             onOpenDownloads = onOpenDownloads,
             onOpenSettings = onOpenSettings,
-            onOpenAbout = onOpenAbout,
             onUpdate = onUpdate,
             search = search,
             searchState = searchState,

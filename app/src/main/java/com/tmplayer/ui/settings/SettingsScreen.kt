@@ -247,6 +247,8 @@ private const val SUPPORTING_LINES = 4
 @Composable
 fun SettingsScreen(
     chats: List<ChatSummary>,
+    /** Who is signed in, shown at the top of the list. Null while it is still being read. */
+    account: com.tmplayer.data.Account? = null,
     onLoggedOut: () -> Unit,
     /** Leaving Settings. On a phone this is the app bar's arrow as well as the hardware key. */
     onBack: () -> Unit = {},
@@ -1478,6 +1480,11 @@ fun SettingsScreen(
             // One row per page: what the page is, and either the value that matters most in it or
             // a few words on what is inside.
             null -> {
+                // Who is signed in, first, on the page's own background: a header, not one more
+                // row to press, so it sits in line with the rows' icons rather than in a card.
+                if (account != null) {
+                    item(key = "account") { AccountHeader(account) }
+                }
                 item {
                     ActionRow(
                         title = titleOf(SettingsPage.Appearance),
@@ -1592,10 +1599,9 @@ fun SettingsScreen(
                 // A page of its own would hold this one row, so it stays on the list, last.
                 sectionTitle { s.settingsAccount }
                 item {
-                    ActionRow(
-                        title = s.settingsSignOut,
-                        subtitle = s.settingsSignOutDetail(device),
-                        icon = TmIcons.SignOut,
+                    SignOutButton(
+                        label = s.settingsSignOut,
+                        detail = s.settingsSignOutDetail(device),
                         onClick = { prompt = Prompt.SignOut },
                     )
                 }
@@ -2727,6 +2733,68 @@ private fun SubtitlePreview(style: SubtitleStyle, modifier: Modifier = Modifier)
                 .then(if (style.box) Modifier.background(Color.Black.copy(alpha = 0.75f)) else Modifier)
                 .padding(horizontal = 6.dp, vertical = 2.dp),
         )
+    }
+}
+
+/** The signed in account at the top of Settings: picture, name and @username, no card around it. */
+@Composable
+private fun AccountHeader(account: com.tmplayer.data.Account) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        com.tmplayer.ui.components.MediaPreview(
+            miniThumbnail = account.miniThumbnail,
+            thumbnailFileId = account.photoFileId,
+            fallbackLabel = account.name,
+            modifier = Modifier.size(56.dp).clip(CircleShape),
+        )
+        Column(Modifier.weight(1f)) {
+            Text(
+                account.name,
+                style = MaterialTheme.typography.titleLarge,
+                color = Tone.text,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (account.username.isNotBlank()) {
+                // Isolated left to right, or an Arabic or Persian interface draws "name@".
+                Text(
+                    "\u2066@${account.username}\u2069",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Tone.muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Sign out, at the very end of Settings: a full width button in the danger colour, since it is the
+ * one press here that ends the session and empties the app. It still asks first.
+ */
+@Composable
+private fun SignOutButton(label: String, detail: String, onClick: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        androidx.compose.material3.Button(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = Tone.danger,
+                contentColor = androidx.compose.material3.MaterialTheme.colorScheme.onError,
+            ),
+        ) {
+            androidx.compose.material3.Icon(TmIcons.SignOut, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.size(8.dp))
+            M3Text(label, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
+        }
+        Text(detail, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
     }
 }
 

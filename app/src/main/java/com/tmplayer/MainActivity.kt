@@ -631,8 +631,6 @@ private fun Root() {
     val device = remember { if (FormFactor.isTv(context)) "tv" else "phone" }
     // Where leaving the Downloads screen goes back to.
     var downloadsCameFrom by remember { mutableStateOf<Screen>(Screen.Chats) }
-    // About opens from Settings, and on a phone from the profile popover over the browser too.
-    var aboutCameFrom by remember { mutableStateOf<Screen>(Screen.Settings) }
     // Whether the Downloads screen opens on its cached videos, which is how Settings' Cached
     // videos row reaches the list of them.
     var downloadsOnCached by remember { mutableStateOf(false) }
@@ -1319,10 +1317,6 @@ private fun Root() {
                     onSetMediaWatched = { item, chatTitle, watched -> setWatched(item, chatTitle, watched) },
                     onMessage = toast,
                     onSearched = { settings.addRecentSearch(it) },
-                    onOpenAbout = {
-                        aboutCameFrom = Screen.Chats
-                        screen = Screen.About
-                    },
                 )
             }
 
@@ -1408,6 +1402,7 @@ private fun Root() {
                 }
                 SettingsScreen(
                     chats = chats,
+                    account = accountHeader,
                     onLoggedOut = {
                         settingsPage = null
                         screen = Screen.Chats
@@ -1418,17 +1413,14 @@ private fun Root() {
                         downloadsOnCached = true
                         screen = Screen.Downloads
                     },
-                    onOpenAbout = {
-                        aboutCameFrom = Screen.Settings
-                        screen = Screen.About
-                    },
+                    onOpenAbout = { screen = Screen.About },
                     initialPage = settingsPage,
                     onPageChange = { settingsPage = it },
                 )
             }
 
             is Screen.About -> {
-                val leaveAbout = { screen = aboutCameFrom }
+                val leaveAbout = { screen = Screen.Settings }
                 BackHandler(onBack = leaveAbout)
                 AboutScreen(onBack = leaveAbout)
             }
