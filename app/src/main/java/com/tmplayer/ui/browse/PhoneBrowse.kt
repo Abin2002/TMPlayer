@@ -62,8 +62,13 @@ internal fun PhoneBrowse(
     tab: BrowseSection,
     account: Account?,
     pane: @Composable (BrowseSection) -> Unit,
+    /**
+     * What pulling a page down does: refresh Home, or the chat list; null for a page with
+     * nothing to fetch again. A pull, not a button: a lone floating Refresh reads like a mistake.
+     */
+    refreshOf: (BrowseSection) -> (() -> Unit)? = { null },
     countOf: (BrowseSection) -> Int,
-    actions: @Composable RowScope.() -> Unit,
+    actions: (@Composable RowScope.() -> Unit)?,
     sections: List<BrowseSection>,
     favourites: Set<Long>,
     downloadCount: Int,
@@ -238,7 +243,25 @@ internal fun PhoneBrowse(
                         modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
                     )
                 }
-                pane(page)
+                val refresh = refreshOf(page)
+                if (refresh == null) {
+                    pane(page)
+                } else {
+                    // TDLib answers through the list's own flow, so the spinner is a short
+                    // acknowledgement rather than a wait on the fetch itself.
+                    var pulling by remember { mutableStateOf(false) }
+                    LaunchedEffect(pulling) {
+                        if (pulling) {
+                            kotlinx.coroutines.delay(PULL_ACK_MS)
+                            pulling = false
+                        }
+                    }
+                    androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                        isRefreshing = pulling,
+                        onRefresh = { pulling = true; refresh() },
+                        modifier = Modifier.fillMaxSize(),
+                    ) { pane(page) }
+                }
             }
         }
     }
@@ -273,3 +296,6 @@ private fun decodeFilters(raw: String): Pair<SearchFilters, SearchSort>? {
 
 /** How far a page slides in as it fades: a twelfth of the width, a nudge rather than a swipe. */
 private const val SLIDE_PART = 12
+
+/** How long the pull's spinner stays after a pull, as the acknowledgement of it. */
+private const val PULL_ACK_MS = 900L

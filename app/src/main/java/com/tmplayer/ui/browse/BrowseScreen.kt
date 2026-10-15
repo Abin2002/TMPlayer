@@ -691,6 +691,13 @@ fun BrowseScreen(
 
     if (touch) {
         PhoneBrowse(
+            refreshOf = { page ->
+                when {
+                    page.isHome -> onRefreshHome
+                    !page.listsVideos -> onRefresh
+                    else -> null
+                }
+            },
             tab = tab,
             account = (state as? UiState.Content)?.value?.account ?: account,
             pane = pane,
@@ -706,12 +713,8 @@ fun BrowseScreen(
                     else -> chats?.let { filterChats(it, section, favorites, query, chatFilter, chatSort).size } ?: 0
                 }
             },
-            actions = actions@{
-                // Home is rows of tiles whatever the arrangement, so it only offers a refresh.
-                if (tab.isHome) {
-                    BarIcon(s.commonRefresh, TmIcons.Refresh, onRefreshHome)
-                    return@actions
-                }
+            // Home is rows of tiles whatever the arrangement, and refreshes with a pull: no pill.
+            actions = unlessHidden(tab.isHome) actions@{
                 BarIcon(
                     label = if (layout == CardLayout.Grid) s.browseShowAsRows else s.browseShowAsTiles,
                     icon = if (layout == CardLayout.Grid) {
@@ -721,9 +724,6 @@ fun BrowseScreen(
                     },
                     onClick = onToggleLayout,
                 )
-                if (!tab.listsVideos) {
-                    BarIcon(s.commonRefresh, TmIcons.Refresh, onRefresh)
-                }
                 // Everything destructive goes behind the overflow. A "Clear history" button
                 // sitting in the bar beside Refresh is one mis-tap from emptying the tab.
                 val clearHistory = showsContinue && continueWatching.isNotEmpty()
@@ -2884,3 +2884,7 @@ private class BrowseInsets(val start: Dp, val end: Dp, val top: Dp, val bottom: 
 
 private val TvInsets = BrowseInsets(start = 28.dp, end = Tv.FocusClearance, top = Tv.SafeV, bottom = Tv.SafeV)
 private val TouchInsets = BrowseInsets(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+
+/** [content] for a page's action pill, or none at all where [hidden]. */
+private fun unlessHidden(hidden: Boolean, content: @Composable RowScope.() -> Unit): (@Composable RowScope.() -> Unit)? =
+    if (hidden) null else content
