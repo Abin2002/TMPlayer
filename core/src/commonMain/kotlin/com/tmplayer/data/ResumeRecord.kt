@@ -95,6 +95,10 @@ data class ResumeRecord(
         fun updatedAtOf(encoded: String?): Long? =
             encoded?.split(SEP)?.getOrNull(5)?.toLongOrNull()
 
+        /** Just the title out of an encoded line, for matching copies of one video ([VideoCopies]). */
+        fun titleOf(encoded: String?): String? =
+            encoded?.split(SEP)?.getOrNull(1)?.takeIf { it.isNotBlank() }
+
         /**
          * Rebuilds a record, or returns null when the stored line cannot be trusted.
          *
