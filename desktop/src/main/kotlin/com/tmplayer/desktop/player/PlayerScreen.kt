@@ -1075,9 +1075,11 @@ fun PlayerScreen(
                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                     noteInput()
                     // The episode list has the keyboard while it is up: Esc closes it, and every
-                    // other key (the arrows, Enter) is its own, not a seek or a fullscreen.
+                    // other key (the arrows, Enter) is its own, not a seek or a fullscreen. The
+                    // other back keys close it too, or the window would take Backspace as a way
+                    // out of the whole player.
                     if (showEpisodes) {
-                        if (event.key == androidx.compose.ui.input.key.Key.Escape) {
+                        if (com.tmplayer.ui.nav.isBackKey(event)) {
                             showEpisodes = false
                             refocus()
                             return@onPreviewKeyEvent true
