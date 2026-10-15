@@ -67,6 +67,9 @@ import kotlin.system.exitProcess
 
 private const val QUIT_GRACE_MS = 3_000L
 
+/** How long a fullscreen change is given to land before the window asks for the keyboard again. */
+private const val FULLSCREEN_SETTLE_MS = 250L
+
 fun main(args: Array<String>) {
     // Loads every native library, reports, exits: no window, no second instance check.
     args.firstOrNull(SelfTest::matches)?.let { exitProcess(SelfTest.run(it)) }
@@ -238,6 +241,18 @@ fun main(args: Array<String>) {
                     } else if (!shell.fullscreen && windowState.placement == WindowPlacement.Fullscreen) {
                         windowState.placement = beforeFullscreen
                     }
+                }
+                // The change remaps the window, and the window system may hand it back without the
+                // keyboard (Esc and Space then reach nothing until a click). Once it has settled,
+                // the window asks for focus again; the player takes it from there (PlayerScreen).
+                var fullscreenSeen by remember { mutableStateOf(shell.fullscreen) }
+                LaunchedEffect(shell.fullscreen) {
+                    if (fullscreenSeen == shell.fullscreen) return@LaunchedEffect
+                    fullscreenSeen = shell.fullscreen
+                    delay(FULLSCREEN_SETTLE_MS)
+                    if (!window.isShowing || window.isActive) return@LaunchedEffect
+                    window.toFront()
+                    window.requestFocus()
                 }
                 raise = {
                     window.isVisible = true

@@ -76,6 +76,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
@@ -558,7 +559,9 @@ private fun VolumeControl(volume: Int, muted: Boolean, onVolume: (Int) -> Unit, 
             Slider(
                 value = if (muted) 0f else volume / 100f,
                 onValueChange = { onVolume((it * 100).roundToInt()) },
-                modifier = Modifier.width(110.dp).padding(end = 4.dp),
+                // Never the keyboard's: a slider that took focus on a click would keep Space and
+                // Esc from the player until the video was clicked again.
+                modifier = Modifier.width(110.dp).padding(end = 4.dp).focusProperties { canFocus = false },
                 colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = Color.White, inactiveTrackColor = Color(0x55FFFFFF)),
             )
         }
