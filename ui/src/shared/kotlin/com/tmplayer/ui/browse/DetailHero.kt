@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -52,7 +53,11 @@ import com.tmplayer.data.WatchPoint
 import com.tmplayer.i18n.Messages
 import com.tmplayer.ui.components.ArtBackdrop
 import com.tmplayer.ui.components.BackdropSource
+import com.tmplayer.ui.components.Micro
+import com.tmplayer.ui.components.SwapIcon
 import com.tmplayer.ui.components.isTouch
+import com.tmplayer.ui.components.pressScale
+import com.tmplayer.ui.components.rememberToggleTick
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Danger
@@ -190,6 +195,8 @@ internal fun HeroPill(
                 scaleX = scale
                 scaleY = scale
             }
+            // Under a finger the pill gives a little and springs back, as every button here does.
+            .then(if (tv) Modifier else Modifier.pressScale(interactions, Micro.PillPressScale))
             .clip(CircleShape)
             .background(if (focused) Tone.focusFill else Tone.hero)
             .focusRing(focused, CircleShape)
@@ -222,6 +229,13 @@ internal fun RoundAction(
     focusRequester: FocusRequester? = null,
     /** The word or two under the round button; [label] stays for the pill and for screen readers. */
     short: String = label,
+    /**
+     * A switch rather than a step: true for one that turns something on (Mark as watched, Add to
+     * Watch later), false for one that turns it off, null for neither. A finger feels it tick.
+     */
+    toggles: Boolean? = null,
+    /** A download under way, 0 to 1: a ring round the button fills as it goes. */
+    progress: Float? = null,
 ) {
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
@@ -267,12 +281,16 @@ internal fun RoundAction(
         return
     }
     val ink = if (destructive) Tone.danger else Tone.text
+    val tick = rememberToggleTick()
     Column(
         modifier
             .then(requester)
             .width(RoundActionWidth)
             .clip(RoundedCornerShape(Corner.Medium))
-            .clickable(interactionSource = interactions, indication = LocalIndication.current, onClick = onClick)
+            .clickable(interactionSource = interactions, indication = LocalIndication.current) {
+                toggles?.let(tick)
+                onClick()
+            }
             .semantics { contentDescription = listOfNotNull(label, detail).joinToString(". ") }
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -281,12 +299,16 @@ internal fun RoundAction(
         Box(
             Modifier
                 .size(48.dp)
+                .pressScale(interactions)
+                .downloadRing(progress)
                 .clip(CircleShape)
                 .background(if (focused) Tone.focusFill else Tone.surfaceHigh)
                 .border(1.dp, if (focused) Color.Transparent else Tone.outline, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, contentDescription = null, tint = if (focused) Tone.onFocusFill else ink, modifier = Modifier.size(22.dp))
+            // A switch's icon turns into its other one (the check into the cross, the clock into
+            // the cross) rather than blinking, so the press visibly did something.
+            SwapIcon(icon, if (focused) Tone.onFocusFill else ink, size = 22.dp)
         }
         // Up to three lines, in type small enough for the longest word to fit the button's width:
         // in Malayalam "Mark as watched" ran past two lines, and German and French broke
@@ -299,6 +321,30 @@ internal fun RoundAction(
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+/**
+ * A ring over the round button's own outline while a download runs: the share done drawn in the
+ * accent from the top, sweeping on smoothly between the updates rather than jumping, and fading in
+ * as the Download button turns into the Cancel one. Nothing when [progress] is null.
+ */
+@Composable
+private fun Modifier.downloadRing(progress: Float?): Modifier {
+    val shown by animateFloatAsState(if (progress != null) 1f else 0f, Motion.standard(Motion.Normal), label = "ringShown")
+    val sweep by animateFloatAsState((progress ?: 0f).coerceIn(0f, 1f), Motion.standard(Motion.Slow), label = "ringSweep")
+    val accent = Tone.accent
+    val track = Tone.outline
+    return drawWithContent {
+        drawContent()
+        if (shown <= 0f) return@drawWithContent
+        val width = 2.5.dp.toPx()
+        val inset = width / 2
+        val arcSize = androidx.compose.ui.geometry.Size(size.width - width, size.height - width)
+        val topLeft = androidx.compose.ui.geometry.Offset(inset, inset)
+        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawArc(track, 0f, 360f, useCenter = false, topLeft = topLeft, size = arcSize, style = stroke, alpha = shown)
+        if (sweep > 0f) drawArc(accent, -90f, 360f * sweep, useCenter = false, topLeft = topLeft, size = arcSize, style = stroke, alpha = shown)
     }
 }
 
