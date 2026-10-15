@@ -6,6 +6,13 @@ import com.tmplayer.data.copyQuality
 import com.tmplayer.data.VideoCopies
 import com.tmplayer.data.CopyHandoff
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -397,16 +404,7 @@ internal fun BoxScope.PlayerOverlay(
                 if (previous != null) {
                     OverlayButton(TmIcons.SkipPrevious, s.playerPreviousEpisodeHint(s.playerPreviousUp(episodes.labelFor(previous))), { onEpisode(previous) }, size = 56, tonal = true)
                 }
-                Box(
-                    Modifier.size(72.dp).clip(CircleShape).background(PlayerTonalButton).clickable(onClick = onTogglePlay),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (status.buffering) {
-                        CircularProgressIndicator(Modifier.size(40.dp), color = Color.White, strokeWidth = 3.dp)
-                    } else {
-                        Icon(if (status.playing) TmIcons.PauseSolid else TmIcons.PlaySolid, if (status.playing) s.playerPause else s.playerPlay, tint = Color.White, modifier = Modifier.size(40.dp))
-                    }
-                }
+                PlayPauseButton(status, onTogglePlay)
                 if (next != null) {
                     OverlayButton(TmIcons.SkipNext, s.playerNextEpisodeHint(s.playerNextUp(episodes.labelFor(next))), { onEpisode(next) }, size = 56, tonal = true)
                 }
@@ -892,12 +890,8 @@ internal fun BoxScope.FeedbackLayer(flash: Flash?, spinner: Boolean, chip: Strin
         alpha.snapTo(1f)
         scale.snapTo(0.8f)
         launch { scale.animateTo(1f, tween(250)) }
-        val hold = when (f.kind) {
-            Flash.Kind.Play, Flash.Kind.Pause -> 150L
-            else -> 650L
-        }
-        delay(hold)
-        alpha.animateTo(0f, tween(if (f.kind == Flash.Kind.Play || f.kind == Flash.Kind.Pause) 250 else 300))
+        delay(650L)
+        alpha.animateTo(0f, tween(300))
     }
     val layer = Modifier.graphicsLayer {
         this.alpha = alpha.value
@@ -905,12 +899,6 @@ internal fun BoxScope.FeedbackLayer(flash: Flash?, spinner: Boolean, chip: Strin
         scaleY = scale.value
     }
     when (f.kind) {
-        Flash.Kind.Play, Flash.Kind.Pause -> Box(
-            layer.align(Alignment.Center).testTag("play-pause-flash").size(72.dp).clip(CircleShape).background(PlayerTonalButton),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(if (f.kind == Flash.Kind.Play) TmIcons.PlaySolid else TmIcons.PauseSolid, null, tint = Color.White, modifier = Modifier.size(40.dp))
-        }
         Flash.Kind.SeekBack, Flash.Kind.SeekForward -> {
             val back = f.kind == Flash.Kind.SeekBack
             Box(
@@ -1289,3 +1277,42 @@ internal fun BoxScope.ShortcutSheet(onClose: () -> Unit, mac: Boolean = false, w
 
 /** The command key as this OS spells it in a hint: Cmd on a Mac, where [PlayerKeys] reads Cmd, Ctrl elsewhere. */
 private fun commandKey(s: Strings): String = if (OsInfo.isMac) s.keysCmd else s.keysCtrl
+
+/**
+ * The centre play and pause button. Its own change is the only answer to a pause or a resume:
+ * the glyph turns over with a short scale and fade (at once with reduced motion), and a screen
+ * reader hears "Paused" or "Playing" as it changes.
+ */
+@Composable
+private fun PlayPauseButton(status: PlaybackStatus, onTogglePlay: () -> Unit) {
+    val s = LocalStrings.current
+    val reduced = com.tmplayer.ui.theme.rememberReducedMotion()
+    Box(
+        Modifier.size(72.dp).clip(CircleShape).background(PlayerTonalButton).clickable(onClick = onTogglePlay)
+            .testTag("play-pause")
+            .semantics {
+                stateDescription = if (status.playing) s.playerPlaying else s.playerPaused
+                liveRegion = LiveRegionMode.Polite
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        if (status.buffering) {
+            CircularProgressIndicator(Modifier.size(40.dp), color = Color.White, strokeWidth = 3.dp)
+        } else {
+            androidx.compose.animation.AnimatedContent(
+                targetState = status.playing,
+                transitionSpec = {
+                    if (reduced) {
+                        androidx.compose.animation.EnterTransition.None togetherWith androidx.compose.animation.ExitTransition.None
+                    } else {
+                        (scaleIn(tween(180), initialScale = 0.6f) + fadeIn(tween(180))) togetherWith
+                            (scaleOut(tween(140), targetScale = 0.6f) + fadeOut(tween(140)))
+                    }
+                },
+                label = "play-pause",
+            ) { playing ->
+                Icon(if (playing) TmIcons.PauseSolid else TmIcons.PlaySolid, if (playing) s.playerPause else s.playerPlay, tint = Color.White, modifier = Modifier.size(40.dp))
+            }
+        }
+    }
+}

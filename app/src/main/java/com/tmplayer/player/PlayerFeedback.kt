@@ -29,8 +29,8 @@ import kotlin.math.roundToInt
 /**
  * Everything a touch on the phone's picture puts on screen while it is happening.
  *
- * Each gesture answers where the finger is and for as long as the gesture lasts: play and pause
- * flash a big glyph in the middle, a double tap on a side draws YouTube's half-moon with chevrons
+ * Each gesture answers where the finger is and for as long as the gesture lasts (play and pause
+ * are the row's own, see [PauseControls]): a double tap on a side draws YouTube's half-moon with chevrons
  * and a running total, a held finger keeps a speed pill up until it lifts, a vertical drag fills a
  * level bar on its own side, a sideways drag shows where it would land. The one text pill
  * ([message]) answers everything that is not a gesture too, on a television as well: a remote's
@@ -52,7 +52,6 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
     /** Set from the viewer's preference; the system's own haptics switch is honoured regardless. */
     var hapticsEnabled = true
 
-    private val flash = CenterFlash(context)
     private val ripple = SeekRipple(context)
     private val hold = pill().apply {
         layoutParams = FrameLayout.LayoutParams(wrap, wrap, Gravity.TOP or Gravity.CENTER_HORIZONTAL)
@@ -84,7 +83,7 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
     init {
         val at = insertBelow?.let { root.indexOfChild(it) }?.takeIf { it >= 0 } ?: root.childCount
         // Inserted in reverse so they land in this order, bottom to top.
-        listOf(spinner, scrub, level, hold, note, offer, ripple, flash).forEach { view ->
+        listOf(spinner, scrub, level, hold, note, offer, ripple).forEach { view ->
             if (view.layoutParams == null) {
                 view.layoutParams = FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -94,7 +93,6 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
             view.visibility = View.GONE
             root.addView(view, at)
         }
-        flash.layoutParams = FrameLayout.LayoutParams(dp(88f), dp(88f), Gravity.CENTER)
         level.layoutParams = FrameLayout.LayoutParams(dp(36f), dp(196f), Gravity.CENTER_VERTICAL)
         scrub.layoutParams = FrameLayout.LayoutParams(wrap, wrap, Gravity.CENTER)
         spinner.layoutParams = FrameLayout.LayoutParams(dp(72f), dp(72f), Gravity.CENTER)
@@ -112,17 +110,10 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
         renderSpinner()
     }
 
-    /**
-     * While the row is up its play disc spins instead, in the same spot, and its play button
-     * says play or pause itself: a play or pause glyph still fading out gives way to it.
-     */
+    /** While the row is up its play disc spins instead, in the same spot. */
     fun controlsShown(up: Boolean) {
         controlsUp = up
         renderSpinner()
-        if (up && flash.visibility == View.VISIBLE) {
-            flash.animate().cancel()
-            flash.visibility = View.GONE
-        }
     }
 
     private fun renderSpinner() {
@@ -133,22 +124,6 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
             spinner.postDelayed(showSpinner, SPINNER_DELAY_MS)
         }
     }
-
-    // ---- play and pause --------------------------------------------------------------------
-
-    /**
-     * The glyph for what just happened: [playing] true means the video has just started. It is
-     * the only sign of a toggle over the bare picture, so with the row up, whose own button has
-     * already changed, it is not drawn: the haptic still answers the finger.
-     */
-    fun flashPlayPause(playing: Boolean) {
-        haptic(confirm = true)
-        if (controlsUp) return
-        flash.show(playing)
-    }
-
-    /** Whether the play or pause glyph is on screen, for the tests. */
-    internal val playPauseShowing: Boolean get() = flash.visibility == View.VISIBLE
 
     // ---- text ---------------------------------------------------------------------------------
 
@@ -259,7 +234,7 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
         spinner.removeCallbacks(showSpinner)
         note.removeCallbacks(hideNote)
         offer.dismiss()
-        listOf(flash, ripple, hold, note, level, scrub, spinner).forEach {
+        listOf(ripple, hold, note, level, scrub, spinner).forEach {
             it.animate().cancel()
             it.visibility = View.GONE
         }
@@ -285,32 +260,6 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
     }
 
     // =========================================================================================
-
-    /** The big disc in the middle with the glyph for what just happened, grown in and faded out. */
-    private inner class CenterFlash(context: Context) : FrameLayout(context) {
-        private val icon = PlayPauseIcon(context)
-
-        init {
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(ContextCompat.getColor(context, R.color.player_tonal_button))
-            }
-            addView(icon, LayoutParams(dp(44f), dp(44f), Gravity.CENTER))
-        }
-
-        fun show(playing: Boolean) {
-            // The glyph names the new state the way YouTube's does: a triangle as it starts.
-            icon.setShowsPlay(playing, animate = false)
-            animate().cancel()
-            visibility = VISIBLE
-            alpha = 1f
-            scaleX = 0.8f
-            scaleY = 0.8f
-            animate().scaleX(1f).scaleY(1f).alpha(0f).setDuration(FLASH_MS)
-                .withEndAction { visibility = GONE }
-                .start()
-        }
-    }
 
     /**
      * YouTube's double tap answer, re-implemented: a pale half-moon over that third of the
@@ -614,7 +563,6 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
         /** What the offer leaves of the screen's width for its text: the button, the padding and a margin. */
         const val OFFER_SIDE_ROOM_DP = 160f
         const val SPINNER_DELAY_MS = 400L
-        const val FLASH_MS = 450L
         const val WAVE_MS = 650L
         const val CHEVRON_CYCLE_MS = 750L
         const val LINGER_MS = 1_000L

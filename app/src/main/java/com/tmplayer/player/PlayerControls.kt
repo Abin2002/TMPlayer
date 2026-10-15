@@ -1,11 +1,13 @@
 package com.tmplayer.player
 
 import android.graphics.Color
+import android.os.SystemClock
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.DefaultTimeBar
@@ -347,16 +349,17 @@ class PlayerControls(
      * the time readout becomes something OK can land on and press, which flips the total to the time
      * left the way a tap on the phone's total does.
      *
-     * The centre disc stays, stripped to the glyph: not focusable, not pressable, shown only while
-     * paused. With no play button on the row it is the one thing on screen that says paused.
+     * The centre disc stays: the one play button, up with the row like the phone's. A pause hands
+     * it the remote, so OK resumes, and its glyph turning is the only answer to either.
      */
     private fun setUpTv(root: View) {
         listOf(centerPrevious, centerNext, centerPreviousCaption, centerNextCaption)
             .forEach { it.visibility = View.GONE }
         clock.visibility = View.VISIBLE
-        centerPlay.isFocusable = false
-        centerPlay.isClickable = false
-        centerPlay.contentDescription = L.playerPaused
+        center.visibility = View.VISIBLE
+        wire(centerPlay) { onTogglePlay(); renderPlayPause(animate = true) }
+        centerPlay.nextFocusDownId = R.id.controls_timebar
+        timeBar.nextFocusUpId = R.id.center_play_pause
         // Down from the bar lands on the first button the row has.
         timeBar.nextFocusDownId = R.id.control_subtitles
         val more = root.findViewById<View>(R.id.control_tv_more)
@@ -623,7 +626,37 @@ class PlayerControls(
     /** Buys the row its timeout again. Called by every interaction, however it arrived. */
     fun poke() {
         container.removeCallbacks(hide)
-        if (!held && player()?.isPlaying == true && timeoutMs > 0) container.postDelayed(hide, timeoutMs)
+        if (held || player()?.isPlaying != true) return
+        // The resume's own time holds for the pokes the resume itself sets off (the player's
+        // listeners answer it more than once); anything later is the viewer, who gets the usual.
+        val quick = resumeHideMs?.takeIf { SystemClock.uptimeMillis() - resumedAt < RESUME_ECHO_MS }
+        if (quick == null) resumeHideMs = null
+        val after = quick ?: timeoutMs
+        if (after > 0) container.postDelayed(hide, after)
+    }
+
+    /** The time the row stays after a resume, in place of [timeoutMs]; see [resumed]. */
+    private var resumeHideMs: Long? = null
+    private var resumedAt = 0L
+
+    /**
+     * A pause, however it came: the row comes up and stays for the whole pause, and on a
+     * television the play disc takes the remote, so OK resumes.
+     */
+    fun paused() {
+        resumeHideMs = null
+        show()
+        if (isTv) centerPlay.requestFocus()
+    }
+
+    /**
+     * A resume: the row stays for the disc to turn back into pause, then goes after [hideAfterMs]
+     * (see [com.tmplayer.player.PauseControls]). Focus stays where it is.
+     */
+    fun resumed(hideAfterMs: Long) {
+        resumeHideMs = hideAfterMs
+        resumedAt = SystemClock.uptimeMillis()
+        if (!shown) show() else poke()
     }
 
     /**
@@ -634,52 +667,13 @@ class PlayerControls(
     private fun renderPlayPause(animate: Boolean = false) {
         val exo = player()
         val playing = exo?.isPlaying == true || (exo?.playWhenReady == true && buffering)
-        if (isTv) {
-            renderPausedCue(paused = exo != null && !exo.playWhenReady, animate = animate)
-            return
-        }
+        // The morph is the only answer to a pause or a resume; with animations off in the
+        // system's settings the animator runs in no time, so the glyph simply changes.
         centerIcon.setShowsPlay(!playing, animate = animate && centerDrawn && visible)
         centerDrawn = true
         describe(centerPlay, if (playing) L.commonPause else L.commonPlay)
-    }
-
-    /** True while the television's disc is folding back into play on its way out. */
-    private var cueLeaving = false
-
-    /**
-     * The television's centre disc, shown only while paused, with the play triangle: what OK or
-     * the play key will do next, the same glyph the phone's disc shows while paused. Read from the
-     * player's intent, so a stall mid-play is not a pause. Pausing folds the bars into the
-     * triangle, resuming folds it back into the bars and fades the disc, so the change itself is
-     * the feedback; a row raised over a video already paused just shows the triangle.
-     */
-    private fun renderPausedCue(paused: Boolean, animate: Boolean) {
-        val morph = animate && visible
-        if (paused) {
-            if (center.visibility != View.VISIBLE || cueLeaving) {
-                center.animate().cancel()
-                cueLeaving = false
-                center.alpha = 1f
-                if (center.visibility != View.VISIBLE) centerIcon.setShowsPlay(false, animate = false)
-                center.visibility = View.VISIBLE
-            }
-            centerIcon.setShowsPlay(true, animate = morph)
-            return
-        }
-        if (center.visibility != View.VISIBLE || cueLeaving) return
-        if (!morph) {
-            center.visibility = View.GONE
-            return
-        }
-        cueLeaving = true
-        centerIcon.setShowsPlay(false, animate = true)
-        center.animate().alpha(0f).setStartDelay(CUE_HOLD_MS).setDuration(FADE_MS)
-            .withEndAction {
-                cueLeaving = false
-                center.visibility = View.GONE
-                center.alpha = 1f
-            }
-            .start()
+        val state = if (playing) L.playerPlaying else L.playerPaused
+        if (ViewCompat.getStateDescription(centerPlay) != state) ViewCompat.setStateDescription(centerPlay, state)
     }
 
     private fun renderProgress() {
@@ -744,8 +738,8 @@ class PlayerControls(
         /** Long enough to read the row and reach for something on it, short enough to get out. */
         const val TIMEOUT_MS = 3_500L
 
-        /** How long the television's disc holds the pause bars before it fades on a resume. */
-        const val CUE_HOLD_MS = 500L
+        /** How long after a resume the player's own answers to it still count as the resume. */
+        const val RESUME_ECHO_MS = 500L
 
         /** Twice a second: faster than the eye needs on a scrub bar this size. */
         const val TICK_MS = 500L

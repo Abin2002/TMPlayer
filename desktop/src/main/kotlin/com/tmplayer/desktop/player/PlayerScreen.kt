@@ -76,6 +76,7 @@ import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.player.PlaybackSpeed
 import com.tmplayer.player.SleepTimer
 import com.tmplayer.player.SpeedMemory
+import com.tmplayer.player.PauseControls
 import com.tmplayer.player.StillWatching
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.SyncDelays
@@ -118,16 +119,9 @@ internal sealed interface Phase {
 
 /** One flash of feedback over the picture; [id] restarts the animation for a repeat. */
 internal data class Flash(val kind: Kind, val text: String, val id: Long) {
-    enum class Kind { Play, Pause, SeekBack, SeekForward, Text, Volume }
-
-    /**
-     * Whether this flash is drawn while the controls are [controlsVisible]. The play and pause
-     * glyph exists to confirm a toggle nobody could otherwise see: with the controls up, their own
-     * play button has already changed, so the glyph would only say the same thing twice. A pause
-     * raises the controls at once, so the glyph also gives way the moment they arrive.
-     */
-    fun showsWith(controlsVisible: Boolean): Boolean =
-        !controlsVisible || (kind != Kind.Play && kind != Kind.Pause)
+    // No play or pause glyph: a pause brings the controls up, and their centre button's own
+    // change is the answer to it (see PauseControls).
+    enum class Kind { SeekBack, SeekForward, Text, Volume }
 }
 
 internal enum class MenuPage { Main, Audio, Subtitles, Speed, Shape, Sleep, Options, SubtitleStyle, Bookmarks, Copies }
@@ -737,16 +731,38 @@ fun PlayerScreen(
     // "Hide the controls after" is the phone's setting, shared: zero keeps them up while playing.
     val hideAfterMs by remember(settings) { settings.touchPrefs.map { it.controlsTimeoutMs } }
         .collectAsState(initial = TouchPrefs.TIMEOUT_DEFAULT_MS)
+    // A pause, from anywhere (a click, a key, a media key or the system's media controls), puts
+    // the controls up for as long as it lasts; the resume keeps them up for the button to turn back
+    // into pause, then lets them go, sooner when they were down before the pause (PauseControls).
+    var wasPlaying by remember { mutableStateOf(status.playing) }
+    var downBeforePause by remember { mutableStateOf(false) }
+    var quickHide by remember { mutableStateOf(false) }
+    LaunchedEffect(status.playing) {
+        if (status.playing == wasPlaying) return@LaunchedEffect
+        wasPlaying = status.playing
+        if (!status.playing) {
+            downBeforePause = !controlsUp
+            quickHide = false
+        } else {
+            quickHide = downBeforePause
+            downBeforePause = false
+        }
+        controlsUp = true
+        activity = System.nanoTime()
+    }
     LaunchedEffect(activity, status.playing, menusOpen, overControls, phase, hideAfterMs) {
         if (!status.playing || menusOpen || overControls || phase != Phase.Playing) return@LaunchedEffect
-        if (hideAfterMs <= 0L) return@LaunchedEffect
-        delay(hideAfterMs)
+        val after = PauseControls.hideAfterResumeMs(hideAfterMs, quickHide)
+        if (after <= 0L) return@LaunchedEffect
+        delay(after)
         controlsUp = false
     }
     val showControls = phase == Phase.Playing && (controlsUp || !status.playing || menusOpen)
 
     fun poke() {
         controlsUp = true
+        // The viewer is back at the controls: the usual time again, not the resume's quick one.
+        quickHide = false
         activity = System.nanoTime()
     }
 
@@ -864,8 +880,6 @@ fun PlayerScreen(
 
     fun togglePlay() {
         if (phase != Phase.Playing) return
-        val wasPlaying = status.playing
-        if (!showControls) showFlash(if (wasPlaying) Flash.Kind.Pause else Flash.Kind.Play)
         engine.togglePlay()
     }
 
@@ -1301,7 +1315,7 @@ fun PlayerScreen(
             ) }
 
             FeedbackLayer(
-                flash = flash?.takeIf { it.showsWith(showControls) },
+                flash = flash,
                 spinner = phase == Phase.Playing && status.buffering && !showControls,
                 chip = if (phase == Phase.Playing && status.buffering && !showControls) s.playerBuffering else null,
             )

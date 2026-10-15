@@ -45,7 +45,7 @@ import androidx.media3.common.C
  * so the transport can be captured and checked without a Telegram account or a video file.
  *
  *     adb shell am start -n com.tmplayer.promo/com.tmplayer.PromoPlayerActivity \
- *         [--ez tv true] [--ez playing true] [--es feedback ripple|level|scrub|hold|flash|jump|offer|hint]
+ *         [--ez tv true] [--ez playing true] [--es feedback ripple|level|scrub|hold|jump|offer|hint]
  *         [--ez nextup true] [--ez menu true] [--ez overflow true] [--ez trickplay true] [--el scrub_at 1265000]
  *         [--es picker subtitles|online] [--ez subtitles true]
  *         [--es online signed_out|signed_in|quota|expired|unavailable|empty|offline|subdl|none|live]
@@ -169,10 +169,6 @@ class PromoPlayerActivity : FragmentActivity(), TrackPickerHost {
                 "hold" -> {
                     controls.hideNow()
                     feedback?.holdStarted(2f)
-                }
-                "flash" -> {
-                    controls.hideNow()
-                    feedback?.flashPlayPause(false)
                 }
                 "jump" -> {
                     controls.hideNow()

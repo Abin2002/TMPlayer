@@ -215,6 +215,7 @@
 
         <FrameLayout
             android:id="@+id/center_play_pause"
+            android:accessibilityLiveRegion="polite"
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:layout_marginStart="16dp"

@@ -7,6 +7,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.ScrollWheel
@@ -104,38 +105,44 @@ class PlayerMouseTest {
     }
 
     @Test
-    fun `the play and pause glyph never shows over the controls`() = runComposeUiTest {
+    fun `a pause keeps the controls up, and a resume lets them go sooner when they were down`() = runComposeUiTest {
         open()
         mainClock.autoAdvance = false
-        // With the controls up, a click on the picture pauses and their own button says so.
-        onNodeWithTag("video").performMouseInput { moveTo(onPicture) }
-        mainClock.advanceTimeBy(100)
-        onNode(hasContentDescription("More")).assertExists()
-        onNodeWithTag("video").performMouseInput { click(onPicture) }
-        mainClock.advanceTimeBy(400)
-        assertEquals(false, engine.state.value.playing)
-        onNodeWithTag("play-pause-flash").assertDoesNotExist()
-        // Playing again with the controls let go: Space pauses over the bare picture, which brings
-        // the controls up at once, so the glyph does not show on top of them either.
-        onNodeWithTag("video").performMouseInput { click(onPicture) }
-        mainClock.advanceTimeBy(400)
-        assertEquals(true, engine.state.value.playing)
         mainClock.advanceTimeBy(5_000)
         onNode(hasContentDescription("More")).assertDoesNotExist()
+        // Space over the bare picture: the controls come up, the centre button says Play, and
+        // they stay for the whole pause.
         onNode(isFocused()).performKeyInput { pressKey(Key.Spacebar) }
-        mainClock.advanceTimeBy(50)
+        mainClock.advanceTimeBy(100)
         assertEquals(false, engine.state.value.playing)
         onNode(hasContentDescription("More")).assertExists()
-        onNodeWithTag("play-pause-flash").assertDoesNotExist()
+        onNodeWithTag("play-pause").assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Paused"))
+        mainClock.advanceTimeBy(20_000)
+        onNode(hasContentDescription("More")).assertExists()
+        // The resume: the button turns back, and the controls go after the quick 1.5 s.
+        onNode(isFocused()).performKeyInput { pressKey(Key.Spacebar) }
+        mainClock.advanceTimeBy(1_000)
+        assertEquals(true, engine.state.value.playing)
+        onNode(hasContentDescription("More")).assertExists()
+        onNodeWithTag("play-pause").assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Playing"))
+        mainClock.advanceTimeBy(1_000)
+        onNode(hasContentDescription("More")).assertDoesNotExist()
     }
 
     @Test
-    fun `only the play and pause glyph gives way to the controls`() {
-        assertEquals(false, Flash(Flash.Kind.Pause, "", 1).showsWith(controlsVisible = true))
-        assertEquals(false, Flash(Flash.Kind.Play, "", 1).showsWith(controlsVisible = true))
-        assertEquals(true, Flash(Flash.Kind.Play, "", 1).showsWith(controlsVisible = false))
-        assertEquals(true, Flash(Flash.Kind.Text, "1.5x", 1).showsWith(controlsVisible = true))
-        assertEquals(true, Flash(Flash.Kind.SeekForward, "10s", 1).showsWith(controlsVisible = true))
+    fun `a pause with the controls up keeps the usual time after the resume`() = runComposeUiTest {
+        open()
+        mainClock.autoAdvance = false
+        onNodeWithTag("video").performMouseInput { moveTo(onPicture) }
+        mainClock.advanceTimeBy(100)
+        onNode(isFocused()).performKeyInput { pressKey(Key.Spacebar) }
+        mainClock.advanceTimeBy(100)
+        assertEquals(false, engine.state.value.playing)
+        onNode(isFocused()).performKeyInput { pressKey(Key.Spacebar) }
+        mainClock.advanceTimeBy(2_500)
+        onNode(hasContentDescription("More")).assertExists()
+        mainClock.advanceTimeBy(1_500)
+        onNode(hasContentDescription("More")).assertDoesNotExist()
     }
 
     @Test

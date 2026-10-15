@@ -455,7 +455,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     private var gestures: PlayerGestures? = null
 
-    /** The phone's gesture answers (flash, ripple, pills). Null on a television. */
+    /** The phone's gesture answers (ripple, pills). Null on a television. */
     private var feedback: PlayerFeedback? = null
 
     /** The phone's touch settings, read off disk once the player opens. */
@@ -985,28 +985,55 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     }
 
     /**
-     * Play or pause from a button, a key or a headset. The phone's centre button morphs on its
-     * own, so a press with the row up needs nothing more; with the row down a phone flashes the
-     * big glyph.
-     *
-     * A television has no play button on its row any more, so the cue is the row's centre disc:
-     * a pause raises the row, where the disc folds into the play triangle and stays while paused,
-     * and a resume with the row up folds it back into the bars and lets it fade. Only a resume
-     * over the bare picture has nothing to morph, and flashes the play glyph instead.
+     * Play or pause from a button, a key or a headset. The row comes up first, so the centre disc
+     * is on screen to turn when the pause lands; the player's listener then keeps it up for the
+     * pause and lets it go after the resume ([onPauseChanged]). The disc's turn is the only
+     * answer, on a phone and a television alike.
      */
     private fun togglePlayback() {
         val exo = player ?: return
         val nowPlaying = !exo.isPlaying
-        if (FormFactor.isTv(this)) {
-            // The row first, so the disc is on screen to fold when the pause lands.
-            if (!nowPlaying && statusOverlay.visibility != View.VISIBLE) controls?.show()
-            if (nowPlaying) exo.play() else exo.pause()
-            if (nowPlaying && !controlsUp) feedback?.flashPlayPause(true)
+        if (!nowPlaying) raiseRowForPause()
+        if (nowPlaying) exo.play() else exo.pause()
+    }
+
+    /** Whether the row was down when the pause came, for how soon it goes after the resume. */
+    private var rowDownBeforePause = false
+
+    /** True between [raiseRowForPause] and the pause it was for, so the row's state is read before it rose. */
+    private var pauseNoted = false
+
+    /** True once the viewer has paused this video, so the first play is not taken for a resume. */
+    private var sawPause = false
+
+    private fun raiseRowForPause() {
+        if (statusOverlay.visibility == View.VISIBLE || locked || inPictureInPicture) return
+        rowDownBeforePause = !controlsUp
+        pauseNoted = true
+        controls?.show()
+    }
+
+    /**
+     * A pause or a resume, from anywhere: the row, a key, the picture, the remote, a headset, the
+     * notification, the headphones coming out. See [PauseControls]: a pause brings the row up
+     * for its whole length (on a television with the disc focused, so OK resumes), a resume
+     * leaves it up for the disc to turn and then lets it go, sooner when it was down before.
+     */
+    private fun onPauseChanged(playWhenReady: Boolean, reason: Int) {
+        val quiet = statusOverlay.visibility == View.VISIBLE || locked || inPictureInPicture || stillWatchingUp
+        if (!playWhenReady) {
+            if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM) return
+            if (!pauseNoted) rowDownBeforePause = !controlsUp
+            pauseNoted = false
+            sawPause = true
+            if (!quiet) controls?.paused()
             return
         }
-        if (nowPlaying) exo.play() else exo.pause()
-        if (controlsUp) return
-        feedback?.flashPlayPause(nowPlaying)
+        if (!sawPause) return
+        sawPause = false
+        val after = PauseControls.hideAfterResumeMs(controls?.timeoutMs ?: 0L, rowDownBeforePause)
+        rowDownBeforePause = false
+        if (!quiet) controls?.resumed(after)
     }
 
     /** Adds up a run of key jumps on one side, so the figure counts 10, 20, 30 like the double tap. */
@@ -1047,17 +1074,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * The big glyph is only for a toggle over the bare picture: with the row up before or after,
      * its centre button has already morphed, and a glyph on top of it says the same thing twice.
      */
-    private fun togglePlaybackFromPicture(fromSingleTap: Boolean) {
-        val exo = player ?: return
-        val nowPlaying = !exo.isPlaying
-        val rowWasUp = controlsUp
-        if (nowPlaying) exo.play() else exo.pause()
-        if (fromSingleTap) {
-            if (nowPlaying) controls?.hideAnimated() else controls?.show()
-        }
-        val rowComesUp = fromSingleTap && !nowPlaying
-        if (rowWasUp || rowComesUp) return
-        feedback?.flashPlayPause(nowPlaying)
+    private fun togglePlaybackFromPicture(@Suppress("UNUSED_PARAMETER") fromSingleTap: Boolean) {
+        togglePlayback()
     }
 
     /**
@@ -1858,6 +1876,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             if (FrameRateMatch.shouldTakeOver(this@PlayerActivity)) {
                 FrameRateMatch.apply(videoSurface(), player?.videoFormat?.frameRate ?: 0f)
             }
+        }
+
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            onPauseChanged(playWhenReady, reason)
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
