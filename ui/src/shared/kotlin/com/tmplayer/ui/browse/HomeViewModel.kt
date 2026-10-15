@@ -442,6 +442,8 @@ fun rememberHomeRows(
     continueWatching: List<ResumeRecord>,
     watchLater: List<WatchLaterRecord> = emptyList(),
     watched: Collection<WatchedRecord> = emptyList(),
+    /** See [HomeRows.build]: one on a phone, whose Recently added is the featured carousel. */
+    recentMinStarred: Int = HomeRows.RECENT_MIN_STARRED,
 ): List<HomeRow> {
     val loaded by model.loaded.collectAsState()
     val recent by model.recent.collectAsState()
@@ -452,7 +454,7 @@ fun rememberHomeRows(
     // "Not the same video" pulls a copy out of its folded card at once, so the rows are built
     // again when a correction changes.
     val corrections by com.tmplayer.data.VideoCorrections.state.collectAsState()
-    return remember(continueWatching, watchLater, starred, loaded, recent, partial, fresh, corrections) {
-        HomeRows.build(continueWatching, starred, loaded, recent, partial = partial, watchLater = watchLater, fresh = fresh)
+    return remember(continueWatching, watchLater, starred, loaded, recent, partial, fresh, corrections, recentMinStarred) {
+        HomeRows.build(continueWatching, starred, loaded, recent, partial = partial, watchLater = watchLater, fresh = fresh, recentMinStarred = recentMinStarred)
     }
 }
