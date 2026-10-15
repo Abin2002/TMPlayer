@@ -226,6 +226,12 @@
     "priority": "0.6"
   },
   {
+    "path": "/guides/",
+    "lastmod": "2026-10-15",
+    "changefreq": "monthly",
+    "priority": "0.6"
+  },
+  {
     "path": "/guides/telegram-videos-on-android-tv/",
     "lastmod": "2026-10-14",
     "changefreq": "monthly",
@@ -239,7 +245,7 @@
   },
   {
     "path": "/guides/telegram-on-tv-without-casting/",
-    "lastmod": "2026-10-14",
+    "lastmod": "2026-10-15",
     "changefreq": "monthly",
     "priority": "0.7"
   },

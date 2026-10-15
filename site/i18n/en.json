@@ -93,7 +93,8 @@
     "back_to_top": "Back to top",
     "footer": "Footer",
     "guides": "Guides",
-    "community": "Community"
+    "community": "Community",
+    "updated": "Updated {time1}"
   },
   "ld": {
     "a_free_open_source_4a30": "A free, open source Telegram video player for Android TV, Android phones, Windows, macOS and Linux that streams the videos in your own chats.",
@@ -150,8 +151,6 @@
     "android_tv_or_phone_780c": "Android TV or phone: the universal APK. Windows: one line in PowerShell, or the MSI installer. Mac with Apple Silicon: the DMG. Linux: the AppImage, or the PKGBUILD on Arch. The download page shows yours first.",
     "is_there_a_windows_b2c9": "Is there a Windows, macOS or Linux version?",
     "yes_windows_10_and_cb16": "Yes: Windows 10 and 11, 64-bit Linux and, as a preview, Macs with Apple Silicon running macOS 26 or newer, all from the same release and played through mpv. There is no iPhone or iPad version.",
-    "can_i_read_my_61ff": "Can I read my messages on it?",
-    "no_it_only_ever_01d3": "No. It only ever shows the videos in your chats. You cannot read, reply or send anything from it.",
     "does_tmplayer_provide_any_e5a6": "Does TMPlayer provide any media of its own?",
     "no_it_hosts_uploads_f0f5": "No. It hosts, uploads, sells and recommends nothing. It shows the videos that are already in the chats and channels you have joined, and nothing else.",
     "how_much_storage_does_ade1": "How much storage does it need?",
@@ -191,7 +190,24 @@
     "watch_telegram_videos_on_3a48": "Watch Telegram videos on a television without casting or mirroring your phone: a player on the TV itself signs in to your account and streams the videos in your chats.",
     "is_tmplayer_the_same_a78e": "Is TMPlayer the same app as TMP - Telegram Media Player?",
     "no_tmp_telegram_media_b63c": "No. TMP - Telegram Media Player is a different app from another developer, listed on Google Play since before TMPlayer existed. TMPlayer is a separate, open source app with its own code, made by dracu-lah, and its downloads come only from this site and its GitHub releases. Several apps call themselves a Telegram media player, so check the developer before you install one.",
-    "windows_macos_and_linux_218b": "Windows, macOS and Linux"
+    "windows_macos_and_linux_218b": "Windows, macOS and Linux",
+    "can_i_watch_telegram_c73f": "Can I watch Telegram videos on Android TV?",
+    "yes_telegram_has_no_01da": "Yes. Telegram has no app for televisions, but TMPlayer runs on Android TV and Google TV with Android 8.0 or above: a Chromecast with Google TV, a Mi TV Stick, an NVIDIA Shield or a television with Android TV built in. Install it with the free Downloader app by typing tmplayer.org/apk, open it and scan the QR code with Telegram on your phone. Your chats and channels appear with their videos as tiles, and a video starts within seconds while it keeps downloading. It is a player for the videos in your chats, so messages stay on your phone.",
+    "is_there_a_telegram_fcd2": "Is there a Telegram app for Fire TV Stick?",
+    "not_from_telegram_amazon_fc7a": "Not from Telegram: Amazon's store has no Telegram app for Fire TV. TMPlayer plays the videos in your Telegram chats on a Fire TV Stick, Fire TV Cube or Fire TV Edition television with Fire OS 7 or newer. It is installed with the free Downloader app and the remote: turn on Developer options, let Downloader install apps, type tmplayer.org/apk into it and install. Then open TMPlayer and scan its QR code with Telegram on your phone. It is tested on a stick with 1 GB of RAM, and it offers its own updates, so Downloader is only needed once.",
+    "how_do_i_play_8108": "How do I play Telegram videos on a PC or Mac?",
+    "install_tmplayer_on_windows_c4ff": "Install TMPlayer on Windows 10 or 11, on 64-bit Linux or, as a preview, on a Mac with Apple Silicon running macOS 26 or newer. On Windows, one line in PowerShell installs it, or use the MSI installer; on Linux, take the AppImage; on a Mac, open the DMG and drag TMPlayer into Applications. Sign in by scanning the QR code with Telegram on your phone, or with your phone number. Videos play through mpv while they download, with their subtitles, every audio track and keyboard shortcuts.",
+    "is_tmplayer_free_is_76f2": "Is TMPlayer free? Is there a paid version?",
+    "yes_it_is_free_a7e9": "Yes, it is free, and there is no paid version. Every feature works for everyone, with no TMPlayer account, no subscription and no trial. The code is open source under the GPL-3.0, so anyone can read it and build it. There are no ads of its own; Telegram's sponsored messages still appear in public channels, as Telegram requires. The project is paid for by people who choose to: GitHub Sponsors and Buy Me a Coffee take any amount and unlock nothing.",
+    "is_tmplayer_safe_can_c92b": "Is TMPlayer safe? Can it read my messages?",
+    "it_talks_to_telegram_0579": "It talks to Telegram directly through TDLib, Telegram's official client library, with no TMPlayer server or bot in between. The sign-in shows up in Telegram's list of devices, where you can end it at any time. It only ever shows the videos in your chats: you cannot read, reply or send anything from it. There is no analytics or advertising library, and on Android crash reports go out only if you switch them on. All of the code is public under the GPL-3.0, every release is built by GitHub from that code, and the security page shows how to check the file you downloaded.",
+    "is_it_the_same_2bed": "Is it the same as the official Telegram app?",
+    "no_the_official_telegram_cc99": "No. The official Telegram apps are messengers made by Telegram for phones and computers, and Telegram has no app for televisions. TMPlayer is an unofficial, independent player: it signs in to the same Telegram account through Telegram's own library and shows only the videos in your chats, laid out for a TV remote, a phone or a desktop window. It cannot send messages, make calls or change your account, so keep the official app for those. Both can be signed in to the same account at the same time.",
+    "do_i_need_a_0351": "Do I need a phone to sign in?",
+    "not_always_you_need_579a": "Not always. You need your Telegram account and one of two ways in. The QR code, which a TV and a computer show first: in Telegram on your phone, open Settings, Devices, Link Desktop Device and scan it. Or Log in by phone number, which a phone shows first and a TV and a computer offer as the second choice: enter your number, then the code Telegram sends, usually to Telegram on a device that is already signed in, such as a computer, otherwise by text message or a call. If two-step verification is on, your Telegram password comes next.",
+    "does_it_play_music_a59f": "Does it play music and audio files?",
+    "no_tmplayer_lists_videos_a868": "No. TMPlayer lists videos only: Telegram videos, short silent clips, and files that Telegram calls video or whose names end in a video format such as MKV or MP4. Music, voice messages and audio files sent on their own, such as MP3 or FLAC, do not appear in it, so open those in Telegram. The sound inside a video is another matter: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD and the rest play, and a film with several audio tracks lets you switch between them during playback.",
+    "guides_929a": "Guides"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer features: stream Telegram videos on TV and PC",
@@ -747,7 +763,6 @@
     "questions_2__em1": "and the honest answers",
     "including_the_ones_about_trust": "Including the ones about trust, which a player that signs into Telegram should answer first.",
     "common_questions": "Common questions",
-    "ten_short_questions_open_the": "Eleven short questions. Open the one you need.",
     "do_i_have_to_wait": "Do I have to wait for the video to download?",
     "no_it_starts_in_seconds": "No. It starts in seconds and downloads while you watch. If your connection cannot keep up, a setting in the app will fetch the whole video first instead.",
     "is_there_a_server_or": "Is there a server or a bot involved?",
@@ -759,8 +774,6 @@
     "is_there_a_windows_macos_linux": "Is there a Windows, macOS or Linux version?",
     "yes_for_windows_10_11_macos": "Yes: Windows 10 and 11, 64-bit Linux and, as a preview, Macs with Apple Silicon running macOS 26 or newer, all from the same release and played through mpv. There is no iPhone or iPad version. {a1}.",
     "yes_for_windows_10_11_macos__a1": "Get it here",
-    "can_i_read_my_messages": "Can I read my messages on it?",
-    "no_it_only_ever_shows": "No. It only ever shows the videos in your chats. You cannot read, reply or send anything from it.",
     "does_tmplayer_provide_any_media": "Does TMPlayer provide any media of its own?",
     "no_it_hosts_uploads_sells": "No. It hosts, uploads, sells and recommends nothing. It shows the videos that are already in the chats and channels you have joined, and nothing else.",
     "how_much_storage_does_it": "How much storage does it need?",
@@ -789,7 +802,8 @@
     "the_lists_what_stays_on__a1": "privacy page",
     "the_lists_what_stays_on__a2": "Lawful use",
     "no_money_no_account_no": "No money, no account, no email. A star is all the project asks for.",
-    "answers_about_tmplayer_streaming_without": "Answers about TMPlayer: streaming without waiting, no server or bot, which file to download, Windows, macOS and Linux versions, privacy and what it will not do."
+    "answers_about_tmplayer_streaming_without": "Answers about TMPlayer: streaming without waiting, no server or bot, which file to download, Windows, macOS and Linux versions, privacy and what it will not do.",
+    "short_questions_open_the_one": "{count} short questions. Open the one you need."
   },
   "formats": {
     "supported_formats_what_tmplayer_plays": "TMPlayer formats on Android TV, Windows, macOS and Linux",
@@ -1037,7 +1051,27 @@
     "tmplayer_does_not_provide_media": "TMPlayer does not provide media: it plays what is already in your own chats and channels. {a1} cover what it can and cannot see.",
     "tmplayer_does_not_provide_media__a1": "The questions",
     "watch_telegram_videos_on_a": "Watch Telegram videos on a TV without casting or mirroring your phone: a player on the TV signs in to your account and streams the videos in your chats.",
-    "telegram_on_your_tv_without_2": "Telegram on your TV without casting"
+    "telegram_on_your_tv_without_2": "Telegram on your TV without casting",
+    "five_ways_to_get_telegram": "Five ways to get Telegram videos onto a TV, side by side",
+    "way": "Way",
+    "your_phone": "Your phone",
+    "the_catch": "The catch",
+    "casting_from_the_phone": "Casting from the phone",
+    "telegram_s_android_app_on": "Telegram's Android app on the TV",
+    "telegram_web_in_the_tv": "Telegram Web in the TV's browser",
+    "a_tv_or_stick_that": "A TV or stick that takes casting, on the same Wi-Fi as the phone, and an app on the phone that can cast the video.",
+    "a_tv_or_stick_that_2": "A TV or stick that accepts screen mirroring, with the phone on the same Wi-Fi.",
+    "an_android_tv_google_tv": "An Android TV, Google TV or Fire TV, and the phone app's APK installed on it by hand.",
+    "a_web_browser_on_the": "A web browser on the TV, and a QR code scanned with Telegram on your phone to sign in.",
+    "an_android_tv_google_tv_2": "An Android TV, Google TV or Fire TV on Android 8.0 or Fire OS 7 or newer, and TMPlayer installed from its APK.",
+    "it_sends_the_video_so": "It sends the video, so it stays on, near the TV and on the Wi-Fi until the film ends, using its battery.",
+    "it_stays_awake_on_the": "It stays awake on the video for the whole film, screen on and battery draining.",
+    "free_once_you_have_signed": "Free once you have signed in.",
+    "if_the_phone_drops_off": "If the phone drops off the Wi-Fi, runs flat or closes the app, the video stops. Subtitles and audio tracks depend on the casting app.",
+    "calls_and_notifications_show_on": "Calls and notifications show on the TV. The picture is the phone's screen sent again over Wi-Fi, so it is softer and can stutter, and you control it from the phone.",
+    "it_is_the_phone_app": "It is the phone app on a big screen, made for touch, so every chat and video is reached by stepping through a phone layout with the D-pad.",
+    "a_page_made_for_a": "A page made for a mouse and keyboard, driven with a remote. Videos play only in the formats the TV's browser can decode, which often rules out MKV.",
+    "it_is_installed_from_the": "It is installed from the APK, not the TV's app store, and plays the videos in your chats and nothing else: no messages, music or photos. There is no Apple TV version."
   },
   "desktop": {
     "title": "TMPlayer: Telegram video player for Windows, Mac and Linux",
@@ -1120,5 +1154,16 @@
     "kao_bar": "From 2027, Android plans to install only apps from developers registered with Google.",
     "kao_learn": "About Keep Android Open",
     "kao_close": "Close this notice"
+  },
+  "guides": {
+    "guides_to_telegram_on_your": "Guides to Telegram on your TV | TMPlayer",
+    "telegram_on_the_tv": "Telegram on the TV, {em1}",
+    "telegram_on_the_tv__em1": "step by step",
+    "three_guides_to_watching_the": "Three guides to watching the videos in your own Telegram chats on a television: two that install TMPlayer step by step, and one that compares the ways to get there.",
+    "pick_a_guide": "Pick a guide",
+    "install_tmplayer_on_an_android": "Install TMPlayer on an Android TV or Google TV with the Downloader app, scan a QR code with your phone and press play.",
+    "install_tmplayer_on_a_fire": "Install TMPlayer on a Fire TV Stick, Fire TV Cube or Fire TV Edition TV with Downloader and the remote, then sign in.",
+    "casting_screen_mirroring_telegram_s": "Casting, screen mirroring, Telegram's own apps and a player on the TV, compared in one table.",
+    "how_to_watch_the_videos": "How to watch the videos in your Telegram chats on Android TV, Google TV and Fire TV, and how casting, mirroring and a player on the TV compare."
   }
 }

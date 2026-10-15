@@ -15,7 +15,8 @@ import Panel from '../../../components/Panel.astro';
 import StarCard from '../../../components/StarCard.astro';
 import { faqLd } from '../../../components/faq/ld';
 import { langPaths } from '../../../i18n/paths';
-import { text } from '../../../i18n/t';
+import { english, format, text } from '../../../i18n/t';
+import { ldKey } from '../../../i18n/ld';
 import { l as link } from '../../../i18n/links';
 
 export const getStaticPaths = langPaths;
@@ -27,12 +28,25 @@ const l = (href: string) => link(lang, href);
 
 // The questions, in the order of the FAQPage JSON-LD. An answer with `href` links its {a1} words.
 // The security page is English only, so its link is not moved into the language.
-const questions = [
+//
+// A question with `ld` (its English name) is written only in the JSON-LD and shows the same ld.*
+// strings on the page, so the two cannot drift; `more` puts a link after its answer.
+type Question =
+  | { q: string; a: string; href?: string; id?: string }
+  | { ld: string; more?: { k: string; href: string } };
+const questions: Question[] = [
+  { ld: 'Can I watch Telegram videos on Android TV?', more: { k: 'guide_no_casting.install_the_apk_and_sign__a1', href: l('/guides/telegram-videos-on-android-tv/') } },
+  { ld: 'Is there a Telegram app for Fire TV Stick?', more: { k: 'guide_no_casting.install_it_with_the_downloader__a1', href: l('/guides/telegram-videos-on-fire-tv/') } },
+  { ld: 'How do I play Telegram videos on a PC or Mac?', more: { k: 'faq.which_file_answer__a1', href: l('/download/') } },
+  { ld: 'Is TMPlayer free? Is there a paid version?' },
+  { ld: 'Is TMPlayer safe? Can it read my messages?', more: { k: 'faq.neither_the_app_talks_to__a1', href: '/security/' } },
+  { ld: 'Is it the same as the official Telegram app?' },
+  { ld: 'Do I need a phone to sign in?' },
+  { ld: 'Does it play music and audio files?', more: { k: 'faq.mkv_mp4_avi_and_ts__a1', href: l('/formats/') } },
   { q: 'faq.do_i_have_to_wait', a: 'faq.no_it_starts_in_seconds' },
   { q: 'faq.is_there_a_server_or', a: 'faq.neither_the_app_talks_to', href: '/security/' },
   { q: 'faq.which_file_do_i_download', a: 'faq.which_file_answer', href: l('/download/') },
   { q: 'faq.is_there_a_windows_macos_linux', a: 'faq.yes_for_windows_10_11_macos', href: l('/download/'), id: 'desktop' },
-  { q: 'faq.can_i_read_my_messages', a: 'faq.no_it_only_ever_shows' },
   { q: 'faq.does_tmplayer_provide_any_media', a: 'faq.no_it_hosts_uploads_sells' },
   { q: 'faq.how_much_storage_does_it', a: 'faq.one_video_at_a_time' },
   { q: 'faq.which_video_formats_does_it', a: 'faq.mkv_mp4_avi_and_ts', href: l('/formats/') },
@@ -40,7 +54,14 @@ const questions = [
   { q: 'faq.is_tmplayer_affiliated_with_telegram', a: 'faq.no_it_is_an_unofficial' },
   { q: 'faq.is_tmplayer_the_same_as_tmp', a: 'faq.no_tmp_is_a_different_app' },
 ];
----
+
+// Every question on the page is in the JSON-LD, in the same place, or the build stops.
+const ldAnswers = new Map(faqLd.mainEntity.map((e) => [e.name, e.acceptedAnswer.text]));
+const onPage = questions.map((x) => ('ld' in x ? x.ld : english[x.q]));
+if (onPage.join('\n') !== faqLd.mainEntity.map((e) => e.name).join('\n')) {
+  throw new Error('the FAQ page and its FAQPage JSON-LD list different questions');
+}
+------
 <Base page="faq" title={t('faq.tmplayer_faq_unofficial_telegram_video')} description={t('faq.answers_about_tmplayer_streaming_without')}>
   <Fragment slot="head">
     <JsonLd data={breadcrumb(['Questions', '/faq/'])} />
@@ -53,7 +74,7 @@ const questions = [
 
 <main id="main">
 
-  <PageHead lede={t('faq.including_the_ones_about_trust')}>
+  <PageHead lede={t('faq.including_the_ones_about_trust')} updated="/faq/">
     <Fragment slot="crumbs"><T k="faq.questions"><a href={l('/')} slot="a1">{t('faq.questions__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
     <Fragment slot="title"><T k="faq.questions_2"><em slot="em1">{t('faq.questions_2__em1')}</em></T></Fragment>
     <Fragment slot="actions">
@@ -62,13 +83,15 @@ const questions = [
     </Fragment>
   </PageHead>
 
-    <Band wave id="faq" labelledby="faq-h" tonal title={t('faq.common_questions')} sub={t('faq.ten_short_questions_open_the')}>
+    <Band wave id="faq" labelledby="faq-h" tonal title={t('faq.common_questions')} sub={format(lang, 'faq.short_questions_open_the_one', { count: questions.length.toLocaleString(lang.tag === 'en' ? 'en-GB' : lang.tag) })}>
     {/* A real accordion, built from native details and summary, so it opens with a keyboard, is
         announced as a disclosure, and works with JavaScript off. The height animation lives on
         the inner .faq-body, since details itself cannot be transitioned. */}
     <div class="faq" data-reveal>
-      {questions.map(({ q, a, href, id }) => (
-        <FaqItem q={t(q)} name="faq" id={id}>{href ? <T k={a}><a href={href} slot="a1">{t(`${a}__a1`)}</a></T> : t(a)}</FaqItem>
+      {questions.map((x) => 'ld' in x ? (
+        <FaqItem q={t(ldKey(x.ld))} name="faq">{t(ldKey(ldAnswers.get(x.ld)!))}{x.more && <> <a href={x.more.href}>{t(x.more.k)}</a></>}</FaqItem>
+      ) : (
+        <FaqItem q={t(x.q)} name="faq" id={x.id}>{x.href ? <T k={x.a}><a href={x.href} slot="a1">{t(`${x.a}__a1`)}</a></T> : t(x.a)}</FaqItem>
       ))}
     </div>
   </Band>

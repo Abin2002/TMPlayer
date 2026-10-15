@@ -1,8 +1,10 @@
-// The JSON-LD every guide carries, written in English: a breadcrumb under the home page, the
-// guide as an Article, and for a guide with numbered steps a HowTo whose steps link to their
-// anchors on the page. JsonLd translates the text fields and moves the URLs into the language.
+// The JSON-LD every guide carries, written in English: a breadcrumb through the guides hub, the
+// guide as an Article whose dateModified is the page's lastmod, and for a guide with numbered
+// steps a HowTo whose steps link to their anchors on the page. JsonLd translates the text fields
+// and moves the URLs into the language.
 
 import { breadcrumb } from '../breadcrumb';
+import { lastmod } from '../../lib/lastmod';
 
 const ORIGIN = 'https://tmplayer.org';
 
@@ -21,7 +23,6 @@ export interface Guide {
   headline: string;
   description: string;
   datePublished: string;
-  dateModified: string;
   /** a HowTo with these steps follows the Article */
   howTo?: { totalTime: string; steps: GuideStep[] };
 }
@@ -29,7 +30,7 @@ export interface Guide {
 export function guideLd(g: Guide): object[] {
   const url = ORIGIN + g.path;
   const blocks: object[] = [
-    breadcrumb([g.crumb, g.path]),
+    breadcrumb(['Guides', '/guides/'], [g.crumb, g.path]),
     {
       '@context': 'https://schema.org',
       '@type': 'Article',
@@ -40,7 +41,7 @@ export function guideLd(g: Guide): object[] {
       image: `${ORIGIN}/og.png?v=4`,
       inLanguage: 'en',
       datePublished: g.datePublished,
-      dateModified: g.dateModified,
+      dateModified: lastmod(g.path),
       author: { '@type': 'Person', name: 'dracu-lah', url: 'https://nevil.dev' },
       publisher: {
         '@type': 'Organization',

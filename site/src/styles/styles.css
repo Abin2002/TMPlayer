@@ -1226,6 +1226,56 @@ kbd {
   .keys th, .keys td { padding: 10px 4px; }
 }
 
+/* ---------- Comparison table ----------
+
+   The ways to get Telegram onto a TV, in the casting guide, read across. On a phone the table
+   keeps its width and scrolls inside its wrapper, with the way it describes pinned at the start,
+   so the page itself never widens. Start and end, not left and right, so it reads in RTL. */
+
+.compare-wrap {
+  container-type: inline-size;
+  overflow-x: auto;
+  margin-top: clamp(28px, 4vw, 40px);
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-xl);
+}
+.compare-wrap:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.compare { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 0.92rem; line-height: 1.55; }
+/* As wide as the wrapper, not the table, and pinned, so it wraps in view instead of scrolling off. */
+.compare caption {
+  position: sticky;
+  inset-inline-start: 0;
+  box-sizing: border-box;
+  max-width: 100cqi;
+  caption-side: top;
+  text-align: start;
+  padding: 18px clamp(14px, 2.6vw, 22px) 6px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+.compare th, .compare td { text-align: start; vertical-align: top; padding: 12px clamp(10px, 1.6vw, 16px); }
+.compare thead th {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--on-surface-variant);
+  font-weight: 600;
+}
+.compare tbody th {
+  position: sticky;
+  inset-inline-start: 0;
+  width: 20%;
+  background: var(--surface-container-lowest);
+  font-weight: 600;
+  color: var(--on-surface);
+}
+.compare td { color: var(--on-surface-variant); }
+.compare tbody tr > * { border-top: 1px solid var(--outline-variant); }
+@media (max-width: 560px) {
+  .compare { min-width: 600px; }
+  .compare tbody th { width: 112px; }
+}
+
 /* ---------- Screenshots ---------- */
 
 .shots { display: grid; gap: clamp(40px, 6vw, 80px); }
@@ -2341,9 +2391,12 @@ a.card:active,
 .crumbs { font-size: 0.86rem; color: var(--on-surface-variant); margin: 0 0 clamp(16px, 2vw, 22px); }
 .crumbs a { color: var(--on-surface-variant); }
 .crumbs a:hover { color: var(--on-surface); }
-/* Only the separators are dimmed; a crumb that is a plain word (Guides) keeps full contrast. */
+/* Only the separators are dimmed; a crumb that is a plain word keeps full contrast. */
 .crumbs span { padding: 0 6px; }
 .crumbs span[aria-hidden="true"] { opacity: 0.6; }
+
+/* The day the page last changed, under the lede of the guides and the questions. */
+.page-updated { margin: 14px 0 0; color: var(--on-surface-variant); font-size: 0.86rem; }
 
 /* ---------- Buttons ----------
 

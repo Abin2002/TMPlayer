@@ -1,5 +1,5 @@
 ---
-// Home / Guides / the device: the guide trail, with Guides as plain text since it has no page.
+// Home / Guides / the device: the guide trail, through the guides hub.
 import { text } from '../../i18n/t';
 import { l } from '../../i18n/links';
 
@@ -7,4 +7,4 @@ interface Props { here: string }
 const { here } = Astro.props;
 const lang = Astro.locals.lang;
 ---
-<a href={l(lang, '/')}>{text(lang, 'common.home')}</a><span aria-hidden="true">/</span><span>{text(lang, 'common.guides')}</span><span aria-hidden="true">/</span>{here}
+<a href={l(lang, '/')}>{text(lang, 'common.home')}</a><span aria-hidden="true">/</span><a href={l(lang, '/guides/')}>{text(lang, 'common.guides')}</a><span aria-hidden="true">/</span>{here}
