@@ -149,4 +149,42 @@ class SelfUpdateTest {
     fun `quotes paths for powershell`() {
         assertEquals("C:\\Users\\O''Brien\\TMPlayer", SelfUpdate.psQuote("C:\\Users\\O'Brien\\TMPlayer"))
     }
+
+    @Test
+    fun `stages the msi update beside the install folder, never in it`() {
+        val launcher = File("/home/a/AppData/Local/TMPlayer/TMPlayer.exe")
+        val root = SelfUpdate.msiRoot(launcher)!!
+        assertEquals(File("/home/a/AppData/Local/TMPlayer-update").absoluteFile, root.absoluteFile)
+        assertFalse(SelfUpdate.inside(File(root, "download/TMPlayer-1.27.0-windows-x64.msi"), launcher.parentFile))
+        assertTrue(SelfUpdate.inside(File("/home/a/AppData/Local/TMPlayer/Cache/updates/x.msi"), launcher.parentFile))
+        assertTrue(SelfUpdate.inside(File("/home/a/appdata/local/tmplayer/x.msi"), launcher.parentFile))
+    }
+
+    @Test
+    fun `fills in every value of the msi update script`() {
+        val install = File("/home/O'Brien/AppData/Local/TMPlayer")
+        val root = File("/home/O'Brien/AppData/Local/TMPlayer-update")
+        val script = SelfUpdate.msiScript(
+            pid = 4242,
+            msi = File(root, "download/TMPlayer-1.27.0-windows-x64.msi"),
+            exe = File(install, "TMPlayer.exe"),
+            installDir = install,
+            root = root,
+            version = "v1.27.0",
+        )
+        assertFalse(Regex("@@[A-Z_]+@@").containsMatchIn(script))
+        assertTrue(script.contains("\$AppPid = 4242\r\n"))
+        assertTrue(script.contains("\$Version = '1.27.0'\r\n"))
+        assertTrue(script.contains("O''Brien"))
+        assertTrue(script.contains("'{6F1D3C0E-2B8A-4B7E-9D2C-7A1E5F4C3B21}'"))
+        assertTrue(script.contains("'HKCU:\\Software\\TMPlayer\\TMPlayer\\1.27.0'"))
+        assertTrue(script.contains("/l*v"))
+        assertFalse(script.replace("\r\n", "").contains("\n"))
+    }
+
+    @Test
+    fun `the upgrade code matches the msi's`() {
+        val gradle = File("build.gradle.kts").readText()
+        assertTrue(gradle.contains("upgradeUuid = \"${SelfUpdate.UPGRADE_CODE}\""))
+    }
 }

@@ -2020,6 +2020,7 @@
     "could_not_save": "Could not save the download",
     "damaged": "The download was damaged and was not installed.",
     "did_not_finish": "The update did not finish.",
+    "did_not_install": "The update to TMPlayer {version} did not install. Your sign in and settings are kept. Download the installer from tmplayer.org and run it to finish.",
     "downloading": "Downloading {size} from GitHub. Keep this on screen.",
     "downloading_percent": "Downloading, {percent}",
     "downloading_plain": "Downloading",
