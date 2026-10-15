@@ -50,6 +50,7 @@ import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.Td
 import com.tmplayer.data.valueOrNull
+import com.tmplayer.platform.Background
 import com.tmplayer.desktop.DesktopPaths
 import com.tmplayer.desktop.DownloadIndex
 import com.tmplayer.desktop.os.OpenExternal
@@ -176,6 +177,9 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
     ).filterNot { it == DetailAction.Share }
 
     fun close() = state.closeDetail()
+    // The lines that close the pane before their work is done run on the process's scope: the
+    // pane's own is cancelled as it leaves, which dropped the copied link and the hand off.
+    val outlives = Background.scope
     // "Remove from Downloads?" is asked over the pane, which stays open until it is answered.
     var confirmingRemove by remember(item.id) { mutableStateOf(false) }
 
@@ -190,14 +194,14 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
             DetailAction.StartOver -> state.openPlayer(item, startFromBeginning = true)
             DetailAction.MarkWatched, DetailAction.MarkUnwatched -> {
                 val mark = action == DetailAction.MarkWatched
-                scope.launch {
+                outlives.launch {
                     runCatching { setWatched(state.watched, state.settings, item, title, mark) }
                     toast(if (mark) s.watchedMarkedWatched(item.title) else s.watchedMarkedUnwatched(item.title))
                 }
             }
             DetailAction.AddWatchLater, DetailAction.RemoveWatchLater -> {
                 val add = action == DetailAction.AddWatchLater
-                scope.launch {
+                outlives.launch {
                     runCatching { setWatchLater(state.watched, item, title, add) }
                     toast(if (add) s.detailWatchLaterAdded(item.title) else s.detailWatchLaterRemoved(item.title))
                 }
@@ -215,7 +219,7 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
             DetailAction.CancelDownload -> OfflineDownloads.cancel(state.downloads, item.fileId)
             DetailAction.SelectVideos -> request.selectThis?.invoke()
             DetailAction.Share -> Unit
-            DetailAction.OpenElsewhere -> scope.launch {
+            DetailAction.OpenElsewhere -> outlives.launch {
                 if (record == null && !Td.maySave(item.chatId, item.messageId)) {
                     toast(ContentProtection.NOT_SAVABLE)
                     return@launch
@@ -225,7 +229,7 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
                         .getOrNull()?.let(::File)
                 if (file == null) toast(s.downloadsFileGone) else OpenExternal.open(file)
             }
-            DetailAction.CopyLink -> scope.launch {
+            DetailAction.CopyLink -> outlives.launch {
                 val link = runCatching {
                     Td.client.getMessageLink(item.chatId, item.messageId, 0, 0, "", false, false).valueOrNull?.link
                 }.getOrNull()
