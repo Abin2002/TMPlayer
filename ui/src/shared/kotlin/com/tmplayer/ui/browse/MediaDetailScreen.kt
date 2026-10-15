@@ -7,6 +7,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -144,6 +146,19 @@ fun MediaDetailScreen(
             StackedLayout(page, maxWidth, maxHeight)
         }
         if (com.tmplayer.ui.components.usesFloatingChrome()) {
+            // The page scrolls up under the status bar; a fade there keeps the clock and the
+            // text beneath it from being drawn over each other once the backdrop has gone by.
+            Box(
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .windowInsetsTopHeight(WindowInsets.statusBars)
+                    .background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            listOf(Tone.background, Tone.background.copy(alpha = 0.6f)),
+                        ),
+                    ),
+            )
             // A phone's pages all leave by the round Back at the top start, so this one does too.
             com.tmplayer.ui.components.FloatingBackButton(
                 TmIcons.ArrowBack,
@@ -282,13 +297,14 @@ private fun StackedLayout(page: DetailPage, width: Dp, height: Dp) {
             // Back up on the buttons from below with a remote or keys, the title above them shows too.
             Column(Modifier.revealFromTop(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 FactsBlock(page)
-                Actions(page, primaryFullWidth = true, onEpisodes = episodesButton(page.item, page.meta, episodes))
+                Actions(page, primaryFullWidth = true, onEpisodes = episodesButton(page.item, page.meta, episodes), headlineOnly = true)
                 Versions(page.item, page.onPickCopy, page.chatTitle, page.copyStarted)
                 synopsisOf(page)?.let { Synopsis(it) }
                 ProtectedNote(page.item)
                 DetailBookmarks(page.bookmarks, page.onOpenBookmark)
             }
             BelowTheFold(page.item, page.meta, page.extras, page.onOpenItem, Modifier.bringIntoViewRequester(episodes))
+            MoreActions(page)
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -384,6 +400,11 @@ private fun Actions(
     primaryFullWidth: Boolean = false,
     /** Scrolls down to the seasons and episodes; null where the video is not an episode. */
     onEpisodes: (() -> Unit)? = null,
+    /**
+     * A phone's page: only the everyday buttons (watched, watch later, download, the trailer, the
+     * episodes) under Play, centred; the rest wait at the foot of the page ([MoreActions]).
+     */
+    headlineOnly: Boolean = false,
 ) {
     val s = LocalStrings.current
     val tv = !isTouch()
@@ -394,11 +415,11 @@ private fun Actions(
     val trailer = page.extras?.trailer
     val primary = page.rows.firstOrNull()
     val others = buildList {
-        addAll(page.rows.drop(1))
+        addAll(page.rows.drop(1).filter { !headlineOnly || it.action in HEADLINE_ACTIONS })
         // Beside the main button, as a streaming app's "Episodes" sits by Play.
         if (onEpisodes != null) add(0, DetailRow(DetailAction.Play, s.detailEpisodes, TmIcons.Episodes, onSelect = onEpisodes))
         if (trailer != null) add(DetailRow(DetailAction.Play, s.metadataTrailer, TrailerIcon, onSelect = { trailers.open(trailer) }))
-        if (online != null && page.meta == null && metadataOff) {
+        if (!headlineOnly && online != null && page.meta == null && metadataOff) {
             add(DetailRow(DetailAction.Play, s.metadataTurnOn, TmIcons.Info, s.metadataTurnOnDetail, onSelect = { online.setEnabled(true) }))
         }
     }
@@ -414,12 +435,55 @@ private fun Actions(
             }
         } else {
             hero(if (primaryFullWidth) Modifier.fillMaxWidth() else Modifier)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, if (headlineOnly) Alignment.CenterHorizontally else Alignment.Start),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 others.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s)) }
             }
         }
         trailers.unopened?.let { TrailerQr(it, Modifier.padding(vertical = 8.dp)) }
         TrailerHost(trailers)
+    }
+}
+
+/** The everyday buttons a phone keeps under Play; see [Actions]' headlineOnly and [MoreActions]. */
+private val HEADLINE_ACTIONS = setOf(
+    DetailAction.MarkWatched,
+    DetailAction.MarkUnwatched,
+    DetailAction.AddWatchLater,
+    DetailAction.RemoveWatchLater,
+    DetailAction.Download,
+    DetailAction.SaveToDownloads,
+    DetailAction.InDownloads,
+    DetailAction.CancelDownload,
+)
+
+/**
+ * The rest of a phone page's buttons, at its foot and centred: Start over, Remove download, Share,
+ * Open elsewhere, the chat, the corrections (Not the same video, Wrong match, Rename) and the
+ * switch for posters while they are off. Things done now and then, out of the way of Play.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MoreActions(page: DetailPage) {
+    val s = LocalStrings.current
+    val online = OnlineMetadata.current
+    val metadataOff = online != null && !online.settings.collectAsState().value.enabled
+    val rest = buildList {
+        addAll(page.rows.drop(1).filter { it.action !in HEADLINE_ACTIONS })
+        if (online != null && page.meta == null && metadataOff) {
+            add(DetailRow(DetailAction.Play, s.metadataTurnOn, TmIcons.Info, s.metadataTurnOnDetail, onSelect = { online.setEnabled(true) }))
+        }
+    }
+    if (rest.isEmpty()) return
+    FlowRow(
+        Modifier.fillMaxWidth().padding(top = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        rest.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s)) }
     }
 }
 
