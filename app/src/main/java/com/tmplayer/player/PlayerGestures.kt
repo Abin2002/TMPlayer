@@ -263,6 +263,24 @@ class PlayerGestures(
     }
 
     /**
+     * Ends a touch whose lift the activity kept from [onTouchEvent], because a sheet came up over
+     * the picture while the finger was down: the end of the video, an error, "Still watching?".
+     * A hold drops back to the chosen speed and a scrub is let go without its seek; otherwise the
+     * hold ran on at double speed under "Watch again", and the next tap committed a stale scrub.
+     */
+    fun cancel() {
+        if (dragKind == DRAG_SEEK) onScrubEnd()
+        if (holding) {
+            holding = false
+            onHold(false)
+        }
+        seekTarget = -1L
+        dragKind = DRAG_NONE
+        scaling = false
+        onChrome = false
+    }
+
+    /**
      * Decides what a drag is for, once, and then stops asking.
      *
      * Measured from where the finger went down rather than from the last few pixels of travel,

@@ -21,6 +21,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -710,6 +711,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             holdControls()
             if (!pickerOpen) controls?.focusRow()
         }
+        // The manifest opts into the new back dispatch, and from Android 13 that means Back never
+        // arrives in [dispatchKeyEvent] as a key: it comes here, and without this a locked screen,
+        // the next-up card or the row up all ended the film on the first press.
+        onBackPressedDispatcher.addCallback(this) {
+            if (!peelOneOverlay()) finish()
+        }
         subtitleView.setApplyEmbeddedStyles(true)
         applySubtitleStyle()
 
@@ -1173,6 +1180,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             return super.dispatchTouchEvent(event)
         }
         if (surface == null || inPictureInPicture || pickerOpen || statusOverlay.visibility == View.VISIBLE) {
+            // A hold or a scrub that was under way when the sheet came up still has to end.
+            if (event.actionMasked == android.view.MotionEvent.ACTION_UP ||
+                event.actionMasked == android.view.MotionEvent.ACTION_CANCEL
+            ) {
+                gestures?.cancel()
+            }
             return super.dispatchTouchEvent(event)
         }
         gestures?.onTouchEvent(event, surface.width, surface.height)
@@ -1768,6 +1781,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             // has been answered.
             if (isPlaying && stillWatchingUp) {
                 stillWatchingUp = false
+                resumeHeldDownloads()
                 hideStatus()
             }
             // A long download before the first frame is still the viewer waiting on this screen,
@@ -2317,6 +2331,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * The position in the episode being left is saved on the way out.
      */
     fun playEpisode(item: MediaItem) {
+        // Once: a double tap on the next button, or a held next key on a slow stick, reached here
+        // again before this screen was gone and stacked a second player that Back then landed on.
+        if (handingOver) return
         handingOver = true
         startActivity(
             intent(this, item, chatTitle).putExtra(
@@ -2339,6 +2356,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     override fun finish() {
         val stranded = !handingOver && isTaskRoot && !isChangingConfigurations &&
             intent.getBooleanExtra(EXTRA_OUTSIDE_APP_TASK, false)
+        // Leaving from "Still watching?" is an answer too: somebody pressed Back.
+        resumeHeldDownloads()
         super.finish()
         if (stranded) {
             runCatching {
@@ -2722,6 +2741,28 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         return super.dispatchKeyEvent(event)
     }
 
+    /**
+     * Back as the dispatcher delivers it: the same peeling [dispatchKeyEvent] does for the key on
+     * older Androids, the unlock pill, then the next-up card, then the row. True when something
+     * took the press, false when Back is for the film itself.
+     */
+    private fun peelOneOverlay(): Boolean {
+        if (locked) {
+            showUnlockPill()
+            return true
+        }
+        if (nextUpHasTheRemote()) {
+            nextUpDismissed = true
+            hideNextUp()
+            return true
+        }
+        if (statusOverlay.visibility != View.VISIBLE && controlsUp) {
+            controls?.hideAnimated()
+            return true
+        }
+        return false
+    }
+
     /** The number row and the numpad, as one digit; null for every other key. */
     private fun digitOf(keyCode: Int): Int? = when (keyCode) {
         in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> keyCode - KeyEvent.KEYCODE_0
@@ -2779,7 +2820,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             KeyEvent.KEYCODE_DPAD_CENTER,
             KeyEvent.KEYCODE_ENTER,
             KeyEvent.KEYCODE_SPACE,
-            -> togglePlayback()
+            // Once per press: a held key repeats, and each repeat flipped playback back again.
+            -> if (event.repeatCount == 0) togglePlayback()
             else -> return false
         }
         return true
@@ -3359,8 +3401,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     private fun keepWatching(next: MediaItem?) {
         stillWatchingUp = false
-        downloadsHeldForTheCard.forEach { OfflineDownloads.resume(this, it) }
-        downloadsHeldForTheCard = emptyList()
+        resumeHeldDownloads()
         if (next != null) {
             playEpisode(next)
             return
@@ -3370,6 +3411,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         if (exo.playbackState == Player.STATE_IDLE) exo.prepare()
         exo.play()
         keepScreenOn(true)
+    }
+
+    /**
+     * Lets the queued downloads "Still watching?" paused carry on. Any answer counts, not only Keep
+     * watching: play from a headset, and Back or Go back, which otherwise left them paused in
+     * Downloads with nothing to say why.
+     */
+    private fun resumeHeldDownloads() {
+        downloadsHeldForTheCard.forEach { OfflineDownloads.resume(this, it) }
+        downloadsHeldForTheCard = emptyList()
     }
 
     /**
@@ -4467,10 +4518,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      *
      * onStop covers Back and Home, but it never runs when the power goes off at the wall or the
      * system kills the process to reclaim memory, and on a 1 GB stick the second is routine.
+     * Started rather than resumed: in picture in picture the activity is paused while the video
+     * plays on, and an hour watched in the corner went unwritten.
      */
     private fun startResumeHeartbeat() {
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 while (true) {
                     delay(RESUME_TICK_MS)
                     if (player?.isPlaying == true) saveResumePosition()
