@@ -169,8 +169,8 @@ class SeriesWatch(
     fun newEpisodes(series: Series): Int =
         NewEpisodes.inSeries(series, { finished(it) || (point(it)?.fraction ?: 0f) > 0f }, touchedAt)
 
-    /** Watched when any copy of the episode is. */
-    fun finishedEpisode(episode: SeriesEpisode): Boolean = episode.copies.any(finished)
+    /** Watched when any copy of the episode is, or a file of several episodes that holds it. */
+    fun finishedEpisode(episode: SeriesEpisode): Boolean = episode.watched(finished)
 
     /** Where the viewer stopped in whichever copy of the episode got furthest. */
     fun pointOf(episode: SeriesEpisode): WatchPoint? =

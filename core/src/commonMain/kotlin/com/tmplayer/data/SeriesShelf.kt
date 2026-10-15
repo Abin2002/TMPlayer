@@ -18,7 +18,15 @@ data class SeriesEpisode(
     val season: Int,
     val episode: Int,
     val copies: List<MediaItem> = listOf(item),
+    /**
+     * Files of several episodes listed under an earlier one that hold this one too: the
+     * "S01E01E02" file for episode two. Watching one counts as watching this episode.
+     */
+    val alsoIn: List<MediaItem> = emptyList(),
 ) {
+    /** Watched when any copy is, or any file of several episodes that holds it. */
+    fun watched(finished: (MediaItem) -> Boolean): Boolean = copies.any(finished) || alsoIn.any(finished)
+
     /** "S01E02"; a release with no season of its own counts as season one. */
     val code: String
         get() = "S%02dE%02d".format(Locale.ROOT, season, episode)
@@ -544,6 +552,7 @@ object SeriesShelf {
                     SeriesEpisode(sorted.first(), number.first, number.second, sorted)
                 }
             }
+            .let { rows -> withMultiEpisodeFiles(rows, files, defaultSeason) }
         val seasons = episodes
             .groupBy { it.season }
             .toSortedMap()
@@ -558,6 +567,18 @@ object SeriesShelf {
     }
 
 
+    /** Each file of several episodes, named as a holder of the later ones it holds. */
+    private fun withMultiEpisodeFiles(rows: List<SeriesEpisode>, files: List<Found>, defaultSeason: Int): List<SeriesEpisode> {
+        val multi = files.filter { (it.name.lastEpisode ?: 0) > it.episode }
+        if (multi.isEmpty()) return rows
+        return rows.map { row ->
+            val holders = multi.filter { file ->
+                (file.name.season ?: defaultSeason) == row.season && row.episode in (file.episode + 1)..file.name.lastEpisode!!
+            }.map { it.item }.filter { holder -> row.copies.none { it.id == holder.id } }
+            if (holders.isEmpty()) row else row.copy(alsoIn = holders)
+        }
+    }
+
     /**
      * Where the viewer is in [series]. An episode counts as watched when any copy of it is, and
      * as started when any copy is partway.
@@ -571,7 +592,7 @@ object SeriesShelf {
         position: (MediaItem) -> Float,
     ): SeriesProgress {
         val all = series.episodes
-        val done = all.map { episode -> episode.copies.any(finished) }
+        val done = all.map { episode -> episode.watched(finished) }
         val watched = done.count { it }
         fun started(index: Int) = all[index].copies.firstOrNull { !finished(it) && position(it) > 0f }
         // Partway through one beats everything: it is literally where the viewer stopped.

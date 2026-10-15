@@ -30,6 +30,22 @@ class SeriesShelfTest {
     private fun files(entries: List<ShelfEntry>) = entries.filterIsInstance<ShelfEntry.File>().map { it.item.fileName }
 
     @Test
+    fun `a file of two episodes ticks both when it is watched`() {
+        val double = video("Harbour.Notes.S01E01E02.1080p.mkv")
+        val e02 = video("Harbour.Notes.S01E02.720p.mkv")
+        val e03 = video("Harbour.Notes.S01E03.1080p.mkv")
+        val show = shows(SeriesShelf.arrange(listOf(e03, e02, double))).single()
+        assertEquals(listOf(1, 2, 3), show.episodes.map { it.episode })
+        val second = show.episodes[1]
+        assertEquals(listOf(double.id), second.alsoIn.map { it.id })
+        val finished: (MediaItem) -> Boolean = { it.id == double.id }
+        assertTrue(second.watched(finished))
+        val progress = SeriesShelf.progress(show, finished) { 0f }
+        assertEquals(2, progress.watched)
+        assertEquals(3, progress.next?.episode)
+    }
+
+    @Test
     fun `every way of writing one show lands on the same key`() {
         val key = SeriesShelf.keyOf("Harbour Notes")
         assertEquals("harbour notes", key)

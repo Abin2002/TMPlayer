@@ -22,6 +22,11 @@ data class ParsedName(
      * "Show 14-10-2024"): an episode by date, which [year] then dates too. Never a film.
      */
     val airDate: String? = null,
+    /**
+     * The last episode a file of several holds: 2 for "S01E01E02" and "S01E01-E02". Null for a
+     * file of one episode, which is nearly every file.
+     */
+    val lastEpisode: Int? = null,
 ) {
     /** Episodic media rather than a standalone video. */
     val isSeries: Boolean get() = season != null || episode != null || airDate != null
@@ -218,6 +223,7 @@ object MediaName {
                 year = year?.value,
                 season = episode?.season,
                 episode = episode?.number,
+                lastEpisode = episode?.last,
                 part = part?.number,
                 extra = (extra ?: leadingExtra)?.let { extraOf(it.value) },
                 airDate = date?.text,
@@ -325,7 +331,7 @@ object MediaName {
     }
 
     /** A season and episode number, and where in the name the code starts. */
-    private data class Episode(val season: Int?, val number: Int?, val at: Int)
+    private data class Episode(val season: Int?, val number: Int?, val at: Int, val last: Int? = null)
 
     /**
      * Finds an episode however the uploader chose to write it.
@@ -342,10 +348,13 @@ object MediaName {
             .mapNotNull { it.find(text) }
             .minByOrNull { it.range.first }
             ?.let {
+                val number = it.groupValues[2].toIntOrNull()
                 return Episode(
                     season = it.groupValues[1].toIntOrNull(),
-                    number = it.groupValues[2].toIntOrNull(),
+                    number = number,
                     at = it.range.first,
+                    // A second code straight after the first, the file's last episode.
+                    last = it.groupValues.getOrNull(3)?.toIntOrNull()?.takeIf { last -> number != null && last > number },
                 )
             }
 
@@ -602,11 +611,11 @@ object MediaName {
     private val BARE_YEAR = Regex("""(?<![\d])((?:19|20)\d{2})(?![\d])""")
 
     /**
-     * Season and episode written together. A multi-episode file ("S01E01-E02") matches the first
-     * of them, which is the one it opens on.
+     * Season and episode written together. A multi-episode file ("S01E01E02", "S01E01-E02") is
+     * the first of them, which is the one it opens on, and its last ([ParsedName.lastEpisode]).
      */
     private val PAIRED_EPISODE = listOf(
-        Regex("""\bs(\d{1,2})[\s.-]?e(\d{1,3})\b""", RegexOption.IGNORE_CASE),
+        Regex("""\bs(\d{1,2})[\s.-]?e(\d{1,3})(?:-?e(\d{1,3}))?\b""", RegexOption.IGNORE_CASE),
         Regex("""\b(\d{1,2})x(\d{1,3})\b""", RegexOption.IGNORE_CASE),
         Regex("""\bseason\s?(\d{1,2})\s?episode\s?(\d{1,3})\b""", RegexOption.IGNORE_CASE),
     )

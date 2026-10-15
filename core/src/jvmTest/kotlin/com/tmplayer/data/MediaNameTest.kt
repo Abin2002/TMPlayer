@@ -20,6 +20,18 @@ class MediaNameTest {
     }
 
     @Test
+    fun `a file of two episodes opens on the first and knows its last`() {
+        for (name in listOf("Harbour.Notes.S01E01E02.1080p.mkv", "Harbour.Notes.S01E01-E02.1080p.mkv")) {
+            val parsed = parse(name)
+            assertEquals(name, "Harbour Notes", parsed.title)
+            assertEquals(name, 1, parsed.season)
+            assertEquals(name, 1, parsed.episode)
+            assertEquals(name, 2, parsed.lastEpisode)
+        }
+        assertEquals(null, parse("Harbour.Notes.S01E03.1080p.mkv").lastEpisode)
+    }
+
+    @Test
     fun `treats dots as spaces`() {
         val parsed = parse("City.Archive.1999.1080p.BluRay.x264-GROUP.mkv")
         assertEquals("City Archive", parsed.title)
