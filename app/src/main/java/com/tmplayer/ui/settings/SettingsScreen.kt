@@ -1601,7 +1601,6 @@ fun SettingsScreen(
                 item {
                     SignOutButton(
                         label = s.settingsSignOut,
-                        detail = s.settingsSignOutDetail(device),
                         onClick = { prompt = Prompt.SignOut },
                     )
                 }
@@ -2777,11 +2776,8 @@ private fun AccountHeader(account: com.tmplayer.data.Account) {
  * one press here that ends the session and empties the app. It still asks first.
  */
 @Composable
-private fun SignOutButton(label: String, detail: String, onClick: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+private fun SignOutButton(label: String, onClick: () -> Unit) {
+    Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
         androidx.compose.material3.Button(
             onClick = onClick,
             modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -2794,7 +2790,6 @@ private fun SignOutButton(label: String, detail: String, onClick: () -> Unit) {
             Spacer(Modifier.size(8.dp))
             M3Text(label, style = androidx.compose.material3.MaterialTheme.typography.labelLarge)
         }
-        Text(detail, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
     }
 }
 

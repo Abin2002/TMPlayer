@@ -67,6 +67,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -333,8 +334,36 @@ private fun FloatingBar(
                 .border(floatingBorder(), CircleShape)
                 .padding(horizontal = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+          Box(contentAlignment = Alignment.CenterStart) {
+            // One highlight under the chosen page, sliding to the next one rather than blinking
+            // off under one button and on under another, so the bar shows where the page went.
+            val index = when (current) {
+                TouchDestination.Home -> 0
+                TouchDestination.Chats -> 1
+                TouchDestination.Search -> 2
+                null -> null
+            }
+            val reduced = rememberReducedMotion() || Motion.reduced
+            val x by androidx.compose.animation.core.animateDpAsState(
+                targetValue = (BUTTON + BAR_SPACING) * (index ?: 0),
+                animationSpec = if (reduced) androidx.compose.animation.core.snap() else androidx.compose.animation.core.spring(dampingRatio = 0.8f, stiffness = 500f),
+                label = "barHighlight",
+            )
+            val shown by androidx.compose.animation.core.animateFloatAsState(
+                targetValue = if (index != null) 1f else 0f,
+                animationSpec = Motion.standard(if (reduced) 0 else Motion.Fast),
+                label = "barHighlightShown",
+            )
+            Box(
+                Modifier
+                    .offset(x = x)
+                    .size(BUTTON)
+                    .graphicsLayer { alpha = shown }
+                    .clip(CircleShape)
+                    .background(Tone.accent.copy(alpha = 0.16f)),
+            )
+          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(BAR_SPACING)) {
             BarButton(TmIcons.Home, s.browseTabHome, current == TouchDestination.Home, onHome)
             BarButton(TmIcons.Chats, s.browseTabChats, current == TouchDestination.Chats, onChats)
             searchButton(
@@ -366,6 +395,8 @@ private fun FloatingBar(
                     )
                 }
             }
+          }
+          }
         }
     }
 }
@@ -384,7 +415,6 @@ private fun BarButton(icon: ImageVector, label: String, chosen: Boolean, onClick
         Modifier
             .size(BUTTON)
             .clip(CircleShape)
-            .background(if (chosen) Tone.accent.copy(alpha = 0.16f) else Color.Transparent)
             .clickable(role = Role.Tab, onClick = onClick)
             .semantics {
                 contentDescription = label
@@ -393,7 +423,9 @@ private fun BarButton(icon: ImageVector, label: String, chosen: Boolean, onClick
             },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, contentDescription = null, tint = if (chosen) Tone.accent else Tone.text, modifier = Modifier.size(24.dp))
+        // The highlight behind is the bar's (see FloatingBar); the icon takes its colour as it lands.
+        val tint by androidx.compose.animation.animateColorAsState(if (chosen) Tone.accent else Tone.text, label = "barIcon")
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
     }
 }
 
@@ -517,7 +549,7 @@ private fun PopoverRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
+        Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(22.dp))
         Text(label, style = MaterialTheme.typography.bodyMedium, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         if (badge != null) {
             Text(
@@ -546,9 +578,12 @@ internal val BAR_MARGIN = 16.dp
 internal val BAR_GAP = 8.dp
 
 private val BUTTON = 48.dp
+
+/** Between two of the bar's buttons. */
+private val BAR_SPACING = 4.dp
 private val PICTURE = 32.dp
 private val BAR_SHADOW = 8.dp
-private val POPOVER_WIDTH = 248.dp
+private val POPOVER_WIDTH = 208.dp
 private val POPOVER_ROW = 44.dp
 private val POPOVER_SHAPE = RoundedCornerShape(20.dp)
 
