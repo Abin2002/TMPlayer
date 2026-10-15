@@ -266,7 +266,7 @@ function Install-TMPlayer {
         # Up to 1.26.0 the MSI installed into %LOCALAPPDATA%\TMPlayer, the folder the app keeps its
         # sign in, settings and cache in, and its uninstall, which an upgrade runs first, deletes
         # that whole folder. So when such an install is there, the data steps aside for the install
-        # and comes back after it. Later versions install to %LOCALAPPDATA%\Programs\TMPlayer.
+        # and comes back after it. Later versions install to %LOCALAPPDATA%\TMPlayer App.
         $dataDir = Join-Path $env:LOCALAPPDATA 'TMPlayer'
         $aside = Join-Path $env:LOCALAPPDATA 'TMPlayer-kept'
         $setAside = New-Object System.Collections.Generic.List[string]

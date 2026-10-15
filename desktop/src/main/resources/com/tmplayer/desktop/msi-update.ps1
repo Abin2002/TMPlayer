@@ -7,7 +7,7 @@
 # folder was %LOCALAPPDATA%\TMPlayer up to 1.26.0, which is also where the app keeps its sign in,
 # its settings and its cache, and where the update used to download the MSI and this script to.
 # The old version's uninstall deleted the very MSI being installed, so the new version never
-# arrived. Later versions install to %LOCALAPPDATA%\Programs\TMPlayer, so the launcher this
+# arrived. Later versions install to %LOCALAPPDATA%\TMPlayer App, so the launcher this
 # update ends with can be in another folder than the one it started from (Find-Launcher).
 #
 # So this script, the MSI, the logs and the kept data all live in the folder beside the install
@@ -112,7 +112,7 @@ function Restore-Data {
 function Find-Launcher {
     if (Test-Path -LiteralPath $Exe) { return $Exe }
     $name = Split-Path -Leaf $Exe
-    foreach ($dir in (Join-Path $env:LOCALAPPDATA 'Programs\TMPlayer'), (Join-Path $env:LOCALAPPDATA 'TMPlayer')) {
+    foreach ($dir in (Join-Path $env:LOCALAPPDATA 'TMPlayer App'), (Join-Path $env:LOCALAPPDATA 'TMPlayer')) {
         $candidate = Join-Path $dir $name
         if (Test-Path -LiteralPath $candidate) { return $candidate }
     }
