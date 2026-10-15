@@ -125,7 +125,7 @@ class BrowseKeyboardTest {
             waitForIdle()
             assertEquals("Video 2", shell.detail?.item?.title)
             onNodeWithText("Details").assertExists()
-            onNodeWithText("Copy link").assertExists()
+            onNodeWithText("Copy link").assertDoesNotExist()
             // The first action takes focus, so Enter would play from the pane at once.
             onNode(isFocused()).assert(hasText("Play"))
             onNode(isFocused()).performKeyInput { pressKey(Key.Escape) }
