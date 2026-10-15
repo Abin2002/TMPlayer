@@ -43,6 +43,19 @@ class VideoCopiesTest {
     private val uhd = video(2, 50, "Night Train (2019) 2160p HEVC.mkv", size = 6_000L shl 20)
     private val other = video(1, 12, "Low.Tide.2022.1080p.mkv")
 
+    // ---- the same file posted twice ----------------------------------------------------------
+
+    @Test
+    fun `the same file posted twice is one copy, whether forwarded or uploaded again`() {
+        val forwarded = hd.copy(chatId = 3, messageId = 70) // the same Telegram file
+        val again = video(1, 13, hd.fileName) // the same name and size, a new upload
+        val files = VideoCopies.distinctFiles(listOf(hd, sd, forwarded, again, uhd))
+        assertEquals(listOf(hd.id, sd.id, uhd.id), files.map { it.first.id })
+        assertEquals(listOf(hd.id, forwarded.id, again.id), files[0].second.map { it.id })
+        // The player lists the post playing for its file.
+        assertEquals(listOf(again.id, sd.id, uhd.id), VideoCopies.oneOfEachFile(listOf(hd, sd, forwarded, again, uhd), again.id).map { it.id })
+    }
+
     // ---- keying ------------------------------------------------------------------------------
 
     @Test

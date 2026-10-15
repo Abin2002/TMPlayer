@@ -34,6 +34,32 @@ object VideoCopies {
     fun keyOf(item: MediaItem): String? = grouping.keyOf(item)
 
     /**
+     * [copies] with the very same file posted more than once (forwarded, or uploaded again: the
+     * same Telegram file, or the same name and size) as one entry, the first of them leading, in
+     * the order given. A list of copies to choose from offers a file once, however often it was
+     * posted; the rest are the entry's second half, for "posted twice" or "in 2 chats".
+     */
+    fun distinctFiles(copies: List<MediaItem>): List<Pair<MediaItem, List<MediaItem>>> {
+        val groups = mutableListOf<MutableList<MediaItem>>()
+        for (copy in copies) {
+            val same = groups.firstOrNull { group -> group.any { sameFile(it, copy) } }
+            if (same != null) same += copy else groups += mutableListOf(copy)
+        }
+        return groups.map { it.first() to it.toList() }
+    }
+
+    /** [distinctFiles], one item per file: the one [playing] where it is among a file's posts. */
+    fun oneOfEachFile(copies: List<MediaItem>, playing: String): List<MediaItem> =
+        distinctFiles(copies).map { (lead, same) -> same.firstOrNull { it.id == playing } ?: lead }
+
+    /** One file posted twice: the same Telegram file, or the same file name and size. */
+    fun sameFile(a: MediaItem, b: MediaItem): Boolean = when {
+        a.id == b.id -> true
+        a.fileId > 0 && a.fileId == b.fileId -> true
+        else -> a.fileName.isNotBlank() && a.fileName == b.fileName && a.sizeBytes > 0 && a.sizeBytes == b.sizeBytes
+    }
+
+    /**
      * Which video a stored record names. A record that kept its file name ([ResumeRecord.fileName])
      * is read like the live video. One written before records kept it has only its title, so it
      * counts only when that title names a year or an episode: a quality marker alone ("Lecture

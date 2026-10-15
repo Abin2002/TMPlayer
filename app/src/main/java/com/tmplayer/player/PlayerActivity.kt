@@ -1207,7 +1207,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** Takes [list] as the copies, and names the one playing on the copy button when there is a choice. */
     private fun setCopies(list: List<MediaItem>) {
         val here = currentItem()
-        val all = (list + here).distinctBy { it.id }
+        // The same file posted twice is one copy to switch to, not two.
+        val all = com.tmplayer.data.VideoCopies.oneOfEachFile((list + here).distinctBy { it.id }, here.id)
         copies = all
         // The listed copy carries Telegram's picture size, which the start arguments do not.
         val playing = all.firstOrNull { it.id == here.id } ?: here

@@ -109,6 +109,9 @@ internal fun Versions(
     started: (MediaItem) -> Boolean = { false },
 ) {
     if (item.versions.size <= 1 || onPick == null) return
+    // The same file posted twice is one choice, not two identical rows.
+    val files = remember(item.versions) { VideoCopies.distinctFiles(item.versions) }
+    if (files.size <= 1) return
     val s = LocalStrings.current
     var open by rememberSaveable(item.id) { mutableStateOf(false) }
     val spans = remember(item.versions) { VideoCopies.spansChats(item.versions) }
@@ -122,7 +125,7 @@ internal fun Versions(
     Column(Modifier.widthIn(max = 640.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CopySummary(
             summary = summary,
-            count = s.detailVersions(item.versions.size),
+            count = s.detailVersions(files.size),
             action = if (open) s.detailCopyDone else s.detailCopyChange,
             onClick = { open = !open },
         )
@@ -134,11 +137,16 @@ internal fun Versions(
                     color = Tone.muted,
                     modifier = Modifier.padding(top = 4.dp),
                 )
-                item.versions.forEach { copy ->
+                files.forEach { (lead, same) ->
+                    // The row stands for every post of its file: the one playing if it is among them.
+                    val copy = same.firstOrNull { it.id == item.id } ?: lead
                     CopyRow(
                         copy = copy,
-                        detail = copyDetail(copy, s, if (spans) copyChat(copy, item, chatTitle) else null, started(copy)),
-                        chosen = copy.id == item.id,
+                        detail = listOfNotNull(
+                            copyDetail(copy, s, if (spans) copyChat(copy, item, chatTitle) else null, same.any(started)),
+                            postedAgain(same, s),
+                        ).joinToString("  ·  "),
+                        chosen = same.any { it.id == item.id },
                         onClick = {
                             open = false
                             if (copy.id != item.id) onPick(copy.asVersion(item))
@@ -148,6 +156,16 @@ internal fun Versions(
             }
         }
     }
+}
+
+/**
+ * For a file posted more than once: "in 2 chats" where the posts are in different chats, else
+ * "posted twice"; null for a file posted once.
+ */
+fun postedAgain(same: List<MediaItem>, s: Messages): String? {
+    if (same.size <= 1) return null
+    val chats = same.map { it.chatId }.distinct().size
+    return if (chats > 1) s.detailCopyInChats(chats) else s.detailCopyPostedTimes(same.size)
 }
 
 /** "1080p  ·  1.4 GB  ·  from Film Club" and the count of copies, with Change at the end: one target. */

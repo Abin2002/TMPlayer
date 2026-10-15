@@ -239,7 +239,8 @@ fun PlayerScreen(
     val copies = remember(current.item.id, episodes) {
         val here = current.item
         val episode = episodes.series?.episodes?.firstOrNull { ep -> ep.copies.any { it.id == here.id } }
-        (CopyHandoff.copiesOf(here) + episode?.copies.orEmpty() + here).distinctBy { it.id }
+        // The same file posted twice is one copy to switch to, not two.
+        com.tmplayer.data.VideoCopies.oneOfEachFile((CopyHandoff.copiesOf(here) + episode?.copies.orEmpty() + here).distinctBy { it.id }, here.id)
     }
     LaunchedEffect(current.item.id) {
         val here = current.item
