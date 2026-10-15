@@ -65,7 +65,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text as M3Text
 import androidx.compose.material3.TextButton
@@ -1460,16 +1459,23 @@ private fun TouchRecentSearches(
         Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         for (recent in searches) {
-            SuggestionChip(
-                onClick = { onPick(recent) },
-                label = { M3Text(recent, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                icon = { M3Icon(TmIcons.History, contentDescription = null, modifier = Modifier.size(18.dp)) },
-            )
+            // Plain words on the panel, no box each: the panel already says these go together.
+            Row(
+                Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable(role = Role.Button) { onPick(recent) }
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                M3Icon(TmIcons.History, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(18.dp))
+                M3Text(recent, style = M3MaterialTheme.typography.bodyMedium, color = Tone.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
         TextButton(onClick = onClear) { M3Text(s.commonClear) }
     }
