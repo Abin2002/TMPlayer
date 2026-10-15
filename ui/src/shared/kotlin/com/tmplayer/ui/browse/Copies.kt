@@ -60,8 +60,20 @@ fun copyHeading(copy: MediaItem): String {
     val name = copy.fileName.ifBlank { copy.title }
     val facts = MediaFacts.read(name, copy.width, copy.height)
     val quality = VideoCopies.heightOf(copy)?.let { copy.copyQuality() }
-    return listOfNotNull(quality ?: MediaMapper.formatSize(copy.sizeBytes).ifEmpty { null }, facts.videoCodec)
+    return listOfNotNull(quality ?: MediaMapper.formatSize(copy.sizeBytes).ifEmpty { null }, facts.videoCodec, facts.dynamicRange, facts.source)
         .joinToString("  ·  ")
+}
+
+/**
+ * What the copy's name says it sounds like: its audio languages in the app's language, then the
+ * audio format ("Malayalam  ·  DDP 5.1"). Null when the name says neither.
+ */
+fun copySound(copy: MediaItem, locale: java.util.Locale = java.util.Locale.getDefault()): String? {
+    val facts = MediaFacts.read(copy.fileName.ifBlank { copy.title }, copy.width, copy.height)
+    val languages = facts.languages.map { code ->
+        java.util.Locale.forLanguageTag(code).getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }
+    }
+    return (languages + listOfNotNull(facts.audio)).joinToString("  ·  ").ifEmpty { null }
 }
 
 /**
@@ -84,7 +96,7 @@ fun copyDetail(copy: MediaItem, s: Messages, chatTitle: String?, started: Boolea
 ).joinToString("  ·  ")
 
 /**
- * The chat each copy of [item] is in, by name, for a list that spans several: [chatTitle] for the
+ * The chat each copy of [item] is in, by name: [chatTitle] for the
  * page's own chat, the name the page that found the others handed over ([CopyHandoff]) for the rest.
  */
 fun copyChat(copy: MediaItem, item: MediaItem, chatTitle: String): String? =
@@ -116,7 +128,6 @@ internal fun Versions(
     if (files.size <= 1) return
     val s = LocalStrings.current
     var open by rememberSaveable(item.id) { mutableStateOf(false) }
-    val spans = remember(item.versions) { VideoCopies.spansChats(item.versions) }
     val summary = remember(item, chatTitle, s) {
         listOfNotNull(
             copyHeading(item),
@@ -139,10 +150,14 @@ internal fun Versions(
                     val copy = same.firstOrNull { it.id == item.id } ?: lead
                     CopyRow(
                         copy = copy,
+                        // The chat on every row, not only when the copies span several: which
+                        // channel a copy came from is half of what tells two of them apart.
                         detail = listOfNotNull(
-                            copyDetail(copy, s, if (spans) copyChat(copy, item, chatTitle) else null, same.any(started)),
+                            copyDetail(copy, s, copyChat(copy, item, chatTitle), same.any(started)),
                             postedAgain(same, s),
                         ).joinToString("  ·  "),
+                        sound = copySound(copy),
+                        fileName = copy.fileName.ifBlank { null },
                         chosen = same.any { it.id == item.id },
                         onClick = {
                             open = false
@@ -220,7 +235,17 @@ private fun CopySummary(summary: String, count: String, action: String, onClick:
  * what else sets it apart under that ([copyDetail]). The whole row is the target.
  */
 @Composable
-internal fun CopyRow(copy: MediaItem, detail: String, chosen: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun CopyRow(
+    copy: MediaItem,
+    detail: String,
+    chosen: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** The languages and audio format the name states ([copySound]); null for none. */
+    sound: String? = null,
+    /** The file's own name, last and quiet, for whoever wants to read exactly what it is. */
+    fileName: String? = null,
+) {
     val s = LocalStrings.current
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
@@ -261,8 +286,14 @@ internal fun CopyRow(copy: MediaItem, detail: String, chosen: Boolean, onClick: 
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(heading, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (sound != null) {
+                Text(sound, style = MaterialTheme.typography.labelMedium, color = if (focused) ink else Tone.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             if (detail.isNotEmpty()) {
                 Text(detail, style = MaterialTheme.typography.labelMedium, color = if (focused) ink.copy(alpha = 0.8f) else Tone.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+            if (fileName != null) {
+                Text(fileName, style = MaterialTheme.typography.labelSmall, color = if (focused) ink.copy(alpha = 0.7f) else Tone.muted.copy(alpha = 0.8f), maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
         if (!copy.canBeSaved) {

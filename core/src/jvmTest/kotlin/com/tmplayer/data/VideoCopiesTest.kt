@@ -263,4 +263,12 @@ class VideoCopiesTest {
         val other = EpisodeNeighbours.around(show[0], show)
         assertEquals(102L, other.next?.messageId)
     }
+
+    @Test
+    fun `a height written without its p still names the copy's quality`() {
+        val bare = video(1, 60, "Night Train 2019 Malayalam HQ HDRip - 1080.mkv")
+        assertEquals(1080, VideoCopies.heightOf(bare))
+        assertEquals("1080p", bare.copyQuality())
+        assertEquals("HDRip", MediaFacts.of(bare).source)
+    }
 }

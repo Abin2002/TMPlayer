@@ -139,6 +139,7 @@ data class MediaFacts(
             "WEBRip" to word("""web[ ._-]?rip"""),
             "Blu-ray" to word("""blu[ ._-]?ray|bd[ ._-]?rip|br[ ._-]?rip|bdremux|remux"""),
             "HDTV" to word("hdtv"),
+            "HDRip" to word("""hd[ ._-]?rip"""),
             "DVD" to word("""dvd[ ._-]?rip|dvd"""),
         )
 

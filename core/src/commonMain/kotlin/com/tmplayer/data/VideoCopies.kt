@@ -177,7 +177,14 @@ object VideoCopies {
         val marked = EpisodeCopies.markers(name).firstNotNullOfOrNull { it.toIntOrNull() }
         if (marked != null) return marked
         if (item.width > 0 && item.height > 0) return snap(minOf(item.width, item.height))
-        return null
+        // "HDRip - 1080.mkv": the height with its "p" left off, which the release reader allows
+        // where the rest of the name is release words.
+        return when (MediaMapper.qualityTags(name).firstOrNull()) {
+            "4K" -> 2160
+            "1080p" -> 1080
+            "720p" -> 720
+            else -> null
+        }
     }
 
     /**
