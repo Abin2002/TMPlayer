@@ -70,7 +70,7 @@ import androidx.compose.material3.Text as M3Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import com.tmplayer.ui.components.TouchPullRefresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -985,7 +985,7 @@ fun MediaGridScreen(
             content = {
                 // The circular arrow stays in the overflow too, because a listing that is empty or
                 // in an error state has nothing to drag.
-                PullToRefreshBox(
+                TouchPullRefresh(
                     isRefreshing = refreshing,
                     onRefresh = {
                         refreshing = true
