@@ -43,6 +43,7 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.isShiftPressed as pointerShift
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.platform.LocalWindowInfo
 import com.tmplayer.data.MediaItem
 import com.tmplayer.online.OnlineSubtitles
 import com.tmplayer.online.SubtitleTarget
@@ -1079,6 +1080,7 @@ fun PlayerScreen(
                         showShortcuts = false
                         showDetails = false
                         showOnline = false
+                        refocus()
                         return@onPreviewKeyEvent true
                     }
                     val press = KeyPress(
@@ -1404,7 +1406,25 @@ fun PlayerScreen(
     }
 
     LaunchedEffect(Unit) { refocus() }
+    // Going in or out of fullscreen remaps the window, and some window systems hand it back
+    // without focus inside it: take the keyboard again once the change has settled.
+    // Not while a sheet or a menu is up: those hold the keyboard themselves, some for typing.
+    fun keysBack() {
+        if (!showEpisodes && !showShortcuts && !showDetails && !showOnline && notePrompt == null && menu == null) refocus()
+    }
+    LaunchedEffect(fullscreen) {
+        delay(FULLSCREEN_SETTLE_MS)
+        keysBack()
+    }
+    // Back in the window (alt tab, a click on the title bar): the keys are the player's again.
+    val windowFocused = LocalWindowInfo.current.isWindowFocused
+    LaunchedEffect(windowFocused) {
+        if (windowFocused) keysBack()
+    }
 }
+
+/** How long a fullscreen change is given to land before the player takes the keyboard back. */
+private const val FULLSCREEN_SETTLE_MS = 300L
 
 /** Whether [item] came from a message, which is what the Watched list is keyed by. */
 internal fun hasMessage(item: MediaItem): Boolean = item.chatId != 0L && item.messageId != 0L
