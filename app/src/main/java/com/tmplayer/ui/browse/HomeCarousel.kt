@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -318,7 +319,7 @@ private fun FeaturedPage(
  * A page's facts: the year (when the name does not already carry it), "Season 2" for a show or
  * "6 versions" for a film posted several times, the quality, and the chat it came from.
  */
-private fun featuredFacts(pick: FeaturedPick, title: String, chat: String, s: com.tmplayer.i18n.Messages): String {
+internal fun featuredFacts(pick: FeaturedPick, title: String, chat: String, s: com.tmplayer.i18n.Messages): String {
     val item = pick.item
     val series = pick.series
     val name = SeriesShelf.episodeOf(item)
@@ -338,13 +339,15 @@ private fun featuredFacts(pick: FeaturedPick, title: String, chat: String, s: co
  * tap on one goes to its page; the touch target is 24 dp tall round a 3 dp line.
  */
 @Composable
-private fun Segments(
+internal fun Segments(
     count: Int,
     current: Int,
     fill: (Int) -> Float,
     label: (Int) -> String,
     onPick: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    /** False on a television, where the remote reaches the pages by Left and Right instead. */
+    focusable: Boolean = true,
 ) {
     val track = Tone.onArt.copy(alpha = 0.35f)
     val ink = Tone.onArt
@@ -354,6 +357,7 @@ private fun Segments(
                 Modifier
                     .weight(1f)
                     .height(SEGMENT_TARGET)
+                    .focusProperties { canFocus = focusable }
                     .clickable(
                         interactionSource = null,
                         indication = null,
