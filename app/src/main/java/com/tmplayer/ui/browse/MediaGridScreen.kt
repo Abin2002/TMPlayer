@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -130,6 +131,8 @@ import com.tmplayer.data.MediaFeedEntry
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.MediaMapper
 import com.tmplayer.data.OfflineDownloads
+import com.tmplayer.data.Series
+import com.tmplayer.data.SeriesProgress
 import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ShelfEntry
@@ -595,8 +598,6 @@ fun MediaGridScreen(
                             columns = columns,
                             posterColumns = posterColumns,
                             wideColumns = wideColumns,
-                            filmsHeading = s.gridSectionFilms,
-                            videosHeading = s.gridSectionVideos,
                         ) { entry ->
                                 when (entry) {
                                     is MediaFeedEntry.Media -> {
@@ -666,7 +667,7 @@ fun MediaGridScreen(
                                 is MediaFeedEntry.Media -> {
                                     val shelved = entry.item
                                     if (shelved is ShelfEntry.Show) {
-                                        SeriesCard(
+                                        SeriesRow(
                                             series = shelved.series,
                                             progress = remember(shelved.series, watch) { watch.progress(shelved.series) },
                                             fresh = remember(shelved.series, watch) { watch.newEpisodes(shelved.series) > 0 },
@@ -1889,9 +1890,10 @@ internal fun VideoTile(
 /**
  * The same video as a full-width row.
  *
- * This is the arrangement for a chat full of release file names: the title gets the whole width of
- * the panel rather than a quarter of it, so a name that a media tile cuts after four words is
- * readable without opening anything.
+ * This is the arrangement for a chat full of release file names: the title gets most of the width
+ * of the panel rather than a quarter of it, so a name that a media tile cuts after four words is
+ * readable without opening anything. The art is a small 2:3 poster for that reason, a film's own
+ * poster where one is found, and the frame cropped to fit otherwise.
  */
 @Composable
 private fun MediaRow(
@@ -1906,6 +1908,92 @@ private fun MediaRow(
     selected: Boolean? = null,
     /** The caption's line worth showing under the title, see [MediaMapper.captionLine]. */
     captionLine: String? = null,
+) {
+    val touch = isTouch()
+    ListRow(
+        onClick = onClick,
+        onFocused = onFocused,
+        modifier = modifier,
+        onLongClick = onLongClick,
+        selected = selected,
+        art = { artModifier ->
+            MediaArt(item, watched, artModifier, compact = touch, selected = selected, finished = finished, poster = true)
+        },
+    ) {
+        Text(
+            SeriesShelf.tileTitle(item),
+            style = MaterialTheme.typography.titleLarge,
+            color = Tone.text,
+            // Three lines here, unlike the tile: this is the arrangement someone picked in order
+            // to read the name, and a row can afford the height a grid cell cannot.
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+        // What the poster wrote under it, when that is more than the title already says: in a
+        // chat of camera files, the caption is the only thing telling two rows apart.
+        if (captionLine != null) {
+            Text(
+                captionLine,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Tone.muted,
+                maxLines = if (touch) 1 else 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        MetaLine(item, watched, finished = finished)
+    }
+}
+
+/** A show as a full-width row, beside the videos' rows: its poster, its name and its seasons. */
+@Composable
+private fun SeriesRow(
+    series: Series,
+    progress: SeriesProgress,
+    fresh: Boolean,
+    onClick: () -> Unit,
+    onFocused: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val touch = isTouch()
+    ListRow(
+        onClick = onClick,
+        onFocused = onFocused,
+        modifier = modifier,
+        art = { artModifier ->
+            SeriesArt(series, progress, artModifier, compact = touch, poster = true, fresh = fresh)
+        },
+    ) {
+        Text(
+            series.title,
+            style = MaterialTheme.typography.titleLarge,
+            color = Tone.text,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            listOfNotNull(seriesSummary(series), seriesProgressLine(progress)).joinToString("  ·  "),
+            style = MaterialTheme.typography.labelMedium,
+            color = if (progress.watched > 0) Tone.accent else Tone.muted,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * The frame of a row in a chat's list: a small 2:3 [art] at the start and [text] taking the rest of
+ * the width. On a phone a card with the system's own surface and ripple, since the focus border
+ * only means anything to a remote.
+ */
+@Composable
+private fun ListRow(
+    onClick: () -> Unit,
+    onFocused: () -> Unit,
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
+    selected: Boolean? = null,
+    art: @Composable (Modifier) -> Unit,
+    text: @Composable ColumnScope.() -> Unit,
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -1933,53 +2021,20 @@ private fun MediaRow(
                             .holdOrPress(interactions, onClick, onLongClick)
                     },
                 )
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(if (touch) 10.dp else 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (touch) 14.dp else 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            MediaArt(
-                item,
-                watched,
-                // A fixed 176dp is a fifth of a television but half a phone held upright, which
-                // would leave the title about a hundred dp. Reading the whole name is the reason
-                // for this arrangement, so on a phone the art takes a share of the row instead.
-                (if (touch) Modifier.weight(TOUCH_ART_SHARE) else Modifier.width(ROW_ART_WIDTH))
-                    .aspectRatio(16f / 9f)
+            art(
+                Modifier
+                    .width(if (touch) TOUCH_ROW_POSTER_WIDTH else ROW_POSTER_WIDTH)
+                    .aspectRatio(2f / 3f)
                     .clip(RoundedCornerShape(Corner.Small)),
-                selected = selected,
-                finished = finished,
             )
-            Column(
-                Modifier.weight(if (touch) 1f - TOUCH_ART_SHARE else 1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    item.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Tone.text,
-                    // Two lines here, unlike the tile: this is the arrangement someone picked in
-                    // order to read the name, and a row can afford the height a grid cell cannot.
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                // What the poster wrote under it, when that is more than the title already says:
-                // in a chat of camera files, the caption is the only thing telling two rows apart.
-                if (captionLine != null) {
-                    Text(
-                        captionLine,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Tone.muted,
-                        maxLines = if (touch) 1 else 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                MetaLine(item, watched, finished = finished)
-            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp), content = text)
         }
     }
 
-    // Same reasoning as the tile: on a phone this is a card with the system's own surface and
-    // ripple, since the focus border only means anything to a remote.
     if (touch) {
         Card(
             shape = RoundedCornerShape(Corner.Medium),
@@ -2244,7 +2299,8 @@ internal val TOUCH_EDGE = 16.dp
 /** How many rows from the bottom the next page is fetched in the list arrangement. */
 private const val LIST_LEAD = 4
 
-private val ROW_ART_WIDTH = 176.dp
+private val ROW_POSTER_WIDTH = 104.dp
+private val TOUCH_ROW_POSTER_WIDTH = 76.dp
 
 /**
  * How much of a list row the art takes on a phone, where a width in dp cannot work: the same row
@@ -2285,11 +2341,11 @@ internal data class Shelved(
 )
 
 /**
- * What a chat's listing draws, in order: shows folded into one entry each while [grouping], copies
- * of one film folded into one (led by the copy the viewer started), and in the grid the films and
- * shows first as one block of posters and every other video after them, each block in the chat's
- * own order. Mixed into one order, tall and short cards would leave a ragged row wherever they met.
- * Shared with the promo fixture, so its shots are of this arrangement and not a copy of it.
+ * What a chat's listing draws, in the chat's own order: shows folded into one entry each while
+ * [grouping], and copies of one film folded into one (led by the copy the viewer started). Films,
+ * shows and other videos are not split apart, and in the grid every card is a portrait poster
+ * ([SeriesShelf.posterKeys]). Shared with the promo fixture, so its shots are of
+ * this arrangement and not a copy of it.
  */
 internal fun arrangeShelf(
     items: List<MediaItem>,
@@ -2307,20 +2363,14 @@ internal fun arrangeShelf(
         val started = film.versions.firstOrNull { SettingsStore.progressKey(it.chatId, it.messageId) in watchProgress }
         if (started == null) entry else ShelfEntry.File(started.asVersion(film))
     }
-    val posters = led.filter(SeriesShelf::isPoster).mapTo(HashSet()) { it.key }
-    val ordered = if (layout == CardLayout.Grid) {
-        led.filter { it.key in posters } + led.filter { it.key !in posters }
-    } else {
-        led
-    }
-    return Shelved(ordered, MediaMapper.repeatedCaptionLines(items), posters)
+    val posters = if (layout == CardLayout.Grid) SeriesShelf.posterKeys(led) else emptySet()
+    return Shelved(led, MediaMapper.repeatedCaptionLines(items), posters)
 }
 
 /**
  * A chat's grid of [feed]: posters spanning [columns] / [posterColumns], wide cards and the rest
- * [columns] / [wideColumns], a sponsored message the whole row, and the two blocks headed only when
- * the chat has both (a page of films needs no "Films"). [card] draws each entry; the promo fixture
- * calls this with the same cards, so its shots are of the real grid.
+ * [columns] / [wideColumns], a sponsored message the whole row. [card] draws each entry; the promo
+ * fixture calls this with the same cards, so its shots are of the real grid.
  */
 internal fun LazyGridScope.shelfGrid(
     feed: List<MediaFeedEntry<ShelfEntry>>,
@@ -2328,73 +2378,22 @@ internal fun LazyGridScope.shelfGrid(
     columns: Int,
     posterColumns: Int,
     wideColumns: Int,
-    filmsHeading: String,
-    videosHeading: String,
     card: @Composable (MediaFeedEntry<ShelfEntry>) -> Unit,
 ) {
-    val sections = splitSections(feed, posterKeys)
-    sections.forEach { (section, part) ->
-        if (sections.size > 1) {
-            item(key = "section-$section", span = { GridItemSpan(maxLineSpan) }) {
-                SectionHeading(if (section == Section.Posters) filmsHeading else videosHeading)
+    gridItems(
+        items = feed,
+        key = {
+            when (it) {
+                is MediaFeedEntry.Media -> it.item.key
+                is MediaFeedEntry.Sponsored -> "sponsor-${it.item.messageId}"
             }
-        }
-        gridItems(
-            items = part,
-            key = {
-                when (it) {
-                    is MediaFeedEntry.Media -> it.item.key
-                    is MediaFeedEntry.Sponsored -> "sponsor-${it.item.messageId}"
-                }
-            },
-            span = {
-                when {
-                    it is MediaFeedEntry.Sponsored -> GridItemSpan(maxLineSpan)
-                    (it as MediaFeedEntry.Media).item.key in posterKeys -> GridItemSpan(columns / posterColumns)
-                    else -> GridItemSpan(columns / wideColumns)
-                }
-            },
-        ) { entry -> card(entry) }
-    }
-}
-
-/** The two blocks of a chat's grid: films and shows as posters, then every other video. */
-private enum class Section { Posters, Videos }
-
-/**
- * [feed] cut where the posters end, each part with the block it is. One part when the chat holds
- * only one kind. A sponsored message stays in the part it was placed in.
- */
-private fun splitSections(
-    feed: List<MediaFeedEntry<ShelfEntry>>,
-    posterKeys: Set<String>,
-): List<Pair<Section, List<MediaFeedEntry<ShelfEntry>>>> {
-    val firstVideo = feed.indexOfFirst { it is MediaFeedEntry.Media && it.item.key !in posterKeys }
-    return when {
-        posterKeys.isEmpty() || firstVideo == 0 -> listOf(Section.Videos to feed)
-        firstVideo < 0 -> listOf(Section.Posters to feed)
-        else -> listOf(Section.Posters to feed.subList(0, firstVideo), Section.Videos to feed.subList(firstVideo, feed.size))
-    }
-}
-
-/** A block's heading in a chat's grid, in the row headings' own type. */
-@Composable
-private fun SectionHeading(label: String) {
-    if (isTouch()) {
-        M3Text(
-            label,
-            style = M3MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = Tone.text,
-            modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
-        )
-    } else {
-        Text(
-            label,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = Tone.text,
-            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
-        )
-    }
+        },
+        span = {
+            when {
+                it is MediaFeedEntry.Sponsored -> GridItemSpan(maxLineSpan)
+                (it as MediaFeedEntry.Media).item.key in posterKeys -> GridItemSpan(columns / posterColumns)
+                else -> GridItemSpan(columns / wideColumns)
+            }
+        },
+    ) { entry -> card(entry) }
 }

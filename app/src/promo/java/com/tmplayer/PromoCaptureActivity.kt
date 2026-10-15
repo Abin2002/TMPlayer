@@ -884,7 +884,7 @@ private fun PromoShelfGrid(
             horizontalArrangement = Arrangement.spacedBy(gap),
             verticalArrangement = Arrangement.spacedBy(gap),
         ) {
-                shelfGrid(feed, shelved.posterKeys, columns, posterColumns, wideColumns, s.gridSectionFilms, s.gridSectionVideos) { entry ->
+                shelfGrid(feed, shelved.posterKeys, columns, posterColumns, wideColumns) { entry ->
                     val shelf = (entry as com.tmplayer.data.MediaFeedEntry.Media<ShelfEntry>).item
                     val focus = if (first != null && shelf.key == shelved.shelf.firstOrNull()?.key) Modifier.focusRequester(first) else Modifier
                     if (shelf is ShelfEntry.Show) {
