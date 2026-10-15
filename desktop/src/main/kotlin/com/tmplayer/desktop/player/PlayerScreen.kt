@@ -1127,7 +1127,15 @@ fun PlayerScreen(
                     SeekMath.wheelAction(delta.x, delta.y, event.keyboardModifiers.pointerShift, wheelSeeksNow)
                         ?.let(dispatchNow)
                 }
-                .pointerHoverIcon(if (fullscreen && !showControls && menu == null) blankCursor else PointerIcon.Default)
+                // Hidden with the controls only while a video plays: the loading, end and error
+                // sheets have no controls to bring it back with, and the sheets are for the mouse.
+                .pointerHoverIcon(
+                    if (fullscreen && phase == Phase.Playing && !showControls && menu == null && !showEpisodes && !showOnline) {
+                        blankCursor
+                    } else {
+                        PointerIcon.Default
+                    },
+                )
                 .subtitleDropTarget(onDrop = ::loadSubtitle, onRefused = { showFlash(Flash.Kind.Text, it) }),
         ) {
             (engine as? MpvPlaybackEngine)?.let { MpvMediampPlayerSurface(it.player, Modifier.fillMaxSize()) }
