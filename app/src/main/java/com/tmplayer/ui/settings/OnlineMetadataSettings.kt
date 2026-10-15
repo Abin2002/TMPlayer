@@ -34,22 +34,23 @@ import kotlinx.coroutines.withContext
  * the viewer's own as an override, and the cache with its purge. Drawn in every build that set the
  * feature up; without a TMDB key of the build's own, the key row says to add one.
  */
-internal fun LazyListScope.onlineMetadataSection(onEditKey: () -> Unit) {
+internal fun LazyListScope.onlineMetadataSection(onEditKey: () -> Unit, toggleModifier: Modifier = Modifier) {
     if (OnlineMetadata.current == null) return
     sectionTitle { LocalStrings.current.metadataTitle }
-    item { MetadataToggleRow() }
+    item { MetadataToggleRow(toggleModifier) }
     item { SkipTimesToggleRow() }
     item { MetadataKeyRow(onEditKey) }
     item { MetadataCacheRow() }
 }
 
 @Composable
-private fun MetadataToggleRow() {
+private fun MetadataToggleRow(modifier: Modifier) {
     val s = LocalStrings.current
     val online = OnlineMetadata.current ?: return
     val settings by online.settings.collectAsState()
     ToggleRow(
         title = s.metadataToggle,
+        modifier = modifier,
         subtitle = if (settings.enabled) s.metadataToggleOn else s.metadataToggleOff,
         icon = TmIcons.Image,
         checked = settings.enabled,

@@ -30,6 +30,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -97,7 +98,10 @@ import com.tmplayer.player.TouchPrefs
 import com.tmplayer.player.TrackPreferences
 import com.tmplayer.ui.about.About
 import com.tmplayer.ui.components.TmAlertDialog
+import com.tmplayer.ui.components.JumpTarget
+import com.tmplayer.ui.components.jumpTarget
 import com.tmplayer.ui.components.rememberToast
+import com.tmplayer.ui.onboarding.SetupStep
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.i18n.languageRowDetail
 import com.tmplayer.ui.theme.Tone
@@ -123,6 +127,28 @@ fun SettingsPage(
     val supportCounters by state.settings.supportCounters.collectAsState(initial = SupportReminder.Counters())
     if (showAbout) {
         AboutPage(version, supporter = supportCounters.supporter, onBack = { showAbout = false })
+        return
+    }
+    // Setup choices (the setup's answers in one place), and the row its "Also in" sends the
+    // viewer to here, with the step it came from so Setup choices opens on that row again.
+    var showSetupChoices by remember { mutableStateOf(false) }
+    var jumpTo by remember { mutableStateOf<SetupStep?>(null) }
+    var cameFromStep by remember { mutableStateOf<SetupStep?>(null) }
+    val jumps = remember { SetupStep.entries.associateWith { JumpTarget() } }
+    if (showSetupChoices) {
+        SetupChoicesPage(
+            state,
+            focusStep = cameFromStep,
+            onBack = {
+                cameFromStep = null
+                showSetupChoices = false
+            },
+            onJump = { step ->
+                cameFromStep = step
+                jumpTo = step
+                showSetupChoices = false
+            },
+        )
         return
     }
     val settings = state.settings
@@ -179,6 +205,11 @@ fun SettingsPage(
     }
 
     val scroll = rememberScrollState()
+    LaunchedEffect(jumpTo) {
+        val step = jumpTo ?: return@LaunchedEffect
+        jumps.getValue(step).arrive()
+        jumpTo = null
+    }
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
             PageHeader(s.settingsTitle, if (version.isBlank()) null else s.settingsAppVersion(version))
@@ -192,6 +223,13 @@ fun SettingsPage(
                     onApplied = { toast(s.deviceApplied) },
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
+                // The setup's answers, each changeable on its own, without running it again.
+                Setting(s.setupChoicesTitle, s.setupChoicesSummary) {
+                    OutlinedButton(onClick = {
+                        cameFromStep = null
+                        showSetupChoices = true
+                    }) { Text(s.commonOpen) }
+                }
                 Group(s.settingsAppearance)
                 Setting(s.settingsTheme, if (theme == ThemeChoice.System) s.themeSystemDesktopDetail else theme.description) {
                     SingleChoiceSegmentedButtonRow {
@@ -253,6 +291,7 @@ fun SettingsPage(
                     s.settingsLowStorage,
                     if (lowStorage) s.settingsLowStorageOn else s.settingsLowStorageOff,
                     lowStorage,
+                    Modifier.jumpTarget(jumps.getValue(SetupStep.Storage)),
                 ) { on -> scope.launch { settings.setLowStorageMode(on) } }
                 Setting(
                     s.settingsHideControls,
@@ -312,7 +351,7 @@ fun SettingsPage(
                 SubtitleLanguageSettings(settings, trackPrefs, scope)
 
                 OnlineSubtitlesGroup()
-                OnlineMetadataGroup()
+                OnlineMetadataGroup(Modifier.jumpTarget(jumps.getValue(SetupStep.Posters)))
 
                 Group(s.settingsLibrary)
                 Toggle(s.settingsOpenLast, s.settingsOpenLastDetail, openLast) {
@@ -523,9 +562,6 @@ fun SettingsPage(
                 }
 
                 Group(s.settingsHelp)
-                Setting(s.settingsWalkthrough, s.settingsWalkthroughBody) {
-                    OutlinedButton(onClick = { scope.launch { settings.replaySetup() } }) { Text(s.commonOpen) }
-                }
                 Setting(s.settingsTour, s.settingsTourBody) {
                     OutlinedButton(onClick = { scope.launch { settings.openTour() } }) { Text(s.commonOpen) }
                 }
@@ -796,7 +832,13 @@ internal fun Group(title: String) {
  * [SettingsColumn] it is one row of its group's card; anywhere else it is the same row on the page.
  */
 @Composable
-internal fun Setting(title: String, detail: String, titleColor: Color = Color.Unspecified, control: @Composable () -> Unit) {
+internal fun Setting(
+    title: String,
+    detail: String,
+    titleColor: Color = Color.Unspecified,
+    modifier: Modifier = Modifier,
+    control: @Composable () -> Unit,
+) {
     // The words and the control side by side, unless the control would leave the words under
     // half the row and they need more than that: a row of four segments in German or Malayalam
     // squeezed the title to a word a line, so there the control goes under the words instead.
@@ -810,6 +852,7 @@ internal fun Setting(title: String, detail: String, titleColor: Color = Color.Un
         },
         modifier = Modifier
             .layoutId(SettingsPart.Row)
+            .then(modifier)
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .padding(horizontal = SETTING_INSET, vertical = 10.dp),
@@ -841,8 +884,14 @@ internal fun Setting(title: String, detail: String, titleColor: Color = Color.Un
 }
 
 @Composable
-private fun Toggle(title: String, detail: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Setting(title, detail) { Switch(checked = checked, onCheckedChange = onChange) }
+private fun Toggle(
+    title: String,
+    detail: String,
+    checked: Boolean,
+    modifier: Modifier = Modifier,
+    onChange: (Boolean) -> Unit,
+) {
+    Setting(title, detail, modifier = modifier) { Switch(checked = checked, onCheckedChange = onChange) }
 }
 
 /** What a child of a [SettingsColumn] is, which decides the gap above it and whether it is carded. */

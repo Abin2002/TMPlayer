@@ -159,6 +159,11 @@ import com.tmplayer.ui.components.SettingsSectionLabel
 import com.tmplayer.ui.components.Spinner
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.isTouch
+import com.tmplayer.ui.components.JumpTarget
+import com.tmplayer.ui.components.jumpTarget
+import com.tmplayer.ui.onboarding.SetupChoicesList
+import com.tmplayer.ui.onboarding.SetupPlace
+import com.tmplayer.ui.onboarding.SetupStep
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.i18n.languageRowDetail
@@ -178,9 +183,10 @@ import kotlinx.coroutines.withContext
 /**
  * The pages Settings is split into, each opened from a row of the category list. Named in code
  * rather than by index, so a caller can open one directly and get back to it after About or the
- * cached videos. [Gestures] is a phone's alone; a television never shows its row.
+ * cached videos. [Gestures] is a phone's alone; a television never shows its row. [SetupChoices]
+ * gathers the setup's answers (SetupChoicesList), each with a way to the page it also lives on.
  */
-enum class SettingsPage { Appearance, Playback, Subtitles, Gestures, Library, Storage, Lock, About }
+enum class SettingsPage { SetupChoices, Appearance, Playback, Subtitles, Gestures, Library, Storage, Lock, About }
 
 /**
  * Focus for a row in a lazy list, which exists only once the list has been measured: a frame
@@ -384,12 +390,25 @@ fun SettingsScreen(
         page = target
         onPageChange(target)
     }
+    // Setup choices' "Also in": the row to bring the viewer to once its page is open, and the
+    // Setup choices row to come back to, since Back from that page returns to Setup choices.
+    var jumpTo by remember { mutableStateOf<SetupStep?>(null) }
+    var cameFromStep by rememberSaveable { mutableStateOf<SetupStep?>(null) }
+    val jumps = remember { SetupStep.entries.associateWith { JumpTarget() } }
     val closePage = {
-        returnTo = page
-        page = null
-        onPageChange(null)
+        val back = cameFromStep
+        if (back != null && page != SettingsPage.SetupChoices) {
+            page = SettingsPage.SetupChoices
+            onPageChange(SettingsPage.SetupChoices)
+        } else {
+            cameFromStep = null
+            returnTo = page
+            page = null
+            onPageChange(null)
+        }
     }
     fun titleOf(target: SettingsPage): String = when (target) {
+        SettingsPage.SetupChoices -> s.setupChoicesTitle
         SettingsPage.Appearance -> s.settingsPageAppearance
         SettingsPage.Playback -> s.settingsPlayback
         SettingsPage.Subtitles -> s.settingsSubtitles
@@ -437,6 +456,8 @@ fun SettingsScreen(
     if (!touch) {
         LaunchedEffect(page) {
             val open = page
+            // A jump from Setup choices lands on its row instead (the effect below).
+            if (open != null && jumpTo != null && open != SettingsPage.SetupChoices) return@LaunchedEffect
             if (open != null) {
                 landing.settle()
                 // Focus asks to be brought into view with room to spare, which can push the
@@ -448,13 +469,22 @@ fun SettingsScreen(
                 returnTo = null
                 // Back from a page lands on the row that opened it, with the list scrolled where
                 // it was. A first arrival starts on the first row, at the top.
-                categoryFocus.getValue(back ?: SettingsPage.Appearance).settle()
+                categoryFocus.getValue(back ?: SettingsPage.SetupChoices).settle()
                 if (back == null) {
                     withFrameNanos { }
                     listState.scrollToItem(0)
                 }
             }
         }
+    }
+
+    // Setup choices' "Also in": once the page is open, its row is brought into view and lit, and on
+    // a remote focused.
+    LaunchedEffect(page, jumpTo) {
+        val step = jumpTo ?: return@LaunchedEffect
+        if (page == SettingsPage.SetupChoices) return@LaunchedEffect
+        jumps.getValue(step).arrive(pageState, focus = !touch)
+        jumpTo = null
     }
 
     // The PIN pad takes the whole screen, and the row that opened it is gone when it closes ("Set
@@ -560,6 +590,36 @@ fun SettingsScreen(
         // page that took in more than one keeps the old headings between them.
         // Each run of rows between two headings is drawn as one card on a phone (settingsGroups).
         settingsGroups { when (page) {
+            // The setup's answers in the setup's order, each with the page it also lives on.
+            SettingsPage.SetupChoices -> {
+                settingsNote {
+                    SetupChoicesList(
+                        settings = settings,
+                        place = { step ->
+                            val target = when (step) {
+                                SetupStep.Posters -> SettingsPage.Library
+                                SetupStep.Storage -> SettingsPage.Playback
+                                SetupStep.Performance -> SettingsPage.Appearance
+                                SetupStep.MobileData -> SettingsPage.Storage
+                                // Its settings are on three pages; each row above has its own.
+                                SetupStep.Device -> null
+                            }
+                            target?.let {
+                                SetupPlace(titleOf(it)) {
+                                    cameFromStep = step
+                                    jumpTo = step
+                                    showPage(it)
+                                }
+                            }
+                        },
+                        onRunSetupAgain = { scope.launch { settings.replaySetup() } },
+                        landing = landing,
+                        focusStep = cameFromStep,
+                        modifier = Modifier.padding(top = if (touch) 8.dp else 0.dp, bottom = 16.dp),
+                    )
+                }
+            }
+
             SettingsPage.Appearance -> {
                 // First, on both devices: a stick often lives on a screen in a bright room, so the theme
                 // is worth offering there too.
@@ -618,6 +678,7 @@ fun SettingsScreen(
                 item {
                     ToggleRow(
                         title = s.settingsLighterPictures,
+                        modifier = Modifier.jumpTarget(jumps.getValue(SetupStep.Performance)),
                         subtitle = if (lighterPictures) s.settingsLighterPicturesOn else s.settingsLighterPicturesOff,
                         icon = TmIcons.Image,
                         checked = lighterPictures,
@@ -710,6 +771,7 @@ fun SettingsScreen(
                 item {
                     ToggleRow(
                         title = s.settingsLowStorage,
+                        modifier = Modifier.jumpTarget(jumps.getValue(SetupStep.Storage)),
                         subtitle = if (lowStorage) s.settingsLowStorageOn else s.settingsLowStorageOff,
                         icon = TmIcons.Archive,
                         checked = lowStorage,
@@ -1074,7 +1136,10 @@ fun SettingsScreen(
                 }
 
                 // ---- posters and details --------------------------------------------------------------
-                onlineMetadataSection(onEditKey = { editingTmdbKey = true })
+                onlineMetadataSection(
+                    onEditKey = { editingTmdbKey = true },
+                    toggleModifier = Modifier.jumpTarget(jumps.getValue(SetupStep.Posters)),
+                )
             }
 
             SettingsPage.Storage -> {
@@ -1191,6 +1256,7 @@ fun SettingsScreen(
                     item {
                         ToggleRow(
                             title = s.settingsSaveMobileData,
+                            modifier = Modifier.jumpTarget(jumps.getValue(SetupStep.MobileData)),
                             subtitle = if (saveMobileData) {
                                 s.settingsSaveMobileDataOn
                             } else {
@@ -1340,15 +1406,6 @@ fun SettingsScreen(
                 sectionTitle { s.settingsHelp }
                 item {
                     ActionRow(
-                        title = s.settingsWalkthrough,
-                        modifier = if (Updates.enabled) Modifier else Modifier.focusRequester(landing),
-                        subtitle = s.settingsWalkthroughBody,
-                        icon = TmIcons.Help,
-                        onClick = { scope.launch { settings.replaySetup() } },
-                    )
-                }
-                item {
-                    ActionRow(
                         title = s.settingsTour,
                         subtitle = s.settingsTourBody,
                         icon = TmIcons.Info,
@@ -1484,6 +1541,18 @@ fun SettingsScreen(
                 // row to press, so it sits in line with the rows' icons rather than in a card.
                 if (account != null) {
                     settingsNote { AccountHeader(account) }
+                }
+                item {
+                    ActionRow(
+                        title = titleOf(SettingsPage.SetupChoices),
+                        subtitle = s.setupChoicesSummary,
+                        icon = TmIcons.Checklist,
+                        modifier = Modifier.focusRequester(categoryFocus.getValue(SettingsPage.SetupChoices)),
+                        onClick = {
+                            cameFromStep = null
+                            showPage(SettingsPage.SetupChoices)
+                        },
+                    )
                 }
                 item {
                     ActionRow(

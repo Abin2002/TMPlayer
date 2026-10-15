@@ -40,7 +40,7 @@ import kotlinx.coroutines.withContext
  * own rows.
  */
 @Composable
-internal fun OnlineMetadataGroup() {
+internal fun OnlineMetadataGroup(toggleModifier: Modifier = Modifier) {
     val s = LocalStrings.current
     val online = OnlineMetadata.current ?: return
     val settings by online.settings.collectAsState()
@@ -53,7 +53,7 @@ internal fun OnlineMetadataGroup() {
     LaunchedEffect(Unit) { bytes = withContext(Dispatchers.IO) { online.cacheBytes() } }
 
     Group(s.metadataTitle)
-    Setting(s.metadataToggle, if (settings.enabled) s.metadataToggleOn else s.metadataToggleOff) {
+    Setting(s.metadataToggle, if (settings.enabled) s.metadataToggleOn else s.metadataToggleOff, modifier = toggleModifier) {
         Switch(checked = settings.enabled, onCheckedChange = { online.setEnabled(it) })
     }
     // The player's skip intro button rides on lookups, so it is offered only while they are on.
