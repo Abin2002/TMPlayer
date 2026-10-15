@@ -1120,6 +1120,9 @@ fun PlayerScreen(
                 .onPointerEvent(PointerEventType.Scroll) { event ->
                     noteInput()
                     if (phase != Phase.Playing) return@onPointerEvent
+                    // A wheel over a sheet, or one a list inside has scrolled with, is the sheet's,
+                    // not the volume's under it as well.
+                    if (showEpisodes || showShortcuts || showOnline || event.changes.any { it.isConsumed }) return@onPointerEvent
                     val delta = event.changes.firstOrNull()?.scrollDelta ?: return@onPointerEvent
                     SeekMath.wheelAction(delta.x, delta.y, event.keyboardModifiers.pointerShift, wheelSeeksNow)
                         ?.let(dispatchNow)

@@ -466,6 +466,20 @@ class PlayerMouseTest {
         assertEquals(2, engine.count("toggle"))
     }
 
+    @Test
+    fun `the wheel over the shortcut sheet leaves the volume alone`() = runComposeUiTest {
+        open()
+        press(Key.Slash, shift = true)
+        onNodeWithText("Keyboard shortcuts").assertExists()
+        onNodeWithTag("video").performMouseInput { moveTo(onPicture); scroll(-1f) }
+        waitForIdle()
+        assertEquals(50, engine.state.value.volume)
+        press(Key.Escape)
+        onNodeWithTag("video").performMouseInput { moveTo(onPicture); scroll(-1f) }
+        waitForIdle()
+        assertEquals(55, engine.state.value.volume)
+    }
+
     private fun track(id: Int, type: TrackType, lang: String, selected: Boolean) = MediaTrack(
         id = id, type = type, title = null, language = lang, codec = null, channels = null,
         selected = selected, isDefault = false, external = false,
