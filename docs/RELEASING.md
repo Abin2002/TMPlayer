@@ -70,10 +70,10 @@ as a workflow artifact named `mapping-<v>` on the release run, for 90 days. Down
 the run's page (or `gh run download <run id> -n mapping-<v>`) and keep it with your own
 records if a crash from that build may need decoding later.
 
-These names are what the website matches on: `site/app.js` reads the release list from the GitHub
+These names are what the website matches on: `site/src/scripts/app.js` reads the release list from the GitHub
 API and finds each file by the end of its name (`universal.apk`, `windows-x64.msi`, `.AppImage`,
 `macos-arm64.dmg` and so on), because the version in the middle rules out GitHub's fixed `latest/download/<name>`
-links. Renaming an asset means updating the `KINDS` table in `site/app.js` in the same change, or
+links. Renaming an asset means updating the `KINDS` table in `site/src/scripts/app.js` in the same change, or
 the download page falls back to linking the release page for that row.
 
 The Windows files are not code signed, so SmartScreen warns on every machine; INSTALL.md and the

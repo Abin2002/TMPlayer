@@ -90,15 +90,6 @@
       ]
     },
     {
-      "source": "/(styles\\.css|app\\.js)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=300, stale-while-revalidate=3600"
-        }
-      ]
-    },
-    {
       "source": "/(og\\.png|icon-512\\.png|favicon\\.svg|logo\\.svg)",
       "headers": [
         {

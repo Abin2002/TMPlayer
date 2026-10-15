@@ -59,5 +59,4 @@ the picker, the hreflang alternates and the sitemap once the catalog is complete
 ```sh
 python3 scripts/site-i18n-check.py   # catalogs against the pages and app.js (after a build)
 python3 scripts/site-links.py        # every internal link in dist/ resolves
-scripts/site-review.sh               # the build against the old site, page by page (needs ../TMPlayer-baseline)
 ```

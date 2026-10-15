@@ -1,5 +1,7 @@
 # Moving tmplayer.org to Astro
 
+**Status: done.** Live on 2026-10-15 (merge c089b1b). Production matched the old site on every page, the sitemap, the feed and the headers. The comparison scripts and baseline lists this plan describes (`site-parity*`, `site-review.sh`, `serve-vercel.py`, `scripts/parity-baseline/`) were removed once that was proven; they are in the history at c089b1b. Release pages later moved to slashless URLs (0ab7839), since Vercel redirects `/changelog/1.26.0/` to `/changelog/1.26.0`.
+
 Written 2026-10-15 against `f71701c` (1.26.0 on the site). Work runs on the `astro` branch; baseline is `f71701c`.
 
 ## Goal and the one rule

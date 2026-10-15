@@ -112,9 +112,7 @@ changed.
   `home.buy_me_a_coffee` keys so it arrives translated; a new page gets it too. It stays an offer:
   no popups, no nags, nothing locked.
 - **After changing the site**, run `pnpm -C site build`, `python3 scripts/site-i18n-check.py` and
-  `python3 scripts/site-links.py` (CI runs all three). `scripts/site-review.sh` compares a build
-  page by page against an older one (`SITE_BASELINE=<dir of a built site>`), for changes that
-  should not show.
+  `python3 scripts/site-links.py` (CI runs all three).
 
 ## Branches and worktrees
 
