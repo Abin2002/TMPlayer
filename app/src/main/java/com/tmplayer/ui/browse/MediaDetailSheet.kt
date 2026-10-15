@@ -1,7 +1,9 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.components.TopMessageHost
 import android.widget.Toast
 import com.tmplayer.App
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -138,11 +140,7 @@ internal fun MediaDetailOpened(
                 scope.launch {
                     val record = settings.downloadRecord(item.chatId, item.messageId)
                     val removed = record != null && LocalDownloads.delete(settings, record)
-                    Toast.makeText(
-                        context,
-                        if (removed) s.gridRemovedDownload else s.gridRemoveDownloadFailed,
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                    com.tmplayer.ui.components.showMessage(context, if (removed) s.gridRemovedDownload else s.gridRemoveDownloadFailed)
                     onRemoved()
                     onDismiss()
                 }
@@ -226,11 +224,7 @@ internal fun MediaDetailOpened(
                         }
                     }
                 }
-                Toast.makeText(
-                    context,
-                    if (add) s.detailWatchLaterAdded(item.title) else s.detailWatchLaterRemoved(item.title),
-                    Toast.LENGTH_SHORT,
-                ).show()
+                com.tmplayer.ui.components.showMessage(context, if (add) s.detailWatchLaterAdded(item.title) else s.detailWatchLaterRemoved(item.title))
                 onDismiss()
             } }
             DetailAction.Download, DetailAction.SaveToDownloads -> { { onDownload(); onDismiss() } }
@@ -364,6 +358,7 @@ private fun DetailScreen(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
+        androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         // Keyed by the video, so one opened from "More like this" starts at its top.
         androidx.compose.runtime.key(item.id) {
             MediaDetailScreen(
@@ -381,6 +376,9 @@ private fun DetailScreen(
                 onPickCopy = onPickCopy,
                 copyStarted = copyStarted,
             )
+        }
+        // Over the page, which is a window of its own above the app's.
+        TopMessageHost()
         }
     }
 }

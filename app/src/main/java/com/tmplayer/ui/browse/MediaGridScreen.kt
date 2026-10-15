@@ -128,7 +128,13 @@ import com.tmplayer.data.FormFactor
 import com.tmplayer.ui.components.FloatingBackButton
 import com.tmplayer.ui.components.FloatingBarIcon
 import com.tmplayer.ui.components.FloatingChrome
-import com.tmplayer.ui.components.FloatingPageTitle
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.draw.shadow
+import com.tmplayer.ui.theme.floatingBorder
+import com.tmplayer.ui.theme.FloatingTone
 import com.tmplayer.ui.components.LocalBottomChrome
 import com.tmplayer.ui.components.StickyActionBar
 import com.tmplayer.ui.components.rememberCompactChrome
@@ -308,7 +314,7 @@ fun MediaGridScreen(
     val submit: () -> Unit = {
         if (query.trim().equals(com.tmplayer.data.DEVELOPER_PHRASE, ignoreCase = true)) {
             recentScope.launch { recentStore.setDeveloperOptions(true) }
-            Toast.makeText(context, s.logsDeveloperOn, Toast.LENGTH_LONG).show()
+            com.tmplayer.ui.components.showMessage(context, s.logsDeveloperOn)
             query = ""
         } else {
             viewModel.search(query)
@@ -1121,39 +1127,47 @@ internal fun TouchMediaScaffold(
     Box(Modifier.fillMaxSize()) {
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                FloatingPageTitle(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            MediaPreview(
-                                miniThumbnail = chatMiniThumbnail,
-                                thumbnailFileId = chatPhotoFileId,
-                                fallbackLabel = chatTitle,
-                                modifier = Modifier.size(BAR_AVATAR).clip(CircleShape),
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            M3Text(
-                                chatTitle,
-                                // Material's default bar title is 22sp, which with an avatar in
-                                // front of it leaves room for about eight characters of a name.
-                                style = M3MaterialTheme.typography.titleMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    },
-                    scrollBehavior = scrollBehavior,
-                )
-            },
-            // The grid runs to the foot of the window, under the bar that floats over it.
+            // The grid runs to the foot of the window, under the bar that floats over it, and from
+            // under the floating Back and title at the top, which it starts clear of.
             contentWindowInsets = WindowInsets.statusBars,
         ) { padding ->
-            Column(Modifier.fillMaxSize().padding(padding)) {
+            Column(Modifier.fillMaxSize().padding(padding).padding(top = FloatingChrome.Button + 16.dp)) {
                 if (selectionBar == null) topicTabs?.invoke()
                 CompositionLocalProvider(LocalBottomChrome provides room) {
                     Box(Modifier.fillMaxSize()) { content() }
                 }
             }
+        }
+
+        // The chat's picture and name in a floating pill beside Back: both stay put while the
+        // list scrolls under them, so where you are is always in sight.
+        Row(
+            Modifier
+                .align(Alignment.TopStart)
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+                .padding(start = FloatingChrome.Inset + FloatingChrome.Button + 8.dp, top = 10.dp, end = FloatingChrome.Inset)
+                .height(FloatingChrome.Button)
+                .shadow(FloatingChrome.Shadow, CircleShape)
+                .clip(CircleShape)
+                .background(FloatingTone.menu)
+                .border(floatingBorder(), CircleShape)
+                .padding(start = 6.dp, end = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MediaPreview(
+                miniThumbnail = chatMiniThumbnail,
+                thumbnailFileId = chatPhotoFileId,
+                fallbackLabel = chatTitle,
+                modifier = Modifier.size(36.dp).clip(CircleShape),
+            )
+            Spacer(Modifier.width(10.dp))
+            M3Text(
+                chatTitle,
+                style = M3MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = Tone.text,
+            )
         }
 
         FloatingBackButton(
@@ -1216,7 +1230,6 @@ internal fun TouchMediaScaffold(
                         label = if (layout == CardLayout.Grid) s.browseShowAsRows else s.browseShowAsTiles,
                         onClick = onToggleLayout,
                     )
-                    FloatingBarIcon(TmIcons.Refresh, s.commonRefresh, onRefresh)
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.tmplayer
 
+import com.tmplayer.ui.components.TopMessageHost
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
@@ -307,7 +308,13 @@ class MainActivity : ComponentActivity() {
                 // Shared screens (a video's copies) open their sheets as the phone's own sheet.
                 androidx.compose.runtime.CompositionLocalProvider(
                     com.tmplayer.ui.components.LocalSheetHost provides com.tmplayer.ui.components.PhoneSheetHost,
-                ) { Root() }
+                ) {
+                    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize()) {
+                        Root()
+                        // Messages at the top, clear of the floating bar and the buttons at the foot.
+                        TopMessageHost()
+                    }
+                }
             }
         }
         if (savedInstanceState == null) playFromHomeScreen(intent)
@@ -1354,14 +1361,10 @@ private fun Root() {
                             // The star lands on a row the menu was covering, and in the Favourites
                             // tab the row leaves the screen altogether, so the only account of what
                             // happened is this line.
+                            // Starring says so itself, the star filling in; only a removal is
+                            // told, since in the Favourites tab the row leaves the screen.
                             val nowFavorite = settings.toggleFavorite(chat.id)
-                            toast(
-                                if (nowFavorite) {
-                                    L.mainFavouriteAdded(title = chat.title)
-                                } else {
-                                    L.mainFavouriteRemoved(title = chat.title)
-                                },
-                            )
+                            if (!nowFavorite) toast(L.mainFavouriteRemoved(title = chat.title))
                         }
                     },
                     onRestartMedia = { record ->
@@ -1465,14 +1468,8 @@ private fun Root() {
                     onSetWatched = { item, watched -> setWatched(item, current.chat.title, watched) },
                     onToggleFavorite = {
                         scope.launch {
-                            val nowFavorite = settings.toggleFavorite(current.chat.id)
-                            toast(
-                                if (nowFavorite) {
-                                    L.mainFavouriteAdded(title = current.chat.title)
-                                } else {
-                                    L.mainFavouriteRemoved(title = current.chat.title)
-                                },
-                            )
+                            // The star on the chat's own bar fills in or empties: that is the answer.
+                            settings.toggleFavorite(current.chat.id)
                         }
                     },
                     onPlay = { play(it, chatTitle = current.chat.title) },

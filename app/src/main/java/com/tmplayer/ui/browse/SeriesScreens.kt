@@ -1,5 +1,6 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.components.TopMessageHost
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -132,6 +133,8 @@ private fun SeriesPage(
                 onBack = onDismiss.takeIf { touch },
                 barInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top),
             )
+            // Over the page, which is a window of its own above the app's.
+            TopMessageHost()
         }
     }
 }

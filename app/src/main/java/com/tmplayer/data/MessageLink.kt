@@ -26,11 +26,11 @@ object MessageLink {
     suspend fun copy(context: Context, chatId: Long, messageId: Long) {
         val link = of(chatId, messageId)
         if (link == null) {
-            Toast.makeText(context, L.shareNoMessageLinks, Toast.LENGTH_SHORT).show()
+            com.tmplayer.ui.components.showMessage(context, L.shareNoMessageLinks)
             return
         }
         val clipboard = context.getSystemService(ClipboardManager::class.java)
         runCatching { clipboard?.setPrimaryClip(ClipData.newPlainText("Telegram link", link)) }
-        Toast.makeText(context, L.shareLinkCopied, Toast.LENGTH_SHORT).show()
+        com.tmplayer.ui.components.showMessage(context, L.shareLinkCopied)
     }
 }

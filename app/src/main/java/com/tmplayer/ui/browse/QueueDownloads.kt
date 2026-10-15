@@ -267,14 +267,13 @@ internal suspend fun shareVideo(context: Context, item: MediaItem, send: Boolean
         // file already on the phone. Said out loud anyway: silence here is indistinguishable from
         // a press that missed.
         Log.w(SHARE_TAG, "No local file for ${item.fileId}")
-        Toast.makeText(context, L.gridShareNotHere, Toast.LENGTH_SHORT).show()
+        com.tmplayer.ui.components.showMessage(context, L.gridShareNotHere)
         return
     }
     val uri = runCatching {
         FileProvider.getUriForFile(context, "${context.packageName}.updates", File(path))
     }.onFailure { Log.w(SHARE_TAG, "Cannot share $path", it) }.getOrNull() ?: run {
-        Toast.makeText(context, L.gridShareFailed, Toast.LENGTH_SHORT)
-            .show()
+        com.tmplayer.ui.components.showMessage(context, L.gridShareFailed)
         return
     }
 
@@ -295,7 +294,7 @@ internal suspend fun shareVideo(context: Context, item: MediaItem, send: Boolean
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     runCatching { context.startActivity(chooser) }.onFailure {
         Log.w(SHARE_TAG, "No app took the video", it)
-        Toast.makeText(context, L.gridNoAppOpens, Toast.LENGTH_SHORT).show()
+        com.tmplayer.ui.components.showMessage(context, L.gridNoAppOpens)
     }
 }
 

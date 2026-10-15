@@ -1,9 +1,43 @@
 package com.tmplayer.ui.components
 
+import android.content.Context
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.tmplayer.ui.theme.FloatingTone
+import com.tmplayer.ui.theme.Tone
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
  * A short confirmation, for an action whose result the viewer cannot see happen.
@@ -13,13 +47,73 @@ import androidx.compose.ui.platform.LocalContext
  * noise. What earns one is the opposite case: the effect lands somewhere the viewer is not
  * looking, on a screen they are about to leave, or nowhere visible at all.
  *
- * Android's own toast is used rather than a composable of our own: it survives the screen that
- * raised it going away, which is exactly the case that needs it.
+ * Shown at the top of the window by [TopMessageHost], so it never covers the floating bar or a
+ * page's buttons at the foot. The system's own toast, which sits at the bottom and cannot be moved
+ * on Android 11 and later, is only the fallback for a message raised while no host is on screen.
  */
 @Composable
 fun rememberToast(): (String) -> Unit {
     val context = LocalContext.current
-    return remember(context) {
-        { message: String -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+    return remember(context) { { message: String -> showMessage(context, message) } }
+}
+
+/** [rememberToast] for code outside composition: at the top while a host is showing, else the system's toast. */
+fun showMessage(context: Context, message: String) {
+    if (TopMessages.hosts > 0 && TopMessages.flow.tryEmit(message)) return
+    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+}
+
+private object TopMessages {
+    val flow = MutableSharedFlow<String>(extraBufferCapacity = 8)
+
+    @Volatile
+    var hosts = 0
+}
+
+/**
+ * Where [showMessage] draws: a small pill at the top centre, under the status bar, for about two
+ * and a half seconds, a newer message replacing the one showing. Put once over the whole app.
+ */
+@Composable
+fun BoxScope.TopMessageHost() {
+    var shown by remember { mutableStateOf<String?>(null) }
+    var serial by remember { mutableIntStateOf(0) }
+    var last by remember { mutableStateOf("") }
+    DisposableEffect(Unit) {
+        TopMessages.hosts++
+        onDispose { TopMessages.hosts-- }
+    }
+    LaunchedEffect(Unit) {
+        TopMessages.flow.collect { message ->
+            shown = message
+            last = message
+            serial++
+        }
+    }
+    LaunchedEffect(serial) {
+        if (shown == null) return@LaunchedEffect
+        delay(SHOWN_MS)
+        shown = null
+    }
+    AnimatedVisibility(
+        visible = shown != null,
+        modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 8.dp, start = 24.dp, end = 24.dp),
+        enter = fadeIn() + slideInVertically { -it / 2 },
+        exit = fadeOut() + slideOutVertically { -it / 2 },
+    ) {
+        val shape = RoundedCornerShape(50)
+        Box(
+            Modifier
+                .widthIn(max = 480.dp)
+                .shadow(6.dp, shape)
+                .clip(shape)
+                .background(FloatingTone.menu)
+                .padding(horizontal = 18.dp, vertical = 10.dp)
+                .semantics { liveRegion = LiveRegionMode.Polite },
+        ) {
+            Text(last, style = MaterialTheme.typography.bodyMedium, color = Tone.text, textAlign = TextAlign.Center)
+        }
     }
 }
+
+private const val SHOWN_MS = 2_500L
