@@ -21,16 +21,13 @@ class DefaultGroupsTest {
     private val folders = listOf(ChatFolderSummary(3, "Films"), ChatFolderSummary(7, "Family"))
 
     @Test
-    fun `hiding leaves Chats and Saved out of the sections and keeps Watch and the folders`() {
+    fun `hiding keeps Chats while there are folders, and Chats then opens the first folder`() {
         val shown = browseSections(folders)
         val hidden = browseSections(folders, hideDefaultGroups = true)
-        assertEquals(shown.filterNot(DefaultGroups::isDefault), hidden)
-        assertEquals(
-            listOf(BrowseTab.Home, BrowseTab.History, BrowseTab.Favorites).map(BrowseSection::of) +
-                listOf(BrowseSection.Folder(3, "Films"), BrowseSection.Folder(7, "Family")),
-            hidden,
-        )
-        assertTrue(BrowseSection.of(BrowseTab.Chats) in shown && BrowseSection.of(BrowseTab.Saved) in shown)
+        assertEquals(shown, hidden)
+        assertFalse(BrowseSection.of(BrowseTab.Saved) in shown)
+        assertEquals(BrowseSection.Folder(3, "Films"), chatsDestination(hidden, hideDefaultGroups = true))
+        assertEquals(BrowseSection.of(BrowseTab.Chats), chatsDestination(shown, hideDefaultGroups = false))
     }
 
     @Test
@@ -44,11 +41,8 @@ class DefaultGroupsTest {
     }
 
     @Test
-    fun `hidden, the sidebar has no Telegram group, and with no folders only Watch is left`() {
-        val groups = navGroups(browseSections(folders, hideDefaultGroups = true))
-        assertEquals(listOf(NavGroup.Watch, NavGroup.Folders), groups.map { it.group })
+    fun `hidden with no folders, only Watch is left`() {
         val bare = navGroups(browseSections(emptyList(), hideDefaultGroups = true))
-        assertEquals(listOf(NavGroup.Watch), bare.map { it.group })
         assertEquals(
             listOf(
                 NavEntry.Section(BrowseSection.of(BrowseTab.Home)),

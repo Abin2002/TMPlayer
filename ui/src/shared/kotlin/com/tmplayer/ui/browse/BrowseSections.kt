@@ -231,28 +231,73 @@ sealed interface BrowseSection {
 }
 
 /**
- * Every place the sidebar offers, Home first, with the viewer's folders after the chat entries.
+ * Every place the browser can show, Home first, then the viewer's folders.
  *
- * With [hideDefaultGroups] the Chats group (Chats and Saved Messages) is left out, so the folders
- * follow Favourites directly.
+ * The sidebar offers the fixed entries ([navGroups]): Home, History, Favourites and Chats. The
+ * folders are not sidebar entries any more but chips on the Chats page ([chatPageChips]), so they
+ * are listed here for the page to find a remembered folder by, not for a rail to draw. Saved
+ * Messages has no entry of its own: it is a chat among the others, and the People chip lists it.
  *
- * Folders come last because they are the only part of this list that differs per account. Keeping
- * the fixed, learnable entries first also stops the sidebar changing shape halfway down when a
- * folder is added or renamed.
+ * With [hideDefaultGroups] ("Only my folders") Chats is still there while the account has folders,
+ * and its page then lists only them; with no folders it goes, since it would lead nowhere.
  */
 fun browseSections(
     folders: List<ChatFolderSummary>,
-    /** "Only my folders" in Settings: Telegram's default groups ([DefaultGroups.TABS]) are left out. */
+    /** "Only my folders" in Settings: the Chats page lists the folders and none of Telegram's own lists. */
     hideDefaultGroups: Boolean = false,
 ): List<BrowseSection> = buildList {
     add(BrowseSection.of(BrowseTab.Home))
     add(BrowseSection.of(BrowseTab.History))
     add(BrowseSection.of(BrowseTab.Favorites))
-    if (!hideDefaultGroups) {
-        add(BrowseSection.of(BrowseTab.Chats))
-        add(BrowseSection.of(BrowseTab.Saved))
-    }
+    if (!hideDefaultGroups || folders.isNotEmpty()) add(BrowseSection.of(BrowseTab.Chats))
     folders.forEach { add(BrowseSection.Folder(it.id, it.title)) }
+}
+
+/**
+ * The sidebar entry that stands for [this] section: a folder is shown on the Chats page, so it is
+ * Chats that the sidebar marks as current.
+ */
+val BrowseSection.navSection: BrowseSection
+    get() = if (this is BrowseSection.Folder) BrowseSection.of(BrowseTab.Chats) else this
+
+/** The Chats page, by its own tab or by one of its folder chips. */
+val BrowseSection.onChatsPage: Boolean
+    get() = isChats || this is BrowseSection.Folder
+
+/**
+ * Where pressing Chats in a sidebar goes: the Chats list, or with "Only my folders" on, the first
+ * folder, since the page then has no list of its own.
+ */
+fun chatsDestination(sections: List<BrowseSection>, hideDefaultGroups: Boolean): BrowseSection =
+    if (hideDefaultGroups) sections.firstOrNull { it is BrowseSection.Folder } ?: BrowseSection.of(BrowseTab.Chats) else BrowseSection.of(BrowseTab.Chats)
+
+/** One chip over the Chats page: one of Telegram's own filters, or one of the account's folders. */
+@androidx.compose.runtime.Immutable
+sealed interface ChatPageChip {
+    val label: String
+
+    data class Filter(val filter: ChatFilter) : ChatPageChip {
+        override val label: String get() = filter.label
+    }
+
+    data class Folder(val folder: BrowseSection.Folder) : ChatPageChip {
+        override val label: String get() = folder.name
+    }
+}
+
+/**
+ * The chips over the Chats page, in order: the [ChatFilter]s (All, Unread, Channels, Groups,
+ * People, Archived), then each Telegram folder, which is what the sidebar used to list. With
+ * "Only my folders" the filters are left out and the folders are the page.
+ */
+fun chatPageChips(sections: List<BrowseSection>, hideDefaultGroups: Boolean): List<ChatPageChip> =
+    (if (hideDefaultGroups) emptyList() else ChatFilter.entries.map { ChatPageChip.Filter(it) }) +
+        sections.filterIsInstance<BrowseSection.Folder>().map { ChatPageChip.Folder(it) }
+
+/** Whether [chip] is the one lit for [section] under [filter]. */
+fun ChatPageChip.isSelected(section: BrowseSection, filter: ChatFilter): Boolean = when (this) {
+    is ChatPageChip.Filter -> section.isChats && this.filter == filter
+    is ChatPageChip.Folder -> section is BrowseSection.Folder && section.id == folder.id
 }
 
 /**
