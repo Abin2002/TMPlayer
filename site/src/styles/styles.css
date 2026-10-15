@@ -741,6 +741,9 @@ summary {
   font-size: 0.95rem;
 }
 .hero-quiet .sep { margin: 0 8px; opacity: 0.55; }
+/* Links inside running text are underlined, so they are not told apart by colour alone. */
+.hero-quiet a,
+p.muted a { text-decoration: underline; text-underline-offset: 2px; }
 
 /* The scroll cue that used to sit at the foot of a full-height hero has gone
    with the full height: it pointed at #showcase, which is now the same section
@@ -2336,7 +2339,9 @@ a.card:active,
 .crumbs { font-size: 0.86rem; color: var(--on-surface-variant); margin: 0 0 clamp(16px, 2vw, 22px); }
 .crumbs a { color: var(--on-surface-variant); }
 .crumbs a:hover { color: var(--on-surface); }
-.crumbs span { padding: 0 6px; opacity: 0.6; }
+/* Only the separators are dimmed; a crumb that is a plain word (Guides) keeps full contrast. */
+.crumbs span { padding: 0 6px; }
+.crumbs span[aria-hidden="true"] { opacity: 0.6; }
 
 /* ---------- Buttons ----------
 
@@ -3008,3 +3013,13 @@ pre.abi-cmd.copyable { padding-right: 44px; min-height: 40px; display: flex; ali
 .sha-expect + p { margin-top: 12px; }
 .sha-expect code.sha { display: block; margin-top: 4px; direction: ltr; text-align: left; overflow-wrap: anywhere; word-break: break-all; }
 button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointer; }
+
+/* Under 360px the header row (brand, GitHub, language, theme, menu) is wider than the screen; the
+   GitHub link goes, as it is in the footer of every page too. */
+@media (max-width: 359px) {
+  .nav .nav-icon { display: none; }
+  .theme-toggle,
+  .js .menu-btn { width: 40px; height: 40px; margin-left: 2px; }
+  .lang-picker-btn { height: 40px; padding: 0 8px; }
+  .brand { gap: 8px; }
+}

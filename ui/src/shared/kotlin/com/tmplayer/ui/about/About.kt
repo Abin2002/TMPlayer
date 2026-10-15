@@ -23,7 +23,7 @@ object About {
     const val SOURCE = "https://github.com/dracu-lah/TMPlayer"
     const val NOTICES_ONLINE = "$SOURCE/blob/main/THIRD_PARTY_NOTICES.md"
     const val PRIVACY = "https://tmplayer.org/privacy/"
-    const val LEGAL = "https://tmplayer.org/legal"
+    const val LEGAL = "https://tmplayer.org/legal/"
     const val EMAIL = "hello@tmplayer.org"
     const val SPONSORS = "https://github.com/sponsors/dracu-lah"
     const val COFFEE = "https://buymeacoffee.com/nevil.dev"

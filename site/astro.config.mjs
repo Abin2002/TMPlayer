@@ -24,6 +24,7 @@ export default defineConfig({
   outDir: 'dist',
   integrations: [usedKeys],
   devToolbar: { enabled: false },
-  // styles.css is served as written; minifying it would be the one change nobody asked for.
-  vite: { build: { cssMinify: false } },
+  // The stylesheet blocks the first paint, so it ships minified; the comments stay in
+  // src/styles/styles.css, where they are read.
+  vite: { build: { cssMinify: true } },
 });

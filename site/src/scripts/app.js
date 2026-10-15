@@ -235,7 +235,7 @@ var tmT = (function () {
     if (isNaN(d.getTime())) { return ''; }
     try {
       return new Intl.DateTimeFormat(tmLocale, {
-        day: 'numeric', month: 'long', year: 'numeric'
+        day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'
       }).format(d);
     } catch (e) {
       return d.toISOString().slice(0, 10);
@@ -791,6 +791,14 @@ var tmT = (function () {
   var targets = document.querySelectorAll('[data-reveal]');
   if (!targets.length) { return; }
 
+  /* Anything already on screen when the page loads is shown as it is, never hidden first: fading
+     in what the reader can already see only delays the largest paint, which is what search
+     engines time. Only blocks further down wait for the scroll. */
+  var fold = window.innerHeight || document.documentElement.clientHeight;
+  Array.prototype.forEach.call(targets, function (node) {
+    if (node.getBoundingClientRect().top < fold) { node.className += ' is-in'; }
+  });
+
   document.documentElement.className += ' reveal-ready';
 
   var observer = new IntersectionObserver(function (entries) {
@@ -803,7 +811,7 @@ var tmT = (function () {
   }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
 
   Array.prototype.forEach.call(targets, function (node) {
-    observer.observe(node);
+    if (!/(^|\s)is-in(\s|$)/.test(node.className)) { observer.observe(node); }
   });
 })();
 
@@ -972,6 +980,13 @@ var tmT = (function () {
       if (typeof value !== 'number') { return; }
       node.textContent = compact(value);
       node.hidden = false;
+      /* A link whose name is set by aria-label names the figure it shows too, so what a screen
+         reader says contains what a sighted reader sees ("TMPlayer on GitHub (29)"). */
+      var named = node.closest ? node.closest('a[aria-label]') : null;
+      if (named) {
+        if (!named.hasAttribute('data-label')) { named.setAttribute('data-label', named.getAttribute('aria-label')); }
+        named.setAttribute('aria-label', named.getAttribute('data-label') + ' (' + node.textContent + ')');
+      }
       /* The label around the figure ("stars", "forks") is hidden with it, so a
          missing number never leaves a bare word behind. */
       var wrap = node.parentNode;

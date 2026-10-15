@@ -91,6 +91,46 @@ What this changes:
 - Mobile pop-ups that cover the content when a visitor arrives from search, or while they scroll,
   are a Google ranking demotion for that page. Slim banners are fine.
 
+## Indexing (Search Console, Page indexing report, 2026-10-15)
+
+- **Discovered, currently not indexed: 220 URLs**, never crawled. Every language has 7 to 12
+  pages in it, and so do 12 English pages (`/android-tv/`, `/features/`, `/faq/`, `/fire-tv/`,
+  `/formats/`, both device guides, `/changelog/`, `/security/`, `/support/`, `/translate/`,
+  `/privacy`). The pages are fine (sitemap, internal links, canonicals, hreflang all check out);
+  Google is rationing crawls for a two-month-old domain with few links to it. What helps: links
+  from other sites (Phase 4, third-party presence) and "Request indexing" in URL Inspection for
+  the English pages first (about ten a day).
+- **Crawled, currently not indexed: 11 URLs**: four translate pages, two Turkish, two Italian, one
+  Chinese FAQ, the English "without casting" guide, and `https://tmplayer.org/legal` without its
+  slash. The slashless address came from the app's About screen (`About.kt`), fixed for the next
+  release; Vercel's 308 covers installed copies meanwhile. The guide gains its comparison table
+  in Phase 2, which gives it more to index.
+- **Alternate page with proper canonical: `https://www.tmplayer.org/`**, last crawled
+  2026-09-22. www now answers with a 308 to the bare domain, so this clears on the next crawl.
+- **Page with redirect**: `http://tmplayer.org/` and `http://www.tmplayer.org/`, as they should.
+- Vercel firewall: Bot Protection off, Attack Challenge Mode off (user, 2026-10-15), so assistants
+  fetching pages for a user are not challenged.
+
+## Chromium audit (2026-10-15)
+
+Lighthouse on a local copy of the build, before and after the fixes (mobile):
+
+| Page | Before (Perf / A11y / BP / SEO) | After |
+|---|---|---|
+| / | 87 / 96 / 96 / 92 | 87 / 100 / 96 / 100 |
+| /download/ | 88 / 100 / 96 / 92 | 87 / 100 / 96 / 100 |
+| /faq/ | 90 / 100 / 96 / 92 (LCP 3.1 s) | 96 / 100 / 96 / 100 (LCP 2.4 s) |
+
+Best practices stays at 96 locally only because `/_vercel/insights/script.js` does not exist off
+Vercel. Fixed: the notice bar's "Learn more" link (the one failing SEO audit, on every page);
+scroll reveal no longer hides what is already on screen; the header fits at 320 px; breadcrumb and
+inline link contrast; accessible names that contain their visible text; release dates in UTC (the
+download page said 15 October for a release of 14 October); the stylesheet ships minified (111 KB
+to 65 KB). Still open: smaller image variants for phones (about 250 to 300 KB a page; needs the
+user's say, since source images are not downscaled without asking) and a Content-Security-Policy
+header (not a ranking factor; needs care with the inline theme script and the Vercel and GitHub
+requests).
+
 ## The plan
 
 Ordered by what moves the most for the least. Strings change in `site/i18n/en.json` only; the

@@ -61,7 +61,12 @@ def main():
             if "." in seg and not seg.startswith("."):
                 return False  # Vercel answers a dotted path's slash form with a 308 to the slashless one
             return (f / "index.html").is_file()
-        return f.is_file() or (f / "index.html").is_file()
+        if f.is_file():
+            return True
+        # A directory without its slash only answers 200 when its last segment has a dot
+        # (/changelog/1.26.0); anywhere else Vercel adds the slash with a 308, so the link is wrong.
+        seg = p.rsplit("/", 1)[-1]
+        return "." in seg and (f / "index.html").is_file()
 
     def check(page):
         rel = "/" + str(page.relative_to(dist))
