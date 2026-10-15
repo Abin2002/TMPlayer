@@ -42,6 +42,21 @@ enum class DetailAction {
 
     /** The chat the video was posted in, from a panel opened outside it (Home, search). */
     OpenChat,
+
+    /** "Not the same video": takes this copy out of the tile it was folded into. See [VideoCorrection]. */
+    SplitCopy,
+
+    /** Undoes [SplitCopy]. */
+    JoinCopies,
+
+    /** "Wrong match": the provider's poster and words go, the file's own name and picture stay. */
+    WrongMatch,
+
+    /** Undoes [WrongMatch]. */
+    UseMatch,
+
+    /** The title the viewer wants to see, which grouping reads too. */
+    Rename,
 }
 
 /** Everything [DetailActions.of] needs to know about the video and where the panel was opened. */
@@ -68,6 +83,16 @@ data class DetailContext(
     val hasClipboard: Boolean = false,
     /** Opened outside the video's chat, so going to that chat is a step somewhere. */
     val outsideChat: Boolean = false,
+    /** The panel can take the viewer's corrections ([VideoCorrection]); off where nothing would redraw. */
+    val canCorrect: Boolean = false,
+    /** The tile stands for several copies of one video. */
+    val grouped: Boolean = false,
+    /** The viewer set this file apart already. */
+    val separated: Boolean = false,
+    /** A provider's poster and words are shown for it. */
+    val matched: Boolean = false,
+    /** The viewer turned the provider's match down already. */
+    val wrongMatch: Boolean = false,
 )
 
 object DetailActions {
@@ -105,6 +130,18 @@ object DetailActions {
             add(DetailAction.OpenElsewhere)
         }
         if (context.outsideChat) add(DetailAction.OpenChat)
+        // Last, being repairs rather than things to do with the video. Each one has its undo.
+        if (context.canCorrect) {
+            when {
+                context.separated -> add(DetailAction.JoinCopies)
+                context.grouped -> add(DetailAction.SplitCopy)
+            }
+            when {
+                context.wrongMatch -> add(DetailAction.UseMatch)
+                context.matched -> add(DetailAction.WrongMatch)
+            }
+            add(DetailAction.Rename)
+        }
     }
 
     /** True for every action that makes or hands over a copy, which a restricted chat never gets. */

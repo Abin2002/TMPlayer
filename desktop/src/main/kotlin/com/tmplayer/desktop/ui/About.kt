@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,7 +82,16 @@ private fun Links(version: String, supporter: Boolean, onRead: () -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
         Image(AppLogo.Mark, contentDescription = null, modifier = Modifier.size(72.dp).clip(RoundedCornerShape(16.dp)))
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(s.settingsAppVersion(version), style = MaterialTheme.typography.titleLarge)
+            // Clicked seven times, it shows the developer rows in Settings (see DevOptions).
+            Text(
+                s.settingsAppVersion(version),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.clickable(
+                    interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                    indication = null,
+                    onClick = DevOptions::tap,
+                ),
+            )
             Text(About.LICENCE, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
             Text(About.WARRANTY, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
         }

@@ -399,7 +399,7 @@ private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(row.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(correctedTitle(row.request.chatId, row.request.messageId, row.title), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth())
             Text(
                 status,
@@ -470,7 +470,7 @@ private fun KeptRow(
         Checkbox(checked = picked, onCheckedChange = onPick)
         Icon(TmIcons.Play, contentDescription = null, tint = if (playable) Tone.accent else Tone.muted)
         Column(Modifier.weight(1f)) {
-            Text(record.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(correctedTitle(record.chatId, record.messageId, record.title), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
                 detail,
                 style = MaterialTheme.typography.bodySmall,
@@ -536,7 +536,7 @@ private fun CachedRow(
     ) {
         Icon(TmIcons.Play, contentDescription = null, tint = Tone.accent)
         Column(Modifier.weight(1f)) {
-            Text(record.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(correctedTitle(record.chatId, record.messageId, record.title), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val size = bytes?.takeIf { it > 0 }?.let(MediaMapper::formatSize) ?: MediaMapper.formatSize(record.sizeBytes)
             Text(
                 listOf(record.chatTitle, size).filter { it.isNotBlank() }.joinToString("  ·  "),

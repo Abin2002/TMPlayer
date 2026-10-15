@@ -186,6 +186,9 @@ object Backups {
         "speed_" to Kind.FLOAT,
         "delay_" to Kind.TEXT,
         "topic_" to Kind.LONG,
+        // A chat's own order ([VideoSort]) and the viewer's corrections to names ([VideoCorrection]).
+        "vsort_" to Kind.TEXT,
+        VideoCorrections.PREFIX to Kind.TEXT,
     )
 
     private const val FAVOURITES_KEY = "favorite_chats"

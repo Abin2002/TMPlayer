@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import com.tmplayer.data.LogExport
+import com.tmplayer.data.NameReport
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.WatchedStore
 import com.tmplayer.i18n.L
@@ -55,6 +56,35 @@ internal fun rememberSaveLogs(say: (String) -> Unit): () -> Unit {
                         .getOrNull()
                 }
                 say(if (place != null) L.logsSavedTo(place) else L.logsFailed)
+            }
+        }
+    }
+}
+
+/**
+ * "Save name check", a hidden developer option: the last chat listing's file names and how they
+ * were read ([NameReport]), written to `name-check/` in this app's own external files folder
+ * (`Android/data/<package>/files`), where a file manager or `adb pull` finds it. Nothing is sent.
+ */
+@Composable
+internal fun rememberSaveNameCheck(say: (String) -> Unit): () -> Unit {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    return {
+        val items = NameReport.lastListing
+        if (items.isEmpty()) {
+            say(L.logsNameReportEmpty)
+        } else {
+            scope.launch {
+                val place = withContext(Dispatchers.Default) {
+                    runCatching {
+                        val folder = java.io.File(context.getExternalFilesDir(null) ?: context.filesDir, "name-check").apply { mkdirs() }
+                        val file = java.io.File(folder, NameReport.fileName(System.currentTimeMillis()))
+                        file.writeText(NameReport.text(items))
+                        file.absolutePath
+                    }.onFailure { Logger.w(TAG, "Name check not written", it) }.getOrNull()
+                }
+                say(if (place != null) L.logsNameReportSaved(place) else L.logsFailed)
             }
         }
     }

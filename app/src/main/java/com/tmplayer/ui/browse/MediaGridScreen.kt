@@ -290,6 +290,26 @@ fun MediaGridScreen(
     val recentSearches by recentStore.recentSearches.collectAsStateWithLifecycle(initialValue = emptyList())
     val recentScope = rememberCoroutineScope()
     val clearRecent: () -> Unit = { recentScope.launch { recentStore.clearRecentSearches() } }
+    // This chat's order (see VideoSort), and the viewer's corrections, which regroup and rename.
+    val sort by remember(chatId) { recentStore.videoSort(chatId) }.collectAsStateWithLifecycle(initialValue = com.tmplayer.data.VideoSort.DEFAULT)
+    val corrections by com.tmplayer.data.VideoCorrections.state.collectAsStateWithLifecycle()
+    var sorting by remember { mutableStateOf(false) }
+    // A search for the developer phrase turns on the hidden name check in Settings instead.
+    val submit: () -> Unit = {
+        if (query.trim().equals(com.tmplayer.data.DEVELOPER_PHRASE, ignoreCase = true)) {
+            recentScope.launch { recentStore.setDeveloperOptions(true) }
+            Toast.makeText(context, s.logsDeveloperOn, Toast.LENGTH_LONG).show()
+            query = ""
+        } else {
+            viewModel.search(query)
+        }
+    }
+    if (sorting) {
+        VideoSortSheet(sort, onPick = { picked ->
+            sorting = false
+            recentScope.launch { recentStore.setVideoSort(chatId, picked) }
+        }, onDismiss = { sorting = false })
+    }
     // Whatever the remote is standing on, for the name strip along the bottom.
     var standingOn by remember { mutableStateOf<MediaItem?>(null) }
     val connectionOffset = if (connectionNotice == ConnectionNotice.Hidden) 0.dp else 56.dp
@@ -467,8 +487,12 @@ fun MediaGridScreen(
             // parser, which on a page of a few hundred videos is a frame or two on a television
             // stick. The skeleton stays up until the first answer, so tiles never jump from one
             // file each into shows; later pages keep the previous listing up while they are read.
-            val arrangedShelf by produceState<Shelved?>(null, list.items, watchProgress, grouping, layout) {
-                value = withContext(Dispatchers.Default) { arrangeShelf(list.items, watchProgress, grouping, layout) }
+            // Sorted only outside a search, whose order is its ranking.
+            val order = if (query.isBlank()) sort else com.tmplayer.data.VideoSort.Newest
+            val arrangedShelf by produceState<Shelved?>(null, list.items, watchProgress, grouping, layout, order, corrections, watchedVideos) {
+                value = withContext(Dispatchers.Default) {
+                    arrangeShelf(list.items, watchProgress, grouping, layout, order, watchedVideos.keys, corrections)
+                }
             }
             val (shelf, repeatedCaptions, posterKeys) = arrangedShelf ?: run {
                 MediaGridSkeleton(layout = layout)
@@ -485,7 +509,17 @@ fun MediaGridScreen(
                 value = if (grouping) withContext(Dispatchers.Default) { watch.course(list.items) } else null
             }
             val courseTitle = topicBar?.let { bar -> bar.nameOf(bar.selected) } ?: chatTitle
+            // Every order but Newest is of what has loaded so far, while older pages remain.
+            val loadedOnly = com.tmplayer.data.VideoSorting.sortsLoadedOnly(order, list.endReached)
             val courseHeader: @Composable () -> Unit = {
+                if (loadedOnly) {
+                    Text(
+                        s.gridSortLoadedNote(list.items.size),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Tone.muted,
+                        modifier = Modifier.padding(horizontal = if (touch && layout == CardLayout.Grid) 4.dp else 0.dp).padding(bottom = 6.dp),
+                    )
+                }
                 course?.let {
                     CourseHeader(
                         progress = it,
@@ -495,7 +529,10 @@ fun MediaGridScreen(
                     )
                 }
             }
-            LaunchedEffect(list.items) { listedItems = list.items }
+            LaunchedEffect(list.items) {
+                listedItems = list.items
+                com.tmplayer.data.NameReport.remember(chatId, list.items)
+            }
             LaunchedEffect(shelf) { shelfShown = shelf }
             // Online metadata is on by default, so the first grid says once where posters come
             // from (see OnlineMetaNotice); not while searching or ticking, when the listing is a pick.
@@ -590,7 +627,7 @@ fun MediaGridScreen(
                         if (metaNotice) {
                             item(key = "meta-notice", span = { GridItemSpan(maxLineSpan) }) { metaNoticeCard() }
                         }
-                        if (course != null) {
+                        if (course != null || loadedOnly) {
                             item(key = "course", span = { GridItemSpan(maxLineSpan) }) { courseHeader() }
                         }
                         shelfGrid(
@@ -654,7 +691,7 @@ fun MediaGridScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         if (metaNotice) item(key = "meta-notice") { metaNoticeCard() }
-                        if (course != null) item(key = "course") { courseHeader() }
+                        if (course != null || loadedOnly) item(key = "course") { courseHeader() }
                         items(
                             items = feed,
                             key = {
@@ -873,7 +910,7 @@ fun MediaGridScreen(
             isFavorite = isFavorite,
             query = query,
             onQuery = { query = it },
-            onSubmit = { viewModel.search(query) },
+            onSubmit = submit,
             onBack = onBack,
             onToggleFavorite = onToggleFavorite,
             layout = layout,
@@ -881,6 +918,7 @@ fun MediaGridScreen(
             onRefresh = refresh,
             recentSearches = recentSearches,
             onClearRecent = clearRecent,
+            onSort = { sorting = true },
             topicTabs = topicBar?.let { bar ->
                 { TopicTabs(bar, viewModel::selectTopic, Modifier.padding(vertical = 6.dp), edge = edge) }
             },
@@ -931,7 +969,7 @@ fun MediaGridScreen(
                     isFavorite = isFavorite,
                     query = query,
                     onQuery = { query = it },
-                    onSubmit = { viewModel.search(query) },
+                    onSubmit = submit,
                     onToggleFavorite = onToggleFavorite,
                     layout = layout,
                     edge = edge,
@@ -940,6 +978,7 @@ fun MediaGridScreen(
                     onBack = onBack,
                     recentSearches = recentSearches,
                     onClearRecent = clearRecent,
+                    onSort = { sorting = true },
                 )
             }
             // Under the heading and over the grid, so Up from the first row of tiles reaches it.
@@ -1006,6 +1045,8 @@ internal fun TouchMediaScaffold(
     /** Offered as chips while the search is open and still empty. */
     recentSearches: List<String> = emptyList(),
     onClearRecent: () -> Unit = {},
+    /** Opens the Sort menu ([VideoSortSheet]); null leaves it out. */
+    onSort: (() -> Unit)? = null,
     /** The topic row of a group with topics, under the bar. Null for every other chat. */
     topicTabs: (@Composable () -> Unit)? = null,
     /** Opens with the search already showing, for the screenshot fixture. */
@@ -1117,7 +1158,8 @@ internal fun TouchMediaScaffold(
                     // divide between the title and the actions, and four of them ellipsise the
                     // chat's name on a 1080p panel.
                     BarOverflow(
-                        listOf(
+                        listOfNotNull(
+                            onSort?.let { s.gridSort to it },
                             (if (layout == CardLayout.Grid) s.browseShowAsRows else s.browseShowAsTiles)
                                 to onToggleLayout,
                             s.commonRefresh to onRefresh,
@@ -1235,6 +1277,8 @@ internal fun Header(
     onClearRecent: () -> Unit = {},
     /** Shows the recent row whatever has focus, for the screenshot fixture. */
     alwaysShowRecent: Boolean = false,
+    /** Opens the Sort menu ([VideoSortSheet]); null leaves it out. */
+    onSort: (() -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     // On Fire TV the voice button opens the keyboard, which the remote's mic dictates into.
@@ -1321,6 +1365,7 @@ internal fun Header(
                 showLabel = false,
                 onClick = onToggleLayout,
             )
+            onSort?.let { Pill(s.gridSort, TmIcons.Sort, showLabel = false, onClick = it) }
             // Telegram pushes new messages into TDLib's database, but this grid was built from a
             // search that ran when it opened, so a video posted since then needs a fresh search.
             // Icon only, like the refresh on the chat list: a label costs the search field 90dp.
@@ -1744,7 +1789,8 @@ internal fun MediaCard(
     /** The line of facts in place of the file's own (Home's New episodes row: the chat, quality and size). */
     meta: (@Composable (ink: Color) -> Unit)? = null,
 ) {
-    val named = if (poster) remember(item) { SeriesShelf.posterTitle(item) } else tileTitle(item)
+    val renamed = com.tmplayer.data.VideoCorrections.state.collectAsState().value[item.id]?.title
+    val named = if (poster) remember(item, renamed) { SeriesShelf.posterTitle(item) } else tileTitle(item)
     VideoTile(
         title = title ?: named,
         onClick = onClick,
@@ -2206,7 +2252,11 @@ private fun MediaArt(
  * the detail panel, the list arrangement and the TV's name strip, which are for reading it whole.
  */
 @Composable
-private fun tileTitle(item: MediaItem): String = remember(item) { SeriesShelf.tileTitle(item) }
+private fun tileTitle(item: MediaItem): String {
+    // A rename redraws the tile it names.
+    val renamed = com.tmplayer.data.VideoCorrections.state.collectAsState().value[item.id]?.title
+    return remember(item, renamed) { SeriesShelf.tileTitle(item) }
+}
 
 /**
  * Click, and on a phone long press, on whatever this is applied to.
@@ -2357,17 +2407,33 @@ internal fun arrangeShelf(
     watchProgress: Map<String, WatchPoint>,
     grouping: Boolean,
     layout: CardLayout,
+    /** The chat's order (see [com.tmplayer.data.VideoSorting]); the chat's own by default. */
+    sort: com.tmplayer.data.VideoSort = com.tmplayer.data.VideoSort.Newest,
+    /** The Watched list's keys, keyed like [watchProgress], for "Unwatched first". */
+    watchedKeys: Set<String> = emptySet(),
+    corrections: Map<String, com.tmplayer.data.VideoCorrection> = com.tmplayer.data.VideoCorrections.current,
 ): Shelved {
     val arranged = if (grouping) {
-        SeriesShelf.arrange(items)
+        SeriesShelf.arrange(items, corrections)
     } else {
-        SeriesShelf.foldFilmCopies(items).map { ShelfEntry.File(it) }
+        SeriesShelf.foldFilmCopies(items, corrections).map { ShelfEntry.File(it) }
     }
-    val led = arranged.map { entry ->
-        val film = (entry as? ShelfEntry.File)?.item?.takeIf { it.versions.size > 1 } ?: return@map entry
-        val started = film.versions.firstOrNull { SettingsStore.progressKey(it.chatId, it.messageId) in watchProgress }
-        if (started == null) entry else ShelfEntry.File(started.asVersion(film))
-    }
+    val led = com.tmplayer.data.VideoSorting.sort(
+        arranged.map { entry ->
+            val film = (entry as? ShelfEntry.File)?.item?.takeIf { it.versions.size > 1 } ?: return@map entry
+            val started = film.versions.firstOrNull { SettingsStore.progressKey(it.chatId, it.messageId) in watchProgress }
+            if (started == null) entry else ShelfEntry.File(started.asVersion(film))
+        },
+        sort,
+        progress = { item ->
+            val key = SettingsStore.progressKey(item.chatId, item.messageId)
+            when {
+                key in watchedKeys -> com.tmplayer.data.VideoSorting.Progress.Watched
+                key in watchProgress -> com.tmplayer.data.VideoSorting.Progress.InProgress
+                else -> com.tmplayer.data.VideoSorting.Progress.Untouched
+            }
+        },
+    )
     val posters = if (layout == CardLayout.Grid) SeriesShelf.posterKeys(led) else emptySet()
     return Shelved(led, MediaMapper.repeatedCaptionLines(items), posters)
 }

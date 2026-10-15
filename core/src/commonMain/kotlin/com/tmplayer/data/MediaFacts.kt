@@ -31,6 +31,11 @@ data class MediaFacts(
     val source: String? = null,
     /** "MKV", "MP4": the extension, upper case. */
     val container: String? = null,
+    /**
+     * The audio languages the name states after its title, as ISO 639-1 codes ("ta", "hi"): what
+     * tells a Tamil copy of a film from its Hindi dub in a copy picker. See [MediaName.languages].
+     */
+    val languages: List<String> = emptyList(),
 ) {
     /** Kinds of track a release name announces. The UI words them in the viewer's language. */
     enum class Track { DualAudio, MultiAudio, Subtitles }
@@ -49,6 +54,7 @@ data class MediaFacts(
                 tracks = TRACKS.filter { (_, pattern) -> pattern.containsMatchIn(name) }.map { it.first },
                 source = first(name, SOURCES),
                 container = containerOf(fileName),
+                languages = MediaName.languages(fileName),
             )
         }
 

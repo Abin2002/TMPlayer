@@ -477,6 +477,19 @@ class OnlineMetadata(
         }
     }
 
+    /**
+     * [info] for [item], if anything backs it beyond the title ([MetaConfidence]): the year, the
+     * episode code, or failing both the file's length against the runtime, which takes the
+     * provider's extras (one call, kept like any other). Null leaves the video with its own name
+     * and picture. [name] is how the file reads, the viewer's own title where they gave one.
+     */
+    suspend fun matched(item: MediaItem, name: com.tmplayer.data.ParsedName, info: MetaInfo): MatchedMeta? {
+        MetaConfidence.basis(name, info)?.let { return MatchedMeta(info, it) }
+        if (!MetaConfidence.needsRuntime(name, info, item.durationSec)) return null
+        val runtime = extras(info)?.runtimeMin
+        return MetaConfidence.basis(name, info, item.durationSec, runtime)?.let { MatchedMeta(info, it) }
+    }
+
     suspend fun extras(info: MetaInfo): MetaExtras? {
         if (!store.now.enabled) return null
         val lang = tmdbLanguage()

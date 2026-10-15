@@ -92,6 +92,8 @@ fun main(args: Array<String>) {
         val settings = DesktopServices.settings
         // The kids lock (CP57), read once here for every list of chats in the process.
         com.tmplayer.data.ChatGate.follow(settings)
+        // The viewer's corrections to names and groups, for every screen that arranges a chat.
+        com.tmplayer.data.VideoCorrections.follow(settings)
         OnlineMetadata.current = desktopOnlineMetadata()
         // What an earlier run was in the middle of comes back paused, once there is an account to
         // ask TDLib about.

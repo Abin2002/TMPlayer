@@ -1,5 +1,7 @@
 package com.tmplayer.data
 
+import com.tmplayer.i18n.L
+
 /**
  * One episode as a label names it: "S01E05", and its own name where one is known, from the online
  * lookup or from what the uploader wrote after the code.
@@ -54,11 +56,12 @@ object EpisodeNeighbours {
      */
     fun around(current: MediaItem, items: List<MediaItem>): EpisodeSteps {
         val all = if (items.any { it.id == current.id }) items else items + current
-        val show = SeriesShelf.arrange(all).asSequence()
+        val arranged = SeriesShelf.arrange(all)
+        val show = arranged.asSequence()
             .filterIsInstance<ShelfEntry.Show>()
             .map { it.series }
             .firstOrNull { series -> series.episodes.any { holds(it, current) } }
-            ?: return LessonSteps.around(current, all) ?: EpisodeSteps(current = tagOf(current))
+            ?: return partsAround(current, arranged) ?: LessonSteps.around(current, all) ?: EpisodeSteps(current = tagOf(current))
         val episodes = show.episodes
         val at = episodes.indexOfFirst { holds(it, current) }
         val before = episodes.getOrNull(at - 1)
@@ -73,6 +76,31 @@ object EpisodeNeighbours {
             previousTag = before?.let { tag(it, previous!!, show.title) },
             nextTag = after?.let { tag(it, next!!, show.title) },
             series = show,
+        )
+    }
+
+    /**
+     * The pieces either side of [current] when it is one piece of a split film ("CD1", "CD2"):
+     * the player rolls on to the next piece as it would to the next episode, with the same
+     * button, card and autoplay. Null when [current] is no piece of one.
+     */
+    private fun partsAround(current: MediaItem, arranged: List<ShelfEntry>): EpisodeSteps? {
+        val pieces = arranged.asSequence()
+            .filterIsInstance<ShelfEntry.File>()
+            .flatMap { it.item.versions.ifEmpty { listOf(it.item) } }
+            .map { it.parts }
+            .firstOrNull { parts -> parts.any { it.id == current.id } }
+            ?: return null
+        val at = pieces.indexOfFirst { it.id == current.id }
+        fun tag(index: Int) = EpisodeTag(code = L.gridPartNumber(index + 1))
+        val previous = pieces.getOrNull(at - 1)
+        val next = pieces.getOrNull(at + 1)
+        return EpisodeSteps(
+            previous = previous,
+            next = next,
+            current = tag(at),
+            previousTag = previous?.let { tag(at - 1) },
+            nextTag = next?.let { tag(at + 1) },
         )
     }
 

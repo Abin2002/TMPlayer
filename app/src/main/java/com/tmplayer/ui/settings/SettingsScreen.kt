@@ -358,6 +358,8 @@ fun SettingsScreen(
     var prompt by remember { mutableStateOf<Prompt?>(null) }
     val backup = rememberBackupActions(onPlan = { prompt = Prompt.Restore(it) }, say = { toast(it) })
     val saveLogs = rememberSaveLogs(say = { toast(it) })
+    val saveNameCheck = rememberSaveNameCheck(say = { toast(it) })
+    val developerOptions by settings.developerOptions.collectAsStateWithLifecycle(initialValue = false)
     // The sign out dialog's tick box. Off every time the dialog opens: downloads are the viewer's
     // files, and losing them has to be asked for each time rather than remembered.
     var alsoDeleteDownloads by remember { mutableStateOf(false) }
@@ -1398,6 +1400,18 @@ fun SettingsScreen(
                         icon = TmIcons.Logs,
                         onClick = saveLogs,
                     )
+                }
+                // Hidden until a chat's search turns it on (see DEVELOPER_PHRASE): how the app read
+                // the file names of the chat opened last, to check its guesses against real chats.
+                if (developerOptions) {
+                    item {
+                        ActionRow(
+                            title = s.logsNameReport,
+                            subtitle = s.logsNameReportDetail,
+                            icon = TmIcons.Checklist,
+                            onClick = saveNameCheck,
+                        )
+                    }
                 }
                 item {
                     ActionRow(

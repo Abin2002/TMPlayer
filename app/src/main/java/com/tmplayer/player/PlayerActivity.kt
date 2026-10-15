@@ -2402,7 +2402,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 return@launch
             }
             for (second in AUTOPLAY_COUNTDOWN_SEC downTo 1) {
-                showStatus(L.playerNextTitle(_episodes.value.nextTag?.label ?: next.title))
+                showStatus(L.playerNextTitle(_episodes.value.nextTag?.label ?: com.tmplayer.data.SeriesShelf.tileTitle(next)))
                 statusDetail.text = L.playerAutoplayCountdown(second)
                 showLoadingProgress(
                     (AUTOPLAY_COUNTDOWN_SEC - second).toFloat() / AUTOPLAY_COUNTDOWN_SEC,
@@ -3384,7 +3384,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         statusTitle.text = L.playerStillWatching
         statusText.text = why
         statusDetail.visibility = View.VISIBLE
-        statusDetail.text = next?.let { L.playerNextTitle(it.title) } ?: L.playerStillWatchingPaused
+        statusDetail.text = next?.let { L.playerNextTitle(com.tmplayer.data.SeriesShelf.tileTitle(it)) } ?: L.playerStillWatchingPaused
         statusBack?.visibility = View.VISIBLE
         statusRetry?.apply {
             text = L.playerKeepWatching
@@ -3670,7 +3670,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                         continue
                     }
                     if (left in 1..lead && statusOverlay.visibility != View.VISIBLE) {
-                        val label = _episodes.value.nextTag?.label ?: next.title
+                        val label = _episodes.value.nextTag?.label ?: com.tmplayer.data.SeriesShelf.tileTitle(next)
                         if (nextUpCard?.show(label, (until.coerceAtLeast(0) + 999) / 1000) == true) {
                             nextUpShown = true
                             // The card and the pill share a corner; the card is the offer then.

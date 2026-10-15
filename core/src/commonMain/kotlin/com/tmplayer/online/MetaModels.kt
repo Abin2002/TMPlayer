@@ -89,6 +89,8 @@ data class MetaQuery(
                 episode = parsed.episode,
                 anime = anime,
                 tmdbId = forced,
+                // A daily show named by its air date is a show, though it names no episode number.
+                kind = if (parsed.isSeries) MetaKind.Show else MetaKind.Film,
             )
         }
     }

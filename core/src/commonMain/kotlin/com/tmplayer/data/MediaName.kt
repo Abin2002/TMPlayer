@@ -10,9 +10,21 @@ data class ParsedName(
     /** Set when the name looks like an episode rather than a standalone video. */
     val season: Int? = null,
     val episode: Int? = null,
+    /**
+     * Which piece of a film cut into several files this one is: "CD2", "Part2", "pt.2" after the
+     * title. Null for a whole file, and for "Part 2" written inside a title, which is a sequel.
+     */
+    val part: Int? = null,
+    /** Set when the name says this is not the video itself but a trailer, a teaser or a sample. */
+    val extra: ExtraKind? = null,
+    /**
+     * "2024-10-14" for a daily show or a match named by the day it aired ("Show 2024.10.14",
+     * "Show 14-10-2024"): an episode by date, which [year] then dates too. Never a film.
+     */
+    val airDate: String? = null,
 ) {
     /** Episodic media rather than a standalone video. */
-    val isSeries: Boolean get() = season != null || episode != null
+    val isSeries: Boolean get() = season != null || episode != null || airDate != null
 
     /** A single episode, as opposed to a season pack that names no episode at all. */
     val isEpisode: Boolean get() = episode != null
@@ -28,6 +40,9 @@ data class ParsedName(
             return season?.let { "S%02d".format(Locale.ROOT, it) + tail } ?: tail
         }
 }
+
+/** What a short file posted beside a film can be, as its name says. */
+enum class ExtraKind { Trailer, Teaser, Promo, Sample, Extra }
 
 /**
  * Turns "Harbour Notes (2026) Malayalam (1080p WEB-Rip E-AC3).mkv" into
@@ -132,7 +147,9 @@ object MediaName {
         val tidy = clean(stripDecoration(stripExtension(fileName)).replace(SEPARATORS, " ").replace(WHITESPACE, " "))
         val parsed = parse(fileName, caption, maxYear)
         val release = parsed.year != null || parsed.isEpisode || EpisodeCopies.markers(fileName).isNotEmpty() ||
-            endsInTags(tidy)
+            endsInTags(tidy) || parsed.part != null || parsed.extra != null ||
+            (HARD_TAGS.find(tidy)?.range?.first ?: 0) > 0 ||
+            (CAST_BRACKET.find(tidy)?.range?.first ?: 0) > 0
         // A name that is nothing but its marker ("Episode 1") reads back as the whole name, which
         // says it already; adding the code to it would say it twice.
         val title = parsed.title.takeIf { release && it.isNotBlank() && !it.equals(tidy, ignoreCase = true) }
@@ -161,19 +178,39 @@ object MediaName {
         val stripped = stripDecoration(text)
         // Separators are interchangeable: the same release shows up dot-separated on one tracker
         // and space-separated on another.
-        val normalised = stripped.replace(SEPARATORS, " ").replace(WHITESPACE, " ").trim()
+        var normalised = stripped.replace(SEPARATORS, " ").replace(WHITESPACE, " ").trim()
         if (normalised.isEmpty()) return Read(ParsedName("", null), "")
 
-        val episode = findEpisode(normalised)
-        val year = findYear(normalised, maxYear)
+        // "Trailer - Night Train (2024)": the word in front says what the file is, the rest names it.
+        // Only with a dash or a colon after it, so "Sample Room Tales" stays a title.
+        val leadingExtra = EXTRA.find(normalised)?.takeIf {
+            it.range.first == 0 && LEADING_SEPARATOR.containsMatchIn(normalised.substring(it.range.last + 1))
+        }
+        if (leadingExtra != null) {
+            normalised = clean(normalised.substring(leadingExtra.range.last + 1))
+            if (normalised.isEmpty()) return Read(ParsedName("", null, extra = extraOf(leadingExtra.value)), "")
+        }
 
-        // The title ends at whichever marker comes first: the year, the episode code, or the
-        // start of the technical block.
-        val cut = listOfNotNull(
-            year?.at,
-            episode?.at,
-            firstTagIndex(normalised),
-        ).minOrNull() ?: normalised.length
+        // A daily show or a match is numbered by the day it aired, "Show 2024.10.14 720p".
+        val date = findAirDate(normalised)
+        val episode = if (date == null) findEpisode(normalised) else null
+        val year = if (date != null) Year(date.year, date.at) else findYear(normalised, maxYear)
+
+        // The title ends at whichever marker comes first: the year, the episode code, the air date,
+        // the start of the technical block, a split film's "CD1", a trailer's own word, or a cast list.
+        val dated = listOfNotNull(year?.at, episode?.at, date?.at).minOrNull()
+        val markers = listOfNotNull(dated, titleEnd(normalised, dated)).minOrNull()
+        val part = if (episode == null) findPart(normalised, markers) else null
+        // The word has to end the title: "Night Train Trailer", "Night Train (2024) Teaser 2", but
+        // not "The Sample Room (2020)", where more of the title follows it.
+        val extra = EXTRA.findAll(normalised).firstOrNull { match ->
+            match.range.first > 0 && (
+                (markers != null && match.range.first > markers) ||
+                    clean(normalised.substring(match.range.last + 1, maxOf(markers ?: normalised.length, match.range.last + 1))).isEmpty()
+                )
+        }
+        val bracket = CAST_BRACKET.find(normalised)?.range?.first?.takeIf { it > 0 }
+        val cut = listOfNotNull(markers, part?.at, extra?.range?.first, bracket).minOrNull() ?: normalised.length
 
         return Read(
             ParsedName(
@@ -181,9 +218,57 @@ object MediaName {
                 year = year?.value,
                 season = episode?.season,
                 episode = episode?.number,
+                part = part?.number,
+                extra = (extra ?: leadingExtra)?.let { extraOf(it.value) },
+                airDate = date?.text,
             ),
             whole = clean(normalised),
         )
+    }
+
+    /** A piece of a split film, and where in the name its marker starts. */
+    private data class Part(val number: Int, val at: Int)
+
+    /**
+     * "CD1", "Disc 2", "Part2", "pt.3": the piece of one film a file holds. "Part 2" with a space
+     * reads as a sequel's title ("Night Train Part 2 (2021)") unless it comes after the year or the
+     * release tags, where no title is; the run-together forms and a disc number never belong to a
+     * title. [markers] is where the year, the episode or the tags begin.
+     */
+    private fun findPart(text: String, markers: Int?): Part? {
+        val match = PART.findAll(text).firstOrNull { it.range.first > 0 } ?: return null
+        val number = match.groupValues[2].toIntOrNull() ?: return null
+        if (number !in 1..MAX_PARTS) return null
+        val word = match.groupValues[1].lowercase(Locale.ROOT)
+        val runTogether = match.value.none { it == ' ' }
+        val afterTitle = markers != null && match.range.first > markers
+        val split = word == "cd" || word.startsWith("dis") || runTogether || afterTitle
+        return if (split) Part(number, match.range.first) else null
+    }
+
+    private fun extraOf(word: String): ExtraKind {
+        val text = word.lowercase(Locale.ROOT)
+        return when {
+            "trailer" in text || TRAILER_WORDS.any { it in text } -> ExtraKind.Trailer
+            "teaser" in text || TEASER_WORDS.any { it in text } -> ExtraKind.Teaser
+            "promo" in text -> ExtraKind.Promo
+            "sample" in text -> ExtraKind.Sample
+            else -> ExtraKind.Extra
+        }
+    }
+
+    /**
+     * The audio languages [text] names after its title ("Night Train 2022 Tamil HDRip" gives
+     * `ta`), as ISO 639-1 codes in the order written. A language word at the very front is the
+     * title's own ("Tamil Lessons"), and is not counted.
+     */
+    fun languages(text: String): List<String> {
+        val normalised = stripDecoration(stripExtension(text)).replace(SEPARATORS, " ").replace(WHITESPACE, " ").trim()
+        return LANGUAGE.findAll(normalised)
+            .filter { it.range.first > 0 }
+            .mapNotNull { LANGUAGE_CODES[it.value.lowercase(Locale.ROOT)] }
+            .distinct()
+            .toList()
     }
 
     /**
@@ -302,10 +387,13 @@ object MediaName {
             ?.let { return it }
 
         // Otherwise the last plausible year wins, so "Studio Log 2049 2017" resolves to 2017
-        // while "Studio Log 2049" keeps 2049 in the title, being beyond next year.
+        // while "Studio Log 2049" keeps 2049 in the title, being beyond next year. A year that
+        // opens the name is its title ("1944.1080p.mkv", "1944 2019 HDRip"): a release year
+        // never stands in front of the title it dates. "[2014] Garden Notes" arrives here with
+        // its opening bracket trimmed off, and the closing one still says it is a year.
         return BARE_YEAR.findAll(text)
             .mapNotNull { match -> match.groups[1]?.let { Year(it.value.toInt(), match.range.first) } }
-            .lastOrNull { it.value in MIN_YEAR..maxYear }
+            .lastOrNull { it.value in MIN_YEAR..maxYear && (it.at > 0 || text.getOrNull(4) in CLOSING) }
     }
 
     /**
@@ -317,6 +405,46 @@ object MediaName {
      */
     private fun firstTagIndex(text: String): Int? =
         TAGS.findAll(text).map { it.range.first }.filter { it > 0 }.minOrNull()
+
+    /**
+     * Where the title ends on account of its tags, given that the year, the episode or the air date
+     * (whichever comes first) is at [dated].
+     *
+     * A hard marker (a resolution, a codec, a source) is never part of a title, so it ends one
+     * wherever it is. A softer word (a language, an edition, "Complete", "Web") ends it only where
+     * nothing but tags follows it up to the next marker: "Harbour Notes Tamil 2022 HDRip" ends at
+     * "Tamil", but "The Italian Job 2003" and "Learn Tamil Fast" keep their words, and so does a
+     * title the cut would leave as a bare article ("The Final Cut").
+     */
+    private fun titleEnd(text: String, dated: Int?): Int? {
+        val hard = HARD_TAGS.findAll(text).map { it.range.first }.firstOrNull { it > 0 }
+        val bound = listOfNotNull(dated, hard).minOrNull() ?: text.length
+        val soft = TAGS.findAll(text).firstOrNull { match ->
+            val at = match.range.first
+            at in 1 until bound &&
+                text.substring(at, bound).replace(TAGS, " ").all { it.isWhitespace() || it in TRIM_CHARS } &&
+                clean(text.substring(0, at)).lowercase(Locale.ROOT) !in ARTICLES &&
+                // "Into the Web", "Tales of Tamil": a word straight after "the" or "of" is the title's.
+                text.substring(0, at).trim().substringAfterLast(' ').lowercase(Locale.ROOT) !in JOINING_WORDS
+        }?.range?.first
+        return listOfNotNull(hard, soft).minOrNull()
+    }
+
+    /** A date and where it starts. */
+    private class AirDate(val text: String, val year: Int, val at: Int)
+
+    /** "2024 10 14" or "14 10 2024", separators already spaces, after a title. */
+    private fun findAirDate(text: String): AirDate? {
+        ISO_DATE.find(text)?.takeIf { it.range.first > 0 }?.let { m ->
+            val (y, mo, d) = m.destructured
+            return AirDate("$y-$mo-$d", y.toInt(), m.range.first)
+        }
+        DAY_FIRST_DATE.find(text)?.takeIf { it.range.first > 0 }?.let { m ->
+            val (d, mo, y) = m.destructured
+            return AirDate("$y-$mo-$d", y.toInt(), m.range.first)
+        }
+        return null
+    }
 
     /**
      * Removes the branding uploaders staple to the front of a file name.
@@ -382,6 +510,76 @@ object MediaName {
     private fun thisYear(): Int = Calendar.getInstance().get(Calendar.YEAR)
 
     private const val MIN_YEAR = 1900
+
+    /** More pieces than this is a numbered run of clips, not one film cut to fit a disc. */
+    private const val MAX_PARTS = 9
+
+    /** "Trailer" in Tamil, Hindi and Malayalam script. Declared before [EXTRA], which reads them. */
+    private val TRAILER_WORDS = listOf("ட்ரெய்லர்", "டிரெய்லர்", "ट्रेलर", "ട്രെയിലർ")
+
+    /** "Teaser" in the same scripts. */
+    private val TEASER_WORDS = listOf("டீசர்", "टीज़र", "ടീസർ")
+
+    /** "CD1", "Disc 2", "Part2", "Part 2", "pt.3" (a dot is a space by now), "Pt-1". */
+    private val PART = Regex("""\b(cd|dis[ck]|part|pt)[\s-]?(\d{1,2})\b""", RegexOption.IGNORE_CASE)
+
+    /**
+     * What a trailer or a sample calls itself. "Official" goes with the word after it, so "Night
+     * Train Official Trailer 2" keeps no "Official" in its title.
+     */
+    private val EXTRA = Regex(
+        """\b(?:official\s+)?(?:trailer|teaser|promo|sample|sneak\s?peek|first\s?look|glimpse|making\s?of)\b(?:\s?\d{1,2}\b)?""" +
+            // The same words as the Tamil, Hindi and Malayalam channels write them, which end on a
+            // vowel sign, so the edges are spelt out rather than left to \b.
+            """|(?<![\p{L}\p{M}])(?:${TRAILER_WORDS.joinToString("|")}|${TEASER_WORDS.joinToString("|")})(?![\p{L}\p{M}])""",
+        RegexOption.IGNORE_CASE,
+    )
+
+    private val CLOSING = setOf(')', ']', '}')
+
+    private val ARTICLES = setOf("", "the", "a", "an")
+
+    private val JOINING_WORDS = setOf("the", "a", "an", "of", "and", "in", "on", "into", "to", "for", "with", "from", "my", "our")
+
+    private val ISO_DATE = Regex("""(?<!\d)((?:19|20)\d{2})[ -](0[1-9]|1[0-2])[ -](0[1-9]|[12]\d|3[01])(?!\d)""")
+    private val DAY_FIRST_DATE = Regex("""(?<!\d)(0[1-9]|[12]\d|3[01])[ -](0[1-9]|1[0-2])[ -]((?:19|20)\d{2})(?!\d)""")
+
+    /**
+     * The markers that never belong to a title: a resolution, a codec, a source, a size. The rest
+     * of [TAGS] (languages, editions, furniture) are words a title can hold.
+     */
+    private val HARD_TAGS = Regex(
+        """\b(""" + listOf(
+            "\\d{3,4}[pi]", "4k", "uhd", "2160p",
+            "bluray", "blu-ray", "bdrip", "brrip", "bdremux", "remux", "web-?rip", "web-?dl",
+            "webrip", "hdrip", "hdtvrip", "dvdrip", "dvdr", "hdtv", "pdtv", "vodrip", "ds4k",
+            "x264", "x265", "h ?264", "h ?265", "hevc", "xvid", "divx", "10bit", "8bit", "hdr10\\+?",
+            "aac\\d?", "ac3", "eac3", "e-ac3", "dd5", "ddp5", "ddp", "dts-hd", "dts-ma", "truehd",
+            "\\d\\.\\dch", "\\d+kbps", "esubs?", "msubs?", "\\d+(?:\\.\\d+)? ?[mg]b", "full ?movie",
+        ).joinToString("|") + """)\b""",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /** A dash, a colon or a bar, the long dashes written as escapes. */
+    private val LEADING_SEPARATOR = Regex("^\\s*[-:|\\u2013\\u2014]")
+
+    /**
+     * A "[" after the title that opens on two words and holds no digit: "Night Train [ Arun Kumar,
+     * Devi ...", the cast or the uploader's notes, which is a caption written as a file name. A
+     * bracket with a number in it ("[1080p]", "[Part 1]") is left to the other rules.
+     */
+    private val CAST_BRACKET = Regex("""\[\s*(?=\p{L}{2,}\s+\p{L})(?![^\]]*\d)""")
+
+    private val LANGUAGE_CODES = mapOf(
+        "tamil" to "ta", "telugu" to "te", "hindi" to "hi", "malayalam" to "ml", "kannada" to "kn",
+        "marathi" to "mr", "bengali" to "bn", "punjabi" to "pa", "english" to "en", "korean" to "ko",
+        "japanese" to "ja", "chinese" to "zh", "spanish" to "es", "french" to "fr", "russian" to "ru",
+        "german" to "de", "italian" to "it", "turkish" to "tr", "arabic" to "ar",
+        // The short forms a multi-audio release lists: "Tam + Tel + Hin".
+        "tam" to "ta", "tel" to "te", "hin" to "hi", "mal" to "ml", "eng" to "en",
+    )
+
+    private val LANGUAGE = Regex("""\b(""" + LANGUAGE_CODES.keys.joinToString("|") + """)\b""", RegexOption.IGNORE_CASE)
 
     private val SEPARATORS = Regex("""[._]+""")
     private val WHITESPACE = Regex("""\s+""")

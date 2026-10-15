@@ -15,6 +15,11 @@ import com.tmplayer.data.DetailAction.Resume
 import com.tmplayer.data.DetailAction.SaveToDownloads
 import com.tmplayer.data.DetailAction.Share
 import com.tmplayer.data.DetailAction.StartOver
+import com.tmplayer.data.DetailAction.JoinCopies
+import com.tmplayer.data.DetailAction.Rename
+import com.tmplayer.data.DetailAction.SplitCopy
+import com.tmplayer.data.DetailAction.UseMatch
+import com.tmplayer.data.DetailAction.WrongMatch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -105,5 +110,15 @@ class DetailActionsTest {
         val saved = DetailActions.of(phoneGrid.copy(watchLater = true))
         assertEquals(listOf(Play, MarkWatched, RemoveWatchLater, Download), saved.take(4))
         assertFalse(DetailActions.keepsACopy(AddWatchLater))
+    }
+
+    @Test
+    fun `corrections come last, each with its undo, and none of them keeps a copy`() {
+        val base = DetailContext(canBeSaved = false, canCorrect = true)
+        assertEquals(listOf(Play, MarkWatched, Rename), DetailActions.of(base))
+        assertEquals(listOf(SplitCopy, WrongMatch, Rename), DetailActions.of(base.copy(grouped = true, matched = true)).takeLast(3))
+        assertEquals(listOf(JoinCopies, UseMatch, Rename), DetailActions.of(base.copy(separated = true, wrongMatch = true)).takeLast(3))
+        assertFalse(DetailActions.of(DetailContext(canBeSaved = true)).contains(Rename))
+        assertFalse(listOf(SplitCopy, JoinCopies, WrongMatch, UseMatch, Rename).any(DetailActions::keepsACopy))
     }
 }

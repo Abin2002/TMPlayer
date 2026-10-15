@@ -25,6 +25,21 @@ class EpisodeStepsTest {
     )
 
     @Test
+    fun `a split film plays on from one piece to the next`() {
+        com.tmplayer.i18n.Translator.use(com.tmplayer.i18n.Languages.ENGLISH)
+        val cd2 = video("Coast Run 2014 720p CD2.avi", size = 700 * mb)
+        val cd1 = video("Coast Run 2014 720p CD1.avi", size = 700 * mb)
+        val items = listOf(cd2, cd1)
+        val first = EpisodeNeighbours.around(cd1, items)
+        assertEquals(cd2.id, first.next?.id)
+        assertEquals("Part 2", first.nextTag?.code)
+        assertNull(first.previous)
+        val second = EpisodeNeighbours.around(cd2, items)
+        assertEquals(cd1.id, second.previous?.id)
+        assertNull(second.next)
+    }
+
+    @Test
     fun `the last episode of a season leads into the next season`() {
         val items = listOf(
             video("Harbour.Notes.S02E01.1080p.mkv"),

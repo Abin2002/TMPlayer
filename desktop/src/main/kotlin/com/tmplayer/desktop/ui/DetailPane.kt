@@ -158,6 +158,10 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
     val bookmarks by remember(item.chatId, item.messageId) {
         state.bookmarks?.bookmarks(item.chatId, item.messageId) ?: kotlinx.coroutines.flow.flowOf(emptyList())
     }.collectAsState(initial = emptyList())
+    // The viewer's corrections to this file, and whether a provider's match is showing for it.
+    val corrections by com.tmplayer.data.VideoCorrections.state.collectAsState()
+    val correction = corrections[item.id]
+    val matched = com.tmplayer.ui.online.rememberMatched(item) != null
 
     val actions = DetailActions.of(
         DetailContext(
@@ -173,6 +177,11 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
             canHandOff = true,
             hasClipboard = true,
             outsideChat = request.outsideChat && chat != null,
+            canCorrect = true,
+            grouped = item.versions.size > 1,
+            separated = correction?.separate == true,
+            matched = matched,
+            wrongMatch = correction?.wrongMatch == true,
         ),
     ).filterNot { it == DetailAction.Share }
 
@@ -182,10 +191,16 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
     val outlives = Background.scope
     // "Remove from Downloads?" is asked over the pane, which stays open until it is answered.
     var confirmingRemove by remember(item.id) { mutableStateOf(false) }
+    // "Rename" is asked over the pane too, which closes once the title is saved.
+    var renaming by remember(item.id) { mutableStateOf(false) }
 
     fun run(action: DetailAction) {
         if (action == DetailAction.RemoveDownload) {
             confirmingRemove = record != null
+            return
+        }
+        if (action == DetailAction.Rename) {
+            renaming = true
             return
         }
         close()
@@ -241,6 +256,17 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
                 }
             }
             DetailAction.OpenChat -> chat?.let(state::openChat)
+            DetailAction.SplitCopy, DetailAction.JoinCopies -> {
+                val apart = action == DetailAction.SplitCopy
+                outlives.launch { runCatching { state.settings.correct(listOf(item)) { it.copy(separate = apart) } } }
+            }
+            DetailAction.WrongMatch, DetailAction.UseMatch -> {
+                val wrong = action == DetailAction.WrongMatch
+                outlives.launch {
+                    runCatching { state.settings.correct(com.tmplayer.data.VideoCorrections.filesOf(item)) { it.copy(wrongMatch = wrong) } }
+                }
+            }
+            DetailAction.Rename -> Unit
         }
     }
 
@@ -287,6 +313,21 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
         }
     }
     LaunchedEffect(item.id) { runCatching { first.requestFocus() } }
+
+    if (renaming) {
+        RenameDialog(
+            initial = correction?.title ?: com.tmplayer.data.SeriesShelf.filmTitle(item),
+            onSave = { title ->
+                renaming = false
+                // Every copy of the tile, so the title holds whichever one it shows.
+                outlives.launch {
+                    runCatching { state.settings.correct(com.tmplayer.data.VideoCorrections.filesOf(item)) { it.copy(title = title) } }
+                }
+                close()
+            },
+            onDismiss = { renaming = false },
+        )
+    }
 
     if (confirmingRemove) {
         ConfirmDialog(

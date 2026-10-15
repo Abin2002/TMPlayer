@@ -113,7 +113,7 @@ class TileTitleTest {
 
     @Test
     fun `a name ending in nothing but tags loses them`() {
-        assertEquals("Marina", SeriesShelf.tileTitle(video("Marina Tamil Hd.mp4")))
+        assertEquals("Harbour Lights", SeriesShelf.tileTitle(video("Harbour Lights Tamil Hd.mp4")))
         assertEquals("Coast Walk", SeriesShelf.tileTitle(video("Coast_Walk_Tamil.mkv")))
         assertEquals("Paper Moons", SeriesShelf.tileTitle(video("Paper Moons Full Movie HD.mp4")))
         // A language inside an ordinary name is not a tag block.

@@ -144,6 +144,11 @@ fun detailRow(
             s.detailOpenChatDetail,
             onSelect = onSelect,
         )
+        DetailAction.SplitCopy -> DetailRow(action, s.gridNotSameVideo, TmIcons.Remove, s.gridNotSameVideoDetail, onSelect = onSelect)
+        DetailAction.JoinCopies -> DetailRow(action, s.gridSameVideoAgain, TmIcons.Add, onSelect = onSelect)
+        DetailAction.WrongMatch -> DetailRow(action, s.gridWrongMatch, TmIcons.VisibilityOff, s.gridWrongMatchDetail, onSelect = onSelect)
+        DetailAction.UseMatch -> DetailRow(action, s.gridMatchAgain, TmIcons.Image, onSelect = onSelect)
+        DetailAction.Rename -> DetailRow(action, s.gridRename, TmIcons.Edit, s.gridRenameDetail, onSelect = onSelect)
     }
 }
 
@@ -181,8 +186,10 @@ fun MediaDetailPanel(
     onOpenBookmark: ((Bookmark) -> Unit)? = null,
 ) {
     val s = LocalStrings.current
-    val parsed = remember(item) { MediaName.parse(item.nameForParsing, item.caption) }
-    val meta = rememberMeta(item)
+    val corrections by com.tmplayer.data.VideoCorrections.state.collectAsState()
+    val parsed = remember(item, corrections) { com.tmplayer.data.SeriesShelf.episodeOf(item, corrections) }
+    val matched = com.tmplayer.ui.online.rememberMatched(item)
+    val meta = matched?.info
     // "small-shelf-part-1" reads as a title once its joiners are spaces; a name with spaces in it
     // already chose its own punctuation and keeps it. A match's own title wins, in the UI language.
     val heading = meta?.title?.takeIf { it.isNotBlank() }
@@ -262,6 +269,17 @@ fun MediaDetailPanel(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.semantics { heading() },
                 )
+                // Where the name came from: the provider's match and what backed it, or the file.
+                if (online?.settings?.collectAsState()?.value?.enabled == true) {
+                    Text(
+                        meta?.let { m -> m.year?.let { s.detailMatchedAs(m.title, it.toString()) } ?: s.detailMatchedAsNoYear(m.title) }
+                            ?: s.detailFromFileName,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Tone.muted,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
 
