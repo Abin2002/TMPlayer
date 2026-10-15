@@ -85,6 +85,9 @@ object WatchNext {
      * - Between the two, short of the last 8 per cent: a Continue entry at [positionMs].
      * - In the gap between the resume line and the watched line: this video leaves the row, the
      *   same moment its resume point is dropped.
+     *
+     * Whatever the position, the [otherCopies] of the video (the 720p the viewer switched away
+     * from in the player) leave the row: one video, one entry, for the copy last played.
      */
     fun changesFor(
         video: Video,
@@ -94,9 +97,15 @@ object WatchNext {
         next: Video?,
         enabled: Boolean,
         supported: Boolean,
+        otherCopies: List<Video> = emptyList(),
     ): List<Change> {
         if (!enabled || !supported) return emptyList()
         if (video.chatId == 0L || video.messageId == 0L) return emptyList()
+        val others = otherCopies.map { it.internalId }.filter { it != video.internalId }.distinct().map { Change.Remove(it) }
+        return others + changesForThis(video, positionMs, durationMs, nowMs, next)
+    }
+
+    private fun changesForThis(video: Video, positionMs: Long, durationMs: Long, nowMs: Long, next: Video?): List<Change> {
         if (ResumeRules.watched(positionMs, durationMs)) {
             return buildList {
                 add(Change.Remove(video.internalId))

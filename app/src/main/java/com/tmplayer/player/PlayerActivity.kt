@@ -4809,6 +4809,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         if (!hasMessage() || !remoteQuirks.watchNextSupported || savable == false) return
         val video = WatchNext.Video(chatId, messageId, fileId, mediaTitle, chatTitle, fileSizeBytes, durationSec)
         val next = _episodes.value.next?.let { WatchNext.Video.of(it, chatTitle) }
+        // A copy switched away from leaves the row, so the video keeps one entry.
+        val otherCopies = copies.filter { it.id != currentItem().id && it.chatId != 0L }.map { WatchNext.Video.of(it, copyChatTitle(it)) }
         val store = settings
         val context = applicationContext
         App.backgroundScope.launch {
@@ -4821,6 +4823,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     next = next,
                     enabled = store.watchNextNow(),
                     supported = true,
+                    otherCopies = otherCopies,
                 )
                 WatchNextPublisher.apply(context, changes)
             }

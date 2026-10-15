@@ -31,6 +31,17 @@ class WatchNextTest {
     }
 
     @Test
+    fun `the copies switched away from leave the row, whatever the position`() {
+        val sd = video(40)
+        val result = WatchNext.changesFor(ep4, 1_000_000, duration, now, ep5, true, true, otherCopies = listOf(sd, ep4))
+        assertEquals(Change.Remove("-100_40"), result[0])
+        assertEquals(WatchNext.Kind.Continue, (result[1] as Change.Upsert).entry.kind)
+        assertEquals(2, result.size)
+        // A glance at the new copy still takes the old one off.
+        assertEquals(listOf(Change.Remove("-100_40")), WatchNext.changesFor(ep4, 10_000, duration, now, ep5, true, true, otherCopies = listOf(sd)))
+    }
+
+    @Test
     fun `nothing in the first three minutes`() {
         assertTrue(changes(179_000).isEmpty())
     }
