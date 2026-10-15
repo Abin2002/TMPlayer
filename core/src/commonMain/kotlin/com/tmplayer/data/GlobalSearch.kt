@@ -132,21 +132,16 @@ interface SearchIdentity {
                 // lengths are known they have to agree.
                 val name = SeriesShelf.episodeOf(a)
                 if (name.year == null && name.episode == null) return false
-                if (a.durationSec > 0 && b.durationSec > 0) {
-                    val gap = kotlin.math.abs(a.durationSec - b.durationSec)
-                    if (gap > maxOf(DURATION_SLACK_SECONDS.toDouble(), maxOf(a.durationSec, b.durationSec) * DURATION_SLACK)) return false
-                }
-                return true
+                // The rest is the browse pages' own test ([SameVideo]): lengths, the player's
+                // learned lengths, and the viewer's "Not the same video".
+                return SameVideo.same(a, b)
             }
 
-            override fun isExtra(item: MediaItem): Boolean = GlobalSearch.isExtra(item)
+            override fun isExtra(item: MediaItem): Boolean =
+                item.extra != null || item.parsedName.extra != null || GlobalSearch.isExtra(item)
 
             override fun copyOrder(copies: List<MediaItem>): List<MediaItem> = GlobalSearch.copyOrder(copies)
         }
-
-        /** Copies of one film differ by a cut credit or a logo: a minute and a half, or three per cent. */
-        private const val DURATION_SLACK_SECONDS = 90
-        private const val DURATION_SLACK = 0.03
     }
 }
 
