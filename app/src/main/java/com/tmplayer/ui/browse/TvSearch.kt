@@ -303,8 +303,15 @@ private fun TvPill(label: String, icon: ImageVector?, chosen: Boolean = false, p
         label = "tvPill",
     )
     val ink = if (focused) Tone.onFocusFill else Tone.text
+    // The pill the remote lands on grows a touch, as the chat header's pills do.
+    val lessMotion = rememberReducedMotion() || Motion.reduced
+    val scale by animateFloatAsState(if (focused && !lessMotion) 1.06f else 1f, Motion.standard(Motion.Fast), label = "tvPillScale")
     Row(
         Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .height(48.dp)
             .clip(CircleShape)
             .background(fill)
