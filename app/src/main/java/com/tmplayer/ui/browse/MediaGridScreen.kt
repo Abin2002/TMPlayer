@@ -1116,6 +1116,8 @@ internal fun TouchMediaScaffold(
     val s = LocalStrings.current
     var searching by rememberSaveable { mutableStateOf(startSearching) }
     val field = remember { FocusRequester() }
+    // The star ticks under the finger as it fills or empties ("Vibrate on tap").
+    val tick = com.tmplayer.ui.components.rememberToggleTick()
     // The title is a lot of a phone screen to spend while scrolling, so it leaves on the way down
     // and comes back on the first flick up. The buttons at the foot stay.
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -1248,7 +1250,7 @@ internal fun TouchMediaScaffold(
                     FloatingBarIcon(
                         icon = if (isFavorite) TmIcons.Star else TmIcons.StarOutline,
                         label = if (isFavorite) s.browseRemoveFavourite else s.browseAddFavourite,
-                        onClick = onToggleFavorite,
+                        onClick = { tick(!isFavorite); onToggleFavorite() },
                         // Only the filled star is coloured, so the outline sits with the others.
                         tint = if (isFavorite) Tone.accent else Tone.text,
                         checked = isFavorite,
