@@ -29,7 +29,11 @@ REPO = "dracu-lah/TMPlayer"
 # Only what a release carries; a client finds nothing under any other key and says so.
 ASSETS = {
     "android-universal": "TMPlayer-{v}-universal.apk",
-    "windows-x64-msi": "TMPlayer-{v}-windows-x64.msi",
+    # Not "windows-x64-msi": 1.26.0 and older read that key, and their in-app update deletes the
+    # sign in and settings (issue #7), so from 1.26.1 the MSI is published only under a key they
+    # do not know. Their popup then sends people to the download page, and install.ps1 keeps
+    # the data on the way.
+    "windows-x64-msi-v2": "TMPlayer-{v}-windows-x64.msi",
     "macos-arm64-dmg": "TMPlayer-{v}-macos-arm64.dmg",
     "linux-x64-appimage": "TMPlayer-{v}-x86_64.AppImage",
     "linux-x64-tarball": "TMPlayer-{v}-linux-x64.tar.xz",

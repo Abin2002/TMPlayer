@@ -167,7 +167,7 @@ object UpdateFeed {
                 "universal" in name -> "android-universal"
                 else -> ANDROID_ABIS.firstOrNull { name.endsWith("-$it.apk") }?.let { "android-$it" }
             }
-            name.endsWith("-windows-x64.msi") -> "windows-x64-msi"
+            name.endsWith("-windows-x64.msi") -> "windows-x64-msi-v2"
             name.endsWith("-windows-x64-portable.zip") -> "windows-x64-portable"
             name.endsWith(".appimage") -> "linux-x64-appimage"
             name.endsWith("_amd64.deb") -> "linux-x64-deb"

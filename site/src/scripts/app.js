@@ -1308,7 +1308,8 @@ var tmT = (function () {
   }).then(function (feed) {
     var assets = (feed && feed.assets) || {};
     function fileOf(kind) {
-      var asset = assets[kind];
+      // The MSI is "windows-x64-msi-v2" from 1.26.1 (scripts/write-latest-json.py).
+      var asset = assets[kind] || assets[kind + '-v2'];
       if (!asset || !asset.url) { return null; }
       var name = String(asset.url).split('/').pop();
       // Only a plain file name goes into the page, never a path or anything else.
@@ -1321,7 +1322,8 @@ var tmT = (function () {
     Array.prototype.forEach.call(sums, function (node) {
       var kind = node.getAttribute('data-sha');
       var name = fileOf(kind);
-      var sha = assets[kind] && assets[kind].sha256;
+      var entry = assets[kind] || assets[kind + '-v2'];
+      var sha = entry && entry.sha256;
       if (!name || !/^[0-9a-f]{64}$/i.test(sha || '')) { return; }
       node.textContent = tmT('sha_expected', 'For {file}, the result should be:', { file: name }) + ' ';
       var code = document.createElement('code');

@@ -151,6 +151,16 @@ class SelfUpdateTest {
     }
 
     @Test
+    fun `the msi updates only from the key 1_26_0 and older do not read`() {
+        val hash = "a".repeat(64)
+        val asset = ReleaseAsset("https://x/TMPlayer-1.27.0-windows-x64.msi", sha256 = hash, size = 1)
+        val msi = SelfUpdate(kind = InstallKind.WindowsMsi, workDir = Files.createTempDirectory("tm-msi").toFile())
+        assertTrue(msi.canUpdateTo(Release("1.27.0", "https://x", assets = mapOf("windows-x64-msi-v2" to asset))))
+        // What a 1.26.0 feed (and so a 1.26.0 app) knows: no longer an update for an MSI install.
+        assertFalse(msi.canUpdateTo(Release("1.27.0", "https://x", assets = mapOf("windows-x64-msi" to asset))))
+    }
+
+    @Test
     fun `stages the msi update beside the install folder, never in it`() {
         val launcher = File("/home/a/AppData/Local/TMPlayer/TMPlayer.exe")
         val root = SelfUpdate.msiRoot(launcher)!!

@@ -135,7 +135,10 @@ function Install-TMPlayer {
         $feed = Invoke-RestMethod -Uri 'https://tmplayer.org/latest.json' -UseBasicParsing
         $version = $feed.version
         if ($feed.releaseUrl) { $fallbackUrl = $feed.releaseUrl }
-        $msi = $feed.assets.'windows-x64-msi'
+        # 1.26.1 and later publish the MSI as windows-x64-msi-v2, so 1.26.0's in-app update
+        # never finds it; older feeds name it windows-x64-msi.
+        $msi = $feed.assets.'windows-x64-msi-v2'
+        if (-not $msi) { $msi = $feed.assets.'windows-x64-msi' }
         if (-not $msi -or -not $msi.url) {
             throw 'The latest release has no Windows installer yet.'
         }

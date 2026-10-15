@@ -456,10 +456,12 @@ class SelfUpdate(
         /**
          * The update feed's key for the package [kind] installs from (see `site/public/latest.json`).
          * The portable zip, deb and rpm keys stay so a release that still carries them (1.21.0
-         * and older) works as before; newer releases simply have no such key.
+         * and older) works as before; newer releases simply have no such key. The MSI moved to
+         * "windows-x64-msi-v2" in 1.26.1, so 1.26.0 and older, whose update deletes the sign in
+         * (issue #7), no longer find one (see `scripts/write-latest-json.py`).
          */
         fun assetFor(kind: InstallKind): String? = when (kind) {
-            InstallKind.WindowsMsi -> "windows-x64-msi"
+            InstallKind.WindowsMsi -> "windows-x64-msi-v2"
             InstallKind.WindowsPortable -> "windows-x64-portable"
             InstallKind.AppImage -> "linux-x64-appimage"
             InstallKind.Deb -> "linux-x64-deb"

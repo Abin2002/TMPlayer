@@ -489,7 +489,7 @@ class BrowseRenderTest {
             version = "2.0.1",
             pageUrl = "https://github.com/dracu-lah/TMPlayer/releases/tag/v2.0.1",
             notes = "Downloads leave the cache and live in a folder you choose.",
-            assets = mapOf("windows-x64-msi" to ReleaseAsset("https://x/TMPlayer-2.0.1-windows-x64.msi", size = 155_000_000)),
+            assets = mapOf("windows-x64-msi-v2" to ReleaseAsset("https://x/TMPlayer-2.0.1-windows-x64.msi", size = 155_000_000)),
         )
         val png = render(update = NavUpdate("Update", "2.0.1")) {
             Box(Modifier.fillMaxSize()) {

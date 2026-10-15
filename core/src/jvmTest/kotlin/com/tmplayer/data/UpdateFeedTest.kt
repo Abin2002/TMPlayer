@@ -28,7 +28,7 @@ class UpdateFeedTest {
           "assets": {
             "android-universal": { "url": "https://x/TMPlayer-1.20.0-universal.apk", "sha256": "${"a".repeat(64)}", "size": 52000000 },
             "android-armeabi-v7a": { "url": "https://x/TMPlayer-1.20.0-armeabi-v7a.apk", "sha256": "${"b".repeat(64)}", "size": 24000000 },
-            "windows-x64-msi": { "url": "https://x/TMPlayer-1.20.0-windows-x64.msi", "sha256": "short", "size": 1 },
+            "windows-x64-msi-v2": { "url": "https://x/TMPlayer-1.20.0-windows-x64.msi", "sha256": "short", "size": 1 },
             "linux-x64-deb": { "url": "https://x/tmplayer_1.20.0_amd64.deb", "sha256": "${"c".repeat(64)}", "size": 2 }
           }
         }
@@ -53,7 +53,7 @@ class UpdateFeedTest {
         assertEquals(52000000L, release.assets["android-universal"]?.size)
         assertEquals("a".repeat(64), release.assets["android-universal"]?.sha256)
         // A hash that is not one is treated as no hash, so the checksum file is used instead.
-        assertNull(release.assets["windows-x64-msi"]?.sha256)
+        assertNull(release.assets["windows-x64-msi-v2"]?.sha256)
         assertEquals("tmplayer_1.20.0_amd64.deb", release.assets["linux-x64-deb"]?.name)
     }
 
@@ -80,8 +80,8 @@ class UpdateFeedTest {
         val release = UpdateFeed.parseGitHub(json)!!
         assertEquals("2.0.1", release.version)
         assertEquals("https://github.com/dracu-lah/TMPlayer/releases/tag/v2.0.1", release.pageUrl)
-        assertEquals(setOf("windows-x64-msi", "linux-x64-deb"), release.assets.keys)
-        assertEquals("d".repeat(64), release.assets["windows-x64-msi"]?.sha256)
+        assertEquals(setOf("windows-x64-msi-v2", "linux-x64-deb"), release.assets.keys)
+        assertEquals("d".repeat(64), release.assets["windows-x64-msi-v2"]?.sha256)
         assertNull(release.assets["linux-x64-deb"]?.sha256)
         assertEquals("https://github.com/d/r/releases/download/v2.0.1/SHA256SUMS-2.0.1.txt", release.checksumsUrl)
         assertNull(UpdateFeed.parseGitHub("{}"))
@@ -95,7 +95,7 @@ class UpdateFeedTest {
             "TMPlayer-$v-arm64-v8a.apk" to "android-arm64-v8a",
             "TMPlayer-$v-armeabi-v7a.apk" to "android-armeabi-v7a",
             "TMPlayer-$v-x86_64.apk" to "android-x86_64",
-            "TMPlayer-$v-windows-x64.msi" to "windows-x64-msi",
+            "TMPlayer-$v-windows-x64.msi" to "windows-x64-msi-v2",
             "TMPlayer-$v-windows-x64-portable.zip" to "windows-x64-portable",
             "TMPlayer-$v-x86_64.AppImage" to "linux-x64-appimage",
             "tmplayer_${v}_amd64.deb" to "linux-x64-deb",
@@ -175,7 +175,7 @@ class UpdateFeedTest {
     @Test
     fun `the minimal release still reaches every device`() {
         // What CI publishes since 1.21.0: one APK, the MSI, the AppImage and the tarball.
-        val r = release("android-universal", "windows-x64-msi", "linux-x64-appimage", "linux-x64-tarball")
+        val r = release("android-universal", "windows-x64-msi-v2", "linux-x64-appimage", "linux-x64-tarball")
         for (abis in listOf(listOf("armeabi-v7a"), listOf("arm64-v8a", "armeabi-v7a"), listOf("x86_64"))) {
             assertEquals("https://x/android-universal", UpdateFeed.androidAsset(r, abis)?.url)
         }
