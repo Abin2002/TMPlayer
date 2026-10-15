@@ -12,8 +12,8 @@
 /* Text this script writes, in the page's language.
 
    Every sentence below goes through tmT(key, english, values). The
-   English stays here as the source: scripts/build-site-i18n.py reads these calls
-   into site/i18n/en.json as js.<key>, and a translated page carries its strings
+   English stays here as the source and matches site/i18n/en.json's js.<key>
+   (scripts/site-i18n-check.py holds the two together), and a translated page carries its strings
    in a <script id="tm-strings"> block, so this file is the same for every
    language and nothing extra is fetched. A key missing from that block falls
    back to the English beside it. {name} placeholders are filled in last, so a
@@ -1048,7 +1048,7 @@ var tmT = (function () {
 
 /* Languages: the header picker and the suggestion bar.
 
-   scripts/build-site-i18n.py writes a <script id="tm-langs"> block into every
+   The layout (src/layouts/Base.astro) writes a <script id="tm-langs"> block into every
    page once a second language is published: the language this page is in, and
    for every published language its URL for this page and the suggestion in
    that language's own words. With one language the block is absent and none of
@@ -1142,7 +1142,7 @@ var tmT = (function () {
 })();
 
 /* Keep Android Open: the close button of the notice bar that
-   scripts/build-site-i18n.py writes into every page. Closing it is remembered
+   the layout (src/components/KaoNotice.astro) writes into every page. Closing it is remembered
    under one key for every page and language; the head script reads that key
    before the first paint. */
 (function () {

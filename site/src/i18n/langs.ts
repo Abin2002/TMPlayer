@@ -1,4 +1,4 @@
-// The site's languages and localized pages, moved here unchanged from scripts/build-site-i18n.py.
+// The site's languages and localized pages.
 
 /** Page id and its directory. Only these pages are localized; the changelog, the legal pages,
  * security and signing stay in English and localized pages link to the English copies. */

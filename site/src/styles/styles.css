@@ -2614,7 +2614,7 @@ a.card:hover .card-go svg { transform: translateX(4px); }
 
 /* ---------- Changelog ----------
 
-   One card per release, newest first, written by scripts/build-changelog.py. The cards are the
+   One card per release, newest first, rendered from src/data/releases.json. The cards are the
    panels' shape on the tonal band, and the notes inside them are prose at the page's measure, so
    a long release reads like a paragraph rather than like a log. The version heading links to the
    release's own page; the anchors stay, because older update popups point at them. The fixed header would cover a heading scrolled to the
@@ -2671,7 +2671,7 @@ a.card:hover .card-go svg { transform: translateX(4px); }
 
 /* ---------- Languages ----------
 
-   scripts/build-site-i18n.py renders a copy of the site per language under /es/, /fr/ and the
+   The Astro build renders a copy of the site per language under /es/, /fr/ and the
    rest, and writes the picker, the footer list and the "Now in" line into every page once a
    second language is published. Nothing redirects: app.js offers a reader whose browser prefers
    another published language the suggestion bar below, once, and remembers the answer. */

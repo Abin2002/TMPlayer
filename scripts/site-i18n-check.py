@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks the site's translation catalogs against the Astro pages (replaces build-site-i18n.py --check).
+"""Checks the site's translation catalogs against the Astro pages.
 
 site/i18n/en.json is the source of every string the site shows; site/i18n/<tag>.json holds the
 translations with the same keys and {placeholders}. After `pnpm -C site build`, which writes the

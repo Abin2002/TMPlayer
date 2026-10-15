@@ -2,7 +2,7 @@
 //
 // src/data/releases.json is written by scripts/release-data.py (the release job runs it). Its
 // notes are the markdown a person wrote in the tag message; inline() and markdown() below are a
-// port of what scripts/build-changelog.py did with them, kept to code, links, bold, bullet lists
+// port of how the site has always rendered them, kept to code, links, bold, bullet lists
 // and small headings, so the HTML stays what the pages always had. No markdown library: one
 // would render the same notes differently.
 import data from '../data/releases.json';

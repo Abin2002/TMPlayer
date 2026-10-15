@@ -1,4 +1,4 @@
-// Localized URLs, as scripts/build-site-i18n.py's page_url() and localize_links() made them.
+// Localized URLs, /<prefix>/<page path> for every localized page, English at the root.
 import { ENGLISH, ORIGIN, PAGES, type Lang, type PageId } from './langs';
 
 export function pageUrl(lang: Lang, page: PageId): string {

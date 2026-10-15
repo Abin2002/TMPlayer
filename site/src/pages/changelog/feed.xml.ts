@@ -1,5 +1,5 @@
-// The RSS feed of the releases, written out by hand in the format scripts/build-changelog.py
-// used, so feed readers see the same GUIDs, titles, links and dates and no item comes back new.
+// The RSS feed of the releases, written out by hand in the format the feed has had since
+// its first release, so feed readers see the same GUIDs, titles, links and dates and no item comes back new.
 import type { APIRoute } from 'astro';
 import {
   DESCRIPTION, FEED_ITEMS, FEED_URL, PAGE_URL, escAttr, markdown, plain, releaseUrl, releases, rfc822,

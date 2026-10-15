@@ -4,7 +4,7 @@
   - every internal href, src, srcset, poster and data-*-src resolves to a file in dist/, or to a
     redirect in site/vercel.json (such as /apk), or to Vercel's own /_vercel/ paths
   - a page under a language prefix (/es/, /zh-tw/, ...) links to the same language's copy of every
-    localized page, never to the English one, as build-site-i18n.py's localize_links() did
+    localized page, never to the English one, as the site always has
 
 Usage: scripts/site-links.py [dist-dir]
 """

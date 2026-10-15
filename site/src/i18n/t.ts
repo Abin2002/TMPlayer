@@ -1,4 +1,4 @@
-// Catalog lookups: the same rules scripts/build-site-i18n.py rendered pages with.
+// Catalog lookups: fallback to English per string, {placeholders} filled from slots or values.
 //
 // site/i18n/en.json is the source of every string; site/i18n/<tag>.json holds the translations
 // with the same keys and {placeholders}. A translation is used only when its placeholders match

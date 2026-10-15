@@ -1,6 +1,5 @@
 // JSON-LD in every language: text fields become ld.* catalog strings, URLs follow the language.
-// The keys are the ones scripts/build-site-i18n.py derived from the English text, so the catalogs
-// need no change.
+// The keys are derived from the English text, the way the catalogs have always been keyed.
 import { createHash } from 'node:crypto';
 import { text } from './t';
 import { ldUrl } from './links';
