@@ -432,6 +432,72 @@ class PlayerMouseTest {
         assertEquals(400_000L - com.tmplayer.data.ResumeRewind.DEFAULT_MS, engine.state.value.positionMs)
     }
 
+    @Test
+    fun `cancel on the end countdown stops it, and the next episode is not started`() = runComposeUiTest {
+        media.steps = Episodes(next = media.item.copy(messageId = 10, title = "Night Train 2"))
+        open()
+        mainClock.autoAdvance = false
+        engine.end()
+        mainClock.advanceTimeBy(1_500)
+        onNodeWithText("Cancel").performClick()
+        mainClock.advanceTimeBy(12_000)
+        assertTrue(media.switchedTo.isEmpty())
+        onNodeWithText("Watch again").assertExists()
+    }
+
+    @Test
+    fun `the keys still work after watch again and start over`() = runComposeUiTest {
+        runBlocking {
+            settings.saveResumePosition(
+                5, 9, 400_000L, 600_000L,
+                com.tmplayer.data.ResumeRecord.encode(3, "Night Train", "Film Club", 1L shl 30, 600, 1L),
+            )
+        }
+        open(fromStart = false)
+        onNodeWithText("Start over").performClick()
+        waitForIdle()
+        press(Key.K)
+        assertEquals(1, engine.count("toggle"))
+        engine.end()
+        waitForIdle()
+        onNodeWithText("Watch again").performClick()
+        waitForIdle()
+        press(Key.K)
+        assertEquals(2, engine.count("toggle"))
+    }
+
+    @Test
+    fun `watch again after the sleep timer stopped the video at its end opens it again`() = runComposeUiTest {
+        open()
+        onNodeWithTag("video").performMouseInput { rightClick(onPicture) }
+        onNodeWithText("Playback options").performClick()
+        onNodeWithText("Sleep timer").performClick()
+        onNodeWithText("End of this video").performClick()
+        waitForIdle()
+        engine.end()
+        waitForIdle()
+        assertEquals(1, engine.count("stop"))
+        onNodeWithText("Keep watching").performClick()
+        waitForIdle()
+        onNodeWithText("Watch again").performClick()
+        waitUntil(timeoutMillis = 5_000) { engine.count("open") == 2 && engine.state.value.opened }
+        assertEquals(0L, engine.state.value.positionMs)
+    }
+
+    @Test
+    fun `the wheel over the shortcut sheet leaves the volume alone`() = runComposeUiTest {
+        open()
+        press(Key.Slash, shift = true)
+        onNodeWithText("Keyboard shortcuts").assertExists()
+        onNodeWithTag("video").performMouseInput { moveTo(onPicture); scroll(-1f) }
+        waitForIdle()
+        assertEquals(50, engine.state.value.volume)
+        press(Key.Escape)
+        onNodeWithTag("video").performMouseInput { moveTo(onPicture); scroll(-1f) }
+        waitForIdle()
+        assertEquals(55, engine.state.value.volume)
+    }
+
     private fun track(id: Int, type: TrackType, lang: String, selected: Boolean) = MediaTrack(
         id = id, type = type, title = null, language = lang, codec = null, channels = null,
         selected = selected, isDefault = false, external = false,
@@ -481,6 +547,9 @@ class PlayerMouseTest {
             return true
         }
         override fun setAbLoop(loop: AbLoop?) { calls += "loop:${loop?.startMs}-${loop?.endMs}" }
+
+        /** Plays to the end, as mpv's end of file reports it. */
+        fun end() = _state.update { it.copy(positionMs = it.durationMs, playing = false, ended = true) }
         override fun details(): List<Pair<String, String>> = emptyList()
         override fun close() = Unit
     }
@@ -495,8 +564,14 @@ class PlayerMouseTest {
         override val chatTitle = "Film Club"
         override val savable = MutableStateFlow(true)
         override suspend fun open(): MediaData = UriMediaData("night-train.mkv")
-        override suspend fun episodes() = Episodes()
-        override fun episode(other: MediaItem): PlayerMedia = this
+        /** What the chat answers for the episodes either side; none unless a test sets them. */
+        var steps = Episodes()
+        val switchedTo = mutableListOf<MediaItem>()
+        override suspend fun episodes() = steps
+        override fun episode(other: MediaItem): PlayerMedia {
+            switchedTo += other
+            return this
+        }
         override val downloaded: StateFlow<Float?> = MutableStateFlow(null)
         override suspend fun tdlibVersion(): String? = null
         override fun release() = Unit

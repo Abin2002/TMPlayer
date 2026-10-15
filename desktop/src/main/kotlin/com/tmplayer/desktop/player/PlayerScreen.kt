@@ -573,6 +573,9 @@ fun PlayerScreen(
         for (second in AUTOPLAY_COUNTDOWN_SEC downTo 1) {
             phase = Phase.Countdown(next, second)
             delay(1_000)
+            // Cancel and Play now on the sheet end the countdown: the end has not changed, so
+            // nothing else stops this loop from bringing it back and moving on regardless.
+            if (phase != Phase.Countdown(next, second)) return@LaunchedEffect
         }
         autoplay(next)
     }
@@ -1072,9 +1075,11 @@ fun PlayerScreen(
                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                     noteInput()
                     // The episode list has the keyboard while it is up: Esc closes it, and every
-                    // other key (the arrows, Enter) is its own, not a seek or a fullscreen.
+                    // other key (the arrows, Enter) is its own, not a seek or a fullscreen. The
+                    // other back keys close it too, or the window would take Backspace as a way
+                    // out of the whole player.
                     if (showEpisodes) {
-                        if (event.key == androidx.compose.ui.input.key.Key.Escape) {
+                        if (com.tmplayer.ui.nav.isBackKey(event)) {
                             showEpisodes = false
                             refocus()
                             return@onPreviewKeyEvent true
@@ -1117,11 +1122,22 @@ fun PlayerScreen(
                 .onPointerEvent(PointerEventType.Scroll) { event ->
                     noteInput()
                     if (phase != Phase.Playing) return@onPointerEvent
+                    // A wheel over a sheet, or one a list inside has scrolled with, is the sheet's,
+                    // not the volume's under it as well.
+                    if (showEpisodes || showShortcuts || showOnline || event.changes.any { it.isConsumed }) return@onPointerEvent
                     val delta = event.changes.firstOrNull()?.scrollDelta ?: return@onPointerEvent
                     SeekMath.wheelAction(delta.x, delta.y, event.keyboardModifiers.pointerShift, wheelSeeksNow)
                         ?.let(dispatchNow)
                 }
-                .pointerHoverIcon(if (fullscreen && !showControls && menu == null) blankCursor else PointerIcon.Default)
+                // Hidden with the controls only while a video plays: the loading, end and error
+                // sheets have no controls to bring it back with, and the sheets are for the mouse.
+                .pointerHoverIcon(
+                    if (fullscreen && phase == Phase.Playing && !showControls && menu == null && !showEpisodes && !showOnline) {
+                        blankCursor
+                    } else {
+                        PointerIcon.Default
+                    },
+                )
                 .subtitleDropTarget(onDrop = ::loadSubtitle, onRefused = { showFlash(Flash.Kind.Text, it) }),
         ) {
             (engine as? MpvPlaybackEngine)?.let { MpvMediampPlayerSurface(it.player, Modifier.fillMaxSize()) }
@@ -1246,11 +1262,16 @@ fun PlayerScreen(
                 chip = if (phase == Phase.Playing && status.buffering && !showControls) s.playerBuffering else null,
             )
 
+            // A button that goes away as it is clicked takes the keyboard with it, so each of
+            // these hands the keys back to the player, as the skip pill does.
             resumedFrom?.let { from ->
                 ResumeNotice(
                     from = from,
                     lifted = showControls,
-                    onStartOver = ::startOver,
+                    onStartOver = {
+                        startOver()
+                        refocus()
+                    },
                     onTimeout = { resumedFrom = null },
                 )
             }
@@ -1267,8 +1288,14 @@ fun PlayerScreen(
                     label = episodes.labelFor(next),
                     secondsLeft = ((nextUpIn.coerceAtLeast(0) + 999) / 1000).toInt(),
                     lifted = showControls,
-                    onPlayNow = { switchTo(next) },
-                    onHide = { nextUpDismissed = true },
+                    onPlayNow = {
+                        switchTo(next)
+                        refocus()
+                    },
+                    onHide = {
+                        nextUpDismissed = true
+                        refocus()
+                    },
                 )
             }
 
@@ -1330,15 +1357,32 @@ fun PlayerScreen(
                 phase = phase,
                 title = title,
                 subtitle = subtitle,
-                onRetry = { attempt++ },
+                onRetry = {
+                    attempt++
+                    refocus()
+                },
                 onBack = onBack,
                 onWatchAgain = {
-                    phase = Phase.Playing
-                    engine.seekTo(0)
-                    engine.play()
+                    if (engine.state.value.opened) {
+                        phase = Phase.Playing
+                        engine.seekTo(0)
+                        engine.play()
+                    } else {
+                        // "Still watching?" stopped the engine at the end (the sleep timer), and
+                        // a stopped engine has no file left to seek in: open it again from the start.
+                        reopenAt = 0L
+                        attempt++
+                    }
+                    refocus()
                 },
-                onPlayNext = { switchTo(it) },
-                onCancelNext = { phase = Phase.Finished },
+                onPlayNext = {
+                    switchTo(it)
+                    refocus()
+                },
+                onCancelNext = {
+                    phase = Phase.Finished
+                    refocus()
+                },
                 onKeepWatching = { (phase as? Phase.StillWatching)?.let(::keepWatching) },
                 nextLabel = { episodes.labelFor(it) },
             )
