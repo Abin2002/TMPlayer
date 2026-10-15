@@ -146,6 +146,9 @@ object SameVideo {
 
     /** Whether two candidates are one video: see [SameVideo] for the rules. */
     private fun sameVideo(a: Candidate, b: Candidate, dated: Boolean): Boolean {
+        // Videos sent together in one album are different videos, whatever their names say.
+        val albums = a.members.mapNotNullTo(HashSet()) { it.albumId.takeIf { id -> id != 0L } }
+        if (b.members.any { it.albumId != 0L && it.albumId in albums }) return false
         if (!a.split && !b.split && a.lead.fileId != 0 && a.lead.fileId == b.lead.fileId) return true
         val x = a.durationSec
         val y = b.durationSec

@@ -81,6 +81,12 @@ data class MediaItem(
      * film: never folded into it, listed after it, and labelled. See [SeriesShelf.arrange].
      */
     val extra: ExtraKind? = null,
+    /**
+     * The Telegram album the post was sent in (several videos sent together), or 0 for a post on
+     * its own. An album's videos are different videos, never copies of each other ([SameVideo]),
+     * and one without a caption of its own takes the album's ([MediaMapper.shareAlbumCaptions]).
+     */
+    val albumId: Long = 0,
 ) {
     /**
      * The file whose Watched mark stands for this tile: a split film's last piece, since the film
@@ -193,6 +199,7 @@ data class MediaItem(
             height == other.height &&
             topicId == other.topicId &&
             extra == other.extra &&
+            albumId == other.albumId &&
             parts.size == other.parts.size &&
             // By id: a copy found since (a new upload of the film) has to reach the tile and the
             // page, and comparing whole copies would compare their copies' thumbnails over again.
@@ -295,7 +302,10 @@ object MediaMapper {
         // Withheld by Telegram on this platform or in this country. Listed, it opens to an error.
         if (!message.restrictionInfo?.restrictionReason.isNullOrEmpty()) return null
         val topic = (message.topicId as? dev.g000sha256.tdl.dto.MessageTopicForum)?.forumTopicId ?: 0
-        val item = video(message)?.let { if (topic != 0) it.copy(topicId = topic) else it } ?: return null
+        val item = video(message)
+            ?.let { if (topic != 0) it.copy(topicId = topic) else it }
+            ?.let { if (message.mediaAlbumId != 0L) it.copy(albumId = message.mediaAlbumId) else it }
+            ?: return null
         return when (ContentProtection.verdict(message.canBeSaved, chatProtected, selfDestructs = false)) {
             ContentProtection.Verdict.Full -> item
             else -> item.copy(canBeSaved = false)
@@ -355,6 +365,22 @@ object MediaMapper {
         }
 
         else -> null
+    }
+
+    /**
+     * An album's caption is written under one of its videos, usually the first, and the others
+     * arrive with none. Each video of [items] without a caption takes its album's, so a member
+     * named only "video.mp4" still reads as the show the caption names.
+     */
+    fun shareAlbumCaptions(items: List<MediaItem>): List<MediaItem> {
+        if (items.none { it.albumId != 0L && it.caption.isBlank() }) return items
+        val captions = items.filter { it.albumId != 0L && it.caption.isNotBlank() }
+            .groupBy { it.albumId }
+            .mapValues { (_, members) -> members.minBy { it.messageId }.caption }
+        return items.map { item ->
+            val shared = captions[item.albumId]
+            if (item.albumId != 0L && item.caption.isBlank() && shared != null) item.copy(caption = shared) else item
+        }
     }
 
     fun looksLikeVideo(fileName: String, mimeType: String): Boolean {

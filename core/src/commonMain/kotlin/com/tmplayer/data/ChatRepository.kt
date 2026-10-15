@@ -424,6 +424,8 @@ class ChatRepository(private val td: TdlClient) {
                 documentResult?.let { addAll(it.items) }
                 animationResult?.let { addAll(it.items) }
             }.distinctBy { it.messageId }.sortedByDescending { it.messageId }
+                // An album's videos without a caption of their own read as the album's.
+                .let(MediaMapper::shareAlbumCaptions)
 
             val next = cursors.copy(
                 video = videoResult?.next ?: cursors.video,

@@ -48,6 +48,26 @@ class SameVideoTest {
         }
 
     @Test
+    fun `videos sent together in one album are never copies of each other`() {
+        val a = video("Night Lantern (2022) 720p.mkv", size = 900 * MB).copy(albumId = 55)
+        val b = video("Night.Lantern.2022.1080p.mkv", size = 2_000 * MB).copy(albumId = 55)
+        assertEquals(2, SameVideo.group(listOf(a, b), emptyMap()).size)
+        // Out of an album, the same two are copies.
+        assertEquals(1, SameVideo.group(listOf(a.copy(albumId = 0), b.copy(albumId = 0)), emptyMap()).size)
+    }
+
+    @Test
+    fun `an album's videos without a caption take the album's`() {
+        val first = video("", caption = "Harbour Notes S01E01").copy(albumId = 9)
+        val second = video("video.mp4").copy(albumId = 9)
+        val alone = video("clip.mp4")
+        val shared = MediaMapper.shareAlbumCaptions(listOf(first, second, alone))
+        assertEquals("Harbour Notes S01E01", shared[1].caption)
+        assertEquals("", shared[2].caption)
+        assertEquals("Harbour Notes", shared[1].parsedName.title)
+    }
+
+    @Test
     fun `copies sent as documents fold on title and year`() {
         val items = listOf(video("Night Lantern (2022) 720p.mkv", size = 900 * MB), video("Night.Lantern.2022.1080p.mkv", size = 2_000 * MB))
         assertEquals(listOf("Night.Lantern.2022.1080p.mkv+Night Lantern (2022) 720p.mkv"), tiles(items))
