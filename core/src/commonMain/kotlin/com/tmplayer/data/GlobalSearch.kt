@@ -58,40 +58,95 @@ data class SearchFilters(
 }
 
 /** A client side filter that left nothing, named so the empty state can say which and offer to clear it. */
-enum class HidingFilter { Quality, SmallClips, Year, ChatType, Archived }
+enum class HidingFilter { Quality, SmallClips, ChatType, Archived }
 
 /**
- * What was typed, read: the words to send Telegram, and a year or a quality that act as filters.
+ * What was typed, read: the words to send Telegram, and a quality that acts as a filter.
  *
- * "2024" or "1080p" alone is a filter over whatever Telegram finds for it, not a title. A quality
- * among other words leaves the words to search ("dune 1080p" asks for "dune" and keeps 1080p
- * copies); a year among other words stays in the text, since years are in titles ("1917",
- * "Blade Runner 2049") and the file names that carry them.
+ * "1080p" alone is a filter over whatever Telegram finds for it, not a title, and among other
+ * words it leaves the words to search ("night train 1080p" asks for "night train" and keeps the
+ * 1080p copies). A year is never only a filter: years are titles ("1917", "2012", "1984") and in
+ * titles ("Blade Runner 2049"), so a year alone is searched as text, the titles holding it ranked
+ * first and the films of that year after them ([year]).
  */
 data class SearchQuery(
     /** The cleaned query, as typed but tidied: what the field and the history show. */
     val text: String,
     /** What Telegram is asked. Empty when there is nothing to ask. */
     val server: String,
+    /** The query is one year and nothing else: films of that year rank after titles naming it. */
     val year: Int? = null,
     val quality: SearchQuality = SearchQuality.Any,
 ) {
-    /** A year or a quality and nothing else: results are filtered by it and not ranked by title. */
-    val filterOnly: Boolean get() = (year != null || quality != SearchQuality.Any) && titleWords.isEmpty()
+    /** A quality and nothing else: results are filtered by it and not ranked by title. */
+    val filterOnly: Boolean get() = quality != SearchQuality.Any && titleWords.isEmpty()
 
-    /** The words a title is ranked against: the text without a quality marker, and none for a year alone. */
+    /** The words a title is ranked against: the text without a quality marker. */
     val titleWords: List<String>
-        get() = Fuzzy.tokens(text).filter { qualityOfToken(it) == null }.let { if (year != null && it.size == 1) emptyList() else it }
+        get() = Fuzzy.tokens(text).filter { qualityOfToken(it) == null }
 
     val isEmpty: Boolean get() = server.isEmpty()
 
     companion object {
+        /**
+         * The quality a word names. Not "hd": it is in "HDRip", "HDTV" and "HDR", and as a word on
+         * its own says nothing about the picture's size.
+         */
         internal fun qualityOfToken(token: String): SearchQuality? = when (token.lowercase(Locale.ROOT)) {
             "4k", "2160p", "uhd" -> SearchQuality.UHD
-            "1080p", "1080i", "fhd" -> SearchQuality.FullHd
-            "720p", "hd" -> SearchQuality.Hd
+            "1080p", "1080i" -> SearchQuality.FullHd
+            "720p" -> SearchQuality.Hd
             else -> null
         }
+    }
+}
+
+/**
+ * What decides that two search results are one video, which copy a card leads with, and what is
+ * an extra (a trailer, a sample) rather than the video.
+ *
+ * An interface because the same answers are wanted wherever copies are folded (a chat's grid, the
+ * detail page's copies list), and the shared implementation of them lives with that work: the
+ * search takes whichever it is given. [Default] is the cautious reading this search uses until
+ * then: the same file, or the same name with a year (or the same episode) and lengths that agree.
+ */
+interface SearchIdentity {
+    /** A cheap first cut: only results under the same bucket are compared with [sameVideo]. Null for none. */
+    fun bucket(item: MediaItem): String? = SeriesShelf.sameVideoKey(item)
+
+    /** Whether [a] and [b], already in one [bucket], are copies of one video. */
+    fun sameVideo(a: MediaItem, b: MediaItem): Boolean
+
+    /** A trailer, a teaser, a sample or a short clip, listed apart from the video it belongs to. */
+    fun isExtra(item: MediaItem): Boolean
+
+    /** The copies of one video, the one to lead with first. */
+    fun copyOrder(copies: List<MediaItem>): List<MediaItem>
+
+    companion object {
+        val Default: SearchIdentity = object : SearchIdentity {
+            override fun sameVideo(a: MediaItem, b: MediaItem): Boolean {
+                if (a.fileId != 0 && a.fileId == b.fileId) return true
+                // A name alone is not enough evidence across chats: "Lecture 1080p" in two groups
+                // is two lectures. A year (or an episode number) has to say it, and where both
+                // lengths are known they have to agree.
+                val name = SeriesShelf.episodeOf(a)
+                if (name.year == null && name.episode == null) return false
+                if (a.durationSec > 0 && b.durationSec > 0) {
+                    val gap = kotlin.math.abs(a.durationSec - b.durationSec)
+                    if (gap > maxOf(DURATION_SLACK_SECONDS.toDouble(), maxOf(a.durationSec, b.durationSec) * DURATION_SLACK)) return false
+                }
+                return true
+            }
+
+            override fun isExtra(item: MediaItem): Boolean = GlobalSearch.isExtra(item)
+
+            override fun copyOrder(copies: List<MediaItem>): List<MediaItem> = GlobalSearch.copyOrder(copies)
+        }
+
+        /** Copies of one film differ by a cut credit or a logo: a minute and a half, or three per cent. */
+        private const val DURATION_SLACK_SECONDS = 90
+        private const val DURATION_SLACK = 0.03
     }
 }
 
@@ -225,66 +280,72 @@ object GlobalSearch {
     }
 
     /**
-     * Whether [item] answers [query] the way a result must: its year when the query is a year, its
-     * picture when it names one. Everything passes a plain title query.
-     */
-    fun answers(item: MediaItem, query: SearchQuery): Boolean {
-        if (query.filterOnly && query.year != null && SeriesShelf.episodeOf(item).year != query.year) return false
-        return true
-    }
-
-    /**
      * [page] folded into [existing]: a copy of a video already on screen joins its card, which
-     * stays where it is, and the cards that are new are ordered by [sort] among themselves and go
-     * after, so paging never moves a card the viewer is looking at. At most [MAX_GROUPS] cards.
-     * Every video once, by message id, whichever source found it.
+     * stays where it is. With the best match the new cards are ranked among themselves and go
+     * after, so paging never moves a card the viewer is looking at; any other order is the whole
+     * list's, and is applied to all of it. At most [MAX_GROUPS] cards. Every video once, by
+     * message id, whichever source found it.
+     *
+     * An episode goes under its show in its own chat, since a show opens on that chat's series
+     * page. Anything else joins a card only when [identity] says it is the same video as a copy
+     * there; an extra only ever joins other extras.
      */
     fun merge(
         existing: List<ResultGroup>,
         page: List<MediaItem>,
         query: SearchQuery,
         sort: SearchSort = SearchSort.BestMatch,
+        identity: SearchIdentity = SearchIdentity.Default,
     ): List<ResultGroup> {
         if (page.isEmpty()) return existing
         val seen = existing.flatMapTo(HashSet()) { group -> group.copies.map { it.id } }
-        val fresh = page.filter { seen.add(it.id) && answers(it, query) }
+        val fresh = page.filter { seen.add(it.id) }
         if (fresh.isEmpty()) return existing
-        val byKey = LinkedHashMap<String, MutableList<MediaItem>>()
-        val shows = HashMap<String, String>()
-        existing.forEach { group -> byKey[group.key] = group.copies.toMutableList(); group.show?.let { shows[group.key] = it } }
-        val added = LinkedHashSet<String>()
+
+        class Building(val key: String, val copies: MutableList<MediaItem>, val show: String?, val extra: Boolean, val before: Int)
+        val building = existing.map { Building(it.key, it.copies.toMutableList(), it.show, it.extra, it.copies.size) }.toMutableList()
+        val byKey = building.associateByTo(HashMap()) { it.key }
+        val buckets = HashMap<String, MutableList<Building>>()
+        fun bucketOf(item: MediaItem, extra: Boolean) = identity.bucket(item)?.let { (if (extra) "x|" else "v|") + it }
+        building.filter { it.show == null }.forEach { group -> bucketOf(group.copies.first(), group.extra)?.let { buckets.getOrPut(it) { mutableListOf() } += group } }
+
         for (item in fresh) {
-            val (key, show) = keyOf(item)
-            byKey.getOrPut(key) { added += key; mutableListOf() } += item
-            if (show != null) shows.putIfAbsent(key, show)
+            val extra = identity.isExtra(item)
+            val show = if (extra) null else showOf(item)
+            if (show != null) {
+                val key = "show:${item.chatId}:${SeriesShelf.keyOf(show)}"
+                val group = byKey.getOrPut(key) { Building(key, mutableListOf(), show, false, 0).also { building += it } }
+                group.copies += item
+                continue
+            }
+            val bucket = bucketOf(item, extra)
+            val match = bucket?.let { buckets[it] }?.firstOrNull { group -> group.copies.any { identity.sameVideo(it, item) } }
+            if (match != null) {
+                match.copies += item
+            } else {
+                val key = (if (extra) EXTRA else "video:") + item.id
+                val group = Building(key, mutableListOf(item), null, extra, 0)
+                building += group
+                byKey[key] = group
+                if (bucket != null) buckets.getOrPut(bucket) { mutableListOf() } += group
+            }
         }
-        val kept = existing.map { group ->
-            val copies = byKey.getValue(group.key)
-            if (copies.size == group.copies.size) group else group.copy(copies = copyOrder(copies))
+
+        val built = building.mapIndexed { index, group ->
+            val old = existing.getOrNull(index)
+            if (old != null && group.copies.size == group.before) old else ResultGroup(group.key, identity.copyOrder(group.copies), group.show, group.extra)
         }
-        val appended = added.map { key ->
-            ResultGroup(key, copyOrder(byKey.getValue(key)), shows[key], extra = key.startsWith(EXTRA))
-        }
-        return (kept + order(appended, query, sort)).take(MAX_GROUPS)
+        val kept = built.take(existing.size)
+        val appended = built.drop(existing.size)
+        val all = if (sort == SearchSort.BestMatch) kept + rank(appended, query) else order(kept + appended, query, sort)
+        return all.take(MAX_GROUPS)
     }
 
-    /**
-     * What folds a video into a card. An episode goes under its show in its own chat, since a show
-     * opens on that chat's series page. A trailer, a sample or a short clip goes under an extras
-     * key of its own, so it never joins the video it is a clip of. Anything else under
-     * [SeriesShelf.sameVideoKey], across chats, so the same film posted in four channels is one
-     * card; a video that names nothing is a card of its own.
-     */
-    fun keyOf(item: MediaItem): Pair<String, String?> {
+    /** The show [item] is an episode of, by its own name, or null for anything that is not an episode. */
+    fun showOf(item: MediaItem): String? {
         val name = SeriesShelf.episodeOf(item)
-        val same = SeriesShelf.sameVideoKey(item)
-        if (isExtra(item)) return "$EXTRA${same ?: item.id}" to null
-        if (name.episode != null) {
-            val show = SeriesShelf.keyOf(name.title)
-            if (show.isNotEmpty()) return "show:${item.chatId}:$show" to name.title
-        }
-        if (same == null) return "video:${item.id}" to null
-        return "same:$same" to null
+        if (name.episode == null) return null
+        return name.title.takeIf { SeriesShelf.keyOf(it).isNotEmpty() }
     }
 
     /**
@@ -300,34 +361,47 @@ object GlobalSearch {
     }
 
     /** [groups] in [sort]'s order: see [rank] for the best match. */
-    fun order(groups: List<ResultGroup>, query: SearchQuery, sort: SearchSort): List<ResultGroup> = when (sort) {
-        SearchSort.BestMatch -> rank(groups, query)
-        SearchSort.Newest -> groups.sortedWith(compareBy<ResultGroup> { it.extra }.thenByDescending { it.newest })
-        SearchSort.BestQuality -> groups.sortedWith(
-            compareByDescending<ResultGroup> { group -> group.bestQuality?.let(::qualityRank) ?: 0 }
-                .thenBy { it.extra }
-                .thenByDescending { it.newest },
-        )
-        SearchSort.Largest -> groups.sortedWith(
-            compareByDescending<ResultGroup> { it.sizeRange?.last ?: 0L }.thenByDescending { it.newest },
-        )
+    fun order(groups: List<ResultGroup>, query: SearchQuery, sort: SearchSort): List<ResultGroup> {
+        if (sort == SearchSort.BestMatch) return rank(groups, query)
+        // The sort keys read file names, so each card's are worked out once, not per comparison.
+        class Keyed(val group: ResultGroup, val quality: Int, val largest: Long, val newest: Int)
+        val keyed = groups.map { Keyed(it, it.bestQuality?.let(::qualityRank) ?: 0, it.sizeRange?.last ?: 0L, it.newest) }
+        val comparator = when (sort) {
+            SearchSort.Newest -> compareBy<Keyed> { it.group.extra }.thenByDescending { it.newest }
+            SearchSort.BestQuality -> compareByDescending<Keyed> { it.quality }.thenBy { it.group.extra }.thenByDescending { it.newest }
+            else -> compareByDescending<Keyed> { it.largest }.thenByDescending { it.newest }
+        }
+        return keyed.sortedWith(comparator).map { it.group }
     }
 
     /**
      * Best first: an exact title, then one that starts with the query, then one holding every
-     * word, then a file name that matches, and a mention in a caption last. Extras go after the
-     * video they are extras of. Ties go to more copies (a widely posted video is the likelier
-     * one), then a better picture, then the newest. A query that is only a year or a quality has
-     * no title to rank by, so it is newest first.
+     * word, then a file name that matches, and a mention in a caption last. For a query that is a
+     * year, the films of that year come next. Extras go after the video they are extras of. Ties
+     * go to more copies (a widely posted video is the likelier one), then a better picture, then
+     * the newest. A query that is only a quality has no title to rank by, so it is newest first.
+     *
+     * Each card is scored once before sorting: the score reads file names, and doing that inside
+     * the comparator would read each one a dozen times on a stick that has no time for it.
      */
-    fun rank(groups: List<ResultGroup>, query: SearchQuery): List<ResultGroup> =
-        groups.sortedWith(
-            compareByDescending<ResultGroup> { if (query.filterOnly) 0 else relevance(it, query) }
-                .thenBy { it.extra }
-                .thenByDescending { it.copies.size }
-                .thenByDescending { group -> group.bestQuality?.let(::qualityRank) ?: 0 }
-                .thenByDescending { it.newest },
-        )
+    fun rank(groups: List<ResultGroup>, query: SearchQuery): List<ResultGroup> {
+        class Scored(val group: ResultGroup, val relevance: Int, val year: Boolean, val quality: Int)
+        return groups.map { group ->
+            Scored(
+                group,
+                if (query.filterOnly) 0 else relevance(group, query),
+                query.year != null && SeriesShelf.episodeOf(group.lead).year == query.year,
+                group.bestQuality?.let(::qualityRank) ?: 0,
+            )
+        }.sortedWith(
+            compareByDescending<Scored> { it.relevance }
+                .thenByDescending { it.year }
+                .thenBy { it.group.extra }
+                .thenByDescending { it.group.copies.size }
+                .thenByDescending { it.quality }
+                .thenByDescending { it.group.newest },
+        ).map { it.group }
+    }
 
     /** 5 exact title, 4 prefix, 3 every word in the title, 2 the file name, 1 anything else, 0 nothing. */
     fun relevance(group: ResultGroup, query: SearchQuery): Int {
@@ -335,12 +409,12 @@ object GlobalSearch {
         if (wanted.isEmpty()) return 0
         val joined = wanted.joinToString(" ")
         // The parsed name, without its year or tags, so "Night.Train.2019" is exactly "night train".
-        val title = Fuzzy.normalize(group.show ?: SeriesShelf.episodeOf(group.lead).title.ifBlank { titleOf(group) })
-        val titleWords = title.split(' ')
+        val parsed = Fuzzy.normalize(group.show ?: SeriesShelf.episodeOf(group.lead).title.ifBlank { titleOf(group) })
+        val title = Fuzzy.normalize(titleOf(group))
         return when {
-            title == joined -> 5
-            title.startsWith(joined) -> 4
-            wanted.all { it in titleWords } -> 3
+            parsed == joined || title == joined -> 5
+            parsed.startsWith(joined) || title.startsWith(joined) -> 4
+            wanted.all { it in title.split(' ') } -> 3
             group.copies.any { Fuzzy.score(it.fileName.ifBlank { it.title }, joined) > 0 } -> 2
             group.copies.any { Fuzzy.score(it.searchText, joined) > 0 } -> 1
             else -> 0
@@ -433,7 +507,7 @@ object GlobalSearch {
     fun matchesLocally(item: MediaItem, query: SearchQuery, names: List<String> = emptyList()): Boolean {
         if (query.filterOnly) {
             val token = query.server
-            return Fuzzy.score(item.searchText, token) > 0 && answers(item, query)
+            return Fuzzy.score(item.searchText, token) > 0
         }
         val text = query.titleWords.joinToString(" ").ifBlank { return false }
         val fields = listOf(SeriesShelf.tileTitle(item), item.fileName, item.searchText) + names

@@ -14,6 +14,7 @@ import com.tmplayer.data.KidsLock
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.ResultGroup
 import com.tmplayer.data.SearchFilters
+import com.tmplayer.data.SearchIdentity
 import com.tmplayer.data.SearchQuery
 import com.tmplayer.data.SearchSort
 import com.tmplayer.data.Td
@@ -124,6 +125,8 @@ class GlobalSearchViewModel(
     private val known: () -> List<MediaItem> = { KnownMedia.all() },
     private val settleMs: Long = SETTLE_MS,
     private val rememberMs: Long = REMEMBER_MS,
+    /** What makes two results one card: see [SearchIdentity]. */
+    private val identity: SearchIdentity = SearchIdentity.Default,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GlobalSearchState())
@@ -248,7 +251,7 @@ class GlobalSearchViewModel(
         val local = GlobalSearch.localVideos(known() + alsoKnown, query, allowed, ::onlineNames)
         _state.value = GlobalSearchState(
             query = query,
-            groups = GlobalSearch.merge(emptyList(), local, query, now.sort),
+            groups = GlobalSearch.merge(emptyList(), local, query, now.sort, identity),
             filters = now.filters,
             sort = now.sort,
             chats = now.chats,
@@ -326,7 +329,7 @@ class GlobalSearchViewModel(
         val kept = if (!fallback) page.items else page.items.filter { GlobalSearch.matchesLocally(it, keepTo, onlineNames(it)) }
         _state.update { s ->
             s.copy(
-                groups = GlobalSearch.merge(s.groups, kept, s.query, s.sort),
+                groups = GlobalSearch.merge(s.groups, kept, s.query, s.sort, identity),
                 chats = s.chats + page.chats.associateBy { it.id },
             )
         }

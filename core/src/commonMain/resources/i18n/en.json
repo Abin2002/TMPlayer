@@ -1404,7 +1404,7 @@
     "wifi_only": "This video isn't downloaded yet, and TMPlayer is set to use Wi-Fi only. Connect to Wi-Fi, or turn that off in Settings."
   },
   "search": {
-    "and_more": "{count, plural, other {and # more}}",
+    "and_more": "{count, plural, one {and # more} other {and # more}}",
     "chats_heading": "Chats",
     "clear_filters": "Clear filters",
     "clear_recent": "Clear all",

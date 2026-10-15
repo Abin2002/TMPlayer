@@ -255,7 +255,6 @@ fun HidingFilter.message(state: GlobalSearchState): String = when (this) {
         state.filters.quality.tag ?: state.query.quality.tag.orEmpty(),
     )
     HidingFilter.SmallClips -> L.searchHiddenBySmall
-    HidingFilter.Year -> L.searchNone(state.query.text)
     HidingFilter.ChatType -> L.searchHiddenByType(state.filters.chatType.label)
     HidingFilter.Archived -> L.searchHiddenByArchived
 }

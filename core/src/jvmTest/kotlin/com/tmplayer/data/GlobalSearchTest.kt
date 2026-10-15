@@ -57,11 +57,12 @@ class GlobalSearchTest {
     }
 
     @Test
-    fun `a year or a quality alone is a filter, not a title`() {
-        val year = q("2024")
-        assertEquals(2024, year.year)
-        assertTrue(year.filterOnly)
-        assertEquals("2024", year.server)
+    fun `a quality alone is a filter, a year alone is still a title`() {
+        val year = q("1917")
+        assertEquals(1917, year.year)
+        assertFalse(year.filterOnly)
+        assertEquals("1917", year.server)
+        assertEquals(listOf("1917"), year.titleWords)
 
         val quality = q("1080p")
         assertEquals(SearchQuality.FullHd, quality.quality)
@@ -76,6 +77,10 @@ class GlobalSearchTest {
         val titled = q("blade runner 2049")
         assertEquals("blade runner 2049", titled.server)
         assertEquals(null, titled.year)
+
+        // "hd" is in HDRip and HDTV, and names no picture size.
+        assertEquals(SearchQuality.Any, q("night train hd").quality)
+        assertEquals("night train hd", q("night train hd").server)
     }
 
     @Test
@@ -109,10 +114,15 @@ class GlobalSearchTest {
     }
 
     @Test
-    fun `a year query keeps only that year`() {
-        val known = listOf(video(1, 1, "Night.Train.2024.1080p.mkv"), video(1, 2, "Night.Train.2019.1080p.mkv"))
-        val groups = GlobalSearch.merge(emptyList(), known, q("2024"))
-        assertEquals(listOf(1L), groups.flatMap { it.copies }.map { it.messageId })
+    fun `a year alone ranks the titles holding it first, then films of that year`() {
+        val found = listOf(
+            video(1, 1, "Harbour.Days.1917.Remastered.mkv", date = 90),
+            video(1, 2, "1917.2019.1080p.mkv", date = 10),
+            video(1, 3, "Ledger.of.Small.Hours.1917.mkv", date = 50),
+        )
+        val groups = GlobalSearch.merge(emptyList(), found, q("1917"))
+        assertEquals(2L, groups.first().lead.messageId)
+        assertEquals(3, groups.size)
     }
 
     @Test
@@ -142,6 +152,33 @@ class GlobalSearchTest {
         assertEquals(listOf(3L, 2L, 1L), card.chatIds)
         assertEquals("4K", card.bestQuality)
         assertEquals(3, card.asItem().versions.size)
+    }
+
+    @Test
+    fun `a name alone does not make copies across chats`() {
+        val groups = GlobalSearch.merge(
+            emptyList(),
+            listOf(
+                // No year: two lectures that happen to share a name.
+                video(1, 1, "Lecture.1080p.mp4", duration = 3_000),
+                video(2, 2, "Lecture.1080p.mp4", duration = 3_000),
+                // Same name and year, lengths far apart: a different cut is not a copy.
+                video(3, 3, "Night.Train.2019.1080p.mkv", duration = 6_000),
+                video(4, 4, "Night.Train.2019.1080p.mkv", duration = 9_000),
+            ),
+            q("lecture"),
+        )
+        assertEquals(4, groups.size)
+    }
+
+    @Test
+    fun `the same file forwarded to two chats is one card`() {
+        val a = video(1, 1, "IMG_2231.mp4")
+        val b = video(2, 2, "IMG_2231.mp4").copy(fileId = a.fileId)
+        val identity = object : SearchIdentity by SearchIdentity.Default {
+            override fun bucket(item: MediaItem) = item.fileName
+        }
+        assertEquals(1, GlobalSearch.merge(emptyList(), listOf(a, b), q("img"), identity = identity).size)
     }
 
     @Test
@@ -194,6 +231,9 @@ class GlobalSearchTest {
             q("story"),
         )
         assertEquals(listOf(3L, 1L, 2L), GlobalSearch.order(groups, q("story"), SearchSort.Newest).map { it.lead.messageId })
+        // A page arriving under another sort is sorted in with the rest, not after it.
+        val more = GlobalSearch.merge(groups, listOf(video(1, 4, "Delta.Story.2022.mkv", date = 99)), q("story"), SearchSort.Newest)
+        assertEquals(4L, more.first().lead.messageId)
         assertEquals(listOf(2L, 3L, 1L), GlobalSearch.order(groups, q("story"), SearchSort.BestQuality).map { it.lead.messageId })
         assertEquals(listOf(1L, 3L, 2L), GlobalSearch.order(groups, q("story"), SearchSort.Largest).map { it.lead.messageId })
     }
