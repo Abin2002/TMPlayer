@@ -561,7 +561,7 @@ object MediaName {
     )
 
     /** A dash, a colon or a bar, the long dashes written as escapes. */
-    private val LEADING_SEPARATOR = Regex("^\\s*[-:|–—]")
+    private val LEADING_SEPARATOR = Regex("^\\s*[-:|\\u2013\\u2014]")
 
     /**
      * A "[" after the title that opens on two words and holds no digit: "Night Train [ Arun Kumar,

@@ -161,6 +161,9 @@ internal fun BookmarkNoteSheet(
     onSave: (String) -> Unit,
     onDismiss: () -> Unit,
     onClose: () -> Unit,
+    /** The grey words in the empty field; a bookmark's by default. Renaming a video passes its own. */
+    hint: String? = null,
+    maxLength: Int = BookmarkStore.MAX_NOTE,
 ) {
     val s = LocalStrings.current
     val touch = isTouch()
@@ -181,11 +184,11 @@ internal fun BookmarkNoteSheet(
             contentAlignment = Alignment.CenterStart,
         ) {
             if (note.isEmpty()) {
-                Text(s.playerBookmarkNoteHint, style = MaterialTheme.typography.bodyLarge, color = Tone.muted)
+                Text(hint ?: s.playerBookmarkNoteHint, style = MaterialTheme.typography.bodyLarge, color = Tone.muted)
             }
             BasicTextField(
                 value = note,
-                onValueChange = { note = it.take(BookmarkStore.MAX_NOTE) },
+                onValueChange = { note = it.take(maxLength) },
                 singleLine = true,
                 // BasicTextField does not read LocalContentColor; without a colour it paints black.
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = Tone.text),

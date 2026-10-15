@@ -49,6 +49,39 @@ val LocalOnlineArt = compositionLocalOf { false }
  */
 @Composable
 fun rememberMeta(fileName: String, caption: String?, showOnly: Boolean = false): MetaInfo? {
+    val found = rememberLookup(fileName, caption, showOnly) ?: return null
+    // Only an answer the name backs with a year or an episode code: with no file to measure,
+    // the runtime cannot vouch for it here (see [rememberMatched]).
+    val name = remember(fileName, caption) { com.tmplayer.data.MediaName.parse(fileName, caption) }
+    return found.takeIf { com.tmplayer.online.MetaConfidence.basis(name, it) != null }
+}
+
+/**
+ * What the providers say about [item], with what backs it ([com.tmplayer.online.MatchBasis]), or
+ * null: lookups off, nothing found, a match nothing but the title backs ([OnlineMetadata.matched]),
+ * or one the viewer turned down ("Wrong match"). A title the viewer gave the video is what is
+ * looked up.
+ */
+@Composable
+fun rememberMatched(item: MediaItem, showOnly: Boolean = false): com.tmplayer.online.MatchedMeta? {
+    val corrections by com.tmplayer.data.VideoCorrections.state.collectAsState()
+    val correction = corrections[item.id]
+    val renamed = correction?.title
+    val found = rememberLookup(renamed ?: item.nameForParsing, if (renamed != null) null else item.caption, showOnly)
+    val name = remember(item, renamed) { com.tmplayer.data.SeriesShelf.episodeOf(item, corrections) }
+    val quick = found?.let { info -> com.tmplayer.online.MetaConfidence.basis(name, info)?.let { com.tmplayer.online.MatchedMeta(info, it) } }
+    val matched by produceState(quick, found, name, item.durationSec) {
+        if (value == null && found != null && com.tmplayer.online.MetaConfidence.needsRuntime(name, found, item.durationSec)) {
+            value = withContext(Dispatchers.IO) { OnlineMetadata.current?.matched(item, name, found) }
+        }
+    }
+    if (correction?.wrongMatch == true) return null
+    return matched?.takeIf { it.info == found }
+}
+
+/** The provider's answer for a name, before anything checks that it is the right one. */
+@Composable
+private fun rememberLookup(fileName: String, caption: String?, showOnly: Boolean): MetaInfo? {
     val online = OnlineMetadata.current ?: return null
     val settings by online.settings.collectAsState()
     if (!settings.enabled) return null
@@ -63,10 +96,13 @@ fun rememberMeta(fileName: String, caption: String?, showOnly: Boolean = false):
     return found
 }
 
-/** [rememberMeta] for a Telegram video: its file name, else its title, and its caption. */
+/**
+ * [rememberMeta] for a Telegram video: its file name (or the title the viewer gave it), and its
+ * caption, gated as [rememberMatched] gates it.
+ */
 @Composable
 fun rememberMeta(item: MediaItem, showOnly: Boolean = false): MetaInfo? =
-    rememberMeta(item.nameForParsing, item.caption, showOnly)
+    rememberMatched(item, showOnly)?.info
 
 /**
  * The provider's episode list for [season] of the show [meta], for the names in a series list:

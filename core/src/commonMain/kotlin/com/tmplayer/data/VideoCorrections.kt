@@ -92,6 +92,20 @@ object VideoCorrections {
 
     fun of(item: MediaItem, all: Map<String, VideoCorrection> = current): VideoCorrection? = all[item.id]
 
+    /** The longest title a rename keeps. */
+    const val TITLE_MAX = 120
+
+    /**
+     * Every file a tile stands for: its copies and their pieces. A rename or a wrong match is
+     * written to all of them, so it holds whichever copy the tile shows next time.
+     */
+    fun filesOf(item: MediaItem): List<MediaItem> =
+        item.versions.ifEmpty { listOf(item) }.flatMap { copy -> listOf(copy) + copy.parts }.distinctBy { it.id }
+
+    /** The title to show for a saved record of a video: the viewer's own where they gave one. */
+    fun titleFor(chatId: Long, messageId: Long, fallback: String): String =
+        current["$chatId:$messageId"]?.title ?: fallback
+
     /** The stored name for [chatId] and [messageId]'s correction. */
     fun keyName(chatId: Long, messageId: Long): String = "$PREFIX${chatId}_$messageId"
 

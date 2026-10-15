@@ -144,6 +144,32 @@ internal fun MediaDetailOpened(
         return
     }
 
+    // The viewer's corrections to this file, and whether a provider's match is showing for it.
+    val corrections by com.tmplayer.data.VideoCorrections.state.collectAsStateWithLifecycle()
+    val correction = corrections[item.id]
+    val matched = com.tmplayer.ui.online.rememberMatched(item) != null
+    var renaming by remember { mutableStateOf(false) }
+    if (renaming) {
+        com.tmplayer.player.BookmarkNoteSheet(
+            title = s.gridRenameTitle,
+            initial = correction?.title ?: com.tmplayer.data.SeriesShelf.filmTitle(item),
+            saveLabel = s.gridRenameSave,
+            onSave = { text ->
+                // Every copy of the tile, so the title holds whichever one it shows. Empty goes
+                // back to the file name.
+                App.backgroundScope.launch {
+                    runCatching { settings.correct(com.tmplayer.data.VideoCorrections.filesOf(item)) { it.copy(title = text.trim().ifEmpty { null }) } }
+                }
+                onDismiss()
+            },
+            onDismiss = onDismiss,
+            onClose = onDismiss,
+            hint = s.gridRenameHint,
+            maxLength = com.tmplayer.data.VideoCorrections.TITLE_MAX,
+        )
+        return
+    }
+
     val actions = DetailActions.of(
         DetailContext(
             canBeSaved = item.canBeSaved,
@@ -158,6 +184,11 @@ internal fun MediaDetailOpened(
             canHandOff = touch,
             hasClipboard = touch,
             outsideChat = onOpenChat != null,
+            canCorrect = true,
+            grouped = item.versions.size > 1,
+            separated = correction?.separate == true,
+            matched = matched,
+            wrongMatch = correction?.wrongMatch == true,
         ),
     )
     val free = DiskInfo.freeLabel(freeBytes)
@@ -203,6 +234,17 @@ internal fun MediaDetailOpened(
             DetailAction.OpenElsewhere -> { { scope.launch { shareVideo(context, item, send = false); onDismiss() } } }
             DetailAction.CopyLink -> { { scope.launch { MessageLink.copy(context, item.chatId, item.messageId); onDismiss() } } }
             DetailAction.OpenChat -> { { onDismiss(); onOpenChat?.invoke() } }
+            DetailAction.SplitCopy, DetailAction.JoinCopies -> { {
+                val apart = action == DetailAction.SplitCopy
+                App.backgroundScope.launch { runCatching { settings.correct(listOf(item)) { it.copy(separate = apart) } } }
+                onDismiss()
+            } }
+            DetailAction.WrongMatch, DetailAction.UseMatch -> { {
+                val wrong = action == DetailAction.WrongMatch
+                App.backgroundScope.launch { runCatching { settings.correct(com.tmplayer.data.VideoCorrections.filesOf(item)) { it.copy(wrongMatch = wrong) } } }
+                onDismiss()
+            } }
+            DetailAction.Rename -> { { renaming = true } }
         }
         if (action == DetailAction.CancelDownload && downloading != null) {
             cancelRow(s, downloading, run)

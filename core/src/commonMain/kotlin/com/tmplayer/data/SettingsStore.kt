@@ -213,6 +213,11 @@ private fun metaKey(chatId: Long, messageId: Long) =
 /** The forum topic last browsed in one group, so it opens where the viewer left it. 0 is all. */
 private fun topicKey(chatId: Long) = longPreferencesKey("topic_$chatId")
 
+private val DEVELOPER_OPTIONS = booleanPreferencesKey("developer_options")
+
+/** What a chat's search turns the developer options on with, on a phone or a television. */
+const val DEVELOPER_PHRASE = "/namecheck"
+
 /** The order a chat's videos are listed in, per chat. See [VideoSort]. */
 private fun videoSortKey(chatId: Long) = stringPreferencesKey("vsort_$chatId")
 
@@ -409,6 +414,17 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     suspend fun setVideoSort(chatId: Long, sort: VideoSort) {
         prefs.edit { if (sort == VideoSort.DEFAULT) it.remove(videoSortKey(chatId)) else it[videoSortKey(chatId)] = sort.name }
+    }
+
+    /**
+     * The hidden developer options (the name check, [NameReport]): off until the viewer turns them
+     * on by the hidden gesture each platform has (searching a chat for [DEVELOPER_PHRASE] on a
+     * phone or a television, seven clicks on the version on a computer). Device only: not backed up.
+     */
+    val developerOptions: Flow<Boolean> = read { it[DEVELOPER_OPTIONS] ?: false }
+
+    suspend fun setDeveloperOptions(value: Boolean) {
+        prefs.edit { if (value) it[DEVELOPER_OPTIONS] = true else it.remove(DEVELOPER_OPTIONS) }
     }
 
     /** Every [VideoCorrection], by [MediaItem.id]. See [VideoCorrections]. */

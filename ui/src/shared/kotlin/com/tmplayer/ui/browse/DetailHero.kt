@@ -429,6 +429,11 @@ internal fun roundLabel(row: DetailRow, s: Messages): String = when (row.action)
     DetailAction.OpenElsewhere -> s.detailRoundOpenWith
     DetailAction.CopyLink -> s.detailRoundLink
     DetailAction.OpenChat -> s.detailRoundChat
+    DetailAction.SplitCopy -> s.detailRoundSplit
+    DetailAction.JoinCopies -> s.detailRoundJoin
+    DetailAction.WrongMatch -> s.detailRoundWrongMatch
+    DetailAction.UseMatch -> s.detailRoundUseMatch
+    DetailAction.Rename -> s.detailRoundRename
     // Play rows beside the pill are the extras, told apart by their wording.
     else -> roundLabel(row.label, s)
 }
