@@ -4510,10 +4510,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      *
      * onStop covers Back and Home, but it never runs when the power goes off at the wall or the
      * system kills the process to reclaim memory, and on a 1 GB stick the second is routine.
+     * Started rather than resumed: in picture in picture the activity is paused while the video
+     * plays on, and an hour watched in the corner went unwritten.
      */
     private fun startResumeHeartbeat() {
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 while (true) {
                     delay(RESUME_TICK_MS)
                     if (player?.isPlaying == true) saveResumePosition()
