@@ -1180,6 +1180,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             return super.dispatchTouchEvent(event)
         }
         if (surface == null || inPictureInPicture || pickerOpen || statusOverlay.visibility == View.VISIBLE) {
+            // A hold or a scrub that was under way when the sheet came up still has to end.
+            if (event.actionMasked == android.view.MotionEvent.ACTION_UP ||
+                event.actionMasked == android.view.MotionEvent.ACTION_CANCEL
+            ) {
+                gestures?.cancel()
+            }
             return super.dispatchTouchEvent(event)
         }
         gestures?.onTouchEvent(event, surface.width, surface.height)
