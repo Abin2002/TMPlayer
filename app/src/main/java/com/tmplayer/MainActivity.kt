@@ -1101,12 +1101,12 @@ private fun Root() {
             val recommendations = remember {
                 com.tmplayer.data.DeviceFitRules.recommendations(fit, light!!, seekThumbnails)
             }
+            // The same steps Settings' Setup choices lists (Setup.stepsFor).
             val steps = remember {
-                Setup.steps(
+                Setup.stepsFor(
+                    FormFactor.form(context),
                     posters = com.tmplayer.online.OnlineMetadata.current != null,
-                    device = recommendations.isNotEmpty(),
-                    devicePerformance = recommendations.any { it != com.tmplayer.data.Recommendation.LowStorageMode },
-                    phone = !FormFactor.isTv(context),
+                    recommendations = recommendations,
                 )
             }
             // The choices, then the quick tour (CP69); with no choices to make, the tour alone.

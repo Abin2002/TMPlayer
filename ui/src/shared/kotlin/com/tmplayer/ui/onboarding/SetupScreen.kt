@@ -134,33 +134,11 @@ fun SetupScreen(
     fun pick(choice: SetupChoice) {
         scope.launch {
             runCatching {
-                when (choice) {
-                    SetupChoice.PostersOn -> online?.setEnabled(true)
-                    SetupChoice.PostersOff -> online?.setEnabled(false)
-                    SetupChoice.KeepWhilePlaying -> settings.setLowStorageMode(false)
-                    SetupChoice.LowStorage -> settings.setLowStorageMode(true)
-                    // The three rows the Device step offers a slow device (CP68), together.
-                    SetupChoice.FullQuality -> {
-                        settings.setLighterPictures(false)
-                        settings.setReduceMotion(false)
-                        settings.setTrickplay(true)
-                    }
-                    SetupChoice.Lighter -> {
-                        settings.setLighterPictures(true)
-                        settings.setReduceMotion(true)
-                        settings.setTrickplay(false)
-                    }
-                    SetupChoice.SaveData -> {
-                        settings.setSaveMobileData(true)
-                        settings.setWifiOnlyDownloads(true)
-                    }
-                    SetupChoice.NoLimits -> {
-                        settings.setSaveMobileData(false)
-                        settings.setWifiOnlyDownloads(false)
-                    }
-                    SetupChoice.ApplyRecommended -> settings.applyRecommendations(recommendations)
-                    SetupChoice.NotNow -> Unit
-                }
+                choice.applyTo(
+                    settings,
+                    posters = online?.let { o -> { on: Boolean -> o.setEnabled(on) } },
+                    recommendations = recommendations,
+                )
             }
         }
         if (!state.next()) onDone()
@@ -363,11 +341,7 @@ private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifi
                 .clip(RoundedCornerShape(Corner.Medium))
                 .background(Tone.background),
         ) {
-            when {
-                choice.screenshot -> SetupShot(choice, Modifier.fillMaxSize())
-                choice.step == SetupStep.MobileData -> MobileDataArt(choice, Modifier.fillMaxSize())
-                else -> StorageArt(choice, Modifier.fillMaxSize())
-            }
+            ChoicePicture(choice, Modifier.fillMaxSize())
             if (selected) {
                 Icon(
                     TmIcons.CheckCircle,
@@ -400,6 +374,19 @@ private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifi
                 color = if (focused) Tone.onFocusFill else Tone.accent,
             )
         }
+    }
+}
+
+/**
+ * An answer's picture, filling [modifier]'s square: the marked shot, or the drawing for the storage
+ * and mobile data steps. The setup's cards and Settings' Setup choices show the same one.
+ */
+@Composable
+internal fun ChoicePicture(choice: SetupChoice, modifier: Modifier) {
+    when {
+        choice.screenshot -> SetupShot(choice, modifier)
+        choice.step == SetupStep.MobileData -> MobileDataArt(choice, modifier)
+        else -> StorageArt(choice, modifier)
     }
 }
 

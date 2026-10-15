@@ -621,12 +621,13 @@ private fun SetupOverlay(state: ShellState, chatsLoaded: Boolean) {
         val recommendations = remember {
             com.tmplayer.data.DeviceFitRules.recommendations(fit, now, seekThumbnailsShown = false, pictures = false)
         }
+        // The same steps Settings' Setup choices lists (Setup.stepsFor): the desktop is only ever
+        // offered Low storage mode there, so Performance stays.
         val steps = remember {
-            Setup.steps(
+            Setup.stepsFor(
+                com.tmplayer.data.DeviceForm.Desktop,
                 posters = com.tmplayer.online.OnlineMetadata.current != null,
-                device = recommendations.isNotEmpty(),
-                // The desktop is only ever offered Low storage mode there, so Performance stays.
-                devicePerformance = false,
+                recommendations = recommendations,
             )
         }
         // The choices, then the quick tour (CP69); with no choices to make, the tour alone.

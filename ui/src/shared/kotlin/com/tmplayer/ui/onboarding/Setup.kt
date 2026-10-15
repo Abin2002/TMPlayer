@@ -4,6 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import com.tmplayer.data.AuthState
+import com.tmplayer.data.DeviceForm
+import com.tmplayer.data.Recommendation
+import com.tmplayer.data.SettingsStore
 import com.tmplayer.i18n.Strings
 
 /**
@@ -76,6 +79,17 @@ data class SetupValues(
     val lighter: Boolean = false,
     val saveData: Boolean = false,
 ) {
+    /**
+     * The answer on [step] that matches what is set, as Settings' Setup choices names it. Unlike
+     * [current], Mobile data says what is set rather than what is suggested; null for the Device
+     * step, whose answers are an action rather than a setting.
+     */
+    fun chosen(step: SetupStep): SetupChoice? = when (step) {
+        SetupStep.MobileData -> if (saveData) SetupChoice.SaveData else SetupChoice.NoLimits
+        SetupStep.Device -> null
+        else -> current(step)
+    }
+
     /** The answer on [step] that matches what is set, the one a remote starts on. */
     fun current(step: SetupStep): SetupChoice = when (step) {
         SetupStep.Posters -> if (posters) SetupChoice.PostersOn else SetupChoice.PostersOff
@@ -116,6 +130,23 @@ object Setup {
         }
 
     /**
+     * The steps for a device of [form], worked out the same way by the setup after sign in and by
+     * Settings' Setup choices, so the two never list different steps. [recommendations] are what
+     * this device is recommended and still has off (CP68): any at all bring the Device step. The
+     * desktop is only ever offered Low storage mode there, so its Performance step stays.
+     */
+    fun stepsFor(
+        form: DeviceForm,
+        posters: Boolean,
+        recommendations: List<Recommendation>,
+    ): List<SetupStep> = steps(
+        posters = posters,
+        device = recommendations.isNotEmpty(),
+        devicePerformance = form != DeviceForm.Desktop && recommendations.any { it != Recommendation.LowStorageMode },
+        phone = form == DeviceForm.Phone,
+    )
+
+    /**
      * Whether the storage step is offered. Low storage mode is core's (`TdByteWindow`), so the
      * phone, the television and the desktop all have it.
      */
@@ -152,6 +183,46 @@ object Setup {
     fun isSignInStep(auth: AuthState): Boolean = when (auth) {
         AuthState.ChooseMethod, is AuthState.Qr, is AuthState.Phone, is AuthState.Code, is AuthState.Password -> true
         AuthState.Connecting, AuthState.Ready, is AuthState.Failed -> false
+    }
+}
+
+/**
+ * Writes what [choice] stands for. The one place an answer is applied, by the setup's steps and by
+ * Settings' Setup choices alike, so changing a choice there does exactly what the setup did.
+ * [posters] switches online posters and details (`OnlineMetadata.setEnabled`), null in a build
+ * without them, and [recommendations] what Apply turns on.
+ */
+suspend fun SetupChoice.applyTo(
+    settings: SettingsStore,
+    posters: ((Boolean) -> Unit)?,
+    recommendations: List<Recommendation> = emptyList(),
+) {
+    when (this) {
+        SetupChoice.PostersOn -> posters?.invoke(true)
+        SetupChoice.PostersOff -> posters?.invoke(false)
+        SetupChoice.KeepWhilePlaying -> settings.setLowStorageMode(false)
+        SetupChoice.LowStorage -> settings.setLowStorageMode(true)
+        // The three rows the Device step offers a slow device (CP68), together.
+        SetupChoice.FullQuality -> {
+            settings.setLighterPictures(false)
+            settings.setReduceMotion(false)
+            settings.setTrickplay(true)
+        }
+        SetupChoice.Lighter -> {
+            settings.setLighterPictures(true)
+            settings.setReduceMotion(true)
+            settings.setTrickplay(false)
+        }
+        SetupChoice.SaveData -> {
+            settings.setSaveMobileData(true)
+            settings.setWifiOnlyDownloads(true)
+        }
+        SetupChoice.NoLimits -> {
+            settings.setSaveMobileData(false)
+            settings.setWifiOnlyDownloads(false)
+        }
+        SetupChoice.ApplyRecommended -> settings.applyRecommendations(recommendations)
+        SetupChoice.NotNow -> Unit
     }
 }
 
