@@ -56,6 +56,14 @@ class VideoCopiesTest {
         assertEquals(listOf(again.id, sd.id, uhd.id), VideoCopies.oneOfEachFile(listOf(hd, sd, forwarded, again, uhd), again.id).map { it.id })
     }
 
+    @Test
+    fun `a copy in a chat the kids lock hides is never offered`() {
+        val files = VideoCopies.distinctFiles(listOf(hd, sd, uhd), allowed = setOf(1L))
+        assertEquals(listOf(hd.id, sd.id), files.map { it.first.id })
+        assertEquals(listOf(hd.id, sd.id, uhd.id), VideoCopies.visible(listOf(hd, sd, uhd), allowed = null).map { it.id })
+        assertEquals(listOf(hd.id, sd.id), VideoCopies.oneOfEachFile(listOf(hd, sd, uhd), hd.id, allowed = setOf(1L)).map { it.id })
+    }
+
     // ---- keying ------------------------------------------------------------------------------
 
     @Test

@@ -38,10 +38,15 @@ object VideoCopies {
      * same Telegram file, or the same name and size) as one entry, the first of them leading, in
      * the order given. A list of copies to choose from offers a file once, however often it was
      * posted; the rest are the entry's second half, for "posted twice" or "in 2 chats".
+     *
+     * Copies in a chat the kids lock hides ([allowed], see [visible]) are never offered.
      */
-    fun distinctFiles(copies: List<MediaItem>): List<Pair<MediaItem, List<MediaItem>>> {
+    fun distinctFiles(
+        copies: List<MediaItem>,
+        allowed: Set<Long>? = ChatGate.allowed.value,
+    ): List<Pair<MediaItem, List<MediaItem>>> {
         val groups = mutableListOf<MutableList<MediaItem>>()
-        for (copy in copies) {
+        for (copy in visible(copies, allowed)) {
             val same = groups.firstOrNull { group -> group.any { sameFile(it, copy) } }
             if (same != null) same += copy else groups += mutableListOf(copy)
         }
@@ -49,8 +54,22 @@ object VideoCopies {
     }
 
     /** [distinctFiles], one item per file: the one [playing] where it is among a file's posts. */
-    fun oneOfEachFile(copies: List<MediaItem>, playing: String): List<MediaItem> =
-        distinctFiles(copies).map { (lead, same) -> same.firstOrNull { it.id == playing } ?: lead }
+    fun oneOfEachFile(
+        copies: List<MediaItem>,
+        playing: String,
+        allowed: Set<Long>? = ChatGate.allowed.value,
+    ): List<MediaItem> {
+        val shown = distinctFiles(copies, allowed).map { (lead, same) -> same.firstOrNull { it.id == playing } ?: lead }
+        // The video playing stays listed, ticked, whatever chat it came from.
+        return if (shown.any { it.id == playing }) shown else copies.filter { it.id == playing } + shown
+    }
+
+    /**
+     * [copies] without those in chats the kids lock hides: [allowed] is [ChatGate.allowed], null
+     * while the lock is off.
+     */
+    fun visible(copies: List<MediaItem>, allowed: Set<Long>? = ChatGate.allowed.value): List<MediaItem> =
+        if (allowed == null) copies else copies.filter { it.chatId in allowed }
 
     /** One file posted twice: the same Telegram file, or the same file name and size. */
     fun sameFile(a: MediaItem, b: MediaItem): Boolean = when {

@@ -1643,7 +1643,8 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
      * list them.
      */
     suspend fun copyToPlay(item: MediaItem): MediaItem {
-        val copies = item.versions.takeIf { it.size > 1 } ?: return item
+        // Never a copy in a chat the kids lock hides.
+        val copies = VideoCopies.visible(item.versions).takeIf { it.size > 1 } ?: return item
         val started = continueWatching.first().mapTo(HashSet()) { progressKey(it.chatId, it.messageId) }
         val picked = VideoCopies.pick(
             copies,
