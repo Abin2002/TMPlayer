@@ -654,6 +654,7 @@
     "offline_refresh": "You're offline. Showing what was loaded before.",
     "open_in_other_player": "Open in another player",
     "open_with": "Open with",
+    "part_number": "Part {number}",
     "parts_count": "{count, plural, one {# part} other {# parts}}",
     "play_from_start": "Play from the start",
     "progress_kept": "{percent} so far, and kept",

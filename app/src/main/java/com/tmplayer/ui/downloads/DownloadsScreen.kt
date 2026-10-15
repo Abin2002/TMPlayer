@@ -252,7 +252,7 @@ fun DownloadsScreen(
     suspend fun measure(record: ResumeRecord): DownloadRow? {
         val row = DownloadRow(
             key = "kept_${record.chatId}_${record.messageId}",
-            title = record.title,
+            title = com.tmplayer.data.VideoCorrections.titleFor(record.chatId, record.messageId, record.title),
             bytes = 0,
             totalBytes = record.sizeBytes,
             complete = false,
@@ -303,7 +303,7 @@ fun DownloadsScreen(
             .getOrDefault(LocalFileAvailability.Missing)
         return DownloadRow(
             key = "cached_${record.chatId}_${record.messageId}",
-            title = record.title,
+            title = com.tmplayer.data.VideoCorrections.titleFor(record.chatId, record.messageId, record.title),
             bytes = bytes,
             totalBytes = record.sizeBytes,
             complete = availability == LocalFileAvailability.Complete,

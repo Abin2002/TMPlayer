@@ -241,10 +241,15 @@ class SameVideoTest {
             }
         }
         repeat(3) { SeriesShelf.arrange(items, emptyMap()) }
-        val fresh = items.map { it.copy() }
-        val start = System.nanoTime()
-        SeriesShelf.arrange(fresh, emptyMap())
-        val ms = (System.nanoTime() - start) / 1_000_000
+        // Fresh copies each time, so every name is parsed again as on a first listing; the best of
+        // three, so a garbage collection or a test running alongside does not decide it.
+        val ms = (1..3).minOf {
+            val fresh = items.map { it.copy() }
+            val start = System.nanoTime()
+            SeriesShelf.arrange(fresh, emptyMap())
+            (System.nanoTime() - start) / 1_000_000
+        }
+        println("arranging 2000 files: $ms ms")
         assertTrue("arranging 2000 files took $ms ms", ms < 200)
     }
 
