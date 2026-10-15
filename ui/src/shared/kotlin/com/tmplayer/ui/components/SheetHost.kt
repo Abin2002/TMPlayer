@@ -10,8 +10,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * the screen shows the same content in place instead.
  */
 fun interface SheetHost {
+    /** [fullScreen]: the whole height, without the drag handle; the content brings its own close. */
     @Composable
-    fun Sheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit)
+    fun Sheet(onDismiss: () -> Unit, fullScreen: Boolean, content: @Composable ColumnScope.() -> Unit)
 }
 
 /** The [SheetHost] in force, or null where the platform shows sheets' content in place. */

@@ -45,6 +45,10 @@ import com.tmplayer.data.MediaMapper
 import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.VideoCopies
 import com.tmplayer.data.copyQuality
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
+import com.tmplayer.ui.components.rememberCover
 import com.tmplayer.i18n.Messages
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
@@ -138,8 +142,9 @@ internal fun Versions(
     }
     // A phone lists the copies in its bottom sheet, over the page; elsewhere they open in place.
     val sheet = com.tmplayer.ui.components.LocalSheetHost.current?.takeIf { isTouch() }
-    val list: @Composable () -> Unit = {
+    val list: @Composable (Boolean) -> Unit = { withHeader ->
         CopyChooser(
+            header = withHeader,
             item = item,
             files = files,
             chatTitle = chatTitle,
@@ -158,19 +163,80 @@ internal fun Versions(
             onClick = { open = !open },
         )
         if (sheet == null) {
-            AnimatedVisibility(open) { list() }
+            AnimatedVisibility(open) { list(true) }
         }
     }
     if (sheet != null && open) {
-        sheet.Sheet(onDismiss = { open = false }) {
-            Column(
-                Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp),
-            ) { list() }
+        val cover = rememberCover(item)
+        val wide = com.tmplayer.ui.online.rememberMeta(item, showOnly = true)?.wideUrl
+        val source = remember(item.id, cover, wide) {
+            com.tmplayer.ui.components.BackdropSource(item.miniThumbnail, item.thumbnailFileId, cover, wide)
+        }
+        sheet.Sheet(onDismiss = { open = false }, fullScreen = true) {
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                CopiesHeader(
+                    source = source,
+                    title = SeriesShelf.tileTitle(item),
+                    subtitle = copiesSubtitle(item, files, chatTitle, s),
+                    onClose = { open = false },
+                )
+                Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)) { list(false) }
+            }
         }
     }
+}
+
+/**
+ * The top of the full screen copies sheet: the video's picture (the provider's backdrop, else the
+ * Telegram thumbnail, else its generated cover) fading into the sheet, the title and the count on
+ * its foot, and a round close at the top end, the sheet having no handle to drag.
+ */
+@Composable
+private fun CopiesHeader(source: com.tmplayer.ui.components.BackdropSource, title: String, subtitle: String, onClose: () -> Unit) {
+    val sheetColour = com.tmplayer.ui.theme.FloatingTone.sheet
+    Box(Modifier.fillMaxWidth().height(COPIES_HEADER).clipToBounds()) {
+        com.tmplayer.ui.components.ArtBackdrop(source, Modifier.matchParentSize())
+        Box(
+            Modifier
+                .matchParentSize()
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        0f to sheetColour.copy(alpha = 0.15f),
+                        0.55f to sheetColour.copy(alpha = 0.55f),
+                        1f to sheetColour,
+                    ),
+                ),
+        )
+        com.tmplayer.ui.components.FloatingRoundButton(
+            TmIcons.Close,
+            LocalStrings.current.commonClose,
+            onClose,
+            Modifier.align(Alignment.TopEnd).padding(12.dp),
+        )
+        Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 20.dp, vertical = 12.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = Tone.text,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = Modifier.padding(top = 2.dp))
+        }
+    }
+}
+
+/** How tall the copies sheet's picture is. */
+private val COPIES_HEADER = 220.dp
+
+/** "7 versions  ·  Film Club", or "7 versions  ·  in 3 chats". */
+private fun copiesSubtitle(item: MediaItem, files: List<Pair<MediaItem, List<MediaItem>>>, chatTitle: String, s: Messages): String {
+    val chats = files.mapNotNull { (lead, _) -> copyChat(lead, item, chatTitle) }.distinct()
+    return listOfNotNull(
+        s.detailVersions(files.size),
+        if (chats.size > 1) s.detailCopyInChats(chats.size) else chats.firstOrNull(),
+    ).joinToString("  ·  ")
 }
 
 /**
@@ -183,6 +249,8 @@ internal fun Versions(
  */
 @Composable
 private fun CopyChooser(
+    /** False under [CopiesHeader], which already says the title and the count. */
+    header: Boolean,
     item: MediaItem,
     files: List<Pair<MediaItem, List<MediaItem>>>,
     chatTitle: String,
@@ -206,7 +274,7 @@ private fun CopyChooser(
             .sortedBy { it.key == null }
     }
     Column {
-        Text(
+        if (header) Text(
             SeriesShelf.tileTitle(item),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
@@ -214,11 +282,8 @@ private fun CopyChooser(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            listOfNotNull(
-                s.detailVersions(rows.size),
-                if (chats.size > 1) s.detailCopyInChats(chats.size) else chats.firstOrNull(),
-            ).joinToString("  ·  "),
+        if (header) Text(
+            copiesSubtitle(item, files, chatTitle, s),
             style = MaterialTheme.typography.bodyMedium,
             color = Tone.muted,
             modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),

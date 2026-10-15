@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.BottomSheetDefaults
@@ -43,6 +44,8 @@ fun PhoneSheet(
      * A sheet shorter than the screen still opens at its own height.
      */
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    /** The whole height and no drag handle, for a page-like sheet with its own close. */
+    fullScreen: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     ModalBottomSheet(
@@ -56,10 +59,13 @@ fun PhoneSheet(
         Column(
             Modifier
                 .fillMaxWidth()
+                .then(if (fullScreen) Modifier.fillMaxHeight() else Modifier)
                 .border(floatingBorder(), Floating.SheetShape)
                 .windowInsetsPadding(BottomSheetDefaults.windowInsets),
         ) {
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { BottomSheetDefaults.DragHandle() }
+            if (!fullScreen) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { BottomSheetDefaults.DragHandle() }
+            }
             content()
         }
     }
@@ -80,10 +86,10 @@ private object KeepScrollInSheet : NestedScrollConnection {
 }
 
 /** [PhoneSheet] as the shared screens' [SheetHost] (a video's copies list opens in it). */
-val PhoneSheetHost = SheetHost { onDismiss, content -> PhoneSheetForHost(onDismiss, content) }
+val PhoneSheetHost = SheetHost { onDismiss, fullScreen, content -> PhoneSheetForHost(onDismiss, fullScreen, content) }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PhoneSheetForHost(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    PhoneSheet(onDismissRequest = onDismiss, content = content)
+private fun PhoneSheetForHost(onDismiss: () -> Unit, fullScreen: Boolean, content: @Composable ColumnScope.() -> Unit) {
+    PhoneSheet(onDismissRequest = onDismiss, fullScreen = fullScreen, content = content)
 }
