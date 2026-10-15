@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.heading
 import com.tmplayer.ui.components.BackdropSource
 import com.tmplayer.ui.components.CoverArt
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.TileBadgeInset
 import com.tmplayer.ui.components.rememberCover
 import com.tmplayer.ui.icons.TmIcons
@@ -952,6 +953,7 @@ fun SeriesPanel(
             }
         }
         }
+        ScrollToTop(list)
         onBack?.let { back ->
             PageBackBand(list, meta?.title?.takeIf { it.isNotBlank() } ?: series.title, back, barInsets, Modifier.align(Alignment.TopStart))
         }

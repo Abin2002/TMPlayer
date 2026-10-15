@@ -150,6 +150,7 @@ import com.tmplayer.ui.components.ChoiceLine
 import com.tmplayer.ui.components.ChoiceList
 import com.tmplayer.ui.components.ChoiceSheet
 import com.tmplayer.ui.components.ConnectionNotice
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.FocusOnOpen
 import com.tmplayer.ui.components.MediaGridSkeleton
 import com.tmplayer.ui.components.MediaPreview
@@ -706,6 +707,10 @@ fun MediaGridScreen(
                             }
                         }
                     }
+                }
+                when (layout) {
+                    CardLayout.Grid -> ScrollToTop(gridState)
+                    CardLayout.List -> ScrollToTop(listState)
                 }
 
                 openSeries.series?.let { series ->

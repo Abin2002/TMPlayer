@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.tmplayer.data.AllChatsSearch
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.ui.browse.VideoSearchState
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.Tone
 
@@ -116,6 +117,7 @@ internal fun AllChatsResults(
             rememberScrollbarAdapter(grid),
             Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(vertical = 4.dp),
         )
+        ScrollToTop(grid)
     }
 }
 

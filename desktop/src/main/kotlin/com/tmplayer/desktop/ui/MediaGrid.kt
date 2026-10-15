@@ -55,6 +55,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.TmAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import com.tmplayer.ui.components.TmDropdownMenu
@@ -374,6 +375,8 @@ internal fun VideoGrid(
             rememberScrollbarAdapter(grid),
             Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(vertical = 4.dp),
         )
+        // The selection bar takes the bottom centre while it is up.
+        if (!selection.active) ScrollToTop(grid)
         if (selection.active) {
             SelectionBar(state, selection, items, chatTitle, index, Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp))
         }
@@ -475,6 +478,7 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                         }
                     }
                     VerticalScrollbar(rememberScrollbarAdapter(grid), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+                    ScrollToTop(grid)
                 }
             }
         }

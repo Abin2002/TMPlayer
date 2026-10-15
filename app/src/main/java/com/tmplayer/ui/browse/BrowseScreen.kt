@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
@@ -115,6 +116,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshotFlow
+import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.Spinner
 import com.tmplayer.ui.components.TmSecondaryButton
 import androidx.compose.runtime.collectAsState
@@ -1131,35 +1133,45 @@ private fun <T : Any> ContinueSection(
         bottom = insets.bottom,
     )
 
-    when (layout) {
-        CardLayout.List -> LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = padding,
-        ) {
-            items(records, key = { text(it).key }) { record ->
-                ContinueCard(
-                    text = text(record),
-                    onResume = { onResume(record) },
-                    onHold = { onHold(record) },
-                    modifier = focusOf(record),
-                )
+    val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
+    Box(Modifier.fillMaxSize()) {
+        when (layout) {
+            CardLayout.List -> LazyColumn(
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = padding,
+            ) {
+                items(records, key = { text(it).key }) { record ->
+                    ContinueCard(
+                        text = text(record),
+                        onResume = { onResume(record) },
+                        onHold = { onHold(record) },
+                        modifier = focusOf(record),
+                    )
+                }
+            }
+
+            CardLayout.Grid -> LazyVerticalGrid(
+                columns = tiles,
+                state = gridState,
+                contentPadding = padding,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                gridItems(records, key = { text(it).key }) { record ->
+                    ContinueTile(
+                        text = text(record),
+                        onResume = { onResume(record) },
+                        onHold = { onHold(record) },
+                        modifier = focusOf(record),
+                    )
+                }
             }
         }
-
-        CardLayout.Grid -> LazyVerticalGrid(
-            columns = tiles,
-            contentPadding = padding,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            gridItems(records, key = { text(it).key }) { record ->
-                ContinueTile(
-                    text = text(record),
-                    onResume = { onResume(record) },
-                    onHold = { onHold(record) },
-                    modifier = focusOf(record),
-                )
-            }
+        when (layout) {
+            CardLayout.List -> ScrollToTop(listState)
+            CardLayout.Grid -> ScrollToTop(gridState)
         }
     }
 
@@ -2287,105 +2299,115 @@ private fun ChatSection(
         else -> Modifier
     }
 
-    when (layout) {
-        CardLayout.List -> LazyColumn(
-            Modifier.fillMaxSize(),
-            // Rows carry their own side padding on a phone so the ripple reaches both edges, and
-            // they sit against each other with no gap: the list is one surface, not a stack of
-            // cards. The television keeps both, because its cards need room to grow a border.
-            contentPadding = if (rowsAreFullBleed) {
-                PaddingValues(bottom = insets.bottom)
-            } else {
-                PaddingValues(start = insets.start, end = insets.end, bottom = insets.bottom)
-            },
-            verticalArrangement = Arrangement.spacedBy(if (rowsAreFullBleed) 0.dp else 14.dp),
-        ) {
-            if (recent.isNotEmpty()) {
-                item(key = "recent-strip") {
-                    // The rows below are full bleed on a phone, but a heading is not a row: with
-                    // the list's side padding dropped for their sake, this heading has to put it
-                    // back or it prints hard against the panel edge.
-                    Column(
-                        if (rowsAreFullBleed) {
-                            Modifier.padding(start = insets.start, end = insets.end)
-                        } else {
-                            Modifier
-                        },
-                    ) {
-                        Text(
-                            s.browseJumpBackIn,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Tone.text,
-                            modifier = Modifier.padding(bottom = 14.dp),
-                        )
-                        LazyRow(
-                            // Drawn [clearance] past every side and padded back in by as much, so
-                            // a focused tile keeps its border and the strip still lines up under its
-                            // heading and sits where it did.
-                            modifier = Modifier.bleed(clearance),
-                            contentPadding = PaddingValues(clearance),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+    val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
+    Box(Modifier.fillMaxSize()) {
+        when (layout) {
+            CardLayout.List -> LazyColumn(
+                Modifier.fillMaxSize(),
+                state = listState,
+                // Rows carry their own side padding on a phone so the ripple reaches both edges, and
+                // they sit against each other with no gap: the list is one surface, not a stack of
+                // cards. The television keeps both, because its cards need room to grow a border.
+                contentPadding = if (rowsAreFullBleed) {
+                    PaddingValues(bottom = insets.bottom)
+                } else {
+                    PaddingValues(start = insets.start, end = insets.end, bottom = insets.bottom)
+                },
+                verticalArrangement = Arrangement.spacedBy(if (rowsAreFullBleed) 0.dp else 14.dp),
+            ) {
+                if (recent.isNotEmpty()) {
+                    item(key = "recent-strip") {
+                        // The rows below are full bleed on a phone, but a heading is not a row: with
+                        // the list's side padding dropped for their sake, this heading has to put it
+                        // back or it prints hard against the panel edge.
+                        Column(
+                            if (rowsAreFullBleed) {
+                                Modifier.padding(start = insets.start, end = insets.end)
+                            } else {
+                                Modifier
+                            },
                         ) {
-                            items(recent, key = { "r-${it.id}" }) { chat ->
-                                ChatTile(
-                                    chat = chat,
-                                    favorite = chat.id in favorites,
-                                    opensOnLaunch = chat.id == launchChatId,
-                                    onClick = { onOpenChat(chat) },
-                                    onHold = { onHold(chat) },
-                                    modifier = focusOf(chat, inStrip = true)
-                                        .width(RECENT_TILE_WIDTH),
-                                )
+                            Text(
+                                s.browseJumpBackIn,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Tone.text,
+                                modifier = Modifier.padding(bottom = 14.dp),
+                            )
+                            LazyRow(
+                                // Drawn [clearance] past every side and padded back in by as much, so
+                                // a focused tile keeps its border and the strip still lines up under its
+                                // heading and sits where it did.
+                                modifier = Modifier.bleed(clearance),
+                                contentPadding = PaddingValues(clearance),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            ) {
+                                items(recent, key = { "r-${it.id}" }) { chat ->
+                                    ChatTile(
+                                        chat = chat,
+                                        favorite = chat.id in favorites,
+                                        opensOnLaunch = chat.id == launchChatId,
+                                        onClick = { onOpenChat(chat) },
+                                        onHold = { onHold(chat) },
+                                        modifier = focusOf(chat, inStrip = true)
+                                            .width(RECENT_TILE_WIDTH),
+                                    )
+                                }
                             }
+                            Text(
+                                // Not "All chats": that is the name of a rail tab, and repeating it as
+                                // a sub-heading inside a different tab reads as if the viewer moved.
+                                s.browseMoreChats,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Tone.text,
+                                modifier = Modifier.padding(top = 32.dp, bottom = 4.dp),
+                            )
                         }
-                        Text(
-                            // Not "All chats": that is the name of a rail tab, and repeating it as
-                            // a sub-heading inside a different tab reads as if the viewer moved.
-                            s.browseMoreChats,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Tone.text,
-                            modifier = Modifier.padding(top = 32.dp, bottom = 4.dp),
-                        )
                     }
+                }
+
+                items(chats, key = { it.id }) { chat ->
+                    ChatRow(
+                        chat = chat,
+                        favorite = chat.id in favorites,
+                        opensOnLaunch = chat.id == launchChatId,
+                        onClick = { onOpenChat(chat) },
+                        onHold = { onHold(chat) },
+                        modifier = focusOf(chat, inStrip = false),
+                    )
                 }
             }
 
-            items(chats, key = { it.id }) { chat ->
-                ChatRow(
-                    chat = chat,
-                    favorite = chat.id in favorites,
-                    opensOnLaunch = chat.id == launchChatId,
-                    onClick = { onOpenChat(chat) },
-                    onHold = { onHold(chat) },
-                    modifier = focusOf(chat, inStrip = false),
-                )
+            CardLayout.Grid -> LazyVerticalGrid(
+                columns = tiles,
+                state = gridState,
+                modifier = Modifier.fillMaxSize(),
+                // The end inset keeps a focused tile in the last column from having its border
+                // clipped by the panel edge.
+                contentPadding = PaddingValues(
+                    start = insets.start,
+                    end = insets.end,
+                    top = if (rowsAreFullBleed) 0.dp else Tv.FocusClearance,
+                    bottom = insets.bottom,
+                ),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                gridItems(chats, key = { it.id }) { chat ->
+                    ChatTile(
+                        chat = chat,
+                        favorite = chat.id in favorites,
+                        opensOnLaunch = chat.id == launchChatId,
+                        onClick = { onOpenChat(chat) },
+                        onHold = { onHold(chat) },
+                        modifier = focusOf(chat, inStrip = false).fillMaxWidth(),
+                    )
+                }
             }
         }
-
-        CardLayout.Grid -> LazyVerticalGrid(
-            columns = tiles,
-            modifier = Modifier.fillMaxSize(),
-            // The end inset keeps a focused tile in the last column from having its border
-            // clipped by the panel edge.
-            contentPadding = PaddingValues(
-                start = insets.start,
-                end = insets.end,
-                top = if (rowsAreFullBleed) 0.dp else Tv.FocusClearance,
-                bottom = insets.bottom,
-            ),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            gridItems(chats, key = { it.id }) { chat ->
-                ChatTile(
-                    chat = chat,
-                    favorite = chat.id in favorites,
-                    opensOnLaunch = chat.id == launchChatId,
-                    onClick = { onOpenChat(chat) },
-                    onHold = { onHold(chat) },
-                    modifier = focusOf(chat, inStrip = false).fillMaxWidth(),
-                )
-            }
+        when (layout) {
+            CardLayout.List -> ScrollToTop(listState)
+            CardLayout.Grid -> ScrollToTop(gridState)
         }
     }
 
@@ -2815,60 +2837,63 @@ private fun AllChatsResults(
     val touch = isTouch()
     val gridState = rememberLazyGridState()
     val gap = if (touch) 8.dp else 16.dp
-    LazyVerticalGrid(
-        columns = if (touch) GridCells.Adaptive(RESULT_TILE_MIN) else GridCells.Fixed(RESULT_COLUMNS),
-        state = gridState,
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = insets.start,
-            end = insets.end,
-            top = if (touch) 0.dp else Tv.FocusClearance,
-            bottom = insets.bottom,
-        ),
-        horizontalArrangement = Arrangement.spacedBy(gap),
-        verticalArrangement = Arrangement.spacedBy(gap),
-    ) {
-        if (results.chats.isNotEmpty()) {
-            item(key = "h-chats", span = { GridItemSpan(maxLineSpan) }) { ResultsHeading(s.browseSearchResultsChats) }
-            gridItems(results.chats, key = { "c-${it.id}" }, span = { GridItemSpan(maxLineSpan) }) { chat ->
-                ChatRow(
-                    chat = chat,
-                    favorite = chat.id in favorites,
-                    opensOnLaunch = false,
-                    onClick = { onOpenChat(chat) },
-                    onHold = { onHoldChat(chat) },
-                )
-            }
-        }
-        item(key = "h-videos", span = { GridItemSpan(maxLineSpan) }) { ResultsHeading(s.browseSearchResultsVideos) }
-        val error = state.error
-        when {
-            error != null -> item(key = "failed", span = { GridItemSpan(maxLineSpan) }) {
-                ResultsNote(s.browseSearchVideosFailed(error)) {
-                    TmSecondaryButton(onClick = onRetry) { M3Text(s.commonRetry) }
+    Box(Modifier.fillMaxSize()) {
+        LazyVerticalGrid(
+            columns = if (touch) GridCells.Adaptive(RESULT_TILE_MIN) else GridCells.Fixed(RESULT_COLUMNS),
+            state = gridState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = insets.start,
+                end = insets.end,
+                top = if (touch) 0.dp else Tv.FocusClearance,
+                bottom = insets.bottom,
+            ),
+            horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalArrangement = Arrangement.spacedBy(gap),
+        ) {
+            if (results.chats.isNotEmpty()) {
+                item(key = "h-chats", span = { GridItemSpan(maxLineSpan) }) { ResultsHeading(s.browseSearchResultsChats) }
+                gridItems(results.chats, key = { "c-${it.id}" }, span = { GridItemSpan(maxLineSpan) }) { chat ->
+                    ChatRow(
+                        chat = chat,
+                        favorite = chat.id in favorites,
+                        opensOnLaunch = false,
+                        onClick = { onOpenChat(chat) },
+                        onHold = { onHoldChat(chat) },
+                    )
                 }
             }
-            state.loading -> item(key = "searching", span = { GridItemSpan(maxLineSpan) }) {
-                ResultsNote(s.browseSearchVideosSearching, spinner = true)
+            item(key = "h-videos", span = { GridItemSpan(maxLineSpan) }) { ResultsHeading(s.browseSearchResultsVideos) }
+            val error = state.error
+            when {
+                error != null -> item(key = "failed", span = { GridItemSpan(maxLineSpan) }) {
+                    ResultsNote(s.browseSearchVideosFailed(error)) {
+                        TmSecondaryButton(onClick = onRetry) { M3Text(s.commonRetry) }
+                    }
+                }
+                state.loading -> item(key = "searching", span = { GridItemSpan(maxLineSpan) }) {
+                    ResultsNote(s.browseSearchVideosSearching, spinner = true)
+                }
+                results.videos.isEmpty() -> item(key = "none", span = { GridItemSpan(maxLineSpan) }) {
+                    ResultsNote(s.browseSearchVideosNone(results.query))
+                }
+                else -> gridItems(results.videos, key = { "v-${it.id}" }) { item ->
+                    MediaCard(
+                        item = item,
+                        watched = watch.point(item),
+                        finished = watch.finished(item),
+                        dense = touch,
+                        onClick = { onPlay(item, chatTitle(item.chatId)) },
+                        onLongClick = { onHold(item, chatTitle(item.chatId)) },
+                        onFocused = {},
+                    )
+                }
             }
-            results.videos.isEmpty() -> item(key = "none", span = { GridItemSpan(maxLineSpan) }) {
-                ResultsNote(s.browseSearchVideosNone(results.query))
-            }
-            else -> gridItems(results.videos, key = { "v-${it.id}" }) { item ->
-                MediaCard(
-                    item = item,
-                    watched = watch.point(item),
-                    finished = watch.finished(item),
-                    dense = touch,
-                    onClick = { onPlay(item, chatTitle(item.chatId)) },
-                    onLongClick = { onHold(item, chatTitle(item.chatId)) },
-                    onFocused = {},
-                )
+            if (state.loadingMore) {
+                item(key = "more", span = { GridItemSpan(maxLineSpan) }) { ResultsNote(s.gridLoadingMore, spinner = true) }
             }
         }
-        if (state.loadingMore) {
-            item(key = "more", span = { GridItemSpan(maxLineSpan) }) { ResultsNote(s.gridLoadingMore, spinner = true) }
-        }
+        ScrollToTop(gridState)
     }
     // The next page well before the last row, the way a chat's grid pages.
     val nearEnd by remember {
