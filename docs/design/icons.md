@@ -33,6 +33,9 @@ state is carried by colour and background, as the sidebar pill already does.
 | `MoreVert` | MoreVertical |  | Material MoreVert, PlayerIcons.MoreVert | More actions. |
 | `Home` | Home03 |  | Material Home | Home. |
 | `Search` | Search01 |  | Material Search | Search. |
+| `SearchRemove` | SearchRemove |  | TmIcons.Search | A search that found nothing. |
+| `FilterHorizontal` | FilterHorizontal |  |  | The search's filters. |
+| `ArrowUpLeft` | ArrowUpLeft01 | yes |  | Put a suggestion into the search field to go on typing. |
 | `Settings` | Settings01 |  | Material Settings | Settings. |
 | `Refresh` | Refresh |  | Material Refresh | Refresh, try again, start over. |
 | `History` | History |  | TmIcons.History | Recent searches and watch history. |
@@ -40,7 +43,7 @@ state is carried by colour and background, as the sidebar pill already does.
 | `Download` | Download04 |  | TmIcons.Download | Downloads, what is held on this device. |
 | `Folder` | Folder01 |  | TmIcons.Folder | A Telegram chat folder. |
 | `Grid` | GridView |  | TmIcons.Grid | The grid arrangement. |
-| `List` | LeftToRightListBullet | yes | Material List | The list arrangement, a list of chats. |
+| `List` | LeftToRightListBullet | yes | Material List | The list arrangement. |
 | `Sort` | SortingAZ02 |  | TmIcons.Sort | The chat list sorted by name. |
 | `OpenExternal` | LinkSquare02 |  | Material ExitToApp | Open in another app. |
 | `SignOut` | Logout05 | yes | Material ExitToApp | Sign out. |
@@ -56,7 +59,7 @@ state is carried by colour and background, as the sidebar pill already does.
 | `Delete` | Delete02 |  | Material Delete | Delete, remove. |
 | `Edit` | PencilEdit02 |  | Material Edit, PlayerIcons.Edit | Rename, edit. |
 | `Info` | InformationCircle |  | Material Info | Details, about. |
-| `Help` | HelpCircle |  | TmIcons.Help | Run the setup again, how this works. |
+| `Help` | HelpCircle |  | TmIcons.Help | The walkthrough, how this works. |
 | `Warning` | Alert02 |  | Material Warning | Something needs attention. |
 | `Lock` | SquareLock02 |  | Material Lock | Locked, private, the PIN. |
 | `Star` | Star (filled) |  | Material Star | A favourite that is set. |
@@ -72,6 +75,7 @@ state is carried by colour and background, as the sidebar pill already does.
 | `Unread` | MessageNotification01 |  | TmIcons.Dot | Unread chats. |
 | `Backspace` | Eraser01 | yes | TmIcons.Backspace | Delete the last digit on the PIN pad. |
 | `VisibilityOff` | ViewOffSlash |  | TmIcons.VisibilityOff | Controls out of sight. |
+| `Chats` | Message01 |  | TmIcons.List | The Chats section, every chat. |
 | `Account` | UserCircle |  | Material AccountCircle | An account. |
 | `Person` | User |  | Material Person | A person. |
 | `Group` | UserGroup |  | TmIcons.Group | A group. |

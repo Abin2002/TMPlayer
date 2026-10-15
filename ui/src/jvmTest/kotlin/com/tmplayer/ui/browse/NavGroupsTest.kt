@@ -11,26 +11,20 @@ class NavGroupsTest {
     private fun tab(tab: BrowseTab) = NavEntry.Section(BrowseSection.of(tab))
 
     @Test
-    fun `every tab sits in the group the plan gives it`() {
-        val watch = listOf(BrowseTab.Home, BrowseTab.History, BrowseTab.Favorites)
-        for (entry in BrowseTab.entries) {
-            val expected = if (entry in watch) NavGroup.Watch else NavGroup.Chats
-            assertEquals(entry.name, expected, navGroupOf(BrowseSection.of(entry)))
-        }
-        assertEquals(NavGroup.Folders, navGroupOf(BrowseSection.Folder(3, "Films")))
+    fun `every section sits in the one group, a folder too`() {
+        for (entry in BrowseTab.entries) assertEquals(entry.name, NavGroup.Watch, navGroupOf(BrowseSection.of(entry)))
+        assertEquals(NavGroup.Watch, navGroupOf(BrowseSection.Folder(3, "Films")))
         assertEquals(NavGroup.Watch, navGroupOf(NavEntry.Downloads))
     }
 
     @Test
-    fun `six fixed entries, Home, History, Favourites and Downloads, then Chats and Saved Messages`() {
+    fun `five entries, Home, History, Favourites, Chats and Downloads, and no Saved Messages`() {
         val groups = navGroups(browseSections(emptyList()))
-        assertEquals(listOf(NavGroup.Watch, NavGroup.Chats), groups.map { it.group })
+        assertEquals(listOf(NavGroup.Watch), groups.map { it.group })
         assertEquals(
-            listOf(tab(BrowseTab.Home), tab(BrowseTab.History), tab(BrowseTab.Favorites), NavEntry.Downloads),
-            groups[0].entries,
+            listOf(tab(BrowseTab.Home), tab(BrowseTab.History), tab(BrowseTab.Favorites), tab(BrowseTab.Chats), NavEntry.Downloads),
+            groups.single().entries,
         )
-        assertEquals(listOf(BrowseTab.Chats, BrowseTab.Saved).map(::tab), groups[1].entries)
-        assertEquals(6, groups.sumOf { it.entries.size })
     }
 
     @Test
@@ -42,24 +36,24 @@ class NavGroupsTest {
     }
 
     @Test
-    fun `Folders only when the account has some, and every section appears exactly once`() {
+    fun `folders are chips on the Chats page, not sidebar entries`() {
         val sections = browseSections(listOf(ChatFolderSummary(3, "Films"), ChatFolderSummary(7, "Family")))
-        val groups = navGroups(sections)
-        assertEquals(listOf(NavGroup.Watch, NavGroup.Chats, NavGroup.Folders), groups.map { it.group })
-        assertEquals(
-            listOf(BrowseSection.Folder(3, "Films"), BrowseSection.Folder(7, "Family")).map { NavEntry.Section(it) },
-            groups[2].entries,
-        )
-        val listed = groups.flatMap { it.entries }.filterIsInstance<NavEntry.Section>().map { it.section }
-        assertEquals(sections.toSet(), listed.toSet())
-        assertEquals(sections.size, listed.size)
+        val listed = navGroups(sections).flatMap { it.entries }.filterIsInstance<NavEntry.Section>().map { it.section }
+        assertFalse(listed.any { it is BrowseSection.Folder })
+        val chips = chatPageChips(listOf(ChatFolderSummary(3, "Films"), ChatFolderSummary(7, "Family")))
+        assertEquals(ChatPageChip.Filter(ChatFilter.All), chips.first())
+        assertEquals(listOf("Films", "Family"), chips.filterIsInstance<ChatPageChip.Folder>().map { it.label })
+        val films = BrowseSection.Folder(3, "Films")
+        assertEquals(BrowseSection.of(BrowseTab.Chats), films.navSection)
+        assertTrue(chips.last { it is ChatPageChip.Folder && it.folder.id == 3 }.isSelected(films, ChatFilter.All))
+        assertFalse(ChatPageChip.Filter(ChatFilter.All).isSelected(films, ChatFilter.All))
     }
 
     @Test
     fun `Downloads can be left out`() {
         val groups = navGroups(browseSections(emptyList()), withDownloads = false)
         assertFalse(NavEntry.Downloads in groups[0].entries)
-        assertEquals(listOf(tab(BrowseTab.Home), tab(BrowseTab.History), tab(BrowseTab.Favorites)), groups[0].entries)
+        assertEquals(listOf(tab(BrowseTab.Home), tab(BrowseTab.History), tab(BrowseTab.Favorites), tab(BrowseTab.Chats)), groups[0].entries)
     }
 
     @Test
@@ -104,5 +98,33 @@ class NavGroupsTest {
         NavGroupState.toggle(NavGroup.Folders)
         NavGroupState.reset()
         assertEquals(NavGroupState.DEFAULT_OPEN, NavGroupState.open.value)
+    }
+
+    @Test
+    fun `the chips follow Telegram's tab bar, then the filters no folder already is`() {
+        val folders = listOf(
+            ChatFolderSummary(1, "Unread", icon = "Unread"),
+            ChatFolderSummary(2, "Films", icon = "Custom"),
+            ChatFolderSummary(3, "Channels", icon = "Channels"),
+            ChatFolderSummary(4, "Bots", icon = "Bots"),
+        )
+        // "All chats" where Telegram puts it: second here, as a Premium account may have moved it.
+        val chips = chatPageChips(folders, mainListPosition = 1)
+        assertEquals(listOf("Unread", "All chats", "Films", "Channels", "Bots"), chips.take(5).map { it.label })
+        // No second Unread or Channels; Groups, People and Archived are TMPlayer's own.
+        assertEquals(
+            listOf(ChatFilter.Groups, ChatFilter.People, ChatFilter.Archived),
+            chips.drop(5).map { (it as ChatPageChip.Filter).filter },
+        )
+        assertEquals(com.tmplayer.ui.icons.TmIcons.Unread, chips.first().icon)
+        // A position past the end is the end, and no folders is "All chats" and every filter.
+        assertEquals(ChatPageChip.Filter(ChatFilter.All), chatPageChips(folders, mainListPosition = 99)[4])
+        assertEquals(ChatFilter.entries.map { ChatPageChip.Filter(it) }, chatPageChips(emptyList()))
+    }
+
+    @Test
+    fun `a folder named like a filter stands for it, by name too`() {
+        val chips = chatPageChips(listOf(ChatFolderSummary(5, "groups", icon = "Custom")))
+        assertFalse(chips.any { it == ChatPageChip.Filter(ChatFilter.Groups) })
     }
 }

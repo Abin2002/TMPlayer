@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.use
 import com.tmplayer.data.AuthState
 import com.tmplayer.data.ChatKind
-import com.tmplayer.data.ChatFolderSummary
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.DownloadRequest
 import com.tmplayer.data.DownloadRunner
@@ -425,28 +424,6 @@ class PromoShots {
         }
     }
 
-    /**
-     * The raw shots the setup's library pictures are cut from: the side bar of an account with two
-     * folders, with Chats and Saved Messages, and with only the folders.
-     */
-    @Test
-    fun setupLibrary() {
-        for (hidden in listOf(false, true)) {
-            both(if (hidden) "setup-raw-library-folders" else "setup-raw-library-everything", before = {
-                shell.hideDefaultGroups = hidden
-                // Everything opens on Chats, with Chats and Saved Messages in view; only the folders
-                // opens on a folder, which is where that side bar starts.
-                shell.showChats(if (hidden) com.tmplayer.ui.browse.BrowseSection.Folder(1, "Films") else com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats))
-            }) {
-                Row(Modifier.fillMaxSize()) {
-                    Sidebar(shell, null, SETUP_FOLDERS)
-                    VerticalDivider(color = Tone.outline)
-                }
-            }
-        }
-        shell.hideDefaultGroups = false
-    }
-
     /** The raw shots of the posters step: Cinema Lounge with posters looked up, and without. */
     @Test
     fun setupPosters() {
@@ -676,12 +653,9 @@ class PromoShots {
         /** Gradle runs the tests from the module directory. */
         val DEMO_DIR = File("../app/src/promo/res/drawable-nodpi")
 
-        /** The demo account's two Telegram folders, as the setup's library step pictures them. */
-        val SETUP_FOLDERS = listOf(ChatFolderSummary(1, "Films"), ChatFolderSummary(2, "Family"))
-
         init {
             // The setup reads these names; keep the specs in scripts/annotations and the classpath in step.
-            check(setupImageName(SetupChoice.Everything, dark = true) == "library-everything-dark.webp")
+            check(setupImageName(SetupChoice.PostersOn, dark = true) == "posters-on-dark.webp")
         }
     }
 }

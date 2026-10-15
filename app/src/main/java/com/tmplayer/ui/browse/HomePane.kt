@@ -121,7 +121,6 @@ internal fun HomePane(
      */
     noFavourites: Boolean = false,
     /** What the first-run state says and where its button goes: Saved Messages, or a folder. */
-    firstStep: DefaultGroups.FirstStep = DefaultGroups.firstStep(hidden = false, folders = emptyList()),
     /** Opens the first-run state's target. */
     onOpenSection: (BrowseSection) -> Unit = {},
     /** A Watch later tile: its detail or the player, as a Continue watching tile does. */
@@ -134,7 +133,7 @@ internal fun HomePane(
     val s = LocalStrings.current
     if (rows.isEmpty()) {
         // Nothing played and nothing starred: a first run, so say how to get a first video in.
-        FirstVideoEmpty(firstStep, onOpenSection)
+        FirstVideoEmpty(onOpenSection)
         return
     }
     val touch = isTouch()

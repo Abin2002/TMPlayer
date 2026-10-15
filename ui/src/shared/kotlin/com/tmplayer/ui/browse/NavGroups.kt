@@ -63,11 +63,14 @@ data class NavGroupEntries(val group: NavGroup, val entries: List<NavEntry>)
  */
 private val WATCH_TABS = listOf(BrowseTab.Home, BrowseTab.History, BrowseTab.Favorites)
 
-/** Which group a section sits in. Every section has exactly one. */
-fun navGroupOf(section: BrowseSection): NavGroup = when (section) {
-    is BrowseSection.Folder -> NavGroup.Folders
-    is BrowseSection.Tab -> if (section.tab in WATCH_TABS) NavGroup.Watch else NavGroup.Chats
-}
+/**
+ * Which group a section sits in. Every section is in Watch now: Chats is a top-level entry beside
+ * Home, and a folder is a chip on its page ([chatPageChips]), so the sidebar has no Telegram group
+ * and no Folders group to fold. [NavGroup.Chats] and [NavGroup.Folders] stay for the headings'
+ * words and for a saved fold state, and [navGroups] never fills them.
+ */
+@Suppress("UNUSED_PARAMETER")
+fun navGroupOf(section: BrowseSection): NavGroup = NavGroup.Watch
 
 fun navGroupOf(entry: NavEntry): NavGroup = when (entry) {
     NavEntry.Downloads -> NavGroup.Watch
@@ -75,20 +78,15 @@ fun navGroupOf(entry: NavEntry): NavGroup = when (entry) {
 }
 
 /**
- * The sidebar's groups for these [sections] (see [browseSections]): Watch with Downloads at its
- * end, Chats, then Folders only when the account has any, so an account with none never gets a
- * heading over nothing. Settings and Update are not here: every platform pins them at the bottom.
+ * The sidebar's entries for these [sections] (see [browseSections]), as one group with no heading:
+ * Home, History, Favourites, Chats, then Downloads. The folders are chips on the Chats page and
+ * Saved Messages a chat among the others, so neither is here. Settings and Update are not here
+ * either: every platform pins them at the bottom.
  */
 fun navGroups(sections: List<BrowseSection>, withDownloads: Boolean = true): List<NavGroupEntries> {
-    val watch = WATCH_TABS.map(BrowseSection::of).filter { it in sections }.map { NavEntry.Section(it) } +
+    val watch = (WATCH_TABS + BrowseTab.Chats).map(BrowseSection::of).filter { it in sections }.map { NavEntry.Section(it) } +
         listOfNotNull(NavEntry.Downloads.takeIf { withDownloads })
-    val chats = sections.filter { navGroupOf(it) == NavGroup.Chats }.map { NavEntry.Section(it) }
-    val folders = sections.filter { navGroupOf(it) == NavGroup.Folders }.map { NavEntry.Section(it) }
-    return listOf(
-        NavGroupEntries(NavGroup.Watch, watch),
-        NavGroupEntries(NavGroup.Chats, chats),
-        NavGroupEntries(NavGroup.Folders, folders),
-    ).filter { it.entries.isNotEmpty() }
+    return listOf(NavGroupEntries(NavGroup.Watch, watch))
 }
 
 /**

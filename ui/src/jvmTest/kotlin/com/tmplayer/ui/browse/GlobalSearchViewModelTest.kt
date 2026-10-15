@@ -1,0 +1,174 @@
+package com.tmplayer.ui.browse
+
+import com.tmplayer.data.AllChatsCursor
+import com.tmplayer.data.AllChatsPage
+import com.tmplayer.data.ChatGate
+import com.tmplayer.data.MediaItem
+import com.tmplayer.data.SearchChatType
+import com.tmplayer.data.SearchFilters
+import com.tmplayer.data.SearchQuality
+import com.tmplayer.data.SearchSort
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class GlobalSearchViewModelTest {
+
+    private val dispatcher = StandardTestDispatcher()
+
+    @Before fun setUp() {
+        Dispatchers.setMain(dispatcher)
+        ChatGate.set(null)
+    }
+
+    @After fun tearDown() = Dispatchers.resetMain()
+
+    private fun video(id: Long, name: String, chat: Long = id % 3 + 1) = MediaItem(
+        chatId = chat,
+        messageId = id,
+        fileId = id.toInt(),
+        title = name,
+        sizeBytes = 900L * 1024 * 1024,
+        durationSec = 5_000,
+        mimeType = "video/mp4",
+        thumbnailFileId = 0,
+        miniThumbnail = null,
+        date = id.toInt(),
+        fileName = name,
+    )
+
+    private val done = AllChatsCursor(videoDone = true, documentDone = true)
+    private val asked = mutableListOf<Pair<String, SearchFilters>>()
+
+    /** Telegram as a fixture: three thin pages for "harbour", nothing for anything else. */
+    private val source = VideoSearchSource { query, cursor, filters ->
+        asked += query to filters
+        when {
+            query != "harbour" -> AllChatsPage(emptyList(), done)
+            cursor.videoOffset.isEmpty() -> AllChatsPage(listOf(video(1, "Harbour.Lights.2019.1080p.mkv")), AllChatsCursor(videoOffset = "2", documentDone = true))
+            cursor.videoOffset == "2" -> AllChatsPage(listOf(video(2, "Harbour.Rain.2020.720p.mkv")), AllChatsCursor(videoOffset = "3", documentDone = true))
+            else -> AllChatsPage(listOf(video(3, "Harbour.Wind.2021.2160p.mkv")), AllChatsCursor(videoOffset = "4", documentDone = true))
+        }
+    }
+
+    @Test
+    fun `typing settles before Telegram is asked, and only the last query goes`() = runTest(dispatcher) {
+        val model = GlobalSearchViewModel(source, known = { emptyList() }, settleMs = 100)
+        model.type("ha")
+        model.type("harb")
+        model.type("harbour")
+        assertTrue(model.state.value.searching)
+        advanceUntilIdle()
+        assertEquals("harbour", asked.first().first)
+        assertFalse(model.state.value.searching)
+    }
+
+    @Test
+    fun `a thin first answer keeps asking, three pages at most`() = runTest(dispatcher) {
+        val model = GlobalSearchViewModel(source, known = { emptyList() }, settleMs = 0)
+        model.type("harbour")
+        advanceUntilIdle()
+        assertEquals(3, asked.size)
+        assertEquals(listOf(1L, 2L, 3L), model.state.value.shown.map { it.lead.messageId })
+        assertFalse(model.state.value.stillSearching)
+    }
+
+    @Test
+    fun `what the app already knows shows before Telegram answers`() = runTest(dispatcher) {
+        val local = video(40, "Harbour_Notes_2024.mkv")
+        val model = GlobalSearchViewModel(source, known = { listOf(local) }, settleMs = 1_000)
+        model.type("harbour notes")
+        assertEquals(listOf(40L), model.state.value.groups.map { it.lead.messageId })
+    }
+
+    @Test
+    fun `a quality or a sort never asks again, a chat type does`() = runTest(dispatcher) {
+        val model = GlobalSearchViewModel(source, known = { emptyList() }, settleMs = 0)
+        model.type("harbour")
+        advanceUntilIdle()
+        val before = asked.size
+        model.setFilters(SearchFilters(quality = SearchQuality.UHD))
+        model.setSort(SearchSort.Newest)
+        advanceUntilIdle()
+        assertEquals(before, asked.size)
+        assertEquals(listOf(3L), model.state.value.shown.map { it.lead.messageId })
+        model.setFilters(SearchFilters(chatType = SearchChatType.Channels))
+        advanceUntilIdle()
+        assertTrue(asked.size > before)
+        assertEquals(SearchChatType.Channels, asked.last().second.chatType)
+    }
+
+    @Test
+    fun `a search that sat with results is remembered, one typed through is not`() = runTest(dispatcher) {
+        val remembered = mutableListOf<String>()
+        val model = GlobalSearchViewModel(source, onSearched = { remembered += it }, known = { emptyList() }, settleMs = 0, rememberMs = 2_000)
+        model.type("harbour")
+        advanceUntilIdle()
+        assertEquals(listOf("harbour"), remembered)
+        model.type("nothing here")
+        advanceUntilIdle()
+        assertEquals(listOf("harbour"), remembered)
+    }
+
+    @Test
+    fun `offline lists the local half and asks again on reconnect`() = runTest(dispatcher) {
+        var online = false
+        val flaky = VideoSearchSource { query, cursor, filters ->
+            if (!online) throw VideoSearchSource.Offline()
+            source.page(query, cursor, filters)
+        }
+        val model = GlobalSearchViewModel(flaky, known = { listOf(video(50, "Harbour.Days.2018.mkv")) }, settleMs = 0)
+        model.type("harbour")
+        advanceUntilIdle()
+        assertTrue(model.state.value.offline)
+        assertEquals(listOf(50L), model.state.value.groups.map { it.lead.messageId })
+        online = true
+        model.reconnected()
+        advanceUntilIdle()
+        assertFalse(model.state.value.offline)
+        assertTrue(model.state.value.groups.size > 1)
+    }
+
+    @Test
+    fun `a flood wait counts down, then asks again`() = runTest(dispatcher) {
+        var calls = 0
+        val waiting = VideoSearchSource { query, cursor, filters ->
+            calls++
+            if (calls == 1) throw IllegalStateException("FLOOD_WAIT_3")
+            source.page(query, cursor, filters)
+        }
+        val model = GlobalSearchViewModel(waiting, known = { emptyList() }, settleMs = 0)
+        model.type("harbour")
+        dispatcher.scheduler.advanceTimeBy(500)
+        dispatcher.scheduler.runCurrent()
+        assertEquals(3, model.state.value.floodWait)
+        advanceUntilIdle()
+        assertEquals(0, model.state.value.floodWait)
+        assertTrue(model.state.value.groups.isNotEmpty())
+    }
+
+    @Test
+    fun `a deleted video's card goes when it is opened`() = runTest(dispatcher) {
+        val gone = object : VideoSearchSource {
+            override suspend fun page(query: String, cursor: AllChatsCursor, filters: SearchFilters) = source.page(query, cursor, filters)
+            override suspend fun stillThere(item: MediaItem): Boolean = item.messageId != 1L
+        }
+        val model = GlobalSearchViewModel(gone, known = { emptyList() }, settleMs = 0)
+        model.type("harbour")
+        advanceUntilIdle()
+        val first = model.state.value.groups.first().lead
+        assertFalse(model.check(first))
+        assertFalse(model.state.value.groups.any { g -> g.copies.any { it.messageId == 1L } })
+    }
+}

@@ -1,534 +1,569 @@
 package com.tmplayer.ui.browse
 
-import com.tmplayer.ui.i18n.LocalStrings
-import com.tmplayer.ui.icons.TmIcons
+import android.view.accessibility.AccessibilityManager
 import com.tmplayer.ui.nav.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemColors
-import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.foundation.layout.height
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.min
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.tmplayer.data.Account
-import com.tmplayer.data.Updates
-import com.tmplayer.ui.components.AppMark
+import com.tmplayer.ui.components.LocalBottomChrome
 import com.tmplayer.ui.components.MediaPreview
-import com.tmplayer.ui.theme.Avatar
+import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
+import com.tmplayer.ui.theme.FloatingTone
+import com.tmplayer.ui.theme.Motion
 import com.tmplayer.ui.theme.Tone
-import kotlinx.coroutines.launch
+import com.tmplayer.ui.theme.floatingBorder
+import com.tmplayer.ui.theme.rememberReducedMotion
+
+/** Where the phone's floating bar can take the viewer. The profile button opens [ProfilePopover] instead. */
+internal enum class TouchDestination { Home, Chats, Search }
 
 /**
- * The touch shell: a drawer of destinations behind a hamburger, with [content] filling the rest.
+ * The touch shell: a top bar with the page's name and its own buttons, the page, and a floating
+ * bar along the bottom with Home, Chats, Search and the viewer's picture.
  *
- * The drawer carries exactly what the television's permanent rail carries, in the same order, so
- * neither device has a way in that the other lacks. It starts closed, because on a phone the
- * listing is the reason the app was opened and a rail taking a third of a 411 dp screen is not
- * navigation, it is an obstruction.
+ * There is no drawer. What it held moved: Home and Chats are on the bar, the Telegram folders
+ * are chips on the Chats page, Search opens [searchScreen] over everything with its field growing
+ * out of the bar's magnifier, and the rest (Favourites, Downloads, History, Watch later, Settings,
+ * About, Update) is behind the picture, in [ProfilePopover].
+ *
+ * The bar floats, so it takes no room from the listing: it slides away as the list is pushed up
+ * and comes back on the first pull down, at the top, on a change of page and on the way back from
+ * the player. It never hides while TalkBack is on (a control that moves away is one a screen
+ * reader cannot find again), and it is out of the way while the keyboard is up. How much of the
+ * screen it keeps is [LocalBottomChrome], which the lists under it pad their ends by.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class, ExperimentalLayoutApi::class)
 @Composable
 internal fun TouchBrowseShell(
     account: Account?,
     selected: BrowseSection,
-    /** Every destination the rail offers, with this account's folders already slotted in. */
-    sections: List<BrowseSection>,
     favoriteCount: Int,
-    unreadCount: Int,
-    onSelect: (BrowseSection) -> Unit,
-    onOpenSettings: () -> Unit,
-    /**
-     * The Downloads screen. The one-video rule is the watch cache's, not this list's: downloads
-     * kept on purpose pile up on a television exactly as they do here, so its rail carries the
-     * same row this drawer does.
-     */
-    onOpenDownloads: () -> Unit,
+    /** Downloads in flight, badged on the Downloads row and on the picture. */
+    downloadCount: Int,
     updateVersion: String?,
+    onHome: () -> Unit,
+    onChats: () -> Unit,
+    onFavourites: () -> Unit,
+    onHistory: (HistoryTab) -> Unit,
+    onOpenDownloads: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenAbout: () -> Unit,
     onUpdate: () -> Unit,
-    /** Downloads in flight, badged on the Downloads row so a fetch is never invisible. */
-    downloadCount: Int = 0,
-    /** What the bar says when it is not being searched in. */
-    title: String = selected.heading,
+    /** The page's name in the top bar. */
+    title: String,
+    searchOpen: Boolean,
+    onOpenSearch: () -> Unit,
     /**
-     * The live search text, or null on a tab that cannot be searched.
-     *
-     * Passing null is what removes the magnifier altogether, rather than leaving a control that
-     * opens a field nothing is listening to.
+     * The search page, drawn over everything while [searchOpen]. [field] goes on its search field,
+     * which is what the bar's magnifier turns into.
      */
-    searchQuery: String? = null,
-    onSearchQueryChange: (String) -> Unit = {},
-    /** Offered inside the field when the device can hear; absent when it cannot. */
-    onVoiceSearch: (() -> Unit)? = null,
-    /** The bar's own buttons, to the right of the magnifier. */
+    searchScreen: @Composable (field: Modifier) -> Unit,
+    /** The top bar's own buttons. */
     actions: @Composable RowScope.() -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val s = LocalStrings.current
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val groups = rememberNavGroups(current = navGroupOf(selected))
-    val scope = rememberCoroutineScope()
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    fun close() = scope.launch { drawerState.close() }
+    val reduced = rememberReducedMotion() || Motion.reduced
+    val bar = remember { BarVisibility() }
+    var profileOpen by remember { mutableStateOf(false) }
 
-    // Back closes the drawer before it leaves the screen, which is what every phone user expects
-    // of an open drawer and what the hardware key would otherwise skip straight past.
-    BackHandler(enabled = drawerState.isOpen) { close() }
+    // Back closes the popover before it leaves the screen.
+    BackHandler(enabled = profileOpen) { profileOpen = false }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        // Left as it comes, so a drag from the left edge opens the drawer without the hamburger.
-        gesturesEnabled = true,
-        drawerContent = {
-            // No colours of its own: the sheet, its rows, its rules and its headings all come
-            // from the scheme, which on this device may have been taken from the wallpaper.
-            ModalDrawerSheet(
-                drawerState = drawerState,
-                // Sized to what it holds rather than Material's 360dp default, and still yielding
-                // to the screen on the narrowest devices so it can never cover the page behind it.
-                modifier = Modifier.width(min(DRAWER_WIDTH, screenWidth * DRAWER_MAX_FRACTION)),
-            ) {
-                // Measured rather than read from the configuration, which on some phones reports a
-                // portrait window while the screen is drawn sideways.
-                BoxWithConstraints {
-                    // A phone held sideways is too short to pin the brand and the bottom rows and
-                    // still scroll a useful middle between them: the middle shrank to a single row
-                    // and the chats could not be reached at all. Short sheets scroll as one list
-                    // instead.
-                    val short = maxHeight < SHORT_DRAWER
-                    val sheetScroll = rememberScrollState()
-                    val sheet = if (short) {
-                        Modifier.verticalScroll(sheetScroll)
-                    } else {
-                        Modifier.fillMaxHeight()
-                    }
-                    Column(sheet) {
-                        DrawerBrand()
+    // The bar comes back whenever the page underneath changes: a bar left hidden across a change
+    // of page has no pull-down to restore it on a page too short to scroll.
+    LaunchedEffect(selected, searchOpen) { bar.show() }
+    // And on the way back from the player, an activity coming forward rather than a recomposition.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) bar.show() }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    val talkBack = rememberTouchExploration()
+    val keyboard = WindowInsets.isImeVisible
+    val barShown = (bar.shown || talkBack) && !keyboard
 
-                        val middleScroll = rememberScrollState()
-                        val middle = if (short) {
-                            Modifier
-                        } else {
-                            Modifier.weight(1f).verticalScroll(middleScroll)
-                        }
-                        Column(middle) {
-                            // Watch with no heading, then Chats and the account's folders, each
-                            // folding under its heading. The grouping is the shared one in :ui, so
-                            // the drawer, the television's rail and the desktop's side bar fold the
-                            // same way.
-                            // Downloads is pinned at the foot beside Settings, not folded into Watch.
-                            navGroups(sections, withDownloads = false).forEach { (group, entries) ->
-                                val open = groups.isOpen(group)
-                                if (group.headed) NavGroupHeading(
-                                    group = group,
-                                    open = open,
-                                    toggleable = groups.canToggle(group),
-                                    onToggle = { groups.toggle(group) },
-                                    height = DRAWER_ROW,
-                                    start = 16.dp,
-                                    modifier = Modifier.padding(horizontal = 12.dp),
-                                )
-                                NavGroupBody(open) {
-                                    entries.forEach { entry ->
-                                        when (entry) {
-                                            NavEntry.Downloads -> DrawerDestination(
-                                                label = s.navDownloads,
-                                                selected = false,
-                                                // How many videos are coming down right now. A
-                                                // download outlives the screen it was started
-                                                // from, so without a mark here the only evidence it
-                                                // is running is a notification the viewer may well
-                                                // have swiped away.
-                                                badge = downloadCount.takeIf { it > 0 }?.toString(),
-                                                icon = { Icon(TmIcons.Download, contentDescription = null) },
-                                                onClick = { close(); onOpenDownloads() },
-                                            )
-                                            is NavEntry.Section -> DrawerSection(
-                                                entry.section,
-                                                selected,
-                                                favoriteCount,
-                                                unreadCount,
-                                            ) {
-                                                close(); onSelect(it)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+    val density = LocalDensity.current
+    val navigationBar = with(density) { WindowInsets.navigationBars.getBottom(this).toDp() }
+    // What the bar keeps, measured from the bottom of the window.
+    val chrome = navigationBar + BAR_MARGIN + BAR_HEIGHT + BAR_GAP
 
-                        DrawerSeparator()
-                        DrawerDestination(
-                            label = s.navDownloads,
-                            selected = false,
-                            // How many videos are coming down right now. A download outlives the
-                            // screen it was started from, so without a mark here the only evidence
-                            // it is running is a notification the viewer may well have swiped away.
-                            badge = downloadCount.takeIf { it > 0 }?.toString(),
-                            icon = { Icon(TmIcons.Download, contentDescription = null) },
-                            onClick = { close(); onOpenDownloads() },
+    SharedTransitionLayout(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize()) {
+            // The top bar slides away with the list and back on the first pull down, the same as
+            // the floating bar at the foot.
+            val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+            LaunchedEffect(selected, title) { scrollBehavior.state.heightOffset = 0f }
+            CompositionLocalProvider(LocalBottomChrome provides chrome) {
+                Scaffold(
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).nestedScroll(bar.connection),
+                    topBar = {
+                        TopAppBar(
+                            scrollBehavior = scrollBehavior,
+                            title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                            actions = actions,
                         )
-                        if (updateVersion != null) {
-                            // Amber on the icon, the label and the version alike, as on the TV
-                            // rail and the desktop side bar: the one item that is news.
-                            DrawerDestination(
-                                label = s.navUpdate,
-                                selected = false,
-                                badge = updateVersion,
-                                icon = { Icon(TmIcons.Refresh, contentDescription = null) },
-                                onClick = { close(); onUpdate() },
-                                colors = NavigationDrawerItemDefaults.colors(
-                                    unselectedIconColor = Tone.caution,
-                                    unselectedTextColor = Tone.caution,
-                                    unselectedBadgeColor = Tone.caution,
+                    },
+                ) { padding ->
+                    Box(Modifier.fillMaxSize().padding(padding)) { content() }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = barShown && !searchOpen,
+                modifier = Modifier.align(Alignment.BottomCenter),
+                enter = if (reduced) fadeIn(Motion.standard(0)) else slideInVertically(Motion.standard(Motion.Normal)) { it } + fadeIn(Motion.standard(Motion.Fast)),
+                exit = if (reduced) fadeOut(Motion.standard(0)) else slideOutVertically(Motion.standard(Motion.Normal)) { it } + fadeOut(Motion.standard(Motion.Fast)),
+            ) {
+                FloatingBar(
+                    current = when {
+                        selected.isHome -> TouchDestination.Home
+                        selected.onChatsPage -> TouchDestination.Chats
+                        else -> null
+                    },
+                    account = account,
+                    badged = downloadCount > 0 || updateVersion != null,
+                    onHome = onHome,
+                    onChats = onChats,
+                    onSearch = onOpenSearch,
+                    onProfile = { profileOpen = true },
+                    searchButton = { modifier ->
+                        if (reduced) {
+                            SearchBarButton(modifier)
+                        } else {
+                            SearchBarButton(
+                                modifier.sharedBounds(
+                                    rememberSharedContentState(SEARCH_KEY),
+                                    animatedVisibilityScope = this@AnimatedVisibility,
+                                    resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                                 ),
                             )
                         }
-                        DrawerDestination(
-                            label = s.navSettings,
-                            selected = false,
-                            badge = null,
-                            icon = { Icon(TmIcons.Settings, contentDescription = null) },
-                            onClick = { close(); onOpenSettings() },
-                        )
-                        DrawerFooter(account)
-                    }
-                }
-            }
-        },
-    ) {
-        // Whether the bar is currently a search field rather than a title. Saveable, because a
-        // rotation in the middle of typing a chat name should not throw the query away.
-        var searching by rememberSaveable { mutableStateOf(false) }
-        val searchFocus = remember { FocusRequester() }
-
-        // Back leaves the search before it leaves the screen: the field is a mode, and the hardware
-        // key is how a phone user closes a mode.
-        BackHandler(enabled = searching) {
-            searching = false
-            onSearchQueryChange("")
-        }
-
-        // The bar slides away as the listing is pushed up and comes back on the first pull down,
-        // which is what gives a 411 dp screen its content back without asking anybody to reach for
-        // anything. It is parked while searching: a field the keyboard is open on must not be able
-        // to scroll off the top of its own results.
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-        val pinned = searching
-        LaunchedEffect(pinned) {
-            if (pinned) scrollBehavior.state.heightOffset = 0f
-        }
-        // The bar comes back whenever the screen underneath it changes. A bar left hidden across a
-        // change of tab has no pull-down to restore it on a tab too short to scroll, which takes
-        // the title, the hamburger and every way out of the screen with it.
-        LaunchedEffect(selected, title) { scrollBehavior.state.heightOffset = 0f }
-        // And again on the way back from the player, which is an activity coming forward rather
-        // than a recomposition, so nothing above would have noticed it.
-        val lifecycleOwner = LocalLifecycleOwner.current
-        DisposableEffect(lifecycleOwner) {
-            val observer = LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_RESUME) scrollBehavior.state.heightOffset = 0f
-            }
-            lifecycleOwner.lifecycle.addObserver(observer)
-            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-        }
-
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                TopAppBar(
-                    scrollBehavior = if (pinned) null else scrollBehavior,
-                    title = {
-                        if (searching && searchQuery != null) {
-                            AppBarSearchField(
-                                query = searchQuery,
-                                onQueryChange = onSearchQueryChange,
-                                onVoiceSearch = onVoiceSearch,
-                                modifier = Modifier.focusRequester(searchFocus),
-                            )
-                        } else {
-                            Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                    },
-                    navigationIcon = {
-                        // An IconButton, not a bare clickable icon: it carries Material's own
-                        // 48 dp touch target around a 24 dp glyph, which is the whole reason a
-                        // hamburger drawn at icon size is still hittable with a thumb.
-                        if (searching) {
-                            IconButton(
-                                onClick = { searching = false; onSearchQueryChange("") },
-                            ) {
-                                Icon(TmIcons.ArrowBack, contentDescription = s.browseCloseSearch)
-                            }
-                        } else {
-                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                Icon(TmIcons.Menu, contentDescription = s.browseOpenNavigation)
-                            }
-                        }
-                    },
-                    actions = {
-                        // Searching takes the whole bar. Half a bar of buttons beside a field the
-                        // user is typing into is where a phone's app bar stops being readable.
-                        if (searching) return@TopAppBar
-                        if (searchQuery != null) {
-                            IconButton(onClick = { searching = true }) {
-                                Icon(TmIcons.Search, contentDescription = s.commonSearch)
-                            }
-                        }
-                        actions()
                     },
                 )
-            },
-        ) { padding ->
-            Box(Modifier.fillMaxSize().padding(padding)) { content() }
-        }
+            }
 
-        // The magnifier was pressed to type, so the keyboard should already be up by the time the
-        // field finishes drawing.
-        LaunchedEffect(searching) {
-            if (searching) searchFocus.requestFocus()
-        }
-    }
-}
+            ProfilePopover(
+                open = profileOpen,
+                reduced = reduced,
+                account = account,
+                favoriteCount = favoriteCount,
+                downloadCount = downloadCount,
+                updateVersion = updateVersion,
+                onDismiss = { profileOpen = false },
+                onFavourites = { profileOpen = false; onFavourites() },
+                onDownloads = { profileOpen = false; onOpenDownloads() },
+                onHistory = { profileOpen = false; onHistory(HistoryTab.Continue) },
+                onWatchLater = { profileOpen = false; onHistory(HistoryTab.WatchLater) },
+                onSettings = { profileOpen = false; onOpenSettings() },
+                onAbout = { profileOpen = false; onOpenAbout() },
+                onUpdate = { profileOpen = false; onUpdate() },
+            )
 
-/**
- * The search box that lives inside the app bar, in place of the title.
- *
- * A magnifier that becomes the bar is both the Telegram idiom and Material's, and it spends no
- * permanent screen space on controls a phone would rather give to content.
- *
- * A [BasicTextField] rather than a `TextField`, because Material's own field brings a container,
- * a label slot and a good deal of vertical padding that a 64 dp app bar has no room for.
- */
-@Composable
-private fun AppBarSearchField(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onVoiceSearch: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
-    val s = LocalStrings.current
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        BasicTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyLarge
-                .copy(color = MaterialTheme.colorScheme.onSurface),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            modifier = modifier.weight(1f),
-            decorationBox = { inner ->
-                if (query.isEmpty()) {
-                    Text(
-                        s.commonSearch,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+            AnimatedVisibility(
+                visible = searchOpen,
+                enter = if (reduced) EnterTransition.None else fadeIn(Motion.standard(Motion.Normal)),
+                exit = if (reduced) ExitTransition.None else fadeOut(Motion.standard(Motion.Normal)),
+            ) {
+                val field = if (reduced) {
+                    Modifier
+                } else {
+                    Modifier.sharedBounds(
+                        rememberSharedContentState(SEARCH_KEY),
+                        animatedVisibilityScope = this@AnimatedVisibility,
+                        resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                     )
                 }
-                inner()
-            },
-        )
-        // Clear lives inside the field, where a phone user reaches for it, rather than as a
-        // separate labelled button in the row below.
-        if (query.isNotEmpty()) {
-            IconButton(onClick = { onQueryChange("") }) {
-                Icon(TmIcons.Close, contentDescription = s.browseClearSearch)
-            }
-        } else if (onVoiceSearch != null) {
-            IconButton(onClick = onVoiceSearch) {
-                Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice)
+                searchScreen(field)
             }
         }
     }
 }
 
-@Composable
-private fun DrawerDestination(
-    label: String,
-    selected: Boolean,
-    badge: String?,
-    icon: @Composable () -> Unit,
-    onClick: () -> Unit,
-    colors: NavigationDrawerItemColors = NavigationDrawerItemDefaults.colors(),
-) {
-    NavigationDrawerItem(
-        label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        icon = icon,
-        badge = badge?.let { { Text(it) } },
-        selected = selected,
-        onClick = onClick,
-        // 48 dp rather than Material's 56: still a full thumb target, and the drawer holds a dozen
-        // of them.
-        // The vertical gap keeps a selected row and a pressed one beside it from merging.
-        modifier = Modifier
-            .padding(NavigationDrawerItemDefaults.ItemPadding)
-            .padding(vertical = 2.dp)
-            .height(DRAWER_ROW),
-        colors = colors,
-    )
+/**
+ * Whether the bar is out, from how the list under it is being moved: pushed up past [HIDE_AFTER]
+ * hides it, any pull back down shows it, and a pull at the very top (which nothing above consumes)
+ * shows it too.
+ */
+@Stable
+private class BarVisibility {
+    var shown by mutableStateOf(true)
+        private set
+    private var travelled by mutableFloatStateOf(0f)
+
+    fun show() {
+        shown = true
+        travelled = 0f
+    }
+
+    val connection = object : NestedScrollConnection {
+        override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+            val moved = consumed.y
+            when {
+                moved < 0f -> {
+                    travelled = (travelled + moved).coerceAtMost(0f)
+                    if (travelled < -HIDE_AFTER_PX) shown = false
+                }
+                moved > 0f || available.y > 0f -> show()
+            }
+            return Offset.Zero
+        }
+    }
 }
 
-/** One browse section as a drawer row. */
+/** Whether TalkBack, or anything else exploring the screen by touch, is on, followed as it changes. */
 @Composable
-private fun DrawerSection(
-    entry: BrowseSection,
-    selected: BrowseSection,
-    favoriteCount: Int,
-    unreadCount: Int,
-    onPick: (BrowseSection) -> Unit,
-) {
-    DrawerDestination(
-        label = entry.label,
-        selected = entry == selected,
-        // Only counts get a badge: a badge promises something that changes and is worth
-        // noticing, which static text is not.
-        badge = navBadge(entry, favoriteCount, unreadCount),
-        icon = { Icon(entry.icon, contentDescription = null) },
-        onClick = { onPick(entry) },
-    )
+private fun rememberTouchExploration(): Boolean {
+    val context = LocalContext.current
+    val manager = remember(context) { context.getSystemService(AccessibilityManager::class.java) }
+    var on by remember { mutableStateOf(manager?.isTouchExplorationEnabled == true) }
+    DisposableEffect(manager) {
+        val listener = AccessibilityManager.TouchExplorationStateChangeListener { on = it }
+        manager?.addTouchExplorationStateChangeListener(listener)
+        onDispose { manager?.removeTouchExplorationStateChangeListener(listener) }
+    }
+    return on
 }
 
 /**
- * Which app this is, at the top of the drawer and nothing else.
- *
- * A drawer is pulled out of a phone that is running a dozen other things, so it is the conventional
- * place for the app to name itself once, quietly, the way YouTube and NewPipe both do. The account
- * belongs in the footer, not here: nobody opens a drawer to reach it. The version sits beside the
- * name, small and muted, as something to read off when reporting a problem.
+ * The floating bar: one rounded pill, clear of the screen's edge and the navigation bar, with a
+ * soft shadow and the floating hairline. The current page's button carries a filled backing in
+ * the accent, as a selected chip does.
  */
 @Composable
-private fun DrawerBrand() {
-    NavBrand(
-        version = Updates.installedVersion,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 14.dp),
-        logo = { AppMark(BRAND_MARK) },
-    )
-}
-
-/** The rule above the rows pinned to the bottom of the drawer. */
-@Composable
-private fun DrawerSeparator() {
-    HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp))
-}
-
-/**
- * Whose library this is, along the bottom edge.
- *
- * One line along the bottom, because it answers a question asked once ever ("am I signed in as the
- * right account?") and should not take the sheet's most valuable space to do it. The version used
- * to ride here too; it now sits beside the name at the top.
- */
-@Composable
-private fun DrawerFooter(account: Account?) {
+private fun FloatingBar(
+    current: TouchDestination?,
+    account: Account?,
+    badged: Boolean,
+    onHome: () -> Unit,
+    onChats: () -> Unit,
+    onSearch: () -> Unit,
+    onProfile: () -> Unit,
+    searchButton: @Composable (Modifier) -> Unit,
+) {
     val s = LocalStrings.current
-    HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
-    ListItem(
-        leadingContent = {
+    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = BAR_MARGIN), contentAlignment = Alignment.Center) {
+        Row(
+            Modifier
+                .height(BAR_HEIGHT)
+                .shadow(BAR_SHADOW, CircleShape)
+                .clip(CircleShape)
+                .background(FloatingTone.menu)
+                .border(floatingBorder(), CircleShape)
+                .padding(horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            BarButton(TmIcons.Home, s.browseTabHome, current == TouchDestination.Home, onHome)
+            BarButton(TmIcons.Chats, s.browseTabChats, current == TouchDestination.Chats, onChats)
+            searchButton(
+                Modifier
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onSearch)
+                    .semantics { contentDescription = s.commonSearch },
+            )
             Box(
                 Modifier
-                    .size(Avatar.Compact)
+                    .size(BUTTON)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                    .clickable(role = Role.Button, onClick = onProfile)
+                    .semantics { contentDescription = s.navProfile },
+                contentAlignment = Alignment.Center,
             ) {
-                if (account != null) {
-                    MediaPreview(
-                        miniThumbnail = account.miniThumbnail,
-                        thumbnailFileId = account.photoFileId,
-                        fallbackLabel = account.name,
-                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                ProfilePicture(account, PICTURE)
+                if (badged) {
+                    // News behind the picture: a download running, or an update to install.
+                    Box(
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = (-6).dp, y = 6.dp)
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(Tone.caution)
+                            .border(1.5.dp, FloatingTone.menu, CircleShape),
                     )
                 }
             }
-        },
-        headlineContent = {
-            Text(
-                account?.name ?: s.browseSignedIn,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        supportingContent = account?.username?.takeIf { it.isNotBlank() }?.let { username ->
-            // Isolated left to right, or an Arabic or Persian interface draws "name@".
-            { Text("\u2066@$username\u2069", maxLines = 1, overflow = TextOverflow.Ellipsis) }
-        },
-        // The sheet has already painted its own background, and a second one over it draws a
-        // panel around the account for no reason.
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-    )
+        }
+    }
 }
 
-/** A drawer row and a group heading: a full thumb target, and no taller. */
-private val DRAWER_ROW = 48.dp
+/** The bar's magnifier. It is the shared element the search field grows out of. */
+@Composable
+private fun SearchBarButton(modifier: Modifier) {
+    Box(modifier.size(BUTTON).clip(CircleShape).background(FloatingTone.menu), contentAlignment = Alignment.Center) {
+        Icon(TmIcons.Search, contentDescription = null, tint = Tone.text, modifier = Modifier.size(24.dp))
+    }
+}
 
-/** The logo beside the name and version, smaller than the 40 dp inline mark so the row stays short. */
-private val BRAND_MARK = 32.dp
+@Composable
+private fun BarButton(icon: ImageVector, label: String, chosen: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(BUTTON)
+            .clip(CircleShape)
+            .background(if (chosen) Tone.accent.copy(alpha = 0.16f) else Color.Transparent)
+            .clickable(role = Role.Tab, onClick = onClick)
+            .semantics {
+                contentDescription = label
+                selected = chosen
+                role = Role.Tab
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = null, tint = if (chosen) Tone.accent else Tone.text, modifier = Modifier.size(24.dp))
+    }
+}
+
+@Composable
+private fun ProfilePicture(account: Account?, size: Dp) {
+    Box(Modifier.size(size).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
+        if (account != null) {
+            MediaPreview(
+                miniThumbnail = account.miniThumbnail,
+                thumbnailFileId = account.photoFileId,
+                fallbackLabel = account.name,
+                modifier = Modifier.fillMaxSize().clip(CircleShape),
+            )
+        } else {
+            Icon(TmIcons.Account, contentDescription = null, tint = Tone.muted, modifier = Modifier.align(Alignment.Center).size(size * 0.7f))
+        }
+    }
+}
 
 /**
- * How wide the drawer is on a phone that has room for it.
- *
- * Sized to the longest destination name plus its badge rather than to the screen, because that is
- * all the sheet ever holds.
+ * What the drawer used to hold, behind the viewer's picture: a card that grows out of the bottom
+ * end corner over a dimmed screen. The account at the top (picture, name, @username), then
+ * Favourites, Downloads, History, Watch later, Settings, About, and Update when there is one.
+ * A tap outside, Back, or picking a row closes it.
  */
-private val DRAWER_WIDTH = 260.dp
+@Composable
+private fun ProfilePopover(
+    open: Boolean,
+    reduced: Boolean,
+    account: Account?,
+    favoriteCount: Int,
+    downloadCount: Int,
+    updateVersion: String?,
+    onDismiss: () -> Unit,
+    onFavourites: () -> Unit,
+    onDownloads: () -> Unit,
+    onHistory: () -> Unit,
+    onWatchLater: () -> Unit,
+    onSettings: () -> Unit,
+    onAbout: () -> Unit,
+    onUpdate: () -> Unit,
+) {
+    val s = LocalStrings.current
+    AnimatedVisibility(
+        visible = open,
+        enter = fadeIn(Motion.standard(if (reduced) 0 else Motion.Fast)),
+        exit = fadeOut(Motion.standard(if (reduced) 0 else Motion.Fast)),
+    ) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(FloatingTone.scrim)
+                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
+        )
+    }
+    Box(Modifier.fillMaxSize().navigationBarsPadding().padding(bottom = BAR_MARGIN + BAR_HEIGHT + BAR_GAP, end = 16.dp, start = 16.dp)) {
+        AnimatedVisibility(
+            visible = open,
+            modifier = Modifier.align(Alignment.BottomEnd),
+            enter = if (reduced) {
+                fadeIn(Motion.standard(0))
+            } else {
+                fadeIn(Motion.standard(Motion.Fast)) + scaleIn(Motion.standard(Motion.Normal), initialScale = 0.85f, transformOrigin = TransformOrigin(1f, 1f))
+            },
+            exit = if (reduced) {
+                fadeOut(Motion.standard(0))
+            } else {
+                fadeOut(Motion.standard(Motion.Fast)) + scaleOut(Motion.standard(Motion.Fast), targetScale = 0.9f, transformOrigin = TransformOrigin(1f, 1f))
+            },
+        ) {
+            Column(
+                Modifier
+                    .widthIn(max = POPOVER_WIDTH)
+                    .shadow(BAR_SHADOW, POPOVER_SHAPE)
+                    .clip(POPOVER_SHAPE)
+                    .background(FloatingTone.dialog)
+                    .border(floatingBorder(), POPOVER_SHAPE)
+                    // Taps inside the card stay inside it rather than reaching the scrim.
+                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = 8.dp),
+            ) {
+                Row(
+                    Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    ProfilePicture(account, 48.dp)
+                    Column(Modifier.weight(1f, fill = false)) {
+                        Text(
+                            account?.name ?: s.browseSignedIn,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Tone.text,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        account?.username?.takeIf { it.isNotBlank() }?.let { username ->
+                            // Isolated left to right, or an Arabic or Persian interface draws "name@".
+                            Text(
+                                "⁦@$username⁩",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Tone.muted,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                PopoverRow(TmIcons.StarOutline, s.browseTabFavourites, favoriteCount.takeIf { it > 0 }?.toString(), onClick = onFavourites)
+                PopoverRow(TmIcons.Download, s.navDownloads, downloadCount.takeIf { it > 0 }?.toString(), onClick = onDownloads)
+                PopoverRow(TmIcons.History, s.browseTabHistory, null, onClick = onHistory)
+                PopoverRow(TmIcons.Clock, s.browseTabWatchLater, null, onClick = onWatchLater)
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                if (updateVersion != null) {
+                    // Amber, as on the television's rail and the desktop's side bar: the one row that is news.
+                    PopoverRow(TmIcons.Refresh, s.navUpdate, updateVersion, ink = Tone.caution, onClick = onUpdate)
+                }
+                PopoverRow(TmIcons.Settings, s.navSettings, null, onClick = onSettings)
+                PopoverRow(TmIcons.Info, s.aboutTitleShort, null, onClick = onAbout)
+            }
+        }
+    }
+}
 
-/** Below this the drawer scrolls as one list rather than pinning its top and bottom. */
-private val SHORT_DRAWER = 560.dp
+@Composable
+private fun PopoverRow(icon: ImageVector, label: String, badge: String?, ink: Color = Tone.text, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(POPOVER_ROW)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(22.dp))
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        if (badge != null) {
+            Text(
+                badge,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (ink == Tone.text) Tone.onAccent else ink,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(if (ink == Tone.text) Tone.accent else Color.Transparent)
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
+            )
+        }
+    }
+}
 
-/** On a small screen the drawer gives way, so the listing behind it stays visible and tappable. */
-private const val DRAWER_MAX_FRACTION = 0.68f
+/** The key the bar's magnifier and the search field share, for the one to grow into the other. */
+private const val SEARCH_KEY = "search-field"
+
+/** The bar's height: a 48 dp button with a little room above and below it. */
+internal val BAR_HEIGHT = 60.dp
+
+/** Between the bar and the navigation bar (or the screen's edge). */
+internal val BAR_MARGIN = 16.dp
+
+/** Between the bar and whatever a list puts last, or a button floating above it. */
+internal val BAR_GAP = 8.dp
+
+private val BUTTON = 48.dp
+private val PICTURE = 32.dp
+private val BAR_SHADOW = 8.dp
+private val POPOVER_WIDTH = 320.dp
+private val POPOVER_ROW = 52.dp
+private val POPOVER_SHAPE = RoundedCornerShape(28.dp)
+
+/** How far a list has to be pushed up before the bar gets out of the way, so a nudge does not. */
+private const val HIDE_AFTER_PX = 48f

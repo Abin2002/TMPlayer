@@ -1,15 +1,19 @@
 package com.tmplayer.data
 
 /**
- * The last few things searched for inside a chat, newest first, offered again as chips.
+ * The last few things searched for, newest first, offered again: as chips inside a chat, and as
+ * the list an empty search across every chat opens on. One list for both.
  *
  * Kept as plain list arithmetic so the rules are testable without a store: [SettingsStore] only
  * reads and writes the result through [encode] and [decode].
  */
 object RecentSearches {
 
-    /** Five: one row of chips on a phone, and as many as anybody scans before typing again. */
-    const val LIMIT = 5
+    /**
+     * Ten kept. A chat's chip row shows the first few that fit, and the search across every chat
+     * lists eight ([GlobalSearch.RECENT_SHOWN]): enough to find last week's search again.
+     */
+    const val LIMIT = 10
 
     /**
      * [query] put at the front of [current].
@@ -31,6 +35,12 @@ object RecentSearches {
             other != key && !(at == 0 && key.startsWith(other))
         }
         return (listOf(clean) + rest).take(limit)
+    }
+
+    /** [current] without [query], matched as [add] matches: any case, any spacing. */
+    fun remove(current: List<String>, query: String): List<String> {
+        val key = normalise(query).lowercase()
+        return current.filter { it.lowercase() != key }
     }
 
     /** One line, single spaces: a chip is not the place for a pasted paragraph. */

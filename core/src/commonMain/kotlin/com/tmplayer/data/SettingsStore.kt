@@ -58,6 +58,7 @@ private val MAX_SIZE = longPreferencesKey("max_size_bytes")
 private val CHAT_LAYOUT = stringPreferencesKey("chat_layout")
 private val CHAT_FILTER = stringPreferencesKey("chat_filter")
 private val CHAT_SORT = stringPreferencesKey("chat_sort")
+/** "Only my folders", retired: read once by [SettingsStore.takeOnlyFolders] and removed. */
 private val HIDE_DEFAULT_GROUPS = booleanPreferencesKey("hide_default_groups")
 
 /** The qualities played, counted: see [QualityHabit]. */
@@ -103,6 +104,9 @@ private val VIDEO_SCALE = stringPreferencesKey("video_scale")
 
 /** The last few searches inside a chat, one per line, newest first. See [RecentSearches]. */
 private val RECENT_SEARCHES = stringPreferencesKey("recent_searches")
+
+/** "Remember searches" in Settings: on unless switched off, and switching it off forgets them. */
+private val REMEMBER_SEARCHES = booleanPreferencesKey("remember_searches")
 
 // The update check's memory, shared by the phone, the TV and the desktop. See [UpdateScheduler].
 private val UPDATE_NOTIFY = booleanPreferencesKey("update_notify")
@@ -1236,17 +1240,42 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
     // ---- recent searches --------------------------------------------------------------------
 
     /**
-     * What was searched for inside a chat lately, newest first, at most [RecentSearches.LIMIT].
-     * One list for every chat: a viewer looking for a show looks for it wherever it was posted.
+     * What was searched for lately, newest first, at most [RecentSearches.LIMIT]. One list for
+     * every search box: a chat's own and the search across every chat. A viewer looking for a show
+     * looks for it wherever it was posted.
      */
     val recentSearches: Flow<List<String>> = read { RecentSearches.decode(it[RECENT_SEARCHES]) }
 
+    /** Whether searches are kept at all. */
+    val rememberSearches: Flow<Boolean> = read { it[REMEMBER_SEARCHES] ?: true }
+
+    /** Turning it off forgets what is kept, which is what somebody switching it off wants. */
+    suspend fun setRememberSearches(value: Boolean) {
+        prefs.edit {
+            it[REMEMBER_SEARCHES] = value
+            if (!value) it.remove(RECENT_SEARCHES)
+        }
+    }
+
     suspend fun addRecentSearch(query: String) {
         prefs.edit { prefs ->
+            if (prefs[REMEMBER_SEARCHES] == false) return@edit
             val before = RecentSearches.decode(prefs[RECENT_SEARCHES])
             val after = RecentSearches.add(before, query)
             if (after != before) prefs[RECENT_SEARCHES] = RecentSearches.encode(after)
         }
+    }
+
+    suspend fun removeRecentSearch(query: String) {
+        prefs.edit { prefs ->
+            val after = RecentSearches.remove(RecentSearches.decode(prefs[RECENT_SEARCHES]), query)
+            if (after.isEmpty()) prefs.remove(RECENT_SEARCHES) else prefs[RECENT_SEARCHES] = RecentSearches.encode(after)
+        }
+    }
+
+    /** Puts back a list Clear all took, for its Undo. */
+    suspend fun restoreRecentSearches(searches: List<String>) {
+        prefs.edit { it[RECENT_SEARCHES] = RecentSearches.encode(searches.take(RecentSearches.LIMIT)) }
     }
 
     suspend fun clearRecentSearches() {
@@ -1287,30 +1316,26 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         prefs.edit { it[CHAT_SORT] = name }
     }
 
-    // ---- Telegram's default groups ------------------------------------------------------------
+    // ---- "Only my folders", retired ----------------------------------------------------------
 
     /**
-     * Whether the sidebar leaves out Telegram's default groups (Chats and Saved Messages) and lists
-     * only the account's own folders beside Home, History, Favourites and Downloads. Off by default.
-     * The chip over Chats ([chatFilter], [chatSort]) is left as it was while this is on, so turning
-     * it off again comes back to the same chip.
+     * Whether "Only my folders" was on, read and forgotten in one write. The option hid Chats and
+     * Saved Messages so the sidebar listed the account's Telegram folders; the Chats page now
+     * carries Telegram's own folder tabs as chips, so somebody who had it on is shown their first
+     * folder's chip once, and nothing is hidden. Called once the folders are known.
      */
-    val hideDefaultGroups: Flow<Boolean> = read { it[HIDE_DEFAULT_GROUPS] ?: false }
-
-    /**
-     * Turns the option on or off. Turning it on also unstars [unstar] in the same write, the
-     * favourites hiding the groups would leave out of reach (`DefaultGroups.unreachableFavorites`
-     * in :ui), so the setting and the favourites can never be seen half changed. Turning it off
-     * brings nothing back.
-     */
-    suspend fun setHideDefaultGroups(hide: Boolean, unstar: Set<Long> = emptySet()) {
+    suspend fun takeOnlyFolders(): Boolean {
+        var was = false
         prefs.edit { prefs ->
-            prefs[HIDE_DEFAULT_GROUPS] = hide
-            if (hide && unstar.isNotEmpty()) {
-                val keep = prefs[FAVORITES].orEmpty() - unstar.map(Long::toString).toSet()
-                prefs[FAVORITES] = keep
-            }
+            was = prefs[HIDE_DEFAULT_GROUPS] == true
+            prefs.remove(HIDE_DEFAULT_GROUPS)
         }
+        return was
+    }
+
+    /** The retired option as an older version stored it, for the migration's test. */
+    internal suspend fun storeOnlyFoldersForTest(on: Boolean) {
+        prefs.edit { it[HIDE_DEFAULT_GROUPS] = on }
     }
 
     // ---- the app lock and the kids lock (CP57) ------------------------------------------------

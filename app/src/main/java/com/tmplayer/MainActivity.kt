@@ -113,7 +113,6 @@ import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.onboarding.Setup
 import com.tmplayer.ui.onboarding.SetupAndTour
 import com.tmplayer.ui.onboarding.TourOnly
-import com.tmplayer.ui.browse.DefaultGroups
 import com.tmplayer.ui.update.UpdateDialog
 import com.tmplayer.ui.update.LinkQrDialog
 import com.tmplayer.ui.update.openLink
@@ -631,6 +630,8 @@ private fun Root() {
     val device = remember { if (FormFactor.isTv(context)) "tv" else "phone" }
     // Where leaving the Downloads screen goes back to.
     var downloadsCameFrom by remember { mutableStateOf<Screen>(Screen.Chats) }
+    // About opens from Settings, and on a phone from the profile popover over the browser too.
+    var aboutCameFrom by remember { mutableStateOf<Screen>(Screen.Settings) }
     // Whether the Downloads screen opens on its cached videos, which is how Settings' Cached
     // videos row reaches the list of them.
     var downloadsOnCached by remember { mutableStateOf(false) }
@@ -1016,8 +1017,8 @@ private fun Root() {
         }
 
         // The setup after sign in (CP67), in place of the shell until it is done or skipped. It
-        // waits for the chat list, which brings the folder list with it, so it knows whether to
-        // ask about folders; a list slow to come is not waited on for ever.
+        // waits for the chat list, so the shell is ready under it when it ends; a list slow to
+        // come is not waited on for ever.
         if (setupPending) {
             var waitedOut by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) {
@@ -1042,20 +1043,17 @@ private fun Root() {
             }
             val steps = remember {
                 Setup.steps(
-                    folders.size,
                     posters = com.tmplayer.online.OnlineMetadata.current != null,
                     device = recommendations.isNotEmpty(),
                     devicePerformance = recommendations.any { it != com.tmplayer.data.Recommendation.LowStorageMode },
                     phone = !FormFactor.isTv(context),
                 )
             }
-            val unreachable = remember(favorites, chats) { DefaultGroups.unreachableFavorites(favorites, chats) }
             // The choices, then the quick tour (CP69); with no choices to make, the tour alone.
             SetupAndTour(
                 settings,
                 steps,
                 onDone = finish,
-                unreachableFavourites = unreachable,
                 fit = fit,
                 recommendations = recommendations,
             )
@@ -1315,6 +1313,10 @@ private fun Root() {
                     onSetMediaWatched = { item, chatTitle, watched -> setWatched(item, chatTitle, watched) },
                     onMessage = toast,
                     onSearched = { settings.addRecentSearch(it) },
+                    onOpenAbout = {
+                        aboutCameFrom = Screen.Chats
+                        screen = Screen.About
+                    },
                 )
             }
 
@@ -1410,14 +1412,17 @@ private fun Root() {
                         downloadsOnCached = true
                         screen = Screen.Downloads
                     },
-                    onOpenAbout = { screen = Screen.About },
+                    onOpenAbout = {
+                        aboutCameFrom = Screen.Settings
+                        screen = Screen.About
+                    },
                     initialPage = settingsPage,
                     onPageChange = { settingsPage = it },
                 )
             }
 
             is Screen.About -> {
-                val leaveAbout = { screen = Screen.Settings }
+                val leaveAbout = { screen = aboutCameFrom }
                 BackHandler(onBack = leaveAbout)
                 AboutScreen(onBack = leaveAbout)
             }

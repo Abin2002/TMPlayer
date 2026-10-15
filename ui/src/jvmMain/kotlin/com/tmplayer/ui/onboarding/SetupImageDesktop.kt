@@ -30,8 +30,6 @@ internal fun SetupShot(choice: SetupChoice, modifier: Modifier = Modifier) {
 /** The file name of an answer's picture, for the fixture that writes it and the setup that reads it. */
 fun setupImageName(choice: SetupChoice, dark: Boolean): String? {
     val shot = when (choice) {
-        SetupChoice.Everything -> "library-everything"
-        SetupChoice.OnlyFolders -> "library-folders"
         SetupChoice.PostersOn -> "posters-on"
         SetupChoice.PostersOff -> "posters-off"
         SetupChoice.FullQuality -> "performance-full"

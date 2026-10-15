@@ -130,49 +130,41 @@ class BrowseRenderTest {
     }
 
     /**
-     * "Only my folders" (CP41) and the first sign in card (CP42): the side bar without the
-     * Telegram group, on a folder, with the card over the page, then the prompt the card and the
-     * Settings switch lead to, counting two favourites, in dark and light.
+     * The Chats page's chips as Telegram's folder tab bar has them: All chats where Telegram puts
+     * it, each folder with its icon, then the filters no folder already is; a folder's page, with
+     * Chats lit in the side bar, in dark and light.
      */
     @Test
-    fun onlyMyFolders() {
+    fun folderChips() {
         val folders = listOf(
-            com.tmplayer.data.ChatFolderSummary(3, "Films"),
-            com.tmplayer.data.ChatFolderSummary(7, "Family"),
+            com.tmplayer.data.ChatFolderSummary(3, "Films", icon = "Custom"),
+            com.tmplayer.data.ChatFolderSummary(5, "Unread", icon = "Unread"),
+            com.tmplayer.data.ChatFolderSummary(7, "Family", icon = "Private"),
         )
         val chats = listOf(
             chat(2, "Film Club", ChatKind.Channel, 12, 0xFFE5484D.toInt()),
             chat(3, "Documentaries in 4K", ChatKind.Channel, 0, 0xFF46A758.toInt()),
         )
         val films = com.tmplayer.ui.browse.BrowseSection.Folder(3, "Films")
-        shell.hideDefaultGroups = true
+        val chips = com.tmplayer.ui.browse.chatPageChips(folders)
+        assertTrue(chips.count { it.label == "Unread" } == 1)
         shell.showChats(films)
         try {
             for (dark in listOf(true, false)) {
                 val theme = if (dark) "dark" else "light"
-                save("only-folders-$theme.png", render(dark = dark, folders = folders) {
+                save("folder-chips-$theme.png", render(dark = dark, folders = folders) {
                     Column(Modifier.fillMaxSize()) {
                         PageHeader(films.heading, films.blurb)
-                        chats.forEach { ChatRow(it, favourite = false, onOpen = {}, onStar = {}) }
-                    }
-                })
-                val words = com.tmplayer.ui.browse.DefaultGroups.prompt(unreachable = 2, folderCount = folders.size)
-                save("only-folders-prompt-$theme.png", render(dark = dark, folders = folders) {
-                    Box(Modifier.fillMaxSize()) {
-                        SettingsPage(shell, "2.0.0")
-                        ConfirmDialog(
-                            title = words.title,
-                            message = words.message,
-                            detail = words.detail,
-                            confirmLabel = words.confirm,
-                            onConfirm = {},
-                            onDismiss = {},
+                        ChoiceChips(
+                            chips.map { chip ->
+                                Choice(chip.label, chip.label, chip.icon, selected = chip.label == "Films") {}
+                            },
                         )
+                        chats.forEach { ChatRow(it, favourite = false, onOpen = {}, onStar = {}) }
                     }
                 })
             }
         } finally {
-            shell.hideDefaultGroups = false
             shell.showChats(com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats))
         }
     }
@@ -347,47 +339,40 @@ class BrowseRenderTest {
         }
     }
 
-    /** "Videos in all chats": matching chats, then the videos a fake searchMessages found. */
+    /** The search palette (Ctrl+K): matching chats, then one card per video a fake searchMessages found. */
     @Test
-    fun allChatsSearch() = kotlinx.coroutines.runBlocking {
+    fun searchPalette() = kotlinx.coroutines.runBlocking {
         val chats = listOf(
             chat(2, "Harbour Lights fans", ChatKind.Group, 0, 0xFFF5A524.toInt()),
             chat(3, "Film Club", ChatKind.Channel, 0, 0xFFE5484D.toInt()),
             chat(7, "Harbour photos", ChatKind.Channel, 0, 0xFF0090FF.toInt()),
         )
         shell.noteChatTitles(chats)
-        val found = releaseItems(chatId = 3).filter { it.fileName.startsWith("Harbour") } +
-            releaseItems(chatId = 2).take(1).map {
-                val name = it.fileName.replace("S02E05", "S02E04")
-                it.copy(messageId = 900, fileName = name, title = name, date = it.date - 7 * 86_400)
-            }
-        val source = com.tmplayer.ui.browse.VideoSearchSource { query, _ ->
+        val found = releaseItems(chatId = 3) + releaseItems(chatId = 2).map { it.copy(messageId = it.messageId + 500) }
+        val briefs = chats.map(com.tmplayer.data.ChatBrief::of)
+        val source = com.tmplayer.ui.browse.VideoSearchSource { query, _, _ ->
             com.tmplayer.data.AllChatsPage(
                 found.filter { com.tmplayer.data.Fuzzy.score(it.fileName, query) > 0 },
                 com.tmplayer.data.AllChatsCursor(videoDone = true, documentDone = true),
+                briefs,
             )
         }
-        val page = source.page("harbour", com.tmplayer.data.AllChatsCursor())
-        val results = com.tmplayer.ui.browse.VideoSearchState(
-            query = "harbour",
-            videos = com.tmplayer.data.AllChatsSearch.merge(emptyList(), page.items),
-            endReached = page.cursor.done,
-        )
-        fun shot(videos: com.tmplayer.ui.browse.VideoSearchState, dark: Boolean = true) = render(dark = dark) {
-            Column(Modifier.fillMaxSize()) {
-                PageHeader("All chats", null)
-                com.tmplayer.ui.browse.SearchScopeToggle(
-                    com.tmplayer.data.SearchScope.AllVideos,
-                    {},
-                    Modifier.padding(start = 24.dp, bottom = 8.dp),
-                )
-                AllChatsResults(shell, "harbour", chats, setOf(2L), videos, onStar = {}, onLoadMore = {}, onRetry = {})
-            }
+        val model = com.tmplayer.ui.browse.GlobalSearchViewModel(source, known = { emptyList() }, settleMs = 0)
+        fun shot(dark: Boolean = true) = render(dark = dark) {
+            Box(Modifier.fillMaxSize()) { SearchPalette(shell, model, chats, onOpenSeries = {}) }
         }
-        save("desktop-search-all-dark.png", shot(results))
-        save("desktop-search-all-light.png", shot(results, dark = false))
-        save("desktop-search-all-searching.png", shot(com.tmplayer.ui.browse.VideoSearchState(query = "harbour", loading = true)))
-        save("desktop-search-all-none.png", shot(com.tmplayer.ui.browse.VideoSearchState(query = "harbour", endReached = true)))
+        save("desktop-search-palette-empty.png", shot())
+        shell.paletteQuery = androidx.compose.ui.text.input.TextFieldValue("harbour")
+        model.type("harbour")
+        kotlinx.coroutines.withTimeout(5_000) {
+            while (model.state.value.busy || model.state.value.groups.isEmpty()) kotlinx.coroutines.delay(20)
+        }
+        assertTrue(model.state.value.groups.isNotEmpty())
+        save("desktop-search-palette-dark.png", shot())
+        save("desktop-search-palette-light.png", shot(dark = false))
+        model.type("nothing like it at all")
+        kotlinx.coroutines.withTimeout(5_000) { while (model.state.value.busy) kotlinx.coroutines.delay(20) }
+        save("desktop-search-palette-none.png", shot())
     }
 
     @Test

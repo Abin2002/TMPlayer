@@ -154,6 +154,7 @@ fun SettingsPage(
     var confirm by remember { mutableStateOf<Confirm?>(null) }
     val touchPrefs by settings.touchPrefs.collectAsState(initial = TouchPrefs())
     val detailFirst by settings.detailFirst.collectAsState(initial = true)
+    val rememberSearches by settings.rememberSearches.collectAsState(initial = true)
     val subtitleStyle by settings.subtitleStyle.collectAsState(initial = SubtitleStyle())
     val trackPrefs by settings.trackPreferences.collectAsState(initial = TrackPreferences())
     val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
@@ -165,7 +166,6 @@ fun SettingsPage(
     val watchedList by state.watched.history.collectAsState(initial = emptyList())
     var confirmClearWatched by remember { mutableStateOf(false) }
     val folders by com.tmplayer.data.Td.folders.collectAsState()
-    var confirmHideGroups by remember { mutableStateOf(false) }
     val language by settings.language.collectAsState(initial = "")
     var pickingLanguage by remember { mutableStateOf(false) }
     var stylingSubtitles by remember { mutableStateOf(false) }
@@ -235,6 +235,12 @@ fun SettingsPage(
                     if (detailFirst) s.settingsDetailFirstClickOn else s.settingsDetailFirstClickOff,
                     detailFirst,
                 ) { on -> scope.launch { settings.setDetailFirst(on) } }
+                // Off forgets the searches already kept, which is what switching it off is for.
+                Toggle(
+                    s.settingsRememberSearches,
+                    if (rememberSearches) s.settingsRememberSearchesOn else s.settingsRememberSearchesOff,
+                    rememberSearches,
+                ) { on -> scope.launch { settings.setRememberSearches(on) } }
                 Toggle(s.settingsAutoplayNext, s.settingsAutoplayDetail, autoplay) {
                     scope.launch { settings.setAutoplayNext(it) }
                 }
@@ -385,22 +391,6 @@ fun SettingsPage(
                         if (watchedList.isEmpty()) toast(s.settingsWatchedEmpty) else confirmClearWatched = true
                     }) { Text(s.commonClear) }
                 }
-                // Telegram's default groups, Chats and Saved Messages, off the side bar. On asks
-                // first, with the favourites it strands counted; off asks nothing.
-                Toggle(
-                    s.groupsSetting,
-                    com.tmplayer.ui.browse.DefaultGroups.settingDetail(state.hideDefaultGroups, folders.size),
-                    state.hideDefaultGroups,
-                ) { on ->
-                    if (on) {
-                        confirmHideGroups = true
-                    } else {
-                        scope.launch {
-                            settings.setHideDefaultGroups(false)
-                            toast(s.groupsShownToast)
-                        }
-                    }
-                }
                 Setting(s.navFavourites, s.settingsFavouritesDetail) {
                     OutlinedButton(onClick = {
                         if (favourites.isEmpty()) {
@@ -410,11 +400,7 @@ fun SettingsPage(
                         confirm = Confirm(
                             title = s.settingsFavouritesClearTitle,
                             message = s.settingsFavouritesClearMessage(favourites.size),
-                            detail = if (state.hideDefaultGroups) {
-                                com.tmplayer.ui.browse.DefaultGroups.favouritesUntouched(hidden = true)
-                            } else {
-                                s.settingsFavouritesClearDetail
-                            },
+                            detail = s.settingsFavouritesClearDetail,
                         ) {
                             scope.launch {
                                 val count = favourites.size
@@ -625,27 +611,6 @@ fun SettingsPage(
     if (reporting) FeedbackPopup(onClose = { reporting = false })
     if (confirmClearWatched) {
         ClearWatchedDialog(state, watchedList.size, scope, onDismiss = { confirmClearWatched = false })
-    }
-
-    if (confirmHideGroups) {
-        val unreachable = remember(favourites, chatList) {
-            com.tmplayer.ui.browse.DefaultGroups.unreachableFavorites(favourites, chatList)
-        }
-        val words = com.tmplayer.ui.browse.DefaultGroups.prompt(unreachable.size, folders.size)
-        ConfirmDialog(
-            title = words.title,
-            message = words.message,
-            detail = words.detail,
-            confirmLabel = words.confirm,
-            onConfirm = {
-                confirmHideGroups = false
-                scope.launch {
-                    settings.setHideDefaultGroups(true, unstar = unreachable)
-                    toast(s.groupsHiddenToast)
-                }
-            },
-            onDismiss = { confirmHideGroups = false },
-        )
     }
 
     restorePlan?.let { plan ->

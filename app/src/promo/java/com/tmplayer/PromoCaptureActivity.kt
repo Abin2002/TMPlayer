@@ -206,13 +206,11 @@ class PromoCaptureActivity : ComponentActivity() {
         // `--ez metainvite true` shows the one-time invite to turn online metadata on.
         com.tmplayer.ui.browse.MetaNoticeOverride.invite = intent.getBooleanExtra("metainvite", false)
 
-        // `--ez hide_groups true|false` sets "Only my folders" (Telegram's default groups off the
-        // sidebar), and `--ez groups_demo true` puts four of the demo chats in the two demo folders
-        // and stars two that are in none, so the switch's prompt has favourites to count.
+        // `--ez groups_demo true` puts four of the demo chats in the two demo folders and stars
+        // three, two of them in no folder.
         val groupsDemo = intent.getBooleanExtra("groups_demo", false)
         runBlocking {
             val store = SettingsStore(applicationContext)
-            if (intent.hasExtra("hide_groups")) store.setHideDefaultGroups(intent.getBooleanExtra("hide_groups", false))
             if (groupsDemo) {
                 store.clearFavorites()
                 listOf(102L, 103L, 104L).forEach { store.toggleFavorite(it) }
@@ -462,20 +460,6 @@ class PromoCaptureActivity : ComponentActivity() {
                             onConfirm = { overlay = null },
                             onDismiss = { overlay = null },
                         )
-                        // The Settings switch's "Only my folders" prompt, counting the demo favourites in no folder.
-                        "hidegroups" -> {
-                            val chats = promoChats()
-                            val unreachable = com.tmplayer.ui.browse.DefaultGroups.unreachableFavorites(setOf(102L, 103L, 104L), chats)
-                            val words = com.tmplayer.ui.browse.DefaultGroups.prompt(unreachable.size, PROMO_FOLDERS.size)
-                            TvConfirm(
-                                title = words.title,
-                                message = words.message,
-                                detail = words.detail,
-                                confirmLabel = words.confirm,
-                                onConfirm = { overlay = null },
-                                onDismiss = { overlay = null },
-                            )
-                        }
                         // The television's one-time browse hint, as it sits over the first chat list.
                         "tvhint" -> com.tmplayer.ui.browse.TvBrowseHintCard(
                             Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp),
@@ -631,20 +615,39 @@ private fun PromoChatsScreen(
  * Telegram's `searchMessages` across every chat, faked over the demo videos: the shows and the
  * clips spread over the demo chats, matched forgivingly against the file name, eight to a page
  * after a short wait, so "Searching every chat", the results and paging can all be captured.
+ *
+ * Two made-up reposts of Quiet Orbit (2024) in other demo chats, at 1080p and 720p, give the
+ * search a card with copies across chats to show. The chat type filter is honoured, and each page
+ * names its chats, as Telegram's does.
  */
 @Composable
 private fun promoVideoSearch(): VideoSearchSource {
     return remember {
-        val pool = PromoMeta.library.all
-        VideoSearchSource { query, cursor ->
+        val orbit = PromoMeta.library.quietOrbit
+        val reposts = listOf(
+            orbit.copy(chatId = PromoCatalog.FAMILY, messageId = 7_001, fileId = 7_001, fileName = "Quiet.Orbit.2024.1080p.WEB-DL.mkv", sizeBytes = orbit.sizeBytes / 3, date = orbit.date - 400, onDevice = false),
+            orbit.copy(chatId = PromoCatalog.CLIPS, messageId = 7_002, fileId = 7_002, fileName = "Quiet.Orbit.2024.720p.mkv", sizeBytes = orbit.sizeBytes / 6, date = orbit.date - 900, onDevice = false),
+        ).map { it.copy(title = it.fileName) }
+        val pool = PromoMeta.library.all + reposts
+        val chats = PromoCatalog.chats.associateBy { it.id }
+        VideoSearchSource { query, cursor, filters ->
             delay(PROMO_SEARCH_WAIT_MS)
-            val hits = Fuzzy.rank(pool, query) { it.searchText }
+            val kinds = when (filters.chatType) {
+                com.tmplayer.data.SearchChatType.All -> null
+                com.tmplayer.data.SearchChatType.Channels -> setOf(com.tmplayer.data.ChatKind.Channel)
+                com.tmplayer.data.SearchChatType.Groups -> setOf(com.tmplayer.data.ChatKind.Group)
+                com.tmplayer.data.SearchChatType.People -> setOf(com.tmplayer.data.ChatKind.Direct, com.tmplayer.data.ChatKind.Saved)
+            }
+            val hits = Fuzzy.rank(pool.filter { kinds == null || chats[it.chatId]?.kind in kinds }, query) { it.searchText }
             val start = cursor.videoOffset.toIntOrNull() ?: 0
             val page = hits.drop(start).take(PROMO_SEARCH_PAGE)
             val next = start + page.size
             AllChatsPage(
                 items = page,
                 cursor = AllChatsCursor(videoOffset = next.toString(), videoDone = next >= hits.size, documentDone = true),
+                chats = page.map { it.chatId }.distinct().mapNotNull { id ->
+                    chats[id]?.let { com.tmplayer.data.ChatBrief(it.id, it.title, it.kind, 0, it.avatar?.let(PromoMeta.pictures::bytes)) }
+                },
             )
         }
     }

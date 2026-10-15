@@ -124,7 +124,10 @@ private fun BoxScope.ScrollToTop(
             above = it.findRootCoordinates().size.height - it.boundsInRoot().bottom
         },
     )
-    val lift = with(density) { (navigationBar - above).coerceAtLeast(0f).toDp() }
+    // A floating bar at the foot of the screen (LocalBottomChrome, measured from the window's
+    // bottom edge, the navigation bar included) is cleared rather than covered.
+    val chrome = with(density) { LocalBottomChrome.current.toPx() }
+    val lift = with(density) { (maxOf(navigationBar.toFloat(), chrome) - above).coerceAtLeast(0f).toDp() }
 
     LaunchedEffect(Unit) {
         var last = position()

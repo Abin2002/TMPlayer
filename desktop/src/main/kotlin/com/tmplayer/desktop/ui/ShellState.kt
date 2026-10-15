@@ -134,13 +134,6 @@ class ShellState(
      * [SettingsStore] at start and writes each change there, as the phone and the TV do.
      */
     /**
-     * "Only my folders" (Settings): Telegram's default groups, Chats and Saved Messages, are off
-     * the side bar and the narrow window's section chips. Mirrored from [SettingsStore] by the
-     * shell, as the chips are, so every page reads one value.
-     */
-    var hideDefaultGroups by mutableStateOf(false)
-
-    /**
      * Whether the app lock's PIN (CP57) has been given for this visit to Settings. Leaving for any
      * other page forgets it, so Settings asks again next time.
      */
@@ -191,6 +184,14 @@ class ShellState(
 
     /** The window's back dispatcher, fed by Esc, Backspace, Alt+Left, Cmd+[ and the mouse. */
     val backStack = BackStack()
+
+    /**
+     * Whether the search palette is over the window (Ctrl+K, Cmd+K on a Mac). Its query outlives
+     * it, so Esc and Ctrl+K again bring back what was typed, selected.
+     */
+    var paletteOpen by mutableStateOf(false)
+
+    var paletteQuery by mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(""))
 
     /** Whichever search field the page on screen has; "/" and Ctrl+F focus it. */
     val searchFocus = FocusRequester()
@@ -313,8 +314,9 @@ class ShellState(
     var quit: (() -> Unit)? = null
 
     /**
-     * Shortcuts that work wherever focus is, even inside a text field: Ctrl+F (Cmd+F) to search,
-     * Ctrl+, (Cmd+,) for Settings, Ctrl+Q (Cmd+Q) to quit. The command key is the OS's own, as
+     * Shortcuts that work wherever focus is, even inside a text field: Ctrl+F (Cmd+F) to search
+     * the page, Ctrl+K (Cmd+K) to open or close the search across every chat, Ctrl+, (Cmd+,) for
+     * Settings, Ctrl+Q (Cmd+Q) to quit. The command key is the OS's own, as
      * the player reads it: Ctrl on a Mac is a text field's caret key, and Super+Q on Linux belongs
      * to the window manager.
      */
@@ -324,6 +326,10 @@ class ShellState(
         return when {
             command && event.key == Key.Q && quit != null -> {
                 quit?.invoke()
+                true
+            }
+            command && event.key == Key.K -> {
+                paletteOpen = !paletteOpen
                 true
             }
             command && event.key == Key.F -> {

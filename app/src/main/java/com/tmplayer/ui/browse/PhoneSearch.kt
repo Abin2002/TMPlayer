@@ -1,0 +1,573 @@
+package com.tmplayer.ui.browse
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.tmplayer.data.AllChatsSearch
+import com.tmplayer.data.ChatBrief
+import com.tmplayer.data.ChatSummary
+import com.tmplayer.data.GlobalSearch
+import com.tmplayer.data.MediaItem
+import com.tmplayer.data.ResultGroup
+import com.tmplayer.data.ResumeRecord
+import com.tmplayer.data.SearchChatType
+import com.tmplayer.data.SearchFilters
+import com.tmplayer.data.SearchQuality
+import com.tmplayer.data.SearchSort
+import com.tmplayer.ui.components.PhoneSheet
+import com.tmplayer.ui.components.Spinner
+import com.tmplayer.ui.components.TmSecondaryButton
+import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
+import com.tmplayer.ui.nav.BackHandler
+import com.tmplayer.ui.theme.FloatingTone
+import com.tmplayer.ui.theme.Tone
+import com.tmplayer.ui.theme.floatingBorder
+import kotlinx.coroutines.launch
+
+/**
+ * The phone's search across every chat (CP73): a page of its own over the browser, its field
+ * docked at the bottom above the keyboard where the bar's magnifier was, with the close button in
+ * the magnifier's own place.
+ *
+ * Before anything is typed it offers the way back to things: recent chats (starred first), recent
+ * searches (fill one in with the arrow, take one off with its cross or a hold, clear them all with
+ * a few seconds to undo), and up to three videos to carry on with. Typing lists at once the chats
+ * whose names match and the videos this device already knows, then Telegram's answer once the
+ * typing settles ([GlobalSearchViewModel]). Each video is one card however many chats it was
+ * posted in; a tap opens it as a video's tile does.
+ *
+ * Back closes the keyboard first (the system does that), then the filter sheet, then the search.
+ * There is no swipe down to close: the page is a list, and a list is swiped.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+internal fun PhoneSearchScreen(
+    state: GlobalSearchState,
+    text: TextFieldValue,
+    onText: (TextFieldValue) -> Unit,
+    onSubmit: () -> Unit,
+    onClose: () -> Unit,
+    /** Goes on the field, which the bar's magnifier grows into. */
+    fieldModifier: Modifier,
+    chats: List<ChatSummary>,
+    favourites: Set<Long>,
+    /** Hidden while the kids lock is on, and while searches are not remembered. */
+    recentSearches: List<String>,
+    continueWatching: List<ResumeRecord>,
+    continueArt: (ResumeRecord) -> MediaItem,
+    progress: (MediaItem) -> Float?,
+    onOpenChat: (ChatSummary) -> Unit,
+    onOpenGroup: (ResultGroup) -> Unit,
+    onResume: (ResumeRecord) -> Unit,
+    onFilters: (SearchFilters) -> Unit,
+    onSort: (SearchSort) -> Unit,
+    onLoadMore: () -> Unit,
+    onRetry: () -> Unit,
+    onRemoveRecent: (String) -> Unit,
+    /** Clears them all and hands back what was there, for the Undo. */
+    onClearRecent: () -> List<String>,
+    onRestoreRecent: (List<String>) -> Unit,
+    onVoice: (() -> Unit)?,
+    listState: LazyListState,
+) {
+    val s = LocalStrings.current
+    val scope = rememberCoroutineScope()
+    val snackbar = remember { SnackbarHostState() }
+    val focus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    var sheetOpen by rememberSaveable { mutableStateOf(false) }
+    var allChats by rememberSaveable(state.query.text) { mutableStateOf(false) }
+
+    BackHandler(enabled = !sheetOpen) { onClose() }
+
+    // The keyboard is up by the time the field has finished growing out of the magnifier.
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+
+    val query = text.text
+    val chatMatches = remember(chats, query, favourites) { GlobalSearch.localChats(chats, query, favourites) }
+    val recentChats = remember(chats, favourites) { GlobalSearch.recentChats(chats, favourites) }
+    val briefs = remember(state.chats, chats) { state.chats + chats.associate { it.id to ChatBrief.of(it) } }
+    val titleOf: (Long) -> String = { id -> briefs[id]?.title.orEmpty() }
+
+    Box(Modifier.fillMaxSize().background(Tone.background)) {
+        Column(Modifier.fillMaxSize().imePadding()) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentPadding = PaddingValues(bottom = 8.dp),
+            ) {
+                item(key = "top") { Spacer(Modifier.windowInsetsPadding(WindowInsets.statusBars).height(8.dp)) }
+                if (query.isBlank()) {
+                    emptySearch(
+                        chats = recentChats,
+                        recent = recentSearches.take(GlobalSearch.RECENT_SHOWN),
+                        continueWatching = continueWatching.take(CONTINUE_SHOWN),
+                        continueArt = continueArt,
+                        onOpenChat = onOpenChat,
+                        onPick = { picked ->
+                            onText(TextFieldValue(picked, TextRange(picked.length)))
+                            onSubmit()
+                        },
+                        onFill = { picked -> onText(TextFieldValue("$picked ", TextRange(picked.length + 1))) },
+                        onRemove = onRemoveRecent,
+                        onClearAll = {
+                            val before = onClearRecent()
+                            scope.launch {
+                                val answer = snackbar.showSnackbar(s.searchRecentCleared, actionLabel = s.searchUndo)
+                                if (answer == SnackbarResult.ActionPerformed) onRestoreRecent(before)
+                            }
+                        },
+                        onResume = onResume,
+                    )
+                } else {
+                    results(
+                        state = state,
+                        chatMatches = chatMatches,
+                        allChats = allChats,
+                        onShowAllChats = { allChats = true },
+                        briefs = briefs,
+                        progress = progress,
+                        onOpenChat = onOpenChat,
+                        onOpenGroup = { keyboard?.hide(); onOpenGroup(it) },
+                        onRetry = onRetry,
+                        onClearFilters = { onFilters(SearchFilters()) },
+                        onSearchWord = { word -> onText(TextFieldValue(word, TextRange(word.length))); onSubmit() },
+                    )
+                }
+            }
+
+            // The filters once there is something to filter, or a filter is on.
+            if (query.isNotBlank() && (state.groups.isNotEmpty() || !state.filters.isDefault || state.sort != SearchSort.BestMatch)) {
+                FilterRow(state, onFilters = onFilters, onMore = { keyboard?.hide(); sheetOpen = true })
+            }
+
+            Row(
+                Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = BAR_MARGIN),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                SearchField(
+                    text = text,
+                    onText = onText,
+                    onSubmit = { keyboard?.hide(); onSubmit() },
+                    onVoice = onVoice,
+                    modifier = Modifier.weight(1f).then(fieldModifier).focusRequester(focus),
+                )
+                // Where the bar's magnifier was: the way back out.
+                Box(
+                    Modifier
+                        .size(BAR_HEIGHT - 8.dp)
+                        .shadow(6.dp, CircleShape)
+                        .clip(CircleShape)
+                        .background(FloatingTone.menu)
+                        .border(floatingBorder(), CircleShape)
+                        .clickable(role = Role.Button, onClick = onClose),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(TmIcons.Close, contentDescription = s.searchClose, tint = Tone.text, modifier = Modifier.size(22.dp))
+                }
+            }
+        }
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).imePadding().navigationBarsPadding().padding(bottom = BAR_HEIGHT + BAR_MARGIN + BAR_GAP))
+    }
+
+    // The next page well before the end, the way a chat's grid pages.
+    val nearEnd by remember {
+        derivedStateOf {
+            val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            last >= listState.layoutInfo.totalItemsCount - PAGE_LEAD
+        }
+    }
+    LaunchedEffect(listState, state.groups.size) {
+        snapshotFlow { nearEnd }.collect { if (it && state.groups.isNotEmpty()) onLoadMore() }
+    }
+
+    if (sheetOpen) {
+        FilterSheet(state, onFilters = onFilters, onSort = onSort, onDismiss = { sheetOpen = false })
+    }
+}
+
+/** The field: a rounded pill with the magnifier, the text, and Clear while there is text or the microphone while there is none. */
+@Composable
+private fun SearchField(
+    text: TextFieldValue,
+    onText: (TextFieldValue) -> Unit,
+    onSubmit: () -> Unit,
+    onVoice: (() -> Unit)?,
+    modifier: Modifier,
+) {
+    val s = LocalStrings.current
+    Row(
+        modifier
+            .height(BAR_HEIGHT - 4.dp)
+            .shadow(6.dp, CircleShape)
+            .clip(CircleShape)
+            .background(FloatingTone.menu)
+            .border(floatingBorder(), CircleShape)
+            .padding(start = 16.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(TmIcons.Search, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.width(10.dp))
+        BasicTextField(
+            value = text,
+            onValueChange = onText,
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Tone.text),
+            cursorBrush = SolidColor(Tone.accent),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { onSubmit() }),
+            modifier = Modifier.weight(1f),
+            decorationBox = { inner ->
+                Box(contentAlignment = Alignment.CenterStart) {
+                    if (text.text.isEmpty()) {
+                        Text(s.searchFieldHint, style = MaterialTheme.typography.bodyLarge, color = Tone.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    inner()
+                }
+            },
+        )
+        when {
+            text.text.isNotEmpty() -> IconButton(onClick = { onText(TextFieldValue("")) }) {
+                Icon(TmIcons.Close, contentDescription = s.browseClearSearch, tint = Tone.muted)
+            }
+            onVoice != null -> IconButton(onClick = onVoice) {
+                Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice, tint = Tone.muted)
+            }
+        }
+    }
+}
+
+/** What an empty search offers: recent chats, recent searches, and videos to carry on with. */
+@OptIn(ExperimentalFoundationApi::class)
+private fun androidx.compose.foundation.lazy.LazyListScope.emptySearch(
+    chats: List<ChatSummary>,
+    recent: List<String>,
+    continueWatching: List<ResumeRecord>,
+    continueArt: (ResumeRecord) -> MediaItem,
+    onOpenChat: (ChatSummary) -> Unit,
+    onPick: (String) -> Unit,
+    onFill: (String) -> Unit,
+    onRemove: (String) -> Unit,
+    onClearAll: () -> Unit,
+    onResume: (ResumeRecord) -> Unit,
+) {
+    if (chats.isNotEmpty()) {
+        item(key = "chats-h") { Heading(LocalStrings.current.searchChatsHeading) }
+        item(key = "chats") {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                items(chats, key = { it.id }) { chat ->
+                    Column(
+                        Modifier.width(64.dp).clip(RoundedCornerShape(12.dp)).clickable { onOpenChat(chat) }.padding(vertical = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        ChatAvatar(ChatBrief.of(chat), 56.dp)
+                        Spacer(Modifier.height(6.dp))
+                        Text(chat.title, style = MaterialTheme.typography.labelSmall, color = Tone.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+        }
+    }
+    if (recent.isNotEmpty()) {
+        item(key = "recent-h") {
+            val s = LocalStrings.current
+            Row(Modifier.fillMaxWidth().padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) { Heading(s.browseRecentSearches) }
+                TextButton(onClick = onClearAll) { Text(s.searchClearRecent) }
+            }
+        }
+        items(recent, key = { "r-$it" }) { entry ->
+            val s = LocalStrings.current
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(onClick = { onPick(entry) }, onLongClick = { onRemove(entry) })
+                    .padding(start = 16.dp, end = 4.dp)
+                    .height(48.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(TmIcons.History, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(16.dp))
+                Text(entry, style = MaterialTheme.typography.bodyLarge, color = Tone.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                IconButton(onClick = { onFill(entry) }) {
+                    Icon(TmIcons.ArrowUpLeft, contentDescription = s.searchFillIn(entry), tint = Tone.muted, modifier = Modifier.size(20.dp))
+                }
+                IconButton(onClick = { onRemove(entry) }) {
+                    Icon(TmIcons.Close, contentDescription = s.searchRemoveRecent(entry), tint = Tone.muted, modifier = Modifier.size(18.dp))
+                }
+            }
+        }
+    }
+    if (continueWatching.isNotEmpty()) {
+        item(key = "continue-h") { Heading(LocalStrings.current.homeRowContinue) }
+        items(continueWatching, key = { "c-${it.chatId}_${it.messageId}" }) { record ->
+            val item = continueArt(record)
+            Row(
+                Modifier.fillMaxWidth().clickable { onResume(record) }.padding(horizontal = 16.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                ResultPoster(item, Modifier.width(48.dp), fraction = record.fraction())
+                Column(Modifier.weight(1f)) {
+                    Text(record.title, style = MaterialTheme.typography.titleSmall, color = Tone.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (record.chatTitle.isNotBlank()) {
+                        Text(record.chatTitle, style = MaterialTheme.typography.bodySmall, color = Tone.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun ResumeRecord.fraction(): Float? =
+    if (durationMs <= 0) null else (positionMs.toFloat() / durationMs).coerceIn(0f, 1f)
+
+/** What a search with text lists: matching chats, then the videos, then how the search is going. */
+private fun androidx.compose.foundation.lazy.LazyListScope.results(
+    state: GlobalSearchState,
+    chatMatches: List<ChatSummary>,
+    allChats: Boolean,
+    onShowAllChats: () -> Unit,
+    briefs: Map<Long, ChatBrief>,
+    progress: (MediaItem) -> Float?,
+    onOpenChat: (ChatSummary) -> Unit,
+    onOpenGroup: (ResultGroup) -> Unit,
+    onRetry: () -> Unit,
+    onClearFilters: () -> Unit,
+    onSearchWord: (String) -> Unit,
+) {
+    if (chatMatches.isNotEmpty()) {
+        item(key = "chats-h") { Heading(LocalStrings.current.searchChatsHeading) }
+        val shown = if (allChats) chatMatches else chatMatches.take(GlobalSearch.CHAT_PREVIEW)
+        items(shown, key = { "chat-${it.id}" }) { chat ->
+            Row(
+                Modifier.fillMaxWidth().clickable { onOpenChat(chat) }.padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                ChatAvatar(ChatBrief.of(chat), 40.dp)
+                Text(chat.title, style = MaterialTheme.typography.bodyLarge, color = Tone.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            }
+        }
+        if (!allChats && chatMatches.size > GlobalSearch.CHAT_PREVIEW) {
+            item(key = "chats-all") {
+                TextButton(onClick = onShowAllChats, modifier = Modifier.padding(start = 8.dp)) {
+                    Text(LocalStrings.current.searchShowAllChats(chatMatches.size))
+                }
+            }
+        }
+    }
+    item(key = "videos-h") { Heading(LocalStrings.current.searchVideosHeading) }
+    searchStatus(state)?.let { status ->
+        item(key = "status") {
+            Note(status, spinner = state.stillSearching || state.floodWait > 0) {
+                if (state.error != null) TmSecondaryButton(onClick = onRetry) { Text(LocalStrings.current.commonRetry) }
+            }
+        }
+    }
+    val shown = state.shown
+    when {
+        shown.isEmpty() && state.searching -> items(SKELETONS, key = { "sk-$it" }) {
+            SearchResultSkeleton(Modifier.padding(horizontal = 8.dp))
+        }
+        shown.isEmpty() && !state.busy && state.error == null -> item(key = "none") {
+            val s = LocalStrings.current
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(TmIcons.SearchRemove, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(32.dp))
+                val hidden = state.hiddenBy
+                if (hidden.isNotEmpty()) {
+                    hidden.forEach { Text(it.message(state), style = MaterialTheme.typography.bodyLarge, color = Tone.text) }
+                    TmSecondaryButton(onClick = onClearFilters) { Text(s.searchClearFilters) }
+                } else {
+                    Text(s.searchNone(state.query.text), style = MaterialTheme.typography.titleMedium, color = Tone.text)
+                    Text(s.searchNoneDetail, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
+                    AllChatsSearch.fallbackQuery(state.query.server)?.let { word ->
+                        TmSecondaryButton(onClick = { onSearchWord(word) }) { Text(s.searchSearchFor(word)) }
+                    }
+                }
+            }
+        }
+        else -> items(shown, key = { it.key }) { group ->
+            SearchResultCard(
+                group = group,
+                chats = briefs,
+                progress = progress,
+                modifier = Modifier.padding(horizontal = 8.dp).clip(RoundedCornerShape(12.dp)).clickable { onOpenGroup(group) },
+            )
+        }
+    }
+    if (state.loadingMore) item(key = "more") { Note(LocalStrings.current.gridLoadingMore, spinner = true) }
+}
+
+/** The quick filters over the field: the kind of chat, and the rest behind Filters. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FilterRow(state: GlobalSearchState, onFilters: (SearchFilters) -> Unit, onMore: () -> Unit) {
+    val s = LocalStrings.current
+    val extras = listOf(
+        state.filters.quality != SearchQuality.Any,
+        state.filters.hideSmall,
+        !state.filters.includeArchived,
+        state.sort != SearchSort.BestMatch,
+    ).count { it }
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+    ) {
+        item(key = "more") {
+            FilterChip(
+                selected = extras > 0,
+                onClick = onMore,
+                label = { Text(if (extras > 0) "${s.searchFilters} $extras" else s.searchFilters) },
+                leadingIcon = { Icon(TmIcons.FilterHorizontal, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) },
+            )
+        }
+        items(SearchChatType.entries, key = { it.name }) { type ->
+            FilterChip(
+                selected = state.filters.chatType == type,
+                onClick = { onFilters(state.filters.copy(chatType = type)) },
+                label = { Text(type.label) },
+            )
+        }
+    }
+}
+
+/** Everything else: the order, the picture size, small clips, the archive. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FilterSheet(state: GlobalSearchState, onFilters: (SearchFilters) -> Unit, onSort: (SearchSort) -> Unit, onDismiss: () -> Unit) {
+    val s = LocalStrings.current
+    PhoneSheet(onDismissRequest = onDismiss) {
+        Heading(s.searchSort)
+        SearchSort.entries.forEach { sort ->
+            ChoiceLine(sort.label, chosen = state.sort == sort) { onSort(sort) }
+        }
+        Heading(s.searchFilters)
+        SearchQuality.entries.forEach { quality ->
+            ChoiceLine(quality.label, chosen = state.filters.quality == quality) { onFilters(state.filters.copy(quality = quality)) }
+        }
+        SwitchLine(s.searchFilterHideSmall, state.filters.hideSmall) { onFilters(state.filters.copy(hideSmall = it)) }
+        SwitchLine(s.searchFilterIncludeArchived, state.filters.includeArchived) { onFilters(state.filters.copy(includeArchived = it)) }
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun ChoiceLine(label: String, chosen: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(role = Role.RadioButton, onClick = onClick).padding(horizontal = 16.dp).height(48.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = chosen, onClick = null)
+        Spacer(Modifier.width(16.dp))
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = Tone.text)
+    }
+}
+
+@Composable
+private fun SwitchLine(label: String, on: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(role = Role.Switch) { onChange(!on) }.padding(horizontal = 16.dp).height(56.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = Tone.text, modifier = Modifier.weight(1f))
+        Switch(checked = on, onCheckedChange = null)
+    }
+}
+
+@Composable
+private fun Heading(text: String) {
+    Text(text, style = MaterialTheme.typography.titleSmall, color = Tone.muted, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp))
+}
+
+@Composable
+private fun Note(text: String, spinner: Boolean = false, action: (@Composable () -> Unit)? = null) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (spinner) Spinner(size = 18.dp, strokeWidth = 2.dp)
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = Modifier.weight(1f, fill = false))
+        action?.invoke()
+    }
+}
+
+/** Videos to carry on with on an empty search: three is a glance, more is History. */
+private const val CONTINUE_SHOWN = 3
+
+private const val PAGE_LEAD = 6
+
+private val SKELETONS = List(5) { it }

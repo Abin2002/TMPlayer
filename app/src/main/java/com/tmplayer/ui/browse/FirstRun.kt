@@ -56,13 +56,12 @@ import kotlinx.coroutines.launch
 
 /**
  * Home on a first run, before anything has been played or starred: how to get a first video in
- * (forward it to Saved Messages, or with the default groups hidden to a chat in a folder), with
- * the button that opens it ([DefaultGroups.firstStep]), and the line on starring chats under it,
- * all on one [FirstVideoCard]. It used to be one muted sentence; the forwarding advice lived only
+ * (forward it to Saved Messages), with the button that opens it, and the line on starring chats
+ * under it, all on one [FirstVideoCard]. It used to be one muted sentence; the forwarding advice lived only
  * in Saved Messages' own empty state, where nobody new would look.
  */
 @Composable
-internal fun FirstVideoEmpty(step: DefaultGroups.FirstStep, onOpen: (BrowseSection) -> Unit) {
+internal fun FirstVideoEmpty(onOpen: (BrowseSection) -> Unit) {
     val s = LocalStrings.current
     val touch = isTouch()
     val focus = remember { FocusRequester() }
@@ -74,19 +73,16 @@ internal fun FirstVideoEmpty(step: DefaultGroups.FirstStep, onOpen: (BrowseSecti
             .padding(horizontal = if (touch) PhonePad.Side else 72.dp, vertical = 24.dp),
         contentAlignment = Alignment.Center,
     ) {
-        // With Telegram's default groups hidden and no folders there is nowhere to send the
-        // viewer, so the words say what to do and there is no button.
-        val target = step.target
         FirstVideoCard(
             title = s.homeFirstTitle,
-            body = step.body,
+            body = s.homeFirstBody,
             more = s.homeFirstMore,
-            button = step.button?.takeIf { target != null },
-            onButton = { target?.let(onOpen) },
+            button = s.homeFirstOpenSaved,
+            onButton = { onOpen(BrowseSection.of(BrowseTab.Saved)) },
             focus = focus,
         )
     }
-    if (!touch && step.target != null) LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    if (!touch) LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 }
 
 /** The promo build's say over the tip: null follows the stored state, true or false forces it. */
@@ -101,7 +97,7 @@ object FirstVideoTipOverride {
  * television it is a line of text the D-pad passes over, and playing a first video retires it.
  */
 @Composable
-internal fun FirstVideoTip(nothingPlayed: Boolean, start: Dp, end: Dp, defaultsHidden: Boolean = false) {
+internal fun FirstVideoTip(nothingPlayed: Boolean, start: Dp, end: Dp) {
     if (!nothingPlayed) return
     val context = LocalContext.current
     val settings = remember { SettingsStore(context.applicationContext) }
@@ -128,7 +124,7 @@ internal fun FirstVideoTip(nothingPlayed: Boolean, start: Dp, end: Dp, defaultsH
         )
         Spacer(Modifier.size(12.dp))
         Text(
-            DefaultGroups.firstVideoTip(defaultsHidden),
+            s.browseFirstVideoTip,
             style = if (touch) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
             color = Tone.text,
             modifier = Modifier.weight(1f),

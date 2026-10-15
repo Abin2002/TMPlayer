@@ -98,9 +98,6 @@ import kotlinx.coroutines.launch
  * on its side) put the words and buttons beside the answers; a phone held upright stacks them,
  * with the buttons at the foot where a thumb is.
  *
- * [unreachableFavourites] are the starred chats "Only my folders" would leave out of reach
- * (`DefaultGroups.unreachableFavorites`); the step says how many, as the Settings switch's prompt
- * does, and picking it unstars them the same way.
  */
 @Composable
 fun SetupScreen(
@@ -108,7 +105,6 @@ fun SetupScreen(
     state: SetupState,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
-    unreachableFavourites: Set<Long> = emptySet(),
     /** What the Device step says about this device, and what it offers to change (CP68). */
     fit: DeviceFit = DeviceFit.Fine,
     recommendations: List<Recommendation> = emptyList(),
@@ -122,13 +118,11 @@ fun SetupScreen(
     val s = LocalStrings.current
     val scope = rememberCoroutineScope()
     val online = OnlineMetadata.current
-    val onlyFolders by settings.hideDefaultGroups.collectAsState(initial = false)
     val lowStorage by settings.lowStorageMode.collectAsState(initial = false)
     val lighter by settings.lighterPictures.collectAsState(initial = false)
     val saveData by settings.saveMobileData.collectAsState(initial = false)
     val posters = online?.settings?.collectAsState()?.value?.enabled ?: true
     val values = SetupValues(
-        onlyFolders = onlyFolders,
         posters = posters,
         lowStorage = lowStorage,
         lighter = lighter,
@@ -141,8 +135,6 @@ fun SetupScreen(
         scope.launch {
             runCatching {
                 when (choice) {
-                    SetupChoice.Everything -> settings.setHideDefaultGroups(false)
-                    SetupChoice.OnlyFolders -> settings.setHideDefaultGroups(true, unstar = unreachableFavourites)
                     SetupChoice.PostersOn -> online?.setEnabled(true)
                     SetupChoice.PostersOff -> online?.setEnabled(false)
                     SetupChoice.KeepWhilePlaying -> settings.setLowStorageMode(false)
@@ -180,11 +172,6 @@ fun SetupScreen(
     val copy = s.setupCopy(step).let { if (step == SetupStep.Device) it.copy(title = s.fitHeadline(fit)) else it }
     val focus = remember(step) { step.choices.associateWith { FocusRequester() } }
     val holder = remember { FocusHolder() }
-    val note = if (step == SetupStep.Library && unreachableFavourites.isNotEmpty()) {
-        s.groupsPromptFavourites(unreachableFavourites.size)
-    } else {
-        null
-    }
 
     val outer = when (form) {
         DeviceForm.Tv -> Modifier.padding(horizontal = Tv.SafeH, vertical = Tv.SafeV)
@@ -226,7 +213,6 @@ fun SetupScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     words()
-                    if (note != null) Note(note)
                     Spacer(Modifier.height(8.dp))
                     buttons()
                     Text(s.setupLater, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
@@ -255,7 +241,6 @@ fun SetupScreen(
                     } else {
                         Choices(step, values, focus, holder, side = null, onPick = ::pick)
                     }
-                    if (note != null) Note(note)
                     Text(s.setupLater, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
                 }
                 Spacer(Modifier.height(12.dp))
@@ -467,11 +452,6 @@ internal fun SetupButton(
         }
         Text(label, style = MaterialTheme.typography.labelLarge, color = color)
     }
-}
-
-@Composable
-private fun Note(text: String) {
-    Text(text, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
 }
 
 /**
