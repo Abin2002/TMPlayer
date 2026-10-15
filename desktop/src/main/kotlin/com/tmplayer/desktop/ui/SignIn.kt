@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -83,7 +84,8 @@ fun SignInScreen(auth: AuthState) {
         ) {
             Image(AppLogo.Mark, contentDescription = null, modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)))
             when (auth) {
-                AuthState.Connecting, AuthState.ChooseMethod, AuthState.Ready -> Waiting(s.signinConnecting)
+                AuthState.Connecting -> ConnectingPane()
+                AuthState.ChooseMethod, AuthState.Ready -> Waiting(s.signinConnecting)
                 is AuthState.Qr -> QrPane(auth.link)
                 is AuthState.Phone -> PhonePane(auth.wrong)
                 is AuthState.Code -> CodePane(auth)
@@ -104,6 +106,23 @@ fun SignInScreen(auth: AuthState) {
 private fun Waiting(label: String) {
     CircularProgressIndicator()
     Text(label, color = Tone.muted)
+}
+
+/**
+ * The spinner, and once it has run for [com.tmplayer.data.Td.signInStalled]'s while, the likely
+ * reasons and a Retry: a firewall or a VPN that drops Telegram's traffic leaves TDLib waiting with
+ * no error to show, and a spinner alone gives the viewer nothing to check and nothing to press.
+ */
+@Composable
+private fun ConnectingPane() {
+    val s = LocalStrings.current
+    val scope = rememberCoroutineScope()
+    val stalled by Td.signInStalled.collectAsState()
+    Waiting(s.signinConnecting)
+    if (stalled) {
+        Text(s.signinUnreachable, color = Tone.muted, textAlign = TextAlign.Center)
+        Button(onClick = { scope.launch { Td.retryConnecting() } }) { Text(s.commonRetry) }
+    }
 }
 
 @Composable

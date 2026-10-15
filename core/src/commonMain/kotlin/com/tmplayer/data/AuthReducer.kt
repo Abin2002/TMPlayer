@@ -26,6 +26,10 @@ import dev.g000sha256.tdl.dto.AuthorizationStateWaitPassword
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitPhoneNumber
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitRegistration
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitTdlibParameters
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 
 /**
  * How the user has said they want to sign in.
@@ -236,4 +240,26 @@ object AuthReducer {
     }
 
     private val UNSUPPORTED_STEP: String get() = L.errorsUnsupportedSignInStep
+}
+
+/**
+ * Notices a sign in that has been [AuthState.Connecting] for too long.
+ *
+ * TDLib does not fail a request it cannot send: with no route to Telegram (offline, a firewall, a
+ * VPN that drops the traffic) it waits, and the spinner on the sign in screen waits with it. After
+ * [timeoutMs] in that one state, [stalled] turns true so the screen can say what is likely wrong
+ * and offer a Retry. Any other state, or a new emission of [auth] (a retry counts as one), clears
+ * it and starts the count again.
+ */
+object AuthStall {
+
+    suspend fun watch(auth: Flow<AuthState>, stalled: MutableStateFlow<Boolean>, timeoutMs: Long) {
+        auth.collectLatest { state ->
+            stalled.value = false
+            if (state is AuthState.Connecting) {
+                delay(timeoutMs)
+                stalled.value = true
+            }
+        }
+    }
 }

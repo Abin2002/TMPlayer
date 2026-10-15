@@ -25,6 +25,7 @@ import dev.g000sha256.tdl.dto.FileTypeVideoNote
 import dev.g000sha256.tdl.dto.FileTypeVideoStory
 import dev.g000sha256.tdl.dto.OptionValueBoolean
 import dev.g000sha256.tdl.dto.OptionValueInteger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,6 +89,29 @@ object Td {
 
     private val _auth = MutableStateFlow<AuthState>(AuthState.Connecting)
     val auth: StateFlow<AuthState> = _auth.asStateFlow()
+
+    /**
+     * True once the sign in has sat on [AuthState.Connecting] for [CONNECT_TIMEOUT_MS]: Telegram
+     * is most likely out of reach, and the screen says so with a Retry ([retryConnecting]).
+     * Kept apart from [auth] so the spinner stays what it is and every screen that matches on the
+     * state keeps working; a screen that has no use for the hint simply does not read it.
+     */
+    private val _signInStalled = MutableStateFlow(false)
+    val signInStalled: StateFlow<Boolean> = _signInStalled.asStateFlow()
+
+    /** Bumped by [retryConnecting], so the stall count starts again while the state stays put. */
+    private val connectAttempt = MutableStateFlow(0)
+
+    /** The client [retryConnecting] is closing, whose aborted requests are not a sign in failure. */
+    @Volatile
+    private var retiring: TdlClient? = null
+
+    /** Completed to try again after a client could not be started at all. See [keepClientRunning]. */
+    @Volatile
+    private var clientRetry: CompletableDeferred<Unit>? = null
+
+    /** Why the first client could not start, kept for the retries that can only say less. */
+    private var startFailure: String? = null
 
     /**
      * Whether TDLib currently has a line to Telegram.
@@ -175,8 +199,50 @@ object Td {
             this.credentials = credentials
             this.currentPaths = paths
         }
-        scope.launch { clientLoop() }
+        scope.launch { keepClientRunning() }
+        scope.launch {
+            AuthStall.watch(combine(_auth, connectAttempt) { state, _ -> state }, _signInStalled, CONNECT_TIMEOUT_MS)
+        }
     }
+
+    /**
+     * Runs [clientLoop], and turns anything that escapes it into a sign in failure the user can read.
+     *
+     * TDLib's native library is loaded by the first client, so a build missing the library for this
+     * machine (or one the system refuses to load) throws here, outside any request. Left alone it
+     * would end this coroutine, reach only the log, and leave the screen on Connecting for good.
+     * The failure screen's Try again ([restartSignIn]) completes [clientRetry] to start over.
+     */
+    private suspend fun keepClientRunning() {
+        while (true) {
+            try {
+                clientLoop()
+                return
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Logger.w(TAG, "TDLib client could not run", e)
+                current = null
+                _session.value = null
+                _connected.value = false
+                // A class whose static set up failed once answers every later use with a bare
+                // NoClassDefFoundError; the first failure is the one that says what went wrong.
+                val reason = startFailure.takeIf { e is NoClassDefFoundError } ?: describe(e)
+                if (startFailure == null) startFailure = reason
+                val retry = CompletableDeferred<Unit>()
+                clientRetry = retry
+                _auth.value = AuthState.Failed(L.errorsTdlibUnavailable(reason))
+                retry.await()
+                clientRetry = null
+                _auth.value = AuthState.Connecting
+            }
+        }
+    }
+
+    /** The first message in [error]'s chain of causes, or its class name when none has one. */
+    private fun describe(error: Throwable): String =
+        generateSequence(error) { it.cause }.firstNotNullOfOrNull { it.message?.takeIf(String::isNotBlank) }
+            ?: error::class.simpleName.orEmpty()
 
     /**
      * Closes the client and starts a new one over [newPaths], keeping the viewer signed in.
@@ -215,6 +281,7 @@ object Td {
             val closed = CompletableDeferred<Unit>()
             val td = TdlClient.create()
             current = td
+            retiring = null
             _session.value = TdSession(td, generation.incrementAndGet())
             lastHandled = null
             method = methodAfterRestart
@@ -278,8 +345,12 @@ object Td {
             // once directly. Both paths go through the same mutex-guarded handler.
             val primer = launch {
                 runCatching { td.setLogVerbosityLevel(1) }
-                val now = td.getAuthorizationState()
-                if (now is TdlResult.Success) apply(td, now.result)
+                when (val now = td.getAuthorizationState()) {
+                    is TdlResult.Success -> apply(td, now.result)
+                    // Not fatal: the update flow still delivers the state. Logged because it is
+                    // the first thing to look at when a sign in never leaves Connecting.
+                    is TdlResult.Failure -> Logger.w(TAG, "getAuthorizationState failed: ${now.message}")
+                }
             }
 
             closed.await()
@@ -324,9 +395,18 @@ object Td {
 
         when (step.action) {
             AuthAction.SendParameters -> sendParameters(td)
+            // Not awaited under the gate: with no route to Telegram the request waits for one, and
+            // holding the gate that long would leave the client's Closing and Closed unhandled, so
+            // neither a retry nor a restart could replace it. The link itself arrives as an update.
             AuthAction.RequestQrCode -> {
-                val result = td.requestQrCodeAuthentication(longArrayOf())
-                if (result is TdlResult.Failure) _auth.value = AuthState.Failed(Failures.humanise(result.message))
+                scope.launch {
+                    val result = td.requestQrCodeAuthentication(longArrayOf())
+                    // A client being replaced answers its open requests with an error; that is the
+                    // retry working, not the sign in failing.
+                    if (result is TdlResult.Failure && td === current && td !== retiring) {
+                        _auth.value = AuthState.Failed(Failures.humanise(result.message))
+                    }
+                }
             }
             AuthAction.OnReady -> onReady(td)
             AuthAction.RecreateClient -> closedSignal?.complete(Unit)
@@ -504,7 +584,44 @@ object Td {
         method = next
         methodAfterRestart = next
         _auth.value = AuthState.Connecting
+        // No client to log out of: the last one could not start, and this is the Try again.
+        clientRetry?.let {
+            it.complete(Unit)
+            return
+        }
         runCatching { current?.logOut() }
+    }
+
+    /**
+     * Starts a new client when the sign in has been stuck on Connecting ([signInStalled]).
+     *
+     * A request TDLib cannot send stays queued, and asking again only queues a second one, so the
+     * client is closed and a fresh one opened over the same database, keeping the chosen method.
+     * Nobody is signed in at this point, so nothing is lost. If TDLib never reports the old client
+     * closed, the new one is started anyway after [RESTART_TIMEOUT_MS], as [restart] does.
+     */
+    suspend fun retryConnecting() {
+        _signInStalled.value = false
+        connectAttempt.value++
+        clientRetry?.let {
+            it.complete(Unit)
+            return
+        }
+        val td = current ?: return
+        if (_auth.value !is AuthState.Connecting) return
+        Logger.i(TAG, "sign in stalled on Connecting; starting a new client")
+        methodAfterRestart = method
+        retiring = td
+        val before = _session.value?.generation
+        val signal = closedSignal
+        runCatching { td.close() }
+        val replaced = withTimeoutOrNull(RESTART_TIMEOUT_MS) {
+            _session.first { it != null && it.generation != before }
+        }
+        if (replaced == null) {
+            Logger.w(TAG, "TDLib did not report the stalled client closed; starting a new one anyway")
+            signal?.complete(Unit)
+        }
     }
 
     /**
