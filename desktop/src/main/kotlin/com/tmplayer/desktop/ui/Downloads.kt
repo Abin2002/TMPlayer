@@ -146,7 +146,7 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
                 state = list,
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxSize().padding(end = 12.dp).homeEndScrolls(list),
             ) {

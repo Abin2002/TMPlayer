@@ -645,11 +645,7 @@ class BrowseRenderTest {
         ImageComposeScene(WIDTH, height, Density(1f)) {
             TmMaterialTheme(dark = dark) {
                 Surface(Modifier.fillMaxSize(), color = Tone.background) {
-                    Row(Modifier.fillMaxSize()) {
-                        Sidebar(shell, update, folders)
-                        VerticalDivider(color = Tone.outline)
-                        Box(Modifier.weight(1f).fillMaxHeight()) { page() }
-                    }
+                    NavFrame(shell, update, null) { page() }
                 }
             }
         }.use { scene ->
@@ -659,6 +655,113 @@ class BrowseRenderTest {
             scene.render(500_000_000)
             scene.render(1_000_000_000).encodeToData(EncodedImageFormat.PNG)!!.bytes
         }
+
+    /**
+     * The phone's latest look on the desktop, in dark and light: the floating bar over the Chats
+     * page (its name centred, the chips under it), the picture's popover, a chat's floating Back
+     * and name with its bar at the foot as tiles and as rows, its search folded into the bar with
+     * the recent searches over it, its Sort popover, a message at the top and Settings with the
+     * account over it.
+     */
+    @Test
+    fun phoneParity() = kotlinx.coroutines.runBlocking {
+        val account = com.tmplayer.data.Account("Mara Lindqvist", "maralind", jpeg(0xFF8E4EC6.toInt()), 0)
+        val chats = listOf(
+            chat(2, "Film Club", ChatKind.Channel, 12, 0xFFE5484D.toInt()),
+            chat(4, "Weekend series", ChatKind.Group, 3, 0xFFF5A524.toInt()),
+            chat(6, "Old lectures", ChatKind.Channel, 0, 0xFF0090FF.toInt()),
+            chat(8, "Documentaries in 4K", ChatKind.Channel, 0, 0xFF46A758.toInt()),
+        )
+        val folders = listOf(
+            com.tmplayer.data.ChatFolderSummary(3, "Films", icon = "Custom"),
+            com.tmplayer.data.ChatFolderSummary(7, "Family", icon = "Private"),
+        )
+        val chips = com.tmplayer.ui.browse.chatPageChips(folders)
+        val items = releaseItems()
+        val film = chat(2, "Film Club", ChatKind.Channel, 0, 0xFFE5484D.toInt())
+        settings.addRecentSearch("harbour lights")
+        settings.addRecentSearch("night train 2160p")
+        fun frame(dark: Boolean, account: com.tmplayer.data.Account? = null, page: @androidx.compose.runtime.Composable () -> Unit) =
+            ImageComposeScene(WIDTH, HEIGHT, Density(1f)) {
+                TmMaterialTheme(dark = dark) {
+                    Surface(Modifier.fillMaxSize(), color = Tone.background) {
+                        NavFrame(shell, NavUpdate("Update", "2.0.1"), account, barShown = shell.openChat == null) { page() }
+                    }
+                }
+            }.use { scene ->
+                scene.render(0)
+                Thread.sleep(400)
+                scene.render(500_000_000)
+                Thread.sleep(200)
+                scene.render(1_000_000_000).encodeToData(EncodedImageFormat.PNG)!!.bytes
+            }
+        @androidx.compose.runtime.Composable
+        fun chatPage(searching: Boolean = false, sorting: Boolean = false) {
+            androidx.compose.runtime.CompositionLocalProvider(com.tmplayer.ui.components.LocalBottomChrome provides ChatBarClearance) {
+                Box(Modifier.fillMaxSize()) {
+                    val anchor = com.tmplayer.ui.components.rememberPopoverAnchor()
+                    val bar: @androidx.compose.runtime.Composable () -> Unit = {
+                        ChatBar(
+                            state = shell, searching = searching, query = "", onQuery = {}, onOpenSearch = {}, onCloseSearch = {},
+                            onSearchDown = {}, recent = listOf("harbour lights", "night train 2160p", "lecture 7"), onClearRecent = {},
+                            favourite = true, onToggleFavourite = {}, onSort = {}, sortAnchor = anchor, onRefresh = {},
+                        )
+                    }
+                    VideoGrid(shell, items, "Film Club", rows = shell.chatRows, topPadding = ChatTopClearance, bottomBar = bar)
+                    ChatTopChrome(shell, film)
+                    VideoSortPopover(sorting, anchor, com.tmplayer.data.VideoSort.Newest, onPick = {}, onDismiss = {})
+                }
+            }
+        }
+        try {
+            for (dark in listOf(true, false)) {
+                val theme = if (dark) "dark" else "light"
+                shell.showChats(com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats))
+                save("parity-chats-$theme.png", frame(dark, account) {
+                    Column(Modifier.fillMaxSize()) {
+                        PageHeader(com.tmplayer.ui.browse.BrowseTab.Chats.heading, centred = true)
+                        ChoiceChips(chips.map { chip -> Choice(chip.label, chip.label, chip.icon, selected = chip == chips.first()) {} })
+                        chats.forEach { ChatRow(it, favourite = it.id == 2L, onOpen = {}, onStar = {}) }
+                    }
+                })
+                shell.profileOpen = true
+                save("parity-profile-$theme.png", frame(dark, account) {
+                    Column(Modifier.fillMaxSize()) {
+                        PageHeader(com.tmplayer.ui.browse.BrowseTab.Chats.heading, centred = true)
+                        chats.forEach { ChatRow(it, favourite = false, onOpen = {}, onStar = {}) }
+                    }
+                })
+                shell.profileOpen = false
+                shell.openChat(film)
+                shell.chatRows = false
+                save("parity-chat-tiles-$theme.png", frame(dark) { chatPage() })
+                shell.chatRows = true
+                save("parity-chat-rows-$theme.png", frame(dark) { chatPage() })
+                save("parity-chat-search-$theme.png", frame(dark) { chatPage(searching = true) })
+                save("parity-chat-sort-$theme.png", frame(dark) { chatPage(sorting = true) })
+                shell.chatRows = false
+                shell.closeChat()
+                shell.go(Destination.Settings)
+                val toasts = androidx.compose.material3.SnackbarHostState()
+                save("parity-settings-$theme.png", frame(dark, account) {
+                    androidx.compose.runtime.LaunchedEffect(Unit) { toasts.showSnackbar("Low storage mode is on") }
+                    Box(Modifier.fillMaxSize()) {
+                        SettingsPage(shell, "2.0.0", account = account)
+                        TopMessageHost(toasts, Modifier.align(androidx.compose.ui.Alignment.TopCenter).padding(top = 16.dp))
+                    }
+                })
+                shell.go(Destination.Chats)
+                shell.openDetail(DetailRequest(items[0], "Film Club"))
+                save("parity-detail-$theme.png", frame(dark) { Box(Modifier.fillMaxSize()) { VideoGrid(shell, items, "Film Club"); DetailPaneHost(shell) } })
+                shell.closeDetail()
+            }
+        } finally {
+            shell.profileOpen = false
+            shell.chatRows = false
+            shell.closeChat()
+            shell.go(Destination.Chats)
+        }
+    }
 
     @Test
     fun downloadLineCarriesFreeSpace() {

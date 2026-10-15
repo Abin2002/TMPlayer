@@ -145,7 +145,7 @@ internal fun Versions(
         ).joinToString("  ·  ")
     }
     // A phone lists the copies in its bottom sheet, over the page, and a television on a page of
-    // their own over it; the desktop opens them in place.
+    // their own over it; the desktop in a centred card (its own SheetHost).
     val tv = !isTouch()
     val sheet = com.tmplayer.ui.components.LocalSheetHost.current?.takeIf { !tv }
     val list: @Composable (Boolean, androidx.compose.ui.focus.FocusRequester?) -> Unit = { withHeader, chosenFocus ->
@@ -191,7 +191,9 @@ internal fun Versions(
             return
         }
         sheet!!.Sheet(onDismiss = { open = false }, fullScreen = true) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            // As tall as the list, so a host that is not the whole screen (the desktop's centred
+            // card) is no taller than it needs to be; a full screen sheet fills the rest itself.
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 CopiesHeader(
                     source = source,
                     title = SeriesShelf.tileTitle(item),

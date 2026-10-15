@@ -268,11 +268,7 @@ class RefreshLanguageShotsTest {
                     CompositionLocalProvider(LocalSeriesWatch provides watch) {
                         Surface(Modifier.fillMaxSize(), color = Tone.background) {
                             if (sidebar) {
-                                Row(Modifier.fillMaxSize()) {
-                                    Sidebar(shell, null, emptyList())
-                                    VerticalDivider(color = Tone.outline)
-                                    Box(Modifier.weight(1f).fillMaxHeight()) { page() }
-                                }
+                                NavFrame(shell, null, null) { page() }
                             } else {
                                 page()
                             }

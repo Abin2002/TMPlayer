@@ -183,22 +183,34 @@ internal fun HomeRowsView(
         )
         return
     }
-    val header: @Composable () -> Unit = {
-        PageHeader(
-            BrowseTab.Home.heading,
-            BrowseTab.Home.blurb,
-            actions = {
-                IconButton(onClick = onRefresh) { Icon(TmIcons.Refresh, contentDescription = s.commonRefresh) }
-                PosterSizeStep(state)
-            },
-        )
+    RegisterRefresh(state, onRefresh)
+    // No "Home" heading, as on the phone: the featured carousel opens the page, and the page's
+    // two small controls (refresh and the poster size) ride in a pill over its corner.
+    val actions: @Composable () -> Unit = {
+        Row(
+            Modifier
+                .padding(end = if (LocalWindowChrome.current != null) WINDOW_BUTTONS_ROOM else 0.dp)
+                .clip(CircleShape)
+                .background(com.tmplayer.ui.theme.FloatingTone.menu.copy(alpha = 0.85f))
+                .border(com.tmplayer.ui.theme.floatingBorder(), CircleShape)
+                .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onRefresh) { Icon(TmIcons.Refresh, contentDescription = s.commonRefresh) }
+            PosterSizeStep(state)
+        }
     }
+    val recentRow = rows.firstOrNull { it is HomeRow.Recent } as HomeRow.Recent?
+    // The carousel is filled from Recently added, wherever that row sits on the page.
+    LaunchedEffect(recentRow?.loaded) { if (recentRow != null && !recentRow.loaded) onRowShown(recentRow) }
+    val featured = rememberFeatured(recentRow)
+    val watch = rememberSeriesWatch(state)
     // In line with the page header's title, whatever the window's width.
     val side = pageMargin()
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            header()
             if (rows.isEmpty()) {
+                Box(Modifier.fillMaxWidth().windowDrag().padding(top = 16.dp, end = side), contentAlignment = Alignment.TopEnd) { actions() }
                 // Nothing played and nothing starred: a first run, so say how to get a first video in:
                 // forward it to Saved Messages, which the button opens.
                 Box(
@@ -220,9 +232,33 @@ internal fun HomeRowsView(
                 LazyColumn(
                     Modifier.fillMaxSize().homeEndScrolls(list),
                     state = list,
-                    contentPadding = PaddingValues(bottom = 24.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
+                    // With no starred chats there is nothing to feature: the controls stand alone.
+                    item(key = "featured", contentType = "featured") {
+                        if (recentRow == null || featured?.isEmpty() == true) {
+                            Box(Modifier.fillMaxWidth().windowDrag().padding(top = 16.dp, end = side), contentAlignment = Alignment.TopEnd) { actions() }
+                        } else {
+                            FeaturedCarousel(
+                                picks = featured,
+                                height = featuredHeight(maxWidth, maxHeight),
+                                side = side,
+                                watch = watch,
+                                chatTitle = { titles[it].orEmpty() },
+                                onPlay = { state.openPlayer(it, startFromBeginning = false) },
+                                onDetails = { pick ->
+                                    val show = pick.series
+                                    if (show != null) {
+                                        openSeries = show
+                                    } else {
+                                        state.openDetail(DetailRequest(pick.item, titles[pick.item.chatId].orEmpty(), outsideChat = true))
+                                    }
+                                },
+                                actions = actions,
+                            )
+                        }
+                    }
                     items(rows, key = { it.key }, contentType = { it::class }) { row ->
                         val loaded = row.isLoaded()
                         LaunchedEffect(row.key, loaded) { if (!loaded) onRowShown(row) }
@@ -335,7 +371,7 @@ private fun RowPage(
             LazyColumn(
                 Modifier.fillMaxSize().homeEndScrolls(list),
                 state = list,
-                contentPadding = PaddingValues(start = side, end = side, top = 8.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(start = side, end = side, top = 8.dp, bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 sections.forEachIndexed { at, (width, cells) ->
@@ -678,6 +714,9 @@ private const val POSTER_SHARE = 0.75f
 private const val CONTINUE_SHARE = 1.25f
 
 /** Between two cards in a strip or a grid. */
+/** Where the app draws its own window buttons, the room they keep at the top end. */
+private val WINDOW_BUTTONS_ROOM = 150.dp
+
 private val CARD_GAP = 16.dp
 
 /** How much of the next card a strip shows past its whole ones. */

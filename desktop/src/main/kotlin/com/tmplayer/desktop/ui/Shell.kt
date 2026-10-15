@@ -102,9 +102,8 @@ import com.tmplayer.ui.lock.PinPurpose
 typealias PlayerContent = @Composable (request: PlayRequest, onClose: () -> Unit) -> Unit
 
 /**
- * The desktop window's content (B2.1): sign in until Telegram says Ready, then a sidebar above
- * 1000 dp of width (an icon rail below it), the page, and the player over the page when something
- * is playing.
+ * The desktop window's content (B2.1): sign in until Telegram says Ready, then the page with the
+ * floating bar at its foot ([NavFrame]), and the player over the page when something is playing.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -116,6 +115,8 @@ fun DesktopShell(
     CompositionLocalProvider(
         LocalBackStack provides state.backStack,
         LocalToastHost provides toasts,
+        // A video's copies open as a centred card over the window, the phone's sheet on a desktop.
+        com.tmplayer.ui.components.LocalSheetHost provides DesktopSheetHost,
     ) {
         Surface(
             Modifier
@@ -163,7 +164,9 @@ fun DesktopShell(
                 } else {
                     SignInScreen(auth)
                 }
-                SnackbarHost(toasts, Modifier.align(Alignment.BottomCenter).padding(16.dp))
+                // At the top centre, as on the phone: clear of the floating bar and a page's own
+                // buttons at the foot, and where the eye already is when the window is read.
+                TopMessageHost(toasts, Modifier.align(Alignment.TopCenter).padding(top = 16.dp, start = 24.dp, end = 24.dp))
             }
         }
     }
@@ -275,55 +278,51 @@ private fun Browse(state: ShellState, player: PlayerContent) {
 
     // A chat opened from a page takes that page's place, so the page is kept here while the chat
     // is open: back from the chat finds its search, its tab and its scroll as they were. Going
-    // to another page from the side bar forgets them, as before.
+    // to another page from the floating bar forgets them, as before.
     val pages = rememberSaveableStateHolder()
     LaunchedEffect(state.destination) {
         Destination.entries.filter { it != state.destination }.forEach { pages.removeState(it.name) }
     }
 
+    val account by chats.accountHeader.collectAsState()
     Box(Modifier.fillMaxSize()) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
-            val wide = maxWidth >= SIDEBAR_FROM
+            // The detail pane docks beside the page where both fit, so the grid stays in view and
+            // in reach (a click on another poster swaps the pane), and goes over the page where
+            // they do not.
+            val docked = state.detail != null && maxWidth >= DOCK_FROM
             Row(Modifier.fillMaxSize()) {
-                if (wide) Sidebar(state, update) else Rail(state, update)
-                VerticalDivider(color = Tone.outline)
-                BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
-                    // The detail pane docks beside the page where both fit, so the grid stays in
-                    // view and in reach (a click on another poster swaps the pane), and goes over
-                    // the page where they do not.
-                    val docked = state.detail != null && maxWidth >= DOCK_FROM
-                    Row(Modifier.fillMaxSize()) {
-                        Box(Modifier.weight(1f).fillMaxHeight()) {
-                            val open = state.openChat
-                            when {
-                                open != null -> MediaGridPage(state, open)
-                                else -> pages.SaveableStateProvider(state.destination.name) {
-                                    when (state.destination) {
-                                        Destination.Home -> HomePage(state, chats)
-                                        Destination.Chats -> ChatsPage(state, chats, favouritesOnly = false)
-                                        Destination.Favourites -> ChatsPage(state, chats, favouritesOnly = true)
-                                        Destination.History -> HistoryPage(state)
-                                        Destination.Downloads -> DownloadsPage(state)
-                                        Destination.Settings -> LockedSettings(state) {
-                                            SettingsPage(
-                                                state,
-                                                BuildInfo.VERSION,
-                                                chatList = (chatsUi as? UiState.Content)?.value?.chats.orEmpty(),
-                                            )
-                                        }
-                                    }
+                // The floating bar sits at the foot of the page, not of the window, so a docked
+                // pane keeps its own foot; a chat brings its own bar, which takes this one's place.
+                NavFrame(state, update, account, Modifier.weight(1f).fillMaxHeight(), barShown = state.openChat == null) {
+                    val open = state.openChat
+                    when {
+                        open != null -> MediaGridPage(state, open)
+                        else -> pages.SaveableStateProvider(state.destination.name) {
+                            when (state.destination) {
+                                Destination.Home -> HomePage(state, chats)
+                                Destination.Chats -> ChatsPage(state, chats, favouritesOnly = false)
+                                Destination.Favourites -> ChatsPage(state, chats, favouritesOnly = true)
+                                Destination.History -> HistoryPage(state)
+                                Destination.Downloads -> DownloadsPage(state)
+                                Destination.Settings -> LockedSettings(state) {
+                                    SettingsPage(
+                                        state,
+                                        BuildInfo.VERSION,
+                                        chatList = (chatsUi as? UiState.Content)?.value?.chats.orEmpty(),
+                                        account = account,
+                                    )
                                 }
                             }
                         }
-                        if (docked) DetailPaneSide(state)
                     }
-                    // Over the page only, so the side bar stays reachable while a pane is open.
-                    if (!docked) DetailPaneHost(state)
                 }
+                if (docked) DetailPaneSide(state)
             }
+            if (!docked) DetailPaneHost(state)
         }
 
-        // The search across every chat (Ctrl+K), over the page and the side bar alike.
+        // The search across every chat (Ctrl+K), over the page and the floating bar alike.
         val searchModel = rememberViewModel(Unit) {
             com.tmplayer.ui.browse.GlobalSearchViewModel(onSearched = { state.settings.addRecentSearch(it) })
         }
@@ -382,219 +381,7 @@ private fun Browse(state: ShellState, player: PlayerContent) {
     }
 }
 
-private val SIDEBAR_FROM = 1000.dp
 private const val HOUSEKEEPING_DELAY_MS = 20_000L
-
-private fun Destination.icon(): ImageVector = when (this) {
-    Destination.Home -> TmIcons.Home
-    Destination.Chats -> BrowseTab.Chats.icon
-    Destination.Favourites -> TmIcons.StarOutline
-    Destination.History -> BrowseTab.History.icon
-    Destination.Downloads -> TmIcons.Download
-    Destination.Settings -> TmIcons.Settings
-}
-
-/**
- * The wide side bar: the name and version, then Home, History, Favourites, Chats and Downloads,
- * with Settings and Update pinned at the bottom. The entries are the shared ones in :ui
- * ([navGroups]), so the phone's drawer and the television's rail list the same places. The
- * folders are chips on the Chats page, and Chats stays lit while one of them is open.
- */
-@Composable
-internal fun Sidebar(
-    state: ShellState,
-    update: NavUpdate? = null,
-    folders: List<ChatFolderSummary> = Td.folders.collectAsState().value,
-) {
-    val s = LocalStrings.current
-    val sections = remember(folders) { browseSections(folders) }
-    val inFlight = rememberDownloadsInFlight()
-    // Wide enough for a German or Malayalam label beside a badge, with room to breathe: the side
-    // bar is the frame of every page, and a cramped frame makes the whole window feel cramped.
-    Column(Modifier.width(SIDEBAR_WIDTH).fillMaxHeight().padding(horizontal = 16.dp, vertical = 16.dp)) {
-        NavBrand(BuildInfo.VERSION, Modifier.padding(horizontal = 12.dp, vertical = 14.dp))
-        Spacer(Modifier.height(12.dp))
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            navGroups(sections).flatMap { it.entries }.forEach { entry ->
-                val target = entry.destination()
-                SidebarItem(
-                    label = if (entry is NavEntry.Section) entry.section.label else s.navDownloads,
-                    icon = target?.icon() ?: (entry as NavEntry.Section).section.icon,
-                    badge = if (entry == NavEntry.Downloads && inFlight > 0) inFlight.toString() else null,
-                    selected = when {
-                        target != null -> state.destination == target
-                        else -> state.destination == Destination.Chats &&
-                            state.chatSection.navSection == (entry as NavEntry.Section).section
-                    },
-                    onClick = {
-                        if (target != null) state.go(target) else state.showChats(chatsTarget(state, sections))
-                    },
-                )
-            }
-        }
-        HorizontalDivider(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), color = Tone.outline)
-        // Above Settings, as on the phone and the TV, rather than among the pages: it opens the popup.
-        if (update != null) {
-            SidebarItem(
-                label = update.label,
-                icon = TmIcons.Refresh,
-                badge = update.version,
-                selected = false,
-                onClick = { state.updatePopup = true },
-                colors = NavigationDrawerItemDefaults.colors(
-                    unselectedIconColor = Tone.caution,
-                    unselectedTextColor = Tone.caution,
-                    unselectedBadgeColor = Tone.caution,
-                ),
-            )
-        }
-        SidebarItem(
-            label = Destination.Settings.label,
-            icon = Destination.Settings.icon(),
-            badge = null,
-            selected = state.destination == Destination.Settings,
-            onClick = { state.go(Destination.Settings) },
-        )
-    }
-}
-
-/**
- * Where Chats goes from the side bar or the rail: back to the chip that was open (All chats, a
- * filter or one of the folders), else to All chats.
- */
-private fun chatsTarget(state: ShellState, sections: List<BrowseSection>): BrowseSection {
-    val open = state.chatSection
-    return if (open.onChatsPage && open in sections) open else BrowseSection.of(BrowseTab.Chats)
-}
-
-/** The page an entry opens when it is a page of its own; null for a slice of the chat list. */
-private fun NavEntry.destination(): Destination? = when (this) {
-    NavEntry.Downloads -> Destination.Downloads
-    is NavEntry.Section -> when (section) {
-        BrowseSection.of(BrowseTab.Home) -> Destination.Home
-        BrowseSection.of(BrowseTab.History) -> Destination.History
-        BrowseSection.of(BrowseTab.Favorites) -> Destination.Favourites
-        else -> null
-    }
-}
-
-/** A side bar row, 46 dp rather than Material's 56: a pointer needs no thumb sized target, but a row needs air. */
-@Composable
-private fun SidebarItem(
-    label: String,
-    icon: ImageVector,
-    badge: String?,
-    selected: Boolean,
-    onClick: () -> Unit,
-    colors: androidx.compose.material3.NavigationDrawerItemColors = sidebarColors(),
-) {
-    NavigationDrawerItem(
-        // Steps down to 12 sp rather than cut: with a download count beside it, Malayalam's
-        // "ഡൗൺലോഡുകൾ" was "ഡൗൺലോഡു..." at the full size. Clip, not Ellipsis, because an
-        // ellipsized line never reports an overflow and so never steps down.
-        label = {
-            Text(
-                label,
-                maxLines = 1,
-                overflow = TextOverflow.Clip,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = MaterialTheme.typography.bodyLarge.fontSize),
-            )
-        },
-        icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp)) },
-        badge = badge?.let { { Text(it) } },
-        selected = selected,
-        onClick = onClick,
-        // The gap keeps a hovered or focused row from merging into the selected one beside it.
-        modifier = Modifier.padding(vertical = 3.dp).height(SIDEBAR_ROW),
-        colors = colors,
-    )
-}
-
-private val SIDEBAR_ROW = 46.dp
-
-private val SIDEBAR_WIDTH = 280.dp
-
-/**
- * The selected page as a full pill one step above the ground, with its icon in the accent: the
- * television rail's selected destination, so the three devices mark "you are here" the same way.
- * The words stay in the text colour, which reads on that step in both themes.
- */
-@Composable
-private fun sidebarColors(): androidx.compose.material3.NavigationDrawerItemColors =
-    NavigationDrawerItemDefaults.colors(
-        selectedContainerColor = Tone.surfaceHigh,
-        selectedIconColor = Tone.accent,
-        selectedTextColor = Tone.text,
-        selectedBadgeColor = Tone.text,
-        unselectedContainerColor = Color.Transparent,
-        unselectedIconColor = Tone.muted,
-        unselectedTextColor = Tone.text,
-    )
-
-@Composable
-private fun Rail(state: ShellState, update: NavUpdate?) {
-    val s = LocalStrings.current
-    NavigationRail(containerColor = Tone.background) {
-        Image(
-            AppLogo.Mark,
-            contentDescription = null,
-            modifier = Modifier.padding(vertical = 12.dp).size(28.dp),
-        )
-        val inFlight = rememberDownloadsInFlight()
-        val folders by Td.folders.collectAsState()
-        val sections = remember(folders) { browseSections(folders) }
-        Destination.entries.forEach { destination ->
-            val label = destination.label
-            NavigationRailItem(
-                selected = state.destination == destination,
-                onClick = {
-                    if (destination == Destination.Chats) state.showChats(chatsTarget(state, sections)) else state.go(destination)
-                },
-                icon = {
-                    if (destination == Destination.Downloads && inFlight > 0) {
-                        BadgedBox(badge = { Badge { Text(inFlight.toString()) } }) {
-                            Icon(destination.icon(), contentDescription = s.navInProgress(destination.label, inFlight))
-                        }
-                    } else {
-                        Icon(destination.icon(), contentDescription = label)
-                    }
-                },
-                label = { Text(label.substringBefore(' ')) },
-                // The side bar's pill, so the narrow window marks the page the same way.
-                colors = NavigationRailItemDefaults.colors(
-                    indicatorColor = Tone.surfaceHigh,
-                    selectedIconColor = Tone.accent,
-                    selectedTextColor = Tone.text,
-                    unselectedIconColor = Tone.muted,
-                    unselectedTextColor = Tone.muted,
-                ),
-            )
-        }
-        // The rail cuts labels at the first space, so the version rides in a badge on the icon.
-        if (update != null) {
-            NavigationRailItem(
-                selected = false,
-                onClick = { state.updatePopup = true },
-                icon = {
-                    BadgedBox(badge = {
-                        Badge(containerColor = Tone.caution, contentColor = Tone.readableOn(Tone.caution)) {
-                            Text(update.version)
-                        }
-                    }) {
-                        Icon(TmIcons.Refresh, contentDescription = "${update.label} ${update.version}")
-                    }
-                },
-                label = { Text(update.label.substringBefore(' ')) },
-                colors = NavigationRailItemDefaults.colors(
-                    unselectedIconColor = Tone.caution,
-                    unselectedTextColor = Tone.caution,
-                ),
-            )
-        }
-    }
-}
 
 /**
  * The setup after sign in (CP67) over the whole window, once the chat list is in or after a wait

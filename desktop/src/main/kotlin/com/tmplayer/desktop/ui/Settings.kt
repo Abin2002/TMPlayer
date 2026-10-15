@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
@@ -121,6 +123,8 @@ fun SettingsPage(
     version: String = "",
     /** The chat list as loaded, for the favourites "Only my folders" would strand. */
     chatList: List<com.tmplayer.data.ChatSummary> = emptyList(),
+    /** The signed in account, shown over the rows; null leaves the header out. */
+    account: com.tmplayer.data.Account? = null,
 ) {
     val s = LocalStrings.current
     var showAbout by remember { mutableStateOf(false) }
@@ -213,6 +217,8 @@ fun SettingsPage(
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
             PageHeader(s.settingsTitle, if (version.isBlank()) null else s.settingsAppVersion(version))
+            // Whose library this is, centred over the rows, as the phone's Settings opens.
+            if (account != null) AccountHeader(account, Modifier.widthIn(max = 760.dp).padding(horizontal = pageMargin()))
             SettingsColumn(
                 Modifier.widthIn(max = 760.dp).padding(horizontal = pageMargin(), vertical = 8.dp),
             ) {
@@ -621,15 +627,14 @@ fun SettingsPage(
                     OutlinedButton(onClick = { showAbout = true }) { Text(s.commonOpen) }
                 }
 
-                Group(s.settingsAccount)
-                Setting(s.settingsSignOut, s.settingsSignOutLoses) {
-                    OutlinedButton(onClick = { confirmSignOut = true }) { Text(s.signoutConfirm, color = Tone.danger) }
-                }
+                // The one press here that ends the session: a full width button in the danger
+                // colour at the very end, with no heading of its own. It still asks first.
+                SignOutButton(s.settingsSignOut) { confirmSignOut = true }
                 Text(
                     s.settingsPrivacyNote,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Tone.muted,
-                    modifier = Modifier.padding(start = SETTING_INSET, end = SETTING_INSET, top = 12.dp, bottom = 24.dp),
+                    modifier = Modifier.padding(start = SETTING_INSET, end = SETTING_INSET, top = 12.dp, bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                 )
             }
         }
@@ -819,6 +824,40 @@ private class Confirm(val title: String, val message: String, val detail: String
  * [SettingsColumn] the rows that follow it, up to the next label or anything that is not a
  * [Setting], are drawn as one card.
  */
+/** The signed in account over Settings' rows: a large picture, the name and @username under it, centred. */
+@Composable
+private fun AccountHeader(account: com.tmplayer.data.Account, modifier: Modifier = Modifier) {
+    androidx.compose.foundation.layout.Column(
+        modifier.fillMaxWidth().padding(top = 4.dp, bottom = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp),
+    ) {
+        androidx.compose.foundation.layout.Box(Modifier.padding(bottom = 8.dp)) { ChatAvatar(account.miniThumbnail, account.photoFileId, account.name, 88.dp) }
+        Text(account.name, style = MaterialTheme.typography.titleLarge, color = Tone.text, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        if (account.username.isNotBlank()) {
+            // Isolated left to right, or an Arabic or Persian interface draws "name@".
+            Text("\u2066@${account.username}\u2069", style = MaterialTheme.typography.bodyMedium, color = Tone.muted, maxLines = 1)
+        }
+    }
+}
+
+/** Sign out at the end of Settings: full width, in the danger colour. */
+@Composable
+private fun SignOutButton(label: String, onClick: () -> Unit) {
+    androidx.compose.material3.Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().padding(top = 20.dp).height(48.dp),
+        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = Tone.danger,
+            contentColor = MaterialTheme.colorScheme.onError,
+        ),
+    ) {
+        androidx.compose.material3.Icon(com.tmplayer.ui.icons.TmIcons.SignOut, contentDescription = null, modifier = Modifier.size(20.dp))
+        androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
+        Text(label, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
 @Composable
 internal fun Group(title: String) {
     SettingsSectionLabel(

@@ -1,0 +1,298 @@
+package com.tmplayer.desktop.ui
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.tmplayer.data.ChatSummary
+import com.tmplayer.desktop.os.OsInfo
+import com.tmplayer.ui.components.FloatingBarIcon
+import com.tmplayer.ui.components.FloatingChrome
+import com.tmplayer.ui.components.FloatingRoundButton
+import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.icons.TmIcons
+import com.tmplayer.ui.nav.BackHandler
+import com.tmplayer.ui.theme.FloatingTone
+import com.tmplayer.ui.theme.Tone
+import com.tmplayer.ui.theme.floatingBorder
+
+/*
+ * A chat's own chrome on the desktop, as on the phone: Back as a round floating button at the top
+ * start with the chat's picture and name in a pill beside it, and the chat's actions in a floating
+ * bar at the foot (search, the star, sort, rows or tiles, the poster size and refresh). The grid
+ * scrolls under both. The search folds into the bar: opened, the bar becomes the field, with the
+ * recent searches as plain words on a panel just over it.
+ */
+
+/** How far the grid's first row sits from the top, clear of Back and the chat's pill. */
+internal val ChatTopClearance: Dp = 16.dp + FloatingChrome.Button + 12.dp
+
+/** How much of the foot of the page the chat's bar keeps, its margin and a gap included. */
+internal val ChatBarClearance: Dp = 16.dp + FloatingChrome.LabelledBar + 8.dp
+
+/** Back and the chat's picture and name, floating at the top start of the page. */
+@Composable
+internal fun BoxScope.ChatTopChrome(state: ShellState, chat: ChatSummary) {
+    val s = LocalStrings.current
+    Row(
+        Modifier.align(Alignment.TopStart).padding(start = 16.dp, top = 16.dp, end = 160.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        BarTooltip(s.gridBackToChats, "Esc") {
+            FloatingRoundButton(TmIcons.ArrowBack, s.gridBackToChats, onClick = { state.closeChat() })
+        }
+        Row(
+            Modifier
+                .height(FloatingChrome.Button)
+                .shadow(FloatingChrome.Shadow, CircleShape)
+                .clip(CircleShape)
+                .background(FloatingTone.menu)
+                .border(floatingBorder(), CircleShape)
+                .windowDrag()
+                .padding(start = 5.dp, end = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            ChatAvatar(chat.miniThumbnail, chat.photoFileId, chat.title, 34.dp)
+            Text(
+                chat.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = Tone.text,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(max = 420.dp),
+            )
+        }
+    }
+}
+
+/**
+ * The chat's bar at the foot of the page, centred. With [searching] it is the search field, wider,
+ * with Back to fold it again; Esc empties the field and then folds it, and Down moves into the grid.
+ */
+@Composable
+internal fun ChatBar(
+    state: ShellState,
+    searching: Boolean,
+    query: String,
+    onQuery: (String) -> Unit,
+    onOpenSearch: () -> Unit,
+    onCloseSearch: () -> Unit,
+    onSearchDown: () -> Unit,
+    recent: List<String>,
+    onClearRecent: () -> Unit,
+    favourite: Boolean,
+    onToggleFavourite: () -> Unit,
+    onSort: () -> Unit,
+    sortAnchor: com.tmplayer.ui.components.PopoverAnchor,
+    onRefresh: () -> Unit,
+) {
+    val s = LocalStrings.current
+    val command = if (OsInfo.isMac) "⌘" else "Ctrl+"
+    BackHandler(enabled = searching) { onCloseSearch() }
+    Column(
+        Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        AnimatedVisibility(
+            visible = searching && query.isBlank() && recent.isNotEmpty(),
+            enter = fadeIn() + slideInVertically { it / 3 },
+            exit = fadeOut() + slideOutVertically { it / 3 },
+        ) {
+            RecentPanel(recent, onPick = onQuery, onClear = onClearRecent)
+        }
+        if (searching) {
+            BarPill(Modifier.widthIn(min = 360.dp, max = SEARCH_WIDTH).fillMaxWidth()) {
+                BarIcon(TmIcons.ArrowBack, s.browseCloseSearch, "Esc", onCloseSearch)
+                Icon(TmIcons.Search, contentDescription = null, tint = Tone.muted, modifier = Modifier.padding(start = 4.dp).size(20.dp))
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQuery,
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = Tone.text),
+                    cursorBrush = SolidColor(Tone.accent),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp)
+                        .focusRequester(state.searchFocus)
+                        .onPreviewKeyEvent { event ->
+                            if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                            when (event.key) {
+                                Key.DirectionDown -> {
+                                    onSearchDown()
+                                    true
+                                }
+                                Key.Escape -> {
+                                    if (query.isNotEmpty()) onQuery("") else onCloseSearch()
+                                    true
+                                }
+                                else -> false
+                            }
+                        },
+                    decorationBox = { field ->
+                        Box(contentAlignment = Alignment.CenterStart) {
+                            if (query.isEmpty()) {
+                                Text(s.gridSearchThisChat, style = MaterialTheme.typography.bodyLarge, color = Tone.muted, maxLines = 1)
+                            }
+                            field()
+                        }
+                    },
+                )
+                if (query.isNotEmpty()) BarIcon(TmIcons.Close, s.browseClearSearch, null, { onQuery("") })
+            }
+        } else {
+            BarPill {
+                // Each with its name under it, as the phone's bar has them.
+                BarIcon(TmIcons.Search, s.gridSearchThisChat, "${command}F", onOpenSearch, caption = s.commonSearch)
+                BarTooltip(if (favourite) s.browseRemoveFavourite else s.browseAddFavourite, null) {
+                    FloatingBarIcon(
+                        icon = if (favourite) TmIcons.Star else TmIcons.StarOutline,
+                        label = if (favourite) s.browseRemoveFavourite else s.browseAddFavourite,
+                        onClick = onToggleFavourite,
+                        // Only the filled star is coloured, so the outline sits with the others.
+                        tint = if (favourite) Tone.accent else Tone.text,
+                        checked = favourite,
+                        caption = s.browseFavourite,
+                        // The star pops as it fills: the answer to the press, with no message.
+                        glyph = {
+                            com.tmplayer.ui.components.StarIcon(favourite, TmIcons.Star, TmIcons.StarOutline, on = Tone.accent, off = Tone.text)
+                        },
+                    )
+                }
+                BarIcon(TmIcons.Sort, s.gridSort, null, onSort, caption = s.gridSort, modifier = sortAnchor.modifier)
+                BarIcon(
+                    if (state.chatRows) TmIcons.Grid else TmIcons.List,
+                    if (state.chatRows) s.browseShowAsTiles else s.browseShowAsRows,
+                    null,
+                    { state.chatRows = !state.chatRows },
+                    caption = if (state.chatRows) s.browseAsTiles else s.browseAsRows,
+                )
+                if (!state.chatRows) {
+                    // The desktop's own: a window has room for larger posters, or for more of them.
+                    BarDivider()
+                    BarIcon(TmIcons.Remove, s.browseSmallerPosters, null, { state.stepPoster(-1) }, enabled = state.posterWidth != POSTER_STEPS.first())
+                    BarIcon(TmIcons.Add, s.browseLargerPosters, null, { state.stepPoster(1) }, enabled = state.posterWidth != POSTER_STEPS.last())
+                }
+                BarDivider()
+                // The phone pulls the grid down for this; a window has the button and F5.
+                BarIcon(TmIcons.Refresh, s.commonRefresh, "F5", onRefresh)
+            }
+        }
+    }
+}
+
+/** The floating pill the bar's buttons sit in: the floating bar's own look. */
+@Composable
+private fun BarPill(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
+    Row(
+        modifier
+            .height(FloatingChrome.LabelledBar)
+            .shadow(FloatingChrome.Shadow, CircleShape)
+            .clip(CircleShape)
+            .background(FloatingTone.menu)
+            .border(floatingBorder(), CircleShape)
+            .padding(horizontal = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
+}
+
+@Composable
+private fun BarIcon(
+    icon: ImageVector,
+    label: String,
+    shortcut: String?,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    caption: String? = null,
+    modifier: Modifier = Modifier,
+) {
+    BarTooltip(label, shortcut) { FloatingBarIcon(icon, label, onClick, modifier = modifier, enabled = enabled, caption = caption) }
+}
+
+@Composable
+private fun BarDivider() {
+    Box(Modifier.padding(horizontal = 4.dp).width(1.dp).height(24.dp).background(Tone.outline))
+}
+
+/** The recent searches, plain words with a history mark on one panel, Clear at its end. */
+@Composable
+private fun RecentPanel(searches: List<String>, onPick: (String) -> Unit, onClear: () -> Unit) {
+    val s = LocalStrings.current
+    Row(
+        Modifier
+            .widthIn(max = SEARCH_WIDTH)
+            .shadow(6.dp, RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(24.dp))
+            .background(Tone.surfaceHigh)
+            .border(floatingBorder(), RoundedCornerShape(24.dp))
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        for (recent in searches) {
+            // No box round each: the panel already says these go together.
+            Row(
+                Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable(role = Role.Button) { onPick(recent) }
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(TmIcons.History, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(18.dp))
+                Text(recent, style = MaterialTheme.typography.bodyMedium, color = Tone.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        Spacer(Modifier.width(4.dp))
+        TextButton(onClick = onClear) { Text(s.commonClear) }
+    }
+}
+
+private val SEARCH_WIDTH = 600.dp

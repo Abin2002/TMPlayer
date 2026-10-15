@@ -1,6 +1,11 @@
 package com.tmplayer.desktop.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -326,6 +331,8 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
                     }
                 },
                 copyStarted = { SettingsStore.progressKey(it.chatId, it.messageId) in progress },
+                // Play's everyday companions under it, the rest at the foot, as on the phone.
+                actionsAtFoot = true,
             )
         }
     }
@@ -365,3 +372,36 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
         )
     }
 }
+
+/**
+ * The desktop's [com.tmplayer.ui.components.SheetHost]: what a phone shows in its bottom sheet (a
+ * video's copies, with the picture over the list) as a card in the middle of the window, over the
+ * window's dim, as wide as a reading column and no taller than its content or most of the window.
+ * Esc or a click outside closes it.
+ */
+val DesktopSheetHost = com.tmplayer.ui.components.SheetHost { onDismiss, _, content -> DesktopSheet(onDismiss, content) }
+
+@Composable
+private fun DesktopSheet(onDismiss: () -> Unit, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            val tall = maxHeight * 0.85f
+            Column(
+                Modifier
+                    .widthIn(max = SHEET_WIDTH)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .heightIn(max = tall)
+                    .clip(com.tmplayer.ui.theme.Floating.DialogShape)
+                    .background(FloatingTone.sheet)
+                    .border(floatingBorder(), com.tmplayer.ui.theme.Floating.DialogShape),
+                content = content,
+            )
+        }
+    }
+}
+
+private val SHEET_WIDTH = 600.dp

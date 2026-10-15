@@ -253,6 +253,12 @@ fun PageHeader(
     subtitlePending: Boolean = false,
     leading: (@Composable () -> Unit)? = null,
     onArt: Boolean = false,
+    /**
+     * The title in the middle of the window rather than at its start, as the phone's Chats page
+     * has it: [leading] keeps the start and [actions] the end, each given the same share of the
+     * row so the title is centred on the page whatever sits beside it.
+     */
+    centred: Boolean = false,
     actions: @Composable () -> Unit = {},
 ) {
     val ink = if (onArt) Tone.onArt else LocalContentColor.current
@@ -275,24 +281,40 @@ fun PageHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            leading?.invoke()
-            Column(Modifier.weight(1f)) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.displaySmall.trackedFor(title),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (subtitle != null) {
-                    Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = if (onArt) Tone.onArtMuted else Tone.muted)
-                } else if (subtitlePending) {
-                    SubtitleSkeleton()
+            val heading: @Composable (Modifier) -> Unit = { headingModifier ->
+                Column(headingModifier, horizontalAlignment = if (centred) Alignment.CenterHorizontally else Alignment.Start) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.displaySmall.trackedFor(title),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (subtitle != null) {
+                        Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = if (onArt) Tone.onArtMuted else Tone.muted)
+                    } else if (subtitlePending) {
+                        SubtitleSkeleton()
+                    }
                 }
             }
-            actions()
-            if (chrome != null) {
-                if (inSight) RegisterWindowControls()
-                WindowControls()
+            val end: @Composable () -> Unit = {
+                actions()
+                if (chrome != null) {
+                    if (inSight) RegisterWindowControls()
+                    WindowControls()
+                }
+            }
+            if (centred) {
+                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) { leading?.invoke() }
+                heading(Modifier.widthIn(max = 560.dp))
+                Row(
+                    Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) { end() }
+            } else {
+                leading?.invoke()
+                heading(Modifier.weight(1f))
+                end()
             }
         }
     }
