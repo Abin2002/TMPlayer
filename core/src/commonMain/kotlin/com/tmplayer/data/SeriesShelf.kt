@@ -303,12 +303,13 @@ object SeriesShelf {
         // its own and no such word is a short film, not an extra.
         fun titleKey(index: Int) = keyOf(names[index].title)
         val featureOf = HashMap<String, String>()
+        val featureYear = HashMap<String, Int?>()
         for (index in loose) {
             val item = items[index]
             if (names[index].extra != null || strict[index] != null) continue
             if (!isFeature(shown[item.id] ?: item, durationOf)) continue
             val key = titleKey(index).ifEmpty { continue }
-            featureOf.putIfAbsent(key, group[item.id] ?: item.id)
+            if (featureOf.putIfAbsent(key, group[item.id] ?: item.id) == null) featureYear[key] = names[index].year
         }
         val after = HashMap<String, MutableList<MediaItem>>()
         val attached = HashSet<String>()
@@ -317,10 +318,13 @@ object SeriesShelf {
             if (item.id in group || separate[index] || strict[index] != null) continue
             val length = durationOf(item)
             val short = length in 1 until SameVideo.SHORT_SEC
-            val feature = titleKey(index).takeIf { it.isNotEmpty() }?.let { featureOf[it] }
+            val key = titleKey(index)
+            val feature = key.takeIf { it.isNotEmpty() }?.let { featureOf[it] }
             val small = item.sizeBytes in 1 until SameVideo.FEATURE_BYTES
             val word = names[index].extra?.takeIf { feature != null || short || small }
-            val kind = word ?: ExtraKind.Extra.takeIf { short && feature != null && names[index].year == null } ?: continue
+            val year = names[index].year
+            val sameFilm = year == null || year == featureYear[key]
+            val kind = word ?: ExtraKind.Extra.takeIf { short && feature != null && sameFilm } ?: continue
             val labelled = item.copy(extra = kind)
             shown[item.id] = labelled
             if (feature != null && feature != item.id) {
@@ -474,6 +478,8 @@ object SeriesShelf {
      */
     private fun loose(item: MediaItem): Found? {
         val caption = item.caption.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
+        // Most files carry no bare "E05" at all, and finding that out is cheaper than a parse.
+        if (!MAYBE_LOOSE.containsMatchIn(item.nameForParsing) && (caption == null || !MAYBE_LOOSE.containsMatchIn(caption))) return null
         val name = listOfNotNull(item.nameForParsing.ifBlank { null }, caption)
             .firstNotNullOfOrNull { MediaName.looseEpisode(it) }
             ?: return null
@@ -501,9 +507,11 @@ object SeriesShelf {
     /** The keys the file name alone and the caption alone would give, other than [key]. */
     private fun alternatesOf(item: MediaItem, key: String): List<String> {
         val caption = item.caption.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
+        // Without a caption the file name alone gave [key] already.
+        if (caption == null) return emptyList()
         return listOfNotNull(
-            item.fileName.ifBlank { null }?.let { MediaName.parse(it).title },
-            caption?.let { MediaName.parse(it).title },
+            item.fileName.ifBlank { null }?.let { if (it == item.nameForParsing) item.parsedNameAlone.title else MediaName.parse(it).title },
+            MediaName.parse(caption).title,
         ).map(::keyOf).filter { it.isNotEmpty() && it != key }.distinct()
     }
 
@@ -590,5 +598,8 @@ object SeriesShelf {
     }
 
     private val NOT_WORD = Regex("""[^\p{L}\p{M}\p{N}]+""")
+
+    /** Something [MediaName.looseEpisode] could read: an "E" and a number, not inside a word. */
+    private val MAYBE_LOOSE = Regex("""(?i)(?<![a-z])e\d{1,3}(?!\d)""")
     private val SPACES = Regex("""\s+""")
 }

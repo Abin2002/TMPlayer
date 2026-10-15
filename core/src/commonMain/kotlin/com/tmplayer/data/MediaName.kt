@@ -148,6 +148,7 @@ object MediaName {
         val parsed = parse(fileName, caption, maxYear)
         val release = parsed.year != null || parsed.isEpisode || EpisodeCopies.markers(fileName).isNotEmpty() ||
             endsInTags(tidy) || parsed.part != null || parsed.extra != null ||
+            (HARD_TAGS.find(tidy)?.range?.first ?: 0) > 0 ||
             (CAST_BRACKET.find(tidy)?.range?.first ?: 0) > 0
         // A name that is nothing but its marker ("Episode 1") reads back as the whole name, which
         // says it already; adding the code to it would say it twice.
@@ -422,7 +423,9 @@ object MediaName {
             val at = match.range.first
             at in 1 until bound &&
                 text.substring(at, bound).replace(TAGS, " ").all { it.isWhitespace() || it in TRIM_CHARS } &&
-                clean(text.substring(0, at)).lowercase(Locale.ROOT) !in ARTICLES
+                clean(text.substring(0, at)).lowercase(Locale.ROOT) !in ARTICLES &&
+                // "Into the Web", "Tales of Tamil": a word straight after "the" or "of" is the title's.
+                text.substring(0, at).trim().substringAfterLast(' ').lowercase(Locale.ROOT) !in JOINING_WORDS
         }?.range?.first
         return listOfNotNull(hard, soft).minOrNull()
     }
@@ -536,6 +539,8 @@ object MediaName {
 
     private val ARTICLES = setOf("", "the", "a", "an")
 
+    private val JOINING_WORDS = setOf("the", "a", "an", "of", "and", "in", "on", "into", "to", "for", "with", "from", "my", "our")
+
     private val ISO_DATE = Regex("""(?<!\d)((?:19|20)\d{2})[ -](0[1-9]|1[0-2])[ -](0[1-9]|[12]\d|3[01])(?!\d)""")
     private val DAY_FIRST_DATE = Regex("""(?<!\d)(0[1-9]|[12]\d|3[01])[ -](0[1-9]|1[0-2])[ -]((?:19|20)\d{2})(?!\d)""")
 
@@ -555,7 +560,8 @@ object MediaName {
         RegexOption.IGNORE_CASE,
     )
 
-    private val LEADING_SEPARATOR =Regex("""^\s*[-:|–—]""")
+    /** A dash, a colon or a bar, the long dashes written as escapes. */
+    private val LEADING_SEPARATOR = Regex("^\\s*[-:|–—]")
 
     /**
      * A "[" after the title that opens on two words and holds no digit: "Night Train [ Arun Kumar,
