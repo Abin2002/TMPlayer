@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.performClick
@@ -131,7 +132,7 @@ class SetupRenderTest {
     /**
      * From the keyboard: each step opens on the answer set now (the recommended one on a fresh
      * sign in), Enter picks the focused one and moves on, Skip changes nothing, Back walks back,
-     * and Skip all ends the setup.
+     * and the close (Skip all) ends the setup.
      */
     @Test
     fun walkedFromTheKeyboard() = runComposeUiTest {
@@ -259,7 +260,7 @@ class SetupRenderTest {
                 Box(Modifier.size(1280.dp, 800.dp)) { SetupScreen(settings, remember { SetupState(all) }, onDone = { done = true }) }
             }
         }
-        onNode(hasText("Skip all") and hasClickAction()).performClick()
+        onNode(hasContentDescription("Skip all") and hasClickAction()).performClick()
         waitForIdle()
         assertTrue(done)
         assertFalse(runBlocking { settings.lowStorageMode.first() })
@@ -345,7 +346,7 @@ class SetupRenderTest {
         assertTrue(done)
     }
 
-    /** CP69: the setup hands over to the tour, whose Skip all ends both, and Back returns to the setup. */
+    /** CP69: the setup hands over to the tour, whose close (Skip all) ends both, and Back returns to the setup. */
     @Test
     fun setupThenTour() = runComposeUiTest {
         MetaFixture.install("on")
@@ -365,7 +366,7 @@ class SetupRenderTest {
         onNode(hasText("Keep what plays") and hasClickAction()).assertExists()
         onNode(hasText("Skip") and hasClickAction()).performClick()
         waitForIdle()
-        onNode(hasText("Skip all") and hasClickAction()).performClick()
+        onNode(hasContentDescription("Skip all") and hasClickAction()).performClick()
         waitForIdle()
         assertTrue(done)
     }
