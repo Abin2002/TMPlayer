@@ -138,7 +138,10 @@ linked as "mediamp macOS source" from the release notes.
 
 tdl-coroutines' JVM artifact (see "Shared") bundles TDLib 1.8.67 for Windows, Linux and macOS. On Windows
 it ships OpenSSL 3.6.4 (`libcrypto-3-x64.dll`, `libssl-3-x64.dll`, Apache-2.0) and zlib (`z.dll`,
-Zlib) beside it; on Linux OpenSSL 3.0.13 (Apache-2.0) is linked into `libtdjsonjava.so`.
+Zlib) beside it; on Linux OpenSSL 3.0.13 (Apache-2.0) is linked into `libtdjsonjava.so`. On macOS
+it links OpenSSL 3 dynamically, so the macOS build carries `libcrypto.3.dylib` and `libssl.3.dylib`
+(Apache-2.0) in the app's resources: Homebrew's `openssl@3` bottle as installed on the Mac that
+built that release, source at <https://github.com/openssl/openssl> and in Homebrew's formula.
 
 ### Java runtime
 

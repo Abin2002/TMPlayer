@@ -77,6 +77,9 @@ fun main(args: Array<String>) {
     NonReparentingWm.applyIfNeeded()
     // TDLib's Windows DLL needs the C++ runtime; take the bundled JVM's copy (see WindowsRuntime).
     WindowsRuntime.preload()
+    // TDLib's macOS build needs OpenSSL 3, which the app carries (see MacOpenSsl). A failure here
+    // shows as TDLib's own load error at sign in, which names the library.
+    runCatching { MacOpenSsl.preload() }
     // A second launch hands its arguments (later, tg: links) to the first and leaves.
     var raise: () -> Unit = {}
     if (!SingleInstance.acquire(args.toList()) { java.awt.EventQueue.invokeLater { raise() } }) return

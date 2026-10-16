@@ -34,9 +34,18 @@ runs:
         codesign --verify --deep --strict --verbose=2 "$app"
         /usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$app/Contents/Info.plist"
 
-    - name: Self-test the app bundle
+    - name: Check no library points at the build machine
       shell: bash
-      run: desktop/build/compose/binaries/main-release/app/TMPlayer.app/Contents/MacOS/TMPlayer --self-test
+      run: scripts/check-macho-portable.sh desktop/build/compose/binaries/main-release/app/TMPlayer.app
+
+    # The runner has Homebrew, a Mac the DMG goes to may not: with it moved out of the way, a
+    # library that still needs one of its files fails here rather than at the viewer's sign in.
+    - name: Self-test the app bundle, without Homebrew
+      shell: bash
+      run: |
+        sudo mv /opt/homebrew /opt/homebrew-hidden
+        trap 'sudo mv /opt/homebrew-hidden /opt/homebrew' EXIT
+        desktop/build/compose/binaries/main-release/app/TMPlayer.app/Contents/MacOS/TMPlayer --self-test
 
     - name: Build the DMG
       shell: bash
@@ -50,14 +59,15 @@ runs:
         ln -s /Applications "$stage/Applications"
         hdiutil create -volname "TMPlayer $V" -srcfolder "$stage" -fs APFS -format ULMO -ov "dist/TMPlayer-$V-macos-arm64.dmg"
 
-    - name: Self-test the app from the DMG
+    - name: Self-test the app from the DMG, without Homebrew
       shell: bash
       run: |
         V="${{ inputs.version }}"
         mnt="$RUNNER_TEMP/mnt"
         mkdir -p "$mnt"
         hdiutil attach -nobrowse -readonly -mountpoint "$mnt" "dist/TMPlayer-$V-macos-arm64.dmg"
-        trap 'hdiutil detach "$mnt" || true' EXIT
+        sudo mv /opt/homebrew /opt/homebrew-hidden
+        trap 'sudo mv /opt/homebrew-hidden /opt/homebrew; hdiutil detach "$mnt" || true' EXIT
         codesign --verify --deep --strict "$mnt/TMPlayer.app"
         "$mnt/TMPlayer.app/Contents/MacOS/TMPlayer" --self-test
 
