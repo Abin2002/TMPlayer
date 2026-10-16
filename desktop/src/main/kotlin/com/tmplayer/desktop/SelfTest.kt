@@ -50,6 +50,7 @@ object SelfTest {
         }
 
         if (OsInfo.isWindows) step("msvc runtime") { WindowsRuntime.preload() }
+        if (OsInfo.isMac) step("openssl") { MacOpenSsl.preload() }
         step("tdlib") { tdlibVersion() }
         if (OsInfo.isWindows) step("msvc runtime origin") { WindowsRuntime.checkOrigin() }
         step("libmpv") { mpvVersions() }

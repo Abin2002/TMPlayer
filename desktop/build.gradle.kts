@@ -92,6 +92,10 @@ val mpvRuntime = when {
 //    only ever loads its own, so the other five are removed: about 85 MB off every package.
 //  - On a Linux host, the ELF .so entries (libtdjsonjava, libmpv and FFmpeg) are stripped of
 //    symbols that nothing reads at runtime. Windows DLLs are left alone.
+//  - On a Mac host, the kept libtdjsonjava.dylib has its references to the build machine's
+//    Homebrew (libjvm, libssl, libcrypto by absolute /opt/homebrew paths, upstream
+//    g000sha256/tdl-coroutines#163) rewritten to @rpath/<name> and is signed again ad hoc. The
+//    app carries the OpenSSL they then resolve to (macOpenSsl below, loaded by MacOpenSsl).
 // A signed jar (META-INF/*.SF) is only ever stored, never changed, so its signature stays valid.
 // The transform runs per host OS, since the kept TDLib and the strip step both depend on it, and
 // the installers are built on the matching host. The self-test proves the TDLib that remains loads.
@@ -101,7 +105,7 @@ val tdlibKeep = when {
     else -> if (hostArm) "linux/arm64/" else "linux/x64/"
 }
 // The name is the transform's cache identity: change it whenever the transform's output changes.
-val jarsStored: Attribute<Boolean> = Attribute.of("com.tmplayer.jarsStoredV2", Boolean::class.javaObjectType)
+val jarsStored: Attribute<Boolean> = Attribute.of("com.tmplayer.jarsStoredV3", Boolean::class.javaObjectType)
 
 abstract class StoreRuntimeJars : TransformAction<StoreRuntimeJars.Params> {
     interface Params : TransformParameters {
@@ -110,6 +114,9 @@ abstract class StoreRuntimeJars : TransformAction<StoreRuntimeJars.Params> {
 
         @get:Input
         val stripElf: Property<Boolean>
+
+        @get:Input
+        val patchMachO: Property<Boolean>
     }
 
     @get:InputArtifact
@@ -126,6 +133,7 @@ abstract class StoreRuntimeJars : TransformAction<StoreRuntimeJars.Params> {
         val keep = parameters.keep.get()
         val native = Regex("^(linux|macos|windows)/")
         val strip = parameters.stripElf.get()
+        val patchMac = parameters.patchMachO.get()
         val tmp = Files.createTempDirectory("tmplayer-jar").toFile()
         try {
             ZipFile(jar).use { zin ->
@@ -146,6 +154,7 @@ abstract class StoreRuntimeJars : TransformAction<StoreRuntimeJars.Params> {
                             val key = entry.crc * 31 + bytes.size
                             bytes = stripped.getOrPut(key) { stripElf(bytes, tmp) }
                         }
+                        if (tdlib && patchMac && entry.name.endsWith(".dylib")) bytes = portableMachO(bytes, tmp)
                         val crc = CRC32().apply { update(bytes) }
                         zout.putNextEntry(
                             ZipEntry(entry.name).apply {
@@ -173,6 +182,34 @@ abstract class StoreRuntimeJars : TransformAction<StoreRuntimeJars.Params> {
         }
     }
 
+    /**
+     * Points every reference to a library outside the system (/usr/lib, /System) at @rpath/<name>
+     * and signs the result ad hoc again, as Apple Silicon requires. Fails the build rather than
+     * ship a library that only loads on a Mac with the build machine's Homebrew.
+     */
+    private fun portableMachO(bytes: ByteArray, dir: File): ByteArray {
+        val f = File(dir, "lib.dylib")
+        f.writeBytes(bytes)
+        val foreign = machORefs(f, dir).filter { it.startsWith("/") && !it.startsWith("/usr/lib/") && !it.startsWith("/System/") }
+        if (foreign.isEmpty()) return bytes
+        run(dir, "install_name_tool", *foreign.flatMap { listOf("-change", it, "@rpath/" + it.substringAfterLast('/')) }.toTypedArray(), f.path)
+        run(dir, "codesign", "--force", "--sign", "-", f.path)
+        val left = machORefs(f, dir).filter { it in foreign }
+        check(left.isEmpty()) { "still linked by absolute path: $left" }
+        return f.readBytes()
+    }
+
+    /** The libraries a Mach-O file loads, by `otool -L` (its own install name included). */
+    private fun machORefs(f: File, dir: File): List<String> =
+        run(dir, "otool", "-L", f.path).lines().drop(1).map { it.trim().substringBefore(" (") }.filter { it.isNotEmpty() }
+
+    private fun run(dir: File, vararg cmd: String): String {
+        val p = ProcessBuilder(*cmd).directory(dir).redirectErrorStream(true).start()
+        val out = p.inputStream.readBytes().decodeToString()
+        check(p.waitFor() == 0) { "${cmd.first()} failed: $out" }
+        return out
+    }
+
     /** Runs `strip --strip-unneeded` over a copy, and keeps the original if strip is missing or fails. */
     private fun stripElf(bytes: ByteArray, dir: File): ByteArray {
         val f = File(dir, "lib.so")
@@ -194,7 +231,8 @@ dependencies {
         from.attribute(jarsStored, false).attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "jar")
         to.attribute(jarsStored, true).attribute(ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE, "jar")
         parameters.keep.set(tdlibKeep)
-        parameters.stripElf.set(!hostOs.contains("win"))
+        parameters.stripElf.set(!hostOs.contains("win") && !hostMac)
+        parameters.patchMachO.set(hostMac)
     }
 }
 configurations.named("runtimeClasspath") {
@@ -303,6 +341,46 @@ val syncLegalResources by tasks.registering(Sync::class) {
     into(legalResources.map { it.dir("common") })
 }
 tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(syncLegalResources) }
+
+// The OpenSSL 3 that macOS TDLib links (see StoreRuntimeJars and MacOpenSsl): Homebrew's openssl@3
+// on the Mac that builds the DMG (or -PmacOpenSsl=<its prefix>), copied into the macos-arm64
+// resources, which Compose merges into the app's resources on a Mac only. Each library gets an
+// @rpath install name, libssl finds libcrypto by that name, nothing points into Homebrew any more,
+// and both are signed again ad hoc.
+val macOpenSsl by tasks.registering {
+    onlyIf { hostMac }
+    val out = legalResources.map { it.dir("macos-arm64") }
+    val prefix = providers.gradleProperty("macOpenSsl")
+    outputs.dir(out)
+    doLast {
+        fun run(vararg cmd: String): String {
+            val p = ProcessBuilder(*cmd).redirectErrorStream(true).start()
+            val text = p.inputStream.readBytes().decodeToString()
+            check(p.waitFor() == 0) { "${cmd.joinToString(" ")} failed: $text" }
+            return text
+        }
+        val lib = File(prefix.orNull ?: run("brew", "--prefix", "openssl@3").trim(), "lib")
+        val dir = out.get().asFile
+        dir.deleteRecursively()
+        dir.mkdirs()
+        val names = listOf("libcrypto.3.dylib", "libssl.3.dylib")
+        names.forEach { name ->
+            val target = File(dir, name)
+            // The real file, not Homebrew's symlink to it, and writable for install_name_tool.
+            File(lib, name).canonicalFile.copyTo(target, overwrite = true)
+            target.setWritable(true)
+            val refs = run("otool", "-L", target.path).lines().drop(2).map { it.trim().substringBefore(" (") }.filter { it.isNotEmpty() }
+            val changes = refs.filter { it.startsWith("/") && !it.startsWith("/usr/lib/") && !it.startsWith("/System/") }
+                .flatMap { listOf("-change", it, "@rpath/" + it.substringAfterLast('/')) }
+            run("install_name_tool", "-id", "@rpath/$name", *changes.toTypedArray(), target.path)
+            run("codesign", "--force", "--sign", "-", target.path)
+            val left = run("otool", "-L", target.path).lines().drop(1).map { it.trim() }
+                .filter { it.startsWith("/") && !it.startsWith("/usr/lib/") && !it.startsWith("/System/") }
+            check(left.isEmpty()) { "$name still links $left" }
+        }
+    }
+}
+tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(macOpenSsl) }
 
 compose.desktop {
     application {
