@@ -19,6 +19,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import com.tmplayer.ui.components.TouchPullRefresh
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
@@ -374,9 +376,21 @@ private fun HomeChatsPager(
         key = { it },
         modifier = Modifier.fillMaxSize(),
     ) { index ->
-        page(swipeSection(index, chats))
+        // Only the page on screen may scroll something into view: the Chats page beside Home
+        // bringing its chosen chip into view would turn the pager to it on launch.
+        val onScreen by remember(index) { derivedStateOf { pager.settledPage == index } }
+        CompositionLocalProvider(LocalPageOnScreen provides onScreen) {
+            page(swipeSection(index, chats))
+        }
     }
 }
+
+/**
+ * Whether the page this is composed in is the one on screen. False for a page of the Home and
+ * Chats pager kept composed beside the one showing, where a request to bring something into view
+ * would scroll the pager itself.
+ */
+internal val LocalPageOnScreen = androidx.compose.runtime.compositionLocalOf { true }
 
 /**
  * One page of the phone's browser under its title. Home, Favourites and History keep the title
@@ -396,7 +410,9 @@ private fun PhonePageFrame(
     val pinned = section.onChatsPage
     val scrollBehavior = if (pinned) TopAppBarDefaults.pinnedScrollBehavior() else TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
-        modifier = if (pinned) Modifier else Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        // Home has no top bar to collapse: the behaviour's limit is never measured there, so it
+        // would take every drag for itself and the page would not scroll.
+        modifier = if (pinned || section.isHome) Modifier else Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             if (section.isHome) {
                 // No title: Home's featured carousel is the top of the page.

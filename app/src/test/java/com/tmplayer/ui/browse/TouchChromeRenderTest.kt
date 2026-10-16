@@ -22,6 +22,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -86,15 +87,15 @@ class TouchChromeRenderTest {
 
     @Test
     @Config(sdk = [35], qualifiers = "w411dp-h891dp-port-night-xhdpi")
-    fun settingsLightsThePicture() {
+    fun settingsLightsItsButton() {
         val chrome = TouchChrome()
         render("chrome-settings.png", chrome, "settings") {
-            TouchPage(TouchPageSpec(current = null, inProfile = true))
+            TouchPage(TouchPageSpec(current = TouchDestination.Settings))
             rows()()
         }
-        // Settings lives behind the picture, so the picture is lit rather than a button.
-        assertNull(chrome.specs["settings"]?.current)
-        assertTrue(chrome.specs["settings"]!!.inProfile)
+        // Settings is on the bar itself, so its own button is lit and the picture is not.
+        assertEquals(TouchDestination.Settings, chrome.specs["settings"]?.current)
+        assertFalse(chrome.specs["settings"]!!.inProfile)
         assertEquals("settings", chrome.pageKey)
     }
 

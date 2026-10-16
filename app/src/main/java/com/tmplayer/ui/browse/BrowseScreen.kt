@@ -2113,7 +2113,8 @@ private fun ChipRowItems(
                 val view = remember { BringIntoViewRequester() }
                 var size by remember { mutableStateOf(IntSize.Zero) }
                 val margin = with(LocalDensity.current) { insets.end.toPx() }
-                if (chip.selected && size != IntSize.Zero) {
+                val onScreen = LocalPageOnScreen.current
+                if (chip.selected && size != IntSize.Zero && onScreen) {
                     LaunchedEffect(Unit) {
                         runCatching { view.bringIntoView(Rect(-margin, 0f, size.width + margin, size.height.toFloat())) }
                     }

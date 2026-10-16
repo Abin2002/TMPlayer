@@ -226,7 +226,7 @@ internal fun PhoneSearchScreen(
             Row(
                 Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = BAR_MARGIN),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(SEARCH_GAP),
             ) {
                 SearchField(
                     text = text,
@@ -239,9 +239,9 @@ internal fun PhoneSearchScreen(
                 val closePress = remember { MutableInteractionSource() }
                 Box(
                     Modifier
-                        .size(BAR_HEIGHT - 8.dp)
+                        .size(BAR_HEIGHT)
                         .pressScale(closePress)
-                        .shadow(6.dp, CircleShape)
+                        .shadow(BAR_SHADOW, CircleShape)
                         .clip(CircleShape)
                         .background(FloatingTone.menu)
                         .border(floatingBorder(), CircleShape)
@@ -293,8 +293,8 @@ private fun SearchField(
     Row(
         modifier
             .onFocusChanged { focused = it.hasFocus }
-            .height(BAR_HEIGHT - 4.dp)
-            .shadow(6.dp, CircleShape)
+            .height(BAR_HEIGHT)
+            .shadow(BAR_SHADOW, CircleShape)
             .clip(CircleShape)
             .background(FloatingTone.menu)
             .border(floatingBorder(), CircleShape)

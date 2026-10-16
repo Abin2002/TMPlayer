@@ -96,6 +96,7 @@ import com.tmplayer.ui.browse.onChatsPage
 import com.tmplayer.ui.browse.TouchNav
 import com.tmplayer.ui.browse.TouchNavHost
 import com.tmplayer.ui.browse.TouchPage
+import com.tmplayer.ui.browse.TouchDestination
 import com.tmplayer.ui.browse.TouchPageSpec
 import com.tmplayer.ui.browse.TouchRoutes
 import com.tmplayer.ui.browse.LocalTouchPageKey
@@ -1514,11 +1515,11 @@ private fun Root() {
                 // With no PIN there is nothing to ask, and a PIN set from inside Settings must not
                 // lock the viewer out of the page they set it on.
                 LaunchedEffect(lock?.pinSet) { if (lock?.pinSet == false) settingsUnlocked = true }
-                // The bar is on Settings' own list, with the picture lit, since Settings is behind it;
-                // a page under it, or the PIN pad in front of it, has a back arrow instead.
+                // The bar is on Settings' own list, with its Settings button lit; a page under it,
+                // or the PIN pad in front of it, has a back arrow instead.
                 TouchPage(
                     if (lock != null && (!lock.pinSet || settingsUnlocked) && settingsPage == null) {
-                        TouchPageSpec(current = null, inProfile = true)
+                        TouchPageSpec(current = TouchDestination.Settings)
                     } else {
                         null
                     },

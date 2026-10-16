@@ -108,16 +108,17 @@ import com.tmplayer.ui.theme.rememberReducedMotion
 
 /**
  * Where the phone's floating bar can take the viewer, in the bar's order. The profile button after
- * them opens [ProfilePopover] instead, where Settings lives with the viewer's own lists.
+ * them opens [ProfilePopover] instead, with the viewer's own lists. Search is not on the bar: it is
+ * the round button beside it on Home and Chats.
  */
-internal enum class TouchDestination { Home, Chats, Search }
+internal enum class TouchDestination { Home, Chats, Settings }
 
 /** The profile picture's place on the bar, after every [TouchDestination]. */
 internal val PROFILE_SLOT = TouchDestination.entries.size
 
 /**
  * Which of the bar's slots carries the sliding highlight: [current]'s button, or the picture on a
- * page behind it ([inProfile]: Favourites, History, Watch later, Downloads, Settings), or none.
+ * page behind it ([inProfile]: Favourites, History, Watch later, Downloads), or none.
  */
 internal fun barHighlightIndex(current: TouchDestination?, inProfile: Boolean = false): Int? =
     current?.ordinal ?: if (inProfile) PROFILE_SLOT else null
@@ -147,7 +148,7 @@ internal class TouchNav(
  * What one page asks of the floating bar while it is the page on screen.
  *
  * @param current the bar button lit for this page, or null for a page behind the picture.
- * @param inProfile the picture is ringed: Favourites, History, Watch later, Downloads and Settings.
+ * @param inProfile the picture is ringed: Favourites, History, Watch later and Downloads.
  * @param hidden the bar steps out of the way for now (a search open, a selection under way)
  *   while the page still keeps its room at the foot.
  * @param actions the page's own buttons, in a small pill above the bar; null for none.
@@ -207,9 +208,9 @@ internal fun TouchPage(spec: TouchPageSpec?) {
 }
 
 /**
- * The phone's floating bar, hosted once over every page: Home, Chats, Search and the viewer's
- * picture, with the popover of Favourites, Downloads, History, Watch later, Settings and Update
- * behind the picture.
+ * The phone's floating bar, hosted once over every page: Home, Chats, Settings and the viewer's
+ * picture, with the popover of Favourites, Downloads, History, Watch later and Update behind the
+ * picture. On Home and Chats the search is a round button of its own beside the bar.
  *
  * The bar floats, so it takes no room from the listing: it slides away as the list is pushed up
  * and comes back on the first pull down, on a change of page and on the way back from the player.
@@ -304,8 +305,11 @@ internal fun TouchNavHost(
                         badged = nav.downloadCount > 0 || nav.updateVersion != null,
                         onHome = nav.onHome,
                         onChats = nav.onChats,
+                        onSettings = nav.onSettings,
                         onSearch = nav.onSearch,
                         onProfile = { profileOpen = true },
+                        // The search beside the bar only where there is something to search: Home and Chats.
+                        searchShown = shown.current == TouchDestination.Home || shown.current == TouchDestination.Chats,
                         searchButton = { modifier ->
                             if (reduced) {
                                 SearchBarButton(modifier)
@@ -334,7 +338,6 @@ internal fun TouchNavHost(
                 onDownloads = { profileOpen = false; nav.onDownloads() },
                 onHistory = { profileOpen = false; nav.onHistory(HistoryTab.Continue) },
                 onWatchLater = { profileOpen = false; nav.onHistory(HistoryTab.WatchLater) },
-                onSettings = { profileOpen = false; nav.onSettings() },
                 onUpdate = { profileOpen = false; nav.onUpdate() },
             )
         }
@@ -483,8 +486,9 @@ internal fun rememberTouchExploration(): Boolean {
  * soft shadow and the floating hairline. Each button is its icon with its name in small type under
  * it, as a tab bar has. The current page's button sits on a rounded pill in the accent, which
  * slides from button to button (and follows a swipe between Home and Chats as it goes). On a page
- * behind the picture (Favourites, History, Watch later, Downloads, Settings) the pill moves under
- * the picture, which wears an accent ring too.
+ * behind the picture (Favourites, History, Watch later, Downloads) the pill moves under the
+ * picture, which wears an accent ring too. With [searchShown] the search stands beside the bar at
+ * its end, a round button of the bar's height, which the search field grows out of.
  */
 @Composable
 private fun FloatingBar(
@@ -495,13 +499,19 @@ private fun FloatingBar(
     badged: Boolean,
     onHome: () -> Unit,
     onChats: () -> Unit,
+    onSettings: () -> Unit,
     onSearch: () -> Unit,
     onProfile: () -> Unit,
+    searchShown: Boolean,
     searchButton: @Composable (Modifier) -> Unit,
 ) {
     val s = LocalStrings.current
     val reduced = rememberReducedMotion() || Motion.reduced
-    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = BAR_MARGIN), contentAlignment = Alignment.Center) {
+    Row(
+        Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = BAR_MARGIN),
+        horizontalArrangement = Arrangement.spacedBy(SEARCH_GAP, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Row(
             Modifier
                 .height(BAR_HEIGHT)
@@ -563,14 +573,7 @@ private fun FloatingBar(
           Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(BAR_SPACING)) {
             BarButton(TmIcons.Home, s.browseTabHome, current == TouchDestination.Home, onHome)
             BarButton(TmIcons.Chats, s.browseTabChats, current == TouchDestination.Chats, onChats)
-            val searchPress = remember { MutableInteractionSource() }
-            searchButton(
-                Modifier
-                    .pressScale(searchPress)
-                    .clip(HIGHLIGHT_SHAPE)
-                    .clickable(interactionSource = searchPress, indication = ripple(), role = Role.Button, onClick = onSearch)
-                    .semantics { contentDescription = s.commonSearch },
-            )
+            BarButton(TmIcons.Settings, s.navSettings, current == TouchDestination.Settings, onSettings)
             val profilePress = remember { MutableInteractionSource() }
             Column(
                 Modifier
@@ -613,6 +616,17 @@ private fun FloatingBar(
           }
           }
         }
+        if (searchShown) {
+            val searchPress = remember { MutableInteractionSource() }
+            searchButton(
+                Modifier
+                    .pressScale(searchPress)
+                    .shadow(BAR_SHADOW, CircleShape)
+                    .clip(CircleShape)
+                    .clickable(interactionSource = searchPress, indication = ripple(), role = Role.Button, onClick = onSearch)
+                    .semantics { contentDescription = s.commonSearch },
+            )
+        }
     }
 }
 
@@ -630,16 +644,14 @@ private fun BarCaption(text: String, chosen: Boolean) {
     )
 }
 
-/** The bar's magnifier. It is the shared element the search field grows out of. */
+/** The round search beside the bar. It is the shared element the search field grows out of. */
 @Composable
 private fun SearchBarButton(modifier: Modifier) {
-    Column(
-        modifier.size(BUTTON_WIDTH, BUTTON_HEIGHT).clip(HIGHLIGHT_SHAPE).background(FloatingTone.menu),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
+        modifier.size(BAR_HEIGHT).background(FloatingTone.menu).border(floatingBorder(), CircleShape),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(TmIcons.Search, contentDescription = null, tint = Tone.text, modifier = Modifier.size(24.dp))
-        BarCaption(LocalStrings.current.commonSearch, chosen = false)
+        Icon(TmIcons.Search, contentDescription = null, tint = Tone.text, modifier = Modifier.size(26.dp))
     }
 }
 
@@ -685,8 +697,8 @@ private fun ProfilePicture(account: Account?, size: Dp) {
 
 /**
  * The viewer's own lists, behind their picture: a small card that grows out of the bottom end
- * corner over a dimmed screen, with Favourites, Downloads, History, Watch later, Settings, and
- * Update when there is one. The account and About are in Settings.
+ * corner over a dimmed screen, with Favourites, Downloads, History, Watch later, and Update when
+ * there is one. Settings is on the bar itself; the account and About are in it.
  * A tap outside, Back, or picking a row closes it.
  */
 @Composable
@@ -701,7 +713,6 @@ private fun ProfilePopover(
     onDownloads: () -> Unit,
     onHistory: () -> Unit,
     onWatchLater: () -> Unit,
-    onSettings: () -> Unit,
     onUpdate: () -> Unit,
 ) {
     val s = LocalStrings.current
@@ -755,7 +766,6 @@ private fun ProfilePopover(
                     add { m -> PopoverRow(TmIcons.Download, s.navDownloads, downloadCount.takeIf { it > 0 }?.toString(), modifier = m, onClick = onDownloads) }
                     add { m -> PopoverRow(TmIcons.History, s.browseTabHistory, null, modifier = m, onClick = onHistory) }
                     add { m -> PopoverRow(TmIcons.Clock, s.browseTabWatchLater, null, modifier = m, onClick = onWatchLater) }
-                    add { m -> PopoverRow(TmIcons.Settings, s.navSettings, null, modifier = m, onClick = onSettings) }
                     if (updateVersion != null) {
                         // Amber, as on the television's rail and the desktop's side bar: the one row that is news.
                         add { m -> PopoverRow(TmIcons.Refresh, s.navUpdate, updateVersion, ink = Tone.caution, modifier = m, onClick = onUpdate) }
@@ -831,6 +841,9 @@ internal val ACTIONS_HEIGHT = 48.dp
 /** The key a page reports under when nothing names it, which is the page outside any host. */
 internal const val DEFAULT_PAGE = "page"
 
+/** Between the bar and the round search beside it. */
+internal val SEARCH_GAP = 10.dp
+
 /** Between two of the bar's buttons. */
 private val BAR_SPACING = 4.dp
 private val PICTURE = 26.dp
@@ -838,8 +851,8 @@ internal val BAR_SHADOW = 8.dp
 private val POPOVER_WIDTH = 208.dp
 private val POPOVER_ROW = 44.dp
 
-/** The popover's rows before the divider: the four lists and Settings; Update comes after it. */
-private const val POPOVER_LISTS = 5
+/** The popover's rows before the divider: the four lists; Update comes after it. */
+private const val POPOVER_LISTS = 4
 private val POPOVER_SHAPE = RoundedCornerShape(20.dp)
 
 /** The bar coming back: quick, with a little give as it lands. */

@@ -1,5 +1,7 @@
 package com.tmplayer.ui.browse
 
+import kotlinx.coroutines.flow.first
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.foundation.background
 import androidx.compose.ui.layout.boundsInWindow
@@ -179,6 +181,18 @@ internal fun HomePane(
         val series = HomeLaunch.find(ask, rows) ?: return@LaunchedEffect
         opened.open(series)
         HomeLaunch.show.compareAndSet(ask, null)
+    }
+
+    // The carousel arrives after the rows under it (Recently added is read last), and a list keeps
+    // its first row on screen when something is put above it: Home would open scrolled past the
+    // carousel. Until the viewer has scrolled, the carousel's arrival takes Home back to its top.
+    var scrolled by remember { mutableStateOf(false) }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }.first { it }
+        scrolled = true
+    }
+    LaunchedEffect(carousel) {
+        if (touch && carousel && !scrolled) listState.scrollToItem(0)
     }
 
     // Asked for as the row would be when it first came on screen, and again after a refresh.
