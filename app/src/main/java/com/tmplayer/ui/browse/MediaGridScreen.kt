@@ -1256,7 +1256,6 @@ internal fun TouchMediaScaffold(
                     )
                 }
                 else -> StickyActionBar(compact = compact, labelled = !compact) {
-                    FloatingBarIcon(TmIcons.Search, s.gridSearchThisChat, { searching = true }, caption = caption(s.commonSearch))
                     FloatingBarIcon(
                         icon = if (isFavorite) TmIcons.Star else TmIcons.StarOutline,
                         label = if (isFavorite) s.browseRemoveFavourite else s.browseAddFavourite,
@@ -1268,13 +1267,15 @@ internal fun TouchMediaScaffold(
                         // The star pops as it fills and dips as it empties.
                         glyph = { StarIcon(isFavorite, TmIcons.Star, TmIcons.StarOutline, on = Tone.accent, off = Tone.text) },
                     )
-                    onSort?.let { FloatingBarIcon(TmIcons.Sort, s.gridSort, it, modifier = sortAnchor.modifier, caption = caption(s.gridSort)) }
                     FloatingBarIcon(
                         icon = if (layout == CardLayout.Grid) TmIcons.List else TmIcons.Grid,
                         label = if (layout == CardLayout.Grid) s.browseShowAsRows else s.browseShowAsTiles,
                         onClick = onToggleLayout,
                         caption = caption(if (layout == CardLayout.Grid) s.gridRowsShort else s.gridTilesShort),
                     )
+                    // Search and Sort at the end, Sort last, where the thumb reaches first.
+                    FloatingBarIcon(TmIcons.Search, s.gridSearchThisChat, { searching = true }, caption = caption(s.commonSearch))
+                    onSort?.let { FloatingBarIcon(TmIcons.Sort, s.gridSort, it, modifier = sortAnchor.modifier, caption = caption(s.gridSort)) }
                 }
             }
         }

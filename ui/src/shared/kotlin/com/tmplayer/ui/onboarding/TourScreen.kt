@@ -57,9 +57,11 @@ import kotlinx.coroutines.delay
  * The quick tour ([Tour]): one page at a time, the page's marked picture with numbered badges over
  * it, and the same numbers in front of its lines. Next moves on (Start watching on the last page),
  * Back goes to the page before, and on the first page to whatever came before the tour
- * ([onBackFromFirst], the setup's last step), or out of it. Skip all ends it.
+ * ([onBackFromFirst], the setup's last step), or out of it. On a phone a swipe does the same. The
+ * close at the end of the title ends it.
  *
- * [before] and [total] put the pages on the setup's count, so "Step 5 of 9" runs across both.
+ * [before] and [total] put the pages on the setup's count, so "Step 5 of 9" (at the foot, with
+ * [StepProgress]) runs across both.
  */
 @Composable
 fun TourScreen(
@@ -88,22 +90,24 @@ fun TourScreen(
         DeviceForm.Desktop -> Modifier.padding(40.dp)
         DeviceForm.Phone -> Modifier.windowInsetsPadding(WindowInsets.safeDrawing).padding(16.dp)
     }
+    val swipe = if (form == DeviceForm.Phone) {
+        Modifier.swipeSteps(onNext = forward, onBack = { if (before > 0 || !state.isFirst) backward() })
+    } else {
+        Modifier
+    }
     BoxWithConstraints(
-        modifier.fillMaxSize().background(Tone.background).then(outer),
+        modifier.fillMaxSize().background(Tone.background).then(swipe).then(outer),
         contentAlignment = Alignment.Center,
     ) {
         val wide = maxWidth > maxHeight && maxWidth >= WIDE_FROM
         val heading: @Composable ColumnScope.() -> Unit = {
-            Text(
-                s.tourLabel + "  ·  " + s.setupStep(before + state.index + 1, total),
-                style = MaterialTheme.typography.labelLarge,
-                color = Tone.accent,
-            )
-            Text(
-                copy.title,
-                style = if (form == DeviceForm.Phone) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
-                color = Tone.text,
-            )
+            Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(s.tourLabel, style = MaterialTheme.typography.labelLarge, color = Tone.accent)
+                    Text(copy.title, style = MaterialTheme.typography.headlineMedium, color = Tone.text)
+                }
+                if (!state.isLast) StepsCloseButton(onDone)
+            }
         }
         val lines: @Composable ColumnScope.() -> Unit = {
             copy.lines.forEachIndexed { i, line ->
@@ -118,7 +122,6 @@ fun TourScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (before > 0 || !state.isFirst) SetupButton(s.setupBack, icon = true, onClick = backward)
                 if (!wide) Spacer(Modifier.weight(1f))
-                if (!state.isLast) SetupButton(s.setupSkipAll, onClick = onDone)
                 SetupButton(
                     if (state.isLast) s.setupStart else s.setupNext,
                     primary = true,
@@ -144,6 +147,7 @@ fun TourScreen(
                     lines()
                     Spacer(Modifier.height(8.dp))
                     buttons()
+                    StepProgress(before + state.index, total, Modifier.padding(top = 8.dp))
                 }
                 Box(Modifier.weight(1.6f).fillMaxHeight(), contentAlignment = Alignment.Center) {
                     Picture(page, badges)
@@ -161,6 +165,7 @@ fun TourScreen(
                 }
                 Spacer(Modifier.height(12.dp))
                 buttons()
+                StepProgress(before + state.index, total, Modifier.align(Alignment.CenterHorizontally).padding(top = 14.dp))
             }
         }
     }

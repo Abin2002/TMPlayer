@@ -44,7 +44,7 @@ class TouchRoutesTest {
         assertEquals(2, barHighlightIndex(TouchDestination.Settings))
         assertNull(barHighlightIndex(null))
         // Search is a round button beside the bar, so the picture is still fourth.
-        assertEquals(3, PROFILE_SLOT)
+        assertEquals(4, PROFILE_SLOT)
         assertEquals(PROFILE_SLOT, barHighlightIndex(null, inProfile = true))
         assertEquals(0, barHighlightIndex(TouchDestination.Home, inProfile = true))
     }

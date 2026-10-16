@@ -57,7 +57,6 @@ internal fun VideoSortPopover(
     ChoicePopover(
         open = open,
         anchor = anchor,
-        title = s.gridSortLabel,
         choices = VideoSort.entries.map { PopoverChoice(it, sortLabel(it, s), sortIcon(it)) },
         selected = current,
         onPick = onPick,

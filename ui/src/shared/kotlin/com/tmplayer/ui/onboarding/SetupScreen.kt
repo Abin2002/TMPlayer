@@ -90,8 +90,9 @@ import kotlinx.coroutines.launch
 /**
  * The setup after sign in ([Setup]), the same screen on the phone, the television and the desktop.
  * Each step asks one thing with two answers side by side, each with a picture of what it looks
- * like. Picking one applies it at once and moves on; Skip moves on and changes nothing; Skip all
- * ends the setup; Back goes to the step before.
+ * like. Picking one applies it at once and moves on; Skip, or a swipe towards the end on a phone,
+ * moves on and changes nothing; the close at the end of the title ends the setup; Back, or a
+ * swipe back, goes to the step before. Where the viewer is shows at the foot ([StepProgress]).
  *
  * A remote or a keyboard starts on the answer that is set now, which on a fresh sign in is the
  * recommended one (every setting's default). Wide screens (a television, a desktop window, a phone
@@ -156,30 +157,38 @@ fun SetupScreen(
         DeviceForm.Desktop -> Modifier.padding(40.dp)
         DeviceForm.Phone -> Modifier.windowInsetsPadding(WindowInsets.safeDrawing).padding(16.dp)
     }
+    val swipe = if (form == DeviceForm.Phone) {
+        Modifier.swipeSteps(onNext = { if (!state.next()) onDone() }, onBack = { state.back() })
+    } else {
+        Modifier
+    }
     BoxWithConstraints(
-        modifier.fillMaxSize().background(Tone.background).then(outer),
+        modifier.fillMaxSize().background(Tone.background).then(swipe).then(outer),
         contentAlignment = Alignment.Center,
     ) {
         val wide = maxWidth > maxHeight && maxWidth >= WIDE_FROM
         val words: @Composable ColumnScope.() -> Unit = {
-            Text(s.setupStep(state.index + 1, total), style = MaterialTheme.typography.labelLarge, color = Tone.accent)
-            Text(
-                copy.title,
-                style = if (form == DeviceForm.Phone) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
-                color = Tone.text,
-            )
+            Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    copy.title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Tone.text,
+                    modifier = Modifier.weight(1f),
+                )
+                if (state.canSkipAll || moreAfter) StepsCloseButton(onSkipAll)
+            }
             Text(copy.body, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
         }
         val buttons: @Composable () -> Unit = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (!state.isFirst) SetupButton(s.setupBack, icon = true) { state.back() }
-                // Upright on a phone the skips sit at the end, under the thumb; beside the answers
-                // they follow the words.
+                // Upright on a phone Skip sits at the end, under the thumb; beside the answers it
+                // follows the words.
                 if (!wide) Spacer(Modifier.weight(1f))
                 SetupButton(s.setupSkip) { if (!state.next()) onDone() }
-                if (state.canSkipAll || moreAfter) SetupButton(s.setupSkipAll) { onSkipAll() }
             }
         }
+        val progress: @Composable (Modifier) -> Unit = { m -> StepProgress(state.index, total, m) }
         if (wide) {
             Row(
                 Modifier.widthIn(max = DESKTOP_MAX).fillMaxSize(),
@@ -194,6 +203,7 @@ fun SetupScreen(
                     Spacer(Modifier.height(8.dp))
                     buttons()
                     Text(s.setupLater, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+                    progress(Modifier.padding(top = 8.dp))
                 }
                 BoxWithConstraints(Modifier.weight(1.3f).fillMaxHeight(), contentAlignment = Alignment.Center) {
                     // Two squares side by side, as large as the width allows and the height leaves
@@ -223,6 +233,7 @@ fun SetupScreen(
                 }
                 Spacer(Modifier.height(12.dp))
                 buttons()
+                progress(Modifier.align(Alignment.CenterHorizontally).padding(top = 14.dp))
             }
         }
     }

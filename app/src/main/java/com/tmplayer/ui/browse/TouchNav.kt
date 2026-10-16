@@ -107,14 +107,14 @@ import com.tmplayer.ui.theme.floatingBorder
 import com.tmplayer.ui.theme.rememberReducedMotion
 
 /**
- * Where the phone's floating bar can take the viewer, in the bar's order. The profile button after
- * them opens [ProfilePopover] instead, with the viewer's own lists. Search is not on the bar: it is
- * the round button beside it on Home and Chats.
+ * Where the phone's floating bar can take the viewer, in the bar's order. Search comes after them,
+ * a button that opens the search over the page rather than a page of its own, and the profile
+ * picture last, which opens [ProfilePopover] with the viewer's own lists.
  */
 internal enum class TouchDestination { Home, Chats, Settings }
 
-/** The profile picture's place on the bar, after every [TouchDestination]. */
-internal val PROFILE_SLOT = TouchDestination.entries.size
+/** The profile picture's place on the bar: after every [TouchDestination] and Search. */
+internal val PROFILE_SLOT = TouchDestination.entries.size + 1
 
 /**
  * Which of the bar's slots carries the sliding highlight: [current]'s button, or the picture on a
@@ -208,9 +208,9 @@ internal fun TouchPage(spec: TouchPageSpec?) {
 }
 
 /**
- * The phone's floating bar, hosted once over every page: Home, Chats, Settings and the viewer's
- * picture, with the popover of Favourites, Downloads, History, Watch later and Update behind the
- * picture. On Home and Chats the search is a round button of its own beside the bar.
+ * The phone's floating bar, hosted once over every page: Home, Chats, Settings, Search and the
+ * viewer's picture, with the popover of Favourites, Downloads, History, Watch later and Update
+ * behind the picture.
  *
  * The bar floats, so it takes no room from the listing: it slides away as the list is pushed up
  * and comes back on the first pull down, on a change of page and on the way back from the player.
@@ -308,20 +308,15 @@ internal fun TouchNavHost(
                         onSettings = nav.onSettings,
                         onSearch = nav.onSearch,
                         onProfile = { profileOpen = true },
-                        // The search beside the bar only where there is something to search: Home and Chats.
-                        searchShown = shown.current == TouchDestination.Home || shown.current == TouchDestination.Chats,
-                        searchButton = { modifier ->
-                            if (reduced) {
-                                SearchBarButton(modifier)
-                            } else {
-                                SearchBarButton(
-                                    modifier.sharedBounds(
-                                        rememberSharedContentState(SEARCH_KEY),
-                                        animatedVisibilityScope = this@AnimatedVisibility,
-                                        resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
-                                    ),
-                                )
-                            }
+                        // The search field grows out of the bar's Search button.
+                        searchShared = if (reduced) {
+                            Modifier
+                        } else {
+                            Modifier.sharedBounds(
+                                rememberSharedContentState(SEARCH_KEY),
+                                animatedVisibilityScope = this@AnimatedVisibility,
+                                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                            )
                         },
                     )
                 }
@@ -487,8 +482,8 @@ internal fun rememberTouchExploration(): Boolean {
  * it, as a tab bar has. The current page's button sits on a rounded pill in the accent, which
  * slides from button to button (and follows a swipe between Home and Chats as it goes). On a page
  * behind the picture (Favourites, History, Watch later, Downloads) the pill moves under the
- * picture, which wears an accent ring too. With [searchShown] the search stands beside the bar at
- * its end, a round button of the bar's height, which the search field grows out of.
+ * picture, which wears an accent ring too. Search is the button the search field grows out of
+ * ([searchShared]). Every press and the highlight are pills, round like the bar they sit in.
  */
 @Composable
 private fun FloatingBar(
@@ -502,15 +497,13 @@ private fun FloatingBar(
     onSettings: () -> Unit,
     onSearch: () -> Unit,
     onProfile: () -> Unit,
-    searchShown: Boolean,
-    searchButton: @Composable (Modifier) -> Unit,
+    searchShared: Modifier,
 ) {
     val s = LocalStrings.current
     val reduced = rememberReducedMotion() || Motion.reduced
-    Row(
+    Box(
         Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = BAR_MARGIN),
-        horizontalArrangement = Arrangement.spacedBy(SEARCH_GAP, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
+        contentAlignment = Alignment.Center,
     ) {
         Row(
             Modifier
@@ -574,6 +567,7 @@ private fun FloatingBar(
             BarButton(TmIcons.Home, s.browseTabHome, current == TouchDestination.Home, onHome)
             BarButton(TmIcons.Chats, s.browseTabChats, current == TouchDestination.Chats, onChats)
             BarButton(TmIcons.Settings, s.navSettings, current == TouchDestination.Settings, onSettings)
+            BarButton(TmIcons.Search, s.commonSearch, false, onSearch, role = Role.Button, modifier = searchShared)
             val profilePress = remember { MutableInteractionSource() }
             Column(
                 Modifier
@@ -596,7 +590,7 @@ private fun FloatingBar(
                     animationSpec = Motion.standard(if (reduced) 0 else Motion.Fast),
                     label = "profileRing",
                 )
-                Box(Modifier.size(PICTURE + 4.dp).border(1.5.dp, ring, CircleShape))
+                Box(Modifier.size(PICTURE + 6.dp).border(1.5.dp, ring, CircleShape))
                 ProfilePicture(account, PICTURE)
                 if (badged) {
                     // News behind the picture: a download running, or an update to install.
@@ -611,21 +605,9 @@ private fun FloatingBar(
                     )
                 }
               }
-              BarCaption(s.navYou, inProfile)
             }
           }
           }
-        }
-        if (searchShown) {
-            val searchPress = remember { MutableInteractionSource() }
-            searchButton(
-                Modifier
-                    .pressScale(searchPress)
-                    .shadow(BAR_SHADOW, CircleShape)
-                    .clip(CircleShape)
-                    .clickable(interactionSource = searchPress, indication = ripple(), role = Role.Button, onClick = onSearch)
-                    .semantics { contentDescription = s.commonSearch },
-            )
         }
     }
 }
@@ -644,30 +626,26 @@ private fun BarCaption(text: String, chosen: Boolean) {
     )
 }
 
-/** The round search beside the bar. It is the shared element the search field grows out of. */
 @Composable
-private fun SearchBarButton(modifier: Modifier) {
-    Box(
-        modifier.size(BAR_HEIGHT).background(FloatingTone.menu).border(floatingBorder(), CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(TmIcons.Search, contentDescription = null, tint = Tone.text, modifier = Modifier.size(26.dp))
-    }
-}
-
-@Composable
-private fun BarButton(icon: ImageVector, label: String, chosen: Boolean, onClick: () -> Unit) {
+private fun BarButton(
+    icon: ImageVector,
+    label: String,
+    chosen: Boolean,
+    onClick: () -> Unit,
+    role: Role = Role.Tab,
+    modifier: Modifier = Modifier,
+) {
     val press = remember { MutableInteractionSource() }
     Column(
-        Modifier
+        modifier
             .size(BUTTON_WIDTH, BUTTON_HEIGHT)
             .pressScale(press)
             .clip(HIGHLIGHT_SHAPE)
-            .clickable(interactionSource = press, indication = ripple(), role = Role.Tab, onClick = onClick)
+            .clickable(interactionSource = press, indication = ripple(), role = role, onClick = onClick)
             .semantics {
                 contentDescription = label
-                selected = chosen
-                role = Role.Tab
+                if (role == Role.Tab) selected = chosen
+                this.role = role
             },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -829,11 +807,11 @@ internal val BAR_MARGIN = 16.dp
 internal val BAR_GAP = 8.dp
 
 /** One of the bar's buttons, its icon over its caption. */
-private val BUTTON_WIDTH = 60.dp
+private val BUTTON_WIDTH = 64.dp
 private val BUTTON_HEIGHT = 52.dp
 
-/** The highlight under the chosen button, and the shape a press ripples in. */
-private val HIGHLIGHT_SHAPE = RoundedCornerShape(18.dp)
+/** The highlight under the chosen button, and the shape a press ripples in: a pill, as the bar is. */
+private val HIGHLIGHT_SHAPE = CircleShape
 
 /** The pill of a page's own buttons over the bar: one row of 48 dp buttons. */
 internal val ACTIONS_HEIGHT = 48.dp
@@ -841,12 +819,12 @@ internal val ACTIONS_HEIGHT = 48.dp
 /** The key a page reports under when nothing names it, which is the page outside any host. */
 internal const val DEFAULT_PAGE = "page"
 
-/** Between the bar and the round search beside it. */
+/** Between the search field and its close button. */
 internal val SEARCH_GAP = 10.dp
 
 /** Between two of the bar's buttons. */
 private val BAR_SPACING = 4.dp
-private val PICTURE = 26.dp
+private val PICTURE = 30.dp
 internal val BAR_SHADOW = 8.dp
 private val POPOVER_WIDTH = 208.dp
 private val POPOVER_ROW = 44.dp

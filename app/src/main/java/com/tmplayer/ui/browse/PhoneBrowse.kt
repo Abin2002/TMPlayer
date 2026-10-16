@@ -13,7 +13,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
@@ -25,7 +24,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
@@ -68,6 +66,7 @@ import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.Motion
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.rememberReducedMotion
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 /**
@@ -281,6 +280,7 @@ internal fun PhoneBrowse(
                     tab = tab,
                     chats = chatsSection,
                     onSettle = { section -> if (section != tab) onPickTab(section) },
+                    onSettings = onOpenSettings,
                     onState = { pagerRef.value = it },
                     page = frame,
                 )
@@ -337,8 +337,10 @@ internal fun chatsPageOf(lastChats: String, sections: List<BrowseSection>): Brow
     BrowseSection.decode(lastChats)?.takeIf { it.isChats || (it.onChatsPage && it in sections) } ?: BrowseSection.of(BrowseTab.Chats)
 
 /**
- * Home and Chats side by side: a swipe from Home towards the end goes to Chats, one back from
- * Chats returns to Home, and neither goes further. A row that scrolls sideways inside a page (a
+ * Home and Chats side by side, and Settings after Chats: a swipe from Home towards the end goes to
+ * Chats, one more to Settings, and back the other way. Settings is a screen of its own (it may ask
+ * for the PIN first), so the pager's last page is only its title, and settling there opens the
+ * real one ([onSettings]). A row that scrolls sideways inside a page (a
  * Home shelf, the chips) takes the swipe first; the page turns only once it can go no further, or
  * when the swipe starts outside it. Both pages stay composed, so each keeps its scroll.
  *
@@ -351,6 +353,7 @@ private fun HomeChatsPager(
     tab: BrowseSection,
     chats: BrowseSection,
     onSettle: (BrowseSection) -> Unit,
+    onSettings: () -> Unit,
     onState: (PagerState?) -> Unit,
     page: @Composable (BrowseSection) -> Unit,
 ) {
@@ -367,8 +370,13 @@ private fun HomeChatsPager(
     }
     val currentChats by rememberUpdatedState(chats)
     val settle by rememberUpdatedState(onSettle)
+    val settings by rememberUpdatedState(onSettings)
     LaunchedEffect(pager) {
-        snapshotFlow { pager.settledPage }.collect { settled -> settle(swipeSection(settled, currentChats)) }
+        // Not the page it starts on: coming back from Settings, the pager's saved page may still be
+        // Settings' while it turns back to the tab.
+        snapshotFlow { pager.settledPage }.drop(1).collect { settled ->
+            if (settled == SETTINGS_PAGE) settings() else settle(swipeSection(settled, currentChats))
+        }
     }
     HorizontalPager(
         state = pager,
@@ -380,9 +388,16 @@ private fun HomeChatsPager(
         // bringing its chosen chip into view would turn the pager to it on launch.
         val onScreen by remember(index) { derivedStateOf { pager.settledPage == index } }
         CompositionLocalProvider(LocalPageOnScreen provides onScreen) {
-            page(swipeSection(index, chats))
+            if (index == SETTINGS_PAGE) SettingsPeek() else page(swipeSection(index, chats))
         }
     }
+}
+
+/** What a swipe past Chats shows on its way to Settings: Settings' title, where Settings puts it. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsPeek() {
+    Scaffold(topBar = { TopAppBar(title = { Text(LocalStrings.current.settingsTitle) }) }) { }
 }
 
 /**
@@ -395,7 +410,7 @@ internal val LocalPageOnScreen = androidx.compose.runtime.compositionLocalOf { t
 /**
  * One page of the phone's browser under its title. Home, Favourites and History keep the title
  * that slides away with the list and back on the first pull down, with the count under it.
- * The Chats page has its name larger and centred, and pinned: it and the chips under it stay put
+ * The Chats page has its name pinned, from the start as Settings has it: it and the chips under it stay put
  * while the chat list scrolls beneath them.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -417,17 +432,8 @@ private fun PhonePageFrame(
             if (section.isHome) {
                 // No title: Home's featured carousel is the top of the page.
             } else if (pinned) {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            s.browseTabChats,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
-                )
+                // From the start, in the same bar and type as Settings' title.
+                TopAppBar(title = { Text(s.browseTabChats, maxLines = 1, overflow = TextOverflow.Ellipsis) })
             } else {
                 TopAppBar(
                     scrollBehavior = scrollBehavior,
@@ -500,7 +506,8 @@ internal val LocalUnderStatusBar = androidx.compose.runtime.compositionLocalOf {
 
 private const val HOME_PAGE = 0
 private const val CHATS_PAGE = 1
-private const val SWIPE_PAGE_COUNT = 2
+private const val SETTINGS_PAGE = 2
+private const val SWIPE_PAGE_COUNT = 3
 
 /** The content key of the Home and Chats pager, which a swipe between them does not change. */
 private const val SWIPE_PAGES = "home-chats"

@@ -2804,38 +2804,40 @@ private fun SubtitlePreview(style: SubtitleStyle, modifier: Modifier = Modifier)
 }
 
 /**
- * The signed in account at the top of Settings, above the cards and centred: the picture large,
- * the name and @username under it.
+ * The signed in account at the top of Settings, above the cards, from the start: the picture, with
+ * the name and @username beside it.
  */
 @Composable
 private fun AccountHeader(account: com.tmplayer.data.Account) {
-    Column(
-        Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+    Row(
+        Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         com.tmplayer.ui.components.MediaPreview(
             miniThumbnail = account.miniThumbnail,
             thumbnailFileId = account.photoFileId,
             fallbackLabel = account.name,
-            modifier = Modifier.padding(bottom = 8.dp).size(96.dp).clip(CircleShape),
+            modifier = Modifier.size(56.dp).clip(CircleShape),
         )
-        Text(
-            account.name,
-            style = MaterialTheme.typography.titleLarge,
-            color = Tone.text,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (account.username.isNotBlank()) {
-            // Isolated left to right, or an Arabic or Persian interface draws "name@".
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                "\u2066@${account.username}\u2069",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Tone.muted,
+                account.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = Tone.text,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (account.username.isNotBlank()) {
+                // Isolated left to right, or an Arabic or Persian interface draws "name@".
+                Text(
+                    "\u2066@${account.username}\u2069",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Tone.muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

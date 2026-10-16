@@ -91,8 +91,10 @@ import kotlinx.coroutines.launch
 
 /**
  * The phone's featured carousel at the top of Home: the newest five different films, shows and
- * videos in the starred chats ([HomeFeatured]), one full-bleed page each, swiped through, with a
- * story-style line of segments across the top that fills over [ADVANCE_MS] and moves on.
+ * videos in the starred chats ([HomeFeatured]), one full-bleed page each, swiped through. Only the
+ * picture, the name and its facts move with a swipe: Play and Details stay put at the foot, acting
+ * on the page up, with the story-style line of segments over them that fills over [ADVANCE_MS] and
+ * moves on.
  *
  * It is [height] tall from its first frame, whatever has arrived: while [picks] is null (the
  * starred chats are still being asked) the same frame holds a shimmering stand-in, so nothing on
@@ -185,9 +187,16 @@ internal fun FeaturedCarousel(
                 key = { latest.getOrNull(it)?.key ?: it },
             ) { page ->
                 val pick = latest.getOrNull(page) ?: return@HorizontalPager
-                FeaturedPage(pick, height, under, start, end, watch, chatTitle, onPlay, onDetails)
+                FeaturedPage(pick, height, under, start, end, chatTitle, footRoom = controlsRoom(count > 1))
             }
-            if (count > 1) {
+            Column(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(start = start, end = end, bottom = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(CONTROLS_GAP),
+            ) {
+              if (count > 1) {
                 Segments(
                     count = count,
                     current = pager.currentPage,
@@ -201,16 +210,21 @@ internal fun FeaturedCarousel(
                     },
                     label = { index -> s.homeFeaturedPage(index + 1, count) },
                     onPick = { index -> scope.launch { if (still) pager.scrollToPage(index) else pager.animateScrollToPage(index) } },
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = under + 6.dp, start = start, end = end),
                 )
+              }
+                latest.getOrNull(pager.currentPage)?.let { pick ->
+                    FeaturedControls(pick, watch, chatTitle, onPlay, onDetails)
+                }
             }
         }
     }
 }
 
-/** One page: the picture under its fades, the name, a line of facts, Play and Details. */
+/** What the controls at the carousel's foot take, which a page keeps its name and facts clear of. */
+private fun controlsRoom(segments: Boolean): Dp =
+    4.dp + HERO_PILL_HEIGHT + if (segments) SEGMENT_TARGET + CONTROLS_GAP else 0.dp
+
+/** One page: the picture under its fades, the name and a line of facts, clear of the controls ([footRoom]). */
 @Composable
 private fun FeaturedPage(
     pick: FeaturedPick,
@@ -218,10 +232,8 @@ private fun FeaturedPage(
     under: Dp,
     start: Dp,
     end: Dp,
-    watch: SeriesWatch,
     chatTitle: (Long) -> String,
-    onPlay: (MediaItem, String) -> Unit,
-    onDetails: (FeaturedPick) -> Unit,
+    footRoom: Dp,
 ) {
     val s = LocalStrings.current
     val item = pick.item
@@ -234,26 +246,13 @@ private fun FeaturedPage(
     val title = remember(pick) { series?.title?.ifBlank { null } ?: SeriesShelf.tileTitle(item) }
     val facts = remember(pick, chat, s) { featuredFacts(pick, title, chat, s) }
 
-    // What Play starts: a show where the viewer is in it (the episode under way, else the next),
-    // a film or a video as itself, the copy to play chosen on the way (SettingsStore.copyToPlay).
-    val showProgress = remember(series, watch) { series?.let { watch.progress(it) } }
-    val episode = series?.let { showProgress?.next ?: it.episodes.firstOrNull() }
-    val playItem = if (series != null && episode != null && showProgress != null) watch.pick(episode, showProgress) else item
-    val playLabel = if (series != null && episode != null && showProgress != null) {
-        seriesPlayLabel(episode.code, watch.pointOf(episode), showProgress.watched > 0)
-    } else if ((watch.point(item)?.positionMs ?: 0L) > 0L) {
-        s.commonResume
-    } else {
-        s.commonPlay
-    }
-
     Box(
         Modifier
             .fillMaxSize()
             .semantics { contentDescription = listOf(title, facts).filter { it.isNotBlank() }.joinToString(". ") },
     ) {
         ArtBackdrop(source, Modifier.fillMaxSize(), fieldOnly = rememberLowMemory())
-        // The top darkened under the status bar and the segments, light in either theme.
+        // The top darkened under the status bar, light in either theme.
         Box(
             Modifier
                 .fillMaxWidth()
@@ -265,7 +264,7 @@ private fun FeaturedPage(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(start = start, end = end, bottom = 4.dp),
+                .padding(start = start, end = end, bottom = footRoom + TEXT_GAP),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
@@ -287,30 +286,58 @@ private fun FeaturedPage(
                     textAlign = TextAlign.Center,
                 )
             }
-            Row(
-                Modifier.fillMaxWidth().padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                HeroPill(
-                    label = playLabel,
-                    onClick = { onPlay(playItem, chatTitle(playItem.chatId)) },
-                    stretch = true,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                Box(
-                    Modifier
-                        .size(HERO_PILL_HEIGHT)
-                        .clip(CircleShape)
-                        .background(Tone.surfaceHigh.copy(alpha = 0.72f))
-                        .border(1.dp, Tone.outline, CircleShape)
-                        .clickable(role = Role.Button) { onDetails(pick) }
-                        .semantics { contentDescription = s.detailOpenDetails },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(TmIcons.Info, contentDescription = null, tint = Tone.text, modifier = Modifier.size(24.dp))
-                }
-            }
+        }
+    }
+}
+
+/** Play and Details at the carousel's foot, for the page up; they stay put while the pages move. */
+@Composable
+private fun FeaturedControls(
+    pick: FeaturedPick,
+    watch: SeriesWatch,
+    chatTitle: (Long) -> String,
+    onPlay: (MediaItem, String) -> Unit,
+    onDetails: (FeaturedPick) -> Unit,
+) {
+    val s = LocalStrings.current
+    val item = pick.item
+    val series = pick.series
+
+    // What Play starts: a show where the viewer is in it (the episode under way, else the next),
+    // a film or a video as itself, the copy to play chosen on the way (SettingsStore.copyToPlay).
+    val showProgress = remember(series, watch) { series?.let { watch.progress(it) } }
+    val episode = series?.let { showProgress?.next ?: it.episodes.firstOrNull() }
+    val playItem = if (series != null && episode != null && showProgress != null) watch.pick(episode, showProgress) else item
+    val playLabel = if (series != null && episode != null && showProgress != null) {
+        seriesPlayLabel(episode.code, watch.pointOf(episode), showProgress.watched > 0)
+    } else if ((watch.point(item)?.positionMs ?: 0L) > 0L) {
+        s.commonResume
+    } else {
+        s.commonPlay
+    }
+
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        HeroPill(
+            label = playLabel,
+            onClick = { onPlay(playItem, chatTitle(playItem.chatId)) },
+            stretch = true,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        Box(
+            Modifier
+                .size(HERO_PILL_HEIGHT)
+                .clip(CircleShape)
+                .background(Tone.surfaceHigh.copy(alpha = 0.72f))
+                .border(1.dp, Tone.outline, CircleShape)
+                .clickable(role = Role.Button) { onDetails(pick) }
+                .semantics { contentDescription = s.detailOpenDetails },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(TmIcons.Info, contentDescription = null, tint = Tone.text, modifier = Modifier.size(24.dp))
         }
     }
 }
@@ -458,8 +485,12 @@ private const val FOOT_FADE_SHARE = 0.55f
 
 private val SKELETON_FADE = 160.dp
 
-/** The dark fade under the status bar and the segments. */
+/** The dark fade under the status bar. */
 private val TOP_SCRIM = 72.dp
+
+/** Between the segments and Play, and between a page's facts and the segments. */
+private val CONTROLS_GAP = 8.dp
+private val TEXT_GAP = 10.dp
 
 private val SEGMENT_HEIGHT = 3.dp
 private val SEGMENT_TARGET = 24.dp
