@@ -29,6 +29,7 @@ class ShortcutSheetTest {
         "Seek 10 s with the wheel" to { false },
         "Mute" to { it == PlayerAction.ToggleMute },
         "Fullscreen" to { it == PlayerAction.ToggleFullscreen },
+        "Picture shape" to { it == PlayerAction.CycleShape },
         "Subtitles next, previous, on or off" to {
             it == PlayerAction.SubtitleNext || it == PlayerAction.SubtitlePrevious || it == PlayerAction.SubtitleToggle
         },
@@ -123,7 +124,7 @@ class ShortcutSheetTest {
         "A" to Key.A, "B" to Key.B, "C" to Key.C, "F" to Key.F, "G" to Key.G, "I" to Key.I, "J" to Key.J, "K" to Key.K,
         "L" to Key.L,
         "M" to Key.M, "N" to Key.N, "P" to Key.P, "Q" to Key.Q, "R" to Key.R, "S" to Key.S, "T" to Key.T,
-        "V" to Key.V, "X" to Key.X, "Z" to Key.Z,
+        "V" to Key.V, "W" to Key.W, "X" to Key.X, "Z" to Key.Z,
     )
 
     private fun digit(d: Int): Key = listOf(

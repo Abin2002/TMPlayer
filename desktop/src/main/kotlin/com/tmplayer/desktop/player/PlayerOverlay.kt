@@ -178,6 +178,9 @@ internal sealed interface MenuAction {
     /** The subtitle menu's "Search online", in a build with the OpenSubtitles key. */
     data object SearchOnline : MenuAction
 
+    /** A subtitle file from the disk, through the system's file dialog; dropping one does the same. */
+    data object LoadSubtitleFile : MenuAction
+
     /** The moment playing as a bookmark; the player asks for its note. */
     data object AddBookmark : MenuAction
     data class JumpTo(val bookmark: Bookmark) : MenuAction
@@ -239,9 +242,11 @@ private val LoopColor = Color(0xFFFFC107)
 private val BookmarkColor = Color(0xE6FFFFFF)
 
 /**
- * The picture itself as a click target (B2.3): a single click plays or pauses after 300 ms, so a
- * double click (fullscreen) does not flicker the picture first; right click opens the menu at the
- * cursor; the mouse's back button goes back.
+ * The picture itself as a click target (B2.3): a single click plays or pauses 300 ms after the
+ * button comes up, so a double click (fullscreen) does not flicker the picture first; holding the
+ * left button down past [HOLD_MS] plays fast until it is let go ([onHold], the phone's "Hold to
+ * speed up"), and is no click; right click opens the menu at the cursor; the mouse's back button
+ * goes back.
  */
 @Composable
 internal fun BoxScope.VideoGestures(
@@ -250,36 +255,68 @@ internal fun BoxScope.VideoGestures(
     onRightClick: (Offset) -> Unit,
     onMouseBack: () -> Unit,
     scope: CoroutineScope,
+    /** True as a hold starts, false as it ends. */
+    onHold: (Boolean) -> Unit = {},
 ) {
     val click by rememberUpdatedState(onClick)
     val double by rememberUpdatedState(onDoubleClick)
     val right by rememberUpdatedState(onRightClick)
     val back by rememberUpdatedState(onMouseBack)
+    val hold by rememberUpdatedState(onHold)
     var pending by remember { mutableStateOf<Job?>(null) }
     Box(
         Modifier.matchParentSize().testTag("video").pointerInput(Unit) {
             awaitPointerEventScope {
+                // The left press under way: its hold timer, whether the hold began, and whether it
+                // was a double click's second press, which leaves nothing for its release to do.
+                var holdTimer: Job? = null
+                var holding = false
+                var doubled = false
+                var down = false
                 while (true) {
                     val event = awaitPointerEvent()
-                    if (event.type != PointerEventType.Press) continue
-                    val at = event.changes.firstOrNull()?.position ?: Offset.Zero
-                    when {
-                        event.buttons.isSecondaryPressed -> right(at)
-                        event.buttons.isBackPressed -> back()
-                        event.buttons.isPrimaryPressed -> {
-                            val waiting = pending
-                            if (waiting != null && waiting.isActive) {
-                                waiting.cancel()
-                                pending = null
-                                double()
-                            } else {
-                                pending = scope.launch {
+                    when (event.type) {
+                        PointerEventType.Press -> {
+                            val at = event.changes.firstOrNull()?.position ?: Offset.Zero
+                            when {
+                                event.buttons.isSecondaryPressed -> right(at)
+                                event.buttons.isBackPressed -> back()
+                                event.buttons.isPrimaryPressed && !down -> {
+                                    down = true
+                                    val waiting = pending
+                                    if (waiting != null && waiting.isActive) {
+                                        waiting.cancel()
+                                        pending = null
+                                        doubled = true
+                                        double()
+                                    } else {
+                                        holdTimer = scope.launch {
+                                            delay(HOLD_MS)
+                                            holding = true
+                                            hold(true)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        PointerEventType.Release -> if (down && !event.buttons.isPrimaryPressed) {
+                            down = false
+                            holdTimer?.cancel()
+                            holdTimer = null
+                            when {
+                                doubled -> doubled = false
+                                holding -> {
+                                    holding = false
+                                    hold(false)
+                                }
+                                else -> pending = scope.launch {
                                     delay(DOUBLE_CLICK_MS)
                                     pending = null
                                     click()
                                 }
                             }
                         }
+                        else -> continue
                     }
                     event.changes.forEach { it.consume() }
                 }
@@ -289,6 +326,9 @@ internal fun BoxScope.VideoGestures(
 }
 
 private const val DOUBLE_CLICK_MS = 300L
+
+/** How long the left button stays down before a press is a hold rather than a click. */
+private const val HOLD_MS = 500L
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -340,7 +380,7 @@ internal fun BoxScope.PlayerOverlay(
     // The right click menu hangs at the cursor whether or not the controls are up.
     if (menu?.anchor == MenuAt.Anchor.Cursor) {
         Box(Modifier.offset { IntOffset(menu.at.x.roundToInt(), menu.at.y.roundToInt()) }.size(1.dp)) {
-            PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
+            PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, loop, onOpenMenu, onCloseMenu, onMenuAction)
         }
     }
 
@@ -378,7 +418,7 @@ internal fun BoxScope.PlayerOverlay(
                 Box {
                     OverlayButton(TmIcons.MoreVert, s.commonMore, onClick = { onOpenMenu(MenuAt(MenuPage.Main, MenuAt.Anchor.Overflow)) })
                     if (menu?.anchor == MenuAt.Anchor.Overflow) {
-                        PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
+                        PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, loop, onOpenMenu, onCloseMenu, onMenuAction)
                     }
                 }
                 if (!fullscreen) WindowControls(onArt = true)
@@ -450,13 +490,13 @@ internal fun BoxScope.PlayerOverlay(
                         Box {
                             OverlayButton(TmIcons.Subtitles, s.playerSubtitlesHint, onClick = { onOpenMenu(MenuAt(MenuPage.Subtitles, MenuAt.Anchor.Subtitles)) })
                             if (menu?.anchor == MenuAt.Anchor.Subtitles) {
-                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
+                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, loop, onOpenMenu, onCloseMenu, onMenuAction)
                             }
                         }
                         Box {
                             OverlayButton(TmIcons.Audio, s.playerAudioHint, onClick = { onOpenMenu(MenuAt(MenuPage.Audio, MenuAt.Anchor.Audio)) })
                             if (menu?.anchor == MenuAt.Anchor.Audio) {
-                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
+                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, loop, onOpenMenu, onCloseMenu, onMenuAction)
                             }
                         }
                         Box {
@@ -468,7 +508,7 @@ internal fun BoxScope.PlayerOverlay(
                                 ) { Text(SeekMath.speedLabel(status.speed), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium) }
                             }
                             if (menu?.anchor == MenuAt.Anchor.Speed) {
-                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, onOpenMenu, onCloseMenu, onMenuAction)
+                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, loop, onOpenMenu, onCloseMenu, onMenuAction)
                             }
                         }
                     }
@@ -704,6 +744,8 @@ internal fun PlayerMenu(
     sleepTimer: String?,
     /** This video's bookmarks, or null where it can have none (and the menu has no line for them). */
     bookmarks: List<Bookmark>? = null,
+    /** The A-B repeat as marked so far, which names the menu's repeat line; null for none. */
+    loop: AbLoop? = null,
     onOpenMenu: (MenuAt) -> Unit,
     onClose: () -> Unit,
     onAction: (MenuAction) -> Unit,
@@ -762,6 +804,8 @@ internal fun PlayerMenu(
                 }
                 if (alwaysOnTopAvailable) Entry(s.playerAlwaysOnTop, trailing = s.playerKeyCommandT(commandKey(s))) { pick(MenuAction.Do(PlayerAction.AlwaysOnTop)) }
                 Entry(s.playerPlaybackOptions) { page(MenuPage.Options) }
+                // On the first page, as the phone's pinch is one move away: W cycles it too.
+                Entry(s.playerPictureShape, trailing = status.scale.label) { page(MenuPage.Shape) }
                 Entry(s.playerSubtitleStyleAndTiming) { page(MenuPage.SubtitleStyle) }
                 if (fromTelegram || watchedLabel != null) HorizontalDivider()
                 if (fromTelegram) {
@@ -784,8 +828,17 @@ internal fun PlayerMenu(
                 Entry(s.playerDownmix, checked = status.downmix) { pick(MenuAction.ToggleDownmix) }
                 Entry(s.playerVolumeBoost, checked = status.volumeBoost) { pick(MenuAction.ToggleVolumeBoost) }
                 Entry(s.playerSleepTimer, trailing = sleepTimer ?: s.commonOff) { page(MenuPage.Sleep) }
-                // The bar's button for this went, and it never had a key: this page is the way in.
-                Entry(s.playerShape, trailing = status.scale.label) { page(MenuPage.Shape) }
+                val repeat = when {
+                    loop == null -> s.playerLoopSetStart
+                    loop.endMs == null -> s.playerLoopSetEnd
+                    else -> s.playerLoopClear
+                }
+                Entry(repeat, trailing = "R") { pick(MenuAction.Do(PlayerAction.AbRepeat)) }
+                // Paused only, as on the phone; the menu stays open for the next step.
+                if (!status.playing) {
+                    Entry(s.playerFrameNext, trailing = ".") { onAction(MenuAction.Do(PlayerAction.FrameStep(forward = true))) }
+                    Entry(s.playerFramePrevious, trailing = ",") { onAction(MenuAction.Do(PlayerAction.FrameStep(forward = false))) }
+                }
                 Entry(s.playerIgnoreClicks, checked = ignoreClicks) { pick(MenuAction.ToggleIgnoreClicks) }
                 Entry(s.playerDetails, trailing = "I") { pick(MenuAction.Details) }
             }
@@ -803,6 +856,7 @@ internal fun PlayerMenu(
                 Entry(s.commonOff, checked = list.none { it.selected }) { pick(MenuAction.Track(TrackType.Subtitle, null)) }
                 list.forEach { t -> Entry(t.label, checked = t.selected) { pick(MenuAction.Track(TrackType.Subtitle, t)) } }
                 if (com.tmplayer.online.OnlineSubtitles.available) Entry(s.onlineSearchOnline) { pick(MenuAction.SearchOnline) }
+                Entry(s.playerLoadSubtitleFile) { pick(MenuAction.LoadSubtitleFile) }
                 HorizontalDivider()
                 Entry(s.playerSubtitleStyleAndTiming) { page(MenuPage.SubtitleStyle) }
             }

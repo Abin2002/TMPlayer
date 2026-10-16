@@ -1644,6 +1644,7 @@
     "history_cleared": "{count, plural, =1 {Continue watching cleared} one {# videos forgotten} other {# videos forgotten}}",
     "hold_speed": "Hold to speed up",
     "hold_speed_detail": "Plays fast for as long as a finger is held on the picture",
+    "hold_speed_detail_desktop": "Plays fast for as long as the left mouse button is held on the picture",
     "language": "Language",
     "language_automatic": "Automatic",
     "language_detail_system": "System default, {language} right now",

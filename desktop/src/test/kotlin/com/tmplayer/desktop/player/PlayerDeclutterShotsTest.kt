@@ -40,7 +40,7 @@ class PlayerDeclutterShotsTest {
         assertNull(MenuAt(MenuPage.Subtitles, MenuAt.Anchor.Subtitles).parentPage())
         assertEquals(MenuPage.Main, MenuAt(MenuPage.Options, MenuAt.Anchor.Overflow).parentPage())
         assertEquals(MenuPage.Options, MenuAt(MenuPage.Sleep, MenuAt.Anchor.Overflow).parentPage())
-        assertEquals(MenuPage.Options, MenuAt(MenuPage.Shape, MenuAt.Anchor.Cursor).parentPage())
+        assertEquals(MenuPage.Main, MenuAt(MenuPage.Shape, MenuAt.Anchor.Cursor).parentPage())
         assertEquals(MenuPage.Main, MenuAt(MenuPage.SubtitleStyle, MenuAt.Anchor.Overflow).parentPage())
         assertEquals(MenuPage.Subtitles, MenuAt(MenuPage.SubtitleStyle, MenuAt.Anchor.Subtitles).parentPage())
     }

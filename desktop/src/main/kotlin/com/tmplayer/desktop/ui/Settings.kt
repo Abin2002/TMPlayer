@@ -309,6 +309,19 @@ fun SettingsPage(
                         onMore = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, 1)) } } },
                     )
                 }
+                // Holding the left button on the picture, as a finger on the phone's: the same
+                // setting, so a change on either reaches both.
+                Setting(s.settingsHoldSpeed, s.settingsHoldSpeedDetailDesktop) {
+                    SingleChoiceSegmentedButtonRow {
+                        TouchPrefs.HOLD_CHOICES.forEachIndexed { index, choice ->
+                            SegmentedButton(
+                                selected = touchPrefs.holdSpeed == choice,
+                                onClick = { scope.launch { settings.updateTouchPrefs { it.copy(holdSpeed = choice) } } },
+                                shape = SegmentedButtonDefaults.itemShape(index, TouchPrefs.HOLD_CHOICES.size),
+                            ) { Text(TouchPrefs.holdLabel(choice)) }
+                        }
+                    }
+                }
                 // Four short choices, so all of them at once, as the theme row has them.
                 Setting(s.settingsResumeRewind, s.settingsResumeRewindDetail) {
                     SingleChoiceSegmentedButtonRow {

@@ -19,18 +19,18 @@ import javax.swing.filechooser.FileNameExtensionFilter
  */
 object FilePicker {
 
-    /** The file picked, or null when the viewer cancelled. Only files ending in [extension] are offered. */
-    suspend fun open(title: String, extension: String): File? {
+    /** The file picked, or null when the viewer cancelled. Only files ending in one of [extensions] are offered. */
+    suspend fun open(title: String, vararg extensions: String): File? {
         FolderPicker.ensureFileKit()
         val viaFileKit = runCatching {
-            FileKit.openFilePicker(type = FileKitType.File(extension), dialogSettings = FileKitDialogSettings(title = title))
+            FileKit.openFilePicker(type = FileKitType.File(extensions.toSet()), dialogSettings = FileKitDialogSettings(title = title))
         }
         viaFileKit.exceptionOrNull()?.let { Logger.w(TAG, "The system file picker failed; using Swing's", it) }
         if (viaFileKit.isSuccess) return viaFileKit.getOrNull()?.file
         return withContext(Dispatchers.Main) {
             val chooser = JFileChooser().apply {
                 dialogTitle = title
-                fileFilter = FileNameExtensionFilter(extension, extension)
+                fileFilter = FileNameExtensionFilter(extensions.joinToString(), *extensions)
             }
             if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) chooser.selectedFile else null
         }

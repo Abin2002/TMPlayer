@@ -139,8 +139,8 @@ internal data class MenuAt(val page: MenuPage, val anchor: Anchor, val at: Offse
         MenuPage.Audio -> if (anchor == Anchor.Audio) null else MenuPage.Main
         MenuPage.Subtitles -> if (anchor == Anchor.Subtitles) null else MenuPage.Main
         MenuPage.Speed -> if (anchor == Anchor.Speed) null else MenuPage.Main
-        MenuPage.Sleep, MenuPage.Shape -> MenuPage.Options
-        MenuPage.Options, MenuPage.Bookmarks, MenuPage.Copies -> MenuPage.Main
+        MenuPage.Sleep -> MenuPage.Options
+        MenuPage.Options, MenuPage.Shape, MenuPage.Bookmarks, MenuPage.Copies -> MenuPage.Main
         MenuPage.SubtitleStyle -> if (anchor == Anchor.Subtitles) MenuPage.Subtitles else MenuPage.Main
     }
 }
@@ -732,6 +732,11 @@ fun PlayerScreen(
     // "Hide the controls after" is the phone's setting, shared: zero keeps them up while playing.
     val hideAfterMs by remember(settings) { settings.touchPrefs.map { it.controlsTimeoutMs } }
         .collectAsState(initial = TouchPrefs.TIMEOUT_DEFAULT_MS)
+    // The phone's "Hold to speed up", shared with it: 0 is off.
+    val holdSpeed by remember(settings) { settings.touchPrefs.map { it.holdSpeed } }
+        .collectAsState(initial = TouchPrefs.HOLD_DEFAULT)
+    // The speed to go back to when a hold ends; null while no hold has changed it.
+    var speedBeforeHold by remember { mutableStateOf<Float?>(null) }
     // A pause, from anywhere (a click, a key, a media key or the system's media controls), puts
     // the controls up for as long as it lasts; the resume keeps them up for the button to turn back
     // into pause, then lets them go, sooner when they were down before the pause (PauseControls).
@@ -1078,6 +1083,7 @@ fun PlayerScreen(
             PlayerAction.ShortcutSheet -> showShortcuts = !showShortcuts
             is PlayerAction.Screenshot -> takeScreenshot(action.withSubtitles)
             PlayerAction.AbRepeat -> pressAbRepeat()
+            PlayerAction.CycleShape -> setScale(status.scale.next())
             is PlayerAction.ChapterStep -> stepChapter(action.forward)
             PlayerAction.AddBookmark -> addBookmark()
         }
@@ -1209,6 +1215,17 @@ fun PlayerScreen(
                 onRightClick = { at -> menu = MenuAt(MenuPage.Main, MenuAt.Anchor.Cursor, at) },
                 onMouseBack = onBack,
                 scope = scope,
+                onHold = { on ->
+                    if (on && !ignoreClicks && holdSpeed > 0f && status.playing && speedBeforeHold == null) {
+                        // Not remembered as the series' speed, as a pick in the speed menu is.
+                        speedBeforeHold = status.speed
+                        engine.setSpeed(holdSpeed)
+                        showFlash(Flash.Kind.Text, "${TouchPrefs.holdLabel(holdSpeed)}  \u25B6\u25B6")
+                    } else if (!on) {
+                        speedBeforeHold?.let { engine.setSpeed(it) }
+                        speedBeforeHold = null
+                    }
+                },
             )
 
             // The show's name, with the episode under it ("S01E04  ·  The Lighthouse") and the chat.
@@ -1296,6 +1313,11 @@ fun PlayerScreen(
                         MenuAction.Shortcuts -> showShortcuts = true
                         MenuAction.ToggleWatched -> toggleWatched()
                         MenuAction.SearchOnline -> showOnline = true
+                        MenuAction.LoadSubtitleFile -> scope.launch {
+                            com.tmplayer.desktop.os.FilePicker.open(s.playerLoadSubtitleFile, *SubtitleDrop.EXTENSIONS.toTypedArray())
+                                ?.let { loadSubtitle(it.path) }
+                            refocus()
+                        }
                         MenuAction.AddBookmark -> addBookmark()
                         is MenuAction.JumpTo -> {
                             engine.seekTo(action.bookmark.positionMs)

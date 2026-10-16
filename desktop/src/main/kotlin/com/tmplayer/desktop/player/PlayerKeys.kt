@@ -46,6 +46,9 @@ sealed interface PlayerAction {
     /** Marks the loop start, then its end, then clears it. See [AbLoop]. */
     data object AbRepeat : PlayerAction
 
+    /** The next picture shape: fit, crop to fill, stretch, and round again. */
+    data object CycleShape : PlayerAction
+
     /** The next chapter, or back to the start of this one (or the one before). See [Chapters]. */
     data class ChapterStep(val forward: Boolean) : PlayerAction
 
@@ -174,6 +177,8 @@ object PlayerKeys {
             Key.S -> PlayerAction.Screenshot(withSubtitles = !shift)
             Key.V -> if (shift) PlayerAction.SubtitlePrevious else PlayerAction.SubtitleNext
             Key.R -> PlayerAction.AbRepeat
+            // mpv's own panscan key, and free in both tables.
+            Key.W -> if (shift) null else PlayerAction.CycleShape
             Key.C -> PlayerAction.SubtitleToggle
             Key.A -> if (shift) PlayerAction.AudioPrevious else PlayerAction.AudioNext
             Key.B -> if (shift) null else PlayerAction.AddBookmark
@@ -247,6 +252,7 @@ object PlayerKeys {
             ),
             L.keysGroupWindow to listOf(
                 L.keysRowFullscreen to L.keysFullscreenKeys,
+                L.playerPictureShape to "W",
                 L.keysRowAlwaysOnTop to "$cmd+T",
                 L.keysRowMini to "$cmd+P",
                 L.keysRowScreenshot to L.keysScreenshotKeys,
