@@ -501,7 +501,9 @@ private fun MoreActions(page: DetailPage) {
     val tv = !isTouch()
     FlowRow(
         Modifier.fillMaxWidth().padding(top = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(if (tv) 12.dp else 4.dp, Alignment.CenterHorizontally),
+        // On a television these start where the title, Play and the facts start: centred, they
+        // were the one block on the page standing in the middle of it.
+        horizontalArrangement = Arrangement.spacedBy(if (tv) 12.dp else 4.dp, if (tv) Alignment.Start else Alignment.CenterHorizontally),
         verticalArrangement = Arrangement.spacedBy(if (tv) 12.dp else 8.dp),
     ) {
         rest.forEach { RoundAction(it.label, it.icon, it.onSelect, destructive = it.destructive, detail = it.detail, short = roundLabel(it, s), toggles = togglesOn(it.action), progress = it.progress) }

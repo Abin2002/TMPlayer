@@ -1,6 +1,20 @@
 package com.tmplayer.ui.downloads
 
 import androidx.compose.foundation.BorderStroke
+import com.tmplayer.ui.theme.Danger
+import androidx.tv.material3.Text as TvText
+import androidx.tv.material3.MaterialTheme as TvTheme
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.draw.alpha
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -658,6 +672,25 @@ fun DownloadsScreen(
             listState = listState,
             body = body,
         )
+    } else if (!isTouch()) {
+        TvDownloads(
+            tab = tab,
+            tabLabel = tabLabel,
+            onTab = { tab = it },
+            picking = picking,
+            chosenCount = chosen.size,
+            canSelect = rows.isNotEmpty() && tab == COMPLETED,
+            allChosen = chosen.size >= shown.size,
+            onBack = onBack,
+            onSelect = { picking = true },
+            onDeleteAll = { confirmingClearAll = true },
+            onLeavePicking = { leavePicking() },
+            onSelectAll = { picked = shown.map { it.key }.toSet() },
+            onShareChosen = { share(chosen) },
+            onDeleteChosen = { confirmingDeleteMany = true },
+            listState = listState,
+            body = body,
+        )
     } else {
         Scaffold(
             containerColor = Tone.background,
@@ -897,6 +930,19 @@ private fun Modifier.tvFocusRing(
 @Composable
 private fun RemoveAfterWatchingRow(checked: Boolean, onChange: (Boolean) -> Unit) {
     val s = LocalStrings.current
+    if (!isTouch()) {
+        // Settings' own switch row on a television, so the one setting on this screen fills
+        // with the focus colour like every other setting does, rather than wearing a ring.
+        com.tmplayer.ui.settings.ToggleRow(
+            title = s.downloadsRemoveAfterWatching,
+            subtitle = s.downloadsRemoveAfterWatchingBody,
+            icon = TmIcons.Delete,
+            checked = checked,
+            onToggle = { onChange(!checked) },
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+        return
+    }
     val interactions = remember { MutableInteractionSource() }
     val shape = RoundedCornerShape(Corner.Medium)
     Row(
@@ -939,6 +985,10 @@ private fun RemoveAfterWatchingRow(checked: Boolean, onChange: (Boolean) -> Unit
  */
 @Composable
 private fun TextAction(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+    if (!isTouch()) {
+        TvPill(label, icon = null, enabled = enabled, onClick = onClick)
+        return
+    }
     val interactions = remember { MutableInteractionSource() }
     TextButton(
         onClick = onClick,
@@ -1121,6 +1171,10 @@ private fun androidx.compose.foundation.layout.RowScope.PrimaryAction(
     icon: ImageVector,
     onClick: () -> Unit,
 ) {
+    if (!isTouch()) {
+        TvPill(label, icon, modifier = Modifier.weight(1f), onClick = onClick)
+        return
+    }
     val interactions = remember { MutableInteractionSource() }
     FilledTonalButton(
         onClick = onClick,
@@ -1140,6 +1194,10 @@ private fun androidx.compose.foundation.layout.RowScope.SecondaryAction(
     onClick: () -> Unit,
     danger: Boolean = false,
 ) {
+    if (!isTouch()) {
+        TvPill(label, icon, danger = danger, modifier = Modifier.weight(1f), onClick = onClick)
+        return
+    }
     val colour = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     val interactions = remember { MutableInteractionSource() }
     OutlinedButton(
@@ -1168,6 +1226,10 @@ private fun IconOnlyAction(
     onClick: () -> Unit,
     danger: Boolean = false,
 ) {
+    if (!isTouch()) {
+        TvPill(label, icon, danger = danger, showLabel = false, onClick = onClick)
+        return
+    }
     val colour = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     val interactions = remember { MutableInteractionSource() }
     OutlinedButton(
@@ -1540,6 +1602,190 @@ private fun PhoneDownloads(
             }
         } else if (!hosted && actions != null) {
             StickyActionBar(Modifier.align(Alignment.BottomCenter), compact = compact, content = actions)
+        }
+    }
+}
+
+/**
+ * Downloads on a television, laid out like the app's other full pages there (Settings, a chat's
+ * videos): the name in the large heading on the left with the round Back before it, the three
+ * tabs as the History page's chips with room between them, and the actions as the same pills the
+ * rest of the television uses, filled with the focus colour rather than ringed.
+ *
+ * Stock Material's app bar and tab row used to draw this page: a small title, every tab in the
+ * accent, nothing focused on arrival, and a square ring around a focused tab that butted against
+ * the selected tab's line.
+ */
+@Composable
+private fun TvDownloads(
+    tab: Int,
+    tabLabel: (Int) -> String,
+    onTab: (Int) -> Unit,
+    picking: Boolean,
+    chosenCount: Int,
+    canSelect: Boolean,
+    allChosen: Boolean,
+    onBack: () -> Unit,
+    onSelect: () -> Unit,
+    onDeleteAll: () -> Unit,
+    onLeavePicking: () -> Unit,
+    onSelectAll: () -> Unit,
+    onShareChosen: () -> Unit,
+    onDeleteChosen: () -> Unit,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    body: LazyListScope.() -> Unit,
+) {
+    val s = LocalStrings.current
+    val tabFocus = remember { List(3) { FocusRequester() } }
+    // The remote lands on the tab being shown, as the rail lands on the page being shown: before
+    // this nothing held focus until the first press, which then went to Back.
+    LaunchedEffect(Unit) {
+        repeat(3) {
+            withFrameNanos { }
+            if (runCatching { tabFocus[tab].requestFocus() }.getOrDefault(false)) return@LaunchedEffect
+        }
+    }
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(Tone.background)
+            // The rows below keep 16dp of their own each side, so the page owes that much less to
+            // the overscan margin and the heading, tabs and rows all start on one line.
+            .padding(start = Tv.SafeH - 16.dp, end = Tv.SafeH - 16.dp, top = Tv.SafeV),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TvPill(
+                label = if (picking) s.downloadsLeaveSelection else s.commonBack,
+                icon = if (picking) TmIcons.Close else TmIcons.ArrowBack,
+                showLabel = false,
+                onClick = if (picking) onLeavePicking else onBack,
+            )
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                TvText(
+                    when {
+                        !picking -> s.downloadsTitle
+                        chosenCount == 0 -> s.downloadsSelectVideos
+                        else -> s.downloadsSelected(count = chosenCount)
+                    },
+                    style = TvTheme.typography.headlineLarge,
+                    color = Tone.text,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                TvText(
+                    s.downloadsKeptIn(folder = LegacyDownloads.FOLDER),
+                    style = TvTheme.typography.bodyMedium,
+                    color = Tone.muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                when {
+                    picking -> {
+                        TvPill(s.downloadsSelectAll, TmIcons.Checklist, enabled = !allChosen, onClick = onSelectAll)
+                        if (chosenCount > 0) {
+                            TvPill(s.commonShare, TmIcons.Share, onClick = onShareChosen)
+                            TvPill(s.commonDelete, TmIcons.Delete, danger = true, onClick = onDeleteChosen)
+                        }
+                    }
+                    canSelect -> {
+                        TvPill(s.downloadsSelect, TmIcons.Checklist, onClick = onSelect)
+                        TvPill(s.downloadsDeleteAll, TmIcons.Delete, danger = true, onClick = onDeleteAll)
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Row(
+            Modifier.padding(horizontal = 16.dp).focusRestorer(tabFocus[tab]),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            TvPill(tabLabel(ONGOING), TmIcons.Download, selected = tab == ONGOING, modifier = Modifier.focusRequester(tabFocus[ONGOING])) { onTab(ONGOING) }
+            TvPill(tabLabel(COMPLETED), TmIcons.CheckCircle, selected = tab == COMPLETED, modifier = Modifier.focusRequester(tabFocus[COMPLETED])) { onTab(COMPLETED) }
+            TvPill(tabLabel(CACHED), TmIcons.Clock, selected = tab == CACHED, modifier = Modifier.focusRequester(tabFocus[CACHED])) { onTab(CACHED) }
+        }
+        Spacer(Modifier.height(8.dp))
+        Box(Modifier.fillMaxSize()) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = Tv.SafeV),
+                content = body,
+            )
+            ScrollToTop(listState)
+        }
+    }
+}
+
+/**
+ * A pill on the television's Downloads page: a tab, an action on a card or in the heading.
+ *
+ * Drawn as the browse pages draw theirs (BrowseScreen's chips and pills): the step above the page
+ * at rest, a tint when it is the chosen tab, the focus colour under the remote, and the accent
+ * ring in daylight where that fill alone is too pale. [danger] fills red under the remote.
+ */
+@Composable
+private fun TvPill(
+    label: String,
+    icon: ImageVector?,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    danger: Boolean = false,
+    enabled: Boolean = true,
+    /** False draws the icon alone; the label is still what a screen reader says. */
+    showLabel: Boolean = true,
+    onClick: () -> Unit,
+) {
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val background by animateColorAsState(
+        targetValue = when {
+            focused && danger -> Danger
+            focused -> Tone.focusFill
+            selected -> Tone.accent.copy(alpha = 0.16f)
+            else -> Tone.surfaceHigh
+        },
+        animationSpec = tween(140),
+        label = "downloadsPill",
+    )
+    val foreground = when {
+        focused && danger -> Color.White
+        focused -> Tone.onFocusFill
+        danger -> Danger
+        selected -> Tone.accent
+        else -> Tone.text
+    }
+    Row(
+        modifier
+            .height(48.dp)
+            .clip(CircleShape)
+            .background(background)
+            .focusRing(focused && !danger, CircleShape)
+            .semantics { if (selected) this.selected = true }
+            .clickable(interactionSource = interactions, indication = null, role = Role.Button) { if (enabled) onClick() }
+            .alpha(if (enabled) 1f else 0.5f)
+            // An icon on its own gets even padding, so the pill comes out round rather than wide.
+            .padding(horizontal = if (showLabel) 18.dp else 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+    ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = if (showLabel) null else label, tint = foreground, modifier = Modifier.size(22.dp))
+        }
+        if (showLabel) {
+            TvText(
+                label,
+                style = TvTheme.typography.bodyLarge,
+                fontWeight = if (selected || focused) FontWeight.SemiBold else FontWeight.Normal,
+                color = foreground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }

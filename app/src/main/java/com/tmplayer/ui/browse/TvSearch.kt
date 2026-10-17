@@ -103,6 +103,8 @@ internal fun TvSearchScreen(
     onSort: (SearchSort) -> Unit,
     onLoadMore: () -> Unit,
     onRetry: () -> Unit,
+    /** Whose Telegram this is, for the picture beside the clock every rail page carries. */
+    account: com.tmplayer.data.Account? = null,
 ) {
     val s = LocalStrings.current
     val reduced = rememberReducedMotion() || Motion.reduced
@@ -124,7 +126,32 @@ internal fun TvSearchScreen(
     val grid = rememberLazyGridState()
 
     Column(Modifier.fillMaxSize().padding(start = 28.dp, top = Tv.SafeV, bottom = Tv.SafeV)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        // The heading every other rail page opens with (TabHeading): its name and a line under
+        // it on the left, the clock and the account on the right. Without it this was the one
+        // page of the rail that started with a control, with no clock, a step higher up.
+        Row(
+            Modifier.fillMaxWidth().padding(end = Tv.FocusClearance, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // The television's type, as TabHeading sets it, so the two headings match.
+            Column(Modifier.weight(1f)) {
+                androidx.tv.material3.Text(s.commonSearch, style = androidx.tv.material3.MaterialTheme.typography.headlineLarge, color = Tone.text)
+                androidx.tv.material3.Text(
+                    s.searchPageBlurb,
+                    style = androidx.tv.material3.MaterialTheme.typography.bodyMedium,
+                    color = Tone.muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(Modifier.width(20.dp))
+            TvStatusCluster(account)
+        }
+        Row(
+            Modifier.padding(end = Tv.FocusClearance),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
             if (voice != null) MicOrb(onClick = voice, modifier = Modifier.focusRequester(micFocus))
             TvSearchField(
                 value = text,
@@ -269,7 +296,9 @@ private fun MicOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
-    val fill by animateColorAsState(if (focused) Tone.accent else Tone.surfaceHigh, Motion.standard(Motion.Fast), label = "micOrb")
+    // The focus fill every other control on a television takes, not the accent: in daylight the
+    // accent is a dark blue that made this the one control lit differently from the rest.
+    val fill by animateColorAsState(if (focused) Tone.focusFill else Tone.surfaceHigh, Motion.standard(Motion.Fast), label = "micOrb")
     Box(
         modifier
             .size(64.dp)
@@ -279,7 +308,7 @@ private fun MicOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .clickable(interactionSource = interactions, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice, tint = if (focused) Tone.onAccent else Tone.text, modifier = Modifier.size(30.dp))
+        Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice, tint = if (focused) Tone.onFocusFill else Tone.text, modifier = Modifier.size(30.dp))
     }
 }
 
@@ -429,6 +458,7 @@ internal fun TvSearchPage(
     onOpenMedia: (MediaItem, String) -> Unit,
     onPlayMedia: (MediaItem, String) -> Unit,
     onMessage: (String) -> Unit,
+    account: com.tmplayer.data.Account? = null,
 ) {
     val s = LocalStrings.current
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -482,6 +512,7 @@ internal fun TvSearchPage(
         onSort = search::setSort,
         onLoadMore = search::loadMore,
         onRetry = search::retry,
+        account = account,
     )
     opened?.let { (series, chatTitle) ->
         SeriesOpened(series = series, watch = watch, onPlay = { onPlayMedia(it, chatTitle) }, onDismiss = { opened = null }, chatTitle = chatTitle)

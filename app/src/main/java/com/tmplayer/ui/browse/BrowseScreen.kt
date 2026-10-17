@@ -74,6 +74,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -216,6 +217,13 @@ fun BrowseScreen(
      * accumulates a list worth managing exactly as a phone does.
      */
     onOpenDownloads: () -> Unit = {},
+    /**
+     * Back from Settings or Downloads, opened from the rail: the rail item to land on, so the
+     * remote is where it was pressed (television only). Null the rest of the time.
+     */
+    returnToRail: RailReturn? = null,
+    /** Told once [returnToRail] has been honoured, so it is not honoured again. */
+    onReturnedToRail: () -> Unit = {},
     /** How many downloads are running, for the badge on that row of the drawer and the rail. */
     downloadCount: Int = 0,
     onToggleFavorite: (ChatSummary) -> Unit = {},
@@ -792,9 +800,21 @@ fun BrowseScreen(
     } else {
         // The search across every chat: the rail's first item, and the remote's search key.
         var tvSearchOpen by rememberSaveable { mutableStateOf(false) }
+        // Back from anywhere in a page goes to the rail first, on the page's own item, the way
+        // the system's TV apps answer it; only Back on the rail asks to leave the app. Before,
+        // Back deep in a row went straight to "press Back again to exit".
+        val railSelected = remember { FocusRequester() }
+        var railHasFocus by remember { mutableStateOf(false) }
+        BackHandler(enabled = !railHasFocus && !tvSearchOpen && tab.navSection in sections) {
+            runCatching { railSelected.requestFocus() }
+        }
         BackHandler(enabled = tvSearchOpen) { tvSearchOpen = false }
+        // Whether the viewer has pressed anything since this screen came up: until then the rail
+        // may keep putting the remote back on the item Back returned to (NavRail's returnTo).
+        val pressedSinceArrival = remember { booleanArrayOf(false) }
         Row(
             Modifier.fillMaxSize().onPreviewKeyEvent { event ->
+                if (event.type == KeyEventType.KeyDown) pressedSinceArrival[0] = true
                 if (event.type == KeyEventType.KeyDown && event.key == Key.Search) {
                     tvSearchOpen = true
                     true
@@ -820,6 +840,11 @@ fun BrowseScreen(
                 downloadCount = downloadCount,
                 updateVersion = updateVersion,
                 onUpdate = onUpdate,
+                returnTo = returnToRail,
+                onReturned = onReturnedToRail,
+                pressedSinceArrival = { pressedSinceArrival[0] },
+                selectedFocus = railSelected,
+                modifier = Modifier.onFocusChanged { railHasFocus = it.hasFocus },
             )
 
             Column(Modifier.fillMaxSize().padding(end = Tv.SafeH).keepsVerticalFocus()) {
@@ -835,6 +860,7 @@ fun BrowseScreen(
                         onOpenMedia = openMedia,
                         onPlayMedia = onPlayMedia,
                         onMessage = onMessage,
+                        account = (state as? UiState.Content)?.value?.account ?: account,
                     )
                 } else {
                     pane(tab)
@@ -1324,11 +1350,13 @@ private fun ContinueCard(
     )
 
     val body: @Composable RowScope.() -> Unit = {
-        // The bar lies across the foot of the thumbnail, as it does on every video tile.
-        Box {
+        // The bar lies across the foot of the thumbnail, as it does on every video tile. The box
+        // carries the size, not the art: the bar fills its parent's width, and in a box sized by
+        // its art alone that was the whole row, which left the title column no width at all.
+        Box(Modifier.width(THUMBNAIL_WIDTH).height(THUMBNAIL_HEIGHT)) {
             ContinueArt(
                 text,
-                Modifier.width(THUMBNAIL_WIDTH).height(THUMBNAIL_HEIGHT),
+                Modifier.fillMaxSize(),
                 badge = 34.dp,
             )
             if (text.fraction > 0f) {
@@ -1466,8 +1494,34 @@ private fun NavRail(
     /** The version on GitHub, when it beats the one running. Null the rest of the time. */
     updateVersion: String? = null,
     onUpdate: () -> Unit = {},
+    returnTo: RailReturn? = null,
+    onReturned: () -> Unit = {},
+    pressedSinceArrival: () -> Boolean = { false },
+    /** On the item being shown; Left from the content and Back from it land there. */
+    selectedFocus: FocusRequester = remember { FocusRequester() },
+    modifier: Modifier = Modifier,
 ) {
     val s = LocalStrings.current
+    val downloadsFocus = remember { FocusRequester() }
+    val settingsFocus = remember { FocusRequester() }
+    // Back from Settings or Downloads lands on the rail item that opened them, as Back does in the
+    // system's own TV apps. The page under the rail takes focus for itself as it is composed, so
+    // this keeps asking for the item, frame by frame, for about a second and a half or until the
+    // viewer presses a key, whichever is first: a page that loads its rows a moment later takes
+    // focus a moment later, and a single request lost that race.
+    LaunchedEffect(returnTo) {
+        val target = when (returnTo) {
+            RailReturn.Downloads -> downloadsFocus
+            RailReturn.Settings -> settingsFocus
+            null -> return@LaunchedEffect
+        }
+        repeat(RETURN_HOLD_FRAMES) {
+            if (pressedSinceArrival()) return@repeat
+            withFrameNanos { }
+            if (!pressedSinceArrival()) runCatching { target.requestFocus() }
+        }
+        onReturned()
+    }
     // 180dp of room for the items, or as much more as the longest label needs up to RAIL_WIDE:
     // "ഡൗൺലോഡുകൾ" and "ക്രമീകരണങ്ങൾ" are single words that cannot wrap, and at 180dp a
     // Malayalam rail read "ഡൗൺലോ..." and "ക്രമീകരണ...".
@@ -1492,9 +1546,8 @@ private fun NavRail(
     // Left from the content lands on the destination being shown, not on whichever rail item
     // happens to sit level with the focused tile (a group heading, Downloads), so the rail always
     // opens where the viewer is.
-    val selectedFocus = remember { FocusRequester() }
     Column(
-        Modifier
+        modifier
             .width(width + Tv.SafeH - RAIL_INSET)
             .fillMaxHeight()
             .focusProperties { onEnter = { selectedFocus.requestFocus() } }
@@ -1563,6 +1616,7 @@ private fun NavRail(
             badge = downloadCount.takeIf { it > 0 }?.toString(),
             selected = false,
             onClick = onOpenDownloads,
+            modifier = Modifier.focusRequester(downloadsFocus),
         )
         if (updateVersion != null) {
             RailItem(
@@ -1584,9 +1638,16 @@ private fun NavRail(
             badge = null,
             selected = false,
             onClick = onOpenSettings,
+            modifier = Modifier.focusRequester(settingsFocus),
         )
     }
 }
+
+/** Where Back from a page opened at the foot of the television's rail puts the remote. */
+enum class RailReturn { Downloads, Settings }
+
+/** How many frames, about a second and a half at 60 Hz, the rail holds focus on that item. */
+private const val RETURN_HOLD_FRAMES = 90
 
 /**
  * The logo, the name and the version, at the top of the rail.
@@ -1909,7 +1970,7 @@ private fun TabHeading(
  * happened to open, so the minute changes when the minute changes.
  */
 @Composable
-private fun TvStatusCluster(account: Account?, onArt: Boolean = false) {
+internal fun TvStatusCluster(account: Account?, onArt: Boolean = false) {
     var now by remember { mutableStateOf(java.util.Date()) }
     LaunchedEffect(Unit) {
         while (true) {

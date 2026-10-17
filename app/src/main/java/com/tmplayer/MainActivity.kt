@@ -720,6 +720,9 @@ private fun Root() {
     var downloadsCameFrom by remember { mutableStateOf<Screen>(Screen.Chats) }
     // Where leaving Settings goes back to: the page the profile popover's Settings was picked on.
     var settingsCameFrom by remember { mutableStateOf<Screen>(Screen.Chats) }
+    // On a television, the rail item to put the remote back on when Back from Settings or
+    // Downloads returns to the browser: the place it was pressed, not the first tile of the page.
+    var railReturn by remember { mutableStateOf<com.tmplayer.ui.browse.RailReturn?>(null) }
     // Whether the Downloads screen opens on its cached videos, which is how Settings' Cached
     // videos row reaches the list of them.
     var downloadsOnCached by remember { mutableStateOf(false) }
@@ -1349,6 +1352,8 @@ private fun Root() {
                     onResumeMedia = { resumeMedia(it) },
                     onOpenSettings = openSettings,
                     onOpenDownloads = openDownloads,
+                    returnToRail = railReturn,
+                    onReturnedToRail = { railReturn = null },
                     downloadCount = activeDownloads.size,
                     updateVersion = offeredUpdate,
                     onUpdate = { showUpdate = true },
@@ -1515,7 +1520,10 @@ private fun Root() {
                 // Back to whatever raised it. Reached from the drawer that is the chat list, and
                 // reached from "Not enough space" it is the chat the video was in, which is where
                 // somebody who has just freed space wants to be.
-                val leaveDownloads = { screen = downloadsCameFrom }
+                val leaveDownloads = {
+                    if (downloadsCameFrom is Screen.Chats) railReturn = com.tmplayer.ui.browse.RailReturn.Downloads
+                    screen = downloadsCameFrom
+                }
                 BackHandler(onBack = leaveDownloads)
                 DownloadsScreen(
                     onPlay = { record -> resumeMedia(record) },
@@ -1530,6 +1538,7 @@ private fun Root() {
                     // so a full re-sync on the way out would be work nothing asked for.
                     chatsViewModel.refreshIfStale()
                     settingsPage = null
+                    if (settingsCameFrom is Screen.Chats) railReturn = com.tmplayer.ui.browse.RailReturn.Settings
                     screen = settingsCameFrom
                 }
                 BackHandler(onBack = leaveSettings)
