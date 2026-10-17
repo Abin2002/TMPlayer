@@ -24,7 +24,7 @@ Key facts:
 - [Windows, macOS and Linux](https://tmplayer.org/desktop/): the desktop app, a Telegram video player for a computer built with Compose Multiplatform and played through mpv: signing in by QR code, streaming while downloading, self update, the main keyboard shortcuts, and which computers it runs on (no iPhone or iPad version)
 - [Fire TV](https://tmplayer.org/fire-tv/): installing on a Fire TV Stick, Cube or Fire TV Edition TV
 - [Formats](https://tmplayer.org/formats/): the containers, codecs and subtitle formats it plays
-- [Questions](https://tmplayer.org/faq/): Android TV, Fire TV, PC and Mac, price, safety, signing in with or without a phone, audio files (not listed: it plays videos only), streaming without waiting, which file to download, what it will not do
+- [Questions](https://tmplayer.org/faq/): Android TV, Fire TV, PC and Mac, price, safety, signing in with or without a phone, audio files (not listed: it plays videos only), streaming without waiting, which file to download, using an external player such as VLC (on Android, Open in another app hands a video over), what it will not do
 - [Changelog](https://tmplayer.org/changelog/): every release, newest first, with a page per release and an RSS feed at https://tmplayer.org/changelog/feed.xml
 
 ## Guides

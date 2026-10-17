@@ -70,6 +70,14 @@ export const faqLd = {
     },
     {
       "@type": "Question",
+      "name": "Can I use an external player for Telegram videos, such as VLC?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. TMPlayer is itself an external player for the videos in your Telegram chats: it signs in to your own account and plays them with their subtitles and every audio track, and remembers where you stopped, so there is no file to save and open elsewhere. On Android it can also pass a video on: the player's menu has Open in another app, which hands it to VLC, MX Player or any other player on the device. A finished download goes over whole, one still downloading goes over as far as it has got, and videos from chats that do not allow saving stay in TMPlayer. The desktop app plays everything itself, through mpv."
+      }
+    },
+    {
+      "@type": "Question",
       "name": "Do I have to wait for the video to download?",
       "acceptedAnswer": {
         "@type": "Answer",
