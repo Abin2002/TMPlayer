@@ -1,5 +1,6 @@
 package com.tmplayer.ui.onboarding
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.LocalIndication
@@ -7,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -109,7 +109,7 @@ internal fun StepProgress(index: Int, total: Int, modifier: Modifier = Modifier)
 internal fun StepsCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val touch = deviceForm() == DeviceForm.Phone
     Box(
         modifier

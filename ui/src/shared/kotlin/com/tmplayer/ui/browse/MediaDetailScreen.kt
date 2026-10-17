@@ -1,11 +1,11 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import com.tmplayer.ui.components.riseIn
 import androidx.compose.foundation.background
 import com.tmplayer.ui.theme.trackedFor
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.statusBars
@@ -550,7 +550,7 @@ fun PageDiscButton(icon: ImageVector, label: String, onClick: () -> Unit, modifi
     }
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     Box(
         modifier
             .size(if (tv) 48.dp else 40.dp)

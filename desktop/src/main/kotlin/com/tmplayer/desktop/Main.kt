@@ -56,6 +56,8 @@ import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.platform.Background
 import com.tmplayer.ui.components.AppLogo
 import com.tmplayer.ui.theme.TmMaterialTheme
+import com.tmplayer.desktop.ui.ProvideFocusVisibility
+import com.tmplayer.desktop.ui.trackFocusVisibility
 import com.tmplayer.ui.theme.UiScaled
 import com.tmplayer.ui.theme.rememberUiScale
 import kotlinx.coroutines.delay
@@ -157,6 +159,8 @@ fun main(args: Array<String>) {
                 }.apply { isDaemon = true }.start()
                 exitApplication()
             }
+            // Focus drawn for the keyboard only: a click hides it, Tab and the arrows show it.
+            com.tmplayer.desktop.ui.FocusVisible.install()
             Window(
                 onCloseRequest = quit,
                 state = windowState,
@@ -287,7 +291,7 @@ fun main(args: Array<String>) {
                         )
                     }
                     CompositionLocalProvider(LocalWindowChrome provides chrome) {
-                        Box(Modifier.fillMaxSize()) {
+                        Box(Modifier.fillMaxSize().trackFocusVisibility()) {
                             DesktopShell(shell) { request, close ->
                                 PlayerHost(
                                     request = request,
@@ -342,7 +346,7 @@ fun DesktopTheme(settings: SettingsStore, content: @Composable () -> Unit) {
     // The interface size (CP59) for the whole window, the player's controls included; the video
     // fills whatever space it is given, so it is the same at every size.
     val scale by rememberUiScale(settings)
-    TmMaterialTheme(dark = dark) { UiScaled(scale, content) }
+    TmMaterialTheme(dark = dark) { ProvideFocusVisibility { UiScaled(scale, content) } }
 }
 
 /**

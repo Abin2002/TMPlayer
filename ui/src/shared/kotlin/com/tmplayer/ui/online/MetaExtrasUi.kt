@@ -1,12 +1,12 @@
 package com.tmplayer.ui.online
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -223,7 +223,7 @@ fun TrailerPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     Row(
         modifier
             .height(if (tv) 48.dp else 40.dp)
@@ -275,7 +275,7 @@ fun MetaCastRow(cast: List<MetaPerson>, modifier: Modifier = Modifier, contentPa
 private fun PersonCard(person: MetaPerson, loadPhoto: Boolean) {
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val face = if (tv) FACE_TV else FACE
     var enlarged by remember { mutableStateOf(false) }
     if (enlarged) PersonEnlarged(person) { enlarged = false }
@@ -362,7 +362,7 @@ private fun PersonEnlarged(person: MetaPerson, onClose: () -> Unit) {
                 }
             }
             val interactions = remember { MutableInteractionSource() }
-            val focused by interactions.collectIsFocusedAsState()
+            val focused by interactions.collectIsFocusVisibleAsState()
             Box(
                 Modifier
                     .align(Alignment.TopEnd)
@@ -438,7 +438,7 @@ fun MoreLikeThisRow(
 private fun KnownPoster(known: KnownTitle, onClick: () -> Unit) {
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val width = if (tv) POSTER_TV else POSTER
     val shape = RoundedCornerShape(Corner.Medium)
     Column(Modifier.width(width), verticalArrangement = Arrangement.spacedBy(4.dp)) {

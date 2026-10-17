@@ -252,7 +252,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         Column(Modifier.fillMaxSize()) {
         if (!underChrome || ui !is UiState.Content) Spacer(Modifier.height(ChatTopClearance))
         topicBar?.let { bar ->
-            com.tmplayer.ui.browse.TopicTabs(bar, model::selectTopic, Modifier.padding(bottom = 12.dp), edge = 24.dp)
+            com.tmplayer.ui.browse.TopicTabs(bar, model::selectTopic, Modifier.padding(bottom = 12.dp), edge = pageMargin())
         }
         val skeleton: @Composable () -> Unit = {
             VideoGridSkeleton(if (postersLast) state.posterWidth * POSTER_SHARE else state.posterWidth, posters = postersLast)
@@ -441,9 +441,11 @@ internal fun VideoGrid(
                 else -> GridCells.Adaptive(state.posterWidth * POSTER_SHARE)
             },
             state = if (rows) rowsGrid else grid,
+            // On the page's margin, as the heading and the chips are; a row's own 8 dp inset is
+            // taken off, so its poster starts there too, and the end keeps room for the scrollbar.
             contentPadding = PaddingValues(
-                start = if (rows) 16.dp else 24.dp,
-                end = if (rows) 24.dp else 32.dp,
+                start = if (rows) pageMargin() - 8.dp else pageMargin(),
+                end = if (rows) pageMargin() else pageMargin() + 8.dp,
                 top = topPadding,
                 bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current,
             ),
@@ -507,12 +509,8 @@ internal fun LoadMoreNearEnd(grid: LazyGridState, enabled: Boolean, loadMore: ()
 fun PosterSizeStep(state: ShellState) {
     val s = LocalStrings.current
     Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { state.stepPoster(-1) }, enabled = state.posterWidth != POSTER_STEPS.first()) {
-            Icon(TmIcons.Grid, contentDescription = s.browseSmallerPosters)
-        }
-        IconButton(onClick = { state.stepPoster(1) }, enabled = state.posterWidth != POSTER_STEPS.last()) {
-            Icon(TmIcons.Add, contentDescription = s.browseLargerPosters)
-        }
+        TipIconButton(TmIcons.Grid, s.browseSmallerPosters, { state.stepPoster(-1) }, enabled = state.posterWidth != POSTER_STEPS.first())
+        TipIconButton(TmIcons.Add, s.browseLargerPosters, { state.stepPoster(1) }, enabled = state.posterWidth != POSTER_STEPS.last())
     }
 }
 
@@ -561,7 +559,7 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                         // A quarter wider than a poster: the card carries its title on the art.
                         columns = GridCells.Adaptive(state.posterWidth * CONTINUE_WIDTH),
                         state = grid,
-                        contentPadding = PaddingValues(start = 24.dp, end = 32.dp, top = 8.dp, bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
+                        contentPadding = PaddingValues(start = pageMargin(), end = pageMargin() + 8.dp, top = 8.dp, bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                         modifier = Modifier.fillMaxSize().navKeys(nav) { records.size },
@@ -821,7 +819,10 @@ internal fun Poster(
             lifted = false
         }
     }
-    var focused by remember { mutableStateOf(false) }
+    var hasFocus by remember { mutableStateOf(false) }
+    // The ring, the lift and the Play button are the keyboard's: back from the detail pane or a
+    // menu the poster has focus again, and after a click that must not look like a hover stuck on.
+    val focused = hasFocus && com.tmplayer.ui.theme.FocusVisibility.visible
     val scale by animateFloatAsState(
         targetValue = if ((lifted || focused) && !rememberReducedMotion()) Motion.FocusScale else 1f,
         animationSpec = Motion.standard(Motion.Fast),
@@ -889,7 +890,7 @@ internal fun Poster(
                 }
             }
             .then(if (nav != null) Modifier.navCell(nav, index, requester) else Modifier.focusRequester(requester))
-            .onFocusChanged { focused = it.isFocused }
+            .onFocusChanged { hasFocus = it.isFocused }
             .onPreviewKeyEvent { event ->
                 when {
                     GridNav.isMenuKey(event) -> {
@@ -964,7 +965,7 @@ internal fun Poster(
                 if (details == null) {
                     TileMenu(state, item, chatTitle, expanded = menu, onDismiss = {
                         menu = false
-                        if (focused || nav?.current == index) runCatching { requester.requestFocus() }
+                        if (hasFocus || nav?.current == index) runCatching { requester.requestFocus() }
                     }, extra = extraMenu, watchedToggle = if (markToggle) finished else null, fileMenu = fileMenu)
                 }
             }
@@ -1024,7 +1025,7 @@ internal fun Poster(
                 TileMenu(state, item, chatTitle, expanded = menu, onDismiss = {
                     menu = false
                     // Back to the poster, so the arrows carry on from where the menu was opened.
-                    if (focused || nav?.current == index) runCatching { requester.requestFocus() }
+                    if (hasFocus || nav?.current == index) runCatching { requester.requestFocus() }
                 }, extra = extraMenu, watchedToggle = if (markToggle) finished else null, fileMenu = fileMenu)
             }
         }

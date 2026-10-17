@@ -658,7 +658,7 @@ class BrowseRenderTest {
 
     /**
      * The phone's latest look on the desktop, in dark and light: the floating bar over the Chats
-     * page (its name centred, the chips under it), the picture's popover, a chat's floating Back
+     * page (its name at the start like every page's, the chips under it), the picture's popover, a chat's floating Back
      * and name with its bar at the foot as tiles and as rows, its search folded into the bar with
      * the recent searches over it, its Sort popover, a message at the top and Settings with the
      * account over it.
@@ -719,7 +719,7 @@ class BrowseRenderTest {
                 shell.showChats(com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats))
                 save("parity-chats-$theme.png", frame(dark, account) {
                     Column(Modifier.fillMaxSize()) {
-                        PageHeader(com.tmplayer.ui.browse.BrowseTab.Chats.heading, centred = true)
+                        PageHeader(com.tmplayer.ui.browse.BrowseTab.Chats.heading)
                         ChoiceChips(chips.map { chip -> Choice(chip.label, chip.label, chip.icon, selected = chip == chips.first()) {} })
                         chats.forEach { ChatRow(it, favourite = it.id == 2L, onOpen = {}, onStar = {}) }
                     }
@@ -727,7 +727,7 @@ class BrowseRenderTest {
                 shell.profileOpen = true
                 save("parity-profile-$theme.png", frame(dark, account) {
                     Column(Modifier.fillMaxSize()) {
-                        PageHeader(com.tmplayer.ui.browse.BrowseTab.Chats.heading, centred = true)
+                        PageHeader(com.tmplayer.ui.browse.BrowseTab.Chats.heading)
                         chats.forEach { ChatRow(it, favourite = false, onOpen = {}, onStar = {}) }
                     }
                 })

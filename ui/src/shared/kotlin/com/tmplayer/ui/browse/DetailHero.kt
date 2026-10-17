@@ -1,12 +1,12 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -177,7 +177,7 @@ internal fun HeroPill(
 ) {
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val reduced = rememberReducedMotion()
     // Grows only under a remote: a pointer's focus sits on a full-width pill with no room around it.
     val scale by animateFloatAsState(
@@ -239,7 +239,7 @@ internal fun RoundAction(
 ) {
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val reduced = rememberReducedMotion()
     val scale by animateFloatAsState(
         if (focused && tv && !reduced) Motion.FocusScale else 1f,
@@ -361,7 +361,7 @@ internal fun Synopsis(text: String, modifier: Modifier = Modifier, style: TextSt
     var open by remember(text) { mutableStateOf(false) }
     var cut by remember(text) { mutableStateOf(false) }
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val shape = RoundedCornerShape(Corner.Small)
     val pressable = cut || open
     Column(

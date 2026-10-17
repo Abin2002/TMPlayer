@@ -1,9 +1,9 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -106,7 +106,7 @@ private fun TopicTab(
 ) {
     val s = LocalStrings.current
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     // Quiet pills: the plain surface at rest, and the focus fill for the chosen topic and for the
     // one under the remote. The two are told apart by the ring, which only focus draws, and by the
     // chosen one's weight.

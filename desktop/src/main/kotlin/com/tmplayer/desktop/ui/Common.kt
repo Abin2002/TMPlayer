@@ -253,12 +253,6 @@ fun PageHeader(
     subtitlePending: Boolean = false,
     leading: (@Composable () -> Unit)? = null,
     onArt: Boolean = false,
-    /**
-     * The title in the middle of the window rather than at its start, as the phone's Chats page
-     * has it: [leading] keeps the start and [actions] the end, each given the same share of the
-     * row so the title is centred on the page whatever sits beside it.
-     */
-    centred: Boolean = false,
     actions: @Composable () -> Unit = {},
 ) {
     val ink = if (onArt) Tone.onArt else LocalContentColor.current
@@ -282,7 +276,7 @@ fun PageHeader(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             val heading: @Composable (Modifier) -> Unit = { headingModifier ->
-                Column(headingModifier, horizontalAlignment = if (centred) Alignment.CenterHorizontally else Alignment.Start) {
+                Column(headingModifier) {
                     Text(
                         title,
                         style = MaterialTheme.typography.displaySmall.trackedFor(title),
@@ -303,19 +297,9 @@ fun PageHeader(
                     WindowControls()
                 }
             }
-            if (centred) {
-                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) { leading?.invoke() }
-                heading(Modifier.widthIn(max = 560.dp))
-                Row(
-                    Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) { end() }
-            } else {
-                leading?.invoke()
-                heading(Modifier.weight(1f))
-                end()
-            }
+            leading?.invoke()
+            heading(Modifier.weight(1f))
+            end()
         }
     }
 }

@@ -1,12 +1,12 @@
 package com.tmplayer.ui.onboarding
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -256,7 +256,7 @@ private fun ChoiceSwitch(
 ) {
     val s = LocalStrings.current
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val outer = RoundedCornerShape(Corner.Medium)
     val inner = RoundedCornerShape(Corner.Small)
@@ -327,7 +327,7 @@ private fun ChoiceSwitch(
 @Composable
 private fun PlaceLink(label: String, onClick: () -> Unit) {
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val touch = deviceForm() == DeviceForm.Phone
     Row(
         Modifier

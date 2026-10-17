@@ -1,5 +1,6 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import com.tmplayer.ui.theme.trackedFor
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
@@ -17,7 +18,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -241,7 +241,7 @@ fun SeasonTabs(
     ) {
         seasons.forEach { season ->
             val interactions = remember { MutableInteractionSource() }
-            val focused by interactions.collectIsFocusedAsState()
+            val focused by interactions.collectIsFocusVisibleAsState()
             val chosen = season.number == selected
             LaunchedEffect(focused) { if (focused && tv) onSelect(season.number) }
             val fill = when {
@@ -348,7 +348,7 @@ fun EpisodeRow(
 internal fun CopyChip(label: String, chosen: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, description: String = label) {
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val shape = CircleShape
     Text(
         label,
@@ -436,7 +436,7 @@ private fun EpisodeLine(
     val s = LocalStrings.current
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val shape = RoundedCornerShape(Corner.Medium)
     val cover = rememberCover(item)
     Row(
@@ -1007,7 +1007,7 @@ private fun EpisodeRanges(
     ) {
         ranges.forEachIndexed { index, range ->
             val interactions = remember { MutableInteractionSource() }
-            val focused by interactions.collectIsFocusedAsState()
+            val focused by interactions.collectIsFocusVisibleAsState()
             val chosen = index == selected
             val shape = RoundedCornerShape(Corner.Small)
             Text(
@@ -1065,7 +1065,7 @@ fun ProgressLine(fraction: Float, modifier: Modifier = Modifier) {
 @Composable
 internal fun PlayButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val tv = !isTouch()
     Row(
         modifier

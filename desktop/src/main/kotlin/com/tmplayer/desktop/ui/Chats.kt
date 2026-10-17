@@ -45,6 +45,7 @@ import androidx.compose.foundation.shape.CircleShape
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Focus
+import com.tmplayer.ui.theme.FocusVisibility
 import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.TmDropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -135,11 +136,10 @@ fun ChatsPage(
             if (waiting > 0) toast(s.chatsRefreshWait(waiting))
         }
         RegisterRefresh(state, refresh)
-        // The page's name alone, centred and large, as on the phone: the chips under it already
-        // say which slice of the list this is, and a line under the name said it again.
+        // The page's name alone, at the start like every other page's: the chips under it
+        // already say which slice of the list this is, and a line under the name said it again.
         PageHeader(
             title = if (favouritesOnly) s.navFavourites else section.heading,
-            centred = true,
             actions = {
                 SearchField(
                     query = query,
@@ -149,9 +149,7 @@ fun ChatsPage(
                     modifier = Modifier.widthIn(min = 160.dp, max = 280.dp),
                     onDown = { nav.focus(0) },
                 )
-                IconButton(onClick = refresh) {
-                    Icon(TmIcons.Refresh, contentDescription = s.commonRefresh)
-                }
+                TipIconButton(TmIcons.Refresh, s.commonRefresh, refresh, shortcut = "F5")
             },
         )
         if (!favouritesOnly) {
@@ -386,7 +384,10 @@ internal fun ChatRow(
     actions: ChatRowActions = ChatRowActions(),
 ) {
     val s = LocalStrings.current
-    var focused by remember { mutableStateOf(false) }
+    var hasFocus by remember { mutableStateOf(false) }
+    // Drawn for the keyboard only: a click opens the chat, and coming back to a ringed row read
+    // as a row still selected.
+    val focused = hasFocus && FocusVisibility.visible
     var menu by remember { mutableStateOf(false) }
     val hover = remember { MutableInteractionSource() }
     val hovered by hover.collectIsHoveredAsState()
@@ -410,7 +411,7 @@ internal fun ChatRow(
                 if (event.buttons.isSecondaryPressed || macContext) menu = true
             }
             .then(modifier)
-            .onFocusChanged { focused = it.isFocused }
+            .onFocusChanged { hasFocus = it.isFocused }
             .onPreviewKeyEvent { event ->
                 // Enter opens (the click). The letters are the row's menu, one key each.
                 if (GridNav.isMenuKey(event)) {
@@ -465,13 +466,13 @@ internal fun ChatRow(
                 )
             }
         }
-        IconButton(onClick = onStar) {
-            Icon(
-                if (favourite) TmIcons.Star else TmIcons.StarOutline,
-                contentDescription = if (favourite) s.chatsUnfavourite else s.chatsFavourite,
-                tint = if (favourite) Tone.caution else Tone.muted,
-            )
-        }
+        TipIconButton(
+            if (favourite) TmIcons.Star else TmIcons.StarOutline,
+            if (favourite) s.chatsUnfavourite else s.chatsFavourite,
+            onStar,
+            shortcut = "S",
+            tint = if (favourite) Tone.caution else Tone.muted,
+        )
         Box {
             ChatRowMenu(chat, favourite, menu, onDismiss = { menu = false }, onOpen, onStar, actions)
         }

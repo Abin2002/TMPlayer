@@ -1,11 +1,11 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.foundation.background
 import com.tmplayer.ui.theme.trackedFor
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -421,7 +421,7 @@ internal fun DetailBookmarks(bookmarks: List<Bookmark>, onOpen: ((Bookmark) -> U
 @Composable
 internal fun DetailFacts(item: MediaItem, facts: MediaFacts, s: Messages, overview: String?, credit: MetaInfo? = null, showSynopsis: Boolean = true) {
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val shape = RoundedCornerShape(Corner.Medium)
     val remote = !isTouch()
     val lines = buildList {
@@ -496,7 +496,7 @@ internal fun DetailFacts(item: MediaItem, facts: MediaFacts, s: Messages, overvi
 @Composable
 private fun DetailActionRow(row: DetailRow, modifier: Modifier = Modifier) {
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val touch = isTouch()
     val shape = RoundedCornerShape(Corner.Medium)
     val background = when {

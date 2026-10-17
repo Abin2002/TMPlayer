@@ -17,7 +17,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -96,6 +95,7 @@ import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.FloatingTone
 import com.tmplayer.ui.theme.Motion
 import com.tmplayer.ui.theme.Tone
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import com.tmplayer.ui.theme.floatingBorder
 import com.tmplayer.ui.theme.rememberReducedMotion
 
@@ -197,7 +197,7 @@ private fun NavBar(
                 // button to the next, so the bar shows where the page went.
                 val index = current?.ordinal
                 val x by animateDpAsState(
-                    targetValue = NAV_ITEM * (index ?: 0),
+                    targetValue = (NAV_ITEM + NAV_GAP) * (index ?: 0),
                     animationSpec = if (reduced) snap() else spring(dampingRatio = 0.8f, stiffness = 500f),
                     label = "navHighlight",
                 )
@@ -214,7 +214,9 @@ private fun NavBar(
                         .clip(RoundedCornerShape(NAV_ITEM_HEIGHT / 2))
                         .background(Tone.accent.copy(alpha = 0.16f)),
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // A gap between the places, so the chosen one's highlight and the hover on the one
+                // beside it stay two shapes rather than running into one block.
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(NAV_GAP)) {
                     NavButton(TmIcons.Home, s.browseTabHome, "${COMMAND}1", current == NavPlace.Home) { state.go(Destination.Home) }
                     NavButton(TmIcons.Chats, s.navChats, "${COMMAND}2", current == NavPlace.Chats) {
                         val open = state.chatSection
@@ -237,7 +239,8 @@ private fun NavBar(
 
 /**
  * One place on the bar: its icon over a short name in 10 sp, a tooltip naming its key, and the
- * keyboard's focus drawn as an accent ring round the cell.
+ * keyboard's focus drawn as an accent ring round the cell (never after a click, see
+ * [com.tmplayer.ui.theme.FocusVisibility]).
  */
 @Composable
 private fun NavButton(
@@ -265,7 +268,7 @@ private fun NavCell(
     glyph: @Composable (Color) -> Unit,
 ) {
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     // The icon and its name take the accent as the highlight lands under them; the cell sinks a
     // little under the press, as the phone's buttons do.
     val tint by animateColorAsState(if (chosen) Tone.accent else Tone.text, Motion.standard(Motion.Fast), label = "navIcon")
@@ -347,10 +350,13 @@ private fun ProfileButton(
     }
 }
 
-/** The bar's tooltip: the button's name and, beside it, the key that does the same. */
+/**
+ * The bar's tooltip: the button's name and, beside it, the key that does the same. Above the
+ * button, or with [below] under it, for a button near the top of the window.
+ */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-internal fun BarTooltip(label: String, shortcut: String?, content: @Composable () -> Unit) {
+internal fun BarTooltip(label: String, shortcut: String?, below: Boolean = false, content: @Composable () -> Unit) {
     TooltipArea(
         tooltip = {
             Row(
@@ -368,13 +374,33 @@ internal fun BarTooltip(label: String, shortcut: String?, content: @Composable (
             }
         },
         delayMillis = 500,
-        tooltipPlacement = TooltipPlacement.ComponentRect(
-            anchor = Alignment.TopCenter,
-            alignment = Alignment.TopCenter,
-            offset = DpOffset(0.dp, (-8).dp),
-        ),
+        tooltipPlacement = if (below) {
+            TooltipPlacement.ComponentRect(anchor = Alignment.BottomCenter, alignment = Alignment.BottomCenter, offset = DpOffset(0.dp, 4.dp))
+        } else {
+            TooltipPlacement.ComponentRect(anchor = Alignment.TopCenter, alignment = Alignment.TopCenter, offset = DpOffset(0.dp, (-8).dp))
+        },
         content = content,
     )
+}
+
+/**
+ * An icon button on a page, with the bar's tooltip under it naming what it does (and its key,
+ * where it has one): an icon alone says little to a pointer that has not used it before.
+ */
+@Composable
+internal fun TipIconButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    shortcut: String? = null,
+    enabled: Boolean = true,
+    tint: Color = Color.Unspecified,
+) {
+    BarTooltip(label, shortcut, below = true) {
+        androidx.compose.material3.IconButton(onClick = onClick, enabled = enabled) {
+            Icon(icon, contentDescription = label, tint = if (tint == Color.Unspecified) androidx.compose.material3.LocalContentColor.current else tint)
+        }
+    }
 }
 
 /**
@@ -464,7 +490,7 @@ private fun PopoverRow(
     onClick: () -> Unit,
 ) {
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     Row(
         modifier
             .fillMaxWidth()
@@ -535,6 +561,12 @@ fun TopMessageHost(host: androidx.compose.material3.SnackbarHostState, modifier:
 val NavBarClearance: Dp get() = NAV_MARGIN + NAV_HEIGHT + 8.dp
 
 private val NAV_ITEM = 68.dp
+
+/** Between two places, as much as the bar keeps round them. */
+private val NAV_GAP = 6.dp
+
+/** The same gap between the buttons of a chat's bar, which stands in this bar's place. */
+internal val BarGap: Dp get() = NAV_GAP
 private val NAV_ITEM_HEIGHT = 50.dp
 private val NAV_PADDING = 6.dp
 private val NAV_HEIGHT = NAV_ITEM_HEIGHT + NAV_PADDING * 2

@@ -1,12 +1,12 @@
 package com.tmplayer.ui.onboarding
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -326,7 +326,7 @@ private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifi
     val s = LocalStrings.current
     val copy = s.choiceCopy(choice)
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val shape = RoundedCornerShape(Corner.Large)
     val touch = deviceForm() == DeviceForm.Phone
     Column(
@@ -414,7 +414,7 @@ internal fun SetupButton(
     onClick: () -> Unit,
 ) {
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val touch = deviceForm() == DeviceForm.Phone
     Row(
         modifier

@@ -237,6 +237,8 @@ private fun BarPill(modifier: Modifier = Modifier, content: @Composable RowScope
             .background(FloatingTone.menu)
             .border(floatingBorder(), CircleShape)
             .padding(horizontal = 6.dp),
+        // The window's bar's gap, so a hovered button and a focused one beside it stay apart.
+        horizontalArrangement = Arrangement.spacedBy(BarGap),
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )
@@ -257,7 +259,7 @@ private fun BarIcon(
 
 @Composable
 private fun BarDivider() {
-    Box(Modifier.padding(horizontal = 4.dp).width(1.dp).height(24.dp).background(Tone.outline))
+    Box(Modifier.width(1.dp).height(24.dp).background(Tone.outline))
 }
 
 /** The recent searches, plain words with a history mark on one panel, Clear at its end. */

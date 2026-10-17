@@ -100,14 +100,16 @@ internal fun SeriesPoster(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
-    var focused by remember { mutableStateOf(false) }
+    var hasFocus by remember { mutableStateOf(false) }
+    // The lift and the ring are the keyboard's; a click leaves none behind.
+    val focused = hasFocus && com.tmplayer.ui.theme.FocusVisibility.visible
     val scale by animateFloatAsState(if (hovered || focused) 1.05f else 1f)
     val requester = remember { FocusRequester() }
     val progress = watch.progress(series)
     val behaviour = Modifier
             .hoverable(interaction)
             .then(if (nav != null) Modifier.navCell(nav, index, requester) else Modifier.focusRequester(requester))
-            .onFocusChanged { focused = it.isFocused }
+            .onFocusChanged { hasFocus = it.isFocused }
             .onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyDown && (event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.Spacebar)) {
                     onOpen()

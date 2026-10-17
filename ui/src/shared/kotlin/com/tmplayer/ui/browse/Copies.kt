@@ -1,5 +1,6 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.graphicsLayer
 import com.tmplayer.ui.components.riseIn
@@ -10,7 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -449,7 +449,7 @@ private fun CopyOption(
     val s = LocalStrings.current
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val shape = RoundedCornerShape(Corner.Medium)
     // The chosen tint fades from the old copy to the new one rather than switching rows.
     val tint by androidx.compose.animation.animateColorAsState(
@@ -536,7 +536,7 @@ fun postedAgain(same: List<MediaItem>, s: Messages): String? {
 private fun CopySummary(summary: String, count: String, action: String, onClick: () -> Unit) {
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val shape = RoundedCornerShape(Corner.Medium)
     Row(
         Modifier
@@ -580,7 +580,7 @@ internal fun CopyRow(
     val s = LocalStrings.current
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val shape = RoundedCornerShape(Corner.Medium)
     val heading = remember(copy) { copyHeading(copy) }
     Row(

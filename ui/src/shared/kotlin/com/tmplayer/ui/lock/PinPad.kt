@@ -1,11 +1,11 @@
 package com.tmplayer.ui.lock
 
+import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -391,7 +391,7 @@ private fun PadKey(
 ) {
     val tv = deviceForm() == DeviceForm.Tv
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
+    val focused by interactions.collectIsFocusVisibleAsState()
     val shape = if (tv) RoundedCornerShape(Corner.Large) else CircleShape
     val ink = when {
         focused && tv -> Tone.onFocusFill

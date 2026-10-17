@@ -292,7 +292,7 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.weight(1f).semantics { heading() },
             )
-            IconButton(onClick = { close() }) { Icon(TmIcons.Close, contentDescription = s.commonClose) }
+            TipIconButton(TmIcons.Close, s.commonClose, { close() }, shortcut = "Esc")
         }
         // A film posted more than once opens on the copy that would play, and a copy chosen from
         // its list is remembered for the video before the pane turns to it.
