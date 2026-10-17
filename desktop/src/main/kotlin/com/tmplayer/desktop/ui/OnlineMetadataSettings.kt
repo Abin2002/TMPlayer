@@ -30,6 +30,7 @@ import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.Tone
+import com.tmplayer.ui.icons.TmIcons
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,28 +54,32 @@ internal fun OnlineMetadataGroup(toggleModifier: Modifier = Modifier) {
     LaunchedEffect(Unit) { bytes = withContext(Dispatchers.IO) { online.cacheBytes() } }
 
     Group(s.metadataTitle)
-    Setting(s.metadataToggle, if (settings.enabled) s.metadataToggleOn else s.metadataToggleOff, modifier = toggleModifier) {
-        Switch(checked = settings.enabled, onCheckedChange = { online.setEnabled(it) })
-    }
+    Toggle(
+        s.metadataToggle,
+        if (settings.enabled) s.metadataToggleOn else s.metadataToggleOff,
+        settings.enabled,
+        toggleModifier,
+        icon = TmIcons.Image,
+    ) { online.setEnabled(it) }
     // The player's skip intro button rides on lookups, so it is offered only while they are on.
     if (settings.enabled) {
-        Setting(s.metadataSkipTimes, s.metadataSkipTimesDetail) {
-            Switch(checked = settings.skipTimes, onCheckedChange = { online.setSkipTimes(it) })
+        Toggle(s.metadataSkipTimes, s.metadataSkipTimesDetail, settings.skipTimes, icon = TmIcons.Episodes) {
+            online.setSkipTimes(it)
         }
     }
-    Setting(
+    Action(
         s.metadataKey,
         MetaWords.key(state),
+        TmIcons.Lock,
         titleColor = if (state == TmdbState.AppKey || state == TmdbState.OwnKey) Color.Unspecified else Tone.caution,
-    ) {
-        OutlinedButton(onClick = { editingKey = true }) { Text(s.commonChange) }
-    }
-    Setting(
+    ) { editingKey = true }
+    Action(
         s.metadataClearCache,
         if (bytes > 0) s.metadataCacheDetail(Translator.messages.formatter.size(bytes)) else s.metadataCacheEmpty,
-    ) {
-        OutlinedButton(enabled = bytes > 0, onClick = { clearingCache = true }) { Text(s.commonClear) }
-    }
+        TmIcons.Delete,
+        end = RowEnd.None,
+        enabled = bytes > 0,
+    ) { clearingCache = true }
     if (clearingCache) {
         ConfirmDialog(
             title = s.confirmMetadataCacheTitle,

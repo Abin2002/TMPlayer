@@ -1,165 +1,178 @@
 package com.tmplayer.desktop.ui
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.layoutId
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.LayoutDirection
-import com.tmplayer.ui.components.SettingsSectionLabel
-import com.tmplayer.ui.icons.TmIcons
-import com.tmplayer.ui.theme.Corner
-import com.tmplayer.ui.theme.LocalDarkTheme
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.tmplayer.data.BackupRead
-import com.tmplayer.data.BackupService
-import com.tmplayer.data.BackupWords
-import com.tmplayer.data.RestorePlan
-import com.tmplayer.data.AppLockSession
 import com.tmplayer.data.AppLockSettings
-import com.tmplayer.data.ResumeRewind
+import com.tmplayer.data.DiskInfo
 import com.tmplayer.data.SettingsStore
-import com.tmplayer.ui.lock.AppLockWords
-import com.tmplayer.ui.lock.PinPad
-import com.tmplayer.ui.lock.PinPurpose
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.Checkbox
-import androidx.compose.runtime.produceState
-import com.tmplayer.data.SizeFilter
+import com.tmplayer.data.StorageRelocationPlan
 import com.tmplayer.data.SupportReminder
 import com.tmplayer.data.ThemeChoice
-import com.tmplayer.data.UiScale
-import com.tmplayer.data.LogExport
-import com.tmplayer.data.UpdateState
 import com.tmplayer.data.UpdateWords
 import com.tmplayer.data.Updates
-import com.tmplayer.data.WhatsNew
 import com.tmplayer.data.release
-import com.tmplayer.desktop.DesktopSettings
-import com.tmplayer.desktop.os.FilePicker
-import com.tmplayer.desktop.os.DesktopLog
-import com.tmplayer.ui.theme.rememberUiScale
-import com.tmplayer.desktop.os.OpenExternal
-import com.tmplayer.online.OnlineMetadata
+import com.tmplayer.desktop.DesktopPaths
+import com.tmplayer.online.OnlineSubtitles
 import com.tmplayer.player.SubtitlePosition
 import com.tmplayer.player.SubtitleSize
 import com.tmplayer.player.SubtitleStyle
-import com.tmplayer.player.TouchPrefs
-import com.tmplayer.player.TrackPreferences
-import com.tmplayer.ui.about.About
-import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.components.JumpTarget
-import com.tmplayer.ui.components.jumpTarget
+import com.tmplayer.ui.components.LocalBottomChrome
+import com.tmplayer.ui.components.SettingsDividerStart
+import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.components.rememberToast
-import com.tmplayer.ui.onboarding.SetupStep
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.i18n.languageRowDetail
+import com.tmplayer.ui.icons.TmIcons
+import com.tmplayer.ui.lock.AppLockWords
+import com.tmplayer.ui.lock.PinPad
+import com.tmplayer.ui.lock.PinPurpose
+import com.tmplayer.ui.onboarding.SetupStep
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * The settings that mean something on a desktop: theme, playback, the chat to open on launch,
- * the size limits, storage, history and signing out. Voice search is not here at all (no portable
- * speech API, B2.5), nor are the phone's touch and orientation settings.
+ * The pages Settings is split into, the phone's own (SettingsScreen's `SettingsPage`) in the
+ * phone's order. [Mouse] stands where the phone has Player gestures: how the pointer drives the
+ * player, which is what the phone's gestures are for a finger.
  */
-@OptIn(ExperimentalFoundationApi::class)
+enum class SettingsCategory {
+    SetupChoices, Appearance, Playback, Subtitles, Mouse, Library, Storage, Lock, About;
+
+    internal val icon: androidx.compose.ui.graphics.vector.ImageVector
+        get() = when (this) {
+            SetupChoices -> TmIcons.Checklist
+            Appearance -> TmIcons.Palette
+            Playback -> TmIcons.Play
+            Subtitles -> TmIcons.Subtitles
+            Mouse -> SettingsGlyphs.Mouse
+            Library -> TmIcons.Grid
+            Storage -> TmIcons.Download
+            Lock -> TmIcons.Lock
+            About -> TmIcons.Info
+        }
+
+    internal companion object {
+        /** The page a setup step's settings also live on, for Setup choices' "Also in". */
+        fun holding(step: SetupStep): SettingsCategory? = when (step) {
+            SetupStep.Posters -> Library
+            SetupStep.Storage -> Playback
+            SetupStep.Performance, SetupStep.MobileData, SetupStep.Device -> null
+        }
+    }
+}
+
+/** A page's name, as its row in the list and its heading say it. */
+@Composable
+internal fun titleOf(category: SettingsCategory): String {
+    val s = LocalStrings.current
+    return when (category) {
+        SettingsCategory.SetupChoices -> s.setupChoicesTitle
+        SettingsCategory.Appearance -> s.settingsPageAppearance
+        SettingsCategory.Playback -> s.settingsPlayback
+        SettingsCategory.Subtitles -> s.settingsSubtitles
+        SettingsCategory.Mouse -> s.settingsPageMouse
+        SettingsCategory.Library -> s.settingsLibrary
+        SettingsCategory.Storage -> s.settingsPageStorage
+        SettingsCategory.Lock -> s.lockTitle
+        SettingsCategory.About -> s.settingsPageAbout
+    }
+}
+
+/**
+ * Settings on the desktop, organised as the phone's: a list of pages (who is signed in over it,
+ * Sign out under it), each page its grouped cards of rows. A window wide enough for both keeps the
+ * list on the left and the open page beside it, as a desktop's preferences window does; a narrow
+ * one shows the list, and a page in its place with a Back arrow, as the phone does. Esc goes back
+ * there, the arrow keys walk the rows, and Tab reaches every control.
+ *
+ * [initialCategory] is the page to open on (the wide layout opens on Appearance without one).
+ */
 @Composable
 fun SettingsPage(
     state: ShellState,
     version: String = "",
-    /** The chat list as loaded, for the favourites "Only my folders" would strand. */
+    /** The chat list as loaded, for the kids lock's picker. */
     chatList: List<com.tmplayer.data.ChatSummary> = emptyList(),
-    /** The signed in account, shown over the rows; null leaves the header out. */
+    /** The signed in account, shown over the list; null leaves the header out. */
     account: com.tmplayer.data.Account? = null,
+    initialCategory: SettingsCategory? = null,
 ) {
-    val s = LocalStrings.current
     var showAbout by remember { mutableStateOf(false) }
-    val supportCounters by state.settings.supportCounters.collectAsState(initial = SupportReminder.Counters())
+    val settings = state.settings
+    val supportCounters by settings.supportCounters.collectAsState(initial = SupportReminder.Counters())
     if (showAbout) {
         AboutPage(version, supporter = supportCounters.supporter, onBack = { showAbout = false })
         return
     }
-    // Setup choices (the setup's answers in one place), and the row its "Also in" sends the
-    // viewer to here, with the step it came from so Setup choices opens on that row again.
-    var showSetupChoices by remember { mutableStateOf(false) }
-    var jumpTo by remember { mutableStateOf<SetupStep?>(null) }
-    var cameFromStep by remember { mutableStateOf<SetupStep?>(null) }
-    val jumps = remember { SetupStep.entries.associateWith { JumpTarget() } }
-    if (showSetupChoices) {
-        SetupChoicesPage(
-            state,
-            focusStep = cameFromStep,
-            onBack = {
-                cameFromStep = null
-                showSetupChoices = false
-            },
-            onJump = { step ->
-                cameFromStep = step
-                jumpTo = step
-                showSetupChoices = false
-            },
-        )
-        return
-    }
-    val settings = state.settings
     val scope = rememberCoroutineScope()
     val toast = rememberToast()
-    // The developer rows, turned on from About (see DevOptions).
-    val developerOptions by settings.developerOptions.collectAsState(initial = false)
     // The app lock (CP57): a PIN being set, changed or removed takes the page's place.
     val appLock by settings.appLock.collectAsState(initial = AppLockSettings())
     var pinFlow by remember { mutableStateOf<DesktopPinFlow?>(null) }
@@ -168,537 +181,321 @@ fun SettingsPage(
         PinFlowPad(flow, state, appLock, scope, toast, onNext = { pinFlow = it }, onKidsChats = { pickingKidsChats = true })
         return
     }
-    val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
-    val autoplay by settings.autoplayNext.collectAsState(initial = true)
-    val resumeRewindMs by settings.resumeRewindMs.collectAsState(initial = ResumeRewind.DEFAULT_MS)
-    val downloadFirst by settings.downloadBeforePlaying.collectAsState(initial = false)
-    val lowStorage by settings.lowStorageMode.collectAsState(initial = false)
-    val openLast by settings.openLastChat.collectAsState(initial = false)
-    val minSize by settings.minSizeBytes.collectAsState(initial = SizeFilter.DEFAULT_MIN)
-    val maxSize by settings.maxSizeBytes.collectAsState(initial = SizeFilter.DEFAULT_MAX)
-    val desktop by state.extras.prefs.state.collectAsState()
-    val notifyUpdates by settings.updateNotify.collectAsState(initial = true)
-    val updateState by Updates.state.collectAsState()
-    var confirmSignOut by remember { mutableStateOf(false) }
-    var supporting by remember { mutableStateOf(false) }
-    var confirm by remember { mutableStateOf<Confirm?>(null) }
-    val touchPrefs by settings.touchPrefs.collectAsState(initial = TouchPrefs())
-    val detailFirst by settings.detailFirst.collectAsState(initial = true)
-    val rememberSearches by settings.rememberSearches.collectAsState(initial = true)
-    val subtitleStyle by settings.subtitleStyle.collectAsState(initial = SubtitleStyle())
-    val trackPrefs by settings.trackPreferences.collectAsState(initial = TrackPreferences())
-    val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
-    val history by settings.continueWatching.collectAsState(initial = emptyList())
-    // Only those the kids lock shows, as the Favourites section counts them.
-    val storedFavourites by settings.favorites.collectAsState(initial = emptySet())
-    val allowedChats by com.tmplayer.data.ChatGate.allowed.collectAsState()
-    val favourites = remember(storedFavourites, allowedChats) { com.tmplayer.data.KidsLock.favourites(storedFavourites, allowedChats) }
-    val watchedList by state.watched.history.collectAsState(initial = emptyList())
-    var confirmClearWatched by remember { mutableStateOf(false) }
-    val folders by com.tmplayer.data.Td.folders.collectAsState()
-    val language by settings.language.collectAsState(initial = "")
-    var pickingLanguage by remember { mutableStateOf(false) }
-    var stylingSubtitles by remember { mutableStateOf(false) }
-    var whatsNew by remember { mutableStateOf(false) }
-    var reporting by remember { mutableStateOf(false) }
-    val uiScale by rememberUiScale(settings)
-    // A backup file picked, with what restoring it would change, while the prompt is up.
-    var restorePlan by remember { mutableStateOf<RestorePlan?>(null) }
-    val backups = remember(settings, state.watched, version) {
-        BackupService(settings, state.watched, OnlineMetadata.current?.store, version, bookmarks = state.bookmarks)
-    }
 
-    val scroll = rememberScrollState()
-    LaunchedEffect(jumpTo) {
+    // The page open, by name so it survives a trip to another destination and back.
+    var openName by rememberSaveable { mutableStateOf(initialCategory?.name) }
+    val open = openName?.let { name -> SettingsCategory.entries.firstOrNull { it.name == name } }
+    // Setup choices' "Also in": the row to bring the viewer to once its page is open, and the step
+    // to come back to, since Back from that page returns to Setup choices.
+    var jumpTo by remember { mutableStateOf<SetupStep?>(null) }
+    var cameFromStep by remember { mutableStateOf<SetupStep?>(null) }
+    val jumps = remember { SetupStep.entries.associateWith { JumpTarget() } }
+    val keyboard = remember { KeyboardFocus() }
+    val categoryFocus = remember { SettingsCategory.entries.associateWith { FocusRequester() } }
+    val backFocus = remember { FocusRequester() }
+    var returnTo by remember { mutableStateOf<SettingsCategory?>(null) }
+    var confirmSignOut by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    // What Esc does: back to the list from a page in the narrow layout, nothing otherwise.
+    val escape = remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    val pages = SettingsPages(
+        state = state,
+        version = version,
+        chatList = chatList,
+        jumps = jumps,
+        cameFromStep = cameFromStep,
+        onJump = { step ->
+            SettingsCategory.holding(step)?.let { target ->
+                cameFromStep = step
+                jumpTo = step
+                openName = target.name
+            }
+        },
+        onPin = { pinFlow = it },
+        onKidsChats = { pickingKidsChats = true },
+        onShowAbout = { showAbout = true },
+    )
+
+    LaunchedEffect(open, jumpTo) {
         val step = jumpTo ?: return@LaunchedEffect
+        if (open == null || open == SettingsCategory.SetupChoices) return@LaunchedEffect
         jumps.getValue(step).arrive()
         jumpTo = null
     }
-    Box(Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
-            PageHeader(s.settingsTitle, if (version.isBlank()) null else s.settingsAppVersion(version))
-            // Whose library this is, centred over the rows, as the phone's Settings opens.
-            if (account != null) AccountHeader(account, Modifier.widthIn(max = 760.dp).padding(horizontal = pageMargin()))
-            SettingsColumn(
-                Modifier.widthIn(max = 760.dp).padding(horizontal = pageMargin(), vertical = 8.dp),
-            ) {
-                // "Recommended for this device" (CP68): on a computer, Low storage mode when the
-                // disk is short. It draws nothing otherwise.
-                com.tmplayer.ui.onboarding.DeviceFitSettingsCard(
-                    settings,
-                    onApplied = { toast(s.deviceApplied) },
-                    modifier = Modifier.padding(vertical = 8.dp),
-                )
-                // The setup's answers, each changeable on its own, without running it again.
-                Setting(s.setupChoicesTitle, s.setupChoicesSummary) {
-                    OutlinedButton(onClick = {
-                        cameFromStep = null
-                        showSetupChoices = true
-                    }) { Text(s.commonOpen) }
-                }
-                Group(s.settingsAppearance)
-                Setting(s.settingsTheme, if (theme == ThemeChoice.System) s.themeSystemDesktopDetail else theme.description) {
-                    SingleChoiceSegmentedButtonRow {
-                        ThemeChoice.entries.forEachIndexed { index, choice ->
-                            SegmentedButton(
-                                selected = theme == choice,
-                                onClick = { scope.launch { settings.setThemeChoice(choice) } },
-                                shape = SegmentedButtonDefaults.itemShape(index, ThemeChoice.entries.size),
-                            ) { Text(choice.label) }
-                        }
-                    }
-                }
 
-                Setting(s.settingsLanguage, s.languageRowDetail(language)) {
-                    OutlinedButton(onClick = { pickingLanguage = true }) { Text(s.commonChange) }
+    BoxWithConstraints(
+        Modifier
+            .fillMaxSize()
+            .tracksKeyboardFocus(keyboard)
+            .onKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown || event.isCtrlPressed || event.isAltPressed) return@onKeyEvent false
+                when (event.key) {
+                    Key.Escape -> escape.value?.let { back ->
+                        back()
+                        true
+                    } ?: false
+                    // Up and Down walk the rows, as they walk a list anywhere else in the app; Left
+                    // and Right are left to the segments and to crossing between the two panes.
+                    Key.DirectionDown -> focusManager.moveFocus(FocusDirection.Down)
+                    Key.DirectionUp -> focusManager.moveFocus(FocusDirection.Up)
+                    Key.DirectionLeft -> focusManager.moveFocus(FocusDirection.Left)
+                    Key.DirectionRight -> focusManager.moveFocus(FocusDirection.Right)
+                    else -> false
                 }
-                Setting(s.interfaceSize, s.interfaceSizeDetail) {
-                    SingleChoiceSegmentedButtonRow {
-                        UiScale.entries.forEachIndexed { index, choice ->
-                            SegmentedButton(
-                                selected = uiScale == choice,
-                                onClick = { scope.launch { settings.setUiScale(choice) } },
-                                shape = SegmentedButtonDefaults.itemShape(index, UiScale.entries.size),
-                            ) { Text(choice.label) }
-                        }
-                    }
-                }
-                // Only where TMPlayer would draw window buttons of its own: Windows, and a tiling
-                // window manager. Read at launch, so the change waits for a restart.
-                if (remember { com.tmplayer.desktop.os.WindowChromeMode.current(systemTitleBar = false).inApp }) {
-                    Toggle(
-                        s.settingsSystemTitleBar,
-                        if (desktop.systemTitleBar) s.settingsSystemTitleBarOn else s.settingsSystemTitleBarOff,
-                        desktop.systemTitleBar,
-                    ) { on -> state.extras.prefs.update { it.copy(systemTitleBar = on) } }
-                }
-
-                Group(s.settingsPlayback)
-                Toggle(
-                    s.settingsDetailFirst,
-                    if (detailFirst) s.settingsDetailFirstClickOn else s.settingsDetailFirstClickOff,
-                    detailFirst,
-                ) { on -> scope.launch { settings.setDetailFirst(on) } }
-                // Off forgets the searches already kept, which is what switching it off is for.
-                Toggle(
-                    s.settingsRememberSearches,
-                    if (rememberSearches) s.settingsRememberSearchesOn else s.settingsRememberSearchesOff,
-                    rememberSearches,
-                ) { on -> scope.launch { settings.setRememberSearches(on) } }
-                Toggle(s.settingsAutoplayNext, s.settingsAutoplayDetail, autoplay) {
-                    scope.launch { settings.setAutoplayNext(it) }
-                }
-                Toggle(s.settingsDownloadFirst, s.settingsDownloadFirstDetail, downloadFirst) {
-                    scope.launch { settings.setDownloadBeforePlaying(it) }
-                }
-                // A rolling window of the video on disk, for a drive with less room than the film;
-                // the line under it says the cost.
-                Toggle(
-                    s.settingsLowStorage,
-                    if (lowStorage) s.settingsLowStorageOn else s.settingsLowStorageOff,
-                    lowStorage,
-                    Modifier.jumpTarget(jumps.getValue(SetupStep.Storage)),
-                ) { on -> scope.launch { settings.setLowStorageMode(on) } }
-                Setting(
-                    s.settingsHideControls,
-                    s.settingsHideControlsDetail(TouchPrefs.timeoutLabel(touchPrefs.controlsTimeoutMs)),
-                ) {
-                    val choices = TouchPrefs.TIMEOUT_CHOICES_MS
-                    Stepper(
-                        onLess = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, -1)) } } },
-                        onMore = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, 1)) } } },
-                    )
-                }
-                // Holding the left button on the picture, as a finger on the phone's: the same
-                // setting, so a change on either reaches both.
-                Setting(s.settingsHoldSpeed, s.settingsHoldSpeedDetailDesktop) {
-                    SingleChoiceSegmentedButtonRow {
-                        TouchPrefs.HOLD_CHOICES.forEachIndexed { index, choice ->
-                            SegmentedButton(
-                                selected = touchPrefs.holdSpeed == choice,
-                                onClick = { scope.launch { settings.updateTouchPrefs { it.copy(holdSpeed = choice) } } },
-                                shape = SegmentedButtonDefaults.itemShape(index, TouchPrefs.HOLD_CHOICES.size),
-                            ) { Text(TouchPrefs.holdLabel(choice)) }
-                        }
-                    }
-                }
-                // Four short choices, so all of them at once, as the theme row has them.
-                Setting(s.settingsResumeRewind, s.settingsResumeRewindDetail) {
-                    SingleChoiceSegmentedButtonRow {
-                        ResumeRewind.CHOICES_MS.forEachIndexed { index, choice ->
-                            SegmentedButton(
-                                selected = resumeRewindMs == choice,
-                                onClick = { scope.launch { settings.setResumeRewindMs(choice) } },
-                                shape = SegmentedButtonDefaults.itemShape(index, ResumeRewind.CHOICES_MS.size),
-                            ) { Text(ResumeRewind.label(choice)) }
-                        }
-                    }
-                }
-
-                Toggle(
-                    s.settingsWheelSeeks,
-                    if (desktop.wheelSeeks) s.settingsWheelSeeksOn else s.settingsWheelSeeksOff,
-                    desktop.wheelSeeks,
-                ) { on -> state.extras.prefs.update { it.copy(wheelSeeks = on) } }
-                Toggle(s.playerDownmix, s.settingsDownmixDetail, desktop.downmix) { on ->
-                    state.extras.prefs.update { it.copy(downmix = on) }
-                }
-                AudioLanguageSetting(settings, trackPrefs, scope)
-                Toggle(
-                    s.settingsSoftwareDecoding,
-                    if (DesktopSettings.defaultSoftwareDecoding()) {
-                        s.settingsSoftwareDecodingLinux
-                    } else {
-                        s.settingsSoftwareDecodingDetail
-                    },
-                    desktop.softwareDecoding,
-                ) { on -> state.extras.prefs.update { it.copy(softwareDecoding = on) } }
-
-                Group(s.playerSubtitles)
-                // One row saying what is set; the preview and the three choices open over the page
-                // (SubtitleStyleDialog), as on the phone and the TV.
-                Setting(
-                    s.settingsSubtitleStyle,
-                    listOf(
-                        subtitleStyle.size.label,
-                        if (subtitleStyle.box) s.settingsSubtitleStyleBox else s.settingsSubtitleStyleNoBox,
-                        subtitleStyle.position.label,
-                    ).joinToString("  ·  "),
-                ) {
-                    OutlinedButton(onClick = { stylingSubtitles = true }) { Text(s.commonChange) }
-                }
-                SubtitleLanguageSettings(settings, trackPrefs, scope)
-
-                OnlineSubtitlesGroup()
-                OnlineMetadataGroup(Modifier.jumpTarget(jumps.getValue(SetupStep.Posters)))
-
-                Group(s.settingsLibrary)
-                Toggle(s.settingsOpenLast, s.settingsOpenLastDetail, openLast) {
-                    scope.launch { settings.setOpenLastChat(it) }
-                }
-                if (openLast && lastChatId != 0L) {
-                    Setting(s.settingsForgetLast, s.settingsForgetLastDetail) {
-                        OutlinedButton(onClick = {
-                            scope.launch {
-                                settings.forgetLastChat()
-                                // The row goes away on success, so the toast is the only sign.
-                                toast(s.settingsForgetLastDone)
-                            }
-                        }) { Text(s.settingsForget) }
-                    }
-                }
-                // Straight in the settings column, not wrapped: the column stacks them (in a Box the
-                // two rows once drew over each other), and a wrapper would cut them off the card.
-                Setting(s.settingsSmallest, SizeFilter.label(minSize)) {
-                    Stepper(
-                        onLess = { scope.launch { settings.setMinSizeBytes(SizeFilter.clampMin(SizeFilter.step(minSize, -1), maxSize)) } },
-                        onMore = { scope.launch { settings.setMinSizeBytes(SizeFilter.clampMin(SizeFilter.step(minSize, 1), maxSize)) } },
-                    )
-                }
-                Setting(s.settingsLargest, SizeFilter.label(maxSize)) {
-                    Stepper(
-                        onLess = { scope.launch { settings.setMaxSizeBytes(SizeFilter.clampMax(SizeFilter.step(maxSize, -1), minSize)) } },
-                        onMore = { scope.launch { settings.setMaxSizeBytes(SizeFilter.clampMax(SizeFilter.step(maxSize, 1), minSize)) } },
-                    )
-                }
-                // Reset means the defaults, as on the phone and TV: offering it at the defaults and
-                // then clearing both ends contradicted the 50 MB the filter was still applying.
-                if (!SizeFilter.isDefault(minSize, maxSize)) {
-                    Setting(
-                        s.settingsSizeLimitsReset,
-                        s.settingsSizeLimitsResetDetail(SizeFilter.describe(SizeFilter.DEFAULT_MIN, SizeFilter.DEFAULT_MAX)),
-                    ) {
-                        OutlinedButton(onClick = {
-                            scope.launch {
-                                // Widen first, so the clamp that stops the ends crossing cannot
-                                // refuse the new floor on its way past the old ceiling.
-                                settings.setMaxSizeBytes(SizeFilter.DEFAULT_MAX)
-                                settings.setMinSizeBytes(SizeFilter.DEFAULT_MIN)
-                            }
-                        }) { Text(s.commonReset) }
-                    }
-                }
-
-                StorageGroup(state)
-
-                Group(s.settingsHistory)
-                Setting(s.continueTitle, s.settingsContinueDetail) {
-                    OutlinedButton(onClick = {
-                        if (history.isEmpty()) {
-                            toast(s.settingsContinueEmpty)
-                            return@OutlinedButton
-                        }
-                        confirm = Confirm(
-                            title = s.settingsContinueClearTitle,
-                            message = s.settingsContinueClearMessage,
-                            detail = s.settingsContinueClearDetail,
-                        ) {
-                            scope.launch {
-                                val count = history.size
-                                settings.clearWatchHistory()
-                                toast(s.settingsContinueCleared(count))
-                            }
-                        }
-                    }) { Text(s.commonClear) }
-                }
-                Setting(
-                    s.settingsClearWatched,
-                    s.settingsClearWatchedSummary(watchedList.size),
-                ) {
-                    OutlinedButton(onClick = {
-                        if (watchedList.isEmpty()) toast(s.settingsWatchedEmpty) else confirmClearWatched = true
-                    }) { Text(s.commonClear) }
-                }
-                Setting(s.navFavourites, s.settingsFavouritesDetail) {
-                    OutlinedButton(onClick = {
-                        if (favourites.isEmpty()) {
-                            toast(s.settingsFavouritesEmpty)
-                            return@OutlinedButton
-                        }
-                        confirm = Confirm(
-                            title = s.settingsFavouritesClearTitle,
-                            message = s.settingsFavouritesClearMessage(favourites.size),
-                            detail = s.settingsFavouritesClearDetail,
-                        ) {
-                            scope.launch {
-                                val count = favourites.size
-                                settings.clearFavorites(allowedChats)
-                                toast(s.settingsFavouritesCleared(count))
-                            }
-                        }
-                    }) { Text(s.commonClear) }
-                }
-
-                // To a file and back: settings, lists and resume points, never the Telegram sign in.
-                Group(s.backupSection)
-                Setting(s.backupBackUp, s.backupBackUpDetail) {
-                    OutlinedButton(onClick = {
-                        scope.launch {
-                            val file = FilePicker.save(s.backupSaveTitle, backups.fileName(), "json") ?: return@launch
-                            val saved = withContext(Dispatchers.IO) {
-                                runCatching { file.writeText(backups.export()) }.isSuccess
-                            }
-                            toast(if (saved) s.backupSavedTo(file.absolutePath) else s.backupFailed)
-                        }
-                    }) { Text(s.backupBackUp) }
-                }
-                Setting(s.backupRestore, s.backupRestoreDetail) {
-                    OutlinedButton(onClick = {
-                        scope.launch {
-                            val file = FilePicker.open(s.backupPickTitle, "json") ?: return@launch
-                            val text = withContext(Dispatchers.IO) {
-                                // No backup comes near this; a film picked by mistake is not read whole.
-                                runCatching { file.takeIf { it.length() <= 32L * 1024 * 1024 }?.readText() }.getOrNull()
-                            }
-                            if (text == null) {
-                                toast(s.backupReadFailed)
-                                return@launch
-                            }
-                            when (val read = backups.read(text)) {
-                                is BackupRead.Ok -> {
-                                    val plan = backups.plan(read.backup)
-                                    if (plan.nothing) toast(s.backupRestoreNothing) else restorePlan = plan
-                                }
-                                else -> BackupWords.refusal(read)?.let { toast(it) }
-                            }
-                        }
-                    }) { Text(s.backupRestore) }
-                }
-                Group(s.lockTitle)
-                if (!appLock.pinSet) {
-                    Setting(s.lockSetPin, s.lockSetPinDetail) {
-                        OutlinedButton(onClick = { pinFlow = DesktopPinFlow.Set }) { Text(s.lockSetPin) }
-                    }
-                } else {
-                    Setting(s.lockChangePin, s.lockChangePinDetail) {
-                        OutlinedButton(onClick = { pinFlow = DesktopPinFlow.ChangeCheck }) { Text(s.commonChange) }
-                    }
-                    Toggle(s.lockOnOpen, s.lockOnOpenDetail, appLock.onOpen) { on ->
-                        // Whoever switches it on has just given the PIN to reach this page.
-                        if (on) AppLockSession.unlock()
-                        scope.launch { settings.setLockOnOpen(on) }
-                    }
-                }
-                Toggle(s.lockKids, AppLockWords.kidsDetail(appLock), appLock.kids) { on ->
-                    when {
-                        // The lock is only as good as the PIN that guards its switch.
-                        !appLock.pinSet -> pinFlow = DesktopPinFlow.SetForKids
-                        !on -> scope.launch { settings.setKidsLock(false) }
-                        else -> {
-                            scope.launch { settings.setKidsLock(true) }
-                            if (appLock.kidsChats.isEmpty()) pickingKidsChats = true
-                        }
-                    }
-                }
-                Setting(s.lockAllowedChats, s.lockAllowedChatsDetail(count = appLock.kidsChats.size)) {
-                    OutlinedButton(onClick = { pickingKidsChats = true }) { Text(s.commonChange) }
-                }
-                if (appLock.pinSet) {
-                    Setting(s.lockRemovePin, s.lockRemovePinDetail) {
-                        OutlinedButton(onClick = { pinFlow = DesktopPinFlow.Remove }) { Text(s.commonRemove) }
-                    }
-                }
-                Text(
-                    s.lockForgot,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Tone.muted,
-                    modifier = Modifier.padding(horizontal = SETTING_INSET),
-                )
-
-                state.extras.updates?.let { updates ->
-                    Group(s.settingsUpdates)
-                    Toggle(
-                        s.settingsNotifyUpdates,
-                        s.settingsNotifyUpdatesDetail,
-                        notifyUpdates,
-                    ) { on -> scope.launch { settings.setUpdateNotify(on) } }
-                    val offered = updateState.release
-                    if (offered != null) {
-                        Setting(UpdateWords.settingsRow(offered), UpdateWords.youHave(version), titleColor = Tone.caution) {
-                            OutlinedButton(onClick = { state.updatePopup = true }) { Text(s.commonOpen, color = Tone.caution) }
-                        }
-                    }
-                    Setting(s.settingsCheckUpdates, s.settingsAppVersion(version)) {
-                        var checking by remember { mutableStateOf(false) }
-                        OutlinedButton(enabled = !checking, onClick = {
-                            checking = true
-                            scope.launch {
-                                updates.checkNow()
-                                checking = false
-                                // Anything to offer opens the popup, a skipped version included;
-                                // the rest is a sentence.
-                                when (val after = Updates.state.value) {
-                                    is UpdateState.Available -> state.updatePopup = true
-                                    is UpdateState.Failed -> {
-                                        toast(after.message)
-                                        Updates.dismiss()
-                                    }
-                                    else -> toast(s.settingsUpToDate(version))
-                                }
-                            }
-                        }) { Text(if (checking) s.settingsChecking else s.settingsCheck) }
-                    }
-                }
-
-                Group(s.settingsHelp)
-                Setting(s.settingsTour, s.settingsTourBody) {
-                    OutlinedButton(onClick = { scope.launch { settings.openTour() } }) { Text(s.commonOpen) }
-                }
-                Setting(s.settingsWhatsNew, s.settingsWhatsNewDetail(WhatsNew.VERSION)) {
-                    OutlinedButton(onClick = { whatsNew = true }) { Text(s.commonShow) }
-                }
-                Setting(s.settingsChangelog, s.settingsChangelogDetail) {
-                    OutlinedButton(onClick = { OpenExternal.browse(WhatsNew.CHANGELOG) }) { Text(s.commonOpen) }
-                }
-                Setting(s.settingsReportProblem, s.settingsReportProblemDetail) {
-                    OutlinedButton(onClick = { reporting = true }) { Text(s.commonOpen) }
-                }
-                // The logs to attach to that report (CP59), scrubbed of names and ids before they are written.
-                Setting(s.logsSave, s.logsSaveDetail) {
-                    OutlinedButton(onClick = {
-                        scope.launch {
-                            val lines = withContext(Dispatchers.IO) { DesktopLog.recentLines(LogExport.MAX_LINES) }
-                            if (lines.isEmpty()) {
-                                toast(s.logsEmpty)
-                                return@launch
-                            }
-                            val file = FilePicker.save(s.logsSaveTitle, LogExport.fileName(), "txt") ?: return@launch
-                            val saved = withContext(Dispatchers.IO) {
-                                runCatching {
-                                    val known = LogExport.knownNames(settings, state.watched)
-                                    file.writeText(LogExport.report(desktopFeedbackFacts(), lines, known))
-                                }.isSuccess
-                            }
-                            toast(if (saved) s.logsSavedTo(file.absolutePath) else s.logsFailed)
-                        }
-                    }) { Text(s.logsSave) }
-                }
-                // Developers only (see DevOptions): how the last chat's file names were read.
-                if (developerOptions || DevOptions.forced) {
-                    Setting(s.logsNameReport, s.logsNameReportDetail) {
-                        OutlinedButton(onClick = {
-                            scope.launch {
-                                val file = withContext(Dispatchers.IO) { runCatching { saveNameCheck() } }
-                                file.onSuccess { toast(if (it == null) s.logsNameReportEmpty else s.logsNameReportSaved(it.absolutePath)) }
-                                    .onFailure { toast(s.logsFailed) }
-                            }
-                        }) { Text(s.logsNameReport) }
-                    }
-                }
-                Setting(s.settingsPrivacy, s.settingsPrivacyComputer) {
-                    OutlinedButton(onClick = { OpenExternal.browse(About.PRIVACY) }) { Text(s.commonOpen) }
-                }
-                Setting(s.settingsLawfulUse, s.settingsLawfulUseDetail) {
-                    OutlinedButton(onClick = { OpenExternal.browse(About.LEGAL) }) { Text(s.commonOpen) }
-                }
-                if (SupportReminder.enabled) {
-                    Setting(if (supportCounters.supporter) About.SUPPORT_THANKS_TITLE else About.SUPPORT_TITLE, s.settingsSupportDetail) {
-                        OutlinedButton(onClick = { supporting = true }) { Text(s.commonShow) }
-                    }
-                }
-                Setting(s.settingsAbout, s.settingsAboutDetail(version)) {
-                    OutlinedButton(onClick = { showAbout = true }) { Text(s.commonOpen) }
-                }
-
-                // The one press here that ends the session: a full width button in the danger
-                // colour at the very end, with no heading of its own. It still asks first.
-                SignOutButton(s.settingsSignOut) { confirmSignOut = true }
-                Text(
-                    s.settingsPrivacyNote,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Tone.muted,
-                    modifier = Modifier.padding(start = SETTING_INSET, end = SETTING_INSET, top = 12.dp, bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
-                )
+            },
+    ) {
+        val wide = maxWidth >= TWO_PANE_FROM
+        val closePage: () -> Unit = {
+            val back = cameFromStep
+            if (back != null && open != SettingsCategory.SetupChoices) {
+                openName = SettingsCategory.SetupChoices.name
+            } else {
+                cameFromStep = null
+                returnTo = open
+                openName = null
             }
         }
-        VerticalScrollbar(rememberScrollbarAdapter(scroll), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+        // Keyboard focus follows the page in the narrow layout, where the list and the page take
+        // turns: onto the page's Back on the way in, back to the row that opened it on the way out.
+        LaunchedEffect(open, wide) {
+            if (wide || !keyboard.keyboard || jumpTo != null) return@LaunchedEffect
+            withFrameNanos { }
+            if (open != null) {
+                runCatching { backFocus.requestFocus() }
+            } else {
+                returnTo?.let { runCatching { categoryFocus.getValue(it).requestFocus() } }
+            }
+        }
+        CompositionLocalProvider(LocalKeyboardFocus provides keyboard) {
+            val list: @Composable () -> Unit = {
+                CategoryList(
+                    state = state,
+                    version = version,
+                    account = account,
+                    selected = if (wide) open ?: SettingsCategory.Appearance else null,
+                    focus = categoryFocus,
+                    onOpen = { category ->
+                        cameFromStep = null
+                        jumpTo = null
+                        openName = category.name
+                    },
+                    onSignOut = { confirmSignOut = true },
+                )
+            }
+            if (wide) {
+                val shown = open ?: SettingsCategory.Appearance
+                Column(Modifier.fillMaxSize()) {
+                    PageHeader(s().settingsTitle, s().settingsSavesAsYouGo)
+                    Row(
+                        Modifier.fillMaxSize().padding(start = pageMargin()),
+                        horizontalArrangement = Arrangement.spacedBy(PANE_GAP),
+                    ) {
+                        ScrollPane(Modifier.width(LIST_WIDTH).fillMaxHeight()) { list() }
+                        key(shown) {
+                            ScrollPane(Modifier.weight(1f).fillMaxHeight()) {
+                                Column(Modifier.widthIn(max = PAGE_MAX)) {
+                                    Text(
+                                        titleOf(shown),
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        color = Tone.text,
+                                        modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp),
+                                    )
+                                    pages.Content(shown)
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                key(open) {
+                    ScrollPane(Modifier.fillMaxSize(), inset = false) {
+                        if (open == null) {
+                            PageHeader(s().settingsTitle, s().settingsSavesAsYouGo)
+                            Column(Modifier.widthIn(max = PAGE_MAX).padding(horizontal = pageMargin())) { list() }
+                        } else {
+                            PageHeader(
+                                title = titleOf(open),
+                                leading = {
+                                    val interactions = remember { MutableInteractionSource() }
+                                    IconButton(
+                                        onClick = closePage,
+                                        interactionSource = interactions,
+                                        modifier = Modifier.focusRequester(backFocus).keyboardRing(interactions, CircleShape),
+                                    ) { Icon(TmIcons.ArrowBack, contentDescription = s().aboutBackToSettings) }
+                                },
+                            )
+                            Column(Modifier.widthIn(max = PAGE_MAX).padding(horizontal = pageMargin())) { pages.Content(open) }
+                        }
+                    }
+                }
+            }
+        }
+        // Esc on a page goes back to the list, as the phone's Back does; the wide layout has the
+        // list beside the page already, so there it is left alone.
+        androidx.compose.runtime.SideEffect { escape.value = if (!wide && open != null) closePage else null }
     }
 
     if (confirmSignOut) SignOutDialog(state, onDismiss = { confirmSignOut = false })
     if (pickingKidsChats) {
         KidsChatsDialog(chatList, appLock.kidsChats, settings, onClose = { pickingKidsChats = false })
     }
-    if (supporting) SupportPopup(from = "settings", onClose = { supporting = false })
-    if (pickingLanguage) LanguagePopup(settings, onClose = { pickingLanguage = false })
-    if (stylingSubtitles) SubtitleStyleDialog(settings, subtitleStyle, onClose = { stylingSubtitles = false })
-    if (whatsNew) WhatsNewPopup(onClose = { whatsNew = false })
-    if (reporting) FeedbackPopup(onClose = { reporting = false })
-    if (confirmClearWatched) {
-        ClearWatchedDialog(state, watchedList.size, scope, onDismiss = { confirmClearWatched = false })
-    }
+}
 
-    restorePlan?.let { plan ->
-        ConfirmDialog(
-            title = s.backupRestoreTitle,
-            message = BackupWords.restoreMessage(plan),
-            detail = s.backupRestoreUntouched,
-            confirmLabel = s.backupRestoreConfirm,
-            destructive = false,
-            onConfirm = {
-                restorePlan = null
-                scope.launch {
-                    val done = runCatching { backups.restore(plan.backup) }.isSuccess
-                    toast(if (done) s.backupRestored else s.backupReadFailed)
-                }
-            },
-            onDismiss = { restorePlan = null },
-        )
-    }
+/** The strings, for the places a lambda cannot read [LocalStrings] through a local. */
+@Composable
+private fun s() = LocalStrings.current
 
-    confirm?.let { asked ->
-        ConfirmDialog(
-            title = asked.title,
-            message = asked.message,
-            detail = asked.detail,
-            confirmLabel = s.commonClear,
-            onConfirm = {
-                confirm = null
-                asked.action()
-            },
-            onDismiss = { confirm = null },
-        )
+/**
+ * One scrolling column with its scroll bar, the content held clear of the bar and of the floating
+ * bar at the foot of the window. [inset] keeps a gutter for the bar on a pane's right.
+ */
+@Composable
+private fun ScrollPane(modifier: Modifier, inset: Boolean = true, content: @Composable () -> Unit) {
+    val scroll = rememberScrollState()
+    Box(modifier) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(scroll)
+                .padding(end = if (inset) 16.dp else 0.dp),
+        ) {
+            content()
+            Spacer(Modifier.height(24.dp + LocalBottomChrome.current))
+        }
+        VerticalScrollbar(rememberScrollbarAdapter(scroll), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
     }
 }
+
+/**
+ * The list of pages: who is signed in, "Recommended for this device" while it has something to
+ * say, one row per page with its most telling value under its name, and Sign out at the end, in
+ * the phone's order. [selected] is the page open beside it in the wide layout, null in the narrow
+ * one, where each row leads on to its page.
+ */
+@Composable
+private fun CategoryList(
+    state: ShellState,
+    version: String,
+    account: com.tmplayer.data.Account?,
+    selected: SettingsCategory?,
+    focus: Map<SettingsCategory, FocusRequester>,
+    onOpen: (SettingsCategory) -> Unit,
+    onSignOut: () -> Unit,
+) {
+    val s = LocalStrings.current
+    val settings = state.settings
+    val toast = rememberToast()
+    val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
+    val language by settings.language.collectAsState(initial = "")
+    val subtitleStyle by settings.subtitleStyle.collectAsState(initial = SubtitleStyle())
+    val appLock by settings.appLock.collectAsState(initial = AppLockSettings())
+    val updateState by Updates.state.collectAsState()
+    // The free space where downloads go, once measured, which is what somebody opening Storage
+    // is usually after; reading it is a blocking call, so it is not made while drawing.
+    val disk by produceState<DiskInfo?>(initialValue = null) {
+        value = withContext(Dispatchers.IO) { runCatching { DiskInfo.of(DesktopPaths.downloadsDir) }.getOrNull() }
+    }
+    val offered = if (state.extras.updates != null) updateState.release else null
+
+    if (account != null) AccountHeader(account)
+    com.tmplayer.ui.onboarding.DeviceFitSettingsCard(
+        settings,
+        onApplied = { toast(s.deviceApplied) },
+        modifier = Modifier.padding(vertical = 8.dp),
+    )
+    SettingsColumn(Modifier.padding(top = 4.dp), dividerStart = SettingsDividerStart) {
+        SettingsCategory.entries.forEach { category ->
+            val summary = when (category) {
+                SettingsCategory.SetupChoices -> s.setupChoicesSummary
+                SettingsCategory.Appearance -> s.settingsPageAppearanceSummary(theme = theme.label, language = s.languageRowDetail(language))
+                SettingsCategory.Playback -> s.settingsPagePlaybackSummaryDesktop
+                SettingsCategory.Subtitles -> {
+                    val style = listOf(
+                        subtitleStyle.size.label,
+                        if (subtitleStyle.box) s.settingsSubtitleStyleBox else s.settingsSubtitleStyleNoBox,
+                        subtitleStyle.position.label,
+                    ).joinToString("  ·  ")
+                    if (OnlineSubtitles.available) s.settingsPageSubtitlesSummaryOnline(style) else style
+                }
+                SettingsCategory.Mouse -> s.settingsPageMouseSummary
+                SettingsCategory.Library -> s.settingsPageLibrarySummary
+                SettingsCategory.Storage -> disk?.takeIf { it.totalBytes > 0 }?.let {
+                    s.settingsStorageFree(StorageRelocationPlan.size(it.freeBytes), StorageRelocationPlan.size(it.totalBytes))
+                } ?: s.settingsPageStorageSummary
+                SettingsCategory.Lock -> AppLockWords.summary(appLock)
+                // An update waiting is said here as well as inside, in the same colour, so it is
+                // not hidden one level down.
+                SettingsCategory.About -> offered?.let { UpdateWords.settingsRow(it) } ?: s.settingsPageAboutSummary(version)
+            }
+            val caution = category == SettingsCategory.About && offered != null
+            Setting(
+                titleOf(category),
+                summary,
+                modifier = Modifier.focusRequester(focus.getValue(category)),
+                icon = category.icon,
+                iconTint = if (caution) Tone.caution else Tone.accent,
+                onClick = { onOpen(category) },
+                selected = category == selected,
+            ) { if (selected == null) RowTail(null, RowEnd.Chevron) }
+        }
+    }
+    // Last, under the card rather than in it: the one press here that ends the session.
+    SignOutButton(s.settingsSignOut, onSignOut)
+}
+
+/**
+ * Every page's rows, with what the pages share: the shell, the jump targets Setup choices
+ * sends the viewer to, and the ways out to the PIN pad, the kids lock's picker and About.
+ */
+internal class SettingsPages(
+    val state: ShellState,
+    val version: String,
+    val chatList: List<com.tmplayer.data.ChatSummary>,
+    val jumps: Map<SetupStep, JumpTarget>,
+    val cameFromStep: SetupStep?,
+    val onJump: (SetupStep) -> Unit,
+    val onPin: (DesktopPinFlow) -> Unit,
+    val onKidsChats: () -> Unit,
+    val onShowAbout: () -> Unit,
+) {
+    @Composable
+    fun Content(category: SettingsCategory) {
+        when (category) {
+            SettingsCategory.SetupChoices -> SetupChoicesContent(
+                state,
+                focusStep = cameFromStep,
+                onJump = onJump,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
+            else -> SettingsColumn(Modifier.padding(vertical = 4.dp), dividerStart = SettingsDividerStart) {
+                when (category) {
+                    SettingsCategory.Appearance -> AppearanceRows(state)
+                    SettingsCategory.Playback -> PlaybackRows(state, jumps)
+                    SettingsCategory.Subtitles -> SubtitlesRows(state)
+                    SettingsCategory.Mouse -> MouseRows(state)
+                    SettingsCategory.Library -> LibraryRows(state, version, chatList, jumps)
+                    SettingsCategory.Storage -> StorageGroup(state)
+                    SettingsCategory.Lock -> LockRows(state, onPin, onKidsChats)
+                    SettingsCategory.About -> AboutRows(state, version, onShowAbout)
+                    SettingsCategory.SetupChoices -> Unit
+                }
+            }
+        }
+    }
+}
+
+/** The narrowest window that still has room for the list and a page side by side. */
+private val TWO_PANE_FROM = 960.dp
+
+/** The list's width beside a page. */
+private val LIST_WIDTH = 340.dp
+
+/** Between the list and the page. */
+private val PANE_GAP = 24.dp
+
+/** A page's rows stop growing here, as a line of text does. */
+private val PAGE_MAX = 760.dp
 
 /**
  * A small stand in for the picture, with a line drawn the way mpv will draw it: mpv's font size is
@@ -731,8 +528,8 @@ private fun SubtitlePreview(style: SubtitleStyle, modifier: Modifier = Modifier)
     }
 }
 
-/** A PIN being set, changed or removed from the App lock group. See the phone's `PinFlow`. */
-private enum class DesktopPinFlow { Set, SetForKids, ChangeCheck, ChangeChoose, Remove }
+/** A PIN being set, changed or removed from the App lock page. See the phone's `PinFlow`. */
+internal enum class DesktopPinFlow { Set, SetForKids, ChangeCheck, ChangeChoose, Remove }
 
 /**
  * The pad for [flow], in the page's place: Cancel and Esc go back to the page.
@@ -829,228 +626,44 @@ private fun KidsChatsDialog(
     )
 }
 
-/** A clear waiting on its yes: what the prompt says, and what happens on Clear. */
-private class Confirm(val title: String, val message: String, val detail: String?, val action: () -> Unit)
-
 /**
- * The label over a group of settings, in line with the words of the rows under it. Inside a
- * [SettingsColumn] the rows that follow it, up to the next label or anything that is not a
- * [Setting], are drawn as one card.
+ * The signed in account over the list, as the phone's Settings opens: the picture, with the name
+ * and @username beside it, on the page's own ground rather than in a card.
  */
-/** The signed in account over Settings' rows: a large picture, the name and @username under it, centred. */
 @Composable
-private fun AccountHeader(account: com.tmplayer.data.Account, modifier: Modifier = Modifier) {
-    androidx.compose.foundation.layout.Column(
-        modifier.fillMaxWidth().padding(top = 4.dp, bottom = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp),
+private fun AccountHeader(account: com.tmplayer.data.Account) {
+    Row(
+        Modifier.fillMaxWidth().padding(start = SETTING_INSET, end = SETTING_INSET, top = 4.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        androidx.compose.foundation.layout.Box(Modifier.padding(bottom = 8.dp)) { ChatAvatar(account.miniThumbnail, account.photoFileId, account.name, 88.dp) }
-        Text(account.name, style = MaterialTheme.typography.titleLarge, color = Tone.text, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-        if (account.username.isNotBlank()) {
-            // Isolated left to right, or an Arabic or Persian interface draws "name@".
-            Text("\u2066@${account.username}\u2069", style = MaterialTheme.typography.bodyMedium, color = Tone.muted, maxLines = 1)
+        ChatAvatar(account.miniThumbnail, account.photoFileId, account.name, 56.dp)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(account.name, style = MaterialTheme.typography.titleMedium, color = Tone.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (account.username.isNotBlank()) {
+                // Isolated left to right, or an Arabic or Persian interface draws "name@".
+                Text("⁦@${account.username}⁩", style = MaterialTheme.typography.bodyMedium, color = Tone.muted, maxLines = 1)
+            }
         }
     }
 }
 
-/** Sign out at the end of Settings: full width, in the danger colour. */
+/** Sign out at the end of the list: full width, in the danger colour. It still asks first. */
 @Composable
 private fun SignOutButton(label: String, onClick: () -> Unit) {
+    val interactions = remember { MutableInteractionSource() }
     androidx.compose.material3.Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().padding(top = 20.dp).height(48.dp),
+        interactionSource = interactions,
+        modifier = Modifier.fillMaxWidth().padding(top = 20.dp).height(48.dp).keyboardRing(interactions, CircleShape),
         colors = androidx.compose.material3.ButtonDefaults.buttonColors(
             containerColor = Tone.danger,
             contentColor = MaterialTheme.colorScheme.onError,
         ),
     ) {
-        androidx.compose.material3.Icon(com.tmplayer.ui.icons.TmIcons.SignOut, contentDescription = null, modifier = Modifier.size(20.dp))
-        androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
+        Icon(TmIcons.SignOut, contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
         Text(label, style = MaterialTheme.typography.labelLarge)
-    }
-}
-
-@Composable
-internal fun Group(title: String) {
-    SettingsSectionLabel(
-        title,
-        Modifier.layoutId(SettingsPart.Label).padding(start = SETTING_INSET, end = SETTING_INSET, top = 16.dp),
-    )
-}
-
-/**
- * One setting: what it is and what it is set to, with its control at the end. Inside a
- * [SettingsColumn] it is one row of its group's card; anywhere else it is the same row on the page.
- */
-@Composable
-internal fun Setting(
-    title: String,
-    detail: String,
-    titleColor: Color = Color.Unspecified,
-    modifier: Modifier = Modifier,
-    control: @Composable () -> Unit,
-) {
-    // The words and the control side by side, unless the control would leave the words under
-    // half the row and they need more than that: a row of four segments in German or Malayalam
-    // squeezed the title to a word a line, so there the control goes under the words instead.
-    Layout(
-        content = {
-            Column {
-                Text(title, style = MaterialTheme.typography.bodyLarge, color = titleColor)
-                Text(detail, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
-            }
-            Box { control() }
-        },
-        modifier = Modifier
-            .layoutId(SettingsPart.Row)
-            .then(modifier)
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .padding(horizontal = SETTING_INSET, vertical = 10.dp),
-    ) { measurables, constraints ->
-        val width = constraints.maxWidth
-        val gap = 16.dp.roundToPx()
-        val loose = Constraints(maxWidth = width)
-        val controlPlaced = measurables[1].measure(loose)
-        val beside = width - controlPlaced.width - gap
-        val stacked = beside < width / 2 && measurables[0].maxIntrinsicWidth(constraints.maxHeight) > beside
-        val words = measurables[0].measure(
-            Constraints(maxWidth = if (stacked) width else beside.coerceAtLeast(0)),
-        )
-        if (stacked) {
-            val below = words.height + 8.dp.roundToPx()
-            val height = maxOf(constraints.minHeight, below + controlPlaced.height)
-            layout(width, height) {
-                words.placeRelative(0, 0)
-                controlPlaced.placeRelative(0, below)
-            }
-        } else {
-            val height = maxOf(constraints.minHeight, words.height, controlPlaced.height)
-            layout(width, height) {
-                words.placeRelative(0, (height - words.height) / 2)
-                controlPlaced.placeRelative(width - controlPlaced.width, (height - controlPlaced.height) / 2)
-            }
-        }
-    }
-}
-
-@Composable
-private fun Toggle(
-    title: String,
-    detail: String,
-    checked: Boolean,
-    modifier: Modifier = Modifier,
-    onChange: (Boolean) -> Unit,
-) {
-    Setting(title, detail, modifier = modifier) { Switch(checked = checked, onCheckedChange = onChange) }
-}
-
-/** What a child of a [SettingsColumn] is, which decides the gap above it and whether it is carded. */
-internal enum class SettingsPart { Label, Row }
-
-/** How far a setting's words sit in from its card's edge, and the labels from the page's. */
-private val SETTING_INSET = 16.dp
-
-/**
- * The settings page's column: the children stacked as a [Column] would, with each run of
- * consecutive [Setting] rows drawn as one grouped card on [Tone.surface] (rounded to
- * [Corner.Large], dividers between the rows inset to where their words start, and in daylight a
- * hairline round the outside). A [Group] label gets room above it and sits 8 dp over its card;
- * anything else (a note, the storage bar, a progress line) sits 8 dp from its neighbours and ends
- * the card it follows.
- *
- * One layout rather than a card composable round each group, so the dozen groups (several of them
- * in their own files and shared with the About page) need no wrapping at every call.
- */
-@Composable
-internal fun SettingsColumn(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    val cards = remember { mutableStateOf(emptyList<SettingsCard>()) }
-    val fill = Tone.surface
-    val line = Tone.outline
-    val hairline = !LocalDarkTheme.current
-    Layout(
-        content = content,
-        modifier = modifier.drawBehind {
-            val radius = CornerRadius(Corner.Large.toPx())
-            val stroke = 1.dp.toPx()
-            val inset = SETTING_INSET.toPx()
-            val rtl = layoutDirection == LayoutDirection.Rtl
-            cards.value.forEach { card ->
-                val topLeft = Offset(0f, card.top.toFloat())
-                val box = Size(size.width, (card.bottom - card.top).toFloat())
-                drawRoundRect(fill, topLeft, box, radius)
-                card.dividers.forEach { y ->
-                    if (rtl) {
-                        drawLine(line, Offset(0f, y.toFloat()), Offset(size.width - inset, y.toFloat()), stroke)
-                    } else {
-                        drawLine(line, Offset(inset, y.toFloat()), Offset(size.width, y.toFloat()), stroke)
-                    }
-                }
-                if (hairline) {
-                    drawRoundRect(
-                        line,
-                        topLeft + Offset(stroke / 2, stroke / 2),
-                        Size(box.width - stroke, box.height - stroke),
-                        radius,
-                        style = Stroke(stroke),
-                    )
-                }
-            }
-        },
-    ) { measurables, constraints ->
-        val width = constraints.maxWidth
-        val placeables = measurables.map {
-            it.measure(Constraints(minWidth = 0, maxWidth = width, minHeight = 0))
-        }
-        val kinds = measurables.map { it.layoutId as? SettingsPart }
-        val gap = 8.dp.roundToPx()
-        val labelGap = 16.dp.roundToPx()
-        val ys = IntArray(placeables.size)
-        val runs = mutableListOf<SettingsCard>()
-        var y = 0
-        var runTop = -1
-        var dividers = mutableListOf<Int>()
-        fun closeRun(bottom: Int) {
-            if (runTop >= 0) runs += SettingsCard(runTop, bottom, dividers)
-            runTop = -1
-            dividers = mutableListOf()
-        }
-        placeables.forEachIndexed { index, placeable ->
-            val kind = kinds[index]
-            val previous = kinds.getOrNull(index - 1)
-            if (index > 0) {
-                y += when {
-                    kind == SettingsPart.Row && previous == SettingsPart.Row -> 0
-                    kind == SettingsPart.Label -> labelGap
-                    else -> gap
-                }
-            }
-            if (kind == SettingsPart.Row) {
-                if (runTop < 0) runTop = y else dividers += y
-            } else {
-                if (index > 0) closeRun(ys[index - 1] + placeables[index - 1].height)
-            }
-            ys[index] = y
-            y += placeable.height
-        }
-        closeRun(y)
-        if (cards.value != runs) cards.value = runs
-        layout(width, y) {
-            placeables.forEachIndexed { index, placeable -> placeable.placeRelative(0, ys[index]) }
-        }
-    }
-}
-
-/** One group's card in a [SettingsColumn], in pixels from the column's top. */
-internal data class SettingsCard(val top: Int, val bottom: Int, val dividers: List<Int>)
-
-@Composable
-internal fun Stepper(onLess: () -> Unit, onMore: () -> Unit) {
-    val s = LocalStrings.current
-    Row {
-        IconButton(onClick = onLess) { Icon(TmIcons.Remove, contentDescription = s.commonLess) }
-        IconButton(onClick = onMore) { Icon(TmIcons.Add, contentDescription = s.commonMore) }
     }
 }
 
@@ -1060,7 +673,7 @@ internal fun Stepper(onLess: () -> Unit, onMore: () -> Unit) {
  * it changes; Close leaves.
  */
 @Composable
-private fun SubtitleStyleDialog(settings: SettingsStore, subtitleStyle: SubtitleStyle, onClose: () -> Unit) {
+internal fun SubtitleStyleDialog(settings: SettingsStore, subtitleStyle: SubtitleStyle, onClose: () -> Unit) {
     val s = LocalStrings.current
     val scope = rememberCoroutineScope()
     TmAlertDialog(
@@ -1075,20 +688,19 @@ private fun SubtitleStyleDialog(settings: SettingsStore, subtitleStyle: Subtitle
                         val next = sizes[(subtitleStyle.size.ordinal + by).coerceIn(0, sizes.lastIndex)]
                         scope.launch { settings.setSubtitleStyle(subtitleStyle.copy(size = next)) }
                     }
-                    Stepper(onLess = { size(-1) }, onMore = { size(1) })
+                    Stepper(
+                        onLess = { size(-1) },
+                        onMore = { size(1) },
+                        canLess = subtitleStyle.size.ordinal > 0,
+                        canMore = subtitleStyle.size.ordinal < sizes.lastIndex,
+                    )
                 }
                 Toggle(s.subtitlesBox, s.settingsSubtitleBoxDetail, subtitleStyle.box) { on ->
                     scope.launch { settings.setSubtitleStyle(subtitleStyle.copy(box = on)) }
                 }
                 Setting(s.subtitlesPosition, s.settingsSubtitlePositionHint) {
-                    SingleChoiceSegmentedButtonRow {
-                        SubtitlePosition.entries.forEachIndexed { index, place ->
-                            SegmentedButton(
-                                selected = subtitleStyle.position == place,
-                                onClick = { scope.launch { settings.setSubtitleStyle(subtitleStyle.copy(position = place)) } },
-                                shape = SegmentedButtonDefaults.itemShape(index, SubtitlePosition.entries.size),
-                            ) { Text(place.label) }
-                        }
+                    Segments(SubtitlePosition.entries, subtitleStyle.position, { it.label }) { place ->
+                        scope.launch { settings.setSubtitleStyle(subtitleStyle.copy(position = place)) }
                     }
                 }
             }

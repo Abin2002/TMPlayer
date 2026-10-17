@@ -1,0 +1,575 @@
+package com.tmplayer.desktop.ui
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.unit.dp
+import com.tmplayer.data.AppLockSession
+import com.tmplayer.data.AppLockSettings
+import com.tmplayer.data.BackupRead
+import com.tmplayer.data.BackupService
+import com.tmplayer.data.BackupWords
+import com.tmplayer.data.LogExport
+import com.tmplayer.data.ResumeRewind
+import com.tmplayer.data.RestorePlan
+import com.tmplayer.data.SizeFilter
+import com.tmplayer.data.SupportReminder
+import com.tmplayer.data.ThemeChoice
+import com.tmplayer.data.UiScale
+import com.tmplayer.data.UpdateState
+import com.tmplayer.data.UpdateWords
+import com.tmplayer.data.Updates
+import com.tmplayer.data.WhatsNew
+import com.tmplayer.data.release
+import com.tmplayer.desktop.DesktopSettings
+import com.tmplayer.desktop.os.DesktopLog
+import com.tmplayer.desktop.os.FilePicker
+import com.tmplayer.desktop.os.OpenExternal
+import com.tmplayer.online.OnlineMetadata
+import com.tmplayer.player.SubtitleStyle
+import com.tmplayer.player.TouchPrefs
+import com.tmplayer.player.TrackPreferences
+import com.tmplayer.ui.about.About
+import com.tmplayer.ui.components.JumpTarget
+import com.tmplayer.ui.components.jumpTarget
+import com.tmplayer.ui.components.rememberToast
+import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.i18n.languageRowDetail
+import com.tmplayer.ui.icons.TmIcons
+import com.tmplayer.ui.lock.AppLockWords
+import com.tmplayer.ui.onboarding.SetupStep
+import com.tmplayer.ui.theme.Tone
+import com.tmplayer.ui.theme.rememberUiScale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/*
+ * The rows of each settings page, drawn inside the page's SettingsColumn, in the phone's order
+ * with the desktop's own rows where the phone has its touch ones.
+ */
+
+/** Appearance and language: the theme, the language, the interface size and the window's title bar. */
+@Composable
+internal fun AppearanceRows(state: ShellState) {
+    val s = LocalStrings.current
+    val settings = state.settings
+    val scope = rememberCoroutineScope()
+    val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
+    val language by settings.language.collectAsState(initial = "")
+    val uiScale by rememberUiScale(settings)
+    val desktop by state.extras.prefs.state.collectAsState()
+    var pickingLanguage by remember { mutableStateOf(false) }
+
+    Setting(
+        s.settingsTheme,
+        if (theme == ThemeChoice.System) s.themeSystemDesktopDetail else theme.description,
+        icon = TmIcons.Theme,
+    ) {
+        Segments(ThemeChoice.entries, theme, { it.label }) { scope.launch { settings.setThemeChoice(it) } }
+    }
+    Action(s.settingsLanguage, s.languageRowDetail(language), TmIcons.Language) { pickingLanguage = true }
+    Setting(s.interfaceSize, s.interfaceSizeDetail, icon = TmIcons.TextSize) {
+        Segments(UiScale.entries, uiScale, { it.label }) { scope.launch { settings.setUiScale(it) } }
+    }
+    // Only where TMPlayer would draw window buttons of its own: Windows, and a tiling window
+    // manager. Read at launch, so the change waits for a restart.
+    if (remember { com.tmplayer.desktop.os.WindowChromeMode.current(systemTitleBar = false).inApp }) {
+        Toggle(
+            s.settingsSystemTitleBar,
+            if (desktop.systemTitleBar) s.settingsSystemTitleBarOn else s.settingsSystemTitleBarOff,
+            desktop.systemTitleBar,
+            icon = TmIcons.WindowMaximize,
+        ) { on -> state.extras.prefs.update { it.copy(systemTitleBar = on) } }
+    }
+
+    if (pickingLanguage) LanguagePopup(settings, onClose = { pickingLanguage = false })
+}
+
+/**
+ * Playback: what plays next and how, the sound, the decoding and the controls, in the phone's
+ * order. Low storage mode is Setup choices' Storage row.
+ */
+@Composable
+internal fun PlaybackRows(state: ShellState, jumps: Map<SetupStep, JumpTarget>) {
+    val s = LocalStrings.current
+    val settings = state.settings
+    val scope = rememberCoroutineScope()
+    val autoplay by settings.autoplayNext.collectAsState(initial = true)
+    val detailFirst by settings.detailFirst.collectAsState(initial = true)
+    val downloadFirst by settings.downloadBeforePlaying.collectAsState(initial = false)
+    val lowStorage by settings.lowStorageMode.collectAsState(initial = false)
+    val trackPrefs by settings.trackPreferences.collectAsState(initial = TrackPreferences())
+    val touchPrefs by settings.touchPrefs.collectAsState(initial = TouchPrefs())
+    val resumeRewindMs by settings.resumeRewindMs.collectAsState(initial = ResumeRewind.DEFAULT_MS)
+    val desktop by state.extras.prefs.state.collectAsState()
+
+    Toggle(s.settingsAutoplay, if (autoplay) s.settingsAutoplayOn else s.settingsAutoplayOff, autoplay, icon = TmIcons.Play) {
+        scope.launch { settings.setAutoplayNext(it) }
+    }
+    Toggle(
+        s.settingsDetailFirst,
+        if (detailFirst) s.settingsDetailFirstClickOn else s.settingsDetailFirstClickOff,
+        detailFirst,
+        icon = TmIcons.Info,
+    ) { on -> scope.launch { settings.setDetailFirst(on) } }
+    Toggle(s.settingsDownloadFirst, if (downloadFirst) s.settingsDownloadFirstOn else s.settingsDownloadFirstOff, downloadFirst, icon = TmIcons.Download) {
+        scope.launch { settings.setDownloadBeforePlaying(it) }
+    }
+    // A rolling window of the video on disk, for a drive with less room than the video; the line
+    // under it says the cost.
+    Toggle(
+        s.settingsLowStorage,
+        if (lowStorage) s.settingsLowStorageOn else s.settingsLowStorageOff,
+        lowStorage,
+        Modifier.jumpTarget(jumps.getValue(SetupStep.Storage)),
+        icon = TmIcons.Archive,
+    ) { on -> scope.launch { settings.setLowStorageMode(on) } }
+    Toggle(s.settingsDownmix, if (desktop.downmix) s.settingsDownmixOn else s.settingsDownmixOff, desktop.downmix, icon = TmIcons.VolumeUp) { on ->
+        state.extras.prefs.update { it.copy(downmix = on) }
+    }
+    AudioLanguageSetting(settings, trackPrefs, scope)
+    Toggle(
+        s.settingsSoftwareDecoding,
+        if (DesktopSettings.defaultSoftwareDecoding()) s.settingsSoftwareDecodingLinux else s.settingsSoftwareDecodingDetail,
+        desktop.softwareDecoding,
+        icon = TmIcons.Frames,
+    ) { on -> state.extras.prefs.update { it.copy(softwareDecoding = on) } }
+    run {
+        val choices = TouchPrefs.TIMEOUT_CHOICES_MS
+        Setting(
+            s.settingsHideControls,
+            s.settingsHideControlsDetail(TouchPrefs.timeoutLabel(touchPrefs.controlsTimeoutMs)),
+            icon = TmIcons.VisibilityOff,
+        ) {
+            Stepper(
+                onLess = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, -1)) } } },
+                onMore = { scope.launch { settings.updateTouchPrefs { it.copy(controlsTimeoutMs = TouchPrefs.step(choices, it.controlsTimeoutMs, 1)) } } },
+                canLess = touchPrefs.controlsTimeoutMs != choices.first(),
+                canMore = touchPrefs.controlsTimeoutMs != choices.last(),
+            )
+        }
+    }
+    // Four short choices, so all of them at once, as the theme row has them.
+    Setting(s.settingsResumeRewind, s.settingsResumeRewindDetail, icon = TmIcons.History) {
+        Segments(ResumeRewind.CHOICES_MS, resumeRewindMs, { ResumeRewind.label(it) }) {
+            scope.launch { settings.setResumeRewindMs(it) }
+        }
+    }
+}
+
+/** Subtitles: how they look, when they come on and in which language, then Online subtitles. */
+@Composable
+internal fun SubtitlesRows(state: ShellState) {
+    val s = LocalStrings.current
+    val settings = state.settings
+    val scope = rememberCoroutineScope()
+    val subtitleStyle by settings.subtitleStyle.collectAsState(initial = SubtitleStyle())
+    val trackPrefs by settings.trackPreferences.collectAsState(initial = TrackPreferences())
+    var styling by remember { mutableStateOf(false) }
+
+    // One row saying what is set; the preview and the three choices open over the page
+    // (SubtitleStyleDialog), as on the phone and the TV.
+    Action(
+        s.settingsSubtitleStyle,
+        listOf(
+            subtitleStyle.size.label,
+            if (subtitleStyle.box) s.settingsSubtitleStyleBox else s.settingsSubtitleStyleNoBox,
+            subtitleStyle.position.label,
+        ).joinToString("  ·  "),
+        TmIcons.Subtitles,
+    ) { styling = true }
+    SubtitleLanguageSettings(settings, trackPrefs, scope)
+    OnlineSubtitlesGroup()
+
+    if (styling) SubtitleStyleDialog(settings, subtitleStyle, onClose = { styling = false })
+}
+
+/**
+ * The mouse in the player, where the phone has Player gestures: holding the left button to play
+ * fast (the phone's Hold to speed up, the same setting, so a change on either reaches both) and
+ * what the wheel does.
+ */
+@Composable
+internal fun MouseRows(state: ShellState) {
+    val s = LocalStrings.current
+    val settings = state.settings
+    val scope = rememberCoroutineScope()
+    val touchPrefs by settings.touchPrefs.collectAsState(initial = TouchPrefs())
+    val desktop by state.extras.prefs.state.collectAsState()
+
+    Setting(s.settingsHoldSpeed, s.settingsHoldSpeedDetailDesktop, icon = SettingsGlyphs.Faster) {
+        Segments(TouchPrefs.HOLD_CHOICES, touchPrefs.holdSpeed, { TouchPrefs.holdLabel(it) }) { choice ->
+            scope.launch { settings.updateTouchPrefs { it.copy(holdSpeed = choice) } }
+        }
+    }
+    Toggle(
+        s.settingsWheelSeeks,
+        if (desktop.wheelSeeks) s.settingsWheelSeeksOn else s.settingsWheelSeeksOff,
+        desktop.wheelSeeks,
+        icon = SettingsGlyphs.Mouse,
+    ) { on -> state.extras.prefs.update { it.copy(wheelSeeks = on) } }
+}
+
+/** A clear waiting on its yes: what the prompt says, and what happens on Clear. */
+private class Confirm(val title: String, val message: String, val detail: String?, val action: () -> Unit)
+
+/**
+ * Library: which videos show, what opens on launch, the lists, the backup and Posters and
+ * details, under the phone's headings.
+ */
+@Composable
+internal fun LibraryRows(state: ShellState, version: String, chatList: List<com.tmplayer.data.ChatSummary>, jumps: Map<SetupStep, JumpTarget>) {
+    val s = LocalStrings.current
+    val settings = state.settings
+    val scope = rememberCoroutineScope()
+    val toast = rememberToast()
+    val minSize by settings.minSizeBytes.collectAsState(initial = SizeFilter.DEFAULT_MIN)
+    val maxSize by settings.maxSizeBytes.collectAsState(initial = SizeFilter.DEFAULT_MAX)
+    val openLast by settings.openLastChat.collectAsState(initial = false)
+    val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
+    val rememberSearches by settings.rememberSearches.collectAsState(initial = true)
+    val history by settings.continueWatching.collectAsState(initial = emptyList())
+    // Only those the kids lock shows, as the Favourites section counts them.
+    val storedFavourites by settings.favorites.collectAsState(initial = emptySet())
+    val allowedChats by com.tmplayer.data.ChatGate.allowed.collectAsState()
+    val favourites = remember(storedFavourites, allowedChats) { com.tmplayer.data.KidsLock.favourites(storedFavourites, allowedChats) }
+    val watchedList by state.watched.history.collectAsState(initial = emptyList())
+    var confirm by remember { mutableStateOf<Confirm?>(null) }
+    var confirmClearWatched by remember { mutableStateOf(false) }
+    // A backup file picked, with what restoring it would change, while the prompt is up.
+    var restorePlan by remember { mutableStateOf<RestorePlan?>(null) }
+    val backups = remember(settings, state.watched, version) {
+        BackupService(settings, state.watched, OnlineMetadata.current?.store, version, bookmarks = state.bookmarks)
+    }
+
+    Setting(s.settingsSmallest, SizeFilter.label(minSize), icon = TmIcons.FilterHorizontal) {
+        Stepper(
+            onLess = { scope.launch { settings.setMinSizeBytes(SizeFilter.clampMin(SizeFilter.step(minSize, -1), maxSize)) } },
+            onMore = { scope.launch { settings.setMinSizeBytes(SizeFilter.clampMin(SizeFilter.step(minSize, 1), maxSize)) } },
+        )
+    }
+    Setting(s.settingsLargest, SizeFilter.label(maxSize), icon = TmIcons.FilterHorizontal) {
+        Stepper(
+            onLess = { scope.launch { settings.setMaxSizeBytes(SizeFilter.clampMax(SizeFilter.step(maxSize, -1), minSize)) } },
+            onMore = { scope.launch { settings.setMaxSizeBytes(SizeFilter.clampMax(SizeFilter.step(maxSize, 1), minSize)) } },
+        )
+    }
+    // Reset means the defaults, as on the phone and TV: offering it at the defaults and then
+    // clearing both ends contradicted the 50 MB the filter was still applying.
+    if (!SizeFilter.isDefault(minSize, maxSize)) {
+        Action(
+            s.settingsSizeLimitsReset,
+            s.settingsSizeLimitsResetDetail(SizeFilter.describe(SizeFilter.DEFAULT_MIN, SizeFilter.DEFAULT_MAX)),
+            TmIcons.Refresh,
+            value = s.commonReset,
+            end = RowEnd.None,
+        ) {
+            scope.launch {
+                // Widen first, so the clamp that stops the ends crossing cannot refuse the new
+                // floor on its way past the old ceiling.
+                settings.setMaxSizeBytes(SizeFilter.DEFAULT_MAX)
+                settings.setMinSizeBytes(SizeFilter.DEFAULT_MIN)
+            }
+        }
+    }
+
+    // What opens first, in the same card as which videos show, as on the phone and the TV.
+    val lastChatTitle = remember(chatList, lastChatId) { chatList.firstOrNull { it.id == lastChatId }?.title }
+    Toggle(
+        s.settingsOpenLastChat,
+        when {
+            lastChatTitle != null -> s.settingsOpenLastChatNamed(lastChatTitle)
+            lastChatId != 0L -> s.settingsOpenLastChatUnnamed
+            else -> s.settingsOpenLastChatOff
+        },
+        openLast,
+        icon = TmIcons.History,
+    ) { scope.launch { settings.setOpenLastChat(it) } }
+    if (openLast && lastChatId != 0L) {
+        Action(s.settingsForgetLastChat, s.settingsForgetLastChatDetail, TmIcons.Close, end = RowEnd.None) {
+            scope.launch {
+                settings.forgetLastChat()
+                // The row goes away on success, so the toast is the only sign.
+                toast(s.settingsForgotLastChat)
+            }
+        }
+    }
+
+    // The lists TMPlayer keeps: recent searches, then a clear for each list with anything in it.
+    Group(s.settingsLists)
+    // Off forgets the searches already kept, which is what switching it off is for.
+    Toggle(
+        s.settingsRememberSearches,
+        if (rememberSearches) s.settingsRememberSearchesOn else s.settingsRememberSearchesOff,
+        rememberSearches,
+        icon = TmIcons.Search,
+    ) { on -> scope.launch { settings.setRememberSearches(on) } }
+    if (favourites.isNotEmpty()) Action(s.settingsClearFavourites, s.settingsClearFavouritesDetail(favourites.size), TmIcons.Close, end = RowEnd.None) {
+        confirm = Confirm(
+            title = s.settingsFavouritesClearTitle,
+            message = s.settingsFavouritesClearMessage(favourites.size),
+            detail = s.settingsFavouritesClearDetail,
+        ) {
+            scope.launch {
+                val count = favourites.size
+                settings.clearFavorites(allowedChats)
+                toast(s.settingsFavouritesCleared(count))
+            }
+        }
+    }
+    if (history.isNotEmpty()) Action(s.settingsClearHistory, s.settingsClearHistoryDetail(history.size), TmIcons.Close, end = RowEnd.None) {
+        confirm = Confirm(
+            title = s.settingsContinueClearTitle,
+            message = s.settingsContinueClearMessage,
+            detail = s.settingsContinueClearDetail,
+        ) {
+            scope.launch {
+                val count = history.size
+                settings.clearWatchHistory()
+                toast(s.settingsContinueCleared(count))
+            }
+        }
+    }
+    if (watchedList.isNotEmpty()) {
+        Action(s.settingsClearWatched, s.settingsClearWatchedDetail(watchedList.size), TmIcons.Close, end = RowEnd.None) {
+            confirmClearWatched = true
+        }
+    }
+
+    // To a file and back: settings, lists and resume points, never the Telegram sign in.
+    Group(s.backupSection)
+    Action(s.backupBackUp, s.backupBackUpDetail, TmIcons.Download) {
+        scope.launch {
+            val file = FilePicker.save(s.backupSaveTitle, backups.fileName(), "json") ?: return@launch
+            val saved = withContext(Dispatchers.IO) { runCatching { file.writeText(backups.export()) }.isSuccess }
+            toast(if (saved) s.backupSavedTo(file.absolutePath) else s.backupFailed)
+        }
+    }
+    Action(s.backupRestore, s.backupRestoreDetail, TmIcons.Refresh) {
+        scope.launch {
+            val file = FilePicker.open(s.backupPickTitle, "json") ?: return@launch
+            val text = withContext(Dispatchers.IO) {
+                // No backup comes near this; a video picked by mistake is not read whole.
+                runCatching { file.takeIf { it.length() <= 32L * 1024 * 1024 }?.readText() }.getOrNull()
+            }
+            if (text == null) {
+                toast(s.backupReadFailed)
+                return@launch
+            }
+            when (val read = backups.read(text)) {
+                is BackupRead.Ok -> {
+                    val plan = backups.plan(read.backup)
+                    if (plan.nothing) toast(s.backupRestoreNothing) else restorePlan = plan
+                }
+                else -> BackupWords.refusal(read)?.let { toast(it) }
+            }
+        }
+    }
+
+    OnlineMetadataGroup(Modifier.jumpTarget(jumps.getValue(SetupStep.Posters)))
+
+    if (confirmClearWatched) {
+        ClearWatchedDialog(state, watchedList.size, scope, onDismiss = { confirmClearWatched = false })
+    }
+    restorePlan?.let { plan ->
+        ConfirmDialog(
+            title = s.backupRestoreTitle,
+            message = BackupWords.restoreMessage(plan),
+            detail = s.backupRestoreUntouched,
+            confirmLabel = s.backupRestoreConfirm,
+            destructive = false,
+            onConfirm = {
+                restorePlan = null
+                scope.launch {
+                    val done = runCatching { backups.restore(plan.backup) }.isSuccess
+                    toast(if (done) s.backupRestored else s.backupReadFailed)
+                }
+            },
+            onDismiss = { restorePlan = null },
+        )
+    }
+    confirm?.let { asked ->
+        ConfirmDialog(
+            title = asked.title,
+            message = asked.message,
+            detail = asked.detail,
+            confirmLabel = s.commonClear,
+            onConfirm = {
+                confirm = null
+                asked.action()
+            },
+            onDismiss = { confirm = null },
+        )
+    }
+}
+
+/** App lock: the PIN, asking for it on open, the kids lock and its chats. */
+@Composable
+internal fun LockRows(state: ShellState, onPin: (DesktopPinFlow) -> Unit, onKidsChats: () -> Unit) {
+    val s = LocalStrings.current
+    val settings = state.settings
+    val scope = rememberCoroutineScope()
+    val appLock by settings.appLock.collectAsState(initial = AppLockSettings())
+
+    if (!appLock.pinSet) {
+        Action(s.lockSetPin, s.lockSetPinDetail, TmIcons.Lock) { onPin(DesktopPinFlow.Set) }
+    } else {
+        Action(s.lockChangePin, s.lockChangePinDetail, TmIcons.Lock) { onPin(DesktopPinFlow.ChangeCheck) }
+        Toggle(s.lockOnOpen, s.lockOnOpenDetail, appLock.onOpen, icon = TmIcons.VisibilityOff) { on ->
+            // Whoever switches it on has just given the PIN to reach this page.
+            if (on) AppLockSession.unlock()
+            scope.launch { settings.setLockOnOpen(on) }
+        }
+    }
+    Toggle(s.lockKids, AppLockWords.kidsDetail(appLock), appLock.kids, icon = TmIcons.Group) { on ->
+        when {
+            // The lock is only as good as the PIN that guards its switch.
+            !appLock.pinSet -> onPin(DesktopPinFlow.SetForKids)
+            !on -> scope.launch { settings.setKidsLock(false) }
+            else -> {
+                scope.launch { settings.setKidsLock(true) }
+                if (appLock.kidsChats.isEmpty()) onKidsChats()
+            }
+        }
+    }
+    Action(s.lockAllowedChats, s.lockAllowedChatsDetail(count = appLock.kidsChats.size), TmIcons.List) { onKidsChats() }
+    if (appLock.pinSet) {
+        Action(s.lockRemovePin, s.lockRemovePinDetail, TmIcons.Close) { onPin(DesktopPinFlow.Remove) }
+    }
+    Text(
+        s.lockForgot,
+        style = MaterialTheme.typography.bodySmall,
+        color = Tone.muted,
+        modifier = Modifier.padding(horizontal = SETTING_INSET),
+    )
+}
+
+/**
+ * About and help: the version and its updates (only where this build updates itself), then help,
+ * privacy and About TMPlayer, and the privacy note at the end, as the phone's page has them.
+ */
+@Composable
+internal fun AboutRows(state: ShellState, version: String, onShowAbout: () -> Unit) {
+    val s = LocalStrings.current
+    val settings = state.settings
+    val scope = rememberCoroutineScope()
+    val toast = rememberToast()
+    val notifyUpdates by settings.updateNotify.collectAsState(initial = true)
+    val updateState by Updates.state.collectAsState()
+    val developerOptions by settings.developerOptions.collectAsState(initial = false)
+    val supportCounters by settings.supportCounters.collectAsState(initial = SupportReminder.Counters())
+    var supporting by remember { mutableStateOf(false) }
+    var whatsNew by remember { mutableStateOf(false) }
+    var reporting by remember { mutableStateOf(false) }
+
+    state.extras.updates?.let { updates ->
+        Group(s.settingsVersion)
+        updateState.release?.let { offered ->
+            Action(
+                UpdateWords.settingsRow(offered),
+                UpdateWords.youHave(version),
+                TmIcons.Refresh,
+                titleColor = Tone.caution,
+                iconTint = Tone.caution,
+            ) { state.updatePopup = true }
+        }
+        var checking by remember { mutableStateOf(false) }
+        Action(
+            s.settingsCheckUpdates,
+            s.settingsAppVersion(version),
+            TmIcons.Refresh,
+            value = if (checking) s.settingsChecking else null,
+            end = RowEnd.None,
+            enabled = !checking,
+        ) {
+            checking = true
+            scope.launch {
+                updates.checkNow()
+                checking = false
+                // Anything to offer opens the popup, a skipped version included; the rest is a
+                // sentence.
+                when (val after = Updates.state.value) {
+                    is UpdateState.Available -> state.updatePopup = true
+                    is UpdateState.Failed -> {
+                        toast(after.message)
+                        Updates.dismiss()
+                    }
+                    else -> toast(s.settingsUpToDate(version))
+                }
+            }
+        }
+        Toggle(s.settingsUpdateNotify, s.settingsUpdateNotifyDetail, notifyUpdates, icon = TmIcons.Bell) { on ->
+            scope.launch { settings.setUpdateNotify(on) }
+        }
+    }
+
+    Group(s.settingsHelp)
+    Action(s.settingsTour, s.settingsTourBody, TmIcons.Help) { scope.launch { settings.openTour() } }
+    Action(s.settingsWhatsNew, s.settingsWhatsNewDetail(WhatsNew.VERSION), TmIcons.StarOutline) { whatsNew = true }
+    Action(s.settingsChangelog, s.settingsChangelogDetail, TmIcons.List, end = RowEnd.External) {
+        OpenExternal.browse(WhatsNew.CHANGELOG)
+    }
+    Action(s.settingsReportProblem, s.settingsReportProblemDetail, TmIcons.Bug) { reporting = true }
+    // The logs to attach to that report (CP59), scrubbed of names and ids before they are written.
+    Action(s.logsSave, s.logsSaveDetail, TmIcons.Logs, end = RowEnd.None) {
+        scope.launch {
+            val lines = withContext(Dispatchers.IO) { DesktopLog.recentLines(LogExport.MAX_LINES) }
+            if (lines.isEmpty()) {
+                toast(s.logsEmpty)
+                return@launch
+            }
+            val file = FilePicker.save(s.logsSaveTitle, LogExport.fileName(), "txt") ?: return@launch
+            val saved = withContext(Dispatchers.IO) {
+                runCatching {
+                    val known = LogExport.knownNames(settings, state.watched)
+                    file.writeText(LogExport.report(desktopFeedbackFacts(), lines, known))
+                }.isSuccess
+            }
+            toast(if (saved) s.logsSavedTo(file.absolutePath) else s.logsFailed)
+        }
+    }
+    // Developers only (see DevOptions): how the last chat's file names were read.
+    if (developerOptions || DevOptions.forced) {
+        Action(s.logsNameReport, s.logsNameReportDetail, TmIcons.Checklist, end = RowEnd.None) {
+            scope.launch {
+                val file = withContext(Dispatchers.IO) { runCatching { saveNameCheck() } }
+                file.onSuccess { toast(if (it == null) s.logsNameReportEmpty else s.logsNameReportSaved(it.absolutePath)) }
+                    .onFailure { toast(s.logsFailed) }
+            }
+        }
+    }
+    Action(s.settingsPrivacy, s.settingsPrivacyComputer, TmIcons.Lock, end = RowEnd.External) {
+        OpenExternal.browse(About.PRIVACY)
+    }
+    Action(s.settingsLawfulUse, s.settingsLawfulUseDetail, TmIcons.Gavel, end = RowEnd.External) {
+        OpenExternal.browse(About.LEGAL)
+    }
+    if (SupportReminder.enabled) {
+        Action(
+            if (supportCounters.supporter) About.SUPPORT_THANKS_TITLE else About.SUPPORT_TITLE,
+            s.settingsSupportDetail,
+            TmIcons.Favorite,
+        ) { supporting = true }
+    }
+    Action(s.settingsAbout, s.settingsAboutDetail(version), TmIcons.Info) { onShowAbout() }
+    Text(
+        s.settingsPrivacyNote,
+        style = MaterialTheme.typography.bodyMedium,
+        color = Tone.muted,
+        modifier = Modifier.padding(start = SETTING_INSET, end = SETTING_INSET, top = 12.dp),
+    )
+
+    if (supporting) SupportPopup(from = "settings", onClose = { supporting = false })
+    if (whatsNew) WhatsNewPopup(onClose = { whatsNew = false })
+    if (reporting) FeedbackPopup(onClose = { reporting = false })
+}

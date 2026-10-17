@@ -129,7 +129,7 @@ class LowStorageRenderTest {
 
     @Test
     fun `the Settings switch says what each state costs`() = runComposeUiTest {
-        setContent { TmMaterialTheme(dark = true) { Box(Modifier.size(1280.dp, 3200.dp)) { SettingsPage(shell, "2.0.0") } } }
+        setContent { TmMaterialTheme(dark = true) { Box(Modifier.size(1280.dp, 3200.dp)) { SettingsPage(shell, "2.0.0", initialCategory = SettingsCategory.Playback) } } }
         waitForIdle()
         onNodeWithText(L.settingsLowStorage).performScrollTo().assertExists()
         onNodeWithText(L.settingsLowStorageOff).assertExists()
@@ -160,9 +160,9 @@ class LowStorageRenderTest {
                 }
             }
         }
-        save("low-storage-settings.png", render(dark = true, height = 3200) { SettingsPage(shell, "2.0.0") })
+        save("low-storage-settings.png", render(dark = true, height = 3200) { SettingsPage(shell, "2.0.0", initialCategory = SettingsCategory.Playback) })
         runBlocking { settings.setLowStorageMode(true) }
-        save("low-storage-settings-on.png", render(dark = true, height = 3200) { SettingsPage(shell, "2.0.0") })
+        save("low-storage-settings-on.png", render(dark = true, height = 3200) { SettingsPage(shell, "2.0.0", initialCategory = SettingsCategory.Playback) })
         runBlocking { settings.setLowStorageMode(false) }
     }
 

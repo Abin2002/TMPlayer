@@ -747,16 +747,6 @@ fun SettingsScreen(
                     )
                 }
                 item {
-                    // Off forgets the searches already kept, which is what switching it off is for.
-                    ToggleRow(
-                        title = s.settingsRememberSearches,
-                        subtitle = if (rememberSearches) s.settingsRememberSearchesOn else s.settingsRememberSearchesOff,
-                        icon = TmIcons.History,
-                        checked = rememberSearches,
-                        onToggle = { scope.launch { settings.setRememberSearches(!rememberSearches) } },
-                    )
-                }
-                item {
                     ToggleRow(
                         title = s.settingsDownloadFirst,
                         subtitle = if (downloadFirst) {
@@ -1047,9 +1037,8 @@ fun SettingsScreen(
                     )
                 }
 
-                // ---- startup ------------------------------------------------------------------------
-
-                sectionTitle { s.settingsOnLaunch }
+                // What opens first, in the same card as which videos show: a heading of its own
+                // stood over a single row.
                 item {
                     ToggleRow(
                         title = s.settingsOpenLastChat,
@@ -1083,10 +1072,19 @@ fun SettingsScreen(
 
                 // ---- lists ---------------------------------------------------------------------------
 
-                // Every row below is conditional, so the heading only appears when it has something
-                // under it rather than standing over empty space.
-                if (favorites.isNotEmpty() || history.isNotEmpty() || watchedList.isNotEmpty()) {
-                    sectionTitle { s.settingsLists }
+                // The lists TMPlayer keeps: recent searches first (moved here from Playback, as
+                // they are a list kept like the others, not a way of playing), then a clear for
+                // each list that has anything in it.
+                sectionTitle { s.settingsLists }
+                item {
+                    // Off forgets the searches already kept, which is what switching it off is for.
+                    ToggleRow(
+                        title = s.settingsRememberSearches,
+                        subtitle = if (rememberSearches) s.settingsRememberSearchesOn else s.settingsRememberSearchesOff,
+                        icon = TmIcons.Search,
+                        checked = rememberSearches,
+                        onToggle = { scope.launch { settings.setRememberSearches(!rememberSearches) } },
+                    )
                 }
                 if (favorites.isNotEmpty()) {
                     item {

@@ -63,8 +63,6 @@ import com.tmplayer.ui.theme.rememberUiScale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
-import org.jetbrains.skiko.SystemTheme
-import org.jetbrains.skiko.currentSystemTheme
 import kotlin.system.exitProcess
 
 private const val QUIT_GRACE_MS = 3_000L
@@ -331,17 +329,19 @@ fun main(args: Array<String>) {
 }
 
 /**
- * The theme the Settings choice asks for. "System" follows the OS where it says (Windows, macOS);
- * where it does not (most Linux desktops, until Phase 3 reads the portal), dark, which is the
- * right default for a window that plays video. Drawn at the viewer's interface size.
+ * The theme the Settings choice asks for. "System" follows the OS (SystemAppearance: Windows,
+ * macOS, and on Linux the desktop portal or gsettings) and changes with it while the app runs;
+ * where the OS says nothing, dark, which is the right default for a window that plays video.
+ * Drawn at the viewer's interface size.
  */
 @Composable
 fun DesktopTheme(settings: SettingsStore, content: @Composable () -> Unit) {
     val choice by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
+    val systemDark by com.tmplayer.desktop.os.SystemAppearance.dark.collectAsState()
     val dark = when (choice) {
         ThemeChoice.Light -> false
         ThemeChoice.Dark -> true
-        ThemeChoice.System -> currentSystemTheme != SystemTheme.LIGHT
+        ThemeChoice.System -> systemDark
     }
     // The interface size (CP59) for the whole window, the player's controls included; the video
     // fills whatever space it is given, so it is the same at every size.

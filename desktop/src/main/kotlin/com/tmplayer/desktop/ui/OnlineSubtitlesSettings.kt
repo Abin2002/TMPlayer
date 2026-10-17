@@ -30,6 +30,7 @@ import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.Tone
+import com.tmplayer.ui.icons.TmIcons
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,34 +58,39 @@ internal fun OnlineSubtitlesGroup() {
     Group(s.onlineTitle)
     when (status) {
         OnlineStatus.NotInBuild, OnlineStatus.Unavailable ->
-            Setting(s.onlineTitle, OnlineWords.status(status), titleColor = Tone.muted) {}
-        OnlineStatus.SignedOut, is OnlineStatus.Expired, is OnlineStatus.FreeQuotaUsed -> Setting(s.onlineSignIn, OnlineWords.status(status)) {
-            OutlinedButton(onClick = { signingIn = true }) { Text(s.onlineSignInButton) }
-        }
-        is OnlineStatus.SignedIn, is OnlineStatus.QuotaUsed -> Setting(
+            Setting(s.onlineTitle, OnlineWords.status(status), titleColor = Tone.muted, icon = TmIcons.Warning) {}
+        OnlineStatus.SignedOut, is OnlineStatus.Expired, is OnlineStatus.FreeQuotaUsed ->
+            Action(s.onlineSignIn, OnlineWords.status(status), TmIcons.Account, value = s.onlineSignInButton) { signingIn = true }
+        is OnlineStatus.SignedIn, is OnlineStatus.QuotaUsed -> Action(
             s.onlineSignedIn(account.username),
             OnlineWords.quota(status),
+            TmIcons.Account,
             titleColor = if (status is OnlineStatus.QuotaUsed) Tone.caution else androidx.compose.ui.graphics.Color.Unspecified,
-        ) {
-            OutlinedButton(onClick = { signingOut = true }) { Text(s.onlineSignOut) }
-        }
+            value = s.onlineSignOut,
+        ) { signingOut = true }
     }
-    Setting(s.onlineMachineToggle, if (account.includeMachine) s.onlineMachineOn else s.onlineMachineOff) {
-        Switch(checked = account.includeMachine, onCheckedChange = { online.setIncludeMachine(it) })
-    }
-    Setting(
+    Toggle(
+        s.onlineMachineToggle,
+        if (account.includeMachine) s.onlineMachineOn else s.onlineMachineOff,
+        account.includeMachine,
+        icon = TmIcons.Language,
+    ) { online.setIncludeMachine(it) }
+    Action(
         s.onlineSubdl,
         when {
             account.subdlKey.isBlank() -> s.onlineSubdlNone
             account.subdlRefused -> s.onlineSubdlRefused
             else -> s.onlineSubdlSet
         },
-    ) {
-        OutlinedButton(onClick = { editingKey = true }) { Text(s.commonChange) }
-    }
-    Setting(s.onlineClearCache, if (bytes > 0) s.onlineCacheDetail(Translator.messages.formatter.size(bytes)) else s.onlineCacheEmpty) {
-        OutlinedButton(enabled = bytes > 0, onClick = { clearingCache = true }) { Text(s.commonClear) }
-    }
+        TmIcons.Lock,
+    ) { editingKey = true }
+    Action(
+        s.onlineClearCache,
+        if (bytes > 0) s.onlineCacheDetail(Translator.messages.formatter.size(bytes)) else s.onlineCacheEmpty,
+        TmIcons.Delete,
+        end = RowEnd.None,
+        enabled = bytes > 0,
+    ) { clearingCache = true }
     if (clearingCache) {
         ConfirmDialog(
             title = s.confirmOnlineCacheTitle,

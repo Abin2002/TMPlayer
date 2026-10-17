@@ -1,10 +1,22 @@
 package com.tmplayer.desktop.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import com.tmplayer.ui.icons.TmIcons
+import com.tmplayer.ui.theme.Corner
 import com.tmplayer.i18n.L
 import com.tmplayer.ui.components.TmAlertDialog
 import androidx.compose.material3.LinearProgressIndicator
@@ -71,10 +83,11 @@ internal fun StorageGroup(state: ShellState) {
     var busy by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(refresh) { figures = measure(state) }
 
-    Group(s.storageTitle)
+    // The page's own heading names it, so the card comes first, as on the phone's Storage page.
     StorageCard(figures)
 
     val root = desktop.storageRoot.takeIf { it.isNotBlank() }?.let(::File)
+    val idle = busy == null && moving == null
     Setting(
         s.storageLocation,
         when {
@@ -83,19 +96,18 @@ internal fun StorageGroup(state: ShellState) {
             root != null -> StorageRelocationPlan.appFolder(root).path
             else -> s.storageDefaultFolders(DesktopPaths.layout(null).downloadsDir.path)
         },
+        icon = TmIcons.Folder,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(enabled = busy == null && moving == null, onClick = {
+            RowButton(s.commonChange, enabled = idle) {
                 scope.launch {
                     val picked = FolderPicker.pick(s.storagePickTitle, root ?: DesktopPaths.downloadsDir.parentFile)
                         ?: return@launch
                     dialog = check(state, picked)
                 }
-            }) { Text(s.commonChange) }
+            }
             if (root != null) {
-                OutlinedButton(enabled = busy == null && moving == null, onClick = {
-                    scope.launch { dialog = check(state, null) }
-                }) { Text(s.commonReset) }
+                RowButton(s.commonReset, enabled = idle) { scope.launch { dialog = check(state, null) } }
             }
         }
     }
@@ -110,58 +122,53 @@ internal fun StorageGroup(state: ShellState) {
     Setting(
         s.storageCacheLimit,
         s.storageCacheLimitDetail(s.formatSizeGb(s.messages.formatter.number(limitGb))),
+        icon = TmIcons.Archive,
     ) {
-        Row {
+        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            if (desktop.cacheLimitBytes != DesktopSettings.DEFAULT_CACHE_LIMIT_BYTES) {
+                RowButton(s.commonReset) { setLimit(state, DesktopSettings.DEFAULT_CACHE_LIMIT_BYTES) }
+            }
             Stepper(
                 onLess = { setLimit(state, DesktopSettings.stepCacheLimit(desktop.cacheLimitBytes, -1)) },
                 onMore = { setLimit(state, DesktopSettings.stepCacheLimit(desktop.cacheLimitBytes, 1)) },
             )
-            if (desktop.cacheLimitBytes != DesktopSettings.DEFAULT_CACHE_LIMIT_BYTES) {
-                TextButton(onClick = { setLimit(state, DesktopSettings.DEFAULT_CACHE_LIMIT_BYTES) }) { Text(s.commonReset) }
-            }
         }
     }
 
     val f = figures
-    Setting(
+    // The videos watching left behind: the row opens them, on the Downloads page.
+    Action(
         s.storageCachedVideos,
         when {
             f == null -> s.storageMeasuring
             f.cachedCount == 0 -> s.storageCachedNone
             else -> s.storageCachedSummary(f.cachedCount, StorageRelocationPlan.size(f.cachedBytes))
         },
-    ) {
-        OutlinedButton(onClick = { state.go(Destination.Downloads) }) { Text(s.commonShow) }
-    }
+        TmIcons.Download,
+    ) { state.go(Destination.Downloads) }
     state.extras.watchCache?.let {
-        Setting(s.storageClearCache, s.storageClearCacheDetail) {
-            OutlinedButton(onClick = { dialog = StorageDialog.ClearCache }) { Text(s.commonClear) }
+        Action(s.storageClearCache, s.storageClearCacheDetail, TmIcons.Delete, end = RowEnd.None) { dialog = StorageDialog.ClearCache }
+    }
+    Action(s.storageClearPictures, s.storageClearPicturesDetail, TmIcons.Image, end = RowEnd.None) {
+        scope.launch {
+            runCatching { Td.clearPicturesAndPreviews() }
+            refresh++
+            toast(s.storagePicturesCleared)
         }
     }
-    Setting(s.storageClearPictures, s.storageClearPicturesDetail) {
-        OutlinedButton(onClick = {
-            scope.launch {
-                runCatching { Td.clearPicturesAndPreviews() }
-                refresh++
-                toast(s.storagePicturesCleared)
-            }
-        }) { Text(s.commonClear) }
+    Action(s.storageClearAll, s.storageClearAllDetail, TmIcons.Delete, iconTint = Tone.danger, end = RowEnd.None) {
+        dialog = StorageDialog.ClearAllButDownloads
     }
-    Setting(s.storageClearAll, s.storageClearAllDetail) {
-        OutlinedButton(onClick = { dialog = StorageDialog.ClearAllButDownloads }) { Text(s.commonClear, color = Tone.danger) }
-    }
-    Setting(s.storageScan, s.storageScanDetail(DesktopPaths.downloadsDir.path)) {
-        OutlinedButton(onClick = {
-            scope.launch {
-                val found = DownloadIndex.scan(settings)
-                if (found.isEmpty()) {
-                    toast(s.storageScanClean)
-                } else {
-                    toast(s.storageScanFound(found.size))
-                    state.go(Destination.Downloads)
-                }
+    Action(s.storageScan, s.storageScanDetail(DesktopPaths.downloadsDir.path), TmIcons.Search, end = RowEnd.None) {
+        scope.launch {
+            val found = DownloadIndex.scan(settings)
+            if (found.isEmpty()) {
+                toast(s.storageScanClean)
+            } else {
+                toast(s.storageScanFound(found.size))
+                state.go(Destination.Downloads)
             }
-        }) { Text(s.storageScanButton) }
+        }
     }
 
     when (val d = dialog) {
@@ -237,22 +244,44 @@ internal fun StorageGroup(state: ShellState) {
 @Composable
 private fun StorageCard(figures: StorageFigures?) {
     val s = LocalStrings.current
-    Surface(shape = MaterialTheme.shapes.medium, color = Tone.surface, modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    // The phone's Storage card: TMPlayer's share split into its three kinds as one bar, a line
+    // naming each, then the free space on each drive involved.
+    val video = Tone.accent
+    val cached = Tone.accent.copy(alpha = 0.6f)
+    val pictures = Tone.accent.copy(alpha = 0.3f)
+    Surface(shape = RoundedCornerShape(Corner.Large), color = Tone.surface, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (figures == null) {
                 Text(s.storageMeasuring, color = Tone.muted)
                 return@Column
             }
-            Text(
-                s.storageCardSummary(
-                    StorageRelocationPlan.size(figures.downloadsBytes),
-                    StorageRelocationPlan.size(figures.cachedBytes),
-                    StorageRelocationPlan.size(figures.picturesBytes),
-                ),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            figures.drives.forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = Tone.muted) }
+            figures.drives.firstOrNull()?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = Tone.text) }
+            val total = figures.downloadsBytes + figures.cachedBytes + figures.picturesBytes
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 6.dp).height(10.dp).clip(CircleShape).background(Tone.surfaceHigh),
+            ) {
+                if (total > 0) {
+                    listOf(figures.downloadsBytes to video, figures.cachedBytes to cached, figures.picturesBytes to pictures)
+                        .filter { it.first > 0 }
+                        .forEach { (bytes, colour) -> Box(Modifier.weight(bytes.toFloat()).fillMaxHeight().background(colour)) }
+                }
+            }
+            Legend(s.settingsStorageDownloads, figures.downloadsBytes, video)
+            Legend(s.settingsStorageCached, figures.cachedBytes, cached)
+            Legend(s.settingsStoragePictures, figures.picturesBytes, pictures)
+            figures.drives.drop(1).forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = Tone.muted) }
         }
+    }
+}
+
+/** One kind of file on the card: its colour, its name and what it takes. */
+@Composable
+private fun Legend(label: String, bytes: Long, colour: androidx.compose.ui.graphics.Color) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Box(Modifier.size(10.dp).clip(CircleShape).background(colour))
+        Spacer(Modifier.width(10.dp))
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = Modifier.weight(1f))
+        Text(StorageRelocationPlan.size(bytes), style = MaterialTheme.typography.bodyMedium, color = Tone.text)
     }
 }
 
