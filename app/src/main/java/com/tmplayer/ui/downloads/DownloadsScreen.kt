@@ -985,11 +985,17 @@ fun DownloadsScreen(
     }
 
     if (confirmingDeleteMany) {
+        // One chosen reads as one: its name, "it" and "Keep it", not "them".
+        val only = chosen.singleOrNull()
         TvConfirm(
             title = L.downloadsDeleteManyTitle(count = chosen.size),
-            message = L.downloadsDeleteManyBody(size = Translator.messages.formatter.bytes(chosen.sumOf { it.bytes })),
+            message = if (only != null) {
+                L.downloadsDeleteOneBody(title = only.title, size = Translator.messages.formatter.bytes(only.bytes))
+            } else {
+                L.downloadsDeleteManyBody(size = Translator.messages.formatter.bytes(chosen.sumOf { it.bytes }))
+            },
             confirmLabel = L.commonDelete,
-            cancelLabel = L.downloadsKeepThem,
+            cancelLabel = if (only != null) L.downloadsKeepIt else L.downloadsKeepThem,
             onConfirm = {
                 confirmingDeleteMany = false
                 deleteMany(chosen)
