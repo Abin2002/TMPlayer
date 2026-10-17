@@ -12,10 +12,11 @@ import com.tmplayer.data.SettingsStore
 import com.tmplayer.ui.components.deviceForm
 
 /**
- * What a fresh sign in walks through (CP69): the setup's choices ([SetupScreen]), then the quick
- * tour ([TourScreen]), on one count. Skip all, on either part, ends both. Back from the tour's first
- * page goes to the setup's last step. With no setup steps (a build without posters, on a
- * device where nothing else applies) it is the tour alone.
+ * The setup a fresh sign in walks through (CP67, CP69): one flow under one name, in three groups
+ * on one count and one bar. Appearance first ([AppearanceStep]: theme and interface size, so
+ * everything after is already drawn the way the viewer likes it), then the preferences
+ * ([SetupScreen]), then the quick tour ([TourScreen]) as the last, optional group. Skip all, on any
+ * step, ends the whole setup; Back on a group's first step goes to the step before it.
  *
  * [onDone] is called once, at the end: the host marks the setup and the tour done.
  */
@@ -32,32 +33,43 @@ fun SetupAndTour(
     val pages = remember(form) { Tour.pages(form) }
     val setup = remember(steps) { steps.takeIf { it.isNotEmpty() }?.let { SetupState(it) } }
     val tour = remember(pages) { TourProgress(pages) }
-    var touring by remember { mutableStateOf(setup == null) }
-    val total = steps.size + pages.size
+    var phase by remember { mutableStateOf(SetupPhase.Appearance) }
+    val groups = listOf(1, steps.size, pages.size)
 
-    if (!touring && setup != null) {
-        SetupScreen(
+    when {
+        phase == SetupPhase.Appearance -> AppearanceStep(
+            settings,
+            onNext = { phase = if (setup != null) SetupPhase.Preferences else SetupPhase.Tour },
+            onSkipAll = onDone,
+            modifier = modifier,
+            groups = groups,
+        )
+        phase == SetupPhase.Preferences && setup != null -> SetupScreen(
             settings,
             setup,
-            onDone = { touring = true },
+            onDone = { phase = SetupPhase.Tour },
             modifier = modifier,
             fit = fit,
             recommendations = recommendations,
-            total = total,
+            before = 1,
+            groups = groups,
             moreAfter = true,
             onSkipAll = onDone,
+            onBackFromFirst = { phase = SetupPhase.Appearance },
         )
-    } else {
-        TourScreen(
+        else -> TourScreen(
             tour,
             onDone = onDone,
             modifier = modifier,
-            before = steps.size,
-            total = total,
-            onBackFromFirst = { if (setup != null) touring = false else onDone() },
+            before = 1 + steps.size,
+            groups = groups,
+            onBackFromFirst = { phase = if (setup != null) SetupPhase.Preferences else SetupPhase.Appearance },
         )
     }
 }
+
+/** The setup's three groups, in the order they come. */
+private enum class SetupPhase { Appearance, Preferences, Tour }
 
 /** The quick tour on its own: taken from the offer to an updated install, or opened from Settings. */
 @Composable

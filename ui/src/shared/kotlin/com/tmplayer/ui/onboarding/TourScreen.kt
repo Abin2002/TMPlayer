@@ -54,14 +54,14 @@ import com.tmplayer.ui.theme.Tv
 import kotlinx.coroutines.delay
 
 /**
- * The quick tour ([Tour]): one page at a time, the page's marked picture with numbered badges over
- * it, and the same numbers in front of its lines. Next moves on (Start watching on the last page),
- * Back goes to the page before, and on the first page to whatever came before the tour
- * ([onBackFromFirst], the setup's last step), or out of it. On a phone a swipe does the same. The
- * close at the end of the title ends it.
+ * The quick tour ([Tour]), the first run's last group, in its shared frame ([StepFrame]): one page
+ * at a time, the page's marked picture with numbered badges over it, and the same numbers in front
+ * of its lines. Next moves on (Done on the last page), Back goes to the page before, and on the
+ * first page to whatever came before the tour ([onBackFromFirst], the setup's last step). On a
+ * phone a swipe does the same. Skip all at the top ends it.
  *
- * [before] and [total] put the pages on the setup's count, so "Step 5 of 9" (at the foot, with
- * [StepProgress]) runs across both.
+ * [before] and [groups] put the pages on the whole first run's count, so "Step 5 of 9" and the bar
+ * at the top run across the setup and the tour.
  */
 @Composable
 fun TourScreen(
@@ -69,8 +69,8 @@ fun TourScreen(
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     before: Int = 0,
-    total: Int = state.pages.size,
-    onBackFromFirst: () -> Unit = onDone,
+    groups: List<Int> = listOf(state.pages.size),
+    onBackFromFirst: (() -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     val form = deviceForm()
@@ -82,33 +82,20 @@ fun TourScreen(
     var focusedOn by remember { mutableStateOf<TourPage?>(null) }
 
     val forward: () -> Unit = { if (!state.next()) onDone() }
-    val backward: () -> Unit = { if (!state.back()) onBackFromFirst() }
-    BackHandler(onBack = backward)
+    val backward: (() -> Unit)? = if (!state.isFirst) ({ state.back() }) else onBackFromFirst
+    BackHandler { backward?.invoke() ?: onDone() }
 
-    val outer = when (form) {
-        DeviceForm.Tv -> Modifier.padding(horizontal = Tv.SafeH, vertical = Tv.SafeV)
-        DeviceForm.Desktop -> Modifier.padding(40.dp)
-        DeviceForm.Phone -> Modifier.windowInsetsPadding(WindowInsets.safeDrawing).padding(16.dp)
-    }
-    val swipe = if (form == DeviceForm.Phone) {
-        Modifier.swipeSteps(onNext = forward, onBack = { if (before > 0 || !state.isFirst) backward() })
-    } else {
-        Modifier
-    }
-    BoxWithConstraints(
-        modifier.fillMaxSize().background(Tone.background).then(swipe).then(outer),
-        contentAlignment = Alignment.Center,
-    ) {
-        val wide = maxWidth > maxHeight && maxWidth >= WIDE_FROM
-        val heading: @Composable ColumnScope.() -> Unit = {
-            Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(s.tourLabel, style = MaterialTheme.typography.labelLarge, color = Tone.accent)
-                    Text(copy.title, style = MaterialTheme.typography.headlineMedium, color = Tone.text)
-                }
-                if (!state.isLast) StepsCloseButton(onDone)
-            }
-        }
+    StepFrame(
+        group = s.tourLabel,
+        position = FlowPosition(before + state.index, groups),
+        primary = if (state.isLast) s.setupDone else s.setupNext,
+        onPrimary = forward,
+        onBack = backward,
+        onSkipAll = if (state.isLast) null else onDone,
+        modifier = modifier,
+        primaryFocus = next,
+        onPrimaryFocused = { focusedOn = page },
+    ) { wide ->
         val lines: @Composable ColumnScope.() -> Unit = {
             copy.lines.forEachIndexed { i, line ->
                 Row(verticalAlignment = Alignment.Top) {
@@ -118,23 +105,9 @@ fun TourScreen(
                 }
             }
         }
-        val buttons: @Composable () -> Unit = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (before > 0 || !state.isFirst) SetupButton(s.setupBack, icon = true, onClick = backward)
-                if (!wide) Spacer(Modifier.weight(1f))
-                SetupButton(
-                    if (state.isLast) s.setupStart else s.setupNext,
-                    primary = true,
-                    modifier = Modifier
-                        .focusRequester(next)
-                        .onFocusChanged { if (it.isFocused) focusedOn = page },
-                    onClick = forward,
-                )
-            }
-        }
         if (wide) {
             Row(
-                Modifier.widthIn(max = MAX).fillMaxSize(),
+                Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(40.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -142,30 +115,21 @@ fun TourScreen(
                     Modifier.weight(1f).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    heading()
-                    Spacer(Modifier.height(4.dp))
+                    StepHeading(copy.title, body = null)
                     lines()
-                    Spacer(Modifier.height(8.dp))
-                    buttons()
-                    StepProgress(before + state.index, total, Modifier.padding(top = 8.dp))
                 }
                 Box(Modifier.weight(1.6f).fillMaxHeight(), contentAlignment = Alignment.Center) {
                     Picture(page, badges)
                 }
             }
         } else {
-            Column(Modifier.widthIn(max = PHONE_MAX).fillMaxSize()) {
-                Column(
-                    Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    heading()
-                    Picture(page, badges, Modifier.fillMaxWidth())
-                    lines()
-                }
-                Spacer(Modifier.height(12.dp))
-                buttons()
-                StepProgress(before + state.index, total, Modifier.align(Alignment.CenterHorizontally).padding(top = 14.dp))
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                StepHeading(copy.title, body = null)
+                Picture(page, badges, Modifier.fillMaxWidth())
+                lines()
             }
         }
     }
@@ -231,12 +195,7 @@ private fun Badge(number: String, marked: Boolean) {
     }
 }
 
-private val WIDE_FROM = 560.dp
-private val PHONE_MAX = 600.dp
-private val MAX = 1280.dp
 private val BADGE = 28.dp
 
 /** How much of a badge sits outside its mark's corner: most of it, so it touches the circle's edge. */
 private const val OUTSIDE = 0.85f
-private const val FOCUS_TRIES = 40
-private const val FOCUS_RETRY_MS = 75L

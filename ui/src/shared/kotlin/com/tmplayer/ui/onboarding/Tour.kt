@@ -21,7 +21,7 @@ enum class TourPage {
     /** Home's rows, and how a chat gets starred into them. */
     Home,
 
-    /** The player: what the timebar's lighter part means, the track buttons, Skip intro. */
+    /** The player: what the timebar's lighter part means, the track buttons, Skip intro, Lock the screen. */
     Player,
 
     /** Gestures on a phone, the remote's keys on a television, the keyboard on a desktop. */
@@ -97,7 +97,8 @@ fun Strings.tourCopy(page: TourPage, form: DeviceForm): TourCopy {
         )
         TourPage.Player -> TourCopy(
             tourPlayerTitle,
-            listOf(tourPlayerTimebar, tourPlayerTracks, tourPlayerSkip),
+            // Lock the screen is on the menu, not in the picture, so its line has no badge.
+            listOf(tourPlayerTimebar, tourPlayerTracks, tourPlayerSkip, tourPlayerLock(formKey)),
         )
         TourPage.Controls -> when (form) {
             DeviceForm.Phone -> TourCopy(tourControlsTitlePhone, listOf(tourControlsPhoneJump, tourControlsPhoneSwipe, tourControlsPhoneTap))
@@ -116,7 +117,10 @@ fun Strings.tourCopy(page: TourPage, form: DeviceForm): TourCopy {
                 if (tv) tourSettingsStorageTv else tourSettingsStorage,
                 tourSettingsLock,
                 tourSettingsAppearance,
-            ),
+            ) +
+                // Where Settings is, last and without a badge: the picture is the page itself, and
+                // on the desktop it opens from the profile menu rather than a place on the bar.
+                if (form == DeviceForm.Desktop) listOf(tourSettingsWhereDesktop) else emptyList(),
         )
     }
 }

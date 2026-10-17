@@ -30,3 +30,6 @@ fun rememberSeekThumbnailsShown(): Boolean = false
 
 /** Nor the Lighter pictures and Reduce motion rows: only Low storage mode is offered there. */
 val hasPictureSettings: Boolean = false
+
+/** A computer has no wallpaper palette for the app to take, so the appearance step never asks. */
+internal val wallpaperColoursOffered: Boolean get() = false

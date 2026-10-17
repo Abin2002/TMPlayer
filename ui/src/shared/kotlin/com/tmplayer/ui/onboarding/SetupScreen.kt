@@ -61,6 +61,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
@@ -88,17 +89,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * The setup after sign in ([Setup]), the same screen on the phone, the television and the desktop.
- * Each step asks one thing with two answers side by side, each with a picture of what it looks
- * like. Picking one applies it at once and moves on; Skip, or a swipe towards the end on a phone,
- * moves on and changes nothing; the close at the end of the title ends the setup; Back, or a
- * swipe back, goes to the step before. Where the viewer is shows at the foot ([StepProgress]).
+ * The setup's preference steps ([Setup]), the same screen on the phone, the television and the
+ * desktop, in the first run's shared frame ([StepFrame]). Each step asks one thing with two
+ * answers side by side, each with a picture of what it looks like, and opens with the answer that
+ * is set now already chosen (on a fresh sign in, the recommended one). Picking an answer only
+ * marks it; Next, the step's one primary button, applies what is marked and moves on, so the
+ * shortest way through keeps every default. Back, or a swipe back on a phone, goes to the step
+ * before; Skip all at the top ends the setup and whatever follows it, changing nothing more.
  *
- * A remote or a keyboard starts on the answer that is set now, which on a fresh sign in is the
- * recommended one (every setting's default). Wide screens (a television, a desktop window, a phone
- * on its side) put the words and buttons beside the answers; a phone held upright stacks them,
- * with the buttons at the foot where a thumb is.
- *
+ * A remote or a keyboard starts each step on Next. Up, or Right on a wide screen, reaches the
+ * answers; OK on one marks it and returns to Next. Wide screens (a television, a desktop window,
+ * a phone on its side) put the words beside the answers; a phone held upright stacks them.
  */
 @Composable
 fun SetupScreen(
@@ -109,12 +110,15 @@ fun SetupScreen(
     /** What the Device step says about this device, and what it offers to change (CP68). */
     fit: DeviceFit = DeviceFit.Fine,
     recommendations: List<Recommendation> = emptyList(),
-    /** The count the step line gives, the quick tour's pages included when it follows ([SetupAndTour]). */
-    total: Int = state.steps.size,
-    /** Whether something follows the last step, so Skip all still means more than Skip there. */
+    /** How many steps of the first run come before these, and each group's size, for the bar at the top. */
+    before: Int = 0,
+    groups: List<Int> = listOf(state.steps.size),
+    /** Whether something follows the last step, so its button says Next rather than Done. */
     moreAfter: Boolean = false,
-    /** Skip all, and Back from the first step: out of the setup and whatever follows it. */
+    /** Skip all: out of the setup and whatever follows it. */
     onSkipAll: () -> Unit = onDone,
+    /** Back from the first step, to what came before it; null leaves as Skip all does. */
+    onBackFromFirst: (() -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     val scope = rememberCoroutineScope()
@@ -132,165 +136,209 @@ fun SetupScreen(
     val form = deviceForm()
     val remote = form != DeviceForm.Phone
 
-    fun pick(choice: SetupChoice) {
-        scope.launch {
-            runCatching {
-                choice.applyTo(
-                    settings,
-                    posters = online?.let { o -> { on: Boolean -> o.setEnabled(on) } },
-                    recommendations = recommendations,
-                )
+    val step = state.step
+    // What is marked on this step: the viewer's pick, or until there is one, what is set now.
+    var picked by remember(step) { mutableStateOf<SetupChoice?>(null) }
+    val selected = picked ?: values.current(step)
+    val primaryFocus = remember { FocusRequester() }
+    var focusedOn by remember { mutableStateOf<SetupStep?>(null) }
+
+    fun next() {
+        val choice = selected
+        // Only a change is written: Next on an untouched step leaves every setting as it was, even
+        // one changed on its own in Settings since. Mobile data suggests saving although it is off,
+        // and the Device step's Apply is an action, so both compare with what is really set.
+        if (choice != values.chosen(step)) {
+            scope.launch {
+                runCatching {
+                    choice.applyTo(
+                        settings,
+                        posters = online?.let { o -> { on: Boolean -> o.setEnabled(on) } },
+                        recommendations = recommendations,
+                    )
+                }
             }
         }
         if (!state.next()) onDone()
     }
 
-    BackHandler { if (!state.back()) onSkipAll() }
+    fun mark(choice: SetupChoice) {
+        picked = choice
+        // A remote goes back to Next, one press from moving on with what it marked.
+        if (remote) runCatching { primaryFocus.requestFocus() }
+    }
 
-    val step = state.step
+    val back: (() -> Unit)? = if (!state.isFirst) ({ state.back() }) else onBackFromFirst
+    BackHandler { back?.invoke() ?: onSkipAll() }
+
     val copy = s.setupCopy(step).let { if (step == SetupStep.Device) it.copy(title = s.fitHeadline(fit)) else it }
-    val focus = remember(step) { step.choices.associateWith { FocusRequester() } }
-    val holder = remember { FocusHolder() }
-
-    val outer = when (form) {
-        DeviceForm.Tv -> Modifier.padding(horizontal = Tv.SafeH, vertical = Tv.SafeV)
-        DeviceForm.Desktop -> Modifier.padding(40.dp)
-        DeviceForm.Phone -> Modifier.windowInsetsPadding(WindowInsets.safeDrawing).padding(16.dp)
-    }
-    val swipe = if (form == DeviceForm.Phone) {
-        Modifier.swipeSteps(onNext = { if (!state.next()) onDone() }, onBack = { state.back() })
-    } else {
-        Modifier
-    }
-    BoxWithConstraints(
-        modifier.fillMaxSize().background(Tone.background).then(swipe).then(outer),
-        contentAlignment = Alignment.Center,
-    ) {
-        val wide = maxWidth > maxHeight && maxWidth >= WIDE_FROM
-        val words: @Composable ColumnScope.() -> Unit = {
-            Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    copy.title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Tone.text,
-                    modifier = Modifier.weight(1f),
-                )
-                if (state.canSkipAll || moreAfter) StepsCloseButton(onSkipAll)
-            }
-            Text(copy.body, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
-        }
-        val buttons: @Composable () -> Unit = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (!state.isFirst) SetupButton(s.setupBack, icon = true) { state.back() }
-                // Upright on a phone Skip sits at the end, under the thumb; beside the answers it
-                // follows the words.
-                if (!wide) Spacer(Modifier.weight(1f))
-                SetupButton(s.setupSkip) { if (!state.next()) onDone() }
-            }
-        }
-        val progress: @Composable (Modifier) -> Unit = { m -> StepProgress(state.index, total, m) }
+    val last = state.isLast && !moreAfter
+    StepFrame(
+        group = s.setupGroupPreferences,
+        position = FlowPosition(before + state.index, groups),
+        primary = if (last) s.setupDone else s.setupNext,
+        onPrimary = ::next,
+        onBack = back,
+        onSkipAll = if (last) null else onSkipAll,
+        modifier = modifier,
+        primaryFocus = primaryFocus,
+        onPrimaryFocused = { focusedOn = step },
+    ) { wide ->
         if (wide) {
             Row(
-                Modifier.widthIn(max = DESKTOP_MAX).fillMaxSize(),
+                Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(40.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(
                     Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    words()
-                    Spacer(Modifier.height(8.dp))
-                    buttons()
+                    StepHeading(copy.title, copy.body)
                     Text(s.setupLater, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
-                    progress(Modifier.padding(top = 8.dp))
                 }
                 BoxWithConstraints(Modifier.weight(1.3f).fillMaxHeight(), contentAlignment = Alignment.Center) {
                     // Two squares side by side, as large as the width allows and the height leaves
                     // room for, with the answer's name and line under each.
                     val side = min((maxWidth - GAP) / 2 - CARD_PAD * 2, maxHeight - LABELS - CARD_PAD * 2)
                     if (step == SetupStep.Device) {
-                        DeviceChoices(recommendations, focus, holder, ::pick)
+                        Column(Modifier.verticalScroll(rememberScrollState())) {
+                            DeviceChoices(recommendations, selected, ::mark)
+                        }
                     } else {
-                        Choices(step, values, focus, holder, side, ::pick)
+                        Choices(step, selected, side, ::mark)
                     }
                 }
             }
         } else {
-            Column(Modifier.widthIn(max = PHONE_MAX).fillMaxSize()) {
-                Column(
-                    Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    words()
-                    Spacer(Modifier.height(4.dp))
-                    if (step == SetupStep.Device) {
-                        DeviceChoices(recommendations, focus, holder, ::pick)
-                    } else {
-                        Choices(step, values, focus, holder, side = null, onPick = ::pick)
-                    }
-                    Text(s.setupLater, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                StepHeading(copy.title, copy.body)
+                if (step == SetupStep.Device) {
+                    DeviceChoices(recommendations, selected, ::mark)
+                } else {
+                    Choices(step, selected, side = null, onPick = ::mark)
                 }
-                Spacer(Modifier.height(12.dp))
-                buttons()
-                progress(Modifier.align(Alignment.CenterHorizontally).padding(top = 14.dp))
+                Text(s.setupLater, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
             }
         }
     }
 
-    // A remote or a keyboard starts each step on the answer that is set now, asked again over a
-    // few frames until one of the answers has it: a window not yet focused, or a list arriving
-    // under the setup, can refuse or take the first request.
+    // A remote or a keyboard starts each step on Next, asked for again over a few frames until it
+    // has it: a window not yet focused, or a list arriving under the setup, can refuse the first.
     if (remote) {
-        val now by rememberUpdatedState(values)
         LaunchedEffect(step) {
             repeat(FOCUS_TRIES) {
                 withFrameNanos { }
                 if (it > 0) delay(FOCUS_RETRY_MS)
-                if (holder.step == step) return@LaunchedEffect
-                runCatching { focus.getValue(now.current(step)).requestFocus() }
+                if (focusedOn == step) return@LaunchedEffect
+                runCatching { primaryFocus.requestFocus() }
             }
         }
     }
 }
 
-/** Which step has an answer focused, so the first focus can be asked for until it lands. */
-private class FocusHolder {
-    var step by mutableStateOf<SetupStep?>(null)
-}
-
 // Three seconds in all: a television cold start can take that long to give the window its focus.
-private const val FOCUS_TRIES = 40
-private const val FOCUS_RETRY_MS = 75L
+internal const val FOCUS_TRIES = 40
+internal const val FOCUS_RETRY_MS = 75L
 
 /**
- * The Device step's answers: the list of what would change, then Apply (where a remote starts)
- * and Not now. No pictures: the changes are settings, and their names say what they do.
+ * The Device step's answers: the list of what would change, then Apply and Not now as two rows to
+ * mark, like every other step's answers. No pictures: the changes are settings, and their names
+ * say what they do.
  */
 @Composable
 private fun DeviceChoices(
     recommendations: List<Recommendation>,
-    focus: Map<SetupChoice, FocusRequester>,
-    holder: FocusHolder,
+    selected: SetupChoice,
     onPick: (SetupChoice) -> Unit,
 ) {
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(Corner.Large)).background(Tone.surfaceHigh).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+    val s = LocalStrings.current
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        RecommendationList(
+            recommendations,
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(Corner.Large)).background(Tone.surfaceHigh).padding(16.dp),
+        )
+        for (choice in SetupStep.Device.choices) {
+            val apply = choice == SetupChoice.ApplyRecommended
+            OptionRow(
+                title = if (apply) s.deviceApply else s.deviceNotNow,
+                detail = if (apply) s.setupDeviceApplyDetail else s.setupDeviceNotNowDetail,
+                selected = selected == choice,
+                recommended = apply,
+                modifier = Modifier.arrowsMoveFocus(),
+            ) { onPick(choice) }
+        }
+    }
+}
+
+/**
+ * One answer as a row to mark: a round check, its name, the line under it, and "Recommended"
+ * where it is. The Device step's answers and the appearance step's wallpaper switch.
+ */
+@Composable
+internal fun OptionRow(
+    title: String,
+    detail: String?,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    recommended: Boolean = false,
+    role: Role = Role.RadioButton,
+    onClick: () -> Unit,
+) {
+    val s = LocalStrings.current
+    val interactions = remember { MutableInteractionSource() }
+    val shown by interactions.collectIsFocusVisibleAsState()
+    val shape = RoundedCornerShape(Corner.Large)
+    val touch = deviceForm() == DeviceForm.Phone
+    Row(
+        modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(if (shown) Tone.focusFill else Tone.surfaceHigh)
+            .then(if (selected) Modifier.border(2.dp, Tone.accent, shape) else Modifier)
+            .focusRing(shown, shape)
+            .semantics { this.selected = selected }
+            .clickable(
+                interactionSource = interactions,
+                indication = if (touch) LocalIndication.current else null,
+                role = role,
+                onClick = onClick,
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        RecommendationList(recommendations)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (choice in SetupStep.Device.choices) {
-                val s = LocalStrings.current
-                SetupButton(
-                    if (choice == SetupChoice.ApplyRecommended) s.deviceApply else s.deviceNotNow,
-                    primary = choice == SetupChoice.ApplyRecommended,
-                    modifier = Modifier
-                        .focusRequester(focus.getValue(choice))
-                        .onFocusChanged { if (it.isFocused) holder.step = SetupStep.Device },
-                ) { onPick(choice) }
+        Mark(selected, if (shown) Tone.onFocusFill else Tone.accent)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, color = if (shown) Tone.onFocusFill else Tone.text)
+            if (detail != null) {
+                Text(
+                    detail,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (shown) Tone.onFocusFill.copy(alpha = 0.85f) else Tone.muted,
+                )
+            }
+            if (recommended) {
+                Text(
+                    s.setupRecommended,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (shown) Tone.onFocusFill else Tone.accent,
+                )
             }
         }
+    }
+}
+
+/** A round mark: a filled check when chosen, an empty ring when not. */
+@Composable
+internal fun Mark(selected: Boolean, color: Color, size: Dp = 22.dp) {
+    if (selected) {
+        Icon(TmIcons.CheckCircle, contentDescription = null, tint = color, modifier = Modifier.size(size))
+    } else {
+        Box(Modifier.size(size).padding(2.dp).border(2.dp, Tone.outline, CircleShape))
     }
 }
 
@@ -298,9 +346,7 @@ private fun DeviceChoices(
 @Composable
 private fun Choices(
     step: SetupStep,
-    values: SetupValues,
-    focus: Map<SetupChoice, FocusRequester>,
-    holder: FocusHolder,
+    selected: SetupChoice,
     side: Dp?,
     onPick: (SetupChoice) -> Unit,
 ) {
@@ -309,12 +355,9 @@ private fun Choices(
         for (choice in step.choices) {
             ChoiceCard(
                 choice = choice,
-                selected = values.current(step) == choice,
+                selected = selected == choice,
                 side = side,
-                modifier = (if (side == null) Modifier.weight(1f) else Modifier)
-                    .focusRequester(focus.getValue(choice))
-                    .onFocusChanged { if (it.isFocused) holder.step = step }
-                    .arrowsMoveFocus(),
+                modifier = (if (side == null) Modifier.weight(1f) else Modifier).arrowsMoveFocus(),
                 onPick = { onPick(choice) },
             )
         }
@@ -326,7 +369,7 @@ private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifi
     val s = LocalStrings.current
     val copy = s.choiceCopy(choice)
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusVisibleAsState()
+    val shown by interactions.collectIsFocusVisibleAsState()
     val shape = RoundedCornerShape(Corner.Large)
     val touch = deviceForm() == DeviceForm.Phone
     Column(
@@ -334,13 +377,14 @@ private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifi
             .then(if (side != null) Modifier.width(side + CARD_PAD * 2) else Modifier)
             .fillMaxHeight()
             .clip(shape)
-            .background(if (focused) Tone.focusFill else Tone.surfaceHigh)
-            .focusRing(focused, shape)
+            .background(if (shown) Tone.focusFill else Tone.surfaceHigh)
+            .then(if (selected) Modifier.border(2.dp, Tone.accent, shape) else Modifier)
+            .focusRing(shown, shape)
             .semantics { this.selected = selected }
             .clickable(
                 interactionSource = interactions,
                 indication = if (touch) LocalIndication.current else null,
-                role = Role.Button,
+                role = Role.RadioButton,
                 onClick = onPick,
             )
             .padding(CARD_PAD),
@@ -368,12 +412,12 @@ private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifi
                 )
             }
         }
-        val onFill = if (focused) Tone.onFocusFill else Tone.text
+        val onFill = if (shown) Tone.onFocusFill else Tone.text
         Text(copy.title, style = MaterialTheme.typography.titleSmall, color = onFill, maxLines = 2)
         Text(
             copy.detail,
             style = MaterialTheme.typography.bodySmall,
-            color = if (focused) Tone.onFocusFill.copy(alpha = 0.85f) else Tone.muted,
+            color = if (shown) Tone.onFocusFill.copy(alpha = 0.85f) else Tone.muted,
             maxLines = 4,
         )
         // Under the words rather than on the picture, which it would hide part of. The row is as
@@ -382,7 +426,7 @@ private fun ChoiceCard(choice: SetupChoice, selected: Boolean, side: Dp?, modifi
             Text(
                 s.setupRecommended,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (focused) Tone.onFocusFill else Tone.accent,
+                color = if (shown) Tone.onFocusFill else Tone.accent,
             )
         }
     }
@@ -402,8 +446,8 @@ internal fun ChoicePicture(choice: SetupChoice, modifier: Modifier) {
 }
 
 /**
- * Skip, Skip all and Back: quiet buttons that fill under the focus like the cards do. [primary] is
- * the accent-filled one an answer like Apply gets. Also the low-end device card's buttons.
+ * A round button that fills under the focus like the cards do. [primary] is the accent-filled one:
+ * the first run's Next and Done ([StepFrame]), and the low-end device card's Apply.
  */
 @Composable
 internal fun SetupButton(
@@ -414,7 +458,7 @@ internal fun SetupButton(
     onClick: () -> Unit,
 ) {
     val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusVisibleAsState()
+    val focused = interactions.collectIsFocusVisibleAsState().value
     val touch = deviceForm() == DeviceForm.Phone
     Row(
         modifier
@@ -561,7 +605,7 @@ private fun MobileDataArt(choice: SetupChoice, modifier: Modifier) {
  * its own; a desktop window's arrow keys do not, and Tab alone is a poor way across two cards.
  */
 @Composable
-private fun Modifier.arrowsMoveFocus(): Modifier {
+internal fun Modifier.arrowsMoveFocus(): Modifier {
     val focusManager = LocalFocusManager.current
     return onPreviewKeyEvent { event ->
         if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
@@ -582,9 +626,6 @@ private fun Modifier.arrowsMoveFocus(): Modifier {
 private fun Modifier.mirrored(): Modifier =
     if (LocalLayoutDirection.current == LayoutDirection.Rtl) graphicsLayer(scaleX = -1f) else this
 
-private val WIDE_FROM = 560.dp
-private val PHONE_MAX = 600.dp
-private val DESKTOP_MAX = 1120.dp
 private val GAP = 12.dp
 private val CARD_PAD = 8.dp
 

@@ -55,3 +55,9 @@ fun rememberSeekThumbnailsShown(): Boolean {
 
 /** The phone and the television have the Lighter pictures and Reduce motion rows. */
 val hasPictureSettings: Boolean = true
+
+/**
+ * Whether the appearance step offers Use the wallpaper's colours: Android 12 and later have a
+ * wallpaper palette to read; earlier, the switch would change nothing. Only a phone asks it.
+ */
+internal val wallpaperColoursOffered: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S

@@ -11,13 +11,17 @@ the streaming works, see [ARCHITECTURE.md](ARCHITECTURE.md).
 Settings, Devices, Link Desktop Device, point it at the screen. No typing an email address with a
 D-pad. On a phone the number comes first, with the country picker and the code boxes Telegram
 itself uses, and the QR route is there for an account that lives on another handset. Two-step
-verification works either way. Once signed in, a short setup asks a few things, each with a
-picture of both answers and a Skip: which chats the sidebar lists (only for an account with
+verification works either way. Once signed in, a short setup walks through three groups, every
+step in the same frame (the group and "Step n of m" at the top with Skip all, Back at the bottom
+left and Next at the bottom right, Done on the last). Appearance: the theme (System, Light, Dark)
+and the interface size, applied as they are picked so the screen itself is the preview, plus the
+wallpaper's colours on Android 12 and later. Preferences, each with a picture of both answers and
+the current one already chosen: which chats the sidebar lists (only for an account with
 folders), posters and details from TMDB, TVmaze and AniList, Low storage mode, full quality or
-lighter pictures and motion, and on a phone whether to save mobile data. A quick tour follows: a
+lighter pictures and motion, and on a phone whether to save mobile data. Then the quick tour: a
 few marked screenshots of where videos come from, Home, the player, the controls, downloads, the
-TV home screen row (on a TV) and Settings. Settings can run either again, and an install updated
-from an older version is offered the tour once.
+TV home screen row (on a TV) and Settings. Settings can run the setup again or the tour on its
+own, and an install updated from an older version is offered the tour once.
 
 **Shows media, not messages.** Browse the chats and channels you already have, then see only their
 playable videos. Text messages never appear. Video documents are included too, so an `.mkv` sent

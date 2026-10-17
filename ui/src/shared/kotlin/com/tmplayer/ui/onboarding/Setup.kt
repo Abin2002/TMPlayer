@@ -12,9 +12,9 @@ import com.tmplayer.i18n.Strings
 /**
  * The short setup after signing in (CP67, CP69), on the phone, the television and the desktop
  * alike. It replaced the two page tour before sign in and the one card after it (CP42): the sign
- * in screen comes first, and once the account is in, a few steps ask one thing each, every step
- * with a picture of what each answer looks like, Skip, and Skip all. The quick tour ([Tour])
- * follows it.
+ * in screen comes first, and once the account is in, the setup runs as one flow in three groups
+ * ([SetupAndTour]): Appearance, these preference steps (one thing each, a picture of each answer,
+ * the current answer marked and Next to keep or apply it), and the quick tour ([Tour]) last.
  *
  * Who sees it: a sign in screen arms it (`SettingsStore.armSetup`), so an install that was signed
  * in before this existed never does, and a fresh sign in always does. Settings can run it again.

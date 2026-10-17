@@ -12,9 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.performClick
@@ -28,6 +27,8 @@ import androidx.compose.ui.use
 import com.tmplayer.data.DownloadRequest
 import com.tmplayer.data.DownloadRunner
 import com.tmplayer.data.SettingsStore
+import com.tmplayer.data.ThemeChoice
+import com.tmplayer.data.UiScale
 import com.tmplayer.data.UpdateScheduler
 import com.tmplayer.data.WatchedStore
 import com.tmplayer.desktop.DesktopPrefs
@@ -37,6 +38,7 @@ import com.tmplayer.i18n.Translator
 import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.ui.nav.BackStack
 import com.tmplayer.ui.nav.LocalBackStack
+import com.tmplayer.ui.onboarding.AppearanceStep
 import com.tmplayer.ui.onboarding.SetupScreen
 import com.tmplayer.ui.onboarding.SetupAndTour
 import com.tmplayer.ui.onboarding.SetupState
@@ -106,6 +108,14 @@ class SetupRenderTest {
                 })
             }
         }
+        for (dark in listOf(true, false)) {
+            save("setup-appearance-${if (dark) "dark" else "light"}.png", render(dark) {
+                AppearanceStep(settings, onNext = {}, onSkipAll = {}, groups = listOf(1, all.size, 6))
+            })
+        }
+        save("setup-appearance-narrow.png", render(true, width = 520, height = 900) {
+            AppearanceStep(settings, onNext = {}, onSkipAll = {})
+        })
         // A narrow window stacks the words over the answers, as a phone does.
         save("setup-narrow.png", render(true, width = 520, height = 900) {
             SetupScreen(settings, remember { SetupState(all) }, onDone = {})
@@ -130,9 +140,9 @@ class SetupRenderTest {
     }
 
     /**
-     * From the keyboard: each step opens on the answer set now (the recommended one on a fresh
-     * sign in), Enter picks the focused one and moves on, Skip changes nothing, Back walks back,
-     * and the close (Skip all) ends the setup.
+     * Each step opens with the answer set now marked and the keyboard on Next. A click on an
+     * answer only marks it; Next applies what is marked and moves on, Next on an untouched step
+     * changes nothing, Back walks back, and Done on the last step finishes.
      */
     @Test
     fun walkedFromTheKeyboard() = runComposeUiTest {
@@ -147,7 +157,7 @@ class SetupRenderTest {
                 }
             }
         }
-        fun card(title: String) = hasText(title) and hasClickAction()
+        fun button(label: String) = hasText(label) and hasClickAction()
         fun press(key: Key) = onNode(isFocused()).performKeyInput { pressKey(key) }
         // The first focus is asked for over a few frames (see SetupScreen), so it is waited for.
         fun awaitFocus(node: androidx.compose.ui.test.SemanticsMatcher) {
@@ -155,35 +165,35 @@ class SetupRenderTest {
         }
 
         waitForIdle()
-        awaitFocus(card("Posters on"))
-        // Right to the other answer, Enter picks it: the setting changes and the step moves on.
-        press(Key.DirectionRight)
-        onNode(card("Posters off")).assertIsFocused()
+        awaitFocus(button("Next"))
+        // Marking an answer changes nothing yet; Next writes it and moves on.
+        onNode(button("Posters off")).performClick()
+        waitForIdle()
+        assertEquals(SetupStep.Posters, setup.step)
+        assertTrue(online.settings.value.enabled)
+        awaitFocus(button("Next"))
         press(Key.Enter)
         waitForIdle()
         assertEquals(SetupStep.Storage, setup.step)
         waitUntil(timeoutMillis = WRITE_MS) { !online.settings.value.enabled }
-        awaitFocus(card("Keep what plays"))
 
-        // Back returns to the posters step, on the answer now set.
+        // Back returns to the posters step, with the answer now set marked.
         back.handleBack()
         waitForIdle()
         assertEquals(SetupStep.Posters, setup.step)
-        awaitFocus(card("Posters off"))
-        press(Key.DirectionLeft)
-        press(Key.Enter)
+        onNode(button("Posters off")).assertIsSelected()
+        onNode(button("Posters on")).performClick()
+        onNode(button("Next")).performClick()
         waitForIdle()
         waitUntil(timeoutMillis = WRITE_MS) { online.settings.value.enabled }
 
-        // Low storage mode, then Skip on the last step leaves it as it is and finishes.
+        // Next on an untouched step keeps it as it is.
         assertEquals(SetupStep.Storage, setup.step)
-        awaitFocus(card("Keep what plays"))
-        press(Key.DirectionRight)
-        press(Key.Enter)
+        onNode(button("Next")).performClick()
         waitForIdle()
         assertEquals(SetupStep.Performance, setup.step)
-        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.lowStorageMode.first() } }
-        onNode(hasText("Skip") and hasClickAction()).performClick()
+        assertFalse(runBlocking { settings.lowStorageMode.first() })
+        onNode(button("Done")).performClick()
         waitForIdle()
         assertTrue("finished after the last step", done)
     }
@@ -242,8 +252,10 @@ class SetupRenderTest {
                 }
             }
         }
+        // Apply is marked, the recommended answer, and the keyboard starts on Done.
+        onNode(hasText("Apply") and hasClickAction()).assertIsSelected()
         waitUntil(timeoutMillis = WRITE_MS) {
-            onAllNodes(hasText("Apply") and hasClickAction() and isFocused()).fetchSemanticsNodes().isNotEmpty()
+            onAllNodes(hasText("Done") and hasClickAction() and isFocused()).fetchSemanticsNodes().isNotEmpty()
         }
         onNode(isFocused()).performKeyInput { pressKey(Key.Enter) }
         waitForIdle()
@@ -260,7 +272,7 @@ class SetupRenderTest {
                 Box(Modifier.size(1280.dp, 800.dp)) { SetupScreen(settings, remember { SetupState(all) }, onDone = { done = true }) }
             }
         }
-        onNode(hasContentDescription("Skip all") and hasClickAction()).performClick()
+        onNode(hasText("Skip all") and hasClickAction()).performClick()
         waitForIdle()
         assertTrue(done)
         assertFalse(runBlocking { settings.lowStorageMode.first() })
@@ -278,8 +290,9 @@ class SetupRenderTest {
             }
         }
         onNode(hasText("Posters off") and hasClickAction()).performClick()
+        onNode(hasText("Next") and hasClickAction()).performClick()
         waitForIdle()
-        assertFalse(online.settings.value.enabled)
+        waitUntil(timeoutMillis = WRITE_MS) { !online.settings.value.enabled }
         assertTrue("chosen, not a stale default", online.settings.value.offByChoice)
     }
 
@@ -295,12 +308,15 @@ class SetupRenderTest {
             }
         }
         onNode(hasText("Lighter") and hasClickAction()).performClick()
+        onNode(hasText("Next") and hasClickAction()).performClick()
         waitForIdle()
         // Three separate writes, which land one after another (slowest on Windows), so all are awaited.
         waitUntil(timeoutMillis = WRITE_MS) {
             runBlocking { settings.lighterPictures.first() && settings.reduceMotion.first() && !settings.trickplay.first() }
         }
-        onNode(hasText("Save mobile data") and hasClickAction()).performClick()
+        // Saving is marked as the suggestion although the settings start off, so Done writes it.
+        onNode(hasText("Save mobile data") and hasClickAction()).assertIsSelected()
+        onNode(hasText("Done") and hasClickAction()).performClick()
         waitForIdle()
         waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.saveMobileData.first() && settings.wifiOnlyDownloads.first() } }
     }
@@ -312,7 +328,7 @@ class SetupRenderTest {
         for ((i, page) in pages.withIndex()) {
             for (dark in listOf(true, false)) {
                 save("tour-${page.imageName}-${if (dark) "dark" else "light"}.png", render(dark) {
-                    TourScreen(remember { TourProgress(pages, start = i) }, onDone = {}, before = 4, total = 4 + pages.size)
+                    TourScreen(remember { TourProgress(pages, start = i) }, onDone = {}, before = 5, groups = listOf(1, 4, pages.size))
                 })
             }
         }
@@ -324,7 +340,7 @@ class SetupRenderTest {
         save("tour-narrow.png", render(true, width = 520, height = 900) { TourScreen(remember { TourProgress(pages) }, onDone = {}) })
     }
 
-    /** CP69: from the keyboard the tour starts on Next, Enter walks it, Start watching ends it. */
+    /** CP69: from the keyboard the tour starts on Next, Enter walks it, Done ends it. */
     @Test
     fun tourFromTheKeyboard() = runComposeUiTest {
         val pages = Tour.pages(com.tmplayer.data.DeviceForm.Desktop)
@@ -336,7 +352,7 @@ class SetupRenderTest {
             }
         }
         for (i in pages.indices) {
-            val label = if (i == pages.lastIndex) "Start watching" else "Next"
+            val label = if (i == pages.lastIndex) "Done" else "Next"
             waitUntil(timeoutMillis = WRITE_MS) {
                 onAllNodes(hasText(label) and hasClickAction() and isFocused()).fetchSemanticsNodes().isNotEmpty()
             }
@@ -346,7 +362,10 @@ class SetupRenderTest {
         assertTrue(done)
     }
 
-    /** CP69: the setup hands over to the tour, whose close (Skip all) ends both, and Back returns to the setup. */
+    /**
+     * One flow: Appearance, then the preferences, then the tour. Back on the tour's first page
+     * returns to the last preference, and Skip all from the tour ends everything.
+     */
     @Test
     fun setupThenTour() = runComposeUiTest {
         MetaFixture.install("on")
@@ -358,17 +377,46 @@ class SetupRenderTest {
                 }
             }
         }
-        onNode(hasText("Skip") and hasClickAction()).performClick()
+        onNode(hasText("Theme and size")).assertExists()
+        onNode(hasText("Next") and hasClickAction()).performClick()
         waitForIdle()
-        onNode(hasText("Next") and hasClickAction()).assertExists()
+        onNode(hasText("Keep what plays") and hasClickAction()).assertExists()
+        onNode(hasText("Next") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Quick tour")).assertExists()
         onNode(hasText("Back") and hasClickAction()).performClick()
         waitForIdle()
         onNode(hasText("Keep what plays") and hasClickAction()).assertExists()
-        onNode(hasText("Skip") and hasClickAction()).performClick()
+        onNode(hasText("Back") and hasClickAction()).performClick()
         waitForIdle()
-        onNode(hasContentDescription("Skip all") and hasClickAction()).performClick()
+        onNode(hasText("Theme and size")).assertExists()
+        onNode(hasText("Next") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Next") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Skip all") and hasClickAction()).performClick()
         waitForIdle()
         assertTrue(done)
+    }
+
+    /** The Appearance step writes the theme and the interface size as they are picked. */
+    @Test
+    fun appearanceAppliesAsPicked() = runComposeUiTest {
+        var next = false
+        setContent {
+            TmMaterialTheme(dark = true) {
+                Box(Modifier.size(1280.dp, 800.dp)) {
+                    AppearanceStep(settings, onNext = { next = true }, onSkipAll = {})
+                }
+            }
+        }
+        onNode(hasText("System") and hasClickAction()).assertIsSelected()
+        onNode(hasText("Light") and hasClickAction()).performClick()
+        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.themeChoice.first() } == ThemeChoice.Light }
+        onNode(hasText("Largest") and hasClickAction()).performClick()
+        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.uiScale.first() } == UiScale.Largest }
+        onNode(hasText("Next") and hasClickAction()).performClick()
+        assertTrue(next)
     }
 
     @Test

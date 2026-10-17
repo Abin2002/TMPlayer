@@ -42,7 +42,7 @@ class TourTest {
             for (page in Tour.pages(form)) {
                 val copy = s.tourCopy(page, form)
                 assertTrue(copy.title.isNotBlank())
-                assertTrue("$page on $form", copy.lines.size in 2..4)
+                assertTrue("$page on $form", copy.lines.size in 2..5)
                 assertTrue(copy.lines.all { it.isNotBlank() })
             }
         }
