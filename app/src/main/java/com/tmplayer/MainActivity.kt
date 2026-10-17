@@ -362,6 +362,28 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
+     * Esc on a keyboard plugged into a tablet or a phone is Back, as it is in every other app with
+     * a keyboard: it closes a sheet, a search or a page the way the back gesture does. Only when
+     * nothing on screen took the key first (these run after the views had it), and not on a
+     * television, whose remote has a Back of its own.
+     */
+    override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent): Boolean {
+        if (keyCode == android.view.KeyEvent.KEYCODE_ESCAPE && !FormFactor.isTv(this)) {
+            event.startTracking()
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onKeyUp(keyCode: Int, event: android.view.KeyEvent): Boolean {
+        if (keyCode == android.view.KeyEvent.KEYCODE_ESCAPE && !FormFactor.isTv(this)) {
+            if (event.isTracking && !event.isCanceled) onBackPressedDispatcher.onBackPressed()
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
+    /**
      * The activity is `singleTask`, so a second launch arrives here rather than as a new instance.
      *
      * Pressing a download's notification while the app is already open is that case, and the new

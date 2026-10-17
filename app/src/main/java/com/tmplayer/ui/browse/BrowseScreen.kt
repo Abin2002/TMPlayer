@@ -384,7 +384,7 @@ fun BrowseScreen(
     val touch = !FormFactor.isTv(LocalContext.current)
     // The phone's lists end clear of the floating bar (TouchNav), which their container already
     // lifts above the navigation bar.
-    val insets = if (touch) TouchInsets.clearing(touchShellClearance(withActions = true)) else TvInsets
+    val insets = if (touch) TouchInsets.clearing(touchShellClearance(withActions = true, rail = LocalTouchRail.current)) else TvInsets
     // Fixed columns suit a screen whose size is known in advance; a phone's is not, and it turns
     // when the viewer does, so the grid is asked for a tile width instead and works out the rest.
     val tiles = if (touch) GridCells.Adaptive(TOUCH_TILE_MIN) else GridCells.Fixed(TILE_COLUMNS)
@@ -2379,6 +2379,10 @@ private fun ChatSection(
 
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
+    // Chats pressed again on the bar: back to the top of the list.
+    ScrollToTopOnReselect(TouchDestination.Chats) { animate ->
+        if (layout == CardLayout.Grid) gridState.toTop(animate) else listState.toTop(animate)
+    }
     // On a phone a chip, a sort or a search moves the rows to their new places and fades newcomers
     // in. Not past a few hundred chats, where the bookkeeping costs more than the motion is worth.
     val animateRows = rowsAreFullBleed && !(rememberReducedMotion() || Motion.reduced) && chats.size <= ANIMATED_ROWS_MAX

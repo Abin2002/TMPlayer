@@ -37,6 +37,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -366,7 +368,18 @@ private fun HomeChatsPager(
     val target = swipePage(tab)
     LaunchedEffect(target) {
         if (target == null || target == pager.currentPage && pager.currentPageOffsetFraction == 0f) return@LaunchedEffect
-        if (reduced) pager.scrollToPage(target) else pager.animateScrollToPage(target)
+        // On the bar's own curve and time rather than the pager's default spring, which is soft
+        // enough at the start that a press seemed to wait before the page moved, and took about
+        // twice as long to settle.
+        if (reduced) pager.scrollToPage(target) else pager.animateScrollToPage(target, animationSpec = Motion.standard(Motion.Normal))
+    }
+    // The page beside the one on screen is composed a frame later, not in the same frame: coming
+    // back from Settings or a chat, the browser is built again, and building Home, Chats and the
+    // Settings peek all at once was most of the wait between the press and the first frame.
+    var beside by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        withFrameNanos { }
+        beside = 1
     }
     val currentChats by rememberUpdatedState(chats)
     val settle by rememberUpdatedState(onSettle)
@@ -380,7 +393,7 @@ private fun HomeChatsPager(
     }
     HorizontalPager(
         state = pager,
-        beyondViewportPageCount = 1,
+        beyondViewportPageCount = beside,
         key = { it },
         modifier = Modifier.fillMaxSize(),
     ) { index ->

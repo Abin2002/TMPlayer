@@ -97,6 +97,7 @@ import com.tmplayer.data.SearchQuality
 import com.tmplayer.data.SearchSort
 import com.tmplayer.ui.components.PhoneSheet
 import com.tmplayer.ui.components.Spinner
+import com.tmplayer.ui.components.secondaryPress
 import com.tmplayer.ui.components.TmSecondaryButton
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
@@ -104,6 +105,7 @@ import com.tmplayer.ui.nav.BackHandler
 import com.tmplayer.ui.theme.FloatingTone
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingBorder
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -162,8 +164,13 @@ internal fun PhoneSearchScreen(
 
     BackHandler(enabled = !sheetOpen) { onClose() }
 
-    // The keyboard is up by the time the field has finished growing out of the magnifier.
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    // The keyboard comes up once the field has finished growing out of the magnifier. Asked for at
+    // once, it rose during the growth, and the field chased a spot the keyboard kept moving.
+    val entered = LocalSearchEntered.current
+    LaunchedEffect(Unit) {
+        snapshotFlow { entered() }.first { it }
+        runCatching { focus.requestFocus() }
+    }
 
     val query = text.text
     val chatMatches = remember(chats, query, favourites) { GlobalSearch.localChats(chats, query, favourites) }
@@ -413,6 +420,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.emptySearch(
                     // A search taken off folds away and the rest close up; one added fades in.
                     .then(if (com.tmplayer.ui.theme.Motion.reduced) Modifier else Modifier.animateItem())
                     .fillMaxWidth()
+                    .secondaryPress { onRemove(entry) }
                     .combinedClickable(onClick = { onPick(entry) }, onLongClick = { onRemove(entry) })
                     .padding(start = 16.dp, end = 4.dp)
                     .height(48.dp),

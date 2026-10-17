@@ -7,6 +7,12 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.tmplayer.data.FormFactor
@@ -43,7 +49,7 @@ fun Modifier.holdable(
     onHold: () -> Unit,
 ): Modifier {
     if (!FormFactor.isTv(LocalContext.current)) {
-        return combinedClickable(
+        return secondaryPress(onHold).combinedClickable(
             interactionSource = interactionSource,
             indication = LocalIndication.current,
             role = Role.Button,
@@ -93,6 +99,38 @@ fun Modifier.holdable(
             }
         }
         .focusable(interactionSource = interactionSource)
+}
+
+/**
+ * What a long press does, from a mouse or a keyboard on a tablet or a phone: a right click, the
+ * keyboard's menu key, or Shift+F10, as on every other app with a pointer. A finger keeps its long
+ * press ([combinedClickable], which also gives the long press its buzz).
+ *
+ * Goes before the clickable in the chain: the right click is taken on the way in, so the
+ * clickable never sees it as the start of a press.
+ */
+@Composable
+fun Modifier.secondaryPress(onSecondary: (() -> Unit)?): Modifier {
+    if (onSecondary == null) return this
+    val action = rememberUpdatedState(onSecondary)
+    return this
+        .pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                        event.changes.forEach { it.consume() }
+                        action.value()
+                    }
+                }
+            }
+        }
+        .onKeyEvent { event ->
+            val menu = event.key == Key.Menu || (event.key == Key.F10 && event.isShiftPressed)
+            if (!menu) return@onKeyEvent false
+            if (event.type == KeyEventType.KeyDown && event.nativeKeyEvent.repeatCount == 0) action.value()
+            true
+        }
 }
 
 /**

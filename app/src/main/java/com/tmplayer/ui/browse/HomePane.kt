@@ -170,6 +170,8 @@ internal fun HomePane(
     // Kept across a turn of the phone: the show is looked up again in the rows once they are back.
     val opened = rememberOpenSeries { key, chatId -> HomeLaunch.find(key, chatId, rows) }
     val listState = rememberLazyListState()
+    // Home pressed again on the bar: back to the top, the featured carousel whole.
+    ScrollToTopOnReselect(TouchDestination.Home) { animate -> listState.toTop(animate) }
     // A show's card on the TV home screen asked for its page: opened once the show is in the rows.
     val showAsk by HomeLaunch.show.collectAsState()
     // Not before this window has focus: the launcher is still on top while the app comes up, and a

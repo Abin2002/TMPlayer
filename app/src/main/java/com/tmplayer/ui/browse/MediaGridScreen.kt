@@ -71,6 +71,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import com.tmplayer.ui.components.TouchPullRefresh
+import com.tmplayer.ui.components.secondaryPress
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -2022,7 +2023,7 @@ internal fun VideoTile(
             .then(
                 if (touch) {
                     // The ripple is drawn on the art below rather than across the whole column.
-                    Modifier.combinedClickable(
+                    Modifier.secondaryPress(onLongClick).combinedClickable(
                         interactionSource = interactions,
                         indication = null,
                         role = Role.Button,
@@ -2426,9 +2427,10 @@ private fun tileTitle(item: MediaItem): String {
  * the same one either way.
  */
 @OptIn(ExperimentalFoundationApi::class)
+@Composable
 private fun Modifier.longPressable(onClick: () -> Unit, onLongClick: (() -> Unit)?): Modifier =
     if (onLongClick == null) clickable(onClick = onClick)
-    else combinedClickable(onClick = onClick, onLongClick = onLongClick)
+    else secondaryPress(onLongClick).combinedClickable(onClick = onClick, onLongClick = onLongClick)
 
 /**
  * The remote's equivalent: OK opens the video, holding OK opens its menu.

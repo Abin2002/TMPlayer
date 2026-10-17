@@ -96,6 +96,23 @@ import androidx.compose.material3.ripple
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import kotlinx.coroutines.flow.MutableSharedFlow
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.collectLatest
 import com.tmplayer.ui.i18n.LocalStrings
@@ -181,6 +198,9 @@ internal class TouchChrome {
     /** Set by the bar's magnifier on a page without a search; the browser opens its search and clears it. */
     var searchAsked by mutableStateOf(false)
 
+    /** A bar button pressed again on its own page, for that page to go back to its top ([ScrollToTopOnReselect]). */
+    internal val reselected = MutableSharedFlow<TouchDestination>(extraBufferCapacity = 1)
+
     internal val bar = BarVisibility()
 }
 
@@ -249,95 +269,210 @@ internal fun TouchNavHost(
     }
     val talkBack = rememberTouchExploration()
     val keyboard = WindowInsets.isImeVisible
-    val barShown = spec != null && !spec.hidden && (bar.shown || talkBack) && !keyboard
 
     val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
     val navigationBar = with(density) { WindowInsets.navigationBars.getBottom(this).toDp() }
-    // What the bar keeps, measured from the bottom of the window, with the pill of the page's own
-    // buttons over it when there is one.
-    val room = if (spec == null) 0.dp else navigationBar + touchShellClearance(withActions = spec.actions != null)
 
     // The spec as it was when the bar was last out, so the bar does not redraw empty on its way out.
     val lastShown = remember { arrayOf(TouchPageSpec(current = null)) }
     if (spec != null && !spec.hidden) lastShown[0] = spec
 
-    SharedTransitionLayout(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize()) {
-            CompositionLocalProvider(
-                LocalBottomChrome provides room,
-                LocalTouchChrome provides chrome,
-                LocalTouchShared provides this@SharedTransitionLayout,
-            ) {
-                Box(Modifier.fillMaxSize().nestedScroll(bar.connection)) { content() }
-            }
+    // A press on the button of the page already on screen takes that page back to its top, as a
+    // tab bar does everywhere else; a press on any other button goes there.
+    fun retap(destination: TouchDestination, go: () -> Unit): () -> Unit = {
+        if (lastShown[0].current == destination) chrome.reselected.tryEmit(destination) else go()
+    }
 
-            AnimatedVisibility(
-                visible = barShown,
-                modifier = Modifier.align(Alignment.BottomCenter),
-                // Back up on a spring, a touch of give as it lands, and away on a plain ease: the bar
-                // answers a pull at once and leaves without fuss.
-                enter = if (reduced) fadeIn(Motion.standard(0)) else slideInVertically(BAR_SPRING) { it } + fadeIn(Motion.standard(Motion.Fast)),
-                exit = if (reduced) fadeOut(Motion.standard(0)) else slideOutVertically(Motion.standard(Motion.Normal)) { it } + fadeOut(Motion.standard(Motion.Fast)),
-            ) {
-                val shown = lastShown[0]
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
-                    shown.actions?.let { actions ->
-                        // The page's own buttons: a small pill at the end, over the bar, so the top
-                        // of the screen holds nothing to press.
-                        Row(
-                            Modifier
-                                .padding(end = 16.dp, bottom = BAR_GAP)
-                                .height(ACTIONS_HEIGHT)
-                                .shadow(BAR_SHADOW, CircleShape)
-                                .clip(CircleShape)
-                                .background(FloatingTone.menu)
-                                .border(floatingBorder(), CircleShape)
-                                .padding(horizontal = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            content = actions,
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        // A medium or expanded window (a tablet, a phone on its side, a wide split screen) gets the
+        // bar as a rail down the start edge, as Material's adaptive layout asks: a bar across the
+        // foot of a short, wide window takes height the page needs.
+        val rail = maxWidth >= RAIL_FROM
+        val barShown = spec != null && !spec.hidden && (rail || ((bar.shown || talkBack) && !keyboard))
+        // What the bar keeps, measured from the bottom of the window, with the pill of the page's
+        // own buttons over it when there is one. A rail keeps nothing at the foot but that pill.
+        val room = if (spec == null) 0.dp else navigationBar + touchShellClearance(withActions = spec.actions != null, rail = rail)
+        // And the room a rail keeps at the start, which the page is laid out beside. A page with
+        // no bar (a chat, a Settings page) has the whole width; the change eases rather than jumps.
+        val safe = WindowInsets.safeDrawing
+        val railInset = with(density) {
+            (if (direction == LayoutDirection.Ltr) safe.getLeft(this, direction) else safe.getRight(this, direction)).toDp()
+        }
+        val railRoom by animateDpAsState(
+            targetValue = if (rail && spec != null) railInset + RAIL_MARGIN + RAIL_WIDTH else 0.dp,
+            animationSpec = Motion.standard(if (reduced) 0 else Motion.Normal),
+            label = "railRoom",
+        )
+
+        SharedTransitionLayout(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize()) {
+                CompositionLocalProvider(
+                    LocalBottomChrome provides room,
+                    LocalTouchChrome provides chrome,
+                    LocalTouchShared provides this@SharedTransitionLayout,
+                    LocalTouchRail provides rail,
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            // The rail's room counts as the page's start inset from here on, so a
+                            // page that pads by the safe drawing area does not count a cutout twice.
+                            .padding(start = railRoom)
+                            .consumeWindowInsets(PaddingValues(start = railRoom))
+                            .nestedScroll(bar.connection),
+                    ) { content() }
+                }
+
+                AnimatedVisibility(
+                    visible = barShown,
+                    modifier = Modifier.align(if (rail) Alignment.CenterStart else Alignment.BottomCenter),
+                    // Back up on a spring, a touch of give as it lands, and away on a plain ease: the
+                    // bar answers a pull at once and leaves without fuss. A rail comes from its edge.
+                    enter = when {
+                        reduced -> fadeIn(Motion.standard(0))
+                        rail -> slideInHorizontally(BAR_SPRING) { -it } + fadeIn(Motion.standard(Motion.Fast))
+                        else -> slideInVertically(BAR_SPRING) { it } + fadeIn(Motion.standard(Motion.Fast))
+                    },
+                    exit = when {
+                        reduced -> fadeOut(Motion.standard(0))
+                        rail -> slideOutHorizontally(Motion.standard(Motion.Normal)) { -it } + fadeOut(Motion.standard(Motion.Fast))
+                        else -> slideOutVertically(Motion.standard(Motion.Normal)) { it } + fadeOut(Motion.standard(Motion.Fast))
+                    },
+                ) {
+                    val shown = lastShown[0]
+                    // The search field grows out of the bar's Search button.
+                    val searchShared = if (reduced) {
+                        Modifier
+                    } else {
+                        Modifier.sharedBounds(
+                            rememberSharedContentState(SEARCH_KEY),
+                            animatedVisibilityScope = this@AnimatedVisibility,
+                            resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                         )
                     }
-                    FloatingBar(
-                        current = shown.current,
-                        inProfile = shown.inProfile,
-                        position = shown.position,
-                        account = nav.account,
-                        badged = nav.downloadCount > 0 || nav.updateVersion != null,
-                        onHome = nav.onHome,
-                        onChats = nav.onChats,
-                        onSettings = nav.onSettings,
-                        onSearch = nav.onSearch,
-                        onProfile = { profileOpen = true },
-                        // The search field grows out of the bar's Search button.
-                        searchShared = if (reduced) {
-                            Modifier
-                        } else {
-                            Modifier.sharedBounds(
-                                rememberSharedContentState(SEARCH_KEY),
-                                animatedVisibilityScope = this@AnimatedVisibility,
-                                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
-                            )
-                        },
-                    )
+                    val barContent: @Composable () -> Unit = {
+                        FloatingBar(
+                            current = shown.current,
+                            inProfile = shown.inProfile,
+                            position = shown.position,
+                            account = nav.account,
+                            badged = nav.downloadCount > 0 || nav.updateVersion != null,
+                            onHome = retap(TouchDestination.Home, nav.onHome),
+                            onChats = retap(TouchDestination.Chats, nav.onChats),
+                            onSettings = nav.onSettings,
+                            onSearch = nav.onSearch,
+                            onProfile = { profileOpen = true },
+                            searchShared = searchShared,
+                            vertical = rail,
+                        )
+                    }
+                    if (rail) {
+                        barContent()
+                    } else {
+                        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
+                            // The page's own buttons: a small pill at the end, over the bar, so the
+                            // top of the screen holds nothing to press.
+                            shown.actions?.let { actions -> ActionsPill(actions, Modifier.padding(end = 16.dp, bottom = BAR_GAP)) }
+                            barContent()
+                        }
+                    }
                 }
-            }
 
-            ProfilePopover(
-                open = profileOpen,
-                reduced = reduced,
-                favoriteCount = nav.favoriteCount,
-                downloadCount = nav.downloadCount,
-                updateVersion = nav.updateVersion,
-                onDismiss = { profileOpen = false },
-                onFavourites = { profileOpen = false; nav.onFavourites() },
-                onDownloads = { profileOpen = false; nav.onDownloads() },
-                onHistory = { profileOpen = false; nav.onHistory(HistoryTab.Continue) },
-                onWatchLater = { profileOpen = false; nav.onHistory(HistoryTab.WatchLater) },
-                onUpdate = { profileOpen = false; nav.onUpdate() },
-            )
+                // Beside a rail the page's own buttons keep their pill at the bottom end, alone.
+                if (rail) {
+                    val actions = lastShown[0].actions
+                    AnimatedVisibility(
+                        visible = barShown && actions != null,
+                        modifier = Modifier.align(Alignment.BottomEnd),
+                        enter = fadeIn(Motion.standard(if (reduced) 0 else Motion.Fast)),
+                        exit = fadeOut(Motion.standard(if (reduced) 0 else Motion.Fast)),
+                    ) {
+                        if (actions != null) {
+                            ActionsPill(
+                                actions,
+                                Modifier
+                                    .windowInsetsPadding(safe.only(WindowInsetsSides.End + WindowInsetsSides.Bottom))
+                                    .padding(end = 16.dp, bottom = BAR_MARGIN),
+                            )
+                        }
+                    }
+                }
+
+                ProfilePopover(
+                    open = profileOpen,
+                    reduced = reduced,
+                    rail = rail,
+                    railRoom = railRoom,
+                    favoriteCount = nav.favoriteCount,
+                    downloadCount = nav.downloadCount,
+                    updateVersion = nav.updateVersion,
+                    onDismiss = { profileOpen = false },
+                    onFavourites = { profileOpen = false; nav.onFavourites() },
+                    onDownloads = { profileOpen = false; nav.onDownloads() },
+                    onHistory = { profileOpen = false; nav.onHistory(HistoryTab.Continue) },
+                    onWatchLater = { profileOpen = false; nav.onHistory(HistoryTab.WatchLater) },
+                    onUpdate = { profileOpen = false; nav.onUpdate() },
+                )
+            }
         }
     }
 }
+
+/** A page's own buttons, in one small floating pill. */
+@Composable
+private fun ActionsPill(actions: @Composable RowScope.() -> Unit, modifier: Modifier) {
+    Row(
+        modifier
+            .height(ACTIONS_HEIGHT)
+            .shadow(BAR_SHADOW, CircleShape)
+            .clip(CircleShape)
+            .background(FloatingTone.menu)
+            .border(floatingBorder(), CircleShape)
+            .padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        content = actions,
+    )
+}
+
+/**
+ * Whether the floating bar is a rail down the start edge in this window ([RAIL_FROM] wide or
+ * more), for a page under it to pad its foot by the right amount.
+ */
+internal val LocalTouchRail = compositionLocalOf { false }
+
+/**
+ * Takes a list back to its top when the bar button of the page it is on is pressed again, as a
+ * tab bar does. Only the page on screen answers ([LocalPageOnScreen]): Home and Chats stay
+ * composed side by side in their pager.
+ */
+@Composable
+internal fun ScrollToTopOnReselect(destination: TouchDestination, toTop: suspend (animate: Boolean) -> Unit) {
+    val chrome = LocalTouchChrome.current ?: return
+    val onScreen = LocalPageOnScreen.current
+    val reduced = rememberReducedMotion() || Motion.reduced
+    val action by rememberUpdatedState(toTop)
+    LaunchedEffect(chrome, onScreen, destination, reduced) {
+        if (!onScreen) return@LaunchedEffect
+        chrome.reselected.collect { if (it == destination) action(!reduced) }
+    }
+}
+
+/** Back to the top of a list: most of a long way is jumped, so the glide is short. */
+internal suspend fun LazyListState.toTop(animate: Boolean) {
+    if (!animate) return scrollToItem(0)
+    if (firstVisibleItemIndex > TOP_GLIDE_ITEMS) scrollToItem(TOP_GLIDE_ITEMS)
+    animateScrollToItem(0)
+}
+
+internal suspend fun LazyGridState.toTop(animate: Boolean) {
+    if (!animate) return scrollToItem(0)
+    if (firstVisibleItemIndex > TOP_GLIDE_ITEMS * 3) scrollToItem(TOP_GLIDE_ITEMS * 3)
+    animateScrollToItem(0)
+}
+
+/** How many rows from the top a second press of a tab glides over; from further it jumps first. */
+private const val TOP_GLIDE_ITEMS = 8
 
 /**
  * The touch shell: the page (which draws its own title, see [PhonePageFrame]), and the search page
@@ -418,17 +553,30 @@ internal fun TouchBrowseShell(
                     )
                 }
             }
-            searchScreen(field)
+            // Whether the field has finished growing out of the magnifier, for the keyboard to wait
+            // on: a keyboard rising under a field still on its way moves the place it is going to.
+            val transition = this.transition
+            val entered = remember(transition) {
+                { transition.currentState == androidx.compose.animation.EnterExitState.Visible && !transition.isRunning }
+            }
+            CompositionLocalProvider(LocalSearchEntered provides entered) { searchScreen(field) }
         }
     }
 }
 
+/** Whether the search page has finished coming in ([TouchBrowseShell]); always, outside one. */
+internal val LocalSearchEntered = staticCompositionLocalOf<() -> Boolean> { { true } }
+
 /**
  * How much a page under the bar pads the end of its list by, the navigation bar not included:
- * the bar, its margin and gap, and the pill of the page's own buttons when it has one.
+ * the bar, its margin and gap, and the pill of the page's own buttons when it has one. Beside a
+ * [rail] the foot keeps only that pill, on its margin.
  */
-internal fun touchShellClearance(withActions: Boolean): Dp =
-    BAR_MARGIN + BAR_HEIGHT + BAR_GAP + if (withActions) ACTIONS_HEIGHT + BAR_GAP else 0.dp
+internal fun touchShellClearance(withActions: Boolean, rail: Boolean = false): Dp = when {
+    !rail -> BAR_MARGIN + BAR_HEIGHT + BAR_GAP + if (withActions) ACTIONS_HEIGHT + BAR_GAP else 0.dp
+    withActions -> BAR_MARGIN + ACTIONS_HEIGHT + BAR_GAP
+    else -> 0.dp
+}
 
 /**
  * Whether the bar is out, from how the list under it is being moved: pushed up past [HIDE_AFTER_PX]
@@ -484,6 +632,9 @@ internal fun rememberTouchExploration(): Boolean {
  * behind the picture (Favourites, History, Watch later, Downloads) the pill moves under the
  * picture, which wears an accent ring too. Search is the button the search field grows out of
  * ([searchShared]). Every press and the highlight are pills, round like the bar they sit in.
+ *
+ * [vertical] stands the same bar up as a rail down the start edge, for a wide window: the same
+ * buttons in the same order, top to bottom, with the highlight sliding down rather than across.
  */
 @Composable
 private fun FloatingBar(
@@ -498,28 +649,36 @@ private fun FloatingBar(
     onSearch: () -> Unit,
     onProfile: () -> Unit,
     searchShared: Modifier,
+    vertical: Boolean = false,
 ) {
     val s = LocalStrings.current
     val reduced = rememberReducedMotion() || Motion.reduced
-    Box(
-        Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = BAR_MARGIN),
-        contentAlignment = Alignment.Center,
-    ) {
-        Row(
+    val outer = if (vertical) {
+        Modifier
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start + WindowInsetsSides.Vertical))
+            // A short window (a phone on its side with the keyboard up) scrolls the rail rather
+            // than cutting its last button off.
+            .verticalScroll(rememberScrollState())
+            .padding(start = RAIL_MARGIN, top = 8.dp, bottom = 8.dp)
+    } else {
+        Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = BAR_MARGIN)
+    }
+    Box(outer, contentAlignment = Alignment.Center) {
+        Box(
             Modifier
-                .height(BAR_HEIGHT)
+                .then(if (vertical) Modifier.width(RAIL_WIDTH) else Modifier.height(BAR_HEIGHT))
                 .shadow(BAR_SHADOW, CircleShape)
                 .clip(CircleShape)
                 .background(FloatingTone.menu)
                 .border(floatingBorder(), CircleShape)
-                .padding(horizontal = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(if (vertical) PaddingValues(vertical = 10.dp) else PaddingValues(horizontal = 6.dp)),
+            contentAlignment = Alignment.Center,
         ) {
-          Box(contentAlignment = Alignment.CenterStart) {
+          Box(contentAlignment = if (vertical) Alignment.TopCenter else Alignment.CenterStart) {
             // One highlight under the chosen page, sliding to the next one rather than blinking
             // off under one button and on under another, so the bar shows where the page went.
             val index = barHighlightIndex(current, inProfile)
-            val step = with(LocalDensity.current) { (BUTTON_WIDTH + BAR_SPACING).toPx() }
+            val step = with(LocalDensity.current) { ((if (vertical) BUTTON_HEIGHT else BUTTON_WIDTH) + BAR_SPACING).toPx() }
             // Where the highlight stands, in buttons from the start: sprung to the chosen one, or,
             // while Home and Chats are on screen, following the pager (sprung only the first time,
             // coming in from another page, then held to the finger).
@@ -547,7 +706,8 @@ private fun FloatingBar(
             Box(
                 Modifier
                     .offset {
-                        IntOffset((slot.value * step).roundToInt(), 0)
+                        val along = (slot.value * step).roundToInt()
+                        if (vertical) IntOffset(0, along) else IntOffset(along, 0)
                     }
                     .size(BUTTON_WIDTH, BUTTON_HEIGHT)
                     .graphicsLayer {
@@ -556,59 +716,77 @@ private fun FloatingBar(
                         // round again as it lands: it reads as moving, not as being redrawn.
                         if (!reduced) {
                             val stretch = (kotlin.math.abs(slot.velocity) * STRETCH_PER_SPEED).coerceAtMost(STRETCH_MAX)
-                            scaleX = 1f + stretch
-                            scaleY = 1f - stretch / 3f
+                            if (vertical) {
+                                scaleY = 1f + stretch
+                                scaleX = 1f - stretch / 3f
+                            } else {
+                                scaleX = 1f + stretch
+                                scaleY = 1f - stretch / 3f
+                            }
                         }
                     }
                     .clip(HIGHLIGHT_SHAPE)
                     .background(Tone.accent.copy(alpha = 0.16f)),
             )
-          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(BAR_SPACING)) {
-            BarButton(TmIcons.Home, s.browseTabHome, current == TouchDestination.Home, onHome)
-            BarButton(TmIcons.Chats, s.browseTabChats, current == TouchDestination.Chats, onChats)
-            BarButton(TmIcons.Settings, s.navSettings, current == TouchDestination.Settings, onSettings)
-            BarButton(TmIcons.Search, s.commonSearch, false, onSearch, role = Role.Button, modifier = searchShared)
-            val profilePress = remember { MutableInteractionSource() }
-            Column(
-                Modifier
-                    .size(BUTTON_WIDTH, BUTTON_HEIGHT)
-                    .pressScale(profilePress)
-                    .clip(HIGHLIGHT_SHAPE)
-                    .clickable(interactionSource = profilePress, indication = ripple(), role = Role.Button, onClick = onProfile)
-                    .semantics {
-                        contentDescription = s.navProfile
-                        selected = inProfile
-                    },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-              Box(contentAlignment = Alignment.Center) {
-                // A ring round the picture while one of its pages is open: the lists behind it are
-                // somewhere the bar can say the viewer is, without lighting a button they are not on.
-                val ring by androidx.compose.animation.animateColorAsState(
-                    if (inProfile) Tone.accent else Color.Transparent,
-                    animationSpec = Motion.standard(if (reduced) 0 else Motion.Fast),
-                    label = "profileRing",
-                )
-                Box(Modifier.size(PICTURE + 6.dp).border(1.5.dp, ring, CircleShape))
-                ProfilePicture(account, PICTURE)
-                if (badged) {
-                    // News behind the picture: a download running, or an update to install.
-                    Box(
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .offset(x = 2.dp, y = (-2).dp)
-                            .size(9.dp)
-                            .clip(CircleShape)
-                            .background(Tone.caution)
-                            .border(1.5.dp, FloatingTone.menu, CircleShape),
-                    )
-                }
-              }
+            val buttons: @Composable () -> Unit = {
+                BarButton(TmIcons.Home, s.browseTabHome, current == TouchDestination.Home, onHome)
+                BarButton(TmIcons.Chats, s.browseTabChats, current == TouchDestination.Chats, onChats)
+                BarButton(TmIcons.Settings, s.navSettings, current == TouchDestination.Settings, onSettings)
+                BarButton(TmIcons.Search, s.commonSearch, false, onSearch, role = Role.Button, modifier = searchShared)
+                ProfileButton(account, inProfile, badged, onProfile)
+            }
+            if (vertical) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(BAR_SPACING)) { buttons() }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(BAR_SPACING)) { buttons() }
             }
           }
-          }
         }
+    }
+}
+
+/** The viewer's picture on the bar, which opens the popover of their own lists. */
+@Composable
+private fun ProfileButton(account: Account?, inProfile: Boolean, badged: Boolean, onProfile: () -> Unit) {
+    val s = LocalStrings.current
+    val reduced = rememberReducedMotion() || Motion.reduced
+    val profilePress = remember { MutableInteractionSource() }
+    Column(
+        Modifier
+            .size(BUTTON_WIDTH, BUTTON_HEIGHT)
+            .pressScale(profilePress)
+            .clip(HIGHLIGHT_SHAPE)
+            .clickable(interactionSource = profilePress, indication = ripple(), role = Role.Button, onClick = onProfile)
+            .semantics {
+                contentDescription = s.navProfile
+                selected = inProfile
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+      Box(contentAlignment = Alignment.Center) {
+        // A ring round the picture while one of its pages is open: the lists behind it are
+        // somewhere the bar can say the viewer is, without lighting a button they are not on.
+        val ring by androidx.compose.animation.animateColorAsState(
+            if (inProfile) Tone.accent else Color.Transparent,
+            animationSpec = Motion.standard(if (reduced) 0 else Motion.Fast),
+            label = "profileRing",
+        )
+        Box(Modifier.size(PICTURE + 6.dp).border(1.5.dp, ring, CircleShape))
+        ProfilePicture(account, PICTURE)
+        if (badged) {
+            // News behind the picture: a download running, or an update to install.
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 2.dp, y = (-2).dp)
+                    .size(9.dp)
+                    .clip(CircleShape)
+                    .background(Tone.caution)
+                    .border(1.5.dp, FloatingTone.menu, CircleShape),
+            )
+        }
+      }
     }
 }
 
@@ -683,6 +861,9 @@ private fun ProfilePicture(account: Account?, size: Dp) {
 private fun ProfilePopover(
     open: Boolean,
     reduced: Boolean,
+    /** Beside a rail the card grows out of the bottom start corner, next to the picture. */
+    rail: Boolean,
+    railRoom: Dp,
     favoriteCount: Int,
     downloadCount: Int,
     updateVersion: String?,
@@ -706,25 +887,38 @@ private fun ProfilePopover(
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
         )
     }
+    val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
+    // The corner the card grows from, in screen terms: the end one over a bar, the start one
+    // beside a rail.
+    val origin = TransformOrigin(if (rail == ltr) 0f else 1f, 1f)
     Box(
         Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .padding(top = 8.dp, bottom = BAR_MARGIN + BAR_HEIGHT + BAR_GAP, end = 16.dp, start = 16.dp),
+            .then(
+                if (rail) {
+                    Modifier
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))
+                        .padding(top = 8.dp, bottom = BAR_MARGIN, start = railRoom + BAR_GAP, end = 16.dp)
+                } else {
+                    Modifier
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
+                        .padding(top = 8.dp, bottom = BAR_MARGIN + BAR_HEIGHT + BAR_GAP, end = 16.dp, start = 16.dp)
+                },
+            ),
     ) {
         AnimatedVisibility(
             visible = open,
-            modifier = Modifier.align(Alignment.BottomEnd),
+            modifier = Modifier.align(if (rail) Alignment.BottomStart else Alignment.BottomEnd),
             enter = if (reduced) {
                 fadeIn(Motion.standard(0))
             } else {
-                fadeIn(Motion.standard(Motion.Fast)) + scaleIn(Motion.standard(Motion.Normal), initialScale = 0.85f, transformOrigin = TransformOrigin(1f, 1f))
+                fadeIn(Motion.standard(Motion.Fast)) + scaleIn(Motion.standard(Motion.Normal), initialScale = 0.85f, transformOrigin = origin)
             },
             exit = if (reduced) {
                 fadeOut(Motion.standard(0))
             } else {
-                fadeOut(Motion.standard(Motion.Fast)) + scaleOut(Motion.standard(Motion.Fast), targetScale = 0.9f, transformOrigin = TransformOrigin(1f, 1f))
+                fadeOut(Motion.standard(Motion.Fast)) + scaleOut(Motion.standard(Motion.Fast), targetScale = 0.9f, transformOrigin = origin)
             },
         ) {
             Column(
@@ -821,6 +1015,18 @@ internal const val DEFAULT_PAGE = "page"
 
 /** Between the search field and its close button. */
 internal val SEARCH_GAP = 10.dp
+
+/**
+ * From this window width the bar stands up as a rail down the start edge: Material's medium
+ * window class, which a tablet, a phone on its side and a wide split screen all reach.
+ */
+internal val RAIL_FROM = 600.dp
+
+/** The rail's width: one button and the bar's inner margin either side. */
+private val RAIL_WIDTH = 76.dp
+
+/** Between the rail and the screen's start edge (or the cutout). */
+private val RAIL_MARGIN = 12.dp
 
 /** Between two of the bar's buttons. */
 private val BAR_SPACING = 4.dp
