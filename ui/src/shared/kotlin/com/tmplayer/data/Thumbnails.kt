@@ -68,6 +68,7 @@ object Thumbnails {
         }
 
     private fun budget(): Int {
+        if (fixedBudget > 0) return if (light) fixedBudget / 2 else fixedBudget
         if (memoryClass <= 0) return if (light) CACHE_BYTES / 2 else CACHE_BYTES
         val fraction = if (light) CACHE_HEAP_FRACTION * 2 else CACHE_HEAP_FRACTION
         return (memoryClass * 1024 * 1024 / fraction).coerceIn(MIN_CACHE_BYTES, MAX_CACHE_BYTES)
@@ -135,7 +136,7 @@ object Thumbnails {
     }
 
     /** A poster already decoded, for the first frame. See [online]. */
-    fun peekOnline(url: String, maxWidth: Int): ImageBitmap? = cache.get("online:${lighter(maxWidth)}:$url")
+    fun peekOnline(url: String, maxWidth: Int): ImageBitmap? = cache.get(onlineKey(url, lighter(maxWidth)))
 
     /**
      * A poster from the online metadata providers: [fetch] puts it on the disk (or finds it there),
@@ -143,13 +144,53 @@ object Thumbnails {
      */
     suspend fun online(url: String, wanted: Int, fetch: suspend () -> java.io.File?): ImageBitmap? {
         val maxWidth = lighter(wanted)
-        val key = "online:$maxWidth:$url"
+        val key = onlineKey(url, maxWidth)
         cache.get(key)?.let { return it }
         return withContext(Dispatchers.IO) {
             val file = runCatching { fetch() }.getOrNull() ?: return@withContext null
             runCatching { decodeImageFile(file.path, maxWidth) }.getOrNull()?.also { cache.put(key, it) }
         }
     }
+
+    /**
+     * The best already decoded copy of the provider's picture [url] for drawing [pixels] wide: the
+     * larger copy [sharp] would fetch, else the one named. For the first frame.
+     */
+    fun peekSharp(url: String, pixels: Int, maxWidth: Int): ImageBitmap? {
+        val larger = sharperUrl(url, lighter(pixels))
+        return (if (larger != url) cache.get(onlineKey(larger, lighter(maxWidth))) else null) ?: peekOnline(url, maxWidth)
+    }
+
+    /**
+     * [online], at the size the picture is drawn: where the platform decodes at full size (the
+     * desktop), the provider's copy at least [pixels] wide ([sharperUrl]) is fetched in place of
+     * the one [url] names, which is only fetched when there is no larger one or it cannot be had.
+     * [maxWidth] is the decode width Android samples down to, as for [online].
+     */
+    suspend fun sharp(url: String, pixels: Int, maxWidth: Int, fetch: suspend (String) -> java.io.File?): ImageBitmap? {
+        val larger = sharperUrl(url, lighter(pixels))
+        if (larger != url) online(larger, maxWidth) { fetch(larger) }?.let { return it }
+        return online(url, maxWidth) { fetch(url) }
+    }
+
+    /** Where the platform decodes at full size one entry serves every width, so the width is not in the key. */
+    private fun onlineKey(url: String, maxWidth: Int): String = if (decodesFullSize) "online:$url" else "online:$maxWidth:$url"
+
+    /** How a picture is sampled when drawn at another size than its own: see the platform's `artFilter`. */
+    val drawFilter: FilterQuality get() = artFilter
+
+    /**
+     * Gives the picture cache [bytes] (half under [light]), for a platform that sizes it from its
+     * own heap rather than [sizeFor]'s memory class: the desktop, whose carousel holds pictures
+     * the width of a 4K screen.
+     */
+    fun budget(bytes: Int) {
+        fixedBudget = bytes
+        cache = newCache(budget())
+    }
+
+    @Volatile
+    private var fixedBudget = 0
 
     private suspend fun downloadThumbnail(fileId: Int): String? {
         val td = Td.awaitAuthorizedSession().client

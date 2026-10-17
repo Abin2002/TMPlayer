@@ -93,6 +93,8 @@ fun main(args: Array<String>) {
         Td.start(DesktopPaths, desktopDeviceInfo(), desktopCredentials())
         OnlineSubtitles.current = desktopOnlineSubtitles()
         val settings = DesktopServices.settings
+        // The interface size for a viewer who never chose one, from the screen (see UiScale.forScreen).
+        settings.unchosenUiScale = unchosenUiScale()
         // The kids lock (CP57), read once here for every list of chats in the process.
         com.tmplayer.data.ChatGate.follow(settings)
         // The viewer's corrections to names and groups, for every screen that arranges a chat.
@@ -111,6 +113,11 @@ fun main(args: Array<String>) {
         }
         // Lighter pictures and Reduce motion (CP68) have no rows on a computer, but a backup made
         // on a phone can carry them, and they mean the same here.
+        // Pictures are decoded at full size here and the carousel's can be a 4K screen wide (33 MB
+        // decoded), past the phone's cap: a sixth of the heap, between 64 and 256 MB.
+        com.tmplayer.data.Thumbnails.budget(
+            (Runtime.getRuntime().maxMemory() / 6).coerceIn(64L shl 20, 256L shl 20).toInt(),
+        )
         Background.scope.launch { settings.lighterPictures.collect { com.tmplayer.data.Thumbnails.light = it } }
         Background.scope.launch { settings.reduceMotion.collect { com.tmplayer.ui.theme.Motion.reduced = it } }
         // `-Dtmplayer.lowend=true`: the low-end verdict, short of storage, for checking the card and the step.
@@ -142,6 +149,8 @@ fun main(args: Array<String>) {
         val chromeMode = WindowChromeMode.current(DesktopServices.prefs.now.systemTitleBar)
         com.tmplayer.platform.Logger.i("Main", "window buttons: $chromeMode")
         val undecorated = chromeMode == WindowChromeMode.Custom
+        // A touchpad's sideways swipe on Linux is a sideways scroll, not the mouse's Back button.
+        com.tmplayer.desktop.os.X11SideScroll.install()
         application(exitProcessOnExit = false) {
             val windowState = remember { WindowMemory.load() }
             LaunchedEffect(windowState) { WindowMemory.follow(windowState) }
@@ -168,7 +177,10 @@ fun main(args: Array<String>) {
                 onPreviewKeyEvent = shell::onPreviewKey,
                 onKeyEvent = shell::onKey,
             ) {
-                window.minimumSize = java.awt.Dimension(960, 600)
+                // The layouts are made for 960 by 600 at the Default size, so the least the window
+                // can be grows with the interface size, as far as the screen allows.
+                val uiScale by rememberUiScale(settings)
+                LaunchedEffect(uiScale) { window.minimumSize = minimumWindow(window, uiScale.factor) }
                 // Before the window is first shown, so one that opens maximized stops at the taskbar.
                 if (undecorated) UndecoratedFrame.holdToWorkArea(window)
                 DisposableEffect(window) {
@@ -327,6 +339,30 @@ fun main(args: Array<String>) {
     // that should keep the process alive.
     AppExit.now()
 }
+
+/**
+ * [com.tmplayer.data.UiScale.forScreen] for the screen the window opens on: the default one, in
+ * the units the window's size is in (pixels over the system's scaling). Default without a screen.
+ */
+private fun unchosenUiScale(): com.tmplayer.data.UiScale = runCatching {
+    val screen = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration.bounds
+    com.tmplayer.data.UiScale.forScreen(screen.width, screen.height)
+}.getOrDefault(com.tmplayer.data.UiScale.Default).also {
+    com.tmplayer.platform.Logger.i("Main", "interface size when none is chosen: $it")
+}
+
+/** 960 by 600 at [factor], no larger than the usable part of the screen [window] is on. */
+private fun minimumWindow(window: java.awt.Window, factor: Float): java.awt.Dimension {
+    val config = window.graphicsConfiguration ?: return java.awt.Dimension(MIN_WIDTH, MIN_HEIGHT)
+    val insets = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(config)
+    val bounds = config.bounds
+    val width = (MIN_WIDTH * factor).toInt().coerceAtMost(bounds.width - insets.left - insets.right).coerceAtLeast(MIN_WIDTH)
+    val height = (MIN_HEIGHT * factor).toInt().coerceAtMost(bounds.height - insets.top - insets.bottom).coerceAtLeast(MIN_HEIGHT)
+    return java.awt.Dimension(width, height)
+}
+
+private const val MIN_WIDTH = 960
+private const val MIN_HEIGHT = 600
 
 /**
  * The theme the Settings choice asks for. "System" follows the OS (SystemAppearance: Windows,

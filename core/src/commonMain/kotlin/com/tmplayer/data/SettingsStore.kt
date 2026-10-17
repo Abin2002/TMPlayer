@@ -1542,11 +1542,23 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         prefs.edit { it[THEME_CHOICE] = value.name }
     }
 
-    /** How large the interface is drawn, on every device; see [UiScale]. */
-    val uiScale: Flow<UiScale> = read { UiScale.from(it[UI_SCALE]) }
+    /**
+     * The interface size for a viewer who never chose one: [UiScale.Default] on a phone and a
+     * television. The desktop sets it from the screen before its first window ([UiScale.forScreen]),
+     * since a maximized window at the phone's size is mostly empty space.
+     */
+    @Volatile
+    var unchosenUiScale: UiScale = UiScale.Default
 
+    /** How large the interface is drawn, on every device; see [UiScale]. */
+    val uiScale: Flow<UiScale> = read { UiScale.from(it[UI_SCALE], unchosenUiScale) }
+
+    /**
+     * Keeps [value] as the viewer's own choice. Default is only left unwritten where it is also
+     * what an unchosen size is, so choosing Default on the desktop sticks.
+     */
     suspend fun setUiScale(value: UiScale) {
-        prefs.edit { if (value == UiScale.Default) it.remove(UI_SCALE) else it[UI_SCALE] = value.name }
+        prefs.edit { if (value == UiScale.Default && unchosenUiScale == UiScale.Default) it.remove(UI_SCALE) else it[UI_SCALE] = value.name }
     }
 
     /**

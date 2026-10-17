@@ -74,7 +74,7 @@ fun PosterArt(
                     shown,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    filterQuality = FilterQuality.Low,
+                    filterQuality = Thumbnails.drawFilter,
                     modifier = Modifier.fillMaxSize(),
                 )
                 else -> WidePicture(shown, miniThumbnail, thumbnailFileId, title, compactCover)
@@ -105,7 +105,7 @@ private fun WidePicture(picture: ImageBitmap, miniThumbnail: ByteArray?, thumbna
             contentScale = ContentScale.Fit,
             // Above the middle when there is a name to set under it.
             alignment = if (title.isBlank()) Alignment.Center else PICTURE_RAISED,
-            filterQuality = FilterQuality.Low,
+            filterQuality = Thumbnails.drawFilter,
             modifier = Modifier.fillMaxSize(),
         )
         Box(Modifier.fillMaxSize().background(Scrims.tileFoot))

@@ -45,7 +45,7 @@ fun rememberUiScale(settings: SettingsStore): State<UiScale> {
     val initial = remember(settings) {
         UiScaleMemory.last ?: runBlocking {
             withTimeoutOrNull(FIRST_READ_MS) { settings.uiScale.first() }
-        } ?: UiScale.Default
+        } ?: settings.unchosenUiScale
     }
     val state = settings.uiScale.collectAsState(initial = initial)
     UiScaleMemory.last = state.value

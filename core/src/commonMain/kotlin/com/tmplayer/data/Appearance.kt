@@ -70,6 +70,22 @@ enum class UiScale(val factor: Float, private val labelText: () -> String) {
     fun step(direction: Int): UiScale = entries.getOrNull(ordinal + direction) ?: this
 
     companion object {
-        fun from(stored: String?): UiScale = entries.firstOrNull { it.name == stored } ?: Default
+        fun from(stored: String?, unchosen: UiScale = Default): UiScale = entries.firstOrNull { it.name == stored } ?: unchosen
+
+        /**
+         * The desktop's size for a viewer who never chose one, from the screen the window opens on,
+         * [widthDp] by [heightDp] in the screen's own units (pixels over the system's scaling):
+         * the largest size that still leaves [ROOM_WIDTH] by [ROOM_HEIGHT] for a maximized window,
+         * which is Home with its carousel and a row of cards under it, the bar and the player's
+         * controls with room around them. A 1920 by 1080 screen at 100 per cent (or a 4K one at 200)
+         * gets Largest, 1536 by 864 (1080p at 125) and 1440 by 900 Larger, 1366 by 768 and smaller
+         * Default.
+         */
+        fun forScreen(widthDp: Int, heightDp: Int): UiScale =
+            listOf(Largest, Larger).firstOrNull { widthDp / it.factor >= ROOM_WIDTH && heightDp / it.factor >= ROOM_HEIGHT } ?: Default
+
+        /** What [forScreen] leaves a maximized window at the size it picks. */
+        const val ROOM_WIDTH = 1200
+        const val ROOM_HEIGHT = 680
     }
 }

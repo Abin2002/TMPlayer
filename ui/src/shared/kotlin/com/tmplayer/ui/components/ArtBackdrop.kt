@@ -27,6 +27,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import com.tmplayer.data.Thumbnails
+import com.tmplayer.data.decodesFullSize
+import com.tmplayer.data.sharperUrl
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.layout.onSizeChanged
 import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.ui.theme.Motion
 import kotlinx.coroutines.Dispatchers
@@ -57,15 +61,25 @@ fun ArtBackdrop(
     fieldOnly: Boolean = false,
 ) {
     val online = OnlineMetadata.current
-    var art by remember(source) { mutableStateOf(peek(source, fieldOnly)) }
-    LaunchedEffect(source, fieldOnly) {
+    // Where the platform decodes at full size (the desktop), the online picture is fetched at the
+    // width the frame is drawn, in steps, and only ever larger: a window being resized does not
+    // fetch at every pixel, and a smaller window keeps the sharper copy it has.
+    var drawn by remember { mutableIntStateOf(0) }
+    val wanted = if (decodesFullSize) maxOf(ONLINE_WIDTH, (drawn + WIDTH_STEP - 1) / WIDTH_STEP * WIDTH_STEP) else ONLINE_WIDTH
+    val peak = remember { intArrayOf(0) }
+    peak[0] = maxOf(peak[0], wanted)
+    val widest = peak[0]
+    var art by remember(source) { mutableStateOf(peek(source, fieldOnly, widest)) }
+    LaunchedEffect(source, fieldOnly, widest) {
         if (fieldOnly) {
             Thumbnails.backdrop(source.thumbnailFileId, source.miniThumbnail)?.let { art = BackdropArt(field = it) }
             return@LaunchedEffect
         }
+        // Not until the frame has been measured, so the first fetch is the size that is drawn.
+        if (decodesFullSize && drawn == 0) return@LaunchedEffect
         val wide = source.wideUrl?.let { url ->
-            Thumbnails.peekOnline(url, ONLINE_WIDTH)
-                ?: online?.let { provider -> Thumbnails.online(url, ONLINE_WIDTH) { provider.image(url) } }
+            Thumbnails.peekSharp(url, widest, ONLINE_WIDTH)?.takeIf { it.width >= widest || sharperUrl(url, widest) == url }
+                ?: online?.let { provider -> Thumbnails.sharp(url, widest, ONLINE_WIDTH) { provider.image(it) } }
         }
         if (wide != null && wide.width >= SHARP_MIN_WIDTH) {
             art = BackdropArt(picture = wide)
@@ -85,7 +99,7 @@ fun ArtBackdrop(
         }
     }
 
-    Box(modifier) {
+    Box(modifier.onSizeChanged { drawn = it.width }) {
         // No fade for the first step: a cross-fade starts on whatever it is first given, so it
         // only runs between two steps of the chain.
         val shown = art ?: return@Box
@@ -95,6 +109,7 @@ fun ArtBackdrop(
                     bitmap = step.picture,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
+                    filterQuality = Thumbnails.drawFilter,
                     modifier = Modifier.fillMaxSize(),
                 )
                 step.field != null -> Box(Modifier.fillMaxSize()) {
@@ -145,9 +160,9 @@ data class BackdropSource(
 private class BackdropArt(val picture: ImageBitmap? = null, val field: ImageBitmap? = null)
 
 /** What is already decoded for [source], so a backdrop seen before is there on the first frame. */
-private fun peek(source: BackdropSource, fieldOnly: Boolean): BackdropArt? {
+private fun peek(source: BackdropSource, fieldOnly: Boolean, pixels: Int): BackdropArt? {
     if (fieldOnly) return null
-    source.wideUrl?.let { url -> Thumbnails.peekOnline(url, ONLINE_WIDTH)?.let { return BackdropArt(picture = it) } }
+    source.wideUrl?.let { url -> Thumbnails.peekSharp(url, pixels, ONLINE_WIDTH)?.let { return BackdropArt(picture = it) } }
     val full = Thumbnails.peekFull(source.thumbnailFileId) ?: return null
     return if (full.width >= SHARP_MIN_WIDTH) BackdropArt(picture = full) else null
 }
@@ -188,8 +203,14 @@ private fun SmallPicture(picture: ImageBitmap, modifier: Modifier) {
     )
 }
 
-/** How wide the online picture is decoded for a backdrop: a hero's width on a 1080p screen. */
+/**
+ * How wide the online picture is decoded for a backdrop on Android, a hero's width on a 1080p
+ * screen, and the least the desktop fetches.
+ */
 private const val ONLINE_WIDTH = 1280
+
+/** The steps the desktop's measured width is rounded up to before it picks a picture. */
+private const val WIDTH_STEP = 320
 
 /**
  * Below this many pixels across, a picture is too small to stretch over a backdrop sharp and

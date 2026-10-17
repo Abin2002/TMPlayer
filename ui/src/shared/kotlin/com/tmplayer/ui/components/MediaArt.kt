@@ -129,7 +129,7 @@ private fun Picture(bitmap: ImageBitmap, mini: ImageBitmap?, frame: Float) {
                 bitmap = bitmap,
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
-                filterQuality = FilterQuality.Low,
+                filterQuality = Thumbnails.drawFilter,
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -138,8 +138,9 @@ private fun Picture(bitmap: ImageBitmap, mini: ImageBitmap?, frame: Float) {
             bitmap = bitmap,
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            // The inline preview is a ~40 px blur; smoothing it beats showing the blocks.
-            filterQuality = FilterQuality.Low,
+            // The inline preview is a ~40 px blur; smoothing it beats showing the blocks. A
+            // thumbnail drawn smaller than itself is sampled with mipmaps on the desktop.
+            filterQuality = Thumbnails.drawFilter,
             modifier = Modifier.fillMaxSize(),
         )
     }

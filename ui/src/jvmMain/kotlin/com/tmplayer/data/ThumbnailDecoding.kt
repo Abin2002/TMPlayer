@@ -19,3 +19,21 @@ internal fun decodeImageFile(path: String, maxWidth: Int): ImageBitmap? =
     decodeImage(File(path).readBytes())
 
 internal fun ImageBitmap.byteCount(): Int = width * height * 4
+
+/**
+ * The desktop decodes every picture at its full size ([decodeImageFile]), so one decode serves
+ * every width it is drawn at and the cache keys an online picture by its address alone.
+ */
+internal const val decodesFullSize: Boolean = true
+
+/**
+ * A provider's larger copy of [url] for a picture drawn [pixels] wide: a desktop window draws
+ * posters and the Home carousel far wider than the copies the metadata names.
+ */
+internal fun sharperUrl(url: String, pixels: Int): String = com.tmplayer.online.MetaImageSize.atLeast(url, pixels)
+
+/**
+ * How a picture is sampled when it is drawn at another size: with mipmaps, so a large poster
+ * drawn smaller stays smooth instead of shimmering, and bilinear when it is drawn larger.
+ */
+internal val artFilter: androidx.compose.ui.graphics.FilterQuality = androidx.compose.ui.graphics.FilterQuality.Medium

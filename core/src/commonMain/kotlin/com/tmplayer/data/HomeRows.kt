@@ -313,4 +313,30 @@ object HomeRows {
 
     /** The same key [SettingsStore.progressKey] writes, so a resume record and a video match. */
     private fun keyOf(chatId: Long, messageId: Long) = SettingsStore.progressKey(chatId, messageId)
+
+    /**
+     * [row] with only the tiles that have a picture of their own ([HomeFeatured.hasArt]), as the
+     * desktop's Home draws it: never a tile of nothing but a generated cover. A record of Continue
+     * watching or Watch later keeps no picture, so it shows once its video has been asked for and
+     * is in [art] (keyed as [SettingsStore.progressKey]) with one. Null for a loaded row left with
+     * nothing to show; a row still loading is returned as it is.
+     */
+    fun withArt(row: HomeRow, art: Map<String, MediaItem>): HomeRow? {
+        fun pictured(chatId: Long, messageId: Long) = art[keyOf(chatId, messageId)]?.let(HomeFeatured::hasArt) == true
+        val kept = when (row) {
+            is HomeRow.Continue -> row.copy(records = row.records.filter { pictured(it.chatId, it.messageId) })
+            is HomeRow.WatchLater -> row.copy(records = row.records.filter { pictured(it.chatId, it.messageId) })
+            is HomeRow.NewEpisodes -> row.copy(episodes = row.episodes.filter { HomeFeatured.hasArt(it.item) })
+            is HomeRow.Chat -> if (!row.loaded) return row else row.copy(entries = row.entries.filter(HomeFeatured::hasArt))
+            is HomeRow.Recent -> if (!row.loaded) return row else row.copy(entries = row.entries.filter(HomeFeatured::hasArt))
+        }
+        val empty = when (kept) {
+            is HomeRow.Continue -> kept.records.isEmpty()
+            is HomeRow.WatchLater -> kept.records.isEmpty()
+            is HomeRow.NewEpisodes -> kept.episodes.isEmpty()
+            is HomeRow.Chat -> kept.entries.isEmpty()
+            is HomeRow.Recent -> kept.entries.isEmpty()
+        }
+        return if (empty) null else kept
+    }
 }

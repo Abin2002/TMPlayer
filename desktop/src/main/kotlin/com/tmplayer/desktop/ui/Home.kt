@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -183,34 +184,26 @@ internal fun HomeRowsView(
         )
         return
     }
+    // F5 and Ctrl+R still refresh Home. No "Home" heading, as on the phone, and no buttons over
+    // the carousel either: a desktop page needs no refresh button, and the poster size, which
+    // Home's cards follow, is set from a chat's page and History.
     RegisterRefresh(state, onRefresh)
-    // No "Home" heading, as on the phone: the featured carousel opens the page, and the page's
-    // two small controls (refresh and the poster size) ride in a pill over its corner.
-    val actions: @Composable () -> Unit = {
-        Row(
-            Modifier
-                .padding(end = if (LocalWindowChrome.current != null) WINDOW_BUTTONS_ROOM else 0.dp)
-                .clip(CircleShape)
-                .background(com.tmplayer.ui.theme.FloatingTone.menu.copy(alpha = 0.85f))
-                .border(com.tmplayer.ui.theme.floatingBorder(), CircleShape)
-                .padding(horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onRefresh) { Icon(TmIcons.Refresh, contentDescription = s.commonRefresh) }
-            PosterSizeStep(state)
-        }
-    }
     val recentRow = rows.firstOrNull { it is HomeRow.Recent } as HomeRow.Recent?
-    // The carousel is filled from Recently added, wherever that row sits on the page.
+    val continueRow = rows.firstOrNull { it is HomeRow.Continue } as HomeRow.Continue?
+    // The carousel is filled from Recently added, wherever that row sits on the page, and from
+    // Continue watching, whose cards need their videos asked for to have a picture.
     LaunchedEffect(recentRow?.loaded) { if (recentRow != null && !recentRow.loaded) onRowShown(recentRow) }
-    val featured = rememberFeatured(recentRow)
+    LaunchedEffect(continueRow?.records) { continueRow?.records?.forEach(onArtWanted) }
+    val featured = rememberFeatured(recentRow, continueRow, art)
+    // Every tile on Home has a picture of its own; "See all" still lists the whole row.
+    val shownRows = remember(rows, art) { rows.mapNotNull { HomeRows.withArt(it, art) } }
     val watch = rememberSeriesWatch(state)
     // In line with the page header's title, whatever the window's width.
     val side = pageMargin()
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             if (rows.isEmpty()) {
-                Box(Modifier.fillMaxWidth().windowDrag().padding(top = 16.dp, end = side), contentAlignment = Alignment.TopEnd) { actions() }
+                Box(Modifier.fillMaxWidth().height(TOP_DRAG).windowDrag())
                 // Nothing played and nothing starred: a first run, so say how to get a first video in:
                 // forward it to Saved Messages, which the button opens.
                 Box(
@@ -235,10 +228,10 @@ internal fun HomeRowsView(
                     contentPadding = PaddingValues(bottom = 24.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
-                    // With no starred chats there is nothing to feature: the controls stand alone.
+                    // With nothing to feature, a strip the window can be dragged by stands in for it.
                     item(key = "featured", contentType = "featured") {
-                        if (recentRow == null || featured?.isEmpty() == true) {
-                            Box(Modifier.fillMaxWidth().windowDrag().padding(top = 16.dp, end = side), contentAlignment = Alignment.TopEnd) { actions() }
+                        if ((recentRow == null && continueRow == null) || featured?.isEmpty() == true) {
+                            Box(Modifier.fillMaxWidth().height(TOP_DRAG).windowDrag())
                         } else {
                             FeaturedCarousel(
                                 picks = featured,
@@ -255,11 +248,10 @@ internal fun HomeRowsView(
                                         state.openDetail(DetailRequest(pick.item, titles[pick.item.chatId].orEmpty(), outsideChat = true))
                                     }
                                 },
-                                actions = actions,
                             )
                         }
                     }
-                    items(rows, key = { it.key }, contentType = { it::class }) { row ->
+                    items(shownRows, key = { it.key }, contentType = { it::class }) { row ->
                         val loaded = row.isLoaded()
                         LaunchedEffect(row.key, loaded) { if (!loaded) onRowShown(row) }
                         Column {
@@ -713,10 +705,10 @@ private const val POSTER_SHARE = 0.75f
 /** A Continue watching card, a quarter wider than a card: it carries its name on the art. */
 private const val CONTINUE_SHARE = 1.25f
 
-/** Between two cards in a strip or a grid. */
-/** Where the app draws its own window buttons, the room they keep at the top end. */
-private val WINDOW_BUTTONS_ROOM = 150.dp
+/** The strip at the top the window is dragged by when there is no carousel. */
+private val TOP_DRAG = 56.dp
 
+/** Between two cards in a strip or a grid. */
 private val CARD_GAP = 16.dp
 
 /** How much of the next card a strip shows past its whole ones. */

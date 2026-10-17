@@ -45,7 +45,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerType
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import com.tmplayer.ui.theme.Focus
+import kotlinx.coroutines.delay
+import kotlin.math.abs
+import kotlin.math.sign
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -99,19 +116,29 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * The featured carousel at the top of Home, the phone's brought to the window: the newest five
- * different films, shows and videos in the starred chats ([HomeFeatured], the same picks as the
- * phone's), one wide page each, with the segmented line over the top that fills over [ADVANCE_MS]
- * and moves on. It takes Home's title's place: the page has no "Home" heading any more.
+ * The featured carousel at the top of Home, the phone's brought to the window: a mix of the newest
+ * films, shows and videos in the starred chats and what the viewer is part way through
+ * ([rememberFeatured]), one wide page each, with the segmented line over the top that fills over
+ * [ADVANCE_MS] and moves on. It takes Home's title's place: the page has no "Home" heading.
  *
  * A window is not a phone, so the words keep to the start, where they read against the picture's
- * fade, and a pointer gets what a thumb does not need: arrows at the sides while it hovers, and
- * Left and Right once the carousel has the keyboard. It holds still while the pointer is over it
- * or the keyboard is in it, and with reduced motion. A segment pressed goes to its page.
+ * fade, and every way a computer has of moving sideways turns the page, one page a time:
  *
- * It is as tall from its first frame as with its pages in, a shimmering stand-in while [picks] is
- * null, so nothing on Home moves when they land.
+ * - a touchpad's two finger swipe, a tilting wheel, or Shift and the wheel: one page per gesture,
+ *   however long its momentum runs on ([SwipeSteps]); the plain wheel is left to the page, which
+ *   scrolls on under the carousel as anywhere else;
+ * - a drag with the mouse or a finger, which snaps to the nearer page;
+ * - the arrows at the sides, shown while the pointer is over the carousel, while the keyboard is in
+ *   it, and for a while after a touch, so a touch screen without hover has them too;
+ * - a segment of the line pressed or tapped;
+ * - Left and Right once the carousel has the keyboard (Tab reaches it, with a ring round it), with
+ *   Enter for the page's details and Space to play it, as on Home's cards.
+ *
+ * It holds still while the pointer is over it, the keyboard is in it, a drag is under way, and
+ * with reduced motion. It is as tall from its first frame as with its pages in, a shimmering
+ * stand-in while [picks] is null, so nothing on Home moves when they land.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun FeaturedCarousel(
     picks: List<FeaturedPick>?,
@@ -122,8 +149,6 @@ internal fun FeaturedCarousel(
     onPlay: (MediaItem) -> Unit,
     onDetails: (FeaturedPick) -> Unit,
     modifier: Modifier = Modifier,
-    /** The page's own small buttons, at the top end corner over the picture. */
-    actions: @Composable () -> Unit = {},
 ) {
     Box(modifier.fillMaxWidth().height(height)) {
         if (picks == null) {
@@ -147,9 +172,20 @@ internal fun FeaturedCarousel(
         val still = rememberReducedMotion() || Motion.reduced
         val hover = remember { MutableInteractionSource() }
         val hovered by hover.collectIsHoveredAsState()
-        var focused by remember { mutableStateOf(false) }
+        val dragged by pager.interactionSource.collectIsDraggedAsState()
+        var focusedWithin by remember { mutableStateOf(false) }
+        var focusedSelf by remember { mutableStateOf(false) }
+        // A touch shows the arrows for a while: a touch screen has no hover to show them with.
+        var touchedAt by remember { mutableStateOf(0L) }
+        var touchShown by remember { mutableStateOf(false) }
+        LaunchedEffect(touchedAt) {
+            if (touchedAt == 0L) return@LaunchedEffect
+            touchShown = true
+            delay(TOUCH_ARROWS_MS)
+            touchShown = false
+        }
         val auto = count > 1 && !still
-        val paused = hovered || focused
+        val paused = hovered || focusedWithin || dragged || touchShown
         val progress = remember { Animatable(0f) }
         var progressPage by remember { mutableIntStateOf(-1) }
         val settled = pager.settledPage
@@ -164,28 +200,70 @@ internal fun FeaturedCarousel(
             pager.animateScrollToPage((settled + 1) % count)
         }
         val scope = rememberCoroutineScope()
+        // Where the last turn is headed, so a second press before the first has landed goes one
+        // further rather than to the same page again.
+        var target by remember { mutableIntStateOf(pager.currentPage) }
+        LaunchedEffect(settled) { target = settled }
         val go: (Int) -> Unit = { page ->
-            val target = (page + count) % count
-            scope.launch { if (still) pager.scrollToPage(target) else pager.animateScrollToPage(target) }
+            val next = (page + count) % count
+            target = next
+            scope.launch { if (still) pager.scrollToPage(next) else pager.animateScrollToPage(next) }
         }
+        val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+        val steps = remember { SwipeSteps() }
+        val self = remember { FocusRequester() }
+        val ring = Tone.accent
 
         Box(
             Modifier
                 .fillMaxSize()
                 .hoverable(hover)
-                .onFocusChanged { focused = it.hasFocus }
+                .onPointerEvent(PointerEventType.Press, PointerEventPass.Initial) { event ->
+                    if (event.changes.any { it.type == PointerType.Touch }) touchedAt = System.nanoTime()
+                }
+                // Sideways scrolls turn the page here, one per gesture, before the pager could
+                // scroll by them; an upright one is the page's and is left alone.
+                .onPointerEvent(PointerEventType.Scroll, PointerEventPass.Initial) { event ->
+                    if (count < 2) return@onPointerEvent
+                    val change = event.changes.firstOrNull() ?: return@onPointerEvent
+                    val delta = change.scrollDelta
+                    if (delta.x == 0f || abs(delta.y) > abs(delta.x)) return@onPointerEvent
+                    event.changes.forEach { it.consume() }
+                    val step = steps.feed(if (rtl) -delta.x else delta.x, change.uptimeMillis)
+                    if (step != 0) go(target + step)
+                }
+                .onFocusChanged { focusedWithin = it.hasFocus }
                 .onPreviewKeyEvent { event ->
-                    if (event.type != KeyEventType.KeyDown || count < 2) return@onPreviewKeyEvent false
-                    when (event.key) {
-                        Key.DirectionLeft -> {
-                            go(pager.currentPage - 1)
+                    if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                    val back = if (rtl) Key.DirectionRight else Key.DirectionLeft
+                    val on = if (rtl) Key.DirectionLeft else Key.DirectionRight
+                    when {
+                        count > 1 && (event.key == back || event.key == on) -> {
+                            go(target + if (event.key == on) 1 else -1)
+                            // A button on the page left behind would keep the keys off screen.
+                            if (!focusedSelf) self.requestFocus()
                             true
                         }
-                        Key.DirectionRight -> {
-                            go(pager.currentPage + 1)
+                        focusedSelf && (event.key == Key.Enter || event.key == Key.NumPadEnter) -> {
+                            latest.getOrNull(pager.currentPage)?.let(onDetails)
+                            true
+                        }
+                        focusedSelf && event.key == Key.Spacebar -> {
+                            latest.getOrNull(pager.currentPage)?.let { pick -> onPlay(playTarget(pick, watch)) }
                             true
                         }
                         else -> false
+                    }
+                }
+                .focusRequester(self)
+                .onFocusChanged { focusedSelf = it.isFocused }
+                .focusable()
+                .semantics { contentDescription = s.homeFeaturedPage(pager.currentPage + 1, count) }
+                .drawWithContent {
+                    drawContent()
+                    if (focusedSelf && com.tmplayer.ui.theme.FocusVisibility.visible) {
+                        val width = Focus.Ring.toPx()
+                        drawRect(ring, topLeft = Offset(width / 2, width / 2), size = Size(size.width - width, size.height - width), style = Stroke(width))
                     }
                 },
         ) {
@@ -196,7 +274,7 @@ internal fun FeaturedCarousel(
                 key = { latest.getOrNull(it)?.key ?: it },
             ) { page ->
                 val pick = latest.getOrNull(page) ?: return@HorizontalPager
-                FeaturedPage(pick, height, side, watch, chatTitle, onPlay, onDetails)
+                FeaturedPage(pick, height, side, watch, chatTitle, onPlay, onDetails, current = page == pager.currentPage)
             }
             if (count > 1) {
                 Segments(
@@ -217,17 +295,55 @@ internal fun FeaturedCarousel(
                         .padding(top = 18.dp, start = side)
                         .widthIn(max = SEGMENTS_WIDTH),
                 )
-                // The arrows, while the pointer is over the carousel: a mouse has no swipe.
-                AnimatedVisibility(hovered, Modifier.align(Alignment.CenterStart).padding(start = 12.dp), enter = fadeIn(), exit = fadeOut()) {
-                    ArrowButton(TmIcons.ArrowBack, s.homeRowScrollBack) { go(pager.currentPage - 1) }
+                // Pointer and touch only: the keyboard turns the pages with the arrow keys.
+                val arrows = hovered || focusedWithin || touchShown
+                AnimatedVisibility(arrows, Modifier.align(Alignment.CenterStart).padding(start = 12.dp), enter = fadeIn(), exit = fadeOut()) {
+                    ArrowButton(TmIcons.ArrowBack, s.homeRowScrollBack) { go(target - 1) }
                 }
-                AnimatedVisibility(hovered, Modifier.align(Alignment.CenterEnd).padding(end = 12.dp), enter = fadeIn(), exit = fadeOut()) {
-                    ArrowButton(TmIcons.ArrowForward, s.homeRowScrollOn) { go(pager.currentPage + 1) }
+                AnimatedVisibility(arrows, Modifier.align(Alignment.CenterEnd).padding(end = 12.dp), enter = fadeIn(), exit = fadeOut()) {
+                    ArrowButton(TmIcons.ArrowForward, s.homeRowScrollOn) { go(target + 1) }
                 }
             }
-            Box(Modifier.align(Alignment.TopEnd).padding(top = 10.dp, end = side)) { actions() }
         }
     }
+}
+
+/**
+ * Turns a run of sideways scroll deltas into page turns: one turn as soon as a gesture has moved
+ * [threshold] wheel steps one way, then nothing more until the deltas stop for [quietMs], so a
+ * touchpad's momentum, or a wheel spun hard, still turns one page and not five. A pause between
+ * two swipes longer than that starts a new gesture.
+ */
+internal class SwipeSteps(private val threshold: Float = SWIPE_THRESHOLD, private val quietMs: Long = SWIPE_QUIET_MS) {
+    private var sum = 0f
+    private var last = Long.MIN_VALUE
+    private var spent = false
+
+    /** +1 for the next page, -1 for the previous, 0 for nothing yet. [atMs] is the event's time. */
+    fun feed(delta: Float, atMs: Long): Int {
+        if (last == Long.MIN_VALUE || atMs - last > quietMs) {
+            sum = 0f
+            spent = false
+        }
+        last = atMs
+        if (spent || delta == 0f) return 0
+        // A turn back the other way within one gesture starts the count again.
+        if (sum != 0f && sign(sum) != sign(delta)) sum = 0f
+        sum += delta
+        if (abs(sum) < threshold) return 0
+        spent = true
+        val step = if (sum > 0f) 1 else -1
+        sum = 0f
+        return step
+    }
+}
+
+/** What Play plays for [pick]: the film, or the episode of the show the viewer is up to. */
+private fun playTarget(pick: FeaturedPick, watch: SeriesWatch): MediaItem {
+    val series = pick.series ?: return pick.item
+    val progress = watch.progress(series)
+    val episode = progress.next ?: series.episodes.firstOrNull() ?: return pick.item
+    return watch.pick(episode, progress)
 }
 
 /** One page: the picture under its fades, the name, a line of facts, Play and Details. */
@@ -240,6 +356,7 @@ private fun FeaturedPage(
     chatTitle: (Long) -> String,
     onPlay: (MediaItem) -> Unit,
     onDetails: (FeaturedPick) -> Unit,
+    current: Boolean,
 ) {
     val s = LocalStrings.current
     val item = pick.item
@@ -280,6 +397,8 @@ private fun FeaturedPage(
         Column(
             Modifier
                 .align(Alignment.BottomStart)
+                // Only the page up takes the keyboard: Tab never lands on a button off screen.
+                .focusProperties { canFocus = current }
                 .padding(start = side, end = side, bottom = 12.dp)
                 .widthIn(max = WORDS_WIDTH),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -398,18 +517,28 @@ private fun FeaturedSkeleton(side: Dp) {
 }
 
 /**
- * The carousel's pages from the Recently added row [recent]: null while that row is still being
- * asked for, empty for nothing to feature. Ranked once per fill, sharp online pictures first,
- * off the main thread since that reads the metadata cache.
+ * The carousel's pages: what [HomeFeatured.pick] chooses from the Recently added row [recent],
+ * mixed with Continue watching [resume] ([HomeFeatured.mix]), only pages with a picture of their
+ * own. A Continue watching record joins once its video is in [art]. Null while Recently added is
+ * still being asked for, empty for nothing to feature. Ranked once per fill, sharp online pictures
+ * first, off the main thread since that reads the metadata cache.
  */
 @Composable
-internal fun rememberFeatured(recent: HomeRow.Recent?): List<FeaturedPick>? {
+internal fun rememberFeatured(recent: HomeRow.Recent?, resume: HomeRow.Continue?, art: Map<String, MediaItem>): List<FeaturedPick>? {
     val online = OnlineMetadata.current
-    val base = remember(recent) { recent?.takeIf { it.loaded }?.let { HomeFeatured.pick(it.entries) } }
+    // More than a carousel's worth, so pages without a picture can be passed over.
+    val fresh = remember(recent) { recent?.takeIf { it.loaded }?.let { HomeFeatured.pick(it.entries, HomeFeatured.LIMIT * 2) } }
+    val going = remember(resume, art) {
+        resume?.records.orEmpty().mapNotNull { art[com.tmplayer.data.SettingsStore.progressKey(it.chatId, it.messageId)] }
+    }
     var ranked by remember { mutableStateOf<List<FeaturedPick>?>(null) }
-    LaunchedEffect(base, online) {
-        val picks = base ?: return@LaunchedEffect
-        ranked = if (picks.isEmpty()) picks else withContext(Dispatchers.IO) { HomeFeatured.rank(picks) { sharpOnline(it, online) } }
+    LaunchedEffect(fresh, going, online) {
+        if (recent != null && fresh == null) return@LaunchedEffect
+        ranked = withContext(Dispatchers.IO) {
+            val sharp = { pick: FeaturedPick -> sharpOnline(pick, online) }
+            val mixed = HomeFeatured.mix(fresh.orEmpty(), going, online = sharp)
+            if (mixed.isEmpty()) mixed else HomeFeatured.rank(mixed, sharp)
+        }
     }
     return ranked
 }
@@ -429,6 +558,15 @@ internal fun featuredHeight(width: Dp, height: Dp): Dp =
     (width * 0.42f).coerceAtMost(height * 0.62f).coerceAtLeast(MIN_HEIGHT)
 
 private const val ADVANCE_MS = 6_000
+
+/** How long the arrows stay up after a touch. */
+private const val TOUCH_ARROWS_MS = 4_000L
+
+/** Wheel steps a sideways gesture has to move before it turns the page: half a notch. */
+private const val SWIPE_THRESHOLD = 0.5f
+
+/** A gap this long in the scroll events ends a gesture, its momentum included. */
+private const val SWIPE_QUIET_MS = 280L
 private const val FOOT_FADE_SHARE = 0.5f
 private val MIN_HEIGHT = 340.dp
 private val TOP_SCRIM = 96.dp

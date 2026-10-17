@@ -65,6 +65,67 @@ object HomeFeatured {
     }
 
     /**
+     * The desktop's carousel: [recent] (what [pick] chose from Recently added) and [resume] (the
+     * videos of Continue watching, newest first) taken in turn, a new one first, so the carousel
+     * holds some of each: at most [resumeShare] of what the viewer is part way through, the rest
+     * new, and either fills the other's places when it has too few. A video or show in both is
+     * one page, the newer one's. Only pages with a picture of their own ([hasArt], or [online]
+     * saying the providers have one) are taken: a page across the top of Home is a large picture,
+     * and a generated cover there is a placeholder.
+     */
+    fun mix(
+        recent: List<FeaturedPick>,
+        resume: List<MediaItem>,
+        limit: Int = LIMIT,
+        resumeShare: Int = RESUME_SHARE,
+        online: (FeaturedPick) -> Boolean = { false },
+    ): List<FeaturedPick> {
+        if (limit <= 0) return emptyList()
+        val seen = HashSet<String>()
+        fun usable(pick: FeaturedPick): Boolean {
+            if (!hasArt(pick.item) && !online(pick)) return false
+            val key = identity(pick)?.first ?: return false
+            return seen.add(key)
+        }
+        val fresh = ArrayDeque(recent)
+        val going = ArrayDeque(resume.map { FeaturedPick(ShelfEntry.File(it)) })
+        val out = ArrayList<FeaturedPick>()
+        var resumed = 0
+        fun next(queue: ArrayDeque<FeaturedPick>): FeaturedPick? {
+            while (queue.isNotEmpty()) {
+                val pick = queue.removeFirst()
+                if (usable(pick)) return pick
+            }
+            return null
+        }
+        while (out.size < limit) {
+            // New, part way through, new, part way through, new: until one side runs out.
+            val resumeTurn = out.size % 2 == 1 && resumed < resumeShare
+            val fromResume = if (resumeTurn) next(going) else null
+            val pick = fromResume ?: next(fresh) ?: next(going)?.also { resumed++ } ?: break
+            if (fromResume != null) resumed++
+            out += pick
+        }
+        return out
+    }
+
+    /**
+     * Whether [item] has a picture of its own from Telegram: a thumbnail to fetch, or at least the
+     * inline preview. Without either, all there is to show is the generated cover.
+     */
+    fun hasArt(item: MediaItem): Boolean =
+        item.thumbnailFileId > 0 || (item.miniThumbnail?.isNotEmpty() == true)
+
+    /** [hasArt] for a shelf's tile: a show by its newest episode, the one its tile shows. */
+    fun hasArt(entry: ShelfEntry): Boolean = when (entry) {
+        is ShelfEntry.File -> hasArt(entry.item)
+        is ShelfEntry.Show -> hasArt(entry.series.cover) || entry.series.episodes.any { hasArt(it.item) }
+    }
+
+    /** At most this many of the desktop carousel's pages are from Continue watching. */
+    const val RESUME_SHARE = 2
+
+    /**
      * [picks] with those [sharp] says have a sharp online picture first, each half in the order it
      * had. Worked out once when the carousel is filled, never as pictures arrive, so a page does
      * not move while it is being looked at.

@@ -10,6 +10,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -119,7 +124,14 @@ fun rememberSeasonEpisodes(meta: MetaInfo?, season: Int): List<MetaEpisode>? {
     return listed
 }
 
-/** The picture at [url], once it is on the disk and decoded; nothing until then. */
+/**
+ * The picture at [url], once it is on the disk and decoded; nothing until then.
+ *
+ * At the size it is drawn: its width in pixels on the screen (the interface size and the screen's
+ * density both in it) picks the provider's copy where the platform can use a larger one
+ * ([Thumbnails.sharp], the desktop), so a poster in a wide window is not a small copy stretched.
+ * A copy already decoded stays up while a larger one is fetched, so a resize never blanks it.
+ */
 @Composable
 fun MetaPicture(
     url: String?,
@@ -131,11 +143,27 @@ fun MetaPicture(
 ) {
     if (url == null) return
     val online = OnlineMetadata.current ?: return
-    val bitmap: ImageBitmap? by produceState(Thumbnails.peekOnline(url, maxWidth), url, maxWidth) {
-        if (value == null) value = Thumbnails.online(url, maxWidth) { online.image(url) }
+    var drawn by remember { mutableIntStateOf(0) }
+    // Android samples every picture to [maxWidth] whatever it is drawn at, so only the desktop measures.
+    val wanted = if (com.tmplayer.data.decodesFullSize) maxOf(maxWidth, drawn) else maxWidth
+    var bitmap by remember(url) { mutableStateOf(Thumbnails.peekSharp(url, wanted, maxWidth)) }
+    LaunchedEffect(url, wanted) {
+        val have = bitmap
+        if (have != null && have.width >= wanted) return@LaunchedEffect
+        Thumbnails.sharp(url, wanted, maxWidth) { online.image(it) }?.let { bitmap = it }
     }
-    bitmap?.let {
-        Image(it, contentDescription = contentDescription, modifier = modifier, contentScale = contentScale, alignment = alignment)
+    val shown = bitmap
+    Box(modifier.onSizeChanged { drawn = it.width }) {
+        if (shown != null) {
+            Image(
+                shown,
+                contentDescription = contentDescription,
+                modifier = Modifier.matchParentSize(),
+                contentScale = contentScale,
+                alignment = alignment,
+                filterQuality = Thumbnails.drawFilter,
+            )
+        }
     }
 }
 
