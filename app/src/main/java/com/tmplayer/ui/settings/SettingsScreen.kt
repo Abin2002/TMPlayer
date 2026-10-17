@@ -198,11 +198,12 @@ enum class SettingsPage { SetupChoices, Appearance, Playback, Subtitles, Gesture
  * Focus for a row in a lazy list, which exists only once the list has been measured: a frame
  * first, and a couple more if the row is still not there to take it.
  */
-private suspend fun FocusRequester.settle() {
+private suspend fun FocusRequester.settle(): Boolean {
     repeat(3) {
         withFrameNanos { }
-        if (runCatching { requestFocus() }.getOrDefault(false)) return
+        if (runCatching { requestFocus() }.getOrDefault(false)) return true
     }
+    return false
 }
 
 private sealed interface Prompt {
@@ -475,7 +476,17 @@ fun SettingsScreen(
                 returnTo = null
                 // Back from a page lands on the row that opened it, with the list scrolled where
                 // it was. A first arrival starts on the first row, at the top.
-                categoryFocus.getValue(back ?: SettingsPage.SetupChoices).settle()
+                val row = categoryFocus.getValue(back ?: SettingsPage.SetupChoices)
+                // A list drawn afresh (Settings left for Downloads and come back to) starts at
+                // its top, where a row near the foot such as Storage is not laid out yet and
+                // cannot take focus: the list goes to its foot for it, and focus brings it into view.
+                if (!row.settle() && back != null && listState.layoutInfo.totalItemsCount > 0) {
+                    listState.scrollToItem(listState.layoutInfo.totalItemsCount - 1)
+                    if (!row.settle()) {
+                        listState.scrollToItem(0)
+                        row.settle()
+                    }
+                }
                 if (back == null) {
                     withFrameNanos { }
                     listState.scrollToItem(0)
