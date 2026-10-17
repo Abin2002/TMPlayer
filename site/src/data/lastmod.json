@@ -1,7 +1,7 @@
 [
   {
     "path": "/",
-    "lastmod": "2026-10-17",
+    "lastmod": "2026-10-18",
     "changefreq": "weekly",
     "priority": "1.0",
     "images": [
@@ -33,7 +33,7 @@
   },
   {
     "path": "/features/",
-    "lastmod": "2026-10-15",
+    "lastmod": "2026-10-18",
     "changefreq": "monthly",
     "priority": "0.9",
     "images": [
@@ -91,7 +91,7 @@
       },
       {
         "loc": "https://tmplayer.org/screenshots/tv-home-screen.webp",
-        "title": "A TMPlayer row of recently added films and shows on the Android TV home screen"
+        "title": "A TMPlayer row of recently added videos and shows on the Android TV home screen"
       }
     ]
   },
@@ -153,7 +153,7 @@
   },
   {
     "path": "/desktop/",
-    "lastmod": "2026-10-17",
+    "lastmod": "2026-10-18",
     "changefreq": "monthly",
     "priority": "0.8",
     "images": [
@@ -173,7 +173,7 @@
   },
   {
     "path": "/faq/",
-    "lastmod": "2026-10-17",
+    "lastmod": "2026-10-18",
     "changefreq": "monthly",
     "priority": "0.7"
   },
@@ -185,7 +185,7 @@
   },
   {
     "path": "/legal/",
-    "lastmod": "2026-10-14",
+    "lastmod": "2026-10-18",
     "changefreq": "monthly",
     "priority": "0.5"
   },
@@ -215,7 +215,7 @@
   },
   {
     "path": "/formats/",
-    "lastmod": "2026-10-14",
+    "lastmod": "2026-10-18",
     "changefreq": "monthly",
     "priority": "0.6"
   },
@@ -245,7 +245,7 @@
   },
   {
     "path": "/guides/telegram-on-tv-without-casting/",
-    "lastmod": "2026-10-15",
+    "lastmod": "2026-10-18",
     "changefreq": "monthly",
     "priority": "0.7"
   },

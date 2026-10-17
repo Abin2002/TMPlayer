@@ -65,7 +65,7 @@ export const faqLd = {
       "name": "Does it play music and audio files?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. TMPlayer lists videos only: Telegram videos, short silent clips, and files that Telegram calls video or whose names end in a video format such as MKV or MP4. Music, voice messages and audio files sent on their own, such as MP3 or FLAC, do not appear in it, so open those in Telegram. The sound inside a video is another matter: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD and the rest play, and a film with several audio tracks lets you switch between them during playback."
+        "text": "No. TMPlayer lists videos only: Telegram videos, short silent clips, and files that Telegram calls video or whose names end in a video format such as MKV or MP4. Music, voice messages and audio files sent on their own, such as MP3 or FLAC, do not appear in it, so open those in Telegram. The sound inside a video is another matter: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD and the rest play, and a video with several audio tracks lets you switch between them during playback."
       }
     },
     {
