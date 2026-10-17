@@ -172,6 +172,8 @@ class PlayerTvMenu(
     private fun action(entry: PlayerMenuEntry): MenuAction {
         val s = LocalStrings.current
         return when (entry) {
+            // The phone's line, word for word, with the lock the app's other locks carry.
+            PlayerMenuEntry.LockScreen -> MenuAction(s.playerLockScreen, TmIcons.Lock, detail = s.playerHoldOkToUnlock) { choose(entry) }
             PlayerMenuEntry.PlaybackDetails -> MenuAction(s.playerPlaybackDetails, TmIcons.Info) { choose(entry) }
             PlayerMenuEntry.StartOver -> MenuAction(s.playerStartOver, TmIcons.Refresh) { choose(entry) }
             PlayerMenuEntry.PictureShape -> MenuAction(

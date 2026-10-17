@@ -89,6 +89,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -218,6 +219,10 @@ fun PlayerScreen(
     onlinePreset: com.tmplayer.online.SearchResult? = null,
     /** Start with the episode list up, once the chat has answered: the render test's and the promo's. */
     episodesOpen: Boolean = false,
+    /** The screen was locked or unlocked, for the OS media controls to hold off ([PlayerHost]). */
+    onLockedChanged: (Boolean) -> Unit = {},
+    /** Start locked, with the Unlock button up: the render test's. */
+    lockedAtStart: Boolean = false,
 ) {
     val s = LocalStrings.current
     val engine = remember { engineFactory() }
@@ -253,6 +258,12 @@ fun PlayerScreen(
     var trackChoice by remember { mutableStateOf(TrackChoice()) }
     var showRemaining by remember { mutableStateOf(false) }
     var ignoreClicks by remember { mutableStateOf(false) }
+    // Lock the screen ([PlayerLock]): whether it is on, when the Unlock button was last asked
+    // for (it fades [PlayerLock.SHOW_MS] after), and the hold of Enter toward an unlock.
+    var screenLocked by remember { mutableStateOf(lockedAtStart) }
+    var unlockWanted by remember { mutableLongStateOf(if (lockedAtStart) System.nanoTime() else 0L) }
+    var showUnlock by remember { mutableStateOf(lockedAtStart) }
+    var unlockHold by remember { mutableStateOf<Job?>(null) }
     var tdlibVersion by remember { mutableStateOf<String?>(null) }
 
     var controlsUp by remember { mutableStateOf(true) }
@@ -552,6 +563,9 @@ fun PlayerScreen(
      * reading ahead, and TDLib keeps fetching for it. Keep watching opens it again where it was.
      */
     fun askStillWatching(why: String, next: MediaItem?, ended: Boolean) {
+        // Its buttons have to be reachable, and playback is stopping anyway: an hour without a
+        // key or a click, or a sleep timer, is nobody there for the lock to keep out.
+        screenLocked = false
         val s = engine.state.value
         if (!ended && s.opened) {
             reopenAt = s.positionMs
@@ -763,9 +777,13 @@ fun PlayerScreen(
         delay(after)
         controlsUp = false
     }
-    val showControls = phase == Phase.Playing && (controlsUp || !status.playing || menusOpen)
+    val showControls = phase == Phase.Playing && !screenLocked && (controlsUp || !status.playing || menusOpen)
 
     fun poke() {
+        if (screenLocked) {
+            unlockWanted = System.nanoTime()
+            return
+        }
         controlsUp = true
         // The viewer is back at the controls: the usual time again, not the resume's quick one.
         quickHide = false
@@ -1128,6 +1146,64 @@ fun PlayerScreen(
     }
     val mac = com.tmplayer.desktop.os.OsInfo.isMac
 
+    // ---- lock the screen ---------------------------------------------------------------------
+
+    fun lockScreen() {
+        // Nothing left open that holds the keyboard or a button: a menu, a sheet, a note.
+        menu = null
+        showEpisodes = false
+        showShortcuts = false
+        showDetails = false
+        showOnline = false
+        notePrompt = null
+        speedBeforeHold?.let { engine.setSpeed(it) }
+        speedBeforeHold = null
+        controlsUp = false
+        screenLocked = true
+        unlockWanted = System.nanoTime()
+        refocus()
+    }
+
+    fun unlockScreen() {
+        unlockHold?.cancel()
+        unlockHold = null
+        screenLocked = false
+        poke()
+        refocus()
+    }
+
+    /** A key while locked: Enter held for [PlayerLock.HOLD_MS] unlocks, any other press shows how. */
+    fun lockedKey(event: androidx.compose.ui.input.key.KeyEvent) {
+        val unlockKey = PlayerLock.isUnlockKey(event.key)
+        when {
+            unlockKey && event.type == KeyEventType.KeyDown -> if (unlockHold == null) {
+                unlockHold = scope.launch {
+                    delay(PlayerLock.HOLD_MS)
+                    unlockHold = null
+                    unlockScreen()
+                }
+            }
+            unlockKey && event.type == KeyEventType.KeyUp -> {
+                unlockHold?.cancel()
+                unlockHold = null
+            }
+        }
+        if (event.type == KeyEventType.KeyDown || unlockKey) {
+            noteInput()
+            unlockWanted = System.nanoTime()
+        }
+    }
+
+    // The Unlock button: up on each move, click or key, and gone a moment after the last, but
+    // never while Enter is held toward an unlock.
+    LaunchedEffect(screenLocked, unlockWanted, unlockHold) {
+        showUnlock = screenLocked
+        if (!screenLocked || unlockHold != null) return@LaunchedEffect
+        delay(PlayerLock.SHOW_MS)
+        showUnlock = false
+    }
+    LaunchedEffect(screenLocked) { onLockedChanged(screenLocked) }
+
     // ---- layout ------------------------------------------------------------------------------
 
     PlayerTheme {
@@ -1136,6 +1212,12 @@ fun PlayerScreen(
                 .fillMaxSize()
                 .background(backdrop)
                 .onPreviewKeyEvent { event ->
+                    // Locked: every key is the lock's, the downs and the ups, so not even the
+                    // window's Esc and Backspace hear one. Enter held unlocks; any key shows how.
+                    if (screenLocked) {
+                        lockedKey(event)
+                        return@onPreviewKeyEvent true
+                    }
                     if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                     noteInput()
                     // The episode list has the keyboard while it is up: Esc closes it, and every
@@ -1185,7 +1267,7 @@ fun PlayerScreen(
                 }
                 .onPointerEvent(PointerEventType.Scroll) { event ->
                     noteInput()
-                    if (phase != Phase.Playing) return@onPointerEvent
+                    if (phase != Phase.Playing || screenLocked) return@onPointerEvent
                     // A wheel over a sheet, or one a list inside has scrolled with, is the sheet's,
                     // not the volume's under it as well.
                     if (showEpisodes || showShortcuts || showOnline || event.changes.any { it.isConsumed }) return@onPointerEvent
@@ -1196,7 +1278,7 @@ fun PlayerScreen(
                 // Hidden with the controls only while a video plays: the loading, end and error
                 // sheets have no controls to bring it back with, and the sheets are for the mouse.
                 .pointerHoverIcon(
-                    if (fullscreen && phase == Phase.Playing && !showControls && menu == null && !showEpisodes && !showOnline) {
+                    if (fullscreen && phase == Phase.Playing && !showControls && menu == null && !showEpisodes && !showOnline && !(screenLocked && showUnlock)) {
                         blankCursor
                     } else {
                         PointerIcon.Default
@@ -1301,6 +1383,7 @@ fun PlayerScreen(
                         is MenuAction.AudioDelay -> stepAudioDelay(action.direction)
                         is MenuAction.SubtitleLook -> setSubtitleStyle(action.style)
                         MenuAction.StartOver -> startOver()
+                        MenuAction.LockScreen -> lockScreen()
                         MenuAction.ToggleIgnoreClicks -> {
                             ignoreClicks = !ignoreClicks
                             showFlash(Flash.Kind.Text, if (ignoreClicks) s.playerClicksIgnored else s.playerClicksWork)
@@ -1531,6 +1614,19 @@ fun PlayerScreen(
                     },
                     mac = mac,
                     wheelSeeks = desktop.wheelSeeks,
+                )
+            }
+
+            // Over everything, the controls and the skip and next-up cards included.
+            if (screenLocked) {
+                LockShield(
+                    showUnlock = showUnlock,
+                    holding = unlockHold != null,
+                    onWake = {
+                        noteInput()
+                        unlockWanted = System.nanoTime()
+                    },
+                    onUnlock = ::unlockScreen,
                 )
             }
         }

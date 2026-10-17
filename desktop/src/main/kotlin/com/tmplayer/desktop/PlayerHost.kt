@@ -49,9 +49,14 @@ fun PlayerHost(
     var playing by remember { mutableStateOf<MediaItem>(request.item) }
     val keepAwake = remember { KeepAwake.create() }
     val awtWindow = LocalAwtWindow.current as? java.awt.Frame
+    // Lock the screen holds off the OS media controls too: a keyboard's media keys arrive this
+    // way as often as they arrive as keys, and the lock ignores those. Raise still works.
+    val locked = remember { java.util.concurrent.atomic.AtomicBoolean(false) }
     val session = remember {
         // Called on a D-Bus or SMTC thread; the engine wants the Swing one.
-        fun onEdt(action: (PlaybackEngine) -> Unit) = SwingUtilities.invokeLater { engine?.let(action) }
+        fun onEdt(action: (PlaybackEngine) -> Unit) = SwingUtilities.invokeLater {
+            if (!locked.get()) engine?.let(action)
+        }
         // A media key can also reach the focused window as a key press; see [MediaKeyEcho].
         fun playPause(action: (PlaybackEngine) -> Unit) {
             if (MediaKeyEcho.claim(MediaKeyEcho.Source.Session)) onEdt(action)
@@ -60,7 +65,7 @@ fun PlayerHost(
             override fun onPlay() = playPause { it.play() }
             override fun onPause() = playPause { it.pause() }
             override fun onPlayPause() = playPause { it.togglePlay() }
-            override fun onStop() = SwingUtilities.invokeLater(onClose)
+            override fun onStop() = SwingUtilities.invokeLater { if (!locked.get()) onClose() }
             override fun onSeekBy(offsetMs: Long) = onEdt { it.seekBy(offsetMs) }
             override fun onSeekTo(positionMs: Long) = onEdt { it.seekTo(positionMs) }
             override fun onRaise() = SwingUtilities.invokeLater(onRaise)
@@ -109,6 +114,7 @@ fun PlayerHost(
         onQuit = onQuit,
         onPlayingItemChanged = { playing = it },
         onEngine = { engine = it },
+        onLockedChanged = locked::set,
         downloads = DesktopServices.downloads,
     )
 

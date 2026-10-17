@@ -167,6 +167,9 @@ internal sealed interface MenuAction {
     /** A new subtitle look, previewed on the picture while the menu stays open. */
     data class SubtitleLook(val style: SubtitleStyle) : MenuAction
     data object StartOver : MenuAction
+
+    /** Locks the player against the mouse, the touchpad, the touch screen and the keyboard. */
+    data object LockScreen : MenuAction
     data object ToggleIgnoreClicks : MenuAction
     data object CopyLink : MenuAction
     data object Download : MenuAction
@@ -759,13 +762,20 @@ internal fun PlayerMenu(
     fun page(to: MenuPage) = onOpenMenu(menu.copy(page = to))
 
     @Composable
-    fun Entry(text: String, checked: Boolean = false, trailing: String? = null, onClick: () -> Unit) {
+    fun Entry(text: String, checked: Boolean = false, trailing: String? = null, icon: ImageVector? = null, onClick: () -> Unit) {
         DropdownMenuItem(
             // Two lines rather than an ellipsis: Material caps a menu item at 280 dp, which a
             // Malayalam or German line outgrows, and shrinking the type would go under the floor.
             text = { Text(text, maxLines = 2, overflow = TextOverflow.Ellipsis) },
             onClick = onClick,
-            leadingIcon = { Box(Modifier.size(18.dp)) { if (checked) Icon(TmIcons.Check, null, Modifier.size(18.dp)) } },
+            leadingIcon = {
+                Box(Modifier.size(18.dp)) {
+                    when {
+                        checked -> Icon(TmIcons.Check, null, Modifier.size(18.dp))
+                        icon != null -> Icon(icon, null, Modifier.size(18.dp))
+                    }
+                }
+            },
             trailingIcon = trailing?.let { { Text(it, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp) } },
         )
     }
@@ -797,6 +807,10 @@ internal fun PlayerMenu(
         }
         when (menu.page) {
             MenuPage.Main -> {
+                // First, under its own divider, with the lock the phone's and the television's
+                // menus draw beside the same words (user, 2026-10-18).
+                Entry(s.playerLockScreen, icon = TmIcons.Lock) { pick(MenuAction.LockScreen) }
+                HorizontalDivider()
                 // A video posted more than once: which copy is playing, and the way to another.
                 if (copies.copies.size > 1) {
                     val playing = copies.copies.firstOrNull { it.id == copies.playing }

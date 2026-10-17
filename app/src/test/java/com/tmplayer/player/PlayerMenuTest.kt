@@ -12,6 +12,7 @@ class PlayerMenuTest {
     fun `the menu carries the phone overflow's actions and the remote keys, in a fixed order`() {
         assertEquals(
             listOf(
+                PlayerMenuEntry.LockScreen,
                 PlayerMenuEntry.PlaybackDetails,
                 PlayerMenuEntry.StartOver,
                 PlayerMenuEntry.VolumeBoost,
@@ -49,6 +50,14 @@ class PlayerMenuTest {
     }
 
     @Test
+    fun `lock the screen is the first line on the phone and the television alike`() {
+        assertEquals(PhoneMenuEntry.LockScreen, PlayerMenu.phoneEntries(false, false, false, false).first())
+        assertEquals(PlayerMenuEntry.LockScreen, PlayerMenu.tvEntries(pictureInPicture = false, openInAnotherApp = false).first())
+        assertEquals("Lock the screen", PhoneMenuEntry.LockScreen.label())
+        assertTrue(RemoteKeys.ROWS.any { it.first == "Hold OK, screen locked" })
+    }
+
+    @Test
     fun `the repeat line says what choosing it does next`() {
         assertEquals("Repeat: set the start (A)", PlayerMenu.loopLabel(null))
         assertEquals("Repeat: set the end (B)", PlayerMenu.loopLabel(AbLoop(10_000)))
@@ -57,7 +66,7 @@ class PlayerMenuTest {
 
     @Test
     fun `the episode steps are left to the Episodes button and the media keys`() {
-        assertEquals(PlayerMenuEntry.PlaybackDetails, PlayerMenu.tvEntries(pictureInPicture = true).first())
+        assertEquals(PlayerMenuEntry.LockScreen, PlayerMenu.tvEntries(pictureInPicture = true).first())
         assertFalse(PlayerMenuEntry.entries.any { it.name.contains("Episode") })
     }
 

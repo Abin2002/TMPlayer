@@ -62,6 +62,7 @@ state is carried by colour and background, as the sidebar pill already does.
 | `Help` | HelpCircle |  | TmIcons.Help | The walkthrough, how this works. |
 | `Warning` | Alert02 |  | Material Warning | Something needs attention. |
 | `Lock` | SquareLock02 |  | Material Lock | Locked, private, the PIN. |
+| `LockOpen` | SquareUnlock02 |  |  | Unlock the locked player, as the phone's pill draws it. |
 | `Star` | Star (filled) |  | Material Star | A favourite that is set. |
 | `StarOutline` | Star |  | TmIcons.StarOutline | Favourites, a favourite that is not set. |
 | `Favorite` | Favourite |  | Material Favorite | Support the project. |
@@ -133,6 +134,7 @@ state is carried by colour and background, as the sidebar pill already does.
 | `ic_rotate_landscape` | SmartPhoneLandscape |  | 36 dp | Rotation held in landscape. |
 | `ic_rotate_portrait` | SmartPhone01 |  | 36 dp | Rotation held in portrait. |
 | `ic_pip` | PictureInPictureOn |  | 24 dp | Picture in picture. |
+| `ic_lock` | SquareLock02 |  | 24 dp | Lock the player's screen, on its menu. |
 | `ic_lock_open` | SquareUnlock02 |  | 24 dp | Unlock the locked player. |
 | `ic_brightness` | Sun03 |  | 24 dp | The brightness swipe. |
 | `ic_volume` | VolumeHigh |  | 24 dp | The volume swipe. |

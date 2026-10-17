@@ -12,6 +12,11 @@ import com.tmplayer.i18n.L
 enum class PlayerMenuEntry {
     // The episode steps are not here: the row's Episodes button opens the episode list, with the
     // previous and next episode at its top, and the remote's media keys step as well.
+    /**
+     * First, as on the phone: a child lock for the remote. Every key is ignored until OK is held
+     * for a couple of seconds, which a press or a mash of the D-pad does not do by accident.
+     */
+    LockScreen,
     PlaybackDetails,
     StartOver,
     /** Night mode: quiet dialogue lifted, loud scenes held back. On or off, and the menu closes. */
@@ -44,6 +49,7 @@ enum class PlayerMenuEntry {
  * the resume notice carries it for the first seconds, and the bar reaches zero.
  */
 enum class PhoneMenuEntry {
+    /** First and set apart with its icon: the line people come to the menu for (user, 2026-10-18). */
     LockScreen,
     PictureInPicture,
     VolumeBoost,
@@ -132,6 +138,7 @@ object PlayerMenu {
         paused: Boolean = false,
         bookmarks: Boolean = false,
     ): List<PlayerMenuEntry> = buildList {
+        add(PlayerMenuEntry.LockScreen)
         add(PlayerMenuEntry.PlaybackDetails)
         add(PlayerMenuEntry.StartOver)
         add(PlayerMenuEntry.VolumeBoost)
@@ -207,6 +214,7 @@ object RemoteKeys {
         L.playerKeyRewind to L.playerKeyRewindDoes,
         L.playerKeyNext to L.playerKeyNextDoes,
         L.playerKeyHoldOk to L.playerKeyHoldOkDoes,
+        L.playerKeyHoldOkLocked to L.playerKeyHoldOkLockedDoes,
         L.playerKeyBack to L.playerKeyBackDoes,
     )
 }
