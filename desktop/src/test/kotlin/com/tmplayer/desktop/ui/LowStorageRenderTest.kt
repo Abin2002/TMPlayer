@@ -133,10 +133,11 @@ class LowStorageRenderTest {
         waitForIdle()
         onNodeWithText(L.settingsLowStorage).performScrollTo().assertExists()
         onNodeWithText(L.settingsLowStorageOff).assertExists()
-        // The switch on the same line as the row's title.
+        // The switch on the same line as the row's title: the toggle whose row holds the title, not
+        // the nearest one, since the rows are only about 48 dp apart.
         val title = onNodeWithText(L.settingsLowStorage).fetchSemanticsNode().boundsInRoot
         val switch = onAllNodes(isToggleable()).fetchSemanticsNodes()
-            .first { it.boundsInRoot.center.y in (title.top - 48f)..(title.bottom + 48f) }
+            .minBy { kotlin.math.abs(it.boundsInRoot.center.y - title.center.y) }
         onNode(SemanticsMatcher("the Low storage switch") { it.id == switch.id }).performClick()
         waitUntil(timeoutMillis = 5_000) { runBlocking { settings.lowStorageModeNow() } }
         waitForIdle()
