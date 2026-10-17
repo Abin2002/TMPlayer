@@ -81,7 +81,7 @@ internal fun StorageGroup(state: ShellState) {
     var figures by remember { mutableStateOf<StorageFigures?>(null) }
     var dialog by remember { mutableStateOf<StorageDialog?>(null) }
     var busy by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(refresh) { figures = measure(state) }
+    LaunchedEffect(refresh) { figures = measureStorage(state) }
 
     // The page's own heading names it, so the card comes first, as on the phone's Storage page.
     StorageCard(figures)
@@ -145,7 +145,10 @@ internal fun StorageGroup(state: ShellState) {
             else -> s.storageCachedSummary(f.cachedCount, StorageRelocationPlan.size(f.cachedBytes))
         },
         TmIcons.Download,
-    ) { state.go(Destination.Downloads) }
+    ) {
+        state.downloadsOpenRecent = true
+        state.go(Destination.Downloads)
+    }
     state.extras.watchCache?.let {
         Action(s.storageClearCache, s.storageClearCacheDetail, TmIcons.Delete, end = RowEnd.None) { dialog = StorageDialog.ClearCache }
     }
@@ -242,7 +245,7 @@ internal fun StorageGroup(state: ShellState) {
 
 /** The figures in one card: what each kind of file takes, then the drives' free space. */
 @Composable
-private fun StorageCard(figures: StorageFigures?) {
+internal fun StorageCard(figures: StorageFigures?) {
     val s = LocalStrings.current
     // The phone's Storage card: TMPlayer's share split into its three kinds as one bar, a line
     // naming each, then the free space on each drive involved.
@@ -378,7 +381,7 @@ private fun inspect(root: File): StorageRelocationPlan.Candidate {
 }
 
 /** The card's figures. TDLib's total less the cached videos is pictures, previews and the rest. */
-private suspend fun measure(state: ShellState): StorageFigures = withContext(Dispatchers.IO) {
+internal suspend fun measureStorage(state: ShellState): StorageFigures = withContext(Dispatchers.IO) {
     val settings = state.settings
     val records = runCatching { settings.downloadsNow() }.getOrDefault(emptyList())
     val downloads = DownloadIndex.bytesOnDisk(records)

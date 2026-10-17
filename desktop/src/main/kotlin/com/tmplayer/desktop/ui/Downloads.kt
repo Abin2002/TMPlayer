@@ -62,8 +62,9 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * Downloads, in three parts (B6): what is coming down (the shared [OfflineDownloads] queue fetched
- * by the desktop's in-process runner), what is kept in the Downloads folder (the index), and what
+ * Downloads, as one page (B6): the storage card with Free up space, what is coming down (the
+ * shared [OfflineDownloads] queue, shown only while there is one), what is kept in the Downloads
+ * folder (the index, a show's episodes grouped under it), and, folded away at the foot, what
  * playing left in the cache, each with a Save to Downloads of its own. Files found in the folder
  * that the index does not name are listed between the last two, to keep or delete.
  *
@@ -117,7 +118,25 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
     var confirmUnlisted by remember { mutableStateOf<File?>(null) }
     var confirmCached by remember { mutableStateOf<ResumeRecord?>(null) }
     var confirmRemoveAfterWatching by remember { mutableStateOf(false) }
+    // Free up space, on the page: the storage card's figures, the sheet of what can go, and the
+    // question before the recently played videos are cleared.
+    var figures by remember { mutableStateOf<StorageFigures?>(null) }
+    var refresh by remember { mutableStateOf(0) }
+    LaunchedEffect(refresh, history.size, cached.size) { figures = runCatching { measureStorage(state) }.getOrNull() }
+    var freeingUp by remember { mutableStateOf(false) }
+    var confirmClearCache by remember { mutableStateOf(false) }
+    // Recently played is folded away at the foot of the page until it is opened.
+    var cachedOpen by remember { mutableStateOf(state.downloadsOpenRecent) }
+    // Where the Recently played heading sits, for Settings' Recently played row to land on.
+    val cachedHeadingAt = remember { intArrayOf(-1) }
     BackHandler(enabled = picked.isNotEmpty()) { picked = emptySet() }
+    // The episodes of one show together in watching order, other videos newest first.
+    val shelf = remember(history) {
+        com.tmplayer.data.DownloadShelf.arrange(history, { it.toMediaItem() }, { it.key }, { it.updatedAt })
+    }
+    val list = rememberLazyListState()
+    // Where the Downloaded heading sits, for "Choose downloads to delete" to scroll to.
+    val doneHeadingAt = remember { intArrayOf(0) }
 
     Column(Modifier.fillMaxSize()) {
         PageHeader(
@@ -130,11 +149,6 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                         Text(s.downloadsDeleteSelected(picked.size), color = Tone.danger)
                     }
                 } else {
-                    if (queue.any { it.busy && it.stage != OfflineDownloads.Stage.Moving }) {
-                        TextButton(onClick = { OfflineDownloads.pauseAll(state.downloads) }) { Text(s.downloadsPauseAll) }
-                    } else if (queue.any { !it.busy }) {
-                        TextButton(onClick = { OfflineDownloads.resumeAll(state.downloads) }) { Text(s.downloadsResumeAll) }
-                    }
                     TextButton(onClick = { OpenExternal.open(downloadsDir.apply { mkdirs() }) }) { Text(s.downloadsOpenFolder) }
                     if (history.isNotEmpty()) {
                         TextButton(onClick = { confirm = history }) { Text(s.downloadsDeleteAll, color = Tone.danger) }
@@ -142,7 +156,39 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                 }
             },
         )
-        val list = rememberLazyListState()
+        val kept: @Composable (ResumeRecord) -> Unit = { record ->
+            KeptRow(
+                record = record,
+                fileState = DownloadIndex.state(record),
+                legacy = legacy[record.key],
+                picked = record.key in picked,
+                onPick = { on -> picked = if (on) picked + record.key else picked - record.key },
+                onPlay = {
+                    state.noteChatTitle(record.chatId, record.chatTitle)
+                    state.openPlayer(record.toMediaItem(), startFromBeginning = false)
+                },
+                onShowInFolder = {
+                    scope.launch {
+                        val file = record.localPath?.let(::File)
+                            ?: runCatching { Td.localFilePath(Td.currentFileId(record.chatId, record.messageId, record.fileId)) }
+                                .getOrNull()?.let(::File)
+                        if (file == null || !file.exists()) toast(s.downloadsFileGone) else OpenExternal.reveal(file)
+                    }
+                },
+                onOpenElsewhere = { record.localPath?.let { OpenExternal.open(File(it)) } },
+                onResume = {
+                    scope.launch {
+                        val item = record.toMediaItem().let { item ->
+                            val id = runCatching { Td.currentFileId(record.chatId, record.messageId, record.fileId) }
+                                .getOrDefault(record.fileId)
+                            item.copy(fileId = id)
+                        }
+                        OfflineDownloads.start(state.downloads, item, record.chatTitle)
+                    }
+                },
+                onRemove = { confirm = listOf(record) },
+            )
+        }
         // Every item's words start [ROW_INSET] into the list, so the list itself starts that much
         // short of the page margin: the words line up under the heading, and a row's hover fill
         // reaches out past them as the settings rows' does.
@@ -154,12 +200,34 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxSize().padding(end = 12.dp).homeEndScrolls(list),
             ) {
-                item(key = "h-active") { Section(s.downloadsDownloading) }
-                if (queue.isEmpty()) {
-                    item(key = "e-active") { Empty(s.downloadsEmptyActive) }
+                var at = 0
+                item(key = "storage") {
+                    Column(Modifier.widthIn(max = 960.dp).padding(horizontal = ROW_INSET)) {
+                        StorageCard(figures)
+                    }
                 }
-                items(queue, key = { "a${it.fileId}" }) { row -> ActiveRow(state, row) }
+                item(key = "free-up") {
+                    Action(s.downloadsFreeUpSpace, s.downloadsFreeUpSpaceNote, TmIcons.Delete, modifier = Modifier.widthIn(max = 960.dp)) {
+                        freeingUp = true
+                    }
+                }
+                at += 2
+                // Only while something is on its way, with the one control for all of it.
+                if (queue.isNotEmpty()) {
+                    item(key = "h-active") {
+                        Section(s.downloadsDownloading) {
+                            if (queue.any { it.busy && it.stage != OfflineDownloads.Stage.Moving }) {
+                                TextButton(onClick = { OfflineDownloads.pauseAll(state.downloads) }) { Text(s.downloadsPauseAll) }
+                            } else if (queue.any { !it.busy }) {
+                                TextButton(onClick = { OfflineDownloads.resumeAll(state.downloads) }) { Text(s.downloadsResumeAll) }
+                            }
+                        }
+                    }
+                    items(queue, key = { "a${it.fileId}" }) { row -> ActiveRow(state, row) }
+                    at += 1 + queue.size
+                }
 
+                doneHeadingAt[0] = at
                 item(key = "h-done") { Section(s.downloadsDownloaded) }
                 item(key = "t-remove") {
                     Setting(REMOVE_AFTER_WATCHING, REMOVE_AFTER_WATCHING_DETAIL) {
@@ -180,38 +248,22 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                 if (history.isEmpty()) {
                     item(key = "e-done") { Empty(s.downloadsEmptyDone(downloadsDir.path)) }
                 }
-                items(history, key = { "d${it.key}" }) { record ->
-                    KeptRow(
-                        record = record,
-                        fileState = DownloadIndex.state(record),
-                        legacy = legacy[record.key],
-                        picked = record.key in picked,
-                        onPick = { on -> picked = if (on) picked + record.key else picked - record.key },
-                        onPlay = {
-                            state.noteChatTitle(record.chatId, record.chatTitle)
-                            state.openPlayer(record.toMediaItem(), startFromBeginning = false)
-                        },
-                        onShowInFolder = {
-                            scope.launch {
-                                val file = record.localPath?.let(::File)
-                                    ?: runCatching { Td.localFilePath(Td.currentFileId(record.chatId, record.messageId, record.fileId)) }
-                                        .getOrNull()?.let(::File)
-                                if (file == null || !file.exists()) toast(s.downloadsFileGone) else OpenExternal.reveal(file)
+                shelf.forEach { entry ->
+                    when (entry) {
+                        is com.tmplayer.data.DownloadShelf.Entry.Single -> item(key = "d${entry.key}") { kept(entry.row) }
+                        is com.tmplayer.data.DownloadShelf.Entry.Show -> {
+                            item(key = "s${entry.key}") {
+                                ShowHeading(
+                                    entry.title,
+                                    listOf(
+                                        s.seriesEpisodesCount(entry.episodes.size),
+                                        MediaMapper.formatSize(entry.episodes.sumOf { it.sizeBytes }),
+                                    ).joinToString("  ·  "),
+                                )
                             }
-                        },
-                        onOpenElsewhere = { record.localPath?.let { OpenExternal.open(File(it)) } },
-                        onResume = {
-                            scope.launch {
-                                val item = record.toMediaItem().let { item ->
-                                    val id = runCatching { Td.currentFileId(record.chatId, record.messageId, record.fileId) }
-                                        .getOrDefault(record.fileId)
-                                    item.copy(fileId = id)
-                                }
-                                OfflineDownloads.start(state.downloads, item, record.chatTitle)
-                            }
-                        },
-                        onRemove = { confirm = listOf(record) },
-                    )
+                            items(entry.episodes, key = { "d${it.key}" }) { record -> kept(record) }
+                        }
+                    }
                 }
 
                 if (unlisted.isNotEmpty()) {
@@ -225,21 +277,34 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                     }
                 }
 
-                item(key = "h-cached") { Section(s.downloadsCached) }
-                item(key = "l-cached") {
-                    Text(
+                // Not downloads, so folded away at the foot until somebody opens it.
+                cachedHeadingAt[0] = at + 1 + 1 + (if (history.isEmpty()) 1 else 0) + shelf.sumOf {
+                    when (it) {
+                        is com.tmplayer.data.DownloadShelf.Entry.Single -> 1
+                        is com.tmplayer.data.DownloadShelf.Entry.Show -> 1 + it.episodes.size
+                    }
+                } + (if (unlisted.isNotEmpty()) 1 + unlisted.size else 0)
+                item(key = "h-cached") {
+                    Setting(
+                        if (cached.isEmpty()) s.downloadsCached else s.downloadsTabCachedCount(cached.size),
                         s.downloadsCachedDetail(
                             MediaMapper.formatSize(desktop.cacheLimitBytes.takeIf { it > 0 } ?: DesktopSettings.DEFAULT_CACHE_LIMIT_BYTES),
                         ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Tone.muted,
-                        modifier = Modifier.padding(horizontal = ROW_INSET),
-                    )
+                        modifier = Modifier.widthIn(max = 960.dp),
+                        icon = TmIcons.Clock,
+                        onClick = { cachedOpen = !cachedOpen },
+                    ) {
+                        Icon(
+                            if (cachedOpen) TmIcons.ChevronUp else TmIcons.ChevronDown,
+                            contentDescription = if (cachedOpen) s.commonHide else s.commonShow,
+                            tint = Tone.muted,
+                        )
+                    }
                 }
-                if (cached.isEmpty()) {
+                if (cachedOpen && cached.isEmpty()) {
                     item(key = "e-cached") { Empty(s.downloadsEmptyCacheLimit) }
                 }
-                items(cached, key = { "c${it.key}" }) { record ->
+                if (cachedOpen) items(cached, key = { "c${it.key}" }) { record ->
                     CachedRow(
                         record = record,
                         bytes = cachedBytes[record.key],
@@ -271,6 +336,83 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
             VerticalScrollbar(rememberScrollbarAdapter(list), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
             ScrollToTop(list)
         }
+    }
+
+    // Opened from Settings' Recently played row: that section, unfolded, in view.
+    LaunchedEffect(Unit) {
+        if (!state.downloadsOpenRecent) return@LaunchedEffect
+        state.downloadsOpenRecent = false
+        androidx.compose.runtime.withFrameNanos { }
+        if (cachedHeadingAt[0] > 0) runCatching { list.scrollToItem(cachedHeadingAt[0]) }
+    }
+
+    if (freeingUp) {
+        val f = figures
+        com.tmplayer.ui.components.TmAlertDialog(
+            onDismissRequest = { freeingUp = false },
+            title = { Text(s.downloadsFreeUpSpace) },
+            text = {
+                Column {
+                    Text(s.downloadsFreeUpSpaceNote, color = Tone.muted, style = MaterialTheme.typography.bodyMedium)
+                    state.extras.watchCache?.let {
+                        Action(
+                            s.storageClearCache,
+                            if ((f?.cachedBytes ?: 0) > 0) s.downloadsFrees(MediaMapper.formatSize(f!!.cachedBytes)) else s.downloadsNothingToFree,
+                            TmIcons.Clock,
+                            end = RowEnd.None,
+                            enabled = (f?.cachedBytes ?: 0) > 0,
+                        ) {
+                            freeingUp = false
+                            confirmClearCache = true
+                        }
+                    }
+                    Action(
+                        s.storageClearPictures,
+                        if ((f?.picturesBytes ?: 0) > 0) s.downloadsFrees(MediaMapper.formatSize(f!!.picturesBytes)) else s.downloadsNothingToFree,
+                        TmIcons.Image,
+                        end = RowEnd.None,
+                        enabled = (f?.picturesBytes ?: 0) > 0,
+                    ) {
+                        freeingUp = false
+                        scope.launch {
+                            runCatching { Td.clearPicturesAndPreviews() }
+                            refresh++
+                            toast(s.storagePicturesCleared)
+                        }
+                    }
+                    Action(
+                        s.downloadsChooseToDelete,
+                        if (history.isNotEmpty()) s.downloadsChooseToDeleteDetail else s.downloadsNothingToFree,
+                        TmIcons.Delete,
+                        end = RowEnd.None,
+                        enabled = history.isNotEmpty(),
+                    ) {
+                        freeingUp = false
+                        // The tick boxes are on every row already: take the viewer to them.
+                        scope.launch { runCatching { list.animateScrollToItem(doneHeadingAt[0]) } }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { freeingUp = false }) { Text(s.commonClose) } },
+        )
+    }
+
+    if (confirmClearCache) {
+        ConfirmDialog(
+            title = s.storageClearCacheTitle,
+            message = s.storageClearCacheMessage,
+            detail = s.storageClearCacheNote,
+            confirmLabel = s.commonClear,
+            onDismiss = { confirmClearCache = false },
+            onConfirm = {
+                confirmClearCache = false
+                scope.launch {
+                    val freed = runCatching { state.extras.watchCache?.clearAll() ?: 0L }.getOrDefault(0L)
+                    refresh++
+                    toast(if (freed > 0) s.storageFreed(MediaMapper.formatSize(freed)) else s.storageNothingToClear)
+                }
+            },
+        )
     }
 
     confirmUnlisted?.let { file ->
@@ -366,13 +508,28 @@ internal fun DownloadToasts(state: ShellState) {
 }
 
 @Composable
-private fun Section(title: String) {
-    Text(
-        title,
-        style = MaterialTheme.typography.titleSmall,
-        color = Tone.muted,
-        modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, top = 16.dp, bottom = 4.dp),
-    )
+private fun Section(title: String, actions: @Composable () -> Unit = {}) {
+    Row(
+        Modifier.fillMaxWidth().widthIn(max = 960.dp).padding(start = ROW_INSET, end = ROW_INSET, top = 16.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            title,
+            style = MaterialTheme.typography.titleSmall,
+            color = Tone.muted,
+            modifier = Modifier.weight(1f),
+        )
+        actions()
+    }
+}
+
+/** A show's name over its downloaded episodes, with how many there are and what they take. */
+@Composable
+private fun ShowHeading(title: String, detail: String) {
+    Column(Modifier.fillMaxWidth().widthIn(max = 960.dp).padding(start = ROW_INSET, end = ROW_INSET, top = 12.dp)) {
+        Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(detail, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+    }
 }
 
 @Composable

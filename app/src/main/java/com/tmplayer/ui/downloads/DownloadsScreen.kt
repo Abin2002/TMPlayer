@@ -126,6 +126,7 @@ import com.tmplayer.data.start
 import com.tmplayer.i18n.L
 import com.tmplayer.i18n.Translator
 import com.tmplayer.ui.components.BigEmpty
+import com.tmplayer.ui.components.ChoiceList
 import com.tmplayer.ui.components.ScrollToTop
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.isTouch
@@ -261,6 +262,21 @@ fun DownloadsScreen(
     }
     var confirmingDeleteMany by remember { mutableStateOf(false) }
 
+    // A phone and a tablet draw one page: what is downloading (only while something is), what is
+    // downloaded, grouped by show, and Recently played folded away at the foot. The television
+    // keeps its three tabs (see [TvDownloads]): a remote steps through one short list at a time
+    // better than down one long page, and its tabs are the first thing it lands on.
+    val onePage = isTouch()
+    // Settings' Recently played row opens the page with that section unfolded and in view.
+    var cachedOpen by rememberSaveable { mutableStateOf(openOnCached) }
+    var freeingUp by remember { mutableStateOf(false) }
+    var confirmingClearCached by remember { mutableStateOf(false) }
+    var confirmingClearPictures by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    // Where the Recently played heading sits in the list, written as the list is laid out, so
+    // the page can scroll to it when it opens on that section.
+    val cachedHeadingAt = remember { intArrayOf(-1) }
+
     fun leavePicking() {
         picking = false
         picked = emptySet()
@@ -275,7 +291,7 @@ fun DownloadsScreen(
 
     // A selection belongs to the tab it was made on. Carried across, its bar would sit under a
     // list of downloads it says nothing about.
-    LaunchedEffect(tab) { if (tab != COMPLETED) leavePicking() }
+    LaunchedEffect(tab) { if (!onePage && tab != COMPLETED) leavePicking() }
 
     BackHandler(enabled = picking) { leavePicking() }
     // Nothing is known until the first pass over TDLib has finished, and an empty list drawn in
@@ -476,7 +492,31 @@ fun DownloadsScreen(
             }
             OfflineDownloads.start(context, row.record.toMediaItem().copy(fileId = row.fileId), row.chatTitle)
             toast(if (row.cached) L.downloadsSavingTitle(title = row.title) else L.downloadsResumingTitle(title = row.title))
-            if (row.cached) tab = ONGOING
+            if (row.cached) {
+                tab = ONGOING
+                // The page's Downloading section is at the top: show it arriving there.
+                if (onePage) listState.animateScrollToItem(0)
+            }
+        }
+    }
+
+    /** Free up space: every recently played video, through the cache's own rules. */
+    fun clearCached() {
+        scope.launch {
+            val freed = split.cachedBytes
+            runCatching { com.tmplayer.data.WatchCache.clearAll(context) }
+            refresh(history)
+            toast(L.settingsFreed(size = Translator.messages.formatter.bytes(freed)))
+        }
+    }
+
+    /** Free up space: thumbnails and previews, which come back as the viewer browses. */
+    fun clearPictures() {
+        scope.launch {
+            val freed = split.otherBytes
+            runCatching { Td.clearPicturesAndPreviews() }
+            refresh(history)
+            toast(L.settingsFreed(size = Translator.messages.formatter.bytes(freed)))
         }
     }
 
@@ -505,8 +545,8 @@ fun DownloadsScreen(
         }
     }
 
-    // What every tab lists, shared by the phone's page and the television's.
-    val body: LazyListScope.() -> Unit = body@{
+    // What each of the television's tabs lists.
+    val tabBody: LazyListScope.() -> Unit = body@{
         if (tab == ONGOING) {
             if (active.isNotEmpty()) {
                 item {
@@ -597,6 +637,7 @@ fun DownloadsScreen(
                 split = split,
                 freeBytes = disk.freeBytes,
                 totalBytes = disk.totalBytes,
+                onFreeUp = { freeingUp = true },
             )
         }
         item {
@@ -643,7 +684,146 @@ fun DownloadsScreen(
             }
         }
     }
-    val listState = rememberLazyListState()
+    // The page's own list (phone and tablet). The episodes of one show sit together under its
+    // name, in watching order, and every other video stands on its own, newest first. The rows
+    // and every action on them are the tabs' own; only the order and the headings are new.
+    val shelf = remember(rows) {
+        com.tmplayer.data.DownloadShelf.arrange(rows, { it.record.toMediaItem() }, { it.key }, { it.record.updatedAt })
+    }
+    val keptCard: @Composable (DownloadRow) -> Unit = { row ->
+        DownloadCard(
+            row = row,
+            picking = picking,
+            checked = row.key in picked,
+            onPlay = { if (row.partial) saveToDownloads(row) else onPlay(row.record) },
+            onShare = { share(listOf(row)) },
+            onDelete = { if (row.missing) removeMissing(row) else confirmingDelete = row },
+            onToggle = { picked = if (row.key in picked) picked - row.key else picked + row.key },
+            onHold = {
+                picking = true
+                picked = picked + row.key
+            },
+        )
+    }
+    val pageBody: LazyListScope.() -> Unit = {
+        var at = 0
+        item(key = "storage") {
+            StorageSummary(
+                split = split,
+                freeBytes = disk.freeBytes,
+                totalBytes = disk.totalBytes,
+                onFreeUp = { freeingUp = true },
+            )
+        }
+        at++
+        // Only while something is on its way: a Downloading heading over nothing is a section to
+        // read past on every visit.
+        if (active.isNotEmpty()) {
+            item(key = "h-active") {
+                QueueHeading(
+                    title = queueHeading(active),
+                    bulk = if (active.size > 1) {
+                        if (active.any { it.busy }) L.commonPauseAll else L.commonResumeAll
+                    } else {
+                        null
+                    },
+                    onBulk = {
+                        if (active.any { it.busy }) OfflineDownloads.pauseAll(context) else OfflineDownloads.resumeAll(context)
+                    },
+                )
+            }
+            items(active, key = { "active_${it.fileId}" }) { progress ->
+                ActiveDownloadCard(
+                    progress = progress,
+                    place = queuePlaces[progress.fileId] ?: -1,
+                    onPause = { OfflineDownloads.pause(context, progress.fileId) },
+                    onResume = { OfflineDownloads.resume(context, progress.fileId) },
+                    onCancel = { OfflineDownloads.cancel(context, progress.fileId) },
+                )
+            }
+            at += 1 + active.size
+        }
+        item(key = "h-done") {
+            SectionHeading(if (rows.isEmpty()) L.downloadsDownloaded else L.downloadsTabDownloadedCount(count = rows.size))
+        }
+        item(key = "remove-after") {
+            RemoveAfterWatchingRow(removeAfterWatching) { on ->
+                if (on) {
+                    confirmingRemoveAfterWatching = true
+                } else {
+                    scope.launch { settings.setRemoveAfterWatching(false) }
+                }
+            }
+        }
+        at += 2
+        shelf.forEach { entry ->
+            when (entry) {
+                is com.tmplayer.data.DownloadShelf.Entry.Single -> {
+                    item(key = entry.key) { keptCard(entry.row) }
+                    at++
+                }
+                is com.tmplayer.data.DownloadShelf.Entry.Show -> {
+                    item(key = entry.key) {
+                        ShowHeading(
+                            title = entry.title,
+                            detail = listOf(
+                                L.seriesEpisodesCount(count = entry.episodes.size),
+                                Translator.messages.formatter.bytes(entry.episodes.sumOf { it.bytes }),
+                            ).joinToString(DOT),
+                        )
+                    }
+                    items(entry.episodes, key = { it.key }) { keptCard(it) }
+                    at += 1 + entry.episodes.size
+                }
+            }
+        }
+        if (counted && rows.isEmpty()) {
+            item(key = "e-done") {
+                Box(emptyStateHeight(0.4f)) {
+                    BigEmpty(L.downloadsEmptyDownloaded(folder = LegacyDownloads.FOLDER), icon = TmIcons.Download)
+                }
+            }
+            at++
+        }
+        cachedHeadingAt[0] = at
+        item(key = "h-cached") {
+            CollapsibleHeading(
+                title = if (cachedRows.isEmpty()) L.downloadsCached else L.downloadsTabCachedCount(count = cachedRows.size),
+                detail = cachedRows.sumOf { it.bytes }.takeIf { it > 0 }?.let { Translator.messages.formatter.bytes(it) },
+                open = cachedOpen,
+                onToggle = { cachedOpen = !cachedOpen },
+            )
+        }
+        if (cachedOpen) {
+            item(key = "n-cached") {
+                Text(
+                    if (counted && cachedRows.isEmpty()) L.downloadsEmptyCached else L.downloadsCachedNote,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = TEXT_EDGE, end = TEXT_EDGE, bottom = 4.dp),
+                )
+            }
+            items(cachedRows, key = { it.key }) { row ->
+                DownloadCard(
+                    row = row,
+                    picking = false,
+                    checked = false,
+                    onPlay = { onPlay(row.record) },
+                    onShare = { saveToDownloads(row) },
+                    onDelete = { confirmingDelete = row },
+                    onToggle = {},
+                    onHold = null,
+                )
+            }
+        }
+    }
+    val body = if (onePage) pageBody else tabBody
+    // Opened from Settings' Recently played row: that section, unfolded, in view.
+    LaunchedEffect(counted) {
+        if (!counted || !openOnCached || !onePage) return@LaunchedEffect
+        withFrameNanos { }
+        if (cachedHeadingAt[0] > 0) runCatching { listState.scrollToItem(cachedHeadingAt[0]) }
+    }
     val tabLabel = { which: Int ->
         when (which) {
             ONGOING -> if (active.isEmpty()) L.downloadsTabDownloading else L.downloadsTabDownloadingCount(count = active.size)
@@ -660,7 +840,7 @@ fun DownloadsScreen(
             onTab = { tab = it },
             picking = picking,
             chosenCount = chosen.size,
-            canSelect = rows.isNotEmpty() && tab == COMPLETED,
+            canSelect = rows.isNotEmpty(),
             allChosen = chosen.size >= shown.size,
             onBack = onBack,
             onSelect = { picking = true },
@@ -735,12 +915,12 @@ fun DownloadsScreen(
                             }
                             return@TopAppBar
                         }
-                        if (rows.isNotEmpty() && tab == COMPLETED) {
+                        if (rows.isNotEmpty()) {
                             TextAction(L.downloadsSelect) { picking = true }
                         }
                         // Offered on the rows and nothing else: a screen headed "Downloads" must not
                         // carry a button that empties the cache and the previews too.
-                        if (rows.isNotEmpty() && tab == COMPLETED) {
+                        if (rows.isNotEmpty()) {
                             TextAction(L.downloadsDeleteAll) { confirmingClearAll = true }
                         }
                     },
@@ -769,38 +949,8 @@ fun DownloadsScreen(
                 }
             },
         ) { padding ->
+            // A tablet: the phone's one page, under Material's bar.
             Column(Modifier.fillMaxSize().padding(padding)) {
-                // Fixed above the list rather than scrolled with it: switching between the two has
-                // to be possible from anywhere in either.
-                TabRow(selectedTabIndex = tab) {
-                    // A tab is the one widget here whose shape really is the full rectangle it is
-                    // given, so the ring follows that rather than pretending it is a pill.
-                    val ongoingFocus = remember { MutableInteractionSource() }
-                    Tab(
-                        selected = tab == ONGOING,
-                        onClick = { tab = ONGOING },
-                        interactionSource = ongoingFocus,
-                        modifier = Modifier.tvFocusRing(ongoingFocus, RectangleShape),
-                        text = { TabLabel(tabLabel(ONGOING)) },
-                    )
-                    val completedFocus = remember { MutableInteractionSource() }
-                    Tab(
-                        selected = tab == COMPLETED,
-                        onClick = { tab = COMPLETED },
-                        interactionSource = completedFocus,
-                        modifier = Modifier.tvFocusRing(completedFocus, RectangleShape),
-                        text = { TabLabel(tabLabel(COMPLETED)) },
-                    )
-                    val cachedFocus = remember { MutableInteractionSource() }
-                    Tab(
-                        selected = tab == CACHED,
-                        onClick = { tab = CACHED },
-                        interactionSource = cachedFocus,
-                        modifier = Modifier.tvFocusRing(cachedFocus, RectangleShape),
-                        text = { TabLabel(tabLabel(CACHED)) },
-                    )
-                }
-
                 Box(Modifier.fillMaxSize()) {
                     LazyColumn(
                         state = listState,
@@ -845,6 +995,82 @@ fun DownloadsScreen(
                 deleteMany(chosen)
             },
             onDismiss = { confirmingDeleteMany = false },
+        )
+    }
+
+    // Free up space, on the page rather than in Settings: what can go, how much each frees, and a
+    // way into the selection for the downloads themselves. Every line still asks before it clears.
+    if (freeingUp) {
+        val bytes = Translator.messages.formatter
+        com.tmplayer.ui.components.ChoiceSheet(
+            title = L.downloadsFreeUpSpace,
+            note = L.downloadsFreeUpSpaceNote,
+            onDismiss = { freeingUp = false },
+            onClose = { freeingUp = false },
+            ignoreRelease = !isTouch(),
+        ) {
+            val first = remember { FocusRequester() }
+            ChoiceList {
+                com.tmplayer.ui.components.ChoiceLine(
+                    L.settingsClearCache,
+                    detail = if (split.cachedBytes > 0) L.downloadsFrees(size = bytes.bytes(split.cachedBytes)) else L.downloadsNothingToFree,
+                    icon = TmIcons.Clock,
+                    enabled = split.cachedBytes > 0,
+                    modifier = Modifier.focusRequester(first),
+                ) {
+                    freeingUp = false
+                    confirmingClearCached = true
+                }
+                com.tmplayer.ui.components.ChoiceLine(
+                    L.settingsClearPictures,
+                    detail = if (split.otherBytes > 0) L.downloadsFrees(size = bytes.bytes(split.otherBytes)) else L.downloadsNothingToFree,
+                    icon = TmIcons.Image,
+                    enabled = split.otherBytes > 0,
+                ) {
+                    freeingUp = false
+                    confirmingClearPictures = true
+                }
+                com.tmplayer.ui.components.ChoiceLine(
+                    L.downloadsChooseToDelete,
+                    detail = if (rows.isNotEmpty()) L.downloadsChooseToDeleteDetail else L.downloadsNothingToFree,
+                    icon = TmIcons.Delete,
+                    enabled = rows.isNotEmpty(),
+                ) {
+                    freeingUp = false
+                    // The television's selection lives on its Downloaded tab.
+                    tab = COMPLETED
+                    picking = true
+                }
+            }
+            com.tmplayer.ui.components.FocusOnOpen(first)
+        }
+    }
+
+    if (confirmingClearCached) {
+        TvConfirm(
+            title = L.settingsClearCacheTitle,
+            message = L.settingsClearCacheMessage(count = split.cachedCount, size = Translator.messages.formatter.bytes(split.cachedBytes)),
+            detail = L.settingsDownloadsUntouched,
+            confirmLabel = L.commonClear,
+            onConfirm = {
+                confirmingClearCached = false
+                clearCached()
+            },
+            onDismiss = { confirmingClearCached = false },
+        )
+    }
+
+    if (confirmingClearPictures) {
+        TvConfirm(
+            title = L.settingsClearPicturesTitle,
+            message = L.settingsClearPicturesMessage(size = Translator.messages.formatter.bytes(split.otherBytes)),
+            detail = L.settingsClearPicturesUntouched,
+            confirmLabel = L.settingsClearPicturesConfirm,
+            onConfirm = {
+                confirmingClearPictures = false
+                clearPictures()
+            },
+            onDismiss = { confirmingClearPictures = false },
         )
     }
 
@@ -1048,6 +1274,7 @@ private fun StorageSummary(
     split: StorageSplit,
     freeBytes: Long,
     totalBytes: Long,
+    onFreeUp: () -> Unit,
 ) {
     val s = LocalStrings.current
     val usedFraction = if (totalBytes > 0) {
@@ -1071,11 +1298,11 @@ private fun StorageSummary(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             // Named, not hidden: somebody comparing this against Android's own figure for the app
-            // needs to know where the rest of it went, and where the buttons for it are.
+            // needs to know where the rest of it went. Free up space, under the bar, clears it.
             if (split.cachedBytes > 0 || split.otherBytes > 0) {
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    s.downloadsStorageOther(cached = s.formatter.bytes(split.cachedBytes), other = s.formatter.bytes(split.otherBytes)),
+                    s.downloadsStorageAlso(cached = s.formatter.bytes(split.cachedBytes), other = s.formatter.bytes(split.otherBytes)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1087,7 +1314,75 @@ private fun StorageSummary(
                     .padding(top = 12.dp)
                     .clip(RoundedCornerShape(Corner.Small)),
             )
+            CardActions {
+                SecondaryAction(s.downloadsFreeUpSpace, TmIcons.Delete, onFreeUp)
+            }
         }
+    }
+}
+
+/** A section's name on the one page: Downloaded, over the downloads. */
+@Composable
+private fun SectionHeading(title: String) {
+    Text(
+        title,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.padding(start = TEXT_EDGE, end = TEXT_EDGE, top = 16.dp, bottom = 4.dp),
+    )
+}
+
+/** A show's name over its downloaded episodes, with how many there are and what they take. */
+@Composable
+private fun ShowHeading(title: String, detail: String) {
+    Column(Modifier.fillMaxWidth().padding(start = TEXT_EDGE, end = TEXT_EDGE, top = 12.dp, bottom = 2.dp)) {
+        Text(
+            title,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            detail,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * Recently played's heading at the foot of the page, which opens and closes the section: those
+ * videos are not downloads, so they stay out of the way until somebody asks for them.
+ */
+@Composable
+private fun CollapsibleHeading(title: String, detail: String?, open: Boolean, onToggle: () -> Unit) {
+    val s = LocalStrings.current
+    val interactions = remember { MutableInteractionSource() }
+    val shape = RoundedCornerShape(Corner.Medium)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = CARD_EDGE, vertical = 8.dp)
+            .clip(shape)
+            .tvFocusRing(interactions, shape)
+            .clickable(interactionSource = interactions, indication = LocalIndication.current, role = Role.Button, onClick = onToggle)
+            .padding(horizontal = CARD_PAD, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            if (detail != null) {
+                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Icon(
+            if (open) TmIcons.ChevronUp else TmIcons.ChevronDown,
+            contentDescription = if (open) s.commonHide else s.commonShow,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -1489,19 +1784,9 @@ private fun LazyItemScope.emptyStateHeight(fraction: Float): Modifier =
     if (isTouch()) Modifier.fillParentMaxHeight(fraction) else Modifier.padding(top = 8.dp)
 
 /**
- * A tab's name, on two lines when it needs them. Three fixed tabs share a phone's width, and
- * "Cached from playback" with its count does not fit a third of it on one line, so it was cut to
- * "Cached from ..." with the half that says what the tab holds missing.
- */
-@Composable
-private fun TabLabel(text: String) {
-    Text(text, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-}
-
-/**
  * Downloads on a phone, drawn like the pages behind the picture it is reached from (History is the
- * model): its name along the top beside the round Back, the three tabs as History's chips, cards
- * shaped like History's, and the floating bar along the foot with the picture ringed. Select and
+ * model): its name along the top beside the round Back, one page of sections rather than tabs,
+ * cards shaped like History's, and the floating bar along the foot with the picture ringed. Select and
  * Delete all ride in the small pill over the bar, so nothing to press is at the top.
  *
  * A selection takes the bar's place with one of its own: the count, Select all, Share and Delete,
@@ -1560,12 +1845,8 @@ private fun PhoneDownloads(
             // The list runs to the foot of the window, under the bars that float over it.
             contentWindowInsets = WindowInsets.statusBars,
         ) { padding ->
+            // One page, no tabs: the sections follow one another down the list.
             Column(Modifier.fillMaxSize().padding(padding)) {
-                TouchChipStrip {
-                    TouchFilterChip(tabLabel(ONGOING), TmIcons.Download, tab == ONGOING) { onTab(ONGOING) }
-                    TouchFilterChip(tabLabel(COMPLETED), TmIcons.CheckCircle, tab == COMPLETED) { onTab(COMPLETED) }
-                    TouchFilterChip(tabLabel(CACHED), TmIcons.Clock, tab == CACHED) { onTab(CACHED) }
-                }
                 Box(Modifier.fillMaxSize()) {
                     LazyColumn(
                         state = listState,

@@ -144,6 +144,12 @@ class ShellState(
     var chatSort by mutableStateOf(ChatSort.Recent)
     var historyTab by mutableStateOf(HistoryTab.Continue)
 
+    /**
+     * Set by Settings' Recently played row: Downloads opens with that section, folded away at the
+     * page's foot otherwise, unfolded and in view. The page clears it once it has done so.
+     */
+    var downloadsOpenRecent by mutableStateOf(false)
+
     /** History, on [tab]. */
     fun showHistory(tab: HistoryTab) {
         historyTab = tab

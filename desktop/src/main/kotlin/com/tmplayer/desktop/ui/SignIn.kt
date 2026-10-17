@@ -59,7 +59,7 @@ import kotlinx.coroutines.withContext
 
 /**
  * Signing in on the desktop (B2.1): the QR code first, since the phone in the viewer's hand is
- * already signed in, with "Log in by phone number" under it; then the code and the two-step
+ * already signed in, with "Sign in with a phone number" under it; then the code and the two-step
  * password. The states and their order are [com.tmplayer.data.AuthReducer]'s, shared with Android.
  */
 @Composable

@@ -185,6 +185,28 @@ class GridSurface(private val grid: LazyGridState, private val offset: () -> Int
     override suspend fun scrollTo(index: Int) = grid.animateScrollToItem(index + offset())
 }
 
+/**
+ * A grid whose cells are parted by full width headings (History's Today, Yesterday, Earlier):
+ * [gridIndex] gives, for each cell in order, the grid item that draws it. The arrows still count
+ * cells in order, so Up and Down across a heading land on the cell [GridNav] works out from the
+ * flat order, which can be a column off the one straight above or below.
+ */
+class SectionedGridSurface(private val grid: LazyGridState, private val gridIndex: () -> IntArray) : NavSurface {
+    private fun cells() = gridIndex().toHashSet().let { set -> grid.layoutInfo.visibleItemsInfo.filter { it.index in set } }
+
+    override fun columns(): Int = (cells().maxOfOrNull { it.column } ?: 0) + 1
+    override fun visibleRows(): Int = cells().map { it.row }.distinct().size
+    override fun isVisible(index: Int): Boolean {
+        val target = gridIndex().getOrNull(index) ?: return false
+        val info = grid.layoutInfo
+        val item = info.visibleItemsInfo.firstOrNull { it.index == target } ?: return false
+        return item.offset.y >= info.viewportStartOffset && item.offset.y + item.size.height <= info.viewportEndOffset
+    }
+    override suspend fun scrollTo(index: Int) {
+        gridIndex().getOrNull(index)?.let { grid.animateScrollToItem(it) }
+    }
+}
+
 class ListSurface(private val list: LazyListState) : NavSurface {
     override fun columns(): Int = 1
     override fun visibleRows(): Int = list.layoutInfo.visibleItemsInfo.size

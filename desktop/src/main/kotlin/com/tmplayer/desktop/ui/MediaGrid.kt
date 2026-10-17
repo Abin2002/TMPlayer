@@ -553,7 +553,10 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
             else -> {
                 val grid = rememberLazyGridState()
                 val records by rememberUpdatedState(list)
-                val nav = rememberKeyboardNav(remember(grid) { GridSurface(grid, { 0 }, { records.size }) })
+                // Today, Yesterday and Earlier over the cards, by when each was last played.
+                val days = remember(list) { daySections(list, System.currentTimeMillis()) { it.updatedAt } }
+                val currentDays by rememberUpdatedState(days)
+                val nav = rememberKeyboardNav(remember(grid) { SectionedGridSurface(grid) { currentDays.gridIndex } })
                 Box(Modifier.fillMaxSize()) {
                     LazyVerticalGrid(
                         // A quarter wider than a poster: the card carries its title on the art.
@@ -564,7 +567,7 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                         modifier = Modifier.fillMaxSize().navKeys(nav) { records.size },
                     ) {
-                        itemsIndexed(list, key = { _, it -> "${it.chatId}:${it.messageId}" }) { index, record ->
+                        daySectionItems(days, key = { "${it.chatId}:${it.messageId}" }) { index, record, _ ->
                             LaunchedEffect(record) { state.noteChatTitle(record.chatId, record.chatTitle) }
                             ContinueTile(
                                 state, record, nav, index,

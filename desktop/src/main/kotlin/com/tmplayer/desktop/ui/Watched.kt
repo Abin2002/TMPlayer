@@ -37,6 +37,11 @@ import com.tmplayer.data.MediaMapper
 import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedWhen
+import com.tmplayer.data.DayGroup
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.material3.MaterialTheme
 import com.tmplayer.desktop.WatchedWords
 import com.tmplayer.desktop.setWatched
 import com.tmplayer.ui.browse.BrowseTab
@@ -114,7 +119,10 @@ fun WatchedPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
             else -> {
                 val grid = rememberLazyGridState()
                 val current by rememberUpdatedState(list)
-                val nav = rememberKeyboardNav(remember(grid) { GridSurface(grid, { 0 }, { current.size }) })
+                // Today, Yesterday and Earlier over the tiles, by when each was finished.
+                val days = remember(list) { daySections(list, System.currentTimeMillis()) { it.watchedAt } }
+                val currentDays by rememberUpdatedState(days)
+                val nav = rememberKeyboardNav(remember(grid) { SectionedGridSurface(grid) { currentDays.gridIndex } })
                 Box(Modifier.fillMaxSize()) {
                     LazyVerticalGrid(
                         columns = GridCells.Adaptive(state.posterWidth),
@@ -124,9 +132,9 @@ fun WatchedPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                         modifier = Modifier.fillMaxSize().navKeys(nav) { current.size },
                     ) {
-                        itemsIndexed(list, key = { _, it -> it.key }) { index, record ->
+                        daySectionItems(days, key = { it.key }) { index, record, day ->
                             LaunchedEffect(record) { state.noteChatTitle(record.chatId, record.chatTitle) }
-                            WatchedTile(state, record, progress[record.key]?.fraction, now, nav, index) {
+                            WatchedTile(state, record, progress[record.key]?.fraction, now, nav, index, day) {
                                 val item = HomeRows.watchedItem(record, all.orEmpty())
                                 toast(s.watchedMarkedUnwatched(item.title))
                                 scope.launch {
@@ -154,6 +162,7 @@ private fun WatchedTile(
     now: Long,
     nav: KeyboardNav?,
     index: Int,
+    day: DayGroup?,
     onUnwatch: () -> Unit,
 ) {
     val s = LocalStrings.current
@@ -167,7 +176,11 @@ private fun WatchedTile(
         chatTitle = record.chatTitle,
         progress = WatchedWords.posterProgress(fraction, finished = true),
         art = { OnHome { OnlineArt(item, Modifier.fillMaxSize()) { RecordArt(item) } } },
-        subtitle = listOf(record.chatTitle, WatchedWhen.phrase(record.watchedAt, now))
+        subtitle = listOf(record.chatTitle, WatchedWhen.phrase(record.watchedAt, now).let { phrase ->
+            // Under a day heading the line does not say the heading's word again.
+            val repeats = day == DayGroup.Yesterday || (day == DayGroup.Today && phrase == s.watchedTodayPhrase)
+            if (repeats) "" else phrase
+        })
             .filter { it.isNotBlank() }
             .joinToString("  ·  "),
         finished = true,
@@ -297,3 +310,52 @@ internal fun ClearWatchedDialog(state: ShellState, count: Int, scope: CoroutineS
 }
 
 private const val CLOCK_TICK_MS = 60_000L
+
+/** History's records under day headings, with the grid item that draws each cell. */
+internal class DaySections<T>(val sections: List<Pair<DayGroup?, List<T>>>) {
+    val gridIndex: IntArray = run {
+        val out = ArrayList<Int>()
+        var at = 0
+        sections.forEach { (day, members) ->
+            if (day != null) at++
+            members.forEach { _ -> out += at++ }
+        }
+        out.toIntArray()
+    }
+}
+
+/** [records] under Today, Yesterday and Earlier, or in one run when headings would not help. */
+internal fun <T> daySections(records: List<T>, now: Long, at: (T) -> Long): DaySections<T> =
+    DaySections(DayGroup.headings(records, at, now) ?: listOf(null to records))
+
+/** The headings and the tiles under them, each tile told its place among the cells and its day. */
+internal fun <T> LazyGridScope.daySectionItems(
+    days: DaySections<T>,
+    key: (T) -> Any,
+    tile: @Composable (index: Int, record: T, day: DayGroup?) -> Unit,
+) {
+    var cell = 0
+    days.sections.forEach { (day, members) ->
+        if (day != null) {
+            item(key = "day-$day", span = { GridItemSpan(maxLineSpan) }) { DayHeading(day) }
+        }
+        val base = cell
+        cell += members.size
+        itemsIndexed(members, key = { _, it -> key(it) }) { i, record -> tile(base + i, record, day) }
+    }
+}
+
+@Composable
+private fun DayHeading(day: DayGroup) {
+    val s = LocalStrings.current
+    Text(
+        when (day) {
+            DayGroup.Today -> s.watchedToday
+            DayGroup.Yesterday -> s.watchedYesterday
+            DayGroup.Earlier -> s.watchedEarlier
+        },
+        style = MaterialTheme.typography.titleSmall,
+        color = Tone.muted,
+        modifier = Modifier.padding(top = 8.dp),
+    )
+}

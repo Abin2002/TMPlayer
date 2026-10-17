@@ -1,0 +1,78 @@
+package com.tmplayer.data
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+
+class DownloadShelfTest {
+
+    private data class Row(val id: Long, val name: String, val at: Long)
+
+    private fun item(row: Row) = MediaItem(
+        chatId = -100L,
+        messageId = row.id,
+        fileId = row.id.toInt(),
+        title = row.name,
+        sizeBytes = 1_000,
+        durationSec = 1_400,
+        mimeType = "",
+        thumbnailFileId = 0,
+        miniThumbnail = null,
+        date = 0,
+        fileName = row.name,
+        caption = "",
+    )
+
+    private fun arrange(vararg rows: Row) =
+        DownloadShelf.arrange(rows.toList(), ::item, { "r${it.id}" }, { it.at }, corrections = emptyMap())
+
+    @Test
+    fun `episodes of one show are grouped in watching order`() {
+        val shelf = arrange(
+            Row(1, "Harbour.Notes.S01E02.1080p.mkv", 30),
+            Row(2, "Some.Film.2024.1080p.mkv", 20),
+            Row(3, "Harbour.Notes.S01E01.1080p.mkv", 10),
+        )
+        assertEquals(2, shelf.size)
+        val show = shelf[0] as DownloadShelf.Entry.Show
+        assertEquals(listOf(3L, 1L), show.episodes.map { it.id })
+        assertEquals(30L, show.newest)
+        assertTrue(shelf[1] is DownloadShelf.Entry.Single)
+    }
+
+    @Test
+    fun `a lone episode stays a video of its own and singles run newest first`() {
+        val shelf = arrange(
+            Row(1, "Harbour.Notes.S01E02.1080p.mkv", 10),
+            Row(2, "Some.Film.2024.1080p.mkv", 20),
+        )
+        assertEquals(listOf(2L, 1L), shelf.map { (it as DownloadShelf.Entry.Single).row.id })
+    }
+
+    private val zone = ZoneOffset.UTC
+    private fun at(day: Int, hour: Int) = LocalDateTime.of(2026, 10, day, hour, 0).toInstant(zone).toEpochMilli()
+
+    @Test
+    fun `calendar days, not 24 hour spans`() {
+        val now = at(18, 9)
+        assertEquals(DayGroup.Today, DayGroup.of(at(18, 1), now, zone))
+        assertEquals(DayGroup.Yesterday, DayGroup.of(at(17, 23), now, zone))
+        assertEquals(DayGroup.Earlier, DayGroup.of(at(16, 23), now, zone))
+        // A clock that ran ahead is still today.
+        assertEquals(DayGroup.Today, DayGroup.of(at(19, 1), now, zone))
+    }
+
+    @Test
+    fun `headings only when they help`() {
+        val now = at(18, 9)
+        val mixed = listOf(at(18, 8), at(18, 7), at(17, 20), at(10, 20))
+        val groups = DayGroup.headings(mixed, { it }, now, zone)!!
+        assertEquals(listOf(DayGroup.Today, DayGroup.Yesterday, DayGroup.Earlier), groups.map { it.first })
+        assertEquals(2, groups[0].second.size)
+        assertNull(DayGroup.headings(listOf(at(18, 8), at(18, 7)), { it }, now, zone))
+        assertNull(DayGroup.headings(listOf(at(10, 8), at(18, 7)), { it }, now, zone))
+    }
+}

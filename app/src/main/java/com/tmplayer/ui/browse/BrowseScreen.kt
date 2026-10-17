@@ -117,6 +117,7 @@ import com.tmplayer.data.SeriesShelf
 import com.tmplayer.data.WatchLaterRecord
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedWhen
+import com.tmplayer.data.DayGroup
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.derivedStateOf
@@ -528,7 +529,7 @@ fun BrowseScreen(
                                 // behind, so the button would be one that visibly does nothing.
                                 if (showsContinue && continuing.isNotEmpty()) {
                                     HeaderAction(
-                                        label = s.browseClearHistory,
+                                        label = s.browseClearContinue,
                                         icon = TmIcons.Close,
                                         onClick = { confirmClearHistory = true },
                                     )
@@ -557,6 +558,7 @@ fun BrowseScreen(
                                     text = { it.cardText() },
                                     onResume = openResume,
                                     onHold = { mediaMenu = it },
+                                    dayOf = { it.updatedAt },
                                 )
                             }
                         } else if (showsWatchLater) {
@@ -593,6 +595,8 @@ fun BrowseScreen(
                                     mayTakeFocus = listMayTakeFocus,
                                     onResume = onOpenWatched,
                                     onHold = { watchedMenu = it },
+                                    dayOf = { it.watchedAt },
+                                    dayText = { record, day -> record.cardText(now, day) },
                                 )
                             }
                         }
@@ -1156,6 +1160,37 @@ private fun WatchedRecord.cardText(now: Long) = VideoCardText(
     item = toMediaItem(),
 )
 
+/**
+ * The same card under a day heading: the line does not say again what the heading says, so
+ * "Watched yesterday" goes under Yesterday and "Watched today" under Today, and the card keeps
+ * only what adds to it ("Watched 5 minutes ago", "Watched on 27 Sep").
+ */
+private fun WatchedRecord.cardText(now: Long, day: DayGroup): VideoCardText {
+    val card = cardText(now)
+    val repeats = when (day) {
+        DayGroup.Yesterday -> true
+        DayGroup.Today -> card.detail == L.watchedTodayPhrase
+        DayGroup.Earlier -> false
+    }
+    return if (repeats) VideoCardText(card.key, card.title, "", card.chatTitle, card.chatId, card.fraction, card.item) else card
+}
+
+/** A day heading over History's Continue watching and Watched lists. */
+@Composable
+private fun DayHeading(day: DayGroup) {
+    val s = LocalStrings.current
+    Text(
+        when (day) {
+            DayGroup.Today -> s.watchedToday
+            DayGroup.Yesterday -> s.watchedYesterday
+            DayGroup.Earlier -> s.watchedEarlier
+        },
+        style = MaterialTheme.typography.titleSmall,
+        color = Tone.muted,
+        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+    )
+}
+
 /** A video saved for later: how long it is and how big, and no bar until it is started. */
 private fun WatchLaterRecord.cardText() = VideoCardText(
     key = key,
@@ -1183,8 +1218,20 @@ private fun <T : Any> ContinueSection(
     onHold: (T) -> Unit,
     /** Asked before [autoFocus] acts: false while the chips over the list hold the focus. */
     mayTakeFocus: () -> Boolean = { true },
+    /**
+     * When each record was played or finished, for Today, Yesterday and Earlier headings over the
+     * list. Null for a list with no such time (Watch later). See [DayGroup.headings].
+     */
+    dayOf: ((T) -> Long)? = null,
+    /** The card under a day heading, which need not repeat the heading's word. */
+    dayText: ((T, DayGroup) -> VideoCardText)? = null,
 ) {
     val first = remember { FocusRequester() }
+    val now = remember(records) { System.currentTimeMillis() }
+    val days = remember(records, dayOf != null) { dayOf?.let { DayGroup.headings(records, it, now) } }
+    val sections: List<Pair<DayGroup?, List<T>>> = days ?: listOf(null to records)
+    fun cardOf(record: T, day: DayGroup?): VideoCardText =
+        if (day != null && dayText != null) dayText(record, day) else text(record)
     // Only the first card asks for focus, and which card that is does not change with the
     // arrangement, so the two branches can share one modifier.
     fun focusOf(record: T): Modifier =
@@ -1211,8 +1258,10 @@ private fun <T : Any> ContinueSection(
                 verticalArrangement = Arrangement.spacedBy(if (isTouch()) 2.dp else 4.dp),
                 contentPadding = padding,
             ) {
-                items(records, key = { text(it).key }) { record ->
-                    val card = text(record)
+                sections.forEach { (day, members) ->
+                if (day != null) item(key = "day-$day") { DayHeading(day) }
+                items(members, key = { text(it).key }) { record ->
+                    val card = cardOf(record, day)
                     VideoListRow(
                         item = card.item,
                         title = card.title,
@@ -1225,6 +1274,7 @@ private fun <T : Any> ContinueSection(
                         modifier = focusOf(record),
                     )
                 }
+                }
             }
 
             CardLayout.Grid -> LazyVerticalGrid(
@@ -1234,13 +1284,16 @@ private fun <T : Any> ContinueSection(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                gridItems(records, key = { text(it).key }) { record ->
+                sections.forEach { (day, members) ->
+                if (day != null) item(key = "day-$day", span = { GridItemSpan(maxLineSpan) }) { DayHeading(day) }
+                gridItems(members, key = { text(it).key }) { record ->
                     ContinueTile(
-                        text = text(record),
+                        text = cardOf(record, day),
                         onResume = { onResume(record) },
                         onHold = { onHold(record) },
                         modifier = focusOf(record),
                     )
+                }
                 }
             }
         }
@@ -1302,7 +1355,8 @@ private fun ContinueTile(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text.detail,
+                // Under a day heading a Watched card may have nothing to add; its chat says where it is.
+                text.detail.ifBlank { text.chatTitle },
                 style = MaterialTheme.typography.bodyMedium,
                 color = Tone.muted,
                 maxLines = 1,
@@ -2847,7 +2901,7 @@ private fun EmptyTab(tab: BrowseSection, query: String, filter: ChatFilter = Cha
         history == HistoryTab.WatchLater ->
             s.browseEmptyWatchLater
         tab == BrowseSection.of(BrowseTab.Favorites) ->
-            s.browseEmptyFavourites
+            if (isTouch()) s.browseEmptyFavouritesTouch else s.browseEmptyFavourites
         tab.isChats && filter == ChatFilter.Unread -> s.browseEmptyUnread
         tab.isChats && filter == ChatFilter.Archived -> s.browseEmptyArchived
         tab == BrowseSection.of(BrowseTab.Saved) ->

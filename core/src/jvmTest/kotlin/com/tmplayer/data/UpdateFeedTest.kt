@@ -136,7 +136,7 @@ class UpdateFeedTest {
             }
             fail("expected a failure")
         } catch (e: java.io.IOException) {
-            assertEquals("GitHub is rate limiting this connection. Try again in an hour.", e.message)
+            assertEquals("GitHub has had too many requests from this connection. Try again in an hour.", e.message)
         }
     }
 
