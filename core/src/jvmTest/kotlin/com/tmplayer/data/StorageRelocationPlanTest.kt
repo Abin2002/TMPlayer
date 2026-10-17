@@ -91,8 +91,8 @@ class StorageRelocationPlanTest {
         )
         assertEquals("Move TMPlayer's files to E:\\?", title)
         assertEquals(
-            "Downloads (12 videos, 38.0 GB) move to E:\\TMPlayer\\downloads. The cache (3.1 GB) is cleared and " +
-                "starts again at E:\\TMPlayer\\cache. Nothing is removed from Telegram. Playback and downloads " +
+            "Downloads (12 videos, 38.0 GB) move to E:\\TMPlayer\\downloads. Recently played videos (3.1 GB) are cleared and " +
+                "start again at E:\\TMPlayer\\cache. Nothing is removed from Telegram. Playback and downloads " +
                 "pause while this happens.",
             body,
         )

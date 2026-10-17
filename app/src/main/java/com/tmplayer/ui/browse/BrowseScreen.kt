@@ -1204,15 +1204,23 @@ private fun <T : Any> ContinueSection(
     val gridState = rememberLazyGridState()
     Box(Modifier.fillMaxSize()) {
         when (layout) {
+            // The rows of a chat's list, poster, type and spacing alike: History's list is the same
+            // kind of list, and a card around each row here made it the one list that was boxed.
             CardLayout.List -> LazyColumn(
                 state = listState,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(if (isTouch()) 2.dp else 4.dp),
                 contentPadding = padding,
             ) {
                 items(records, key = { text(it).key }) { record ->
-                    ContinueCard(
-                        text = text(record),
-                        onResume = { onResume(record) },
+                    val card = text(record)
+                    VideoListRow(
+                        item = card.item,
+                        title = card.title,
+                        detail = card.detail,
+                        chatTitle = card.chatTitle,
+                        fraction = card.fraction,
+                        finished = card.fraction >= 1f,
+                        onClick = { onResume(record) },
                         onHold = { onHold(record) },
                         modifier = focusOf(record),
                     )
@@ -1333,108 +1341,6 @@ private fun ContinueTile(
     }
 }
 
-@Composable
-private fun ContinueCard(
-    text: VideoCardText,
-    onResume: () -> Unit,
-    onHold: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val touch = isTouch()
-    val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
-    val border by animateColorAsState(
-        targetValue = if (focused) Tone.accent else Color.Transparent,
-        animationSpec = tween(140),
-        label = "continueBorder",
-    )
-
-    val body: @Composable RowScope.() -> Unit = {
-        // The bar lies across the foot of the thumbnail, as it does on every video tile. The box
-        // carries the size, not the art: the bar fills its parent's width, and in a box sized by
-        // its art alone that was the whole row, which left the title column no width at all.
-        Box(Modifier.width(THUMBNAIL_WIDTH).height(THUMBNAIL_HEIGHT)) {
-            ContinueArt(
-                text,
-                Modifier.fillMaxSize(),
-                badge = 34.dp,
-            )
-            if (text.fraction > 0f) {
-                ProgressLine(text.fraction, Modifier.align(Alignment.BottomCenter), inset = 6.dp)
-            }
-        }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                text.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = Tone.text,
-                // Two lines, as everywhere else a release name is shown: one line cuts the title
-                // before the resolution, which is the part that tells two of them apart.
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.marqueeWhen(focused),
-            )
-            Text(
-                buildString {
-                    append(text.detail)
-                    // The chat name gives way to the hold hint while focused: both are tail
-                    // information on one line, and only the hint is worth saying to the row the
-                    // viewer is standing on.
-                    if (focused) {
-                        append("  ·  ")
-                        append(HOLD_HINT)
-                    } else if (text.chatTitle.isNotBlank()) {
-                        append("  ·  ")
-                        append(text.chatTitle)
-                    }
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = Tone.muted,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-
-    if (touch) {
-        Card(
-            modifier = modifier
-                .fillMaxWidth()
-                .holdable(
-                    interactionSource = interactions,
-                    onClick = onResume,
-                    onHold = onHold,
-                ),
-            shape = M3MaterialTheme.shapes.large,
-            colors = CardDefaults.cardColors(containerColor = Tone.surface),
-        ) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                content = body,
-            )
-        }
-    } else {
-        Row(
-            modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(Corner.Large))
-                .background(Tone.surface)
-                .border(Focus.Edge, border, RoundedCornerShape(Corner.Large))
-                .holdable(
-                    interactionSource = interactions,
-                    onClick = onResume,
-                    onHold = onHold,
-                )
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            content = body,
-        )
-    }
-}
-
 /**
  * Artwork for a History card (Continue watching, Watch later, Watched), with a play mark on it.
  *
@@ -1470,8 +1376,6 @@ private fun ContinueArt(text: VideoCardText, modifier: Modifier = Modifier, badg
     }
 }
 
-private val THUMBNAIL_WIDTH = 96.dp
-private val THUMBNAIL_HEIGHT = 54.dp
 
 
 // ---- navigation rail -------------------------------------------------------------------------
@@ -2290,30 +2194,6 @@ internal fun TouchChipStrip(content: @Composable RowScope.() -> Unit) {
     }
 }
 
-/**
- * A History card's artwork (the video's thumbnail, the show's or film's picture, or its generated
- * cover) with the play mark and, when [fraction] is above nothing, the progress line: for a row
- * outside History that should look like one of History's, such as a download.
- */
-@Composable
-internal fun VideoRecordArt(item: MediaItem, title: String, fraction: Float = 0f, modifier: Modifier = Modifier) {
-    val text = VideoCardText(
-        key = "${item.chatId}_${item.messageId}",
-        title = title,
-        detail = "",
-        chatTitle = "",
-        chatId = item.chatId,
-        fraction = fraction,
-        item = item,
-    )
-    Box(modifier.width(THUMBNAIL_WIDTH).height(THUMBNAIL_HEIGHT)) {
-        ContinueArt(text, Modifier.fillMaxSize(), badge = 34.dp)
-        if (fraction > 0f) {
-            ProgressLine(fraction, Modifier.align(Alignment.BottomCenter), inset = 6.dp)
-        }
-    }
-}
-
 @Composable
 private fun TvChip(chip: ChipSpec) {
     val interactions = remember { MutableInteractionSource() }
@@ -3034,11 +2914,11 @@ private const val TILE_COLUMNS = 3
 /**
  * The narrowest a tile may be before the grid drops a column.
  *
- * A phone held upright has about 400 dp to spend, so this is what puts two tiles across it and
- * four or five across the same phone turned on its side, without either arrangement being spelled
- * out anywhere.
+ * A phone held upright has 360 to 412 dp, less the margins and the gap, so this is what puts two
+ * tiles across the narrowest of them (168 dp left a 360 dp phone one tile a row) and four or five
+ * across the same phone turned on its side, without either arrangement being spelled out anywhere.
  */
-private val TOUCH_TILE_MIN = 168.dp
+private val TOUCH_TILE_MIN = 150.dp
 
 /**
  * A phone chat row, at Material's list-item metrics.

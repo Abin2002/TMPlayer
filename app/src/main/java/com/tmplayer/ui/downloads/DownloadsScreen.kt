@@ -29,7 +29,7 @@ import com.tmplayer.ui.browse.TouchChipStrip
 import com.tmplayer.ui.browse.TouchFilterChip
 import com.tmplayer.ui.browse.TouchPage
 import com.tmplayer.ui.browse.TouchPageSpec
-import com.tmplayer.ui.browse.VideoRecordArt
+import com.tmplayer.ui.browse.VideoPosterThumb
 import com.tmplayer.ui.components.FloatingBackButton
 import com.tmplayer.ui.components.FloatingBarIcon
 import com.tmplayer.ui.components.FloatingChrome
@@ -564,7 +564,7 @@ fun DownloadsScreen(
                     L.downloadsCachedNote,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 4.dp),
+                    modifier = Modifier.padding(start = TEXT_EDGE, end = TEXT_EDGE, top = 16.dp, bottom = 4.dp),
                 )
             }
             items(cachedRows, key = { it.key }) { row ->
@@ -948,7 +948,7 @@ private fun RemoveAfterWatchingRow(checked: Boolean, onChange: (Boolean) -> Unit
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = CARD_EDGE)
             .clip(shape)
             .tvFocusRing(interactions, shape)
             .toggleable(
@@ -958,7 +958,7 @@ private fun RemoveAfterWatchingRow(checked: Boolean, onChange: (Boolean) -> Unit
                 role = Role.Switch,
                 onValueChange = onChange,
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = CARD_PAD, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -1018,7 +1018,8 @@ private fun queueHeading(active: List<OfflineDownloads.Progress>): String {
 @Composable
 private fun QueueHeading(title: String, bulk: String?, onBulk: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 8.dp),
+        // The button's own 12 dp of padding leaves its word on the cards' inner edge too.
+        modifier = Modifier.fillMaxWidth().padding(start = TEXT_EDGE, end = TEXT_EDGE - 12.dp, top = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -1055,10 +1056,10 @@ private fun StorageSummary(
         0f
     }
     Card(
-        Modifier.fillMaxWidth().padding(16.dp),
+        Modifier.fillMaxWidth().padding(CARD_EDGE),
         shape = MaterialTheme.shapes.large,
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(CARD_PAD)) {
             Text(
                 s.downloadsStorageInDownloads(size = s.formatter.bytes(split.downloadBytes)),
                 style = MaterialTheme.typography.titleMedium,
@@ -1117,7 +1118,7 @@ private fun RowCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = CARD_EDGE, vertical = 6.dp)
             .tvFocusRing(interactions, RoundedCornerShape(Corner.Large))
             .then(
                 if (onClick == null && onHold == null) {
@@ -1145,7 +1146,9 @@ private fun RowCard(
             else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         },
     ) {
-        Column(if (phone) Modifier.padding(horizontal = 20.dp, vertical = 16.dp) else Modifier.padding(16.dp)) { content() }
+        // [CARD_PAD] on every device, the storage card's and the switch row's own figure, so the
+        // words of every card, the note over the list and the queue's heading start on one line.
+        Column(Modifier.padding(CARD_PAD)) { content() }
     }
 }
 
@@ -1289,14 +1292,13 @@ private fun DownloadCard(
                 Spacer(Modifier.width(8.dp))
             }
             if (usesFloatingChrome()) {
-                // History's thumbnail, so a download reads as the same kind of thing as a video
-                // in Continue watching: the picture, or the generated cover until there is one.
-                VideoRecordArt(
+                // The small poster History's rows and a chat's rows wear, so a download reads as
+                // the same kind of thing: the picture, or the generated cover until there is one.
+                VideoPosterThumb(
                     item = row.record.toMediaItem(),
-                    title = row.title,
                     fraction = if (row.partial && row.totalBytes > 0) (row.bytes.toFloat() / row.totalBytes).coerceIn(0f, 1f) else 0f,
                 )
-                Spacer(Modifier.width(16.dp))
+                Spacer(Modifier.width(14.dp))
             }
             Column(Modifier.weight(1f)) {
                 Text(
@@ -1797,3 +1799,12 @@ private const val CACHED = 2
 
 /** The separator these rows join their figures with, spaced as the rest of the app spaces it. */
 private const val DOT = "  ·  "
+
+/** How far a card on this screen sits in from the sides of the list. */
+private val CARD_EDGE = 16.dp
+
+/** How far a card's words sit in from the card's own edge. */
+private val CARD_PAD = 16.dp
+
+/** Where words outside a card start, on the line the words inside the cards start on. */
+private val TEXT_EDGE = CARD_EDGE + CARD_PAD

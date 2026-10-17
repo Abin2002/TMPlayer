@@ -1,6 +1,8 @@
 package com.tmplayer.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -81,7 +83,13 @@ fun TvConfirm(
             },
             title = { M3Text(title) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Scrolls when it has to. Material's dialog does not scroll its text by itself, so
+                // a phone on its side (about 360 dp tall) clipped the detail line under the icon,
+                // the title and the message, and at a large font size the message as well.
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     M3Text(message, style = M3MaterialTheme.typography.bodyMedium)
                     if (detail != null) {
                         M3Text(

@@ -2175,6 +2175,90 @@ private fun SeriesRow(
 }
 
 /**
+ * A History video (Continue watching, Watch later, Watched) as a list row: the same frame, poster
+ * and type as a chat's [MediaRow], so History's rows and a chat's rows are one kind of list.
+ *
+ * [fraction] lays the progress line on the poster's foot while a video is part way through;
+ * [finished] puts the watched tick in the poster's corner instead. [detail] is what the tab says
+ * about the video (where it stopped, when it was watched, how long it is), and [chatTitle] the
+ * chat it came from, on a line of its own so neither one cuts the other short.
+ */
+@Composable
+internal fun VideoListRow(
+    item: MediaItem,
+    title: String,
+    detail: String,
+    chatTitle: String,
+    fraction: Float,
+    finished: Boolean,
+    onClick: () -> Unit,
+    onHold: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val touch = isTouch()
+    // MediaArt draws the line from a watch point, so the fraction is handed over as one.
+    val watched = if (!finished && fraction > 0f) WatchPoint(positionMs = (fraction * 10_000).toLong(), durationMs = 10_000) else null
+    ListRow(
+        onClick = onClick,
+        onFocused = {},
+        modifier = modifier,
+        onLongClick = onHold,
+        art = { artModifier ->
+            MediaArt(item, watched, artModifier, compact = touch, finished = finished, poster = true, thumb = true)
+        },
+    ) {
+        Text(
+            title,
+            style = if (touch) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
+            color = Tone.text,
+            maxLines = if (touch) 2 else 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (detail.isNotBlank()) {
+            Text(
+                detail,
+                style = MaterialTheme.typography.labelMedium,
+                // Accent while there is a place to go back to, as a show's row marks its progress.
+                color = if (watched != null) Tone.accent else Tone.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (chatTitle.isNotBlank()) {
+            Text(
+                chatTitle,
+                style = MaterialTheme.typography.labelMedium,
+                color = Tone.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/**
+ * A list row's poster on its own, for a row drawn somewhere else (a download's card): the same
+ * small 2:3 picture as [VideoListRow], with the progress line when [fraction] is above nothing.
+ * No "Downloaded" or "Cached" corner: the page it sits on already says which the video is.
+ */
+@Composable
+internal fun VideoPosterThumb(item: MediaItem, fraction: Float, modifier: Modifier = Modifier) {
+    val touch = isTouch()
+    val watched = if (fraction > 0f) WatchPoint(positionMs = (fraction * 10_000).toLong(), durationMs = 10_000) else null
+    MediaArt(
+        item.copy(onDevice = false),
+        watched,
+        modifier
+            .width(if (touch) TOUCH_ROW_POSTER_WIDTH else ROW_POSTER_WIDTH)
+            .aspectRatio(2f / 3f)
+            .clip(RoundedCornerShape(Corner.Small)),
+        compact = touch,
+        poster = true,
+        thumb = true,
+    )
+}
+
+/**
  * The frame of a row in a chat's list: a small 2:3 [art] at the start and [text] taking the rest of
  * the width. No card behind a row on either: on a television the row the remote is on fills and
  * takes the focus edge, the others are the poster and its words on the page's own background.

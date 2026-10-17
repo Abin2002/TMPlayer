@@ -143,10 +143,14 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
             },
         )
         val list = rememberLazyListState()
+        // Every item's words start [ROW_INSET] into the list, so the list itself starts that much
+        // short of the page margin: the words line up under the heading, and a row's hover fill
+        // reaches out past them as the settings rows' does.
+        val edge = pageMargin() - ROW_INSET
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
                 state = list,
-                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
+                contentPadding = PaddingValues(start = edge, end = edge, top = 8.dp, bottom = 8.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxSize().padding(end = 12.dp).homeEndScrolls(list),
             ) {
@@ -229,6 +233,7 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                         ),
                         style = MaterialTheme.typography.bodySmall,
                         color = Tone.muted,
+                        modifier = Modifier.padding(horizontal = ROW_INSET),
                     )
                 }
                 if (cached.isEmpty()) {
@@ -366,13 +371,13 @@ private fun Section(title: String) {
         title,
         style = MaterialTheme.typography.titleSmall,
         color = Tone.muted,
-        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
+        modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, top = 16.dp, bottom = 4.dp),
     )
 }
 
 @Composable
 private fun Empty(text: String) {
-    Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = Modifier.padding(vertical = 8.dp))
+    Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = Modifier.padding(horizontal = ROW_INSET, vertical = 8.dp))
 }
 
 @Composable
@@ -394,7 +399,7 @@ private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
     }
     val fraction = if (row.stage == OfflineDownloads.Stage.Moving) row.moveFraction ?: 0f else row.fraction ?: 0f
     Row(
-        Modifier.fillMaxWidth().widthIn(max = 960.dp).padding(vertical = 8.dp),
+        Modifier.fillMaxWidth().widthIn(max = 960.dp).padding(horizontal = ROW_INSET, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -463,7 +468,8 @@ private fun KeptRow(
             .widthIn(max = 960.dp)
             .clip(MaterialTheme.shapes.medium)
             .then(if (playable) Modifier.clickable(onClick = onPlay) else Modifier)
-            .padding(vertical = 4.dp, horizontal = 4.dp),
+            // Less at the start: the tick box carries its own 15 dp of touch room before the box.
+            .padding(start = ROW_INSET - CHECKBOX_ROOM, end = ROW_INSET, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -497,7 +503,7 @@ private fun KeptRow(
 private fun UnlistedRow(file: File, onKeep: () -> Unit, onDelete: () -> Unit) {
     val s = LocalStrings.current
     Row(
-        Modifier.fillMaxWidth().widthIn(max = 960.dp).padding(vertical = 4.dp, horizontal = 8.dp),
+        Modifier.fillMaxWidth().widthIn(max = 960.dp).padding(horizontal = ROW_INSET, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -530,7 +536,7 @@ private fun CachedRow(
             .widthIn(max = 960.dp)
             .clip(MaterialTheme.shapes.medium)
             .clickable(onClick = onPlay)
-            .padding(vertical = 8.dp, horizontal = 8.dp),
+            .padding(horizontal = ROW_INSET, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -554,3 +560,12 @@ private fun CachedRow(
         IconButton(onClick = onDelete) { Icon(TmIcons.Delete, contentDescription = s.downloadsDeleteCached) }
     }
 }
+
+/**
+ * Where every row's words start inside the list, the settings rows' own figure, so the remove after
+ * watching switch, the section names and the rows under them all begin on one line.
+ */
+private val ROW_INSET = SETTING_INSET
+
+/** The touch room a Material tick box keeps on each side of the box it draws. */
+private val CHECKBOX_ROOM = 15.dp

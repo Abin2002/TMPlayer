@@ -276,7 +276,7 @@ class WatchCacheRulesTest {
         videos.resolve("Harbour_Notes.mkv").writeText("x")
         videos.resolve("75").writeText("xx")
         val found = WatchCacheRules.straysIn(root, emptySet())
-        assertEquals(setOf("Harbour Notes", "Cached video"), found.map { it.title }.toSet())
+        assertEquals(setOf("Harbour Notes", "Recently played video"), found.map { it.title }.toSet())
     }
 
     @Test
