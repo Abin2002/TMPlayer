@@ -659,7 +659,9 @@ private fun FloatingBar(
             // A short window (a phone on its side with the keyboard up) scrolls the rail rather
             // than cutting its last button off.
             .verticalScroll(rememberScrollState())
-            .padding(start = RAIL_MARGIN, top = 8.dp, bottom = 8.dp)
+            // A scroll clips to its bounds, so the room above and below is the shadow's as well:
+            // with less, its soft edge is cut off square under the rail on a light page.
+            .padding(start = RAIL_MARGIN, top = 8.dp + BAR_SHADOW * 2, bottom = 8.dp + BAR_SHADOW * 2)
     } else {
         Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = BAR_MARGIN)
     }
