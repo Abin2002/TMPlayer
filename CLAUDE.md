@@ -90,8 +90,12 @@ changed.
   good tag message is the SEO text for that release.
 - **Caching** lives in `site/vercel.json`. Fonts are immutable (their names never change content),
   and so is `/_astro/`, where the stylesheet and `app.js` are served under content-hashed names
-  (`site/src/styles/styles.css`, `site/src/scripts/app.js`). Images, the manifest, the sitemap
-  and the feed have their own entries; a new top-level asset type gets one too.
+  (`site/src/styles/styles.css`, `site/src/scripts/app.js`). Screenshots and badges keep their
+  names when retaken, so `Shot.astro` writes every one as `<file>?v=<content hash>`
+  (`site/src/lib/asset-version.ts`) and `vercel.json` caches a URL with `?v=` for a year as
+  immutable; the plain URL (sitemap image entries, the manifest) keeps the one day cache. Put a
+  new page image through `Shot`, never a bare `<img>`, or it misses both. Images, the manifest,
+  the sitemap and the feed have their own entries; a new top-level asset type gets one too.
 - **Feature screenshots with markers.** A shot that points at one thing is cropped to the part
   that matters and zoomed, and its hand-drawn arrows, circles and underlines are drawn into the
   image by `scripts/annotate-shot.py` from a spec in `scripts/annotations/`, so the site and the
@@ -122,6 +126,66 @@ changed.
   no popups, no nags, nothing locked.
 - **After changing the site**, run `pnpm -C site build`, `python3 scripts/site-i18n-check.py` and
   `python3 scripts/site-links.py` (CI runs all three).
+
+## Site performance
+
+Lighthouse runs locally against headless Chromium (never Google Chrome), on the home page,
+`/features/` and `/download/`, mobile and desktop. Against the live site, and against a local
+build served by `pnpm -C site preview` (the preview server sends none of `vercel.json`'s headers,
+so the cache audit is only meaningful live):
+
+```sh
+export CHROME_PATH=/usr/bin/chromium-browser
+for page in "" features/ download/; do
+  npx -y lighthouse@12.8.2 "https://tmplayer.org/$page" --quiet \
+    --chrome-flags="--headless=new --no-sandbox --disable-gpu" \
+    --form-factor=mobile --output=json --output-path="lh-${page%/}-mobile.json"
+  # desktop: the same with --preset=desktop
+done
+```
+
+Run them one at a time (in parallel they slow each other down), read the failing audits out of
+the JSON, and keep the reports out of the repository. Things to know when reading them:
+
+- Each run spends GitHub API calls (60 an hour per address). Once they run out the download page
+  falls back to `latest.json` and logs a 403, so its numbers stop being comparable; check
+  `curl -s https://api.github.com/rate_limit` first. Locally `/_vercel/insights/script.js` is a
+  404, which costs Best Practices a few points that the live site does not lose.
+- "Improve image delivery" compares a file with its CSS size, ignoring the screen's pixel ratio.
+  The srcset is right when a copy just covers the drawn width times the ratio (Lighthouse's phone
+  is 412 px at 1.75x); no copy is made smaller than that. Widths live in
+  `site/src/data/shot-widths.json`, the `sizes` in `site/src/components/shot-sizes.ts`, measured
+  from the built page, and new copies come from `scripts/site-shot-variants.py`.
+- A layout shift on `/download/` usually means something above the platform list changed after the
+  first paint: a font weight that is not preloaded (`Base.astro` preloads 400, 500 and 600), or a
+  note or link that app.js shows once GitHub answers. Draw such things at build time instead.
+- app.js must not read layout (`getBoundingClientRect`, `innerHeight`, `scrollY`) while the page is
+  being built: that is Lighthouse's forced reflow. Use an IntersectionObserver, or read after the
+  first paint (`requestAnimationFrame` then `setTimeout`).
+
+What the audit of 2026-10-18 found and fixed: screenshots cached for a day (now `?v=` and a year),
+phones sent copies one size too large (640, 1080, 160 and 600 px copies added, the hero's `sizes`
+tightened), app.js shipped with its comments (now minified at build, see `astro.config.mjs`), a
+forced reflow in the scroll reveal and the parallax, the home page asking GitHub for the release
+list (it reads `latest.json` now; the star count waits for idle), and a 0.13 layout shift on the
+download page (font 500 preload, macOS card and note drawn from `latest.json`). Left on purpose:
+the stylesheet stays one shared, render blocking, immutable file (about 14 KB compressed; inlining
+it would add that to every page and every navigation, and the largest paint is the hero picture
+anyway), its unused rules on any one page are the cost of sharing it, and the Obtainium badge PNG
+stays as it is (no re-encoding images). Scores, local build, mobile and desktop:
+
+| Page | Before | After |
+| --- | --- | --- |
+| Home, mobile | 99 (LCP 2.0 s, CLS 0) | 100 (LCP 1.7 s, CLS 0) |
+| Home, desktop | 99 (LCP 0.7 s) | 100 (LCP 0.5 s) |
+| Features, mobile | 99 (TBT 113 ms) | 100 (TBT 60 ms) |
+| Features, desktop | 100 | 100 |
+| Download, mobile | 97 (CLS 0.033) | 100 (CLS 0.002) |
+| Download, desktop | 99 (CLS 0.074) | 100 (CLS 0.002) |
+
+Performance, the median of three interleaved runs; Accessibility and SEO were 100 throughout.
+The live site before the change scored 93 / 99 / 91 on mobile (home, features, download, the
+download page with a 0.125 layout shift) and 99 to 100 on desktop.
 
 ## Branches and worktrees
 

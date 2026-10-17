@@ -110,7 +110,11 @@ const strings = lang.path ? jsStrings(lang) : {};
 <link rel="apple-touch-icon" href="/icon-512.png">
 <link rel="manifest" href="/site.webmanifest">
 </Fragment>}
+{/* The three weights every page sets above the fold: 500 is the header's links and the download
+    page's jump row, and arriving after the first paint it rewrapped that row and pushed the page
+    down (a 0.13 layout shift on a phone). 700 is only the star count, which comes later anyway. */}
 <link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/poppins-500.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/poppins-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href={cssUrl}>
 {feed && <link rel="alternate" type="application/rss+xml" title="TMPlayer releases" href="/changelog/feed.xml">}

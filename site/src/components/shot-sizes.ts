@@ -21,7 +21,9 @@ export const SHOT_STEP = '(min-width: 450px) 360px, calc(100vw - 88px)';
 
 // The home page's showcase: the television takes the hero's width up to 1056 px, and the phone
 // leaning on it is a fifth of that on a narrow screen and a sixth on a wide one (`.showcase`).
-export const SHOT_HERO_TV = '(min-width: 1180px) 1056px, 90vw';
+// Under 600 px the television is the viewport less 48 px of gutter and bezel, measured: 90vw there
+// asked a 412 px phone at 1.75x for 649 px, one past the 640 px copy, and it was sent the 960.
+export const SHOT_HERO_TV = '(min-width: 1180px) 1056px, (min-width: 600px) 90vw, calc(100vw - 48px)';
 export const SHOT_HERO_PHONE = '(min-width: 1180px) 176px, (min-width: 701px) 15vw, 19vw';
 
 // A screenshot in a drawn device (DeviceShot, TourShot): the phone is held narrow, everything else

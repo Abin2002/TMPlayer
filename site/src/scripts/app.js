@@ -148,16 +148,27 @@ var tmT = (function () {
 
   /* The visitor's platform goes first and gets the filled button. Done before
      the request, so the page is in its final order while GitHub is answering.
-     macOS waits for the answer instead: its card is in the markup hidden, and
-     only a release with a DMG shows it (see showMac). */
+     macOS goes first now too when the build drew its card (latest.json named a
+     DMG); otherwise it waits for the answer, and only a release with a DMG
+     shows the card (see showMac). */
   function arrange() {
     if (!document.getElementById('platforms')) { return; }
+    /* The filled button is drawn from the first paint (js-only), so it goes again here where
+       there is no file of this system's to point it at. A Mac keeps it until the release says. */
+    if (os !== 'macos' && !(os && document.getElementById(os))) { el.osBtn.hidden = true; }
     if (os === 'ios') {
       el.osNote.textContent = tmT('os_note_ios_only', 'There is no iPhone or iPad version. The files below are for Android phones, Android TV and computers.');
       el.osNote.hidden = false;
       return;
     }
-    if (os === 'macos') { return; }
+    /* A Mac waits for the release only when the build did not know of a DMG: when it did, the
+       card is in the page already, and the note and the first place are given now rather than
+       when GitHub answers, which pushed the whole list down by the note's height. */
+    if (os === 'macos') {
+      var mac = document.getElementById('macos');
+      if (mac && !mac.hidden) { macNote(true); putFirst('macos'); }
+      return;
+    }
     putFirst(os);
   }
 
@@ -188,11 +199,16 @@ var tmT = (function () {
       Array.prototype.forEach.call(document.querySelectorAll('[data-mac-jump]'), function (a) { a.hidden = false; });
     }
     if (os !== 'macos' || !document.getElementById('platforms')) { return; }
+    if (!has) { el.osBtn.hidden = true; }
+    macNote(has);
+    if (has && card.className.indexOf('is-yours') < 0) { putFirst('macos'); }
+  }
+
+  function macNote(has) {
     el.osNote.textContent = has
       ? tmT('os_note_mac_preview', 'The macOS version is a preview for Macs with Apple Silicon (M1 and later) and macOS 26 or newer. It does not run on Intel Macs.')
       : tmT('os_note_mac', 'There is no macOS version. Everything below is for Android, Windows and Linux.');
     el.osNote.hidden = false;
-    if (has && card.className.indexOf('is-yours') < 0) { putFirst('macos'); }
   }
 
   /* ---------- small helpers ---------- */
@@ -508,18 +524,22 @@ var tmT = (function () {
     };
   }
 
+  function feed(otherwise) {
+    fetch('/latest.json', { cache: 'no-cache' }).then(function (res) {
+      if (!res.ok) { throw new Error('feed-' + res.status); }
+      return res.json();
+    }).then(function (data) {
+      var release = fromFeed(data);
+      if (!release) { throw new Error('feed-shape'); }
+      renderLatest(release);
+    }).catch(function () {
+      otherwise();
+    });
+  }
+
   function fail(reason) {
     if (typeof fetch === 'function') {
-      fetch('/latest.json', { cache: 'no-cache' }).then(function (res) {
-        if (!res.ok) { throw new Error('feed-' + res.status); }
-        return res.json();
-      }).then(function (feed) {
-        var release = fromFeed(feed);
-        if (!release) { throw new Error('feed-shape'); }
-        renderLatest(release);
-      }).catch(function () {
-        showFailure(reason);
-      });
+      feed(function () { showFailure(reason); });
       return;
     }
     showFailure(reason);
@@ -616,7 +636,15 @@ var tmT = (function () {
   }
 
   arrange();
-  load();
+  /* The home page has only the hero button, which needs the version and the file, and the feed
+     has both from this domain. GitHub's list (download counts, older releases) is for the
+     download page; asking it here put a second origin and a second of waiting into every home
+     page load. The API stays the fallback for a feed that cannot be read. */
+  if (!document.getElementById('release-card') && typeof fetch === 'function') {
+    feed(load);
+  } else {
+    load();
+  }
 })();
 
 /* Theme control.
@@ -793,26 +821,33 @@ var tmT = (function () {
 
   /* Anything already on screen when the page loads is shown as it is, never hidden first: fading
      in what the reader can already see only delays the largest paint, which is what search
-     engines time. Only blocks further down wait for the scroll. */
-  var fold = window.innerHeight || document.documentElement.clientHeight;
-  Array.prototype.forEach.call(targets, function (node) {
-    if (node.getBoundingClientRect().top < fold) { node.className += ' is-in'; }
-  });
+     engines time. Only blocks further down wait for the scroll.
 
-  document.documentElement.className += ' reveal-ready';
-
-  var observer = new IntersectionObserver(function (entries) {
+     Which blocks those are is the first answer of an observer with no margin, not a measurement:
+     reading a box here, while the page is still being built, made the browser lay the whole page
+     out early just to answer (Lighthouse's forced reflow, up to 150 ms on a slow phone). The
+     observer answers after the browser's own layout, so a block off screen is hidden before
+     anyone can scroll to it, and a block on screen is never touched. */
+  var later = new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) {
       if (entry.isIntersecting) {
         entry.target.className += ' is-in';
-        observer.unobserve(entry.target);
+        later.unobserve(entry.target);
       }
     });
   }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
 
-  Array.prototype.forEach.call(targets, function (node) {
-    if (!/(^|\s)is-in(\s|$)/.test(node.className)) { observer.observe(node); }
+  var first = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      first.unobserve(entry.target);
+      if (!entry.isIntersecting) {
+        entry.target.className += ' reveal-wait';
+        later.observe(entry.target);
+      }
+    });
   });
+
+  Array.prototype.forEach.call(targets, function (node) { first.observe(node); });
 })();
 
 /* Top app bar and hero parallax. Both are decoration: the header still works
@@ -835,9 +870,10 @@ var tmT = (function () {
      Read live, that height put a step into the middle of a smooth scroll: the
      devices jumped, settled, and jumped back on the way up. It is refreshed
      when the width changes, which is a rotation or a real resize, and left
-     alone otherwise. */
-  var viewportW = window.innerWidth || 0;
-  var viewportH = window.innerHeight || 800;
+     alone otherwise. First read in the first frame, not while the page is
+     still being built (see the end of this function). */
+  var viewportW = -1;
+  var viewportH = 800;
 
   function measure() {
     var w = window.innerWidth || 0;
@@ -923,7 +959,15 @@ var tmT = (function () {
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', onScroll, { passive: true });
   }
-  frame();
+  /* The first pass waits until the browser has drawn the page once. Run here, while the page is
+     still being built, its reads of the scroll position and the showcase's box made the browser
+     lay everything out early (Lighthouse's forced reflow); after the first paint the layout is
+     already done and reading it costs nothing. A page opened at the top needs none of it. */
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(function () { setTimeout(frame, 0); });
+  } else {
+    setTimeout(frame, 0);
+  }
 })();
 
 /* Repository counts, for the star control in the header and the support band.
@@ -963,7 +1007,28 @@ var tmT = (function () {
     });
   }
 
-  (cached ? Promise.resolve(cached) : fetch(API, { headers: { 'Accept': 'application/vnd.github+json' } }).then(function (res) {
+  /* The figures are decoration, so they wait until the page has loaded and the browser is idle,
+     and ask at low priority: on a slow phone the call to a second origin was in the page's
+     critical chain, ahead of things the reader came for. A count kept from earlier in the
+     session is shown at once. */
+  function whenIdle(run) {
+    var go = function () {
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(run, { timeout: 2000 });
+      } else {
+        setTimeout(run, 200);
+      }
+    };
+    if (document.readyState === 'complete') { go(); } else { window.addEventListener('load', go); }
+  }
+
+  function ask() {
+    return new Promise(whenIdle).then(function () {
+      return fetch(API, { headers: { 'Accept': 'application/vnd.github+json' }, priority: 'low' });
+    });
+  }
+
+  (cached ? Promise.resolve(cached) : ask().then(function (res) {
     if (!res.ok) { throw new Error('http-' + res.status); }
     return res.json();
   }).then(function (data) {

@@ -22,6 +22,7 @@ import StarCard from '../../../components/StarCard.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
+import latest from '../../../../public/latest.json';
 
 export const getStaticPaths = langPaths;
 const { lang } = Astro.props;
@@ -30,6 +31,11 @@ const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
 
 const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
+// Whether the release this build knows of (the update feed the release job writes) carries a DMG.
+// The macOS card and its jump link are drawn from that, so a page whose release has one does not
+// grow a link in the jump row once GitHub answers, which pushed the whole list down (a layout
+// shift Lighthouse scored at 0.125 on a phone). app.js still shows them if a newer release adds one.
+const hasMac = Boolean((latest.assets as Record<string, unknown>)['macos-arm64-dmg']);
 
 ---
 <Base page="download" title={t('download.download_tmplayer_for_android_tv')} description={t('download.download_tmplayer_free_the_apk')}>
@@ -60,10 +66,12 @@ const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
     <Fragment slot="title">{t('common.download')}{' '}<em>TMPlayer</em></Fragment>
     <Fragment slot="actions">
       {/*
-        The filled button is drawn by app.js once it knows which system this is, and only then:
-        with scripting off there is no guess to make, and the platform list below does the job.
+        The filled button is there only with scripting on (js-only), from the first paint, so the
+        page does not move when app.js names the system; app.js hides it again where it has no file
+        to offer (an iPhone, or a system it cannot tell). With scripting off there is no guess to
+        make, and the platform list below does the job.
       */}
-      <a class="btn btn-filled" id="os-download" href="#platforms" hidden>
+      <a class="btn btn-filled js-only" id="os-download" href="#platforms">
         <Icon name="download-btn" />
         <span id="os-download-label">{t('common.download')}</span>
       </a>
@@ -74,7 +82,7 @@ const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
       <a href="#android">{t('download.android_phone')}</a>
       <a href="#android-tv">Android TV</a>
       <a href="#windows">Windows</a>
-      <a href="#macos" data-mac-jump hidden>macOS</a>
+      <a href="#macos" data-mac-jump hidden={!hasMac}>macOS</a>
       <a href="#linux">Linux</a>
     </nav>
   </PageHead>
@@ -138,11 +146,12 @@ const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
           </Platform>
 
           {/*
-            The macOS card arrives with the first release that has a DMG. The site deploys before
-            that release does, so the card starts hidden and app.js shows it only once the latest
-            release carries a macos-arm64.dmg: until then it would offer a file that does not exist.
+            The macOS card arrives with the first release that has a DMG. The site can deploy before
+            that release does, so the card is hidden unless latest.json (hasMac) names a DMG, and
+            app.js shows it once the latest release carries a macos-arm64.dmg: until then it would
+            offer a file that does not exist.
           */}
-          <Platform id="macos" icon="laptop-panel" tone="play" title="macOS" req={t('download.macos_req')} computer hidden>
+          <Platform id="macos" icon="laptop-panel" tone="play" title="macOS" req={t('download.macos_req')} computer hidden={!hasMac}>
             <AbiRow asset="mac-dmg">
               <Fragment slot="name">DMG <span class="badge badge-quiet">{t('download.preview')}</span></Fragment>
               <T slot="note" k="download.mac_dmg_note"><em slot="em1">{t('download.mac_dmg_note__em1')}</em><em slot="em2">{t('download.mac_dmg_note__em2')}</em><em slot="em3">{t('download.mac_dmg_note__em3')}</em><em slot="em4">{t('download.mac_dmg_note__em4')}</em></T>

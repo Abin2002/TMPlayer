@@ -152,7 +152,10 @@ class Converter {
       }
       case 'img': {
         const alt = (n.attrs.alt ?? '').trim();
-        return alt && n.attrs.src ? `![${escape(alt)}](${this.abs(n.attrs.src)})` : '';
+        // The page's ?v=<hash> (src/lib/asset-version.ts) is for browser caches; the twin names the
+        // picture by its plain, stable URL.
+        const src = (n.attrs.src ?? '').replace(/\?v=[0-9a-f]+$/, '');
+        return alt && src ? `![${escape(alt)}](${this.abs(src)})` : '';
       }
       case 'a': {
         const label = this.tidy(inner()) || escape(n.attrs['aria-label'] ?? n.attrs.title ?? '');

@@ -2028,11 +2028,11 @@ kbd {
 
 /* ---------- Motion ---------- */
 
-.reveal-ready [data-reveal] {
+[data-reveal].reveal-wait {
   opacity: 0;
   transform: translate3d(0, 26px, 0);
 }
-.reveal-ready [data-reveal].is-in {
+[data-reveal].reveal-wait.is-in {
   opacity: 1;
   transform: none;
   transition: opacity 0.7s var(--ease-emphasised), transform 0.7s var(--ease-emphasised);
@@ -2113,7 +2113,7 @@ a.card:active,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .reveal-ready [data-reveal] { opacity: 1; transform: none; }
+  [data-reveal].reveal-wait { opacity: 1; transform: none; }
   .showcase .device-tv,
   .showcase .device-phone { transform: none; }
   .bg-blob, .scroll-cue { animation: none; }
