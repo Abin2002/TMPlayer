@@ -474,6 +474,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** The select key being held toward an unlock, or 0. */
     private var unlockHeldKey = 0
+
+    /** When the screen was locked, on the key events' clock: only a key pressed after it unlocks. */
+    private var lockedAt = 0L
     private val hideUnlockPill = Runnable { unlockPill?.animate()?.alpha(0f)?.setDuration(300)?.start() }
     private val unlockAfterHold = Runnable {
         unlockHeldKey = 0
@@ -2865,9 +2868,14 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         when (LockedKeys.kind(event.keyCode)) {
             LockedKeys.Kind.System -> return super.dispatchKeyEvent(event)
             LockedKeys.Kind.Unlock -> when (event.action) {
-                // The first down only: a key still held from the press that chose Lock repeats,
-                // and its repeats must not count as a fresh hold.
-                KeyEvent.ACTION_DOWN -> if (event.repeatCount == 0 && unlockHeldKey == 0) startUnlockHold(event.keyCode)
+                // A key pressed since the lock, judged by when it went down rather than by its
+                // first event: a key still held from the press that chose Lock went down before
+                // it and never counts, while a hold that began after it counts even when its first
+                // down never arrived. Locking with a tap leaves the window in touch mode, and
+                // Android spends the first Enter on leaving touch mode, so only the repeats come.
+                KeyEvent.ACTION_DOWN -> if (unlockHeldKey == 0 && event.downTime >= lockedAt) {
+                    startUnlockHold(event.keyCode, heldMs = event.eventTime - event.downTime)
+                }
                 KeyEvent.ACTION_UP -> if (event.keyCode == unlockHeldKey) stopUnlockHold()
             }
             LockedKeys.Kind.Ignored -> if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) showUnlockPill()
@@ -3710,6 +3718,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private fun lockScreen() {
         if (locked) return
         locked = true
+        lockedAt = android.os.SystemClock.uptimeMillis()
         controls?.hideAnimated()
         feedback?.clear()
         requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LOCKED
@@ -3788,22 +3797,29 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         if (unlockHeldKey == 0) pill.postDelayed(hideUnlockPill, UNLOCK_PILL_MS)
     }
 
-    /** A select key went down on the locked screen: unlock if it stays down for [LockedKeys.HOLD_MS]. */
-    private fun startUnlockHold(keyCode: Int) {
+    /**
+     * A select key went down on the locked screen: unlock if it stays down for [LockedKeys.HOLD_MS].
+     * [heldMs] is how long it has been down already, when its first down was not the event that
+     * started this.
+     */
+    private fun startUnlockHold(keyCode: Int, heldMs: Long = 0L) {
         val pill = unlockPill ?: return
+        val already = heldMs.coerceIn(0L, LockedKeys.HOLD_MS)
+        val left = LockedKeys.HOLD_MS - already
         unlockHeldKey = keyCode
         showUnlockPill()
         unlockText?.text = L.playerKeepHoldingToUnlock
         unlockProgress?.let { bar ->
             bar.visibility = View.VISIBLE
-            bar.progress = 0
-            bar.tag = android.animation.ObjectAnimator.ofInt(bar, "progress", 0, bar.max).apply {
-                duration = LockedKeys.HOLD_MS
+            val from = (bar.max * already / LockedKeys.HOLD_MS).toInt()
+            bar.progress = from
+            bar.tag = android.animation.ObjectAnimator.ofInt(bar, "progress", from, bar.max).apply {
+                duration = left
                 interpolator = android.view.animation.LinearInterpolator()
                 start()
             }
         }
-        pill.postDelayed(unlockAfterHold, LockedKeys.HOLD_MS)
+        pill.postDelayed(unlockAfterHold, left)
     }
 
     /** Let go before the hold was up: still locked, and the pill says how again. */
