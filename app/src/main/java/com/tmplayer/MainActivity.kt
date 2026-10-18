@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -1490,6 +1491,24 @@ private fun Root() {
             onUpdate = { showUpdate = true },
         )
 
+        // The television's top bar (experimental, TV_TOP_BAR) over Settings' own list and Downloads,
+        // as it is over the browser's pages; a Settings page, the PIN pad and About have none.
+        val tvBar = com.tmplayer.ui.browse.TV_TOP_BAR && FormFactor.isTv(context)
+        val tvBarShown = tvBar && (
+            screen is Screen.Downloads ||
+                (screen is Screen.Settings && settingsPage == null && appLock?.let { !it.pinSet || settingsUnlocked } == true)
+            )
+        val tvBarFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+        var tvBarFocused by remember { mutableStateOf(false) }
+        // Back on such a page: to the bar first, then from the bar to Home, the remote kept on the bar.
+        val tvBarBack: () -> Unit = {
+            if (tvBarFocused) {
+                railReturn = com.tmplayer.ui.browse.RailReturn.Settings
+                browseTo(BrowseSection.of(BrowseTab.Home))
+            } else {
+                runCatching { tvBarFocus.requestFocus() }
+            }
+        }
         val screens: @Composable (Screen) -> Unit = screens@{ current ->
         when (current) {
             is Screen.Chats -> {
@@ -1518,6 +1537,7 @@ private fun Root() {
                     onOpenSettings = openSettings,
                     onOpenDownloads = openDownloads,
                     returnToRail = railReturn,
+                    tvNav = if (tvBar) touchNav else null,
                     onReturnedToRail = { railReturn = null },
                     downloadCount = activeDownloads.size,
                     updateVersion = offeredUpdate,
@@ -1690,7 +1710,7 @@ private fun Root() {
                     if (downloadsCameFrom is Screen.Chats) railReturn = com.tmplayer.ui.browse.RailReturn.Downloads
                     screen = downloadsCameFrom
                 }
-                BackHandler(onBack = leaveDownloads)
+                BackHandler(onBack = { if (tvBarShown) tvBarBack() else leaveDownloads() })
                 // Keyed on the ask, so a second "Not enough space" while the page is up opens the
                 // sheet again rather than finding it already spent.
                 key(downloadsFreeUp) {
@@ -1717,7 +1737,7 @@ private fun Root() {
                     if (settingsCameFrom is Screen.Chats) railReturn = com.tmplayer.ui.browse.RailReturn.Settings
                     screen = settingsCameFrom
                 }
-                BackHandler(onBack = leaveSettings)
+                BackHandler(onBack = { if (tvBarShown) tvBarBack() else leaveSettings() })
                 val lock = appLock
                 // With no PIN there is nothing to ask, and a PIN set from inside Settings must not
                 // lock the viewer out of the page they set it on.
@@ -1771,7 +1791,31 @@ private fun Root() {
         }
 
         if (FormFactor.isTv(context)) {
-            screens(screen)
+            com.tmplayer.ui.browse.TvBarFrame(
+                shown = tvBarShown,
+                bar = {
+                    // A tab picked here lands in the browser with the remote still on the bar.
+                    val stayOnBar = { railReturn = com.tmplayer.ui.browse.RailReturn.Settings }
+                    com.tmplayer.ui.browse.TvTopBar(
+                        nav = touchNav,
+                        current = if (screen is Screen.Settings) com.tmplayer.ui.browse.TvBarTab.Settings else null,
+                        inProfile = screen is Screen.Downloads,
+                        searchOpen = false,
+                        onHome = { stayOnBar(); touchNav.onHome() },
+                        onChats = { stayOnBar(); touchNav.onChats() },
+                        onSettings = openSettings,
+                        onSearch = {
+                            com.tmplayer.ui.browse.TvBarSignals.searchAsked.value = true
+                            screen = Screen.Chats
+                        },
+                        beforeProfile = stayOnBar,
+                        onRefresh = null,
+                        currentFocus = tvBarFocus,
+                        overArt = false,
+                        modifier = Modifier.onFocusChanged { tvBarFocused = it.hasFocus },
+                    )
+                },
+            ) { screens(screen) }
         } else {
             // The phone: one floating bar over every page it belongs to, and the pages changing
             // under it the way Home and Chats do (see PhoneBrowse), each keeping its scroll.

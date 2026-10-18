@@ -155,6 +155,8 @@ internal fun HomePane(
      * the rows. Null on a phone, whose heading is the app bar.
      */
     tvHeader: (@Composable (onArt: Boolean) -> Unit)? = null,
+    /** Asked before Home takes the remote for its first row: not while the TV top bar holds it. */
+    mayTakeFocus: () -> Boolean = { true },
 ) {
     val s = LocalStrings.current
     val touch = isTouch()
@@ -186,6 +188,11 @@ internal fun HomePane(
     val listState = rememberLazyListState()
     // Home pressed again on the bar: back to the top, the featured carousel whole.
     ScrollToTopOnReselect(TouchDestination.Home) { animate -> listState.toTop(animate) }
+    // Back from Home's rows to the TV top bar: the same, as Home looks when it opens.
+    if (!touch && TV_TOP_BAR) {
+        val still = com.tmplayer.ui.theme.rememberReducedMotion() || com.tmplayer.ui.theme.Motion.reduced
+        LaunchedEffect(listState, still) { TvBarSignals.homeToTop.collect { listState.toTop(!still) } }
+    }
     // A show's card on the TV home screen asked for its page: opened once the show is in the rows.
     val showAsk by HomeLaunch.show.collectAsState()
     // Not before this window has focus: the launcher is still on top while the app comes up, and a
@@ -397,6 +404,11 @@ internal fun HomePane(
                                     LaunchedEffect(key) { onArtWanted(record) }
                                     val item = art[key] ?: remember(record) { record.toMediaItem() }
                                     val chat = record.chatTitle.ifEmpty { chatTitle(record.chatId) }
+                                    InfoTile(
+                                        title = SeriesShelf.tileTitle(item),
+                                        facts = infoFacts(chat, item, left = record.remainingMs),
+                                        artHeight = continueWidth(touch) * 9f / 16f,
+                                    ) {
                                     VideoTile(
                                         title = "",
                                         showTitle = false,
@@ -411,12 +423,18 @@ internal fun HomePane(
                                     ) {
                                         ContinueCardArt(record, item, Modifier.fillMaxSize())
                                     }
+                                    }
                                 }
                             }
                             is HomeRow.WatchLater -> TileRow(start, end, upToSeeAll) {
                                 items(row.records, key = { "l-${it.key}" }) { record ->
                                     LaunchedEffect(record.key) { onLaterArtWanted(record) }
                                     val item = art[record.key] ?: remember(record) { record.toMediaItem() }
+                                    InfoTile(
+                                        title = SeriesShelf.tileTitle(item),
+                                        facts = infoFacts(record.chatTitle.ifEmpty { chatTitle(record.chatId) }, item),
+                                        artHeight = wideWidth(touch) * 9f / 16f,
+                                    ) {
                                     MediaCard(
                                         item = item,
                                         watched = watch.point(item),
@@ -428,6 +446,7 @@ internal fun HomePane(
                                         modifier = Modifier.width(wideWidth(touch))
                                             .then(if (isFirst && record === row.records.first()) Modifier.focusRequester(first) else Modifier),
                                     )
+                                    }
                                 }
                             }
                             is HomeRow.NewEpisodes -> TileRow(start, end, upToSeeAll) {
@@ -437,6 +456,11 @@ internal fun HomePane(
                                     // The show's name, then which episode: the file name would say the
                                     // same less readably. Under it Telegram's facts, as on every other
                                     // row; the New badge on the art says it is new.
+                                    InfoTile(
+                                        title = if (episode.show.isBlank()) episode.code else "${episode.show}  ·  ${episode.code}",
+                                        facts = infoFacts(chat, item),
+                                        artHeight = wideWidth(touch) * 9f / 16f,
+                                    ) {
                                     MediaCard(
                                         item = item,
                                         watched = null,
@@ -450,6 +474,7 @@ internal fun HomePane(
                                         modifier = Modifier.width(wideWidth(touch))
                                             .then(if (isFirst && episode === row.episodes.first()) Modifier.focusRequester(first) else Modifier),
                                     )
+                                    }
                                 }
                             }
                             is HomeRow.Chat -> ShelfRows(row.entries, watch, touch, isFirst, first, { row.title }, onPlay, onHoldMedia, start, end, upToSeeAll) { opened.open(it) }
@@ -496,7 +521,7 @@ internal fun HomePane(
         is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> true
     }
     LaunchedEffect(firstKey, firstReady) {
-        if (!touch && firstReady) {
+        if (!touch && firstReady && mayTakeFocus()) {
             runCatching { first.requestFocus() }
             // The focused row asks to be brought into view with room round it, which scrolled the
             // carousel above it half away; Home opens at its top, the carousel whole over the row.
@@ -558,9 +583,15 @@ private fun LazyListScope.entries(
 ) {
     items(entries, key = { it.key }, contentType = { if (poster) "poster-${it::class.simpleName}" else it::class }) { entry ->
         val focus = if (entry === lead) Modifier.focusRequester(first) else Modifier
-        val modifier = Modifier.width(if (poster) posterWidth(touch) else wideWidth(touch)).then(focus)
+        val width = if (poster) posterWidth(touch) else wideWidth(touch)
+        val modifier = Modifier.width(width).then(focus)
+        val artHeight = if (poster) width * 1.5f else width * 9f / 16f
         when (entry) {
-            is ShelfEntry.File -> MediaCard(
+            is ShelfEntry.File -> InfoTile(
+                title = SeriesShelf.tileTitle(entry.item),
+                facts = infoFacts(chatTitle(entry.item.chatId), entry.item),
+                artHeight = artHeight,
+            ) { MediaCard(
                 item = entry.item,
                 watched = watch.point(entry.item),
                 finished = watch.finished(entry.item),
@@ -570,16 +601,26 @@ private fun LazyListScope.entries(
                 dense = touch,
                 poster = poster,
                 modifier = modifier,
-            )
-            is ShelfEntry.Show -> SeriesCard(
-                series = entry.series,
-                progress = remember(entry.series, watch) { watch.progress(entry.series) },
-                fresh = remember(entry.series, watch) { watch.newEpisodes(entry.series) > 0 },
-                onClick = { onOpenSeries(entry.series) },
-                dense = touch,
-                poster = poster,
-                modifier = modifier,
-            )
+            ) }
+            is ShelfEntry.Show -> {
+                val progress = remember(entry.series, watch) { watch.progress(entry.series) }
+                InfoTile(
+                    title = entry.series.title,
+                    facts = listOfNotNull(seriesSummary(entry.series), seriesProgressLine(progress), chatTitle(entry.series.cover.chatId).ifBlank { null })
+                        .joinToString("  ·  "),
+                    artHeight = artHeight,
+                ) {
+                    SeriesCard(
+                        series = entry.series,
+                        progress = progress,
+                        fresh = remember(entry.series, watch) { watch.newEpisodes(entry.series) > 0 },
+                        onClick = { onOpenSeries(entry.series) },
+                        dense = touch,
+                        poster = poster,
+                        modifier = modifier,
+                    )
+                }
+            }
         }
     }
 }
@@ -596,7 +637,14 @@ private fun TileRow(
         // On a television the tiles fade out over the margins rather than being cut off at the
         // rail, and the tile the remote moves to stays inside them.
         val row = rememberLazyListState()
-        WithinMargins(start, end) {
+        // Under the TV top bar the remote's tile stands at one place, the start of the row, and
+        // the row slides under it; otherwise the row moves only as far as the margins ask.
+        val keep: @Composable (@Composable () -> Unit) -> Unit = if (TV_TOP_BAR) {
+            { body -> AnchoredAtStart(start, body) }
+        } else {
+            { body -> WithinMargins(start, end, body) }
+        }
+        keep {
             LazyRow(
                 state = row,
                 // Coming back down into a row lands on the tile it was left on, not whichever is nearest.
@@ -845,3 +893,95 @@ private fun rememberFeatured(recent: HomeRow.Recent?): List<com.tmplayer.data.Fe
 
 /** How long the carousel waits for its ranked order before showing the picks as they came. */
 private const val RANK_WAIT_MS = 1_200L
+
+
+/**
+ * Under the TV top bar, a Home row's tile grows into an info tile while the remote is on it: the
+ * card stays its size and a panel opens beside its picture with the whole name and a line of
+ * facts, so the neighbours stay small and the row reads at a glance. Nothing plays: a preview
+ * would be a Telegram download. Elsewhere (the phone, the rail) this is the card alone.
+ */
+@Composable
+private fun InfoTile(title: String, facts: String, artHeight: Dp, card: @Composable () -> Unit) {
+    if (isTouch() || !TV_TOP_BAR) {
+        card()
+        return
+    }
+    var focused by remember { mutableStateOf(false) }
+    val still = com.tmplayer.ui.theme.rememberReducedMotion() || com.tmplayer.ui.theme.Motion.reduced
+    val spec = com.tmplayer.ui.theme.Motion.standard<androidx.compose.ui.unit.IntSize>(if (still) 0 else com.tmplayer.ui.theme.Motion.Normal)
+    val fade = com.tmplayer.ui.theme.Motion.standard<Float>(if (still) 0 else com.tmplayer.ui.theme.Motion.Fast)
+    Row(Modifier.onFocusChanged { focused = it.hasFocus }, verticalAlignment = Alignment.Top) {
+        card()
+        androidx.compose.animation.AnimatedVisibility(
+            visible = focused,
+            enter = androidx.compose.animation.expandHorizontally(spec, expandFrom = Alignment.Start) + androidx.compose.animation.fadeIn(fade),
+            exit = androidx.compose.animation.shrinkHorizontally(spec, shrinkTowards = Alignment.Start) + androidx.compose.animation.fadeOut(fade),
+        ) {
+            Column(
+                Modifier
+                    .padding(start = INFO_GAP)
+                    .width(INFO_WIDTH)
+                    .height(artHeight)
+                    .clip(RoundedCornerShape(Corner.Medium))
+                    .background(Tone.surfaceHigh)
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = Tone.text,
+                    maxLines = if (artHeight > 160.dp) 4 else 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (facts.isNotBlank()) {
+                    Text(
+                        facts,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Tone.muted,
+                        maxLines = if (artHeight > 160.dp) 4 else 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** The panel beside a focused Home tile under the TV top bar. */
+private val INFO_WIDTH = 236.dp
+
+/** Clear of the card's picture as it grows by [com.tmplayer.ui.theme.Motion.FocusScale]. */
+private val INFO_GAP = 12.dp
+
+/** The info tile's line of facts: how much is left, how long, its quality, its size, its chat. */
+@Composable
+private fun infoFacts(chat: String, item: MediaItem, left: Long = 0L): String {
+    val s = LocalStrings.current
+    return remember(chat, item, left, s) {
+        listOfNotNull(
+            left.takeIf { it > 0 }?.let { s.browseTimeLeft(s.formatter.clock(it)) },
+            item.durationSec.takeIf { it > 0 }?.let { s.formatter.duration(it.toLong()) },
+            item.qualityTags.firstOrNull(),
+            item.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
+            chat.ifBlank { null },
+        ).joinToString("  ·  ")
+    }
+}
+
+/**
+ * The focused tile's leading edge held at [start] of the row, so the remote stays at one place on
+ * the screen and the row slides under it, as a television's home screen does.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun AnchoredAtStart(start: Dp, content: @Composable () -> Unit) {
+    val startPx = with(LocalDensity.current) { start.toPx() }
+    val spec = remember(startPx) {
+        object : androidx.compose.foundation.gestures.BringIntoViewSpec {
+            override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float = offset - startPx
+        }
+    }
+    CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides spec, content = content)
+}

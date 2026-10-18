@@ -265,7 +265,10 @@ private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String, start
         EdgeBackdrop(
             source,
             Modifier.fillMaxSize(),
-            cornerShade = with(LocalDensity.current) { (headerFade * HEADER_FADE_REACH).toDp() },
+            // Under the top bar the picture melts into the page's ground towards the top instead,
+            // across the whole width, so every item of the bar reads over it in every theme.
+            cornerShade = if (TV_TOP_BAR) 0.dp else with(LocalDensity.current) { (headerFade * HEADER_FADE_REACH).toDp() },
+            topFade = if (TV_TOP_BAR) with(LocalDensity.current) { (headerFade * BAR_FADE_REACH).toDp() } else 0.dp,
             onPictured = HomeFirstPaint::markReady,
         )
         Column(
@@ -378,4 +381,7 @@ private val SEGMENTS_ROOM = 28.dp
 
 /** How far the glow behind the clock and the account reaches, as a share of the heading's height. */
 private const val HEADER_FADE_REACH = 1.5f
+
+/** How far down the picture fades in from the top under the TV top bar, as a share of the bar's height. */
+private const val BAR_FADE_REACH = 1.7f
 

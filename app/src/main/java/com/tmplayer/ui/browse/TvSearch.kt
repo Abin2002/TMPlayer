@@ -131,7 +131,15 @@ internal fun TvSearchScreen(
     var focusedGroup by remember { mutableStateOf<ResultGroup?>(null) }
     val grid = rememberLazyGridState()
 
-    Column(Modifier.fillMaxSize().padding(start = 28.dp, top = Tv.SafeV, bottom = Tv.SafeV)) {
+    Column(
+        Modifier.fillMaxSize().padding(
+            start = if (TV_TOP_BAR) TV_START else 28.dp,
+            // Under the top bar, which names the page and carries the clock, the field leads.
+            top = if (TV_TOP_BAR) 4.dp else Tv.SafeV,
+            bottom = Tv.SafeV,
+        ),
+    ) {
+        if (!TV_TOP_BAR) {
         // The heading every other rail page opens with (TabHeading): its name and a line under
         // it on the left, the clock and the account on the right. Without it this was the one
         // page of the rail that started with a control, with no clock, a step higher up.
@@ -152,6 +160,7 @@ internal fun TvSearchScreen(
             }
             Spacer(Modifier.width(20.dp))
             TvStatusCluster(account)
+        }
         }
         Row(
             Modifier.padding(end = Tv.FocusClearance),

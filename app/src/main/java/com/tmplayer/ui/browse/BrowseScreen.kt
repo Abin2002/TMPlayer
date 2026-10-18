@@ -78,6 +78,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -195,7 +196,7 @@ internal fun countLabel(section: BrowseSection, count: Int): String =
 // BrowseTab, BrowseSection, browseSections and filterChats live in :ui (BrowseSections.kt).
 
 @Composable
-fun BrowseScreen(
+internal fun BrowseScreen(
     state: UiState<BrowseData>,
     /**
      * The header, delivered separately from [state] so a cold start can draw the name and face
@@ -228,6 +229,11 @@ fun BrowseScreen(
     returnToRail: RailReturn? = null,
     /** Told once [returnToRail] has been honoured, so it is not honoured again. */
     onReturnedToRail: () -> Unit = {},
+    /**
+     * What the television's top bar (TV_TOP_BAR) shows and does, the phone's bar's own set; null
+     * keeps the side rail.
+     */
+    tvNav: TouchNav? = null,
     /** How many downloads are running, for the badge on that row of the drawer and the rail. */
     downloadCount: Int = 0,
     onToggleFavorite: (ChatSummary) -> Unit = {},
@@ -408,7 +414,9 @@ fun BrowseScreen(
     // While a chip has the remote's focus, a list that changes under it (because OK picked that
     // chip) must not pull focus down to its first row: the viewer is still choosing.
     var chipsFocused by remember { mutableStateOf(false) }
-    val listMayTakeFocus: () -> Boolean = { !chipsFocused }
+    // Nor while the remote is on the television's top bar: picking a page there keeps it there.
+    var tvBarHasFocus by remember { mutableStateOf(false) }
+    val listMayTakeFocus: () -> Boolean = { !chipsFocused && !tvBarHasFocus }
     // The Chats page's chips: the order, Telegram's own filters, then each folder, which is where
     // the folders went when they left the sidebar. A folder chip is a section of its own, so the
     // folder picked is remembered the way the page is.
@@ -518,6 +526,7 @@ fun BrowseScreen(
                                 onOpenSection = { onPickTab(it); query = "" },
                                 onOpenWatchLater = openLater,
                                 onLaterArtWanted = onHomeLaterArtWanted,
+                                mayTakeFocus = listMayTakeFocus,
                                 onSeeWatchLater = {
                                     pickHistory(HistoryTab.WatchLater)
                                     onPickTab(BrowseSection.of(BrowseTab.History))
@@ -854,6 +863,130 @@ fun BrowseScreen(
             onResume = openResume,
             onMessage = onMessage,
         )
+    } else if (TV_TOP_BAR && tvNav != null) {
+        // The search across every chat: the bar's Search, and the remote's search key.
+        var tvSearchOpen by rememberSaveable { mutableStateOf(false) }
+        val barFocus = remember { FocusRequester() }
+        var barRefocus by remember { mutableIntStateOf(0) }
+        LaunchedEffect(barRefocus) {
+            if (barRefocus == 0) return@LaunchedEffect
+            withFrameNanos { }
+            runCatching { barFocus.requestFocus() }
+        }
+        val homeShown = !tvSearchOpen && tab.isHome
+        // Back anywhere in a page goes up to the bar first, on the page's own item, and Home
+        // goes back to its top as it does; only Back on Home's bar asks to leave the app.
+        BackHandler(enabled = !tvBarHasFocus) {
+            if (homeShown) TvBarSignals.homeToTop.tryEmit(Unit)
+            runCatching { barFocus.requestFocus() }
+        }
+        // Back on the bar of any other page: Home, the remote still on the bar.
+        BackHandler(enabled = tvBarHasFocus && !homeShown) {
+            tvSearchOpen = false
+            onPickTab(BrowseSection.of(BrowseTab.Home))
+            query = ""
+            barRefocus++
+        }
+        // "Search all chats" from a chat or the list's filter: the search page, on those words.
+        val asked by SearchRequest.pending.collectAsState()
+        LaunchedEffect(asked) {
+            val text = SearchRequest.take() ?: return@LaunchedEffect
+            search.submit(text)
+            tvSearchOpen = true
+        }
+        // Search picked on the bar over Settings or Downloads.
+        val barAsked by TvBarSignals.searchAsked.collectAsState()
+        LaunchedEffect(barAsked) {
+            if (!barAsked) return@LaunchedEffect
+            tvSearchOpen = true
+            TvBarSignals.searchAsked.value = false
+        }
+        // Back from Settings or Downloads, or a tab picked on their bar: the remote stays on the
+        // bar, held there against the page taking focus as it loads, until a key is pressed.
+        val pressedSinceArrival = remember { booleanArrayOf(false) }
+        LaunchedEffect(returnToRail) {
+            if (returnToRail == null) return@LaunchedEffect
+            repeat(RETURN_HOLD_FRAMES) {
+                if (pressedSinceArrival[0]) return@repeat
+                withFrameNanos { }
+                if (!pressedSinceArrival[0]) runCatching { barFocus.requestFocus() }
+            }
+            onReturnedToRail()
+        }
+        Box(
+            Modifier.fillMaxSize().onPreviewKeyEvent { event ->
+                if (event.type == KeyEventType.KeyDown) pressedSinceArrival[0] = true
+                if (event.type == KeyEventType.KeyDown && event.key == Key.Search) {
+                    tvSearchOpen = true
+                    true
+                } else {
+                    false
+                }
+            },
+        ) {
+            // Home runs up under the bar, its carousel's picture with it; every other page, and
+            // Home while it loads, starts below the bar.
+            val underBar = homeShown && state is UiState.Content
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .padding(top = if (underBar) 0.dp else TV_BAR_HEIGHT, end = if (homeShown) 0.dp else Tv.SafeH)
+                    .keepsDownFocus(),
+            ) {
+                if (tvSearchOpen) {
+                    TvSearchPage(
+                        search = search,
+                        state = searchState,
+                        chats = (state as? UiState.Content)?.value?.chats.orEmpty(),
+                        favourites = favorites,
+                        homeRows = homeRows,
+                        watch = homeWatch,
+                        onOpenChat = onOpenChat,
+                        onOpenMedia = openMedia,
+                        onPlayMedia = onPlayMedia,
+                        onMessage = onMessage,
+                        account = (state as? UiState.Content)?.value?.account ?: account,
+                    )
+                } else {
+                    pane(tab)
+                }
+            }
+            TvTopBar(
+                nav = tvNav,
+                current = when {
+                    tab.isHome -> TvBarTab.Home
+                    tab.onChatsPage -> TvBarTab.Chats
+                    else -> null
+                },
+                inProfile = !tab.isHome && !tab.onChatsPage,
+                searchOpen = tvSearchOpen,
+                onHome = {
+                    tvSearchOpen = false
+                    onPickTab(BrowseSection.of(BrowseTab.Home))
+                    query = ""
+                },
+                onChats = {
+                    tvSearchOpen = false
+                    query = ""
+                    tvNav.onChats()
+                },
+                onSettings = onOpenSettings,
+                onSearch = { tvSearchOpen = true },
+                beforeProfile = {
+                    tvSearchOpen = false
+                    query = ""
+                },
+                onRefresh = when {
+                    tvSearchOpen -> null
+                    tab.isHome -> onRefreshHome
+                    tab.listsVideos -> null
+                    else -> onRefresh
+                },
+                currentFocus = barFocus,
+                overArt = homeShown,
+                modifier = Modifier.onFocusChanged { tvBarHasFocus = it.hasFocus },
+            )
+        }
     } else {
         // The search across every chat: the rail's first item, and the remote's search key.
         var tvSearchOpen by rememberSaveable { mutableStateOf(false) }
@@ -3149,6 +3282,16 @@ private val TOUCH_AVATAR = Avatar.List
  * the foot of the rail, and Up from the rail's first heading landed in the search field. At an end
  * the remote now stays put, as it does at the end of any list.
  */
+/**
+ * The page under the television's top bar: Up may leave it for the bar, Down never leaves it, and
+ * coming back down from the bar lands on the item the remote left.
+ */
+private fun Modifier.keepsDownFocus(): Modifier = focusProperties {
+    onExit = {
+        if (requestedFocusDirection == FocusDirection.Down) cancelFocusChange()
+    }
+}.focusRestorer()
+
 private fun Modifier.keepsVerticalFocus(): Modifier = focusProperties {
     onExit = {
         if (requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down) {

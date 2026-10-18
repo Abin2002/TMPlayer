@@ -13,9 +13,9 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -455,11 +456,9 @@ internal fun TvBarFrame(
     bar: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    Box(Modifier.fillMaxWidth()) {
-        Box(Modifier.padding(top = if (shown) TV_BAR_HEIGHT - Tv.SafeV else 0.dp)) { content() }
+    Box(Modifier.fillMaxSize()) {
+        // Coming back down from the bar lands on the item the remote left.
+        Box(Modifier.fillMaxSize().padding(top = if (shown) TV_BAR_HEIGHT - Tv.SafeV else 0.dp).focusRestorer()) { content() }
         if (shown) bar()
     }
 }
-
-@Suppress("unused")
-private val keepColumn: @Composable () -> Unit = { Column {} }
