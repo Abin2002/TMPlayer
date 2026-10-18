@@ -116,6 +116,7 @@ import androidx.compose.ui.draw.drawBehind
  * was left on. Home opens on the first tile. A row that leaves videos out offers "See all" on its
  * heading.
  */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 internal fun HomePane(
     rows: List<HomeRow>,
@@ -283,7 +284,16 @@ internal fun HomePane(
         val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
         val rowStep = with(density) { TV_DOWN_STEP.toPx() }
         val headerOnArt = !touch && carousel && tvHeader != null
-        CompositionLocalProvider(LocalOnlineArt provides true) {
+        // Under the TV top bar, Home's own list keeps still while the remote stays in its upper part
+        // (the carousel's Play, the first row): the television's default moved every focused item
+        // to a fixed height, which scrolled Home down and back each time Play took the remote.
+        val barPx = with(density) { TV_BAR_HEIGHT.toPx() }
+        val calm = remember(barPx) { calmVertical(barPx) }
+        val platformSpec = androidx.compose.foundation.gestures.LocalBringIntoViewSpec.current
+        CompositionLocalProvider(
+            LocalOnlineArt provides true,
+            androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides if (!touch && TV_TOP_BAR) calm else platformSpec,
+        ) {
           Column(Modifier.fillMaxSize()) {
             if (!touch && !headerOnArt) tvHeader?.invoke(false)
             LazyColumn(
@@ -1073,6 +1083,25 @@ private fun SeeAllLink(label: String, onClick: () -> Unit, modifier: Modifier = 
         } else {
             Text(label, style = MaterialTheme.typography.titleSmall, color = ink, maxLines = 1)
             Icon(TmIcons.ChevronRight, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+
+/**
+ * Home's vertical list under the TV top bar: a focused item already standing between the bar's foot
+ * ([barPx]) and three fifths of the way down stays where it is; anything above that band, under
+ * the bar, or below it is brought to three tenths of the way down, as the television does.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+private fun calmVertical(barPx: Float) = object : androidx.compose.foundation.gestures.BringIntoViewSpec {
+    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
+        val lead = containerSize * 0.3f
+        return when {
+            offset < barPx -> offset - lead
+            offset + size > containerSize -> offset - lead
+            offset > containerSize * 0.6f -> offset - lead
+            else -> 0f
         }
     }
 }
