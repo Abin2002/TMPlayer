@@ -91,9 +91,9 @@ import kotlinx.coroutines.launch
 /**
  * The phone's featured carousel at the top of Home: the newest five different films, shows and
  * videos in the starred chats ([HomeFeatured]), one full-bleed page each, swiped through. Only the
- * picture, the name and its facts move with a swipe: Play and Details stay put at the foot, acting
- * on the page up, with the story-style line of segments over them that fills over [ADVANCE_MS] and
- * moves on.
+ * picture and the name move with a swipe: Play and Details stay put at the foot, acting on the page
+ * up, and the pages move on by themselves every [ADVANCE_MS]. The hero is the name and the two
+ * buttons, nothing more; the facts are read out by TalkBack.
  *
  * It is [height] tall from its first frame, whatever has arrived: while [picks] is null (the
  * starred chats are still being asked) the same frame holds a shimmering stand-in, so nothing on
@@ -146,7 +146,7 @@ internal fun FeaturedCarousel(
         var progressPage by remember { mutableIntStateOf(-1) }
         val settled = pager.settledPage
         LaunchedEffect(settled, paused, auto, count) {
-            // A new page starts its segment from empty; a pause keeps it where it stopped.
+            // A new page starts its time from empty; a pause keeps it where it stopped.
             if (progressPage != settled) {
                 progress.snapTo(0f)
                 progressPage = settled
@@ -156,8 +156,6 @@ internal fun FeaturedCarousel(
             progress.animateTo(1f, tween((ADVANCE_MS * left).toInt(), easing = LinearEasing))
             pager.animateScrollToPage((settled + 1) % count)
         }
-        val scope = rememberCoroutineScope()
-
         Box(
             Modifier
                 .fillMaxSize()
@@ -186,31 +184,14 @@ internal fun FeaturedCarousel(
                 key = { latest.getOrNull(it)?.key ?: it },
             ) { page ->
                 val pick = latest.getOrNull(page) ?: return@HorizontalPager
-                FeaturedPage(pick, height, under, start, end, chatTitle, footRoom = controlsRoom(count > 1))
+                FeaturedPage(pick, height, under, start, end, chatTitle, footRoom = CONTROLS_ROOM)
             }
-            Column(
+            Box(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .padding(start = start, end = end, bottom = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(CONTROLS_GAP),
             ) {
-              if (count > 1) {
-                Segments(
-                    count = count,
-                    current = pager.currentPage,
-                    fill = { index ->
-                        when {
-                            index < pager.currentPage -> 1f
-                            index > pager.currentPage -> 0f
-                            !auto -> 1f
-                            else -> progress.value
-                        }
-                    },
-                    label = { index -> s.homeFeaturedPage(index + 1, count) },
-                    onPick = { index -> scope.launch { if (still) pager.scrollToPage(index) else pager.animateScrollToPage(index) } },
-                )
-              }
                 latest.getOrNull(pager.currentPage)?.let { pick ->
                     FeaturedControls(pick, watch, chatTitle, onPlay, onDetails)
                 }
@@ -219,11 +200,10 @@ internal fun FeaturedCarousel(
     }
 }
 
-/** What the controls at the carousel's foot take, which a page keeps its name and facts clear of. */
-private fun controlsRoom(segments: Boolean): Dp =
-    4.dp + HERO_PILL_HEIGHT + if (segments) SEGMENT_TARGET + CONTROLS_GAP else 0.dp
+/** What the controls at the carousel's foot take, which a page keeps its name clear of. */
+private val CONTROLS_ROOM: Dp = 4.dp + HERO_PILL_HEIGHT
 
-/** One page: the picture under its fades, the name and a line of facts, clear of the controls ([footRoom]). */
+/** One page: the picture under its fades and the name, clear of the controls ([footRoom]). */
 @Composable
 private fun FeaturedPage(
     pick: FeaturedPick,
@@ -260,33 +240,19 @@ private fun FeaturedPage(
                 .height(under + TOP_SCRIM)
                 .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.55f), Color.Transparent))),
         )
-        Column(
-            Modifier
+        // The name alone, close over the buttons; the facts are only in the page's description.
+        Text(
+            title,
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = Tone.text,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .padding(start = start, end = end, bottom = footRoom + TEXT_GAP),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Text(
-                title,
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = Tone.text,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
-            if (facts.isNotBlank()) {
-                Text(
-                    facts,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Tone.muted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        }
+        )
     }
 }
 
@@ -361,59 +327,6 @@ internal fun featuredFacts(pick: FeaturedPick, title: String, chat: String, s: c
     return listOfNotNull(year, which, item.qualityTags.firstOrNull(), chat.ifBlank { null }).joinToString(SEPARATOR)
 }
 
-/**
- * The line of segments over the top of the carousel, one per page: the pages before the one up
- * filled, the one up filling as its time runs ([fill] is read while drawing, so the run costs no
- * recomposition), the rest empty. Each is a page indicator TalkBack reads as "Page 2 of 5", and a
- * tap on one goes to its page; the touch target is 24 dp tall round a 3 dp line.
- */
-@Composable
-internal fun Segments(
-    count: Int,
-    current: Int,
-    fill: (Int) -> Float,
-    label: (Int) -> String,
-    onPick: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-    /** False on a television, where the remote reaches the pages by Left and Right instead. */
-    focusable: Boolean = true,
-) {
-    // In the page's own ink: the segments sit low, where the picture has faded into the page,
-    // and white on a light theme's pale foot all but vanished.
-    val track = Tone.text.copy(alpha = 0.22f)
-    val ink = Tone.text
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(SEGMENT_GAP)) {
-        repeat(count) { index ->
-            Box(
-                Modifier
-                    .weight(1f)
-                    .height(SEGMENT_TARGET)
-                    .focusProperties { canFocus = focusable }
-                    .clickable(
-                        interactionSource = null,
-                        indication = null,
-                        role = Role.Tab,
-                    ) { onPick(index) }
-                    .semantics {
-                        contentDescription = label(index)
-                        selected = index == current
-                        role = Role.Tab
-                    }
-                    .drawBehind {
-                        val line = SEGMENT_HEIGHT.toPx()
-                        val top = (size.height - line) / 2f
-                        val radius = CornerRadius(line / 2f, line / 2f)
-                        drawRoundRect(track, topLeft = Offset(0f, top), size = Size(size.width, line), cornerRadius = radius)
-                        val filled = fill(index).coerceIn(0f, 1f)
-                        if (filled > 0f) {
-                            drawRoundRect(ink, topLeft = Offset(0f, top), size = Size(size.width * filled, line), cornerRadius = radius)
-                        }
-                    },
-            )
-        }
-    }
-}
-
 /** The carousel's frame while the starred chats are still being asked: the same size, shimmering. */
 @Composable
 private fun FeaturedSkeleton(start: Dp, end: Dp) {
@@ -430,7 +343,6 @@ private fun FeaturedSkeleton(start: Dp, end: Dp) {
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             SkeletonBox(shimmer, Modifier.fillMaxWidth(0.6f).height(30.dp), RoundedCornerShape(8.dp))
-            SkeletonBox(shimmer, Modifier.fillMaxWidth(0.4f).height(14.dp), RoundedCornerShape(7.dp))
             SkeletonBox(shimmer, Modifier.padding(top = 4.dp).fillMaxWidth(0.7f).height(HERO_PILL_HEIGHT), CircleShape)
         }
     }
@@ -489,12 +401,7 @@ private val SKELETON_FADE = 160.dp
 /** The dark fade under the status bar. */
 private val TOP_SCRIM = 72.dp
 
-/** Between the segments and Play, and between a page's facts and the segments. */
-private val CONTROLS_GAP = 8.dp
+/** Between a page's name and Play. */
 private val TEXT_GAP = 10.dp
-
-private val SEGMENT_HEIGHT = 3.dp
-private val SEGMENT_TARGET = 24.dp
-private val SEGMENT_GAP = 4.dp
 
 private const val SEPARATOR = "  ·  "

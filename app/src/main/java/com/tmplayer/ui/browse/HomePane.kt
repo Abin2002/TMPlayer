@@ -92,6 +92,10 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.Text as M3Text
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.drawBehind
 
 /**
  * Home: a row of what the viewer was part way through, a row of what they saved for later, the new episodes of the shows they
@@ -696,8 +700,8 @@ private fun CaptionLine(text: String, ink: Color) {
 
 /**
  * A row's name, SemiBold: titleLarge on a phone and on a television. A row that leaves videos out
- * offers the rest: on a phone a quiet 32 dp chip with a chevron at the end of the heading, on a
- * television a pill that takes focus only from the row under it (see [HomePane]).
+ * offers the rest at the end of the heading, as a link with a chevron and no fill ([SeeAllLink]);
+ * on a television it takes focus only from the row under it (see [HomePane]).
  */
 @Composable
 private fun RowHeading(
@@ -743,44 +747,21 @@ private fun RowHeading(
         if (seeAll != null && !touch) {
             // The count beside the words, as the desktop has it, so the row says how much more
             // there is before anyone presses anything.
-            TmSecondaryButton(
+            SeeAllLink(
+                label = "${s.homeSeeAll}  ·  $count",
                 onClick = seeAll,
                 modifier = Modifier
                     .focusProperties { canFocus = armed }
                     .focusRequester(focus)
                     .onFocusChanged { if (!it.hasFocus) onLeft() },
-            ) {
-                Text(s.homeSeeAll)
-                // The label's own colour, softened, so it reads on the focused fill as well as off it.
-                Text("  ·  $count", color = androidx.tv.material3.LocalContentColor.current.copy(alpha = 0.72f))
-                Icon(
-                    TmIcons.ChevronRight,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            )
         } else if (seeAll != null) {
-            // A quiet chip rather than a link in the accent: the accent is for progress, selection
-            // and focus. The touch target is Material's 48 dp round the 32 dp chip.
-            Row(
-                Modifier
-                    .padding(start = 12.dp)
-                    .minimumInteractiveComponentSize()
-                    .height(SEE_ALL_CHIP)
-                    .clip(CircleShape)
-                    .background(Tone.surface)
-                    .clickable(role = Role.Button, onClick = seeAll)
-                    .padding(start = 12.dp, end = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                M3Text(s.homeSeeAll, style = M3MaterialTheme.typography.labelLarge, color = Tone.text)
-                androidx.compose.material3.Icon(
-                    TmIcons.ChevronRight,
-                    contentDescription = null,
-                    tint = Tone.muted,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            // The touch target is Material's 48 dp round the link.
+            SeeAllLink(
+                label = s.homeSeeAll,
+                onClick = seeAll,
+                modifier = Modifier.padding(start = 12.dp).minimumInteractiveComponentSize(),
+            )
         }
     }
 }
@@ -994,3 +975,62 @@ private fun AnchoredAtStart(start: Dp, content: @Composable () -> Unit) {
 
 /** How long Home without a carousel waits for one to turn up before the cold start's loader lifts. */
 private const val NO_CAROUSEL_SETTLE_MS = 1_500L
+
+
+/**
+ * "See all" at the end of a Home row's heading: muted words and a chevron with no fill at rest. Under
+ * the remote, or pressed, the words and the chevron turn the accent, grow a little and are
+ * underlined, so the place reads from across the room without a pill round it.
+ */
+@Composable
+private fun SeeAllLink(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val touch = isTouch()
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val pressed by interactions.collectIsPressedAsState()
+    val lit = focused || pressed
+    val still = com.tmplayer.ui.theme.rememberReducedMotion() || com.tmplayer.ui.theme.Motion.reduced
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        when {
+            still -> 1f
+            pressed -> com.tmplayer.ui.theme.Motion.PressScale
+            focused -> com.tmplayer.ui.theme.Motion.FocusScale
+            else -> 1f
+        },
+        com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+        label = "seeAllScale",
+    )
+    val ink by androidx.compose.animation.animateColorAsState(
+        if (lit) Tone.accent else Tone.muted,
+        com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+        label = "seeAllInk",
+    )
+    val line by androidx.compose.animation.core.animateFloatAsState(
+        if (focused) 1f else 0f,
+        com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+        label = "seeAllLine",
+    )
+    Row(
+        modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(interactionSource = interactions, indication = null, role = Role.Button, onClick = onClick)
+            .padding(vertical = 4.dp)
+            .drawBehind {
+                if (line <= 0f) return@drawBehind
+                val stroke = 2.dp.toPx()
+                drawRect(ink, topLeft = androidx.compose.ui.geometry.Offset(0f, size.height - stroke), size = androidx.compose.ui.geometry.Size(size.width * line, stroke))
+            },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (touch) {
+            M3Text(label, style = M3MaterialTheme.typography.labelLarge, color = ink, maxLines = 1)
+            androidx.compose.material3.Icon(TmIcons.ChevronRight, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
+        } else {
+            Text(label, style = MaterialTheme.typography.titleSmall, color = ink, maxLines = 1)
+            Icon(TmIcons.ChevronRight, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
+        }
+    }
+}

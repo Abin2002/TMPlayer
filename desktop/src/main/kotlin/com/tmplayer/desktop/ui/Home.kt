@@ -96,6 +96,10 @@ import com.tmplayer.ui.theme.Motion
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 
 /**
  * Home on the desktop: the same rows as the phone and the television (see
@@ -428,13 +432,7 @@ private fun RowHeading(title: String, count: String?, side: Dp, onSeeAll: (() ->
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        if (onSeeAll != null) {
-            TextButton(onClick = onSeeAll) {
-                Text(s.homeSeeAll)
-                if (count != null) Text("  ·  $count", color = Tone.muted)
-                Icon(TmIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(18.dp))
-            }
-        }
+        if (onSeeAll != null) SeeAllLink(if (count != null) "${s.homeSeeAll}  ·  $count" else s.homeSeeAll, onSeeAll)
     }
 }
 
@@ -739,3 +737,55 @@ private val STRIP_ARROW = 44.dp
 
 /** Pixels a strip moves per step of the wheel or the trackpad's sideways delta. */
 private const val WHEEL_STEP_PX = 64f
+
+
+/**
+ * "See all" at the end of a row's heading: muted words and a chevron with no fill. Hovered, focused
+ * by the keyboard or pressed, they turn the accent and grow a little, and the keyboard's focus is
+ * underlined as well.
+ */
+@Composable
+private fun SeeAllLink(label: String, onClick: () -> Unit) {
+    val interactions = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val hovered by interactions.collectIsHoveredAsState()
+    val focused by interactions.collectIsFocusedAsState()
+    val pressed by interactions.collectIsPressedAsState()
+    val lit = hovered || focused || pressed
+    val still = com.tmplayer.ui.theme.Motion.reduced
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        when {
+            still -> 1f
+            pressed -> com.tmplayer.ui.theme.Motion.PressScale
+            lit -> com.tmplayer.ui.theme.Motion.FocusScale
+            else -> 1f
+        },
+        com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+        label = "seeAllScale",
+    )
+    val ink by androidx.compose.animation.animateColorAsState(
+        if (lit) Tone.accent else Tone.muted,
+        com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+        label = "seeAllInk",
+    )
+    val underline = focused && com.tmplayer.ui.theme.FocusVisibility.visible
+    Row(
+        Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .hoverable(interactions)
+            .clickable(interactionSource = interactions, indication = null, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+            .pointerHoverIcon(androidx.compose.ui.input.pointer.PointerIcon.Hand)
+            .padding(horizontal = 4.dp, vertical = 8.dp)
+            .drawBehind {
+                if (!underline) return@drawBehind
+                val stroke = 2.dp.toPx()
+                drawRect(ink, topLeft = androidx.compose.ui.geometry.Offset(0f, size.height - stroke), size = androidx.compose.ui.geometry.Size(size.width, stroke))
+            },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = MaterialTheme.typography.labelLarge, color = ink, maxLines = 1)
+        Icon(TmIcons.ChevronRight, contentDescription = null, tint = ink, modifier = Modifier.size(18.dp))
+    }
+}

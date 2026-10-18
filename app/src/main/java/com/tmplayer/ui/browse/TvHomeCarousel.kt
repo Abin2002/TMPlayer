@@ -86,8 +86,7 @@ import com.tmplayer.ui.theme.rememberReducedMotion
  * The television's featured carousel at the top of Home: the same newest five different films,
  * shows and videos in the starred chats as the phone's ([FeaturedCarousel],
  * [com.tmplayer.data.HomeFeatured]), one picture at a time across the whole width of the page and
- * up behind its [header], with its name, its facts, the line of segments and Play and Details at
- * the start, the phone's order.
+ * up behind its [header], with its name and Play and Details at the start, the phone's order.
  *
  * Made for a remote and a 1 GB stick rather than a finger:
  * - One page is composed at a time, cross-faded to the next: no pager, so only one picture is
@@ -148,7 +147,7 @@ internal fun TvFeaturedCarousel(
         val progress = remember { Animatable(0f) }
         var progressKey by remember { mutableStateOf<String?>(null) }
         LaunchedEffect(currentKey, paused, auto, count) {
-            // A new page starts its segment from empty; a pause keeps it where it stopped.
+            // A new page starts its time from empty; a pause keeps it where it stopped.
             if (progressKey != currentKey) {
                 progress.snapTo(0f)
                 progressKey = currentKey
@@ -162,7 +161,7 @@ internal fun TvFeaturedCarousel(
         Crossfade(targetState = pick, animationSpec = Motion.standard(), label = "tvFeatured", modifier = Modifier.matchParentSize()) { shown ->
             // The heading's words over any picture: a fade from the top, deeper than the heading,
             // under the page's own words.
-            TvFeaturedArt(shown, chatTitle, start = start, segments = count > 1, headerFade = if (header != null) headerPx.toFloat() else 0f)
+            TvFeaturedArt(shown, chatTitle, start = start, headerFade = if (header != null) headerPx.toFloat() else 0f)
         }
 
         // What Play starts, worked out as the phone's page does.
@@ -181,33 +180,11 @@ internal fun TvFeaturedCarousel(
         val back = if (rtl) Key.DirectionRight else Key.DirectionLeft
         val forward = if (rtl) Key.DirectionLeft else Key.DirectionRight
 
-        Column(
+        Row(
             Modifier
                 .align(Alignment.BottomStart)
-                .fillMaxWidth()
-                .padding(start = start, bottom = PAGE_PAD),
-            verticalArrangement = Arrangement.spacedBy(SEGMENTS_GAP),
-        ) {
-        if (count > 1) {
-            Segments(
-                count = count,
-                current = index,
-                fill = { at ->
-                    when {
-                        at < index -> 1f
-                        at > index -> 0f
-                        !auto -> 1f
-                        else -> progress.value
-                    }
-                },
-                label = { at -> s.homeFeaturedPage(at + 1, count) },
-                onPick = { at -> go(at) },
-                modifier = Modifier.fillMaxWidth(SEGMENTS_SHARE),
-                focusable = false,
-            )
-        }
-        Row(
-            Modifier.onFocusChanged { focusedIn = it.hasFocus },
+                .padding(start = start, bottom = PAGE_PAD)
+                .onFocusChanged { focusedIn = it.hasFocus },
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -237,13 +214,12 @@ internal fun TvFeaturedCarousel(
                 },
             )
         }
-        }
     }
 }
 
-/** A page's picture, the fades that let its words read, and the name and facts at its start. */
+/** A page's picture, the fades that let its words read, and the name at its start. */
 @Composable
-private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String, start: Dp, segments: Boolean, headerFade: Float) {
+private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String, start: Dp, headerFade: Float) {
     val s = LocalStrings.current
     val item = pick.item
     val series = pick.series
@@ -271,27 +247,18 @@ private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String, start
             topFade = if (TV_TOP_BAR) with(LocalDensity.current) { (headerFade * BAR_FADE_REACH).toDp() } else 0.dp,
             onPictured = HomeFirstPaint::markReady,
         )
-        Column(
-            Modifier
+        // The name alone over Play and Details; the facts are only in the page's description.
+        Text(
+            title,
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = Tone.text,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth(TEXT_SHARE)
-                .padding(
-                    start = start,
-                    bottom = PAGE_PAD + HERO_PILL_HEIGHT + 14.dp + if (segments) SEGMENTS_ROOM else 0.dp,
-                ),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(
-                title,
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = Tone.text,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (facts.isNotBlank()) {
-                Text(facts, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-        }
+                .padding(start = start, bottom = PAGE_PAD + HERO_PILL_HEIGHT + TITLE_GAP),
+        )
     }
 }
 
@@ -366,18 +333,14 @@ internal val TV_FEATURED_HEIGHT = 224.dp
 /** How long a page is up before the carousel moves on. */
 private const val ADVANCE_MS = 7_000
 
-/** The inset of the words, the buttons and the segments from the picture's edge. */
+/** The inset of the words and the buttons from the picture's edge. */
 private val PAGE_PAD = 24.dp
 
 /** The share of the width the name and facts may take, over the start's fade. */
 private const val TEXT_SHARE = 0.6f
 
-/** The share of the width the segments span, over the start, clear of the picture's subject. */
-private const val SEGMENTS_SHARE = 0.4f
-
-/** Between the segments and Play, and what the name and facts climb by to make room for them. */
-private val SEGMENTS_GAP = 4.dp
-private val SEGMENTS_ROOM = 28.dp
+/** Between the name and Play: the hero is the name and its two buttons. */
+private val TITLE_GAP = 14.dp
 
 /** How far the glow behind the clock and the account reaches, as a share of the heading's height. */
 private const val HEADER_FADE_REACH = 1.5f
