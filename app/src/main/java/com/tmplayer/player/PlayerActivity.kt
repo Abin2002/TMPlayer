@@ -957,6 +957,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 syncDelays = runCatching { settings.syncDelays(chatId, messageId) }.getOrDefault(SyncDelays())
             }
             subtitleDelayUs = syncDelays.subtitleMs * 1000
+            // An id carried in from a stored row, a channel or a notification may name another
+            // file in this TDLib session ([Td.fileIdFits]), and a resume point past that file's
+            // end would read as the end of the video: the message gives the current one.
+            if (downloadedFile == null && hasMessage() &&
+                !runCatching { Td.fileIdFits(fileId, fileSizeBytes) }.getOrDefault(true)
+            ) {
+                runCatching { Td.refreshMedia(chatId, messageId) }.getOrNull()?.let { fresh ->
+                    fileId = fresh.fileId
+                    holdFile(fileId)
+                    fileSizeBytes = fresh.sizeBytes
+                }
+            }
             if (!session.isCurrent()) return@launch
             startPlayback(session.client)
         }
@@ -2010,14 +2022,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /**
      * The player as the media session sees it: one video, plus the chat's next and previous
-     * episodes. Picture in picture, the notification and a headset's buttons draw next as
-     * disabled for a lone item, though the episode list has one; here next steps to it, and
-     * previous does when the playhead is near the start, as it would in a playlist.
+     * episodes. Next and previous are the episodes and nothing else, offered only where the chat
+     * has one: Media3's previous for a lone item goes back to its start, and a stray press on a
+     * headset, the lock screen or picture in picture took a two hour video back to 0:00.
      */
     private inner class EpisodeStepping(exo: ExoPlayer) : androidx.media3.common.ForwardingPlayer(exo) {
         override fun getAvailableCommands(): Player.Commands {
             val found = _episodes.value
             val more = Player.Commands.Builder().addAll(super.getAvailableCommands())
+                .removeAll(
+                    Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
+                    Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM,
+                )
             if (found.next != null) more.addAll(Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
             if (found.previous != null) more.addAll(Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
             return more.build()
@@ -2026,19 +2042,19 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         override fun isCommandAvailable(command: Int): Boolean = availableCommands.contains(command)
 
         override fun seekToNext() {
-            if (!stepEpisode(forward = true)) super.seekToNext()
+            stepEpisode(forward = true)
         }
 
         override fun seekToNextMediaItem() {
-            if (!stepEpisode(forward = true)) super.seekToNextMediaItem()
+            stepEpisode(forward = true)
         }
 
         override fun seekToPrevious() {
-            if (currentPosition > maxSeekToPreviousPosition || !stepEpisode(forward = false)) super.seekToPrevious()
+            stepEpisode(forward = false)
         }
 
         override fun seekToPreviousMediaItem() {
-            if (!stepEpisode(forward = false)) super.seekToPreviousMediaItem()
+            stepEpisode(forward = false)
         }
 
         /**
@@ -2361,6 +2377,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         }
 
         override fun onPlayerError(error: PlaybackException) {
+            // A file TDLib cannot size is a stale id, not a slow network: retrying the same id
+            // only spins for a minute, while asking for the message again fixes it in a second.
+            if (staleFileId(error) && resourceAgain(error, sameId = { if (!recoverFrom(error)) showError(friendlyError(error), retryable = !isHopeless(error)) })) return
             if (recoverFrom(error)) return
             if (resourceAgain(error)) return
             showError(friendlyError(error), retryable = !isHopeless(error))
@@ -2552,8 +2571,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * same fetch with the same answer.
      *
      * Returns true when it has taken over, in which case the retry, or the sheet, comes later.
+     * [sameId] is what follows when Telegram gives back the id already in hand: the sheet, or, for
+     * a file it could not size, the usual retries.
      */
-    private fun resourceAgain(error: PlaybackException): Boolean {
+    private fun resourceAgain(
+        error: PlaybackException,
+        sameId: () -> Unit = { showError(friendlyError(error), retryable = !isHopeless(error)) },
+    ): Boolean {
         // A file in the Downloads folder has no Telegram id to go stale.
         if (downloadedFile != null) return false
         if (reSourced || chatId == 0L || messageId == 0L) return false
@@ -2564,7 +2588,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             if (fresh == null || fresh.fileId == fileId) {
                 // Nothing new to try: the id in hand is the id Telegram gives, so the failure is
                 // about the video rather than about the name this app was calling it by.
-                showError(friendlyError(error), retryable = !isHopeless(error))
+                sameId()
                 return@launch
             }
             fileId = fresh.fileId
@@ -2627,6 +2651,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * caught the file mid-move than a genuinely broken remux, and re-preparing settles it. A
      * codec this TV does not have is the opposite, and no number of attempts will conjure one.
      */
+    /**
+     * Whether TDLib said it has no size for the file, or no file at all ([TdByteWindow.lookUp]):
+     * what an id from before a restart looks like until the message is fetched again.
+     */
+    private fun staleFileId(error: PlaybackException): Boolean =
+        generateSequence(error.cause) { it.cause }.take(MAX_CAUSE_HOPS).any { cause ->
+            val message = cause.message.orEmpty()
+            message.startsWith("Unknown size for file") || message.startsWith("Telegram lost track of file")
+        }
+
     private fun isRecoverable(error: PlaybackException): Boolean = when (error.errorCode) {
         PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
         PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
@@ -5266,6 +5300,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     }
 
     /**
+     * Gives the failure sheet's suggested way out, the one focus lands on, the accent pill, and the
+     * others the quiet one, so the sheet always has exactly one button that reads as the answer.
+     */
+    private fun markPrimaryAction(primary: View) {
+        for (button in listOf(statusReload, statusBack, statusOpenWith)) {
+            val chosen = button === primary
+            button?.setBackgroundResource(if (chosen) R.drawable.bg_control_pill_primary else R.drawable.bg_control_pill)
+            button?.setTextColor(getColorStateList(if (chosen) R.color.player_primary_text else R.color.player_control_icon))
+        }
+    }
+
+    /**
      * Two buttons on a failure: the one that tries, and the one that leaves.
      *
      * Reload is the only attempt on offer, and what it does underneath depends on what is wrong: a
@@ -5285,7 +5331,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         statusLogs?.visibility = View.VISIBLE
         statusBack?.apply {
             visibility = View.VISIBLE
-            if (!retryable) requestFocus()
+            if (!retryable) {
+                markPrimaryAction(this)
+                requestFocus()
+            }
         }
         if (fileId <= 0) return
         lifecycleScope.launch {
@@ -5293,6 +5342,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 statusReload?.apply {
                     text = L.commonReload
                     visibility = View.VISIBLE
+                    markPrimaryAction(this)
                     requestFocus()
                 }
             }
@@ -5318,6 +5368,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     L.playerOpenWhatIsDownloaded
                 }
                 visibility = View.VISIBLE
+                markPrimaryAction(this)
                 requestFocus()
             }
             // Said on the sheet rather than in a dialog on the way out: the viewer is being asked

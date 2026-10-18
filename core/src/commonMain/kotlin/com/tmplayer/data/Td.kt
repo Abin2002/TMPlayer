@@ -758,6 +758,21 @@ object Td {
         return refreshMedia(chatId, messageId)?.fileId ?: storedFileId
     }
 
+    /**
+     * Whether [fileId] is still the file of a video [sizeBytes] long in this session. An id from a
+     * stored row (Continue watching, Watch later) belongs to the TDLib instance that wrote it; after
+     * a restart the same number can name a different file, a thumbnail or another video, and a
+     * resume point past that file's end then reads as the end of the video. True when the size is
+     * not known on either side, so the caller is no worse off than before.
+     */
+    suspend fun fileIdFits(fileId: Int, sizeBytes: Long): Boolean {
+        if (sizeBytes <= 0L) return true
+        val td = current ?: return true
+        val file = td.getFile(fileId).valueOrNull ?: return false
+        val size = if (file.size > 0) file.size else file.expectedSize
+        return size == sizeBytes
+    }
+
     /** How much of a file is already on disk, whether or not the download ever finished. */
     suspend fun localDownloadedBytes(fileId: Int): Long {
         val td = current ?: return 0L

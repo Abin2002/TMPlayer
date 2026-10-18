@@ -258,14 +258,11 @@
             -->
             <Button
                 android:id="@+id/status_retry"
+                style="@style/PlayerSheetButton.Primary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:minWidth="160dp"
-                android:paddingLeft="28dp"
-                android:paddingRight="28dp"
                 android:text="Try again"
-                android:textColor="@color/text_primary"
                 android:visibility="gone" />
 
             <!--
@@ -279,14 +276,11 @@
             -->
             <Button
                 android:id="@+id/status_reload"
+                style="@style/PlayerSheetButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:minWidth="160dp"
-                android:paddingLeft="28dp"
-                android:paddingRight="28dp"
                 android:text="Reload from scratch"
-                android:textColor="@color/text_primary"
                 android:visibility="gone" />
 
             <!--
@@ -298,27 +292,21 @@
             -->
             <Button
                 android:id="@+id/status_back"
+                style="@style/PlayerSheetButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:minWidth="160dp"
-                android:paddingLeft="28dp"
-                android:paddingRight="28dp"
                 android:text="Go back"
-                android:textColor="@color/text_primary"
                 android:visibility="gone" />
 
             <!-- The way out that does not involve this app's decoders at all. -->
             <Button
                 android:id="@+id/status_open_with"
+                style="@style/PlayerSheetButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:minWidth="160dp"
-                android:paddingLeft="28dp"
-                android:paddingRight="28dp"
                 android:text="Open in another app"
-                android:textColor="@color/text_primary"
                 android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>

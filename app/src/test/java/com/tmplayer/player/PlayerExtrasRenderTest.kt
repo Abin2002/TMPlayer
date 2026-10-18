@@ -164,6 +164,9 @@ class PlayerExtrasRenderTest {
         activity.findViewById<Button>(R.id.status_reload).apply {
             text = L.commonReload
             visibility = View.VISIBLE
+            // What markPrimaryAction gives the suggested way out.
+            setBackgroundResource(R.drawable.bg_control_pill_primary)
+            setTextColor(context.getColorStateList(R.color.player_primary_text))
         }
         activity.findViewById<Button>(R.id.status_back).apply {
             text = L.playerGoBack

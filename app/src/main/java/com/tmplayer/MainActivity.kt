@@ -857,7 +857,20 @@ private fun Root() {
     suspend fun playNow(requested: MediaItem, confirmed: Boolean, requestedChat: String) {
         // A film posted more than once plays the copy chosen for the viewer (VideoCopies.pick):
         // the one they picked, one on the device, the one they started, their usual quality.
-        val item = runCatching { settings.copyToPlay(requested) }.getOrDefault(requested)
+        val chosen = runCatching { settings.copyToPlay(requested) }.getOrDefault(requested)
+        // A stored row's file id may name another file in this session ([Td.fileIdFits]): the
+        // message is asked for again, which gives the current id. A video in the Downloads
+        // folder plays from its own file and never needs the id.
+        val item = withContext(Dispatchers.Default) {
+            if (LocalDownloads.fileFor(settings, chosen.chatId, chosen.messageId) == null &&
+                !runCatching { Td.fileIdFits(chosen.fileId, chosen.sizeBytes) }.getOrDefault(true)
+            ) {
+                runCatching { Td.refreshMedia(chosen.chatId, chosen.messageId) }.getOrNull()
+                    ?.let { fresh -> chosen.copy(fileId = fresh.fileId, sizeBytes = fresh.sizeBytes) } ?: chosen
+            } else {
+                chosen
+            }
+        }
         val chatTitle = if (item.chatId == requested.chatId) requestedChat else CopyHandoff.chatTitleOf(item) ?: requestedChat
         // Off the main thread for the whole of the decision. Everything between here and the plan
         // is blocking work: two stat() calls to see whether the file is on disk, a statvfs() for
