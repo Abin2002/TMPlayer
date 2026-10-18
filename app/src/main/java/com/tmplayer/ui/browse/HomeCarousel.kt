@@ -77,7 +77,6 @@ import com.tmplayer.ui.components.ArtBackdrop
 import com.tmplayer.ui.components.BackdropSource
 import com.tmplayer.ui.components.SkeletonBox
 import com.tmplayer.ui.components.rememberCover
-import com.tmplayer.ui.components.rememberLowMemory
 import com.tmplayer.ui.components.rememberShimmer
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
@@ -251,7 +250,7 @@ private fun FeaturedPage(
             .fillMaxSize()
             .semantics { contentDescription = listOf(title, facts).filter { it.isNotBlank() }.joinToString(". ") },
     ) {
-        ArtBackdrop(source, Modifier.fillMaxSize(), fieldOnly = rememberLowMemory())
+        ArtBackdrop(source, Modifier.fillMaxSize())
         // The top darkened under the status bar, light in either theme.
         Box(
             Modifier

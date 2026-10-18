@@ -51,14 +51,14 @@ import kotlinx.coroutines.withContext
  * shape, at the top end of the frame, fading into the field at its start and its foot. The art
  * reads as art rather than as a blur of pixels, and there is no `blur()` anywhere in it.
  *
- * [fieldOnly] draws the field alone and decodes nothing larger, for a device short of memory.
- * The scrims that text needs over all of this are the caller's ([com.tmplayer.ui.theme.Scrims]).
+ * A device short of memory draws the same chain: the online picture is a w780 backdrop, about
+ * 0.7 MB decoded, and drawing the field alone there left the carousel a blur of colour on a 1 GB
+ * television stick. The scrims that text needs over all of this are the caller's ([com.tmplayer.ui.theme.Scrims]).
  */
 @Composable
 fun ArtBackdrop(
     source: BackdropSource,
     modifier: Modifier = Modifier,
-    fieldOnly: Boolean = false,
 ) {
     val online = OnlineMetadata.current
     // Where the platform decodes at full size (the desktop), the online picture is fetched at the
@@ -69,12 +69,8 @@ fun ArtBackdrop(
     val peak = remember { intArrayOf(0) }
     peak[0] = maxOf(peak[0], wanted)
     val widest = peak[0]
-    var art by remember(source) { mutableStateOf(peek(source, fieldOnly, widest)) }
-    LaunchedEffect(source, fieldOnly, widest) {
-        if (fieldOnly) {
-            Thumbnails.backdrop(source.thumbnailFileId, source.miniThumbnail)?.let { art = BackdropArt(field = it) }
-            return@LaunchedEffect
-        }
+    var art by remember(source) { mutableStateOf(peek(source, widest)) }
+    LaunchedEffect(source, widest) {
         // Not until the frame has been measured, so the first fetch is the size that is drawn.
         if (decodesFullSize && drawn == 0) return@LaunchedEffect
         val wide = source.wideUrl?.let { url ->
@@ -160,8 +156,7 @@ data class BackdropSource(
 private class BackdropArt(val picture: ImageBitmap? = null, val field: ImageBitmap? = null)
 
 /** What is already decoded for [source], so a backdrop seen before is there on the first frame. */
-private fun peek(source: BackdropSource, fieldOnly: Boolean, pixels: Int): BackdropArt? {
-    if (fieldOnly) return null
+private fun peek(source: BackdropSource, pixels: Int): BackdropArt? {
     source.wideUrl?.let { url -> Thumbnails.peekSharp(url, pixels, ONLINE_WIDTH)?.let { return BackdropArt(picture = it) } }
     val full = Thumbnails.peekFull(source.thumbnailFileId) ?: return null
     return if (full.width >= SHARP_MIN_WIDTH) BackdropArt(picture = full) else null

@@ -68,7 +68,6 @@ import com.tmplayer.ui.components.ArtBackdrop
 import com.tmplayer.ui.components.BackdropSource
 import com.tmplayer.ui.components.SkeletonBox
 import com.tmplayer.ui.components.rememberCover
-import com.tmplayer.ui.components.rememberLowMemory
 import com.tmplayer.ui.components.rememberShimmer
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
@@ -89,7 +88,7 @@ import com.tmplayer.ui.theme.rememberReducedMotion
  *
  * Made for a remote and a 1 GB stick rather than a finger:
  * - One page is composed at a time, cross-faded to the next: no pager, so only one picture is
- *   fetched and held. A low memory device draws the soft field alone ([rememberLowMemory]).
+ *   fetched and held, a w780 backdrop of about 0.7 MB.
  * - Play and Details stay put while the pages change under them, so the remote never loses its
  *   place. Left on Play goes back a page (from the first, on to the rail as anywhere else), Right
  *   on Details goes on a page; OK on Play plays; Down goes to the rows.
@@ -257,7 +256,7 @@ private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String, start
             .background(Tone.surface)
             .semantics { contentDescription = listOf(title, facts).filter { it.isNotBlank() }.joinToString(". ") },
     ) {
-        ArtBackdrop(source, Modifier.fillMaxSize(), fieldOnly = rememberLowMemory())
+        ArtBackdrop(source, Modifier.fillMaxSize())
         Box(Modifier.fillMaxSize().background(Scrims.startLong()))
         if (headerFade > 0f) Box(Modifier.fillMaxSize().drawBehind { drawRect(Scrims.headerTop(headerFade)) })
         // The foot fades into the page, so the first row below reads as the same ground.
