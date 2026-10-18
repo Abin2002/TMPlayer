@@ -41,6 +41,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -197,29 +204,43 @@ private fun Section(title: String, detail: String, choices: @Composable () -> Un
 @Composable
 private fun <T> Pills(options: List<T>, selected: T, label: (T) -> String, onPick: (T) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        for (option in options) {
-            Pill(label(option), option == selected) { onPick(option) }
+        options.forEachIndexed { i, option ->
+            Pill(label(option), option == selected, first = i == 0, last = i == options.lastIndex) { onPick(option) }
         }
     }
 }
 
 @Composable
-private fun Pill(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun Pill(label: String, selected: Boolean, first: Boolean, last: Boolean, onClick: () -> Unit) {
     val interactions = remember { MutableInteractionSource() }
     val focused = interactions.collectIsFocusVisibleAsState().value
     val touch = deviceForm() == DeviceForm.Phone
+    // With a remote or a keyboard the chosen pill is only tinted, as the TV's Downloads chips are:
+    // in the dark theme the focus fill is the accent itself, so a solid accent would look focused.
     val fill = when {
         focused -> Tone.focusFill
-        selected -> Tone.accent
+        selected && touch -> Tone.accent
+        selected -> Tone.accent.copy(alpha = 0.16f)
         else -> Tone.surfaceHigh
     }
     val ink = when {
         focused -> Tone.onFocusFill
-        selected -> Tone.onAccent
+        selected && touch -> Tone.onAccent
+        selected -> Tone.accent
         else -> Tone.text
     }
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     Row(
         Modifier
+            // Left and Right stay in this row: past its end there is nothing to move to, rather
+            // than the nearest pill of the row below.
+            .onPreviewKeyEvent { event ->
+                event.type == KeyEventType.KeyDown && when (event.key) {
+                    Key.DirectionRight -> if (rtl) first else last
+                    Key.DirectionLeft -> if (rtl) last else first
+                    else -> false
+                }
+            }
             .arrowsMoveFocus()
             .height(40.dp)
             .clip(CircleShape)

@@ -82,8 +82,10 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -796,12 +798,16 @@ private fun ProfileButton(account: Account?, inProfile: Boolean, badged: Boolean
 @Composable
 private fun BarCaption(text: String, chosen: Boolean) {
     val ink by androidx.compose.animation.animateColorAsState(if (chosen) Tone.accent else Tone.muted, label = "barCaption")
+    // A long word steps down to fit the 64 dp button ("Einstellungen" was cut to "Einstellung…").
+    // Clip, not Ellipsis, because an ellipsized line never reports an overflow and so never steps.
+    val style = captionStyle()
     Text(
         text,
-        style = captionStyle(),
+        style = style,
         color = ink,
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = TextOverflow.Clip,
+        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize, stepSize = 0.5.sp),
         modifier = Modifier.padding(top = 2.dp, start = 2.dp, end = 2.dp),
     )
 }
