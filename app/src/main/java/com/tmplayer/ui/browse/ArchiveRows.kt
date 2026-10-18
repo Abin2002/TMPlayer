@@ -1,5 +1,8 @@
 package com.tmplayer.ui.browse
 
+// Not shown since 2026-10-19 (user: a chat lists its videos only); kept for when an archive can be
+// opened in place (a stored ZIP, CP85).
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding

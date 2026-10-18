@@ -236,6 +236,9 @@ object Td {
     private lateinit var device: DeviceInfo
     private lateinit var credentials: Credentials
 
+    /** The API id this app signs in with, or 0 before [start]: how TMPlayer's own sessions are told apart. */
+    val apiId: Int get() = if (::credentials.isInitialized) credentials.apiId else 0
+
     /** The directories the running client was given, or null before [start]. */
     val paths: Paths? get() = currentPaths
 

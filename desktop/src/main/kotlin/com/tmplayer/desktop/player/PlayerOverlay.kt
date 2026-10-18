@@ -392,6 +392,8 @@ internal fun BoxScope.PlayerOverlay(
     onEpisodes: (() -> Unit)? = null,
     /** The Cast button and its device popover (CP73); null leaves it out. */
     castButton: (@Composable () -> Unit)? = null,
+    /** The Subtitles button; false while a cast goes without subtitles ([com.tmplayer.cast.CAST_SUBTITLES]). */
+    subtitlesButton: Boolean = true,
 ) {
     val s = LocalStrings.current
     // The right click menu hangs at the cursor whether or not the controls are up.
@@ -504,10 +506,12 @@ internal fun BoxScope.PlayerOverlay(
                 Spacer(Modifier.height(4.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     ControlsPill {
-                        Box {
-                            OverlayButton(TmIcons.Subtitles, s.playerSubtitlesHint, onClick = { onOpenMenu(MenuAt(MenuPage.Subtitles, MenuAt.Anchor.Subtitles)) })
-                            if (menu?.anchor == MenuAt.Anchor.Subtitles) {
-                                PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, loop, onOpenMenu, onCloseMenu, onMenuAction)
+                        if (subtitlesButton) {
+                            Box {
+                                OverlayButton(TmIcons.Subtitles, s.playerSubtitlesHint, onClick = { onOpenMenu(MenuAt(MenuPage.Subtitles, MenuAt.Anchor.Subtitles)) })
+                                if (menu?.anchor == MenuAt.Anchor.Subtitles) {
+                                    PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, loop, onOpenMenu, onCloseMenu, onMenuAction)
+                                }
                             }
                         }
                         Box {

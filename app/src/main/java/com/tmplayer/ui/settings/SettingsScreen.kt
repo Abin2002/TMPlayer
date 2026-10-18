@@ -370,6 +370,9 @@ fun SettingsScreen(
     // [StorageSplit], which is also what the Downloads screen reads, so the two panels cannot
     // quote different numbers for the same disk.
     var split by remember { mutableStateOf(StorageSplit.EMPTY) }
+    // Whether the count has come back at all: after clearing everything TMPlayer really holds 0
+    // bytes, and the chart says so rather than waiting on a figure above zero (as Downloads does).
+    var splitRead by remember { mutableStateOf(false) }
     // Filled by the first refresh, never read during composition: reading it is a blocking
     // statvfs().
     var disk by remember { mutableStateOf(DiskInfo.EMPTY) }
@@ -460,6 +463,7 @@ fun SettingsScreen(
         }
         disk = measured.first
         split = measured.second
+        splitRead = true
     }
 
     val touch = isTouch()
@@ -1284,7 +1288,7 @@ fun SettingsScreen(
 
             SettingsPage.Storage -> {
                 settingsNote {
-                    StorageCard(split = split, disk = disk)
+                    StorageCard(split = split, disk = disk, measured = splitRead && disk.totalBytes > 0)
                 }
                 // The videos watching left behind, named and measured, each with Save to Downloads and
                 // Delete: the row opens the list of them, which is the Downloads screen's third tab.
@@ -2716,6 +2720,7 @@ private fun AccentRow(selected: com.tmplayer.data.Accent, wallpaper: Boolean, on
 private fun StorageCard(
     split: StorageSplit,
     disk: DiskInfo,
+    measured: Boolean,
 ) {
     val s = LocalStrings.current
     val touch = isTouch()
@@ -2730,7 +2735,7 @@ private fun StorageCard(
                 com.tmplayer.ui.components.StorageDonutPanel(
                     figures = split.chart(disk),
                     wide = wide,
-                    measured = split.totalBytes > 0 && disk.totalBytes > 0,
+                    measured = measured,
                     ringSize = if (!touch) 176.dp else if (wide) 168.dp else 196.dp,
                     large = !touch,
                 )
