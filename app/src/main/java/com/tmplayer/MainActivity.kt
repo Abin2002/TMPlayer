@@ -1499,6 +1499,8 @@ private fun Root() {
                 (screen is Screen.Settings && settingsPage == null && appLock?.let { !it.pinSet || settingsUnlocked } == true)
             )
         val tvBarFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+        // Settings opened from a top bar's tab keeps the remote on the bar, as every tab does.
+        var tvBarHold by remember { mutableStateOf(0) }
         var tvBarFocused by remember { mutableStateOf(false) }
         // Back on such a page: to the bar first, then from the bar to Home, the remote kept on the bar.
         val tvBarBack: () -> Unit = {
@@ -1534,7 +1536,10 @@ private fun Root() {
                     },
                     onOpenChat = { openChat(it) },
                     onResumeMedia = { resumeMedia(it) },
-                    onOpenSettings = openSettings,
+                    onOpenSettings = {
+                        openSettings()
+                        if (tvBar) tvBarHold++
+                    },
                     onOpenDownloads = openDownloads,
                     returnToRail = railReturn,
                     tvNav = if (tvBar) touchNav else null,
@@ -1794,6 +1799,7 @@ private fun Root() {
             val tvPageFocus = remember { androidx.compose.ui.focus.FocusRequester() }
             com.tmplayer.ui.browse.TvBarFrame(
                 shown = tvBarShown,
+                holdBar = tvBarHold,
                 barFocus = tvBarFocus,
                 contentFocus = tvPageFocus,
                 bar = {

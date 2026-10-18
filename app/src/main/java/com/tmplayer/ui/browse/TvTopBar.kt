@@ -238,6 +238,9 @@ internal fun TvTopBar(
     }
 }
 
+/** How many frames, about a second and a half at 60 Hz, a page opened from the bar leaves the remote on it. */
+private const val BAR_HOLD_FRAMES = 90
+
 /** The account's picture's focus ring, and the gap between it and the picture. */
 private val RING_WIDTH = 3.dp
 private val RING_GAP = 3.dp
@@ -380,10 +383,30 @@ internal fun TvBarFrame(
     shown: Boolean,
     barFocus: FocusRequester,
     contentFocus: FocusRequester,
+    /**
+     * Bumped when the page was opened from a bar's tab: the remote stays on the bar, held there
+     * against the page taking focus as it comes up, until a key is pressed.
+     */
+    holdBar: Int = 0,
     bar: @Composable () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    Box(Modifier.fillMaxSize()) {
+    val pressed = remember { booleanArrayOf(false) }
+    androidx.compose.runtime.LaunchedEffect(holdBar) {
+        if (holdBar == 0) return@LaunchedEffect
+        pressed[0] = false
+        repeat(BAR_HOLD_FRAMES) {
+            if (pressed[0]) return@LaunchedEffect
+            androidx.compose.runtime.withFrameNanos { }
+            if (shown && !pressed[0]) runCatching { barFocus.requestFocus() }
+        }
+    }
+    Box(
+        Modifier.fillMaxSize().onPreviewKeyEvent { event ->
+            if (event.type == KeyEventType.KeyDown) pressed[0] = true
+            false
+        },
+    ) {
         // The page starts below the bar, as the browser's pages do, and is clipped there.
         Box(
             Modifier
