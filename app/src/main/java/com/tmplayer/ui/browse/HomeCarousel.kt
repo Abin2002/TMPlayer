@@ -252,7 +252,7 @@ private fun FeaturedPage(
     ) {
         // Upright the picture spans the width and melts into the page at its foot; on its side
         // it stands at the end as on a television, and the words sit on the page.
-        EdgeBackdrop(source, Modifier.fillMaxSize())
+        EdgeBackdrop(source, Modifier.fillMaxSize(), onPictured = HomeFirstPaint::markReady)
         // The top darkened under the status bar, light in either theme.
         Box(
             Modifier

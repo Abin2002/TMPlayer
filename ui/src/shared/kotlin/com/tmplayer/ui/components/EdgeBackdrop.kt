@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +56,8 @@ fun EdgeBackdrop(
     share: Float = EDGE_SHARE,
     topFade: Dp = 0.dp,
     cornerShade: Dp = 0.dp,
+    /** Called once the first picture (or the cover standing for it) is drawn. */
+    onPictured: (() -> Unit)? = null,
 ) {
     BoxWithConstraints(modifier) {
         val density = LocalDensity.current
@@ -66,23 +69,30 @@ fun EdgeBackdrop(
         val topFadePx = with(density) { topFade.toPx() }
         val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
-        val shown = art ?: return@BoxWithConstraints
-        Crossfade(targetState = shown, animationSpec = Motion.standard(), modifier = Modifier.fillMaxSize()) { step ->
+        val pictured by androidx.compose.runtime.rememberUpdatedState(onPictured)
+        androidx.compose.runtime.LaunchedEffect(art != null) { if (art != null) pictured?.invoke() }
+        // From nothing as well as between steps, so the first picture fades in rather than popping.
+        Crossfade(targetState = art, animationSpec = Motion.standard(), modifier = Modifier.fillMaxSize(), label = "edgeBackdrop") { step ->
+            if (step == null) return@Crossfade
             Box(Modifier.fillMaxSize()) {
-                val picture = step.picture
+                // Until the sharp picture is in, the inline preview stands in its place, blurry but
+                // the same picture, rather than a cover of other colours flashing first.
+                val picture = step.picture ?: step.field
                 // The size the picture is drawn at, in pixels: its own shape at the share of the
                 // width, no taller than the frame (cropped from its foot then), and a small one
                 // capped at a few times its own pixels.
                 // A thumbnail too small to stand at the top floats, centred down the end, faded at
                 // its top as well, so it reads as a vignette rather than a strip under the clock.
-                val small = wide && picture != null && picture.width < SHARP_MIN_WIDTH
+                // The stand-in is meant blurry, so it is stretched to the full size, never floated.
+                val standIn = step.picture == null
+                val small = wide && !standIn && picture != null && picture.width < SHARP_MIN_WIDTH
                 val (w, h) = when {
                     picture == null -> pictureW to (if (wide) minOf(frameH, pictureW * 9 / 16) else frameH)
                     !wide -> frameW to frameH
                     else -> {
-                        val cap = if (picture.width < SHARP_MIN_WIDTH) (picture.width * EDGE_SMALL_SCALE).toInt() else Int.MAX_VALUE
+                        val cap = if (!standIn && picture.width < SHARP_MIN_WIDTH) (picture.width * EDGE_SMALL_SCALE).toInt() else Int.MAX_VALUE
                         val width = minOf(pictureW, cap)
-                        width to minOf(frameH, width * picture.height / picture.width.coerceAtLeast(1))
+                        width to minOf(frameH, if (standIn) width * 9 / 16 else width * picture.height / picture.width.coerceAtLeast(1))
                     }
                 }
                 val sized = with(density) { Modifier.size(w.toDp(), h.toDp()) }

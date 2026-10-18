@@ -470,6 +470,10 @@ fun BrowseScreen(
         val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
         val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
         val showsWatchLater = tab.listsVideos && historyTab == HistoryTab.WatchLater
+        // The loader held over a cold start waits for Home only (HomeFirstPaint): another tab, an
+        // error or an empty list has nothing more on its way, so it goes at once.
+        val homeComing = tab.isHome && (state is UiState.Loading || state is UiState.Content)
+        LaunchedEffect(homeComing) { if (!homeComing) HomeFirstPaint.markReady() }
         androidx.compose.runtime.CompositionLocalProvider(LocalJustStarred provides justStarred) {
         StateScaffold(
             state,

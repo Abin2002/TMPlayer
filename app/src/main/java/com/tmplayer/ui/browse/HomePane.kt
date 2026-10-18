@@ -161,6 +161,7 @@ internal fun HomePane(
     // On a phone the page runs up under the status bar (see LocalUnderStatusBar).
     val under = if (touch) LocalUnderStatusBar.current else 0.dp
     if (rows.isEmpty()) {
+        LaunchedEffect(Unit) { HomeFirstPaint.markReady() }
         // Nothing played and nothing starred: a first run, so say how to get a first video in.
         Column(Modifier.fillMaxSize().padding(top = under)) {
             tvHeader?.invoke(false)
@@ -174,6 +175,9 @@ internal fun HomePane(
     val recent = rows.firstNotNullOfOrNull { it as? HomeRow.Recent }
     val featured = rememberFeatured(recent)
     val carousel = recent != null && featured?.isEmpty() != true
+    // With no carousel the rows are the whole first screen; with one, its first picture tells
+    // HomeFirstPaint (through the carousel), so the loader lifts over a finished Home.
+    LaunchedEffect(carousel) { if (!carousel) HomeFirstPaint.markReady() }
     val listed = if (recent != null) rows.filterNot { it === recent } else rows
     val first = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
@@ -822,13 +826,22 @@ private fun rememberFeatured(recent: HomeRow.Recent?): List<com.tmplayer.data.Fe
     var ranked by remember { mutableStateOf<List<com.tmplayer.data.FeaturedPick>?>(null) }
     LaunchedEffect(base, online) {
         val picks = base ?: return@LaunchedEffect
-        ranked = if (picks.isEmpty()) {
-            picks
-        } else {
-            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                com.tmplayer.data.HomeFeatured.rank(picks) { sharpOnline(it, online) }
-            }
+        if (picks.isEmpty()) {
+            ranked = picks
+            return@LaunchedEffect
         }
+        // Ranking asks for each pick's online picture, which on a slow stick took over ten
+        // seconds: the carousel waits a moment for it, then shows the picks in Telegram's order
+        // and takes the ranked order once it is in (the page being looked at stays, by its key).
+        suspend fun rankAll() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            com.tmplayer.data.HomeFeatured.rank(picks) { sharpOnline(it, online) }
+        }
+        val quick = kotlinx.coroutines.withTimeoutOrNull(RANK_WAIT_MS) { rankAll() }
+        ranked = quick ?: picks
+        if (quick == null) ranked = rankAll()
     }
     return ranked
 }
+
+/** How long the carousel waits for its ranked order before showing the picks as they came. */
+private const val RANK_WAIT_MS = 1_200L
