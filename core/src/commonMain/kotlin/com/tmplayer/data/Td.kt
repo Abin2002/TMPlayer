@@ -376,6 +376,9 @@ object Td {
             }
             val posted = launch {
                 td.newMessageUpdates.collect { update ->
+                    // Only what a chat's grid lists: a round video or a link preview's video is
+                    // found through its own entry (CP81), never added to the grid live.
+                    if (!MediaMapper.isVideoContent(update.message.content)) return@collect
                     MediaMapper.fromMessage(update.message)?.let { item ->
                         _videoChanges.tryEmit(VideoChange.Added(update.message.chatId, item))
                     }

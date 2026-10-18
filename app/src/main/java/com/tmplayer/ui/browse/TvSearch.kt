@@ -125,6 +125,8 @@ internal fun TvSearchScreen(
         if (text.isBlank()) GlobalSearch.recentChats(chats, favourites, limit = 10)
         else withUsernameChat(GlobalSearch.localChats(chats, text, favourites), byUsername).take(10)
     }
+    // A typed post or invite link, or a public chat to join (CP79), as a pill beside the field.
+    val offer = rememberLinkOffer(text, byUsername)
     val briefs = remember(state.chats, chats) { state.chats + chats.associate { it.id to ChatBrief.of(it) } }
     var focusedGroup by remember { mutableStateOf<ResultGroup?>(null) }
     val grid = rememberLazyGridState()
@@ -171,6 +173,7 @@ internal fun TvSearchScreen(
                     onText("")
                 }
             }
+            offer?.let { found -> TvPill(found.label, TmIcons.Send) { LinkRequests.ask(found.link) } }
         }
         Spacer(Modifier.height(16.dp))
 

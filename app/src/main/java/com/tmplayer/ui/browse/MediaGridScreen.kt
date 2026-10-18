@@ -479,6 +479,17 @@ fun MediaGridScreen(
     // The chat's audio: how much there is, and whether its list is open.
     val audioCount by viewModel.audioCount.collectAsState()
     var audioOpen by remember(chatId) { mutableStateOf(false) }
+    // Its round videos and its pinned post (CP81), over the videos with the audio.
+    val roundCount by viewModel.roundCount.collectAsState()
+    val pinnedPost by viewModel.pinned.collectAsState()
+    var roundOpen by remember(chatId) { mutableStateOf(false) }
+    // Which of them takes the remote's first focus in a chat with no videos of its own.
+    val firstExtra = when {
+        pinnedPost != null -> "pinned"
+        audioCount > 0 -> "audio"
+        roundCount > 0 -> "round"
+        else -> null
+    }
     var refreshing by remember(chatId) { mutableStateOf(false) }
     LaunchedEffect(refreshing) {
         if (!refreshing) return@LaunchedEffect
@@ -676,10 +687,21 @@ fun MediaGridScreen(
                             if (course != null || loadedOnly) {
                                 item(key = "course", span = { GridItemSpan(maxLineSpan) }) { courseHeader() }
                             }
-                            // The chat's audio, as a list to play from, over its videos.
+                            // The chat's pinned video, its audio and its round videos, over its videos.
+                            val pinnedShown = pinnedPost
+                            if (pinnedShown != null && query.isBlank()) {
+                                item(key = "pinned", span = { GridItemSpan(maxLineSpan) }) {
+                                    PinnedEntry(pinnedShown, onPlay = onPlay, modifier = if (feed.isEmpty() && firstExtra == "pinned") Modifier.focusRequester(firstItem) else Modifier)
+                                }
+                            }
                             if (audioCount > 0 && query.isBlank()) {
                                 item(key = "audio", span = { GridItemSpan(maxLineSpan) }) {
-                                    AudioEntry(audioCount, noVideos = feed.isEmpty(), onOpen = { audioOpen = true }, modifier = if (feed.isEmpty()) Modifier.focusRequester(firstItem) else Modifier)
+                                    AudioEntry(audioCount, noVideos = feed.isEmpty() && firstExtra == "audio", onOpen = { audioOpen = true }, modifier = if (feed.isEmpty() && firstExtra == "audio") Modifier.focusRequester(firstItem) else Modifier)
+                                }
+                            }
+                            if (roundCount > 0 && query.isBlank()) {
+                                item(key = "round", span = { GridItemSpan(maxLineSpan) }) {
+                                    RoundEntry(roundCount, noVideos = feed.isEmpty() && firstExtra == "round", onOpen = { roundOpen = true }, modifier = if (feed.isEmpty() && firstExtra == "round") Modifier.focusRequester(firstItem) else Modifier)
                                 }
                             }
                             shelfGrid(
@@ -736,7 +758,7 @@ fun MediaGridScreen(
                                     }
                             }
                             // The chat's compressed files, which cannot be played, each with why.
-                            archiveItems(list.archives, noVideos = feed.isEmpty() && audioCount == 0, first = if (feed.isEmpty() && audioCount == 0) firstItem else null, onExplain = onOfflineAction)
+                            archiveItems(list.archives, noVideos = feed.isEmpty() && firstExtra == null, first = if (feed.isEmpty() && firstExtra == null) firstItem else null, onExplain = onOfflineAction)
                         }
     
                         CardLayout.List -> LazyColumn(
@@ -747,9 +769,20 @@ fun MediaGridScreen(
                         ) {
                             if (metaNotice) item(key = "meta-notice") { metaNoticeCard() }
                             if (course != null || loadedOnly) item(key = "course") { courseHeader() }
+                            val pinnedShown = pinnedPost
+                            if (pinnedShown != null && query.isBlank()) {
+                                item(key = "pinned") {
+                                    PinnedEntry(pinnedShown, onPlay = onPlay, modifier = if (feed.isEmpty() && firstExtra == "pinned") Modifier.focusRequester(firstItem) else Modifier)
+                                }
+                            }
                             if (audioCount > 0 && query.isBlank()) {
                                 item(key = "audio") {
-                                    AudioEntry(audioCount, noVideos = feed.isEmpty(), onOpen = { audioOpen = true }, modifier = if (feed.isEmpty()) Modifier.focusRequester(firstItem) else Modifier)
+                                    AudioEntry(audioCount, noVideos = feed.isEmpty() && firstExtra == "audio", onOpen = { audioOpen = true }, modifier = if (feed.isEmpty() && firstExtra == "audio") Modifier.focusRequester(firstItem) else Modifier)
+                                }
+                            }
+                            if (roundCount > 0 && query.isBlank()) {
+                                item(key = "round") {
+                                    RoundEntry(roundCount, noVideos = feed.isEmpty() && firstExtra == "round", onOpen = { roundOpen = true }, modifier = if (feed.isEmpty() && firstExtra == "round") Modifier.focusRequester(firstItem) else Modifier)
                                 }
                             }
                             items(
@@ -805,7 +838,7 @@ fun MediaGridScreen(
                                 }
                               }
                             }
-                            archiveItems(list.archives, noVideos = feed.isEmpty() && audioCount == 0, first = if (feed.isEmpty() && audioCount == 0) firstItem else null, onExplain = onOfflineAction)
+                            archiveItems(list.archives, noVideos = feed.isEmpty() && firstExtra == null, first = if (feed.isEmpty() && firstExtra == null) firstItem else null, onExplain = onOfflineAction)
                         }
                     }
                 }
@@ -960,7 +993,7 @@ fun MediaGridScreen(
             // on a remote: on a phone this would highlight a card nobody pointed at.
             // The rows or tiles button pressed in the heading keeps the remote, though: the list
             // under it changes, and the button is where the viewer is looking to press it again.
-            LaunchedEffect(list.items.firstOrNull()?.id, layout, touch, audioCount > 0) {
+            LaunchedEffect(list.items.firstOrNull()?.id, layout, touch, firstExtra) {
                 val switchedHere = laidOut[0] != layout && headerHasFocus
                 laidOut[0] = layout
                 if (!touch && !switchedHere) runCatching { firstItem.requestFocus() }
@@ -997,6 +1030,19 @@ fun MediaGridScreen(
     val downloadSelected = { downloadThese(selected.values.toList()) }
         .takeIf { selected.isEmpty() || selected.values.any { it.canBeSaved } }
 
+    if (roundOpen) {
+        val roundScope = rememberCoroutineScope()
+        val rounds = remember(chatId) { PagedVideos.roundVideos(roundScope, chatId) }
+        MoreVideosSheet(
+            title = LocalStrings.current.gridRoundTitle,
+            note = chatTitle.ifBlank { null },
+            list = rounds,
+            empty = LocalStrings.current.gridRoundNone,
+            round = true,
+            onPlay = onPlay,
+            onDismiss = { roundOpen = false },
+        )
+    }
     if (audioOpen) {
         AudioSheet(chatId, chatTitle, onPlay = onPlay, onDismiss = { audioOpen = false })
     }
