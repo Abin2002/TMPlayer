@@ -2,6 +2,8 @@ package com.tmplayer.data
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -71,6 +73,25 @@ class AuthStallTest {
         advanceTimeBy(2)
         runCurrent()
         assertTrue(stalled.value)
+        watch.cancel()
+    }
+
+    @Test
+    fun `a sign in pane with no line stalls too, and the line coming back clears it`() = runTest {
+        val link = MutableStateFlow(TelegramLink.Connecting)
+        val waiting = combine(auth, link, attempt) { a, l, n -> ConnectAdvice.waiting(a, l) to n }
+            .distinctUntilChanged().map { it.first }
+        val watch = launch { AuthStall.watchWaiting(waiting, stalled, TIMEOUT) }
+        advanceTimeBy(TIMEOUT / 2)
+        // Connecting to the phone pane with still no line: the count carries on, not from zero.
+        auth.value = AuthState.Phone()
+        runCurrent()
+        advanceTimeBy(TIMEOUT / 2 + 1)
+        runCurrent()
+        assertTrue(stalled.value)
+        link.value = TelegramLink.Ready
+        runCurrent()
+        assertFalse(stalled.value)
         watch.cancel()
     }
 

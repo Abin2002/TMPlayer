@@ -528,6 +528,11 @@ internal fun AboutRows(state: ShellState, version: String, onShowAbout: () -> Un
     }
 
     Group(s.settingsHelp)
+    // A proxy (CP77), for a network where Telegram is blocked: the connecting help's own screen.
+    val proxyOn by com.tmplayer.data.Td.proxyOn.collectAsState()
+    Action(s.proxyTitle, if (proxyOn) s.proxyInUse else s.proxySettingsDetailOff, TmIcons.Wifi) {
+        com.tmplayer.ui.connect.ProxyScreenState.open = true
+    }
     Action(s.settingsTour, s.settingsTourBody, TmIcons.Help) { scope.launch { settings.openTour() } }
     Action(s.settingsWhatsNew, s.settingsWhatsNewDetail(WhatsNew.VERSION), TmIcons.StarOutline) { whatsNew = true }
     Action(s.settingsChangelog, s.settingsChangelogDetail, TmIcons.List, end = RowEnd.External) {

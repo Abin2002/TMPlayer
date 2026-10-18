@@ -21,6 +21,7 @@ import com.tmplayer.data.MediaItem
 import com.tmplayer.data.MediaName
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.ResumeRecord
+import com.tmplayer.data.SplitPieces
 import com.tmplayer.data.Td
 import com.tmplayer.data.valueOrNull
 import com.tmplayer.i18n.L
@@ -122,6 +123,15 @@ interface PlayerMedia {
      * whole video: 42 %"); null when there is nothing to say beyond the screen's own words.
      */
     val preparing: StateFlow<String?> get() = NOTHING_TO_SAY
+
+    /**
+     * What to tell the viewer as the video starts, once [open] has returned: for a video cut into
+     * byte pieces with one missing, "Part 4 of 7 is not in this chat, so the video plays up to it."
+     */
+    val notice: String? get() = null
+
+    /** True when the video stops short of its end (a missing piece), so its end marks nothing watched. */
+    val incomplete: Boolean get() = false
 }
 
 private val NOTHING_TO_SAY: StateFlow<String?> = MutableStateFlow(null)
@@ -185,6 +195,8 @@ class TelegramPlayerMedia(
         }
         // A download plays from the Downloads folder (B3.5), before TDLib is asked anything: it is
         // not in TDLib's cache at all any more, and it plays with no connection.
+        // A video cut into byte pieces plays joined, whatever is kept of any one piece.
+        joinedPieces()?.let { return openJoined(it) }
         indexed(item.chatId, item.messageId)?.let { file ->
             downloadFile = file
             _downloaded.value = 1f
@@ -231,6 +243,135 @@ class TelegramPlayerMedia(
                 if (lowStorageFileId == fileId) lowStorageHold?.let { LowStorageStreams.revoke(fileId, it) }
             },
         )
+    }
+
+    // A video cut into byte pieces ([SplitPieces]), played as one stream of their bytes joined.
+
+    @Volatile
+    private var joinedNotice: String? = null
+
+    @Volatile
+    private var joinedIncomplete = false
+
+    override val notice: String? get() = joinedNotice
+    override val incomplete: Boolean get() = joinedIncomplete
+
+    /** The pieces, joined into one item, once [open] found them: what Download keeps. */
+    @Volatile
+    private var joinedItem: MediaItem? = null
+
+    /**
+     * The pieces of this video, in order: from the grid, else searched for in the chat, else among
+     * the Downloads for a player with no connection. Null for any other video.
+     */
+    private suspend fun joinedPieces(): List<MediaItem>? {
+        if (item.chatId == 0L) return null
+        if (item.isJoined) return item.pieces
+        if (item.splitPiece?.certain != true) return null
+        val found = runCatching {
+            val repository = ChatRepository(Td.awaitAuthorizedSession().client)
+            SplitPieces.lookUp(item) { query, cursors ->
+                runCatching { repository.mediaPage(item.chatId, cursors, query = query, topicId = item.topicId) }.getOrNull()
+            }
+        }.getOrNull().orEmpty()
+        if (found.size > 1) return found
+        val kept = runCatching { SplitPieces.among(item, DesktopServices.settings.downloadsNow().map { it.toMediaItem() }) }.getOrNull()
+        return kept?.takeIf { it.size > 1 } ?: found.ifEmpty { null }
+    }
+
+    /**
+     * The pieces as one stream ([JoinedStreamBytes]): each from Downloads where it is there, else
+     * streamed from TDLib under its current id, opened only when mpv reads into it. Room is made
+     * for the whole video, every streamed piece is claimed as the cached video and bounded for
+     * Low storage mode, and a piece a seek leaves behind stops downloading.
+     */
+    private suspend fun openJoined(all: List<MediaItem>): MediaData {
+        val notice = SplitPieces.playerNotice(all)
+        val playable = SplitPieces.playablePieces(all)
+        if (playable.isEmpty()) throw IOException(notice ?: L.playerNothingToPlay)
+        joinedNotice = notice
+        joinedIncomplete = notice != null
+        joinedItem = SplitPieces.joined(all)
+        ensureRoom()
+        val session = Td.awaitAuthorizedSession()
+        val client = session.client
+        class Source(val piece: MediaItem, val file: File?, val fileId: Int, val size: Long)
+        val sources = playable.map { piece ->
+            val file = indexed(piece.chatId, piece.messageId)
+            if (file != null) {
+                Source(piece, file, 0, file.length())
+            } else {
+                val id = runCatching { Td.currentFileId(piece.chatId, piece.messageId, piece.fileId) }.getOrDefault(piece.fileId)
+                val td = client.getFile(id).valueOrNull
+                val size = td?.let { if (it.size > 0) it.size else it.expectedSize }?.takeIf { it > 0 } ?: piece.sizeBytes
+                Source(piece, null, id, size)
+            }
+        }
+        if (sources.any { it.size <= 0 }) throw IOException(L.playerOpenFailed)
+        val streamed = sources.filter { it.file == null }
+        playingId = streamed.firstOrNull()?.fileId ?: playingId
+        if (streamed.isNotEmpty()) {
+            cache?.let { c -> background.launch { runCatching { c.claimAll(streamed.map { it.piece.copy(title = item.title) to it.fileId }, chatTitle) } } }
+            boundPieces(streamed.map { it.fileId })
+        }
+        _downloaded.value = if (streamed.isEmpty()) 1f else null
+        val open = java.util.Collections.synchronizedSet(HashSet<Int>())
+        val bytes = JoinedStreamBytes(
+            sizes = sources.map { it.size },
+            open = { index, from ->
+                val source = sources[index]
+                if (source.file != null) {
+                    LocalFileBytes(source.file)
+                } else {
+                    TdStreamBytes(client, source.fileId).also {
+                        it.start(from)
+                        if (open.add(source.fileId)) ActiveStreams.opened(source.fileId)
+                    }
+                }
+            },
+            onLeft = { index ->
+                val id = sources[index].fileId
+                if (id != 0 && open.remove(id)) {
+                    val lowStorage = LowStorageStreams.isRolling(id)
+                    stopDownload(id)
+                    // In Low storage mode the window is per piece: the one left goes.
+                    if (lowStorage) background.launch { runCatching { Td.deleteFile(id) } }
+                }
+            },
+        )
+        val name = SplitPieces.baseOf(playable.first().fileName.ifBlank { item.fileName })
+        return TdMediaData(
+            bytes = bytes,
+            uri = "tdjoin/${playable.first().fileId}/" + name.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "video" },
+            prefetchTail = TailPrefetch.wanted(name, item.mimeType),
+            onClose = {
+                open.toList().forEach(::stopDownload)
+                open.clear()
+                letGoOfPieceBounds()
+            },
+        )
+    }
+
+    /** What [LowStorageStreams] gave each streamed piece, taken back once the bytes are closed. */
+    private val pieceHolds = java.util.concurrent.ConcurrentHashMap<Int, Any>()
+
+    private suspend fun boundPieces(ids: List<Int>) {
+        letGoOfPieceBounds()
+        val settings = DesktopServices.settings
+        if (!runCatching { settings.lowStorageModeNow() }.getOrDefault(false)) return
+        if (runCatching { settings.isKeptDownload(item.chatId, item.messageId) }.getOrDefault(true)) return
+        val window = LowStorageWindow.windowBytes(DesktopPaths.disk().freeBytes, CacheShelf.HEADROOM_BYTES)
+        for (id in ids) {
+            LowStorageStreams.revoke(id)
+            if (OfflineDownloads.isDownloading(id)) continue
+            if (runCatching { Td.localFileAvailability(id) }.getOrNull() == LocalFileAvailability.Complete) continue
+            pieceHolds[id] = LowStorageStreams.allow(id, window)
+        }
+    }
+
+    private fun letGoOfPieceBounds() {
+        pieceHolds.forEach { (id, hold) -> LowStorageStreams.revoke(id, hold) }
+        pieceHolds.clear()
     }
 
     /** The file [LowStorageStreams] was told about, taken back at [release]. */
@@ -375,17 +516,20 @@ class TelegramPlayerMedia(
         if (row != null && row.busy) {
             return if (row.stage == OfflineDownloads.Stage.Moving) L.downloadsSavesWhenStopped else L.downloadsAlreadyDownloading
         }
-        OfflineDownloads.start(runner, item.copy(fileId = playingId), chatTitle)
+        // A joined video keeps every piece; any other file under the id this session plays it as.
+        OfflineDownloads.start(runner, joinedItem ?: item.copy(fileId = playingId), chatTitle)
         return if (_downloaded.value == 1f) L.downloadsSavingWhenStopped else L.downloadsDownloadingTitle(item.title)
     }
 
     override suspend fun localFile(): File? {
+        // One piece's file is not the video: nothing to hand another app.
+        if (joinedItem != null) return null
         downloadFile?.let { return it }
         return runCatching { Td.localFilePath(playingId) }.getOrNull()?.let(::File)
     }
 
     /** A stream is hashed from TDLib's partial file once both ends are there, without moving it. */
-    override suspend fun onlineHash(): String? = localFile()?.let { withContext(Dispatchers.IO) { com.tmplayer.online.MovieHash.of(it) } }
+    override suspend fun onlineHash(): String? = if (joinedItem != null) null else localFile()?.let { withContext(Dispatchers.IO) { com.tmplayer.online.MovieHash.of(it) } }
         ?: runCatching {
             withTimeoutOrNull(3_000) {
                 com.tmplayer.online.OnlineSubtitles.hashFromTdlib(Td.awaitConnectedSession().client, playingId, item.sizeBytes)

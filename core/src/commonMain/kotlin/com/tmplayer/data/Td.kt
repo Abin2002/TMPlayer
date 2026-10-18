@@ -8,9 +8,8 @@ import com.tmplayer.platform.Paths
 import dev.g000sha256.tdl.TdlClient
 import dev.g000sha256.tdl.TdlResult
 import dev.g000sha256.tdl.dto.AuthorizationState
-import dev.g000sha256.tdl.dto.ConnectionStateReady
 import dev.g000sha256.tdl.dto.CountryInfo
-import dev.g000sha256.tdl.dto.ConnectionStateUpdating
+import dev.g000sha256.tdl.dto.EmailAddressAuthenticationCode
 import dev.g000sha256.tdl.dto.FileType
 import dev.g000sha256.tdl.dto.FileTypeAnimation
 import dev.g000sha256.tdl.dto.FileTypeAudio
@@ -23,6 +22,11 @@ import dev.g000sha256.tdl.dto.FileTypeThumbnail
 import dev.g000sha256.tdl.dto.FileTypeVideo
 import dev.g000sha256.tdl.dto.FileTypeVideoNote
 import dev.g000sha256.tdl.dto.FileTypeVideoStory
+import dev.g000sha256.tdl.dto.NetworkType
+import dev.g000sha256.tdl.dto.NetworkTypeMobile
+import dev.g000sha256.tdl.dto.NetworkTypeMobileRoaming
+import dev.g000sha256.tdl.dto.NetworkTypeOther
+import dev.g000sha256.tdl.dto.NetworkTypeWiFi
 import dev.g000sha256.tdl.dto.OptionValueBoolean
 import dev.g000sha256.tdl.dto.OptionValueInteger
 import kotlinx.coroutines.CancellationException
@@ -39,7 +43,9 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -99,6 +105,14 @@ object Td {
     private val _signInStalled = MutableStateFlow(false)
     val signInStalled: StateFlow<Boolean> = _signInStalled.asStateFlow()
 
+    /**
+     * True once a signed in session has had no line to Telegram for [UNREACHABLE_MS] while the
+     * network itself is up: Telegram is blocked or out of reach, and a banner offers Retry and a
+     * proxy. Cleared the moment the line is back, or by a Retry ([retryConnecting]).
+     */
+    private val _unreachable = MutableStateFlow(false)
+    val unreachable: StateFlow<Boolean> = _unreachable.asStateFlow()
+
     /** Bumped by [retryConnecting], so the stall count starts again while the state stays put. */
     private val connectAttempt = MutableStateFlow(0)
 
@@ -122,6 +136,21 @@ object Td {
      */
     private val _connected = MutableStateFlow(false)
     val connected: StateFlow<Boolean> = _connected.asStateFlow()
+
+    /**
+     * The same line in full: waiting for a network, going through a proxy, connecting, catching up
+     * or ready. The connecting screen says which, so a wait is never a silent one.
+     */
+    private val _link = MutableStateFlow(TelegramLink.Starting)
+    val link: StateFlow<TelegramLink> = _link.asStateFlow()
+
+    /** What the platform last said about its network ([onNetworkChanged]); unknown on a desktop. */
+    private val _network = MutableStateFlow(NetworkFacts())
+    val network: StateFlow<NetworkFacts> = _network.asStateFlow()
+
+    /** Whether TDLib is set to go through one of its stored proxies. See [proxies]. */
+    private val _proxyOn = MutableStateFlow(false)
+    val proxyOn: StateFlow<Boolean> = _proxyOn.asStateFlow()
 
     /**
      * The viewer's Telegram folders, in the order they were set up in.
@@ -208,7 +237,23 @@ object Td {
         }
         scope.launch { keepClientRunning() }
         scope.launch {
-            AuthStall.watch(combine(_auth, connectAttempt) { state, _ -> state }, _signInStalled, CONNECT_TIMEOUT_MS)
+            // Held up on Telegram (ConnectAdvice.waiting), counted afresh by a retry but not by a
+            // move between two states that are both still waiting, such as Connecting to the
+            // phone pane with no line yet.
+            val waiting = combine(_auth, _link, connectAttempt) { auth, link, attempt ->
+                ConnectAdvice.waiting(auth, link) to attempt
+            }.distinctUntilChanged().map { it.first }
+            AuthStall.watchWaiting(waiting, _signInStalled, SIGN_IN_STALL_MS)
+        }
+        scope.launch {
+            // Signed in, the network up as far as the platform knows, and still no line: the
+            // blocked network that otherwise reads as a slow one. A network that is really gone
+            // has the offline notice already, so it is left to that.
+            val held = combine(_auth, _link, _network, connectAttempt) { auth, link, network, attempt ->
+                val up = network.status != NetworkStatus.Offline && link != TelegramLink.WaitingForNetwork
+                (auth is AuthState.Ready && !link.isUp && up) to attempt
+            }.distinctUntilChanged().map { it.first }
+            AuthStall.watchWaiting(held, _unreachable, UNREACHABLE_MS)
         }
     }
 
@@ -346,8 +391,10 @@ object Td {
                     // "Updating" means the socket is up and TDLib is pulling in what it missed.
                     // Requests are answered from that point on, so it counts as connected; waiting
                     // for it to finish would hold the chat list back on a large account.
-                    _connected.value = update.state is ConnectionStateReady ||
-                        update.state is ConnectionStateUpdating
+                    val now = TelegramLink.of(update.state)
+                    if (now != _link.value) Logger.i(TAG, "connection: $now")
+                    _link.value = now
+                    _connected.value = now.isUp
                 }
             }
             // The first update may already have been emitted before we subscribed, so ask
@@ -377,6 +424,7 @@ object Td {
             // still waiting on TDLib would otherwise leak a coroutine holding a dead client.
             primer.cancel()
             _connected.value = false
+            _link.value = TelegramLink.Starting
             current = null
             _session.value = null
         }
@@ -462,7 +510,12 @@ object Td {
      */
     suspend fun submitPhoneNumber(phoneNumber: String): String? {
         val td = current ?: return L.errorsNotConnected
-        return when (val result = td.setAuthenticationPhoneNumber(phoneNumber)) {
+        // With no line to Telegram the request waits for one, and the button waited with it. The
+        // request stays with TDLib, so if the line comes back the code is still sent and the code
+        // screen follows; the viewer is told now, rather than never.
+        val result = withTimeoutOrNull(SUBMIT_TIMEOUT_MS) { td.setAuthenticationPhoneNumber(phoneNumber) }
+            ?: return L.errorsNoAnswer
+        return when (result) {
             is TdlResult.Success -> null
             is TdlResult.Failure -> {
                 _auth.value = AuthState.Phone(wrong = true)
@@ -489,6 +542,43 @@ object Td {
                     result.message.contains("PHONE_CODE_INVALID") -> L.errorsWrongCode
                     result.message.contains("PHONE_CODE_EXPIRED") ->
                         L.errorsCodeExpired
+                    else -> Failures.humanise(result.message)
+                }
+            }
+        }
+    }
+
+    /**
+     * Gives Telegram the email address it asked for ([AuthState.EmailAddress]); it mails a code
+     * there next. Null on success, an error otherwise.
+     */
+    suspend fun submitEmailAddress(address: String): String? {
+        val td = current ?: return L.errorsNotConnected
+        val result = withTimeoutOrNull(SUBMIT_TIMEOUT_MS) { td.setAuthenticationEmailAddress(address.trim()) }
+            ?: return L.errorsNoAnswer
+        return when (result) {
+            is TdlResult.Success -> null
+            is TdlResult.Failure -> {
+                _auth.value = AuthState.EmailAddress(wrong = true)
+                if (result.message.contains("EMAIL_INVALID")) L.errorsEmailInvalid else Failures.humanise(result.message)
+            }
+        }
+    }
+
+    /** Submits the code Telegram mailed ([AuthState.EmailCode]). Null on success, an error otherwise. */
+    suspend fun submitEmailCode(code: String): String? {
+        val td = current ?: return L.errorsNotConnected
+        val asked = _auth.value as? AuthState.EmailCode ?: AuthState.EmailCode("")
+        val result = withTimeoutOrNull(SUBMIT_TIMEOUT_MS) {
+            td.checkAuthenticationEmailCode(EmailAddressAuthenticationCode(code.trim()))
+        } ?: return L.errorsNoAnswer
+        return when (result) {
+            is TdlResult.Success -> null
+            is TdlResult.Failure -> {
+                _auth.value = asked.copy(wrong = true)
+                when {
+                    result.message.contains("CODE_INVALID") -> L.errorsWrongCode
+                    result.message.contains("CODE_EXPIRED") -> L.errorsCodeExpired
                     else -> Failures.humanise(result.message)
                 }
             }
@@ -552,7 +642,12 @@ object Td {
         )
         if (result is TdlResult.Failure) {
             _auth.value = AuthState.Failed(L.errorsTdlibParameters(result.message))
+            return
         }
+        // Both are answered from TDLib's own database, so they work with no line to Telegram:
+        // the network this device is on, and whether a stored proxy is switched on.
+        scope.launch { tellNetworkType(td) }
+        scope.launch { refreshProxyOn(td) }
     }
 
     private suspend fun onReady(td: TdlClient) {
@@ -609,16 +704,26 @@ object Td {
      * client is closed and a fresh one opened over the same database, keeping the chosen method.
      * Nobody is signed in at this point, so nothing is lost. If TDLib never reports the old client
      * closed, the new one is started anyway after [RESTART_TIMEOUT_MS], as [restart] does.
+     *
+     * Anywhere else (a sign in screen, or a signed in session that has lost its line) the client
+     * is kept and only its connections are reopened, by telling it the network type again.
      */
     suspend fun retryConnecting() {
         _signInStalled.value = false
+        _unreachable.value = false
         connectAttempt.value++
         clientRetry?.let {
             it.complete(Unit)
             return
         }
         val td = current ?: return
-        if (_auth.value !is AuthState.Connecting) return
+        if (_auth.value !is AuthState.Connecting) {
+            // On a sign in screen with no line: the client is fine, its sockets are not. Telling
+            // it the network again reopens every connection at once instead of after its backoff.
+            Logger.i(TAG, "no line to Telegram; reopening connections")
+            tellNetworkType(td, force = true)
+            return
+        }
         Logger.i(TAG, "sign in stalled on Connecting; starting a new client")
         methodAfterRestart = method
         retiring = td
@@ -643,6 +748,112 @@ object Td {
     suspend fun cancelPhoneEntry() {
         method = SignInMethod.Undecided
         replay()
+    }
+
+    /**
+     * What the platform says about its network, each time it changes. TDLib cannot see the network
+     * for itself on Android: told nothing, a switch from Wi-Fi to mobile data leaves it waiting on
+     * dead sockets until its own backoff runs out. Told, it reopens them at once. Only a real
+     * switch is passed on ([NetworkFacts.isSwitchFrom]), since every call drops every connection,
+     * and losing the network is not, since TDLib told it has none would stop trying altogether.
+     */
+    fun onNetworkChanged(facts: NetworkFacts) {
+        val before = _network.value
+        _network.value = facts
+        if (!facts.isSwitchFrom(before)) return
+        val td = current ?: return
+        scope.launch { tellNetworkType(td) }
+    }
+
+    private suspend fun tellNetworkType(td: TdlClient, force: Boolean = false) {
+        val facts = _network.value
+        // The desktop knows nothing about its network, and TDLib's default is already "other";
+        // a Retry ([force]) still says it, for the reopened connections.
+        if (!facts.known && !force) return
+        val type: NetworkType = when (facts.kind) {
+            NetworkKind.WiFi -> NetworkTypeWiFi()
+            NetworkKind.Mobile -> NetworkTypeMobile()
+            NetworkKind.Roaming -> NetworkTypeMobileRoaming()
+            NetworkKind.Ethernet, NetworkKind.Other -> NetworkTypeOther()
+        }
+        val result = runCatching { td.setNetworkType(type) }.getOrNull()
+        if (result is TdlResult.Failure) Logger.w(TAG, "setNetworkType failed: ${result.message}")
+    }
+
+    /**
+     * The proxies TDLib has stored, which it keeps in its own database and so across restarts and
+     * sign outs. Usable before sign in, which is the point: where Telegram is blocked the sign in
+     * cannot happen without one. Empty with no client.
+     */
+    suspend fun proxies(): List<ProxyEntry> {
+        val td = current ?: return emptyList()
+        val list = td.getProxies().valueOrNull?.proxies.orEmpty().map(ProxyEntry::of)
+        _proxyOn.value = list.any { it.enabled }
+        return list
+    }
+
+    /** Stores [spec] and, with [enable], switches TDLib over to it. Null on success, an error otherwise. */
+    suspend fun addProxy(spec: ProxySpec, enable: Boolean = true): String? {
+        val td = current ?: return L.errorsNotConnected
+        if (!spec.isComplete) return L.proxyFormInvalid
+        val result = td.addProxy(spec.toTdlib(), enable, "")
+        if (result is TdlResult.Failure) return Failures.humanise(result.message)
+        afterProxyChange(td)
+        return null
+    }
+
+    suspend fun enableProxy(id: Int): String? {
+        val td = current ?: return L.errorsNotConnected
+        val result = td.enableProxy(id)
+        if (result is TdlResult.Failure) return Failures.humanise(result.message)
+        afterProxyChange(td)
+        return null
+    }
+
+    /** Back to a direct connection; the proxies stay stored. */
+    suspend fun disableProxy(): String? {
+        val td = current ?: return L.errorsNotConnected
+        val result = td.disableProxy()
+        if (result is TdlResult.Failure) return Failures.humanise(result.message)
+        afterProxyChange(td)
+        return null
+    }
+
+    suspend fun removeProxy(id: Int): String? {
+        val td = current ?: return L.errorsNotConnected
+        val result = td.removeProxy(id)
+        if (result is TdlResult.Failure) return Failures.humanise(result.message)
+        afterProxyChange(td)
+        return null
+    }
+
+    /**
+     * How long Telegram takes to answer through [spec], in milliseconds, or null with the reason
+     * when it does not. TDLib gives up on its own; the ceiling is for a request it never answers.
+     */
+    suspend fun pingProxy(spec: ProxySpec): Pair<Long?, String?> {
+        val td = current ?: return null to L.errorsNotConnected
+        val result = withTimeoutOrNull(PING_TIMEOUT_MS) { td.pingProxy(spec.toTdlib()) }
+            ?: return null to L.proxyPingFailed
+        return when (result) {
+            is TdlResult.Success -> (result.result.seconds * 1000).toLong() to null
+            is TdlResult.Failure -> {
+                Logger.i(TAG, "proxy ping failed: ${result.message}")
+                null to L.proxyPingFailed
+            }
+        }
+    }
+
+    /** A proxy switched on or off is a new way to Telegram, so the sign in's wait counts again. */
+    private suspend fun afterProxyChange(td: TdlClient) {
+        refreshProxyOn(td)
+        _signInStalled.value = false
+        connectAttempt.value++
+    }
+
+    private suspend fun refreshProxyOn(td: TdlClient) {
+        val list = td.getProxies().valueOrNull?.proxies ?: return
+        _proxyOn.value = list.any { it.isEnabled }
     }
 
     /** Waits for an authorized client and returns the generation it belongs to. */
@@ -997,6 +1208,21 @@ object Td {
 
     /** Long enough for a slow stick on a cold morning, short enough not to read as a hang. */
     private const val CONNECT_TIMEOUT_MS = 30_000L
+
+    /**
+     * How long the sign in waits on Telegram before it says so and offers help. A first launch
+     * on a working line is through in a few seconds; past this the viewer is wondering already.
+     */
+    const val SIGN_IN_STALL_MS = 12_000L
+
+    /** How long a signed in session goes without a line before [unreachable] says so. */
+    private const val UNREACHABLE_MS = 15_000L
+
+    /** How long a typed answer (a number, an email) waits for Telegram before the screen says so. */
+    private const val SUBMIT_TIMEOUT_MS = 20_000L
+
+    /** Past this a proxy is not answering, whatever TDLib is still doing about it. */
+    private const val PING_TIMEOUT_MS = 15_000L
 
     /** How long [restart] waits for TDLib to say the old client is closed before moving on. */
     private const val RESTART_TIMEOUT_MS = 20_000L

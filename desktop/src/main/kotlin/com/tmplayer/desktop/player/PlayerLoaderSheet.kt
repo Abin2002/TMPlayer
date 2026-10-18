@@ -4,13 +4,24 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -19,10 +30,16 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.tmplayer.data.MediaItem
+import com.tmplayer.data.OpeningStall
+import com.tmplayer.data.Td
 import com.tmplayer.data.Thumbnails
 import com.tmplayer.player.SpeedMeter
 import com.tmplayer.player.StreamStats
@@ -40,6 +57,12 @@ import kotlinx.coroutines.delay
  * [downloaded] is how much of the file is on the disk, which feeds both the wait's slow-speed note
  * (after three seconds, and only once it means something) and, during a whole-file download
  * before playing, the progress line. Otherwise the line follows the player's buffer.
+ *
+ * Both also tell it whether anything is arriving. After [OpeningStall.STALL_MS] with neither
+ * moving, the sheet says so over the loader, in the words the line to Telegram earns, with Try
+ * again ([onRetry], focused), Download first ([onDownloadFirst], null where the chat does not allow
+ * keeping a copy) and Back. TDLib does not fail a download it cannot begin, so without this a
+ * blocked network left the loader on "Starting" for good.
  */
 @Composable
 internal fun BoxScope.LoaderSheet(
@@ -51,6 +74,10 @@ internal fun BoxScope.LoaderSheet(
     onBack: () -> Unit,
     /** The picture to use without metadata; the fixture passes one, the app reads the thumbnail. */
     thumbnailOverride: ImageBitmap? = null,
+    onRetry: (() -> Unit)? = null,
+    onDownloadFirst: (() -> Unit)? = null,
+    /** Holds the clock for a test: the sheet as it is once the wait has stalled. */
+    stalledOverride: Boolean? = null,
 ) {
     val s = LocalStrings.current
     val loading = phase as? Phase.Loading
@@ -71,11 +98,25 @@ internal fun BoxScope.LoaderSheet(
     var note by remember(item.fileId) { mutableStateOf<String?>(null) }
     val fraction by rememberUpdatedState(downloaded)
     val real by rememberUpdatedState(isDownload)
-    LaunchedEffect(item.fileId, loading != null) {
+    val buffered by rememberUpdatedState(bufferedMs)
+    var stalled by remember(item.fileId) { mutableStateOf(false) }
+    // Bumped by Try again, so the count starts over though the sheet never left Loading.
+    var tries by remember(item.fileId) { mutableStateOf(0) }
+    LaunchedEffect(item.fileId, loading != null, tries) {
+        stalled = false
         if (loading == null) return@LaunchedEffect
         val started = System.currentTimeMillis()
+        var lastAt = started
+        var lastFraction = fraction
+        var lastBuffered = buffered
         while (true) {
             val now = System.currentTimeMillis()
+            if (fraction != lastFraction || buffered > lastBuffered) {
+                lastAt = now
+                lastFraction = fraction
+                lastBuffered = buffered
+            }
+            stalled = OpeningStall.stalled(opening = true, local = (fraction ?: 0f) >= 1f, lastProgressAtMs = lastAt, nowMs = now)
             fraction?.let { meter.sample((it * item.sizeBytes).toLong(), now) }
             val rate = meter.bytesPerSec
             note = if (now - started > SLOW_MS && rate >= StreamStats.MIN_MEANINGFUL_SPEED && (fraction ?: 1f) < 1f) {
@@ -106,11 +147,57 @@ internal fun BoxScope.LoaderSheet(
                 screenWidthPx = widthPx,
             )
             PlayerLoader(content = content, progress = progress, status = status, note = note)
+            if (stalledOverride ?: stalled) {
+                StalledPanel(
+                    onRetry = {
+                        tries++
+                        onRetry?.invoke()
+                    },
+                    onDownloadFirst = onDownloadFirst,
+                    onBack = onBack,
+                )
+            }
             Box(Modifier.align(Alignment.TopStart).padding(12.dp)) {
                 OverlayButton(TmIcons.ArrowBack, s.playerBackHint, onBack)
             }
         }
     }
+}
+
+/** Over the loader once nothing has arrived for a while: why, and the three ways on. */
+@Composable
+private fun BoxScope.StalledPanel(onRetry: () -> Unit, onDownloadFirst: (() -> Unit)?, onBack: () -> Unit) {
+    val s = LocalStrings.current
+    val link by Td.link.collectAsState()
+    val focus = remember { FocusRequester() }
+    Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.72f)), contentAlignment = Alignment.Center) {
+        Column(
+            Modifier.widthIn(max = 520.dp).padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(s.playerStalledTitle, style = MaterialTheme.typography.headlineSmall, color = Color.White, textAlign = TextAlign.Center)
+            Text(
+                when (OpeningStall.reason(link)) {
+                    OpeningStall.Reason.NoLine -> s.playerStalledNoLine
+                    OpeningStall.Reason.Slow -> s.playerStalledSlow
+                },
+                color = Color.White.copy(alpha = 0.8f),
+                textAlign = TextAlign.Center,
+            )
+            if (onDownloadFirst != null) {
+                Text(s.playerStalledDownloadHint, color = Color.White.copy(alpha = 0.65f), textAlign = TextAlign.Center)
+            }
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(onClick = onRetry, modifier = Modifier.focusRequester(focus)) { Text(s.commonTryAgain) }
+                if (onDownloadFirst != null) {
+                    OutlinedButton(onClick = onDownloadFirst) { Text(s.playerDownloadFirst, color = Color.White) }
+                }
+                TextButton(onClick = onBack) { Text(s.playerGoBack, color = Color.White) }
+            }
+        }
+    }
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 }
 
 private const val SLOW_MS = 3_000L

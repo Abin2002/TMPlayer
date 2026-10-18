@@ -24,12 +24,14 @@ import dev.g000sha256.tdl.dto.AuthorizationStateWaitEmailCode
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitOtherDeviceConfirmation
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitPassword
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitPhoneNumber
+import dev.g000sha256.tdl.dto.AuthorizationStateWaitPremiumPurchase
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitRegistration
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitTdlibParameters
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 
 /**
  * How the user has said they want to sign in.
@@ -107,6 +109,19 @@ sealed interface AuthState {
         val next: CodeDelivery? = null,
     ) : AuthState
 
+    /**
+     * Telegram wants an email address for this account before it sends a code there. Asked of
+     * accounts Telegram will not send a text to any more.
+     */
+    data class EmailAddress(val wrong: Boolean = false) : AuthState
+
+    /**
+     * Waiting for the code Telegram mailed to the account's login email, which it uses in place of
+     * a text for some accounts. [pattern] is the address with most of it starred out, as Telegram
+     * gives it; [length] is the number of digits, zero when not said.
+     */
+    data class EmailCode(val pattern: String, val length: Int = 0, val wrong: Boolean = false) : AuthState
+
     /** Two-step verification is on; [hint] is the user's own password hint (may be blank). */
     data class Password(val hint: String, val wrong: Boolean = false) : AuthState
 
@@ -182,14 +197,27 @@ object AuthReducer {
         is AuthorizationStateClosed ->
             AuthStep(AuthState.Connecting, AuthAction.RecreateClient)
 
-        // Reachable when the account demands an e-mail address or a sign-up. Neither can be
-        // completed from here, whichever way the sign-in was started.
-        is AuthorizationStateWaitEmailAddress,
-        is AuthorizationStateWaitEmailCode,
-        is AuthorizationStateWaitRegistration ->
-            AuthStep(AuthState.Failed(UNSUPPORTED_STEP), AuthAction.None)
+        // An account Telegram signs in by email: an address first if it has none, then the code.
+        is AuthorizationStateWaitEmailAddress ->
+            AuthStep(AuthState.EmailAddress(), AuthAction.None)
 
-        else -> AuthStep(AuthState.Connecting, AuthAction.None)
+        is AuthorizationStateWaitEmailCode ->
+            AuthStep(AuthState.EmailCode(state.codeInfo.emailAddressPattern, state.codeInfo.length), AuthAction.None)
+
+        // A number with no account behind it. Signing up is the Telegram app's job.
+        is AuthorizationStateWaitRegistration ->
+            AuthStep(AuthState.Failed(L.errorsNoAccount), AuthAction.None)
+
+        // Telegram wants Premium bought in a store before it sends this number a code, which only
+        // its own apps can do. This used to fall through to Connecting, with no action, so the
+        // screen said "Connecting to Telegram" for good on a perfectly good connection. A QR code
+        // from the Telegram app needs no code at all.
+        is AuthorizationStateWaitPremiumPurchase ->
+            AuthStep(AuthState.Failed(L.errorsPremiumSignIn), AuthAction.None)
+
+        // A state newer than this app. Waiting on it would be Connecting for ever; saying so at
+        // least gives the viewer a Try again and a way to report it.
+        else -> AuthStep(AuthState.Failed(UNSUPPORTED_STEP), AuthAction.None)
     }
 
     /**
@@ -253,10 +281,18 @@ object AuthReducer {
  */
 object AuthStall {
 
-    suspend fun watch(auth: Flow<AuthState>, stalled: MutableStateFlow<Boolean>, timeoutMs: Long) {
-        auth.collectLatest { state ->
+    suspend fun watch(auth: Flow<AuthState>, stalled: MutableStateFlow<Boolean>, timeoutMs: Long) =
+        watchWaiting(auth.map { it is AuthState.Connecting }, stalled, timeoutMs)
+
+    /**
+     * The same count over anything that says whether the sign in is held up
+     * ([ConnectAdvice.waiting]). Every emission starts it again, so a caller that wants a retry to
+     * count as a fresh start emits once more, and one that does not filters repeats out first.
+     */
+    suspend fun watchWaiting(waiting: Flow<Boolean>, stalled: MutableStateFlow<Boolean>, timeoutMs: Long) {
+        waiting.collectLatest { held ->
             stalled.value = false
-            if (state is AuthState.Connecting) {
+            if (held) {
                 delay(timeoutMs)
                 stalled.value = true
             }

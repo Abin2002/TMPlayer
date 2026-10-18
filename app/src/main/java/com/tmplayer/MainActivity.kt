@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,6 +34,7 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.key
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
@@ -276,6 +278,8 @@ private data class RoomPrompt(
     val reclaimBytes: Long,
     val shortfallBytes: Long,
     val chatTitle: String,
+    /** Low storage mode is off and the video would stream, so the message names the mode. */
+    val lowStorageOff: Boolean = false,
 )
 
 class MainActivity : ComponentActivity() {
@@ -424,6 +428,9 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_SUPPORT_RUNG = "support_rung"
 
         const val OPEN_DOWNLOADS = SCREEN_DOWNLOADS
+
+        /** Downloads with Free up space already up: the player's "Not enough space" button. */
+        const val OPEN_FREE_UP_SPACE = "free_up_space"
 
         /**
          * The ask, waiting to be read by the composition.
@@ -749,6 +756,10 @@ private fun Root() {
     // Whether the Downloads screen opens on its cached videos, which is how Settings' Cached
     // videos row reaches the list of them.
     var downloadsOnCached by remember { mutableStateOf(false) }
+    // How many times the Downloads screen has been asked to open with Free up space up (0: not),
+    // which is where "Not enough space" sends the viewer: straight to what can go, not to a tab
+    // to work it out from. A count, so a second refusal while the page is up opens it again.
+    var downloadsFreeUp by remember { mutableStateOf(0) }
     // The Settings page open, kept here because Settings itself is gone while About or the cached
     // videos are showing, and coming back from either should land on the page that led there.
     var settingsPage by rememberSaveable { mutableStateOf<SettingsPage?>(null) }
@@ -757,11 +768,13 @@ private fun Root() {
     // the list it is about. Cleared as it is acted on, so it happens once per press.
     val requestedScreen by MainActivity.requestedScreen.collectAsStateWithLifecycle()
     LaunchedEffect(requestedScreen) {
-        if (requestedScreen != SCREEN_DOWNLOADS) return@LaunchedEffect
+        if (requestedScreen != SCREEN_DOWNLOADS && requestedScreen != MainActivity.OPEN_FREE_UP_SPACE) return@LaunchedEffect
         // Back from the Downloads screen goes wherever the viewer already was, not to the chat
         // list: they were reading a chat, pressed a notification, and Back should return them to it.
         if (screen !is Screen.Downloads) downloadsCameFrom = screen
         downloadsOnCached = false
+        // The player's "Not enough space" asks for Free up space itself.
+        downloadsFreeUp = if (requestedScreen == MainActivity.OPEN_FREE_UP_SPACE) downloadsFreeUp + 1 else 0
         screen = Screen.Downloads
         MainActivity.requestedScreen.value = null
     }
@@ -926,6 +939,7 @@ private fun Root() {
             // it over as the cache slot would have the next play delete a video they chose to keep.
             val kept = runCatching { settings.isKeptDownload(item.chatId, item.messageId) }
                 .getOrDefault(false)
+            val lowStorageOn = runCatching { settings.lowStorageModeNow() }.getOrDefault(true)
 
             // Back on Main from here down. Everything below writes Compose state or starts an
             // activity, and neither is a thing to do from a background thread.
@@ -946,6 +960,7 @@ private fun Root() {
                         reclaimBytes = plan.reclaimBytes,
                         shortfallBytes = plan.shortfallBytes,
                         chatTitle = chatTitle,
+                        lowStorageOff = !kept && !lowStorageOn,
                     )
                     // Asked every time a video would fit in Low storage mode, before the refusal.
                     if (plan.fitsInLowStorage) {
@@ -1096,10 +1111,15 @@ private fun Root() {
         com.tmplayer.ui.components.BrandLoaderHandOff(
             label = com.tmplayer.ui.auth.loaderLabel(auth, LocalStrings.current),
             modifier = Modifier.zIndex(1f),
+            // The second line is the live step, drawn by ConnectingHelp under it.
+            lines = emptyList(),
         ) {
-            // Telegram still out of reach after the long wait: the logs, for a report of it.
-            val stalled by Td.signInStalled.collectAsStateWithLifecycle()
-            if (stalled) com.tmplayer.ui.settings.SendLogsButton(Modifier.padding(top = 24.dp))
+            // What it is doing now, and past the long wait, why it may be stuck with Retry, a
+            // proxy and the logs: the desktop's help, on the phone and the TV too.
+            com.tmplayer.ui.connect.ConnectingHelp(
+                onOpenProxies = { com.tmplayer.ui.connect.ProxyScreenState.open = true },
+                sendLogs = { com.tmplayer.ui.settings.SendLogsButton(Modifier.padding(top = 8.dp)) },
+            )
         }
         if (auth !is AuthState.Ready) {
             // Signing out drops straight back to the login screen, so forget where we were.
@@ -1151,6 +1171,14 @@ private fun Root() {
                             signInError = null
                             scope.launch { signInError = Td.resendCode() }
                         },
+                        onSubmitEmailAddress = { address ->
+                            signInError = null
+                            scope.launch { signInError = Td.submitEmailAddress(address) }
+                        },
+                        onSubmitEmailCode = { code ->
+                            signInError = null
+                            scope.launch { signInError = Td.submitEmailCode(code) }
+                        },
                     )
                 }
                 if (!keyboard) {
@@ -1175,6 +1203,18 @@ private fun Root() {
                     .zIndex(2f)
                     .padding(bottom = 20.dp),
             )
+            // A sign in pane with no line to Telegram yet: say so before a number goes nowhere.
+            if (com.tmplayer.ui.connect.signInBannerShown()) {
+                com.tmplayer.ui.connect.ConnectBanner(
+                    onOpenProxies = { com.tmplayer.ui.connect.ProxyScreenState.open = true },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .zIndex(2f)
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                        .padding(top = 8.dp, start = 16.dp, end = 16.dp),
+                )
+            }
+            com.tmplayer.ui.connect.ProxyScreenHost(Modifier.zIndex(3f))
             return@Box
         }
 
@@ -1372,6 +1412,7 @@ private fun Root() {
                 )
             }
             downloadsOnCached = false
+            downloadsFreeUp = 0
             screen = Screen.Downloads
         }
         val reducedMotion = rememberReducedMotion() || Motion.reduced
@@ -1605,11 +1646,16 @@ private fun Root() {
                     screen = downloadsCameFrom
                 }
                 BackHandler(onBack = leaveDownloads)
-                DownloadsScreen(
-                    onPlay = { record -> resumeMedia(record) },
-                    onBack = leaveDownloads,
-                    openOnCached = downloadsOnCached,
-                )
+                // Keyed on the ask, so a second "Not enough space" while the page is up opens the
+                // sheet again rather than finding it already spent.
+                key(downloadsFreeUp) {
+                    DownloadsScreen(
+                        onPlay = { record -> resumeMedia(record) },
+                        onBack = leaveDownloads,
+                        openOnCached = downloadsOnCached,
+                        openFreeUp = downloadsFreeUp > 0,
+                    )
+                }
             }
 
             is Screen.Settings -> {
@@ -1657,6 +1703,7 @@ private fun Root() {
                     onOpenCachedVideos = {
                         downloadsCameFrom = Screen.Settings
                         downloadsOnCached = true
+                        downloadsFreeUp = 0
                         screen = Screen.Downloads
                     },
                     onOpenAbout = { screen = Screen.About },
@@ -1748,17 +1795,26 @@ private fun Root() {
                     device = device,
                     short = Translator.messages.formatter.bytes(pending.shortfallBytes),
                 ) + " " +
-                    if (pending.reclaimBytes > 0) {
-                        L.mainNoRoomReclaim(size = Translator.messages.formatter.bytes(pending.reclaimBytes))
-                    } else {
-                        L.mainNoRoomFree(device = device)
-                    },
+                    (
+                        if (pending.reclaimBytes > 0) {
+                            L.mainNoRoomReclaim(size = Translator.messages.formatter.bytes(pending.reclaimBytes))
+                        } else {
+                            L.mainNoRoomFree(device = device)
+                        }
+                        ) +
+                    // A stream, with the mode off: the one answer that deletes nothing is named.
+                    if (pending.lowStorageOff) " " + L.mainNoRoomLowStorage(mode = L.settingsLowStorage, device = device) else "",
                 detail = L.mainNoRoomDetail,
-                confirmLabel = L.mainManageDownloads,
+                // Straight to what can go, with the sheet that says what each line frees already up
+                // (user, 2026-10-18), rather than to a tab to work it out from.
+                confirmLabel = L.downloadsFreeUpSpace,
+                destructive = false,
+                focusConfirm = true,
                 onConfirm = {
                     roomPrompt = null
-                    downloadsCameFrom = screen
+                    if (screen !is Screen.Downloads) downloadsCameFrom = screen
                     downloadsOnCached = false
+                    downloadsFreeUp += 1
                     screen = Screen.Downloads
                 },
                 onDismiss = { roomPrompt = null },
@@ -1918,6 +1974,19 @@ private fun Root() {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp),
         )
+        // The network is up and Telegram has not answered for a while: blocked, most likely,
+        // which the offline pill above never says, since the device is not offline.
+        val unreachable by Td.unreachable.collectAsStateWithLifecycle()
+        if (unreachable) {
+            com.tmplayer.ui.connect.ConnectBanner(
+                onOpenProxies = { com.tmplayer.ui.connect.ProxyScreenState.open = true },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(top = 8.dp, start = 16.dp, end = 16.dp),
+            )
+        }
+        com.tmplayer.ui.connect.ProxyScreenHost()
     }
 }
 

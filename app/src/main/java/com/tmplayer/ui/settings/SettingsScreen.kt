@@ -1232,11 +1232,7 @@ fun SettingsScreen(
 
             SettingsPage.Storage -> {
                 settingsNote {
-                    StorageCard(
-                        split = split,
-                        freeBytes = disk.freeBytes,
-                        totalBytes = disk.totalBytes,
-                    )
+                    StorageCard(split = split, disk = disk)
                 }
                 // The videos watching left behind, named and measured, each with Save to Downloads and
                 // Delete: the row opens the list of them, which is the Downloads screen's third tab.
@@ -1283,15 +1279,15 @@ fun SettingsScreen(
                     ActionRow(
                         // Named for what it clears, beside the row above it that clears videos: two rows
                         // that both sound like the general answer to a full disk cannot be told apart.
-                        title = s.settingsClearPictures,
-                        subtitle = if (split.otherBytes <= 0) {
+                        title = s.downloadsFreePictures,
+                        subtitle = if (split.pictureBytes <= 0) {
                             s.settingsClearPicturesNone
                         } else {
-                            s.settingsClearPicturesDetail(s.formatter.bytes(split.otherBytes))
+                            s.downloadsFreePicturesDetail(s.formatter.bytes(split.pictureBytes))
                         },
                         icon = TmIcons.Delete,
                         onClick = {
-                            if (split.otherBytes <= 0) {
+                            if (split.pictureBytes <= 0) {
                                 toast(s.settingsNothingToClear)
                             } else {
                                 prompt = Prompt.ClearOther
@@ -1305,14 +1301,14 @@ fun SettingsScreen(
                 item {
                     ActionRow(
                         title = s.settingsClearAll,
-                        subtitle = if (split.cachedBytes + split.otherBytes <= 0) {
+                        subtitle = if (split.cachedBytes + split.pictureBytes <= 0) {
                             s.settingsClearAllNone
                         } else {
-                            s.settingsClearAllDetail(s.formatter.bytes(split.cachedBytes + split.otherBytes))
+                            s.settingsClearAllDetail(s.formatter.bytes(split.cachedBytes + split.pictureBytes))
                         },
                         icon = TmIcons.Delete,
                         onClick = {
-                            if (split.cachedBytes + split.otherBytes <= 0) {
+                            if (split.cachedBytes + split.pictureBytes <= 0) {
                                 toast(s.settingsNothingToClear)
                             } else {
                                 prompt = Prompt.ClearAllButDownloads
@@ -1492,6 +1488,17 @@ fun SettingsScreen(
                 // ---- help ----------------------------------------------------------------------------
 
                 sectionTitle { s.settingsHelp }
+                // A proxy (CP77), for a network where Telegram is blocked; the same screen the
+                // connecting help opens before sign in.
+                item {
+                    val proxyOn by com.tmplayer.data.Td.proxyOn.collectAsStateWithLifecycle()
+                    ActionRow(
+                        title = s.proxyTitle,
+                        subtitle = if (proxyOn) s.proxyInUse else s.proxySettingsDetailOff,
+                        icon = TmIcons.Wifi,
+                        onClick = { com.tmplayer.ui.connect.ProxyScreenState.open = true },
+                    )
+                }
                 item {
                     ActionRow(
                         title = s.settingsTour,
@@ -1956,18 +1963,19 @@ fun SettingsScreen(
         )
 
         Prompt.ClearOther -> TvConfirm(
-            title = s.settingsClearPicturesTitle,
-            message = s.settingsClearPicturesMessage(s.formatter.bytes(split.otherBytes)),
+            title = s.downloadsFreePicturesTitle,
+            message = s.downloadsFreePicturesMessage(s.formatter.bytes(split.pictureBytes)),
             detail = s.settingsClearPicturesUntouched,
             confirmLabel = s.settingsClearPicturesConfirm,
             onConfirm = {
                 prompt = null
                 scope.launch {
                     busy = s.settingsDeleting
-                    val freed = split.otherBytes
+                    val freed = split.pictureBytes
                     // Pictures only. Nothing here may touch the download index or the videos on
                     // disk: this row is named for thumbnails.
                     runCatching { Td.clearPicturesAndPreviews() }
+                    runCatching { withContext(Dispatchers.IO) { com.tmplayer.online.OnlineMetadata.current?.purgeImages() } }
                     refresh()
                     busy = null
                     toast(s.settingsFreed(s.formatter.bytes(freed)))
@@ -1978,18 +1986,19 @@ fun SettingsScreen(
 
         Prompt.ClearAllButDownloads -> TvConfirm(
             title = s.settingsClearAllTitle,
-            message = s.settingsClearAllMessage(s.formatter.bytes(split.cachedBytes + split.otherBytes)),
+            message = s.settingsClearAllMessage(s.formatter.bytes(split.cachedBytes + split.pictureBytes)),
             detail = s.settingsClearAllUntouched,
             confirmLabel = s.commonClear,
             onConfirm = {
                 prompt = null
                 scope.launch {
                     busy = s.settingsClearing
-                    val freed = split.cachedBytes + split.otherBytes
+                    val freed = split.cachedBytes + split.pictureBytes
                     // The videos first, through the one thing that knows which of them are the
                     // viewer's downloads, and then the pictures, which cannot be anybody's.
                     runCatching { WatchCache.clearAll(context) }
                     runCatching { Td.clearPicturesAndPreviews() }
+                    runCatching { withContext(Dispatchers.IO) { com.tmplayer.online.OnlineMetadata.current?.purgeImages() } }
                     refresh()
                     busy = null
                     toast(s.settingsFreed(s.formatter.bytes(freed)))
@@ -2577,133 +2586,46 @@ private fun ThemePicker(current: ThemeChoice, onPick: (ThemeChoice) -> Unit) {
     }
 }
 
+/**
+ * What the device holds, as the same storage ring and legend the Downloads page draws, from the
+ * same measurement, so the two cannot disagree; then the bargain this device keeps.
+ */
 @Composable
 private fun StorageCard(
     split: StorageSplit,
-    freeBytes: Long,
-    totalBytes: Long,
+    disk: DiskInfo,
 ) {
     val s = LocalStrings.current
-    val cacheBytes = split.totalBytes
-    val used = (totalBytes - freeBytes).coerceAtLeast(0)
-    val usedFraction = if (totalBytes > 0) used.toFloat() / totalBytes else 0f
-    val cacheFraction = if (totalBytes > 0) cacheBytes.toFloat() / totalBytes else 0f
-    // Until the first measurement lands there is nothing to divide, so the bar keeps its single
-    // band and the lines below stay away rather than showing three zeroes.
-    val measured = cacheBytes > 0
-
     val touch = isTouch()
-    val bar = if (touch) 10.dp else 14.dp
-
-    // Three roles of one palette on a phone, so the bands still read as three parts of the same
-    // thing when the wallpaper decides that palette. A television has no scheme to draw from and
-    // uses three alphas of the app's own green.
-    val videoBand = if (touch) M3Theme.colorScheme.primary else Tone.accent
-    val pictureBand = if (touch) M3Theme.colorScheme.secondary else Tone.accent.copy(alpha = 0.6f)
-    val otherBand = if (touch) M3Theme.colorScheme.tertiary else Tone.accent.copy(alpha = 0.3f)
-    val deviceBand = if (touch) Tone.outline else Tone.muted.copy(alpha = 0.6f)
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Tone.surface),
         shape = if (touch) M3Theme.shapes.large else RoundedCornerShape(Corner.Large),
     ) {
-    Column(Modifier.padding(if (touch) 16.dp else 20.dp)) {
-        Text(
-            s.settingsStorageFree(s.formatter.bytes(freeBytes), s.formatter.bytes(totalBytes)),
-            style = if (touch) {
-                MaterialTheme.typography.titleMedium
-            } else {
-                MaterialTheme.typography.titleLarge
-            },
-            color = Tone.text,
-        )
-        Spacer(Modifier.height(if (touch) 12.dp else 16.dp))
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(bar)
-                .clip(CircleShape)
-                .background(Tone.surfaceHigh)
-                // The bar is three coloured boxes and nothing else, so it needs a description of
-                // its own. Merged into a single node, because the parts mean nothing apart.
-                .semantics(mergeDescendants = true) {
-                    val f = s.formatter
-                    contentDescription = if (measured) {
-                        s.settingsStorageDescription(
-                            f.bytes(used), f.bytes(totalBytes), f.bytes(cacheBytes),
-                            f.bytes(split.downloadBytes), f.bytes(split.cachedBytes), f.bytes(split.otherBytes),
-                        )
-                    } else {
-                        s.settingsStorageDescriptionMeasuring(f.bytes(used), f.bytes(totalBytes), f.bytes(cacheBytes))
-                    }
-                },
-        ) {
-            // Everything on the device, then TMPlayer's own slice highlighted inside it, and
-            // inside that the three things the slice is made of.
-            Box(
-                Modifier
-                    .fillMaxWidth(usedFraction)
-                    .fillMaxHeight()
-                    .background(deviceBand),
-            )
-            Row(Modifier.fillMaxWidth(cacheFraction).fillMaxHeight()) {
-                if (measured) {
-                    // Weights, not fractions: these three divide TMPlayer's own band between
-                    // them, and a band of zero width simply draws nothing.
-                    StorageSlice(split.downloadBytes, videoBand)
-                    StorageSlice(split.cachedBytes, pictureBand)
-                    StorageSlice(split.otherBytes, otherBand)
-                } else {
-                    Box(Modifier.fillMaxSize().background(videoBand))
-                }
-            }
-        }
-        Spacer(Modifier.height(if (touch) 12.dp else 16.dp))
-        Text(
-            if (measured) {
-                s.settingsStorageSplit(
-                    s.formatter.bytes(split.downloadBytes),
-                    s.formatter.bytes(split.cachedBytes),
-                    s.formatter.bytes(split.otherBytes),
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.padding(if (touch) 16.dp else 20.dp)) {
+            val wide = !touch || maxWidth >= 560.dp
+            Column {
+                com.tmplayer.ui.components.StorageDonutPanel(
+                    figures = split.chart(disk),
+                    wide = wide,
+                    measured = split.totalBytes > 0 && disk.totalBytes > 0,
+                    ringSize = if (!touch) 176.dp else if (wide) 168.dp else 196.dp,
+                    large = !touch,
                 )
-            } else {
-                s.settingsStorageUsing(s.formatter.bytes(cacheBytes))
-            },
-            style = if (touch) {
-                MaterialTheme.typography.bodyMedium
-            } else {
-                MaterialTheme.typography.bodyLarge
-            },
-            color = Tone.text,
-        )
-        if (measured) {
-            Spacer(Modifier.height(8.dp))
-            // The same three names, in the same order, as the panel at the top of the Downloads
-            // screen: one measurement drawn twice, so the two must not disagree.
-            if (split.downloadBytes > 0) {
-                StorageLegend(s.settingsStorageDownloads, split.downloadBytes, videoBand)
+                Spacer(Modifier.height(if (touch) 12.dp else 16.dp))
+                Text(
+                    // The two devices keep different bargains, so the wording has to name the one in
+                    // hand: a phone also holds downloads the viewer deletes themselves.
+                    if (touch) {
+                        s.settingsStorageNotePhone
+                    } else {
+                        s.settingsStorageNoteTv
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Tone.muted,
+                )
             }
-            if (split.cachedBytes > 0) {
-                StorageLegend(s.settingsStorageCached, split.cachedBytes, pictureBand)
-            }
-            if (split.otherBytes > 0) {
-                StorageLegend(s.settingsStoragePictures, split.otherBytes, otherBand)
-            }
-            Spacer(Modifier.height(8.dp))
         }
-        Text(
-            // The two devices keep different bargains, so the wording has to name the one in
-            // hand: a phone also holds downloads the viewer deletes themselves.
-            if (touch) {
-                s.settingsStorageNotePhone
-            } else {
-                s.settingsStorageNoteTv
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = Tone.muted,
-        )
-    }
     }
 }
 
@@ -2737,38 +2659,6 @@ internal fun TickRow(label: String, checked: Boolean, onToggle: () -> Unit) {
     }
 }
 
-/** One band of TMPlayer's own slice of the bar, sized by its share of the bytes. */
-@Composable
-private fun RowScope.StorageSlice(bytes: Long, color: Color) {
-    if (bytes <= 0) return
-    Box(Modifier.weight(bytes.toFloat()).fillMaxHeight().background(color))
-}
-
-/** The line naming one of those bands. Merged, so a screen reader reads the pair as a sentence. */
-@Composable
-private fun StorageLegend(label: String, bytes: Long, color: Color) {
-    val s = LocalStrings.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp)
-            .semantics(mergeDescendants = true) {
-                contentDescription = s.settingsStorageLegend(label, s.formatter.bytes(bytes))
-            },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(Modifier.size(10.dp).clip(CircleShape).background(color))
-        Spacer(Modifier.width(10.dp))
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
-        Spacer(Modifier.weight(1f))
-        Text(
-            s.formatter.bytes(bytes),
-            style = MaterialTheme.typography.bodyMedium,
-            color = Tone.text,
-        )
-    }
-}
-
 /**
  * A row whose value is a number the viewer walks up and down.
  *
@@ -2799,11 +2689,15 @@ private fun StepperRow(
             leadingContent = { SettingIconChip(icon) },
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { onStep(-1) }, enabled = canDecrease) {
-                        M3Icon(TmIcons.ChevronDown, contentDescription = s.settingsStepDown)
+                    com.tmplayer.ui.components.IconTip(s.settingsStepDown) {
+                        IconButton(onClick = { onStep(-1) }, enabled = canDecrease) {
+                            M3Icon(TmIcons.ChevronDown, contentDescription = s.settingsStepDown)
+                        }
                     }
-                    IconButton(onClick = { onStep(1) }, enabled = canIncrease) {
-                        M3Icon(TmIcons.ChevronUp, contentDescription = s.settingsStepUp)
+                    com.tmplayer.ui.components.IconTip(s.settingsStepUp) {
+                        IconButton(onClick = { onStep(1) }, enabled = canIncrease) {
+                            M3Icon(TmIcons.ChevronUp, contentDescription = s.settingsStepUp)
+                        }
                     }
                 }
             },

@@ -161,6 +161,8 @@ fun BrandLoader(
 fun BrandLoaderHandOff(
     label: String?,
     modifier: Modifier = Modifier,
+    /** The second line's words, or null for [connectingLines]. Empty when [below] says it instead. */
+    lines: List<String>? = null,
     below: @Composable ColumnScope.() -> Unit = {},
 ) {
     val showing = label != null
@@ -177,6 +179,7 @@ fun BrandLoaderHandOff(
     BrandLoader(
         label = shown,
         modifier = modifier.graphicsLayer { this.alpha = alpha.value },
+        lines = lines ?: connectingLines(),
         below = below,
     )
 }

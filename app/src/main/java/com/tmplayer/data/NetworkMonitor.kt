@@ -9,10 +9,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Process-wide connectivity, based on a validated network rather than Wi-Fi being switched on.
+ * Process-wide connectivity, from the default network's capabilities rather than Wi-Fi being
+ * switched on.
  *
- * TDLib has its own connection state as well. Screens combine the two because a live TDLib
- * connection is stronger evidence than an occasionally late Android connectivity callback.
+ * Offline means no network that claims the internet. A network Android has not validated (a
+ * captive portal, or a country or network where Google's check page is blocked, which is often
+ * where Telegram is blocked too) is unknown, not offline: it used to be read as offline, so the app
+ * said "check this device's internet" to people whose internet worked. See [NetworkFacts.status].
+ *
+ * Every change is also handed to [Td.onNetworkChanged], which tells TDLib about a switch of
+ * network; TDLib cannot see one for itself here. TDLib has its own connection state as well, and
+ * screens combine the two because a live TDLib connection is stronger evidence than an
+ * occasionally late Android connectivity callback.
  */
 object NetworkMonitor : Connectivity {
 
@@ -39,8 +47,9 @@ object NetworkMonitor : Connectivity {
 
             val manager = context.applicationContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            val initial = manager.activeNetwork?.let(manager::getNetworkCapabilities)
-            _status.value = statusOf(initial)
+            val active = manager.activeNetwork
+            val initial = active?.let(manager::getNetworkCapabilities)
+            publish(factsOf(active, initial))
             _metered.value = meteredOf(initial)
             manager.registerDefaultNetworkCallback(
                 object : ConnectivityManager.NetworkCallback() {
@@ -48,12 +57,12 @@ object NetworkMonitor : Connectivity {
                         network: Network,
                         capabilities: NetworkCapabilities,
                     ) {
-                        _status.value = statusOf(capabilities)
+                        publish(factsOf(network, capabilities))
                         _metered.value = meteredOf(capabilities)
                     }
 
                     override fun onLost(network: Network) {
-                        _status.value = NetworkStatus.Offline
+                        publish(NetworkFacts(known = true, hasNetwork = false, internet = false))
                         _metered.value = false
                     }
                 },
@@ -69,13 +78,33 @@ object NetworkMonitor : Connectivity {
         capabilities != null &&
             !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
 
-    private fun statusOf(capabilities: NetworkCapabilities?): NetworkStatus =
-        if (
-            capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
-            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        ) {
-            NetworkStatus.Online
-        } else {
-            NetworkStatus.Offline
+    private fun publish(facts: NetworkFacts) {
+        _status.value = facts.status
+        Td.onNetworkChanged(facts)
+    }
+
+    private fun factsOf(network: Network?, capabilities: NetworkCapabilities?): NetworkFacts {
+        if (network == null || capabilities == null) {
+            return NetworkFacts(known = true, hasNetwork = false, internet = false)
         }
+        fun has(capability: Int) = capabilities.hasCapability(capability)
+        fun over(transport: Int) = capabilities.hasTransport(transport)
+        val kind = when {
+            over(NetworkCapabilities.TRANSPORT_WIFI) -> NetworkKind.WiFi
+            over(NetworkCapabilities.TRANSPORT_CELLULAR) ->
+                if (has(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING)) NetworkKind.Mobile else NetworkKind.Roaming
+            over(NetworkCapabilities.TRANSPORT_ETHERNET) -> NetworkKind.Ethernet
+            else -> NetworkKind.Other
+        }
+        return NetworkFacts(
+            known = true,
+            hasNetwork = true,
+            internet = has(NetworkCapabilities.NET_CAPABILITY_INTERNET),
+            validated = has(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
+            captivePortal = has(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL),
+            vpn = over(NetworkCapabilities.TRANSPORT_VPN),
+            kind = kind,
+            id = network.toString(),
+        )
+    }
 }

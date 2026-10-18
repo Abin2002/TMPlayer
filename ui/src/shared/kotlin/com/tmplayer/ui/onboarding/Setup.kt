@@ -181,7 +181,8 @@ object Setup {
 
     /** Whether [auth] is a screen of the sign in itself, which is what arms the setup. */
     fun isSignInStep(auth: AuthState): Boolean = when (auth) {
-        AuthState.ChooseMethod, is AuthState.Qr, is AuthState.Phone, is AuthState.Code, is AuthState.Password -> true
+        AuthState.ChooseMethod, is AuthState.Qr, is AuthState.Phone, is AuthState.Code, is AuthState.Password,
+        is AuthState.EmailAddress, is AuthState.EmailCode -> true
         AuthState.Connecting, AuthState.Ready, is AuthState.Failed -> false
     }
 }

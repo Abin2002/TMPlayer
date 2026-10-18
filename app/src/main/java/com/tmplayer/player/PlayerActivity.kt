@@ -75,6 +75,7 @@ import com.tmplayer.data.CopyHandoff
 import com.tmplayer.data.VideoCopies
 import com.tmplayer.data.copyQuality
 import com.tmplayer.data.LocalDownloads
+import com.tmplayer.data.OpeningStall
 import com.tmplayer.data.start
 import com.tmplayer.data.pauseAll
 import com.tmplayer.data.resume
@@ -596,6 +597,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** Used only while this video needs more bytes; completed videos ignore connectivity entirely. */
     private var networkOffline = false
 
+    /**
+     * The opening wait's watch ([watchOpening]): when the last new byte arrived, or the wait began,
+     * and the bytes and buffered position it was measured against. [slowStartUp] is true while the
+     * sheet says nothing is arriving ([showSlowStart]); its Try again and Download first borrow
+     * the failure sheet's two buttons.
+     */
+    private var openingWatch: Job? = null
+    private var lastProgressAtMs = 0L
+    private var lastProgressBytes = -1L
+    private var lastBufferedMs = -1L
+    private var slowStartUp = false
+
     /** Automatic recoveries since playback was last healthy, and the one currently pending. */
     private var recoveryAttempts = 0
     private var recoveryJob: Job? = null
@@ -655,10 +668,19 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             setOnClickListener { retryPlayback() }
         }
         statusReload = findViewById<android.widget.Button>(R.id.status_reload).apply {
-            setOnClickListener { reloadFromScratch() }
+            // Try again on the sheet that says nothing is arriving: see [showSlowStart].
+            setOnClickListener { if (slowStartUp) tryOpeningAgain() else reloadFromScratch() }
         }
         statusOpenWith = findViewById<android.widget.Button>(R.id.status_open_with).apply {
-            setOnClickListener { openInAnotherApp() }
+            // The same button is Free up space on a refusal for room: see [freeUpOnFailure], and
+            // Download first while nothing is arriving: see [showSlowStart].
+            setOnClickListener {
+                when {
+                    slowStartUp -> downloadFirst()
+                    freeUpOnFailure -> openFreeUpSpace()
+                    else -> openInAnotherApp()
+                }
+            }
         }
         statusBack = findViewById<android.widget.Button>(R.id.status_back).apply {
             setOnClickListener { finish() }
@@ -833,6 +855,11 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         fileSizeBytes = from.getLongExtra(EXTRA_SIZE, 0)
         durationSec = from.getIntExtra(EXTRA_DURATION, 0)
         savable = if (from.getBooleanExtra(EXTRA_CAN_BE_SAVED, true)) null else false
+        pieces = piecesFrom(from)
+        joinedSource = null
+        piecesNotice = null
+        piecesIncomplete = false
+        piecesNoticeShown = false
     }
 
     /**
@@ -895,12 +922,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         itemScope.launch {
             val session = Td.awaitAuthorizedSession()
+            // A video cut into byte pieces plays as the one file it was, joined: none of its
+            // pieces is a video on its own, whatever the download index or the cache holds of one.
+            val joined = mayBeJoined() && findPieces(session.client)
+            if (joined && !prepareJoined(session.client)) return@launch
             // The download index first. Every way into this screen passes here, the next episode
             // and autoplay included, so a downloaded episode plays from its file however it was
             // reached.
-            val downloaded = LocalDownloads.fileFor(settings, chatId, messageId)
+            val downloaded = if (joined) null else LocalDownloads.fileFor(settings, chatId, messageId)
             downloadedFile = downloaded
-            if (downloaded != null) {
+            if (joined) {
+                // Decided for every piece in [prepareJoined].
+            } else if (downloaded != null) {
                 downloadComplete = true
                 downloadedFraction = 1f
                 if (fileSizeBytes <= 0) fileSizeBytes = downloaded.length()
@@ -980,10 +1013,11 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             built.addListener(playerListener)
             // A plain file for a download, which the default data source reads directly; the TDLib
             // stream for everything else.
-            val source = downloadedFile?.let { android.net.Uri.fromFile(it) } ?: tdFileUri(fileId)
+            val source = joinedSource ?: downloadedFile?.let { android.net.Uri.fromFile(it) } ?: tdFileUri(fileId)
             // A stream also holds the Wi-Fi up while it plays, which matters once the screen is
             // off and the sound plays on ([PlaybackService]); a file on the disk needs only the CPU.
-            built.setWakeMode(if (downloadedFile != null) C.WAKE_MODE_LOCAL else C.WAKE_MODE_NETWORK)
+            val local = if (joinedSource != null) joinedAllLocal else downloadedFile != null
+            built.setWakeMode(if (local) C.WAKE_MODE_LOCAL else C.WAKE_MODE_NETWORK)
             // Built out of sight (the next episode, or a stream opened again, behind the
             // notification): no video decoding until somebody can see it.
             if (inBackgroundAudio) hideVideoUnseen(built)
@@ -1536,11 +1570,14 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         val top = (at[1] - origin[1]).coerceIn(0, root.height)
         val right = (at[0] - origin[0] + frame.width).coerceIn(left, root.width)
         val bottom = (at[1] - origin[1] + frame.height).coerceIn(top, root.height)
-        val clearance = resources.getDimensionPixelSize(R.dimen.player_subtitle_bottom)
-        val margin = (clearance - (root.height - bottom)).coerceAtLeast(0)
+        // The whole picture, to its bottom edge. The clearance a full-height picture needs from
+        // the screen's edge (a television's overscan, a phone's rounded corners) is folded into
+        // the bottom padding by [subtitleBottomFraction] instead of taken off the height here:
+        // taking it off and then adding the position's share on top stacked the two, so on a
+        // picture that filled the screen the lines stood clearly higher than on a letterboxed one.
         val params = subtitleView.layoutParams as FrameLayout.LayoutParams
         val width = right - left
-        val height = (bottom - top - margin).coerceAtLeast(0)
+        val height = (bottom - top).coerceAtLeast(0)
         if (
             params.width == width && params.height == height && subtitleGapBelow == root.height - bottom &&
             params.leftMargin == left && params.topMargin == top && params.bottomMargin == 0
@@ -1888,7 +1925,19 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             // tdfile:// goes to TDLib; DefaultDataSource sends file:// (a subtitle file loaded from
             // the phone, copied into the cache) to the disk and passes every other scheme down.
             .setMediaSourceFactory(
-                DefaultMediaSourceFactory(DefaultDataSource.Factory(this, TdDataSource.Factory(client)), extractors),
+                DefaultMediaSourceFactory(
+                    DefaultDataSource.Factory(
+                        this,
+                        // A video joined from byte pieces reads each piece the way a whole file
+                        // is read: TDLib's stream, or the disk for a downloaded piece.
+                        JoinedDataSource.Factory(
+                            TdDataSource.Factory(client),
+                            DefaultDataSource.Factory(this, TdDataSource.Factory(client)),
+                            ::leftPiece,
+                        ),
+                    ),
+                    extractors,
+                ),
             )
             .setSeekBackIncrementMs(Skip.BACK_MS)
             .setSeekForwardIncrementMs(Skip.FORWARD_MS)
@@ -2354,6 +2403,11 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                         controlsShownOnStart = true
                         controls?.show()
                     }
+                    // A video whose pieces stop at a gap says so as it starts, long enough to read.
+                    if (!piecesNoticeShown) {
+                        piecesNoticeShown = true
+                        piecesNotice?.let { feedback?.message(it, holdMs = PIECES_NOTICE_MS) }
+                    }
                 }
                 // Already moved on from the credits; the file running out behind it changes nothing.
                 Player.STATE_ENDED -> {
@@ -2801,9 +2855,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     runCatching { settings.setLowStorageMode(true) }
                     return makeRoomForThisVideo(availability)
                 }
+                // A stream with the mode off names it: the one answer that deletes nothing.
+                val lowStorageOff = !runCatching { settings.lowStorageModeNow() }.getOrDefault(true) &&
+                    !runCatching { settings.isKeptDownload(chatId, messageId) }.getOrDefault(true)
+                val short = Translator.messages.formatter.bytes(plan.shortfallBytes)
                 showError(
-                    L.playerNotEnoughSpace(Translator.messages.formatter.bytes(plan.shortfallBytes)),
+                    if (lowStorageOff) {
+                        L.playerNotEnoughRoomLowStorage(size = short, mode = L.settingsLowStorage)
+                    } else {
+                        L.playerNotEnoughRoom(size = short)
+                    },
                     retryable = false,
+                    freeUp = true,
                 )
                 false
             }
@@ -2876,7 +2939,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * @return whether there was anything to take back.
      */
     private fun letGoOfStreamBounds(): Boolean {
-        val had = lowStorageFileId != 0 || saveDataFileId != 0
+        val had = letGoOfPieceBounds() or (lowStorageFileId != 0 || saveDataFileId != 0)
         lowStorageHold?.let { LowStorageStreams.revoke(lowStorageFileId, it) }
         saveDataHold?.let { SaveDataStreams.revoke(saveDataFileId, it) }
         lowStorageFileId = 0
@@ -2911,6 +2974,210 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** What [SaveDataStreams.allow] gave this player, as [lowStorageHold]. */
     private var saveDataHold: Any? = null
+
+    // A video cut into byte pieces ([SplitPieces]): the pieces, in order, played joined.
+
+    /** The pieces of the video playing, in order, when it was cut into several files; else empty. */
+    private var pieces: List<MediaItem> = emptyList()
+
+    /** The joined stream ([joinedUri]) once [prepareJoined] has built it, for [startPlayback]. */
+    private var joinedSource: android.net.Uri? = null
+
+    /** Whether every piece plays from the disk, a download or a whole cached file. */
+    private var joinedAllLocal = false
+
+    /** "Part 4 of 7 is not in this chat, so the video plays up to it.", or null. */
+    private var piecesNotice: String? = null
+
+    /** Whether a missing piece cuts the video short, so its end is not the video's end. */
+    private var piecesIncomplete = false
+
+    /** Whether [piecesNotice] has been put up for this video yet. */
+    private var piecesNoticeShown = false
+
+    /** The pieces' file ids this player has told [WatchCache] it is playing. */
+    private var heldPieceIds: List<Int> = emptyList()
+
+    /** What [LowStorageStreams] and [SaveDataStreams] gave this player for each piece, as [lowStorageHold]. */
+    private val pieceBounds = mutableListOf<Triple<Int, Any, Boolean>>()
+
+    /** The pieces an intent carried, as the chat listed them. */
+    private fun piecesFrom(from: Intent): List<MediaItem> {
+        val messages = from.getLongArrayExtra(EXTRA_PIECE_MESSAGES) ?: return emptyList()
+        val files = from.getIntArrayExtra(EXTRA_PIECE_FILES) ?: return emptyList()
+        val sizes = from.getLongArrayExtra(EXTRA_PIECE_SIZES) ?: return emptyList()
+        val names = from.getStringArrayExtra(EXTRA_PIECE_NAMES) ?: return emptyList()
+        if (setOf(messages.size, files.size, sizes.size, names.size).size != 1) return emptyList()
+        return messages.indices.map { i ->
+            MediaItem(
+                chatId = chatId,
+                messageId = messages[i],
+                fileId = files[i],
+                title = names[i],
+                sizeBytes = sizes[i],
+                durationSec = 0,
+                mimeType = "",
+                thumbnailFileId = 0,
+                miniThumbnail = null,
+                date = 0,
+                fileName = names[i],
+            )
+        }
+    }
+
+    /** Whether the video may be one cut into byte pieces: the grid said so, or its name does. */
+    private fun mayBeJoined(): Boolean =
+        hasMessage() && (pieces.isNotEmpty() || com.tmplayer.data.SplitPieces.pieceOf(mediaFileName)?.certain == true)
+
+    /**
+     * The pieces of the video, from the intent or else from the chat ([SplitPieces.lookUp]), for a
+     * player opened on one piece (Continue watching, a link). False when there is only the one
+     * file after all, which then plays as any other.
+     */
+    private suspend fun findPieces(client: TdlClient): Boolean {
+        if (pieces.isEmpty()) {
+            val repository = ChatRepository(client)
+            val found = runCatching {
+                com.tmplayer.data.SplitPieces.lookUp(currentItem()) { query, cursors ->
+                    runCatching { repository.mediaPage(chatId, cursors, query = query, topicId = mediaTopicId) }.getOrNull()
+                }
+            }.getOrNull().orEmpty()
+            // With no connection to search the chat with, the pieces kept in Downloads.
+            pieces = found.takeIf { it.size > 1 } ?: runCatching {
+                com.tmplayer.data.SplitPieces.among(currentItem(), settings.downloadsNow().map { it.toMediaItem() })
+            }.getOrNull()?.takeIf { it.size > 1 } ?: found
+        }
+        return pieces.isNotEmpty()
+    }
+
+    /**
+     * Builds the joined stream: each piece from Downloads where it is there, else streamed from
+     * TDLib under its own fresh id, its exact length asked of TDLib. Checks the connection and the
+     * room for the whole video, holds every piece against the cache's sweep, claims them together
+     * as the cached video, and bounds each streamed piece for Low storage mode or "Save mobile
+     * data". False when nothing can play, with the reason on screen.
+     */
+    private suspend fun prepareJoined(client: TdlClient): Boolean {
+        val all = pieces
+        val notice = com.tmplayer.data.SplitPieces.playerNotice(all)
+        val playable = com.tmplayer.data.SplitPieces.playablePieces(all)
+        if (playable.isEmpty()) {
+            showError(notice ?: L.playerNothingToPlay, retryable = false)
+            return false
+        }
+        piecesNotice = notice
+        piecesIncomplete = notice != null
+        val sources = ArrayList<Pair<android.net.Uri, Long>>()
+        val streamed = ArrayList<MediaItem>()
+        var local = true
+        for (piece in playable) {
+            val file = LocalDownloads.fileFor(settings, piece.chatId, piece.messageId)
+            if (file != null) {
+                sources += android.net.Uri.fromFile(file) to file.length()
+                continue
+            }
+            val id = runCatching { Td.currentFileId(piece.chatId, piece.messageId, piece.fileId) }.getOrDefault(piece.fileId)
+            val td = client.getFile(id).valueOrNull
+            val size = td?.let { if (it.size > 0) it.size else it.expectedSize }?.takeIf { it > 0 } ?: piece.sizeBytes
+            if (size <= 0) {
+                showError(L.playerOpenFailed, retryable = true)
+                return false
+            }
+            if (Td.localFileAvailability(id) != LocalFileAvailability.Complete) local = false
+            sources += tdFileUri(id) to size
+            streamed += piece.copy(fileId = id, sizeBytes = size)
+        }
+        fileSizeBytes = sources.sumOf { it.second }
+        joinedAllLocal = local
+        if (!local) {
+            val availability = LocalFileAvailability.Partial
+            if (!allowedOnThisConnection(availability)) return false
+            if (!makeRoomForThisVideo(availability)) return false
+        }
+        holdPieces(streamed.map { it.fileId })
+        if (streamed.isNotEmpty()) {
+            val title = chatTitle
+            val context = applicationContext
+            val claimed = streamed.map { it.copy(title = mediaTitle, chatId = chatId) }
+            App.backgroundScope.launch { runCatching { WatchCache.claimAll(context, claimed, title) } }
+        }
+        boundPieces(streamed)
+        joinedSource = joinedUri(sources)
+        return true
+    }
+
+    private fun holdPieces(ids: List<Int>) {
+        heldPieceIds.forEach(WatchCache::stoppedPlaying)
+        ids.forEach(WatchCache::startedPlaying)
+        heldPieceIds = ids
+    }
+
+    /** Low storage mode, else "Save mobile data", for each streamed piece, as [boundTheStream] for one file. */
+    private suspend fun boundPieces(streamed: List<MediaItem>) {
+        letGoOfPieceBounds()
+        if (streamed.isEmpty()) return
+        val kept = runCatching { settings.isKeptDownload(chatId, messageId) }.getOrDefault(true)
+        if (kept) return
+        val lowStorage = runCatching { settings.lowStorageModeNow() }.getOrDefault(false)
+        val saveData = MeteredPolicy.saveMobileDataInForce(
+            runCatching { settings.saveMobileDataNow() }.getOrDefault(false),
+            FormFactor.isTv(this),
+        )
+        val window = if (lowStorage) {
+            val free = runCatching { DiskSpace.read(applicationContext).freeBytes }.getOrDefault(0L)
+            LowStorageWindow.windowBytes(free, CacheShelf.HEADROOM_BYTES)
+        } else {
+            0L
+        }
+        for (piece in streamed) {
+            val id = piece.fileId
+            LowStorageStreams.revoke(id)
+            SaveDataStreams.revoke(id)
+            if (OfflineDownloads.isDownloading(id) || Td.localFileAvailability(id) == LocalFileAvailability.Complete) continue
+            when {
+                lowStorage -> pieceBounds += Triple(id, LowStorageStreams.allow(id, window), true)
+                saveData -> pieceBounds += Triple(id, SaveDataStreams.allow(id) { NetworkMonitor.metered.value }, false)
+            }
+        }
+    }
+
+    /** Takes back what [boundPieces] was granted. True when there was anything. */
+    private fun letGoOfPieceBounds(): Boolean {
+        if (pieceBounds.isEmpty()) return false
+        pieceBounds.forEach { (id, hold, low) ->
+            if (low) LowStorageStreams.revoke(id, hold) else SaveDataStreams.revoke(id, hold)
+        }
+        pieceBounds.clear()
+        return true
+    }
+
+    /** [stopDownload] for each streamed piece. */
+    private fun stopPieceDownloads() {
+        val ids = heldPieceIds.ifEmpty { pieceBounds.map { it.first } }
+        for (id in ids) {
+            if (OfflineDownloads.isDownloading(id)) continue
+            App.backgroundScope.launch {
+                if (WatchCache.isPlaying(id)) return@launch
+                if (Td.localFileAvailability(id) == LocalFileAvailability.Complete) return@launch
+                runCatching { Td.cancelDownload(id) }
+            }
+        }
+    }
+
+    /**
+     * A seek moved the joined stream off a piece: its download stops, and in Low storage mode
+     * its bytes go, since the window is per piece and the one being read now has its own.
+     */
+    private fun leftPiece(uri: android.net.Uri) {
+        if (uri.scheme != "tdfile") return
+        val id = uri.authority?.toIntOrNull() ?: return
+        if (OfflineDownloads.isDownloading(id)) return
+        App.backgroundScope.launch {
+            if (Td.localFileAvailability(id) == LocalFileAvailability.Complete) return@launch
+            runCatching { Td.cancelDownload(id) }
+            if (LowStorageStreams.isRolling(id)) runCatching { Td.deleteFile(id) }
+        }
+    }
 
     /** This video, as the cache and the shelf want to see it. */
     private fun mediaItemForCache(): MediaItem = MediaItem(
@@ -2999,6 +3266,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * no next episode the last frame stays up with a way to watch it again.
      */
     private fun onVideoEnded() {
+        if (piecesIncomplete) {
+            // Only up to a missing piece: said again, and nothing marked or played next.
+            piecesNotice?.let { showGestureFeedback(it) }
+            showFinished()
+            return
+        }
         recordFinished()
         lifecycleScope.launch {
             settings.clearResumePosition(chatId, messageId, currentItem())
@@ -3171,6 +3444,21 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private fun subtitleTextFraction(): Float = subtitleStyle.size.fraction * subtitleTextScale()
 
     /**
+     * The bottom padding, as a share of the view's height: the position setting's share, or
+     * enough to keep the lines [R.dimen.player_subtitle_bottom] off the screen's edge where the
+     * picture reaches it, whichever is higher. Never both, so the lines stand at the same height
+     * on every picture shape and every video (user, 2026-10-18).
+     */
+    private fun subtitleBottomFraction(): Float {
+        val share = subtitleStyle.position.bottomFraction
+        val height = subtitleView.layoutParams?.height ?: 0
+        if (height <= 0) return share
+        val clearance = resources.getDimensionPixelSize(R.dimen.player_subtitle_bottom)
+        val needed = (clearance - subtitleGapBelow).coerceAtLeast(0)
+        return maxOf(share, needed.toFloat() / height).coerceAtMost(MAX_SUBTITLE_BOTTOM)
+    }
+
+    /**
      * The same floor for a cue that brings its own size, as an SSA line does: scaled with the
      * rest, or it alone would stay too small to read. Picture cues are left at the shape the film
      * gave them.
@@ -3193,7 +3481,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private fun applySubtitleStyle() {
         subtitleView.setFractionalTextSize(subtitleTextFraction())
-        subtitleView.setBottomPaddingFraction(subtitleStyle.position.bottomFraction)
+        subtitleView.setBottomPaddingFraction(subtitleBottomFraction())
         subtitleView.setStyle(
             CaptionStyleCompat(
                 Color.WHITE,
@@ -3219,6 +3507,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         val hash = withContext(Dispatchers.IO) {
             runCatching {
                 when {
+                    // The hash is of the whole file's two ends, which for a joined video are two pieces.
+                    joinedSource != null -> null
                     local != null -> MovieHash.of(local)
                     id != 0 -> withTimeoutOrNull(3_000) {
                         OnlineSubtitles.hashFromTdlib(Td.awaitConnectedSession().client, id, size)
@@ -3560,7 +3850,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             if (!runCatching { settings.trickplayNow() }.getOrDefault(true)) return@launch
             val frames = TrickplayFrames(
                 scope = lifecycleScope,
-                path = { downloadedFile?.path ?: trickplayPath },
+                // Not for a video joined from pieces: one piece's file is not the video's.
+                path = { if (joinedSource != null) null else downloadedFile?.path ?: trickplayPath },
                 spans = { trickplaySpans },
                 complete = { downloadedFile != null || downloadComplete },
                 sizeBytes = { downloadedFile?.length() ?: fileSizeBytes },
@@ -3602,6 +3893,11 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // zero and the meter reads that drop as the reset it is, where a window that jumped
         // forwards would look like a burst of speed.
         speed.sample(local.downloadedPrefixSize, SystemClock.elapsedRealtime())
+        // Any change of the prefix is TDLib doing something, a seek's reset to zero included.
+        if (local.downloadedPrefixSize != lastProgressBytes) {
+            lastProgressBytes = local.downloadedPrefixSize
+            noteOpeningProgress()
+        }
         // Throttled rather than rendered per update. TDLib emits one of these every few hundred
         // kilobytes, which at a few MB/s is a dozen a second, and each one re-lays-out the whole
         // loading sheet on the main thread while the decoder is starting up. No figure on that
@@ -4963,7 +5259,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         subtitleView.getLocationInWindow(at)
         val height = subtitleView.height
         val viewTop = at[1] - origin[1] - subtitleView.translationY.toInt()
-        val textBottom = viewTop + height * (1f - subtitleStyle.position.bottomFraction)
+        val textBottom = viewTop + height * (1f - subtitleBottomFraction())
         val twoLines = 2.5f * subtitleTextFraction() * height
         val gap = 8 * resources.displayMetrics.density
         return (textBottom - twoLines - gap - centreBottom).toInt()
@@ -5215,6 +5511,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     private fun showStatus(message: String) {
         openingFilm = true
+        slowStartUp = false
+        watchOpening()
         layOutSheetForThisScreen()
         statusOverlay.visibility = View.VISIBLE
         statusIcon.visibility = View.GONE
@@ -5279,6 +5577,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** A stall after playback has begun: a small chip, so the video stays on screen. */
     private fun showRebuffering() {
+        // The sheet saying nothing is arriving stays until bytes do, or the viewer answers it.
+        if (slowStartUp) return
         openingFilm = false
         statusOverlay.visibility = View.GONE
         val offline = networkOffline && !downloadComplete
@@ -5302,10 +5602,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      *   device has not got, or a container nothing here can parse. Offering a button that is
      *   certain to fail again is worse than offering none.
      */
-    private fun showError(message: String, retryable: Boolean = true) {
+    private fun showError(message: String, retryable: Boolean = true, freeUp: Boolean = false) {
         // Out of sight the sheet waits for the viewer, and the notification says it is there.
         stopUnseen()
         failedRetryable = retryable
+        freeUpOnFailure = freeUp
+        slowStartUp = false
         openingFilm = false
         undoChip?.hide()
         keepScreenOn(false)
@@ -5335,6 +5637,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** Puts the sheet back to the one button it had, for every state that is not a failure. */
     private fun hideFailureActions() {
+        slowStartUp = false
         statusLogs?.visibility = View.GONE
         statusReload?.visibility = View.GONE
         statusOpenWith?.visibility = View.GONE
@@ -5379,6 +5682,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 requestFocus()
             }
         }
+        // Not enough space: the way out is the screen that frees it, with the sheet already up.
+        if (freeUpOnFailure) {
+            statusOpenWith?.apply {
+                text = L.downloadsFreeUpSpace
+                visibility = View.VISIBLE
+                markPrimaryAction(this)
+                requestFocus()
+            }
+            return
+        }
         if (fileId <= 0) return
         lifecycleScope.launch {
             if (retryable) {
@@ -5422,6 +5735,22 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 statusDetail.visibility = View.VISIBLE
             }
         }
+    }
+
+    /**
+     * The failure on screen is "Not enough space", and the sheet's second button is Free up space
+     * rather than Open in another app. Set by [showError] each time, so it never outlives the
+     * failure it was for.
+     */
+    private var freeUpOnFailure = false
+
+    /** Leaves for the Downloads screen with Free up space up, which is what the refusal offers. */
+    private fun openFreeUpSpace() {
+        val open = Intent(this, com.tmplayer.MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            .putExtra(com.tmplayer.MainActivity.EXTRA_OPEN, com.tmplayer.MainActivity.OPEN_FREE_UP_SPACE)
+        runCatching { startActivity(open) }
+        finish()
     }
 
     /** Which of the two reloads this video gets, read off the two things that veto the destructive one. */
@@ -5530,7 +5859,121 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         }
     }
 
+    /**
+     * Counts the opening wait while [openingFilm] holds, and once [OpeningStall.STALL_MS] has gone
+     * by with no new byte puts up [showSlowStart]. TDLib does not fail a download it cannot begin,
+     * so without this a blocked network left the loader on "Starting" for as long as anybody
+     * cared to look. Bytes are read from TDLib's updates ([applyDownloadState]) and, for a video in
+     * pieces whose other files that does not follow, from the player's own buffered position.
+     * Not while the offline notice is up, which already says what is wrong and carries on alone.
+     */
+    private fun watchOpening() {
+        if (openingWatch?.isActive == true) return
+        lastProgressAtMs = SystemClock.elapsedRealtime()
+        lastBufferedMs = -1L
+        openingWatch = lifecycleScope.launch {
+            while (true) {
+                delay(OPENING_WATCH_TICK_MS)
+                if (!openingFilm) return@launch
+                val buffered = player?.bufferedPosition ?: -1L
+                if (buffered > lastBufferedMs) {
+                    if (lastBufferedMs >= 0) noteOpeningProgress()
+                    lastBufferedMs = buffered
+                }
+                val local = downloadComplete || downloadedFile != null || (joinedSource != null && joinedAllLocal)
+                if (networkOffline) {
+                    noteOpeningProgress()
+                    continue
+                }
+                if (OpeningStall.stalled(opening = true, local = local, lastProgressAtMs, SystemClock.elapsedRealtime())) {
+                    showSlowStart()
+                    return@launch
+                }
+            }
+        }
+    }
+
+    /** A byte arrived: the count starts again, and a sheet that said nothing was arriving goes. */
+    private fun noteOpeningProgress() {
+        lastProgressAtMs = SystemClock.elapsedRealtime()
+        if (slowStartUp) showStatus(L.playerStarting)
+    }
+
+    /**
+     * Nothing has arrived for the opening in [OpeningStall.STALL_MS]: the sheet says why, in the
+     * words the line to Telegram earns, and offers Try again (the focused one), Download first
+     * where the chat allows keeping a copy, and Back. Bytes arriving after all, or the first frame,
+     * put the ordinary flow back.
+     */
+    private fun showSlowStart() {
+        openingFilm = false
+        statusOverlay.visibility = View.VISIBLE
+        statusIcon.visibility = View.GONE
+        rebufferChip.visibility = View.GONE
+        feedback?.buffering(false)
+        statusSpinner?.visibility = View.GONE
+        statusProgress.visibility = View.GONE
+        statusRetry?.visibility = View.GONE
+        hideFailureActions()
+        slowStartUp = true
+        layOutSheetForThisScreen()
+        statusName?.apply {
+            text = mediaTitle
+            visibility = if (mediaTitle.isBlank()) View.GONE else View.VISIBLE
+        }
+        statusTitle.text = L.playerStalledTitle
+        statusText.text = when (OpeningStall.reason(Td.link.value)) {
+            OpeningStall.Reason.NoLine -> L.playerStalledNoLine
+            OpeningStall.Reason.Slow -> L.playerStalledSlow
+        }
+        val canDownload = canSaveToDownloads()
+        statusDetail.visibility = if (canDownload) View.VISIBLE else View.GONE
+        statusDetail.text = if (canDownload) L.playerStalledDownloadHint else ""
+        statusBack?.visibility = View.VISIBLE
+        statusOpenWith?.apply {
+            text = L.playerDownloadFirst
+            visibility = if (canDownload) View.VISIBLE else View.GONE
+        }
+        statusReload?.apply {
+            text = L.commonTryAgain
+            visibility = View.VISIBLE
+            markPrimaryAction(this)
+            requestFocus()
+        }
+        updateDownloadChip()
+    }
+
+    /**
+     * Try again on [showSlowStart]: the connections to Telegram reopened ([Td.retryConnecting])
+     * and the stream opened afresh. A plain prepare does nothing to a player that is still
+     * buffering; a stop and a prepare closes the data source and opens it again, which asks TDLib
+     * for the bytes once more, from where the player stands.
+     */
+    private fun tryOpeningAgain() {
+        slowStartUp = false
+        recoveryAttempts = 0
+        App.backgroundScope.launch { runCatching { Td.retryConnecting() } }
+        showStatus(L.playerTryingAgain)
+        val exo = player
+        if (exo == null) {
+            retryPlayback()
+            return
+        }
+        exo.stop()
+        exo.prepare()
+        exo.playWhenReady = true
+    }
+
+    /** Download first on [showSlowStart]: the video joins the download queue and the player steps back. */
+    private fun downloadFirst() {
+        if (!canSaveToDownloads()) return
+        OfflineDownloads.start(this, mediaItemForCache(), chatTitle)
+        android.widget.Toast.makeText(applicationContext, L.playerDownloadFirstStarted, android.widget.Toast.LENGTH_LONG).show()
+        finish()
+    }
+
     private fun hideStatus() {
+        slowStartUp = false
         failedRetryable = false
         openingFilm = false
         statusOverlay.visibility = View.GONE
@@ -5566,6 +6009,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     override fun onStart() {
         super.onStart()
+        if (openingFilm) watchOpening()
         // Back in front: the session comes home from the notification, the sound never stopped,
         // and the picture comes back on (turned off only while nobody could see it).
         endBackgroundAudio()
@@ -5595,6 +6039,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     override fun onStop() {
         super.onStop()
+        // Counted again from the start when the viewer is back ([onStart]).
+        openingWatch?.cancel()
         saveResumePosition(leaving = !inPictureInPicture)
         // In picture in picture the activity is stopped while the video is still on screen and
         // still the point of it; pausing here would stop the very thing the mode exists for.
@@ -5641,6 +6087,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * offline playback work.
      */
     private fun stopDownload() {
+        stopPieceDownloads()
         if (downloadComplete) return
         val id = fileId
         if (id <= 0) return
@@ -5660,6 +6107,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var heldFileId = 0
 
     private fun holdFile(id: Int) {
+        if (id == 0) holdPieces(emptyList())
         if (id == heldFileId) return
         WatchCache.stoppedPlaying(heldFileId)
         WatchCache.startedPlaying(id)
@@ -5693,8 +6141,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         val exo = player ?: return
         val position = exo.currentPosition
         val duration = exo.duration
-        // Watched from 90 %, and the position then forgotten; see [ResumeRules].
-        val watched = ResumeRules.watched(position, duration)
+        // Watched from 90 %, and the position then forgotten; see [ResumeRules]. Never for a video
+        // whose pieces stop at a gap: the end of what is here is not the end of the video.
+        val watched = ResumeRules.watched(position, duration) && !piecesIncomplete
         val store = settings
         val chat = chatId
         val message = messageId
@@ -5830,6 +6279,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         private const val EXTRA_MINI_THUMBNAIL = "mini_thumbnail"
         private const val EXTRA_CAN_BE_SAVED = "can_be_saved"
         private const val EXTRA_OUTSIDE_APP_TASK = "outside_app_task"
+        /** How long the note about a missing piece stays up as the video starts. */
+        private const val PIECES_NOTICE_MS = 6_000L
+        private const val EXTRA_PIECE_MESSAGES = "piece_messages"
+        private const val EXTRA_PIECE_FILES = "piece_files"
+        private const val EXTRA_PIECE_SIZES = "piece_sizes"
+        private const val EXTRA_PIECE_NAMES = "piece_names"
 
         /** Said when a press asks for a copy of a video Telegram does not let leave the app. */
         private val NOT_SAVABLE_FEEDBACK: String get() = L.playerNotSavable
@@ -5910,11 +6365,17 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         /** The captions' climb out from under the raised transport row, and back. */
         private const val SUBTITLE_LIFT_MS = 200L
 
+        /** The highest the bottom padding goes, so a short picture never pushes the lines off its top. */
+        private const val MAX_SUBTITLE_BOTTOM = 0.4f
+
         /** A thumbnail at least this wide for its height is a frame of the film, not a logo. */
         private const val REAL_FRAME_ASPECT = 1.3f
 
         /** How long the opening wait runs before the loader adds the speed. */
         private const val LOADER_SLOW_MS = 3_000L
+
+        /** How often [watchOpening] looks at the opening wait. */
+        private const val OPENING_WATCH_TICK_MS = 1_000L
 
         /** Twice a second: faster than the eye needs and slower than TDLib talks. */
         private const val PROGRESS_RENDER_MS = 500L
@@ -6053,6 +6514,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 putExtra(EXTRA_THUMBNAIL_ID, item.thumbnailFileId)
                 putExtra(EXTRA_MINI_THUMBNAIL, item.miniThumbnail)
                 putExtra(EXTRA_CAN_BE_SAVED, item.canBeSaved)
+                // The pieces of a video cut into several files, so the player need not look for them.
+                if (item.isJoined) {
+                    putExtra(EXTRA_PIECE_MESSAGES, item.pieces.map { it.messageId }.toLongArray())
+                    putExtra(EXTRA_PIECE_FILES, item.pieces.map { it.fileId }.toIntArray())
+                    putExtra(EXTRA_PIECE_SIZES, item.pieces.map { it.sizeBytes }.toLongArray())
+                    putExtra(EXTRA_PIECE_NAMES, item.pieces.map { it.fileName }.toTypedArray())
+                }
                 putExtra(
                     EXTRA_SUBTITLE,
                     listOf(

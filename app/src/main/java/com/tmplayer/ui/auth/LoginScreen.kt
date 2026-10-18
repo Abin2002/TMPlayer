@@ -101,6 +101,8 @@ fun LoginScreen(
     onSubmitCode: (String) -> Unit = {},
     onCancelPhoneEntry: () -> Unit = {},
     onResendCode: () -> Unit = {},
+    onSubmitEmailAddress: (String) -> Unit = {},
+    onSubmitEmailCode: (String) -> Unit = {},
 ) {
     val s = LocalStrings.current
     // "Change number" on the code pane. TDLib is happy to be told a different number while it is
@@ -156,6 +158,10 @@ fun LoginScreen(
             }
         is AuthState.Password ->
             PasswordPane(state, submitError, onSubmitPassword, onStartOver)
+        is AuthState.EmailAddress ->
+            EmailAddressPane(state, submitError, onSubmitEmailAddress, onStartOver)
+        is AuthState.EmailCode ->
+            EmailCodePane(state, submitError, onSubmitEmailCode, onStartOver)
         is AuthState.Ready -> BrandLoader(s.loginSigningInStatus)
         // Starting over is the way out of every failure here, including a client that could not
         // start at all, which it tries again.
@@ -867,6 +873,75 @@ private fun PasswordPane(
         onSubmit = { submission.start { onSubmit(password) } },
         // The way out: scanned with the wrong account, or the password is not to hand. Nothing is
         // lost, because nobody is signed in yet.
+        backLabel = s.loginStartOver,
+        onBack = onStartOver,
+    )
+}
+
+/** Telegram asks this account for an email address to sign in with, and mails a code there next. */
+@Composable
+private fun EmailAddressPane(
+    state: AuthState.EmailAddress,
+    error: String?,
+    onSubmit: (String) -> Unit,
+    onStartOver: () -> Unit,
+) {
+    val s = LocalStrings.current
+    var address by rememberSaveable { mutableStateOf("") }
+    val submission = rememberSubmission(state, error)
+    BackHandler(onBack = onStartOver)
+    LoginForm(
+        title = s.loginEmailAddressTitle,
+        blurb = s.loginEmailAddressBody,
+        note = null,
+        value = address,
+        onValueChange = { address = it.trim() },
+        placeholder = s.loginEmailAddressLabel,
+        keyboardType = KeyboardType.Email,
+        masked = false,
+        error = error,
+        submitLabel = s.loginEmailSend,
+        busyLabel = s.loginSendingCode,
+        busy = submission.busy,
+        canSubmit = '@' in address && '.' in address.substringAfter('@'),
+        onSubmit = { submission.start { onSubmit(address) } },
+        backLabel = s.loginStartOver,
+        onBack = onStartOver,
+    )
+}
+
+/**
+ * The code Telegram mailed to the account's login email, which it uses in place of a text for some
+ * accounts. Before this pane the sign in ended in "a step TMPlayer can't do", and such an account
+ * could not sign in here at all.
+ */
+@Composable
+private fun EmailCodePane(
+    state: AuthState.EmailCode,
+    error: String?,
+    onSubmit: (String) -> Unit,
+    onStartOver: () -> Unit,
+) {
+    val s = LocalStrings.current
+    var code by rememberSaveable { mutableStateOf("") }
+    val submission = rememberSubmission(state, error)
+    val length = state.length.takeIf { it > 0 } ?: MAX_CODE_LENGTH
+    BackHandler(onBack = onStartOver)
+    LoginForm(
+        title = s.loginEmailCodeTitle,
+        blurb = s.loginEmailCodeBody(state.pattern),
+        note = null,
+        value = code,
+        onValueChange = { code = it.filter(Char::isLetterOrDigit).take(length) },
+        placeholder = s.loginEmailCodeLabel,
+        keyboardType = KeyboardType.Number,
+        masked = false,
+        error = error,
+        submitLabel = s.loginSignIn,
+        busyLabel = s.loginSigningIn,
+        busy = submission.busy,
+        canSubmit = code.isNotBlank(),
+        onSubmit = { submission.start { onSubmit(code) } },
         backLabel = s.loginStartOver,
         onBack = onStartOver,
     )

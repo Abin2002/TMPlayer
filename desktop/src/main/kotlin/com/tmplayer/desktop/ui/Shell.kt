@@ -165,8 +165,19 @@ fun DesktopShell(
                 } else {
                     SignInScreen(auth)
                 }
+                // Telegram out of reach on a screen already drawn: a sign in pane with no line yet,
+                // or a session whose network is up and Telegram is not answering (blocked, most
+                // likely). The offline pill covers a network that is really gone.
+                val unreachable by Td.unreachable.collectAsState()
+                if ((!signedIn && com.tmplayer.ui.connect.signInBannerShown()) || (signedIn && unreachable)) {
+                    com.tmplayer.ui.connect.ConnectBanner(
+                        onOpenProxies = { com.tmplayer.ui.connect.ProxyScreenState.open = true },
+                        modifier = Modifier.align(Alignment.TopCenter).padding(top = 56.dp, start = 24.dp, end = 24.dp),
+                    )
+                }
                 // The loader after launch, over the window until Telegram has something to ask
-                // or the session is open, then fading out over what is drawn under it.
+                // or the session is open, then fading out over what is drawn under it. Its second
+                // line is the live step (ConnectingHelp), and past the long wait, help.
                 BrandLoaderHandOff(
                     label = if (auth == AuthState.Connecting || auth == AuthState.ChooseMethod) {
                         LocalStrings.current.signinConnecting
@@ -174,7 +185,14 @@ fun DesktopShell(
                         null
                     },
                     modifier = Modifier.windowDrag(),
-                ) { ConnectingStalled() }
+                    lines = emptyList(),
+                ) {
+                    com.tmplayer.ui.connect.ConnectingHelp(
+                        onOpenProxies = { com.tmplayer.ui.connect.ProxyScreenState.open = true },
+                        sendLogs = { SendLogsActions(Modifier.padding(top = 8.dp)) },
+                    )
+                }
+                com.tmplayer.ui.connect.ProxyScreenHost()
                 // At the foot, centred just over the floating bar or a chat's bar, as a desktop
                 // app's messages sit: the top of a window is Back, the chat's name and the window's
                 // own buttons, which a message there covered.

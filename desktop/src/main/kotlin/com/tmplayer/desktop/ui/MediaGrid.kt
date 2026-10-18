@@ -771,7 +771,7 @@ internal fun MediaTile(
             // A poster leads with the film's year and leaves the quality to the chip on its art.
             if (poster || row) MediaName.parse(item.nameForParsing, item.caption).year?.let { append(it).append("  ·  ") }
             if (!poster && item.durationSec > 0) append(MediaMapper.formatDuration(item.durationSec)).append("  ·  ")
-            append(if (item.versions.size > 1) s.detailVersions(item.versions.size) else MediaMapper.formatSize(item.sizeBytes))
+            append(if (item.versions.size > 1) s.detailVersions(item.versions.size) else com.tmplayer.data.SplitPieces.sizeFact(item, MediaMapper.formatSize(item.sizeBytes)))
             if (!poster || row) item.qualityTags.firstOrNull()?.let { append("  ·  ").append(it) }
             if (WatchedWords.showsWatched(point?.fraction, finished)) append("  ·  ").append(s.watchedBadge)
         },
@@ -973,17 +973,21 @@ internal fun Poster(
                 Text(subtitle, style = MaterialTheme.typography.labelMedium, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             if (lifted || focused || menu) {
-                Surface(
-                    shape = CircleShape,
-                    color = Tone.accent,
-                    modifier = Modifier.size(36.dp).clickable { state.openPlayer(item, startFromBeginning = false) },
-                ) {
-                    Icon(TmIcons.PlaySolid, contentDescription = s.playerPlay, tint = Tone.onAccent, modifier = Modifier.padding(8.dp))
+                BarTooltip(s.playerPlay, null) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Tone.accent,
+                        modifier = Modifier.size(36.dp).clickable { state.openPlayer(item, startFromBeginning = false) },
+                    ) {
+                        Icon(TmIcons.PlaySolid, contentDescription = s.playerPlay, tint = Tone.onAccent, modifier = Modifier.padding(8.dp))
+                    }
                 }
             }
             Box {
                 if (lifted || focused || menu) {
-                    IconButton(onClick = { openMenu() }) { Icon(TmIcons.MoreVert, contentDescription = s.commonMore) }
+                    BarTooltip(s.commonMore, null) {
+                        IconButton(onClick = { openMenu() }) { Icon(TmIcons.MoreVert, contentDescription = s.commonMore) }
+                    }
                 } else {
                     Spacer(Modifier.size(48.dp))
                 }
@@ -1038,11 +1042,15 @@ internal fun Poster(
                     modifier = Modifier.align(Alignment.Center).size(48.dp)
                         .clickable { state.openPlayer(item, startFromBeginning = false) },
                 ) {
-                    Icon(TmIcons.PlaySolid, contentDescription = s.playerPlay, tint = Tone.onAccent, modifier = Modifier.padding(10.dp))
+                    BarTooltip(s.playerPlay, null) {
+                        Icon(TmIcons.PlaySolid, contentDescription = s.playerPlay, tint = Tone.onAccent, modifier = Modifier.padding(10.dp))
+                    }
                 }
                 Box(Modifier.align(Alignment.TopEnd)) {
-                    IconButton(onClick = { openMenu() }) {
-                        Icon(TmIcons.MoreVert, contentDescription = s.commonMore, tint = Color.White)
+                    BarTooltip(s.commonMore, null) {
+                        IconButton(onClick = { openMenu() }) {
+                            Icon(TmIcons.MoreVert, contentDescription = s.commonMore, tint = Color.White)
+                        }
                     }
                 }
             }

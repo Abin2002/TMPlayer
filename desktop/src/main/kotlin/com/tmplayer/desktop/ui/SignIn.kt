@@ -96,6 +96,8 @@ fun SignInScreen(auth: AuthState) {
                 is AuthState.Phone -> PhonePane(auth.wrong)
                 is AuthState.Code -> CodePane(auth)
                 is AuthState.Password -> PasswordPane(auth)
+                is AuthState.EmailAddress -> EmailAddressPane(auth)
+                is AuthState.EmailCode -> EmailCodePane(auth)
                 is AuthState.Failed -> FailedPane(auth.message)
             }
             Text(
@@ -112,29 +114,6 @@ fun SignInScreen(auth: AuthState) {
 private fun Waiting(label: String) {
     CircularProgressIndicator()
     Text(label, color = Tone.muted)
-}
-
-/**
- * What the loader adds once it has waited for [com.tmplayer.data.Td.signInStalled]'s while: the
- * likely reasons and a Retry. A firewall or a VPN that drops Telegram's traffic leaves TDLib
- * waiting with no error to show, and a loader alone gives the viewer nothing to check and nothing
- * to press.
- */
-@Composable
-internal fun ConnectingStalled() {
-    val s = LocalStrings.current
-    val scope = rememberCoroutineScope()
-    val stalled by Td.signInStalled.collectAsState()
-    if (stalled) {
-        Text(
-            s.signinUnreachable,
-            color = Tone.muted,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.widthIn(max = 460.dp).padding(top = 24.dp, bottom = 16.dp),
-        )
-        Button(onClick = { scope.launch { Td.retryConnecting() } }) { Text(s.commonRetry) }
-        SendLogsActions(Modifier.padding(top = 8.dp))
-    }
 }
 
 @Composable
@@ -373,6 +352,81 @@ private fun PasswordPane(state: AuthState.Password) {
         modifier = Modifier.fillMaxWidth().focusRequester(focus),
     )
     Button(onClick = { submit() }, enabled = !busy && password.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
+        Text(if (busy) s.signinChecking else s.signinSignIn)
+    }
+    TextButton(onClick = { scope.launch { Td.restartSignIn() } }) { Text(s.signinStartOver) }
+}
+
+/** Telegram asks this account for an email address to sign in with; it mails a code there next. */
+@Composable
+private fun EmailAddressPane(state: AuthState.EmailAddress) {
+    val s = LocalStrings.current
+    val scope = rememberCoroutineScope()
+    var address by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    val ready = '@' in address && '.' in address.substringAfter('@')
+    val submit = {
+        if (!busy && ready) {
+            busy = true
+            scope.launch {
+                error = Td.submitEmailAddress(address)
+                busy = false
+            }
+        }
+    }
+    Heading(s.loginEmailAddressTitle, s.loginEmailAddressBody)
+    OutlinedTextField(
+        value = address,
+        onValueChange = { address = it.trim(); error = null },
+        label = { Text(s.loginEmailAddressLabel) },
+        singleLine = true,
+        isError = error != null || state.wrong,
+        supportingText = { error?.let { Text(it) } },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { submit() }),
+        modifier = Modifier.fillMaxWidth().focusRequester(focus),
+    )
+    Button(onClick = { submit() }, enabled = !busy && ready, modifier = Modifier.fillMaxWidth()) {
+        Text(if (busy) s.signinSending else s.loginEmailSend)
+    }
+    TextButton(onClick = { scope.launch { Td.restartSignIn() } }) { Text(s.signinStartOver) }
+}
+
+/** The code Telegram mailed to the account's login email, in place of a text. */
+@Composable
+private fun EmailCodePane(state: AuthState.EmailCode) {
+    val s = LocalStrings.current
+    val scope = rememberCoroutineScope()
+    var code by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    val submit = {
+        if (!busy && code.isNotBlank()) {
+            busy = true
+            scope.launch {
+                error = Td.submitEmailCode(code)
+                busy = false
+            }
+        }
+    }
+    Heading(s.loginEmailCodeTitle, s.loginEmailCodeBody(state.pattern))
+    OutlinedTextField(
+        value = code,
+        onValueChange = { code = it.filter(Char::isLetterOrDigit); error = null },
+        label = { Text(s.loginEmailCodeLabel) },
+        singleLine = true,
+        isError = error != null || state.wrong,
+        supportingText = { error?.let { Text(it) } },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { submit() }),
+        modifier = Modifier.fillMaxWidth().focusRequester(focus),
+    )
+    Button(onClick = { submit() }, enabled = !busy && code.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
         Text(if (busy) s.signinChecking else s.signinSignIn)
     }
     TextButton(onClick = { scope.launch { Td.restartSignIn() } }) { Text(s.signinStartOver) }

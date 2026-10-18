@@ -1,6 +1,9 @@
 package com.tmplayer.desktop.player
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.unit.Density
@@ -57,6 +60,41 @@ class PlayerLoaderRenderTest {
                 assertTrue("${shot.name}$suffix drew nothing", png.size > 5_000)
                 File(OUT).apply { mkdirs() }.resolve("${shot.name}$suffix.png").writeBytes(png)
             }
+        }
+    }
+
+    /** The sheet once nothing has arrived for the opening: why, Try again, Download first, Back. */
+    @Test
+    fun stalledOpeningSaysWhyAndOffersAWayOn() {
+        val item = com.tmplayer.data.MediaItem(
+            chatId = 2, messageId = 1, fileId = 7, title = "Big Buck Bunny", sizeBytes = 300L * 1024 * 1024,
+            durationSec = 600, mimeType = "video/mp4", thumbnailFileId = 0, miniThumbnail = null, date = 0,
+            fileName = "Big Buck Bunny 2008.mp4",
+        )
+        for (shot in listOf(Shot("stalled-desktop-small", 960, 600, 1f, tv = false), Shot("stalled-desktop-1080p", 1920, 1080, 1f, tv = false))) {
+            val png = ImageComposeScene(shot.width, shot.height, Density(shot.density)) {
+                TmMaterialTheme(dark = true) {
+                    Box(Modifier.fillMaxSize()) {
+                        LoaderSheet(
+                            phase = Phase.Loading("Starting"),
+                            item = item,
+                            downloaded = 0f,
+                            bufferedMs = 0,
+                            isDownload = false,
+                            onBack = {},
+                            thumbnailOverride = art("promo_bbb_backdrop"),
+                            onRetry = {},
+                            onDownloadFirst = {},
+                            stalledOverride = true,
+                        )
+                    }
+                }
+            }.use { scene ->
+                scene.render(0)
+                scene.render(1_000_000_000).encodeToData(EncodedImageFormat.PNG)!!.bytes
+            }
+            assertTrue("${shot.name} drew nothing", png.size > 5_000)
+            File(OUT).apply { mkdirs() }.resolve("${shot.name}.png").writeBytes(png)
         }
     }
 

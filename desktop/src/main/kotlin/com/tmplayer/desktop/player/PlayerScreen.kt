@@ -477,6 +477,8 @@ fun PlayerScreen(
         // Keep watching opens the file again, and a fresh open has no loop in mpv.
         abLoop?.takeIf { it.complete }?.let(engine::setAbLoop)
         phase = Phase.Playing
+        // A video whose pieces stop at a gap says so as it starts.
+        current.notice?.let { showFlash(Flash.Kind.Text, it) }
         if (start > 0 && !reopening) resumedFrom = start
         onPlayingItemChanged(item)
         refocus()
@@ -491,6 +493,8 @@ fun PlayerScreen(
         val store = watched ?: return
         val it = m.item
         if (!hasMessage(it)) return
+        // The end of what is here is not the end of a video missing a piece.
+        if (!manual && m.incomplete) return
         val known = it.durationSec.takeIf { d -> d > 0 } ?: (durationMs / 1000).toInt().coerceAtLeast(0)
         val record = WatchedRecord.of(it.copy(durationSec = known), m.chatTitle, System.currentTimeMillis(), manual)
         playerScope.launch {
@@ -512,7 +516,7 @@ fun PlayerScreen(
         val it = m.item
         val position = s.positionMs
         val duration = s.durationMs
-        val watched = ResumeRules.watched(position, duration)
+        val watched = ResumeRules.watched(position, duration) && !m.incomplete
         val key = SettingsStore.progressKey(it.chatId, it.messageId)
         if (watched && leaving && watchedHere.add(key)) recordWatched(m, duration, manual = false)
         val forget = watched || key in markedHere
@@ -640,6 +644,12 @@ fun PlayerScreen(
     // The end: the next episode after a countdown, or the last frame with a way to watch again.
     LaunchedEffect(status.ended) {
         if (!status.ended || phase != Phase.Playing) return@LaunchedEffect
+        if (current.incomplete) {
+            // Only up to a missing piece: said again, nothing marked, nothing played next.
+            current.notice?.let { showFlash(Flash.Kind.Text, it) }
+            phase = Phase.Finished
+            return@LaunchedEffect
+        }
         recordWatched(current, status.durationMs, manual = false)
         runCatching { settings.clearResumePosition(item.chatId, item.messageId) }
         val next = episodes.next
@@ -1570,6 +1580,21 @@ fun PlayerScreen(
                 isDownload = current.isDownload,
                 onBack = onBack,
                 thumbnailOverride = loaderThumbnail,
+                // Nothing arriving: the connections reopened and the file opened again.
+                onRetry = {
+                    scope.launch { runCatching { com.tmplayer.data.Td.retryConnecting() } }
+                    attempt++
+                    refocus()
+                },
+                // Kept in the queue, which carries on once the player lets go of the file.
+                onDownloadFirst = if (savable && !current.isDownload) {
+                    {
+                        current.download()
+                        onBack()
+                    }
+                } else {
+                    null
+                },
             )
 
             StatusSheet(

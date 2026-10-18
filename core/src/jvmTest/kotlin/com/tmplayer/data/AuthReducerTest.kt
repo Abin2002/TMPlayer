@@ -18,6 +18,15 @@ import dev.g000sha256.tdl.dto.AuthorizationStateWaitOtherDeviceConfirmation
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitPassword
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitPhoneNumber
 import dev.g000sha256.tdl.dto.AuthorizationStateWaitTdlibParameters
+import com.tmplayer.i18n.L
+import dev.g000sha256.tdl.dto.AuthorizationStateWaitEmailAddress
+import dev.g000sha256.tdl.dto.AuthorizationStateWaitEmailCode
+import dev.g000sha256.tdl.dto.AuthorizationStateWaitPremiumPurchase
+import dev.g000sha256.tdl.dto.AuthorizationStateWaitRegistration
+import dev.g000sha256.tdl.dto.EmailAddressAuthenticationCodeInfo
+import dev.g000sha256.tdl.dto.EmailAddressResetStateAvailable
+import dev.g000sha256.tdl.dto.FormattedText
+import dev.g000sha256.tdl.dto.TermsOfService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -226,5 +235,49 @@ class AuthReducerTest {
         val step = AuthReducer.reduce(AuthorizationStateReady(), SignInMethod.Undecided)
         assertEquals(AuthState.Ready, step.state)
         assertEquals(AuthAction.OnReady, step.action)
+    }
+
+    @Test
+    fun `an account signed in by email gets its address and code screens, on any route`() {
+        for (method in SignInMethod.entries) {
+            assertEquals(AuthState.EmailAddress(), AuthReducer.reduce(AuthorizationStateWaitEmailAddress(false, false), method).state)
+            val code = AuthReducer.reduce(
+                AuthorizationStateWaitEmailCode(false, false, EmailAddressAuthenticationCodeInfo("a***@gmail.com", 6), EmailAddressResetStateAvailable(0)),
+                method,
+            )
+            assertEquals(AuthState.EmailCode("a***@gmail.com", 6), code.state)
+            assertEquals(AuthAction.None, code.action)
+        }
+    }
+
+    @Test
+    fun `a Premium purchase to sign in is a failure that says what to do, never Connecting for good`() {
+        val step = AuthReducer.reduce(AuthorizationStateWaitPremiumPurchase("id", 30, "help@x", "s"), SignInMethod.Phone)
+        assertEquals(AuthState.Failed(L.errorsPremiumSignIn), step.state)
+    }
+
+    @Test
+    fun `a number with no account says so`() {
+        val step = AuthReducer.reduce(AuthorizationStateWaitRegistration(TermsOfService(FormattedText("", emptyArray()), 0, false)), SignInMethod.Phone)
+        assertEquals(AuthState.Failed(L.errorsNoAccount), step.state)
+    }
+
+    @Test
+    fun `no TDLib state leaves the screen on Connecting without anything under way`() {
+        // Connecting is only ever shown with an action that moves things on, or while TDLib is
+        // closing, which it finishes on its own.
+        val states = listOf(
+            AuthorizationStateWaitTdlibParameters(), AuthorizationStateWaitPhoneNumber(),
+            AuthorizationStateWaitEmailAddress(false, false),
+            AuthorizationStateWaitPremiumPurchase("id", 30, "help@x", "s"),
+            AuthorizationStateWaitRegistration(TermsOfService(FormattedText("", emptyArray()), 0, false)),
+            AuthorizationStateReady(), AuthorizationStateClosed(),
+        )
+        for (state in states) for (method in SignInMethod.entries) {
+            val step = AuthReducer.reduce(state, method)
+            if (step.state == AuthState.Connecting) {
+                assertTrue("${state::class.simpleName} with $method", step.action != AuthAction.None)
+            }
+        }
     }
 }

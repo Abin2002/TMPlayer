@@ -1353,12 +1353,16 @@ private fun MediaSearchField(
                 },
             )
             if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    M3Icon(TmIcons.Close, contentDescription = s.browseClearSearch)
+                com.tmplayer.ui.components.IconTip(s.browseClearSearch) {
+                    IconButton(onClick = { onQueryChange("") }) {
+                        M3Icon(TmIcons.Close, contentDescription = s.browseClearSearch)
+                    }
                 }
             } else if (onVoiceSearch != null) {
-                IconButton(onClick = onVoiceSearch) {
-                    M3Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice)
+                com.tmplayer.ui.components.IconTip(s.browseSearchByVoice) {
+                    IconButton(onClick = onVoiceSearch) {
+                        M3Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice)
+                    }
                 }
             }
         }
@@ -1843,32 +1847,36 @@ private fun Pill(
         label = "pillScale",
     )
 
-    Row(
-        Modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
+    // An icon on its own says its name under it while the remote is on it, as the rail's icons do.
+    Box {
+        if (!showLabel && !isTouch()) com.tmplayer.ui.components.FocusTip(focused, label)
+        Row(
+            Modifier
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .height(48.dp)
+                .clip(CircleShape)
+                .background(background)
+                .focusRing(focused, CircleShape)
+                .pressable(interactions, onClick)
+                // Even padding when there are no words, so the pill comes out round rather than as a
+                // wide one with a gap in it.
+                .padding(horizontal = if (showLabel) 16.dp else 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (starred != null) {
+                StarIcon(starred, TmIcons.Star, TmIcons.StarOutline, on = foreground, off = foreground, size = 22.dp)
+            } else if (spin != null) {
+                com.tmplayer.ui.components.RefreshGlyph(spin, if (showLabel) null else label, Modifier.size(22.dp), tint = foreground)
+            } else {
+                Icon(icon, contentDescription = if (showLabel) null else label, tint = if (plain && !focused) Tone.muted else foreground, modifier = Modifier.size(22.dp))
             }
-            .height(48.dp)
-            .clip(CircleShape)
-            .background(background)
-            .focusRing(focused, CircleShape)
-            .pressable(interactions, onClick)
-            // Even padding when there are no words, so the pill comes out round rather than as a
-            // wide one with a gap in it.
-            .padding(horizontal = if (showLabel) 16.dp else 13.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        if (starred != null) {
-            StarIcon(starred, TmIcons.Star, TmIcons.StarOutline, on = foreground, off = foreground, size = 22.dp)
-        } else if (spin != null) {
-            com.tmplayer.ui.components.RefreshGlyph(spin, if (showLabel) null else label, Modifier.size(22.dp), tint = foreground)
-        } else {
-            Icon(icon, contentDescription = if (showLabel) null else label, tint = if (plain && !focused) Tone.muted else foreground, modifier = Modifier.size(22.dp))
-        }
-        if (showLabel) {
-            Text(label, style = MaterialTheme.typography.bodyLarge, color = foreground, maxLines = 1)
+            if (showLabel) {
+                Text(label, style = MaterialTheme.typography.bodyLarge, color = foreground, maxLines = 1)
+            }
         }
     }
 }
@@ -2582,7 +2590,7 @@ private fun MetaLine(
     val year = if (poster) remember(item) { MediaName.parse(item.nameForParsing, item.caption).year } else null
     val duration = s.formatter.duration(item.durationSec.toLong())
     // A tile standing for several copies says how many rather than one copy's size.
-    val size = if (item.versions.size > 1) s.detailVersions(item.versions.size) else s.formatter.size(item.sizeBytes)
+    val size = if (item.versions.size > 1) s.detailVersions(item.versions.size) else com.tmplayer.data.SplitPieces.sizeFact(item, s.formatter.size(item.sizeBytes))
     val resume = watched
         ?.takeIf { it.positionMs > 0 }
         ?.let { s.gridStoppedAt(s.formatter.clock(it.positionMs)) }
