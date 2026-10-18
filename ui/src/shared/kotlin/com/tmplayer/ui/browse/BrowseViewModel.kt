@@ -245,6 +245,11 @@ class ChatListViewModel(private val settings: SettingsStore? = null) : ViewModel
 
     private var loadJob: Job? = null
 
+    private val _refreshing = MutableStateFlow(false)
+
+    /** Whether a load is running, so a refresh button can keep turning until the list is in. */
+    val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
+
     /**
      * The header's own channel to the drawer, because [publish] cannot carry it until the chat
      * list exists: on a cold start the name and face are read off disk in milliseconds while the
@@ -309,7 +314,8 @@ class ChatListViewModel(private val settings: SettingsStore? = null) : ViewModel
     fun load() {
         loadJob?.cancel()
         if (chats == null) _state.value = loading()
-        loadJob = viewModelScope.launch {
+        _refreshing.value = true
+        val job = viewModelScope.launch {
             val session = Td.awaitAuthorizedSession()
             val repository = ChatRepository(session.client)
             try {
@@ -375,6 +381,9 @@ class ChatListViewModel(private val settings: SettingsStore? = null) : ViewModel
                 }
             }
         }
+        loadJob = job
+        // A newer load cancels this one; only the newest says when the list has arrived.
+        job.invokeOnCompletion { if (loadJob === job) _refreshing.value = false }
     }
 
     /**

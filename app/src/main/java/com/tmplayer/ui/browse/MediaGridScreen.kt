@@ -1473,7 +1473,11 @@ internal fun Header(
             // Telegram pushes new messages into TDLib's database, but this grid was built from a
             // search that ran when it opened, so a video posted since then needs a fresh search.
             // Icon only, like the refresh on the chat list: a label costs the search field 90dp.
-            Pill(s.commonRefresh, TmIcons.Refresh, showLabel = false, onClick = onRefresh)
+            val spin = com.tmplayer.ui.components.rememberRefreshSpin()
+            Pill(s.commonRefresh, TmIcons.Refresh, showLabel = false, spin = spin, onClick = {
+                spin.kick()
+                onRefresh()
+            })
         }
         if (query.isBlank() && recentSearches.isNotEmpty() && (headerFocused || alwaysShowRecent)) {
             Row(
@@ -1805,6 +1809,8 @@ private fun Pill(
     plain: Boolean = false,
     /** The favourite pill's: the star pops as it fills ([StarIcon]) instead of a plain icon. */
     starred: Boolean? = null,
+    /** The refresh pill's: its arrow turns once for each press ([RefreshGlyph]). */
+    spin: com.tmplayer.ui.components.RefreshSpin? = null,
     onClick: () -> Unit,
 ) {
     val interactions = remember { MutableInteractionSource() }
@@ -1843,6 +1849,8 @@ private fun Pill(
     ) {
         if (starred != null) {
             StarIcon(starred, TmIcons.Star, TmIcons.StarOutline, on = foreground, off = foreground, size = 22.dp)
+        } else if (spin != null) {
+            com.tmplayer.ui.components.RefreshGlyph(spin, if (showLabel) null else label, Modifier.size(22.dp), tint = foreground)
         } else {
             Icon(icon, contentDescription = if (showLabel) null else label, tint = if (plain && !focused) Tone.muted else foreground, modifier = Modifier.size(22.dp))
         }

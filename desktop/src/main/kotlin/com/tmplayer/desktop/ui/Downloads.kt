@@ -185,12 +185,9 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                     OutlinedButton(onClick = { confirm = history.filter { it.key in picked } }) {
                         Text(s.downloadsDeleteSelected(picked.size), color = Tone.danger)
                     }
-                } else {
-                    TextButton(onClick = { OpenExternal.open(downloadsDir.apply { mkdirs() }) }) { Text(s.downloadsOpenFolder) }
-                    if (history.isNotEmpty()) {
-                        TextButton(onClick = { confirm = history }) { Text(s.downloadsDeleteAll, color = Tone.danger) }
-                    }
                 }
+                // Open folder and Delete all sit on the Downloaded heading instead, on the list's
+                // own edge: up here they stood at the window's edge, far past a capped list.
             },
         )
         val kept: @Composable (ResumeRecord) -> Unit = { record ->
@@ -319,7 +316,14 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                             Section(
                                 if (history.isEmpty()) s.downloadsDownloaded else s.downloadsTabDownloadedCount(history.size),
                                 first = twoPane && queue.isEmpty(),
-                            )
+                            ) {
+                                if (picked.isEmpty()) {
+                                    TextButton(onClick = { OpenExternal.open(downloadsDir.apply { mkdirs() }) }) { Text(s.downloadsOpenFolder) }
+                                    if (history.isNotEmpty()) {
+                                        TextButton(onClick = { confirm = history }) { Text(s.downloadsDeleteAll, color = Tone.danger) }
+                                    }
+                                }
+                            }
                         }
                         at += 1
                         if (!twoPane) {

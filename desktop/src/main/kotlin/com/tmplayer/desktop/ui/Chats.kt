@@ -42,6 +42,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
+import com.tmplayer.desktop.os.OsInfo
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Focus
@@ -131,7 +132,10 @@ fun ChatsPage(
 
     Column(Modifier.fillMaxSize()) {
         // The phone pulls the list down to refresh it; here F5, Ctrl+R and the small button do.
+        val spin = com.tmplayer.ui.components.rememberRefreshSpin()
+        val refreshing by model.refreshing.collectAsState()
         val refresh = {
+            spin.kick()
             val waiting = model.refreshUnlessRateLimited()
             if (waiting > 0) toast(s.chatsRefreshWait(waiting))
         }
@@ -149,7 +153,11 @@ fun ChatsPage(
                     modifier = Modifier.widthIn(min = 160.dp, max = 280.dp),
                     onDown = { nav.focus(0) },
                 )
-                TipIconButton(TmIcons.Refresh, s.commonRefresh, refresh, shortcut = "F5")
+                BarTooltip(s.commonRefresh, if (OsInfo.isMac) "⌘R" else "F5", below = true) {
+                    androidx.compose.material3.IconButton(onClick = refresh) {
+                        com.tmplayer.ui.components.RefreshGlyph(spin, s.commonRefresh, spinning = refreshing)
+                    }
+                }
             },
         )
         if (!favouritesOnly) {

@@ -57,6 +57,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
@@ -229,7 +230,7 @@ fun SettingsPage(
             .fillMaxSize()
             .tracksKeyboardFocus(keyboard)
             .onKeyEvent { event ->
-                if (event.type != KeyEventType.KeyDown || event.isCtrlPressed || event.isAltPressed) return@onKeyEvent false
+                if (event.type != KeyEventType.KeyDown || event.isCtrlPressed || event.isMetaPressed || event.isAltPressed) return@onKeyEvent false
                 when (event.key) {
                     Key.Escape -> escape.value?.let { back ->
                         back()
