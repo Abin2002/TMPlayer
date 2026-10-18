@@ -15,6 +15,9 @@ object WebVtt {
 
     const val MIME = "text/vtt"
 
+    /** An HLS subtitle segment's tie to the media clock: cue time zero is media time zero. */
+    const val TIMESTAMP_MAP = "X-TIMESTAMP-MAP=MPEGTS:0,LOCAL:00:00:00.000"
+
     data class Cue(val startMs: Long, val endMs: Long, val text: String)
 
     /** [bytes] in the format [extension] names (srt, ass, ssa, vtt) as one WebVTT text. */
@@ -201,9 +204,12 @@ object WebVtt {
     /**
      * One HLS subtitle segment: the cues that start in it. The timestamp map ties the cue times to
      * the media's own clock, which here starts at zero with the video, as the fMP4 segments do.
+     * Written as RFC 8216 has it, with colons (MPEGTS:0,LOCAL:...): Shaka Player, which the Default
+     * Media Receiver plays HLS with, finds the header, cannot read a map written with equals signs,
+     * and fails the whole video with INVALID_TEXT_HEADER, which is what the device test met.
      */
     fun segment(cues: List<Cue>): String {
-        val sb = StringBuilder("WEBVTT\nX-TIMESTAMP-MAP=MPEGTS=0,LOCAL=00:00:00.000\n\n")
+        val sb = StringBuilder("WEBVTT\n").append(TIMESTAMP_MAP).append("\n\n")
         cues.sortedBy { it.startMs }.forEach { cue ->
             if (cue.text.isBlank() || cue.endMs <= cue.startMs) return@forEach
             sb.append(stamp(cue.startMs)).append(" --> ").append(stamp(cue.endMs)).append('\n')
