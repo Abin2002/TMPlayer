@@ -619,8 +619,10 @@ private fun LazyListScope.entries(
                 val progress = remember(entry.series, watch) { watch.progress(entry.series) }
                 InfoTile(
                     title = entry.series.title,
-                    facts = listOfNotNull(seriesSummary(entry.series), seriesProgressLine(progress), chatTitle(entry.series.cover.chatId).ifBlank { null })
-                        .joinToString("  ·  "),
+                    facts = listOfNotNull(
+                        listOfNotNull(seriesSummary(entry.series), seriesProgressLine(progress)).joinToString("  ·  ").ifBlank { null },
+                        chatTitle(entry.series.cover.chatId).ifBlank { null },
+                    ).joinToString("\n"),
                     artHeight = artHeight,
                 ) {
                     SeriesCard(
@@ -965,13 +967,16 @@ private val INFO_GAP = 12.dp
 private fun infoFacts(chat: String, item: MediaItem, left: Long = 0L): String {
     val s = LocalStrings.current
     return remember(chat, item, left, s) {
+        // The video's own facts on one line and the chat on the next, so no line ends on a dot.
         listOfNotNull(
-            left.takeIf { it > 0 }?.let { s.browseTimeLeft(s.formatter.clock(it)) },
-            item.durationSec.takeIf { it > 0 }?.let { s.formatter.duration(it.toLong()) },
-            item.qualityTags.firstOrNull(),
-            item.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
+            listOfNotNull(
+                left.takeIf { it > 0 }?.let { s.browseTimeLeft(s.formatter.clock(it)) },
+                item.durationSec.takeIf { it > 0 }?.let { s.formatter.duration(it.toLong()) },
+                item.qualityTags.firstOrNull(),
+                item.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
+            ).joinToString("  ·  ").ifBlank { null },
             chat.ifBlank { null },
-        ).joinToString("  ·  ")
+        ).joinToString("\n")
     }
 }
 
