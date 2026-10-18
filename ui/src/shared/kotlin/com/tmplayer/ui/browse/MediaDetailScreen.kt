@@ -247,6 +247,7 @@ private fun CinemaLayout(page: DetailPage, height: Dp) {
                     // of the page, as a phone does; Right walks along the first, Down reaches the rest.
                     Actions(page, onEpisodes = episodesButton(page.item, page.meta, episodes), headlineOnly = tv)
                     Versions(page.item, page.onPickCopy, page.chatTitle, page.copyStarted)
+                    TelegramQualityLine(page.item)
                 }
                 Spacer(Modifier.height(if (tv) 8.dp else 4.dp))
             }
@@ -311,7 +312,12 @@ private fun StackedLayout(page: DetailPage, width: Dp, height: Dp) {
                 Box(Modifier.riseIn(2, enabled = touch)) {
                     Actions(page, primaryFullWidth = true, onEpisodes = episodesButton(page.item, page.meta, episodes), headlineOnly = true)
                 }
-                Box(Modifier.riseIn(3, enabled = touch)) { Versions(page.item, page.onPickCopy, page.chatTitle, page.copyStarted) }
+                Box(Modifier.riseIn(3, enabled = touch)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Versions(page.item, page.onPickCopy, page.chatTitle, page.copyStarted)
+                        TelegramQualityLine(page.item)
+                    }
+                }
                 synopsisOf(page)?.let { Box(Modifier.riseIn(4, enabled = touch)) { Synopsis(it) } }
                 ProtectedNote(page.item)
                 DetailBookmarks(page.bookmarks, page.onOpenBookmark)

@@ -184,6 +184,13 @@ fun SettingsPage(
         PinFlowPad(flow, state, appLock, scope, toast, onNext = { pinFlow = it }, onKidsChats = { pickingKidsChats = true })
         return
     }
+    // The Devices page (CP83), in place of Settings while it is open, so it is behind the same PIN
+    // and goes with Settings when the window moves elsewhere.
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { com.tmplayer.ui.settings.DevicesScreenState.open = false } }
+    if (com.tmplayer.ui.settings.DevicesScreenState.open) {
+        com.tmplayer.ui.settings.DevicesScreen(onClose = { com.tmplayer.ui.settings.DevicesScreenState.open = false })
+        return
+    }
 
     // The page open, by name so it survives a trip to another destination and back.
     var openName by rememberSaveable { mutableStateOf(initialCategory?.name) }

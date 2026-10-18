@@ -97,6 +97,9 @@ class PlayerSheets(
             val playing: String,
             val chatOf: (MediaItem) -> String,
             val onPick: (MediaItem) -> Unit,
+            val qualities: List<com.tmplayer.data.TelegramQuality> = emptyList(),
+            val playingQuality: Int = 0,
+            val onQuality: (Int) -> Unit = {},
         ) : Sheet
     }
 
@@ -158,8 +161,16 @@ class PlayerSheets(
     }
 
     /** Every copy of the video playing; choosing another plays it from the same moment. */
-    fun showCopies(copies: List<MediaItem>, playing: String, chatOf: (MediaItem) -> String, onPick: (MediaItem) -> Unit) {
-        sheet.value = Sheet.Copies(copies, playing, chatOf, onPick)
+    fun showCopies(
+        copies: List<MediaItem>,
+        playing: String,
+        chatOf: (MediaItem) -> String,
+        onPick: (MediaItem) -> Unit,
+        qualities: List<com.tmplayer.data.TelegramQuality> = emptyList(),
+        playingQuality: Int = 0,
+        onQuality: (Int) -> Unit = {},
+    ) {
+        sheet.value = Sheet.Copies(copies, playing, chatOf, onPick, qualities, playingQuality, onQuality)
     }
 
     private fun close() {
@@ -211,6 +222,9 @@ class PlayerSheets(
                 chatOf = shown.chatOf,
                 onPick = { close(); shown.onPick(it) },
                 onClose = ::close,
+                qualities = shown.qualities,
+                playingQuality = shown.playingQuality,
+                onQuality = { close(); shown.onQuality(it) },
             )
             is Sheet.LowStorageOffer -> {
                 val s = LocalStrings.current
@@ -589,6 +603,10 @@ internal fun CopiesSheet(
     chatOf: (MediaItem) -> String,
     onPick: (MediaItem) -> Unit,
     onClose: () -> Unit,
+    /** Telegram's lighter copies of the upload playing (CP80), listed under it. */
+    qualities: List<com.tmplayer.data.TelegramQuality> = emptyList(),
+    playingQuality: Int = 0,
+    onQuality: (Int) -> Unit = {},
 ) {
     val s = LocalStrings.current
     val touch = isTouch()
@@ -598,12 +616,34 @@ internal fun CopiesSheet(
         ChoiceList {
             copies.forEach { copy ->
                 val here = copy.id == playing
+                // The upload is ticked only while no Telegram copy stands in for it.
+                val ticked = here && playingQuality == 0
                 ChoiceLine(
-                    title = copyHeading(copy),
+                    title = if (here && qualities.isNotEmpty()) "${copyHeading(copy)}  ·  ${s.detailUploadQuality}" else copyHeading(copy),
                     detail = copyDetail(copy, s, chatOf(copy).takeIf { spans }),
-                    selected = here,
-                    modifier = if (here) Modifier.focusRequester(focus) else Modifier,
-                ) { if (here) onClose() else onPick(copy) }
+                    selected = ticked,
+                    modifier = if (ticked) Modifier.focusRequester(focus) else Modifier,
+                ) {
+                    when {
+                        ticked -> onClose()
+                        here -> onQuality(0)
+                        else -> onPick(copy)
+                    }
+                }
+                if (here) {
+                    qualities.forEach { q ->
+                        val on = q.height == playingQuality
+                        ChoiceLine(
+                            title = s.detailTelegramQuality(com.tmplayer.data.TelegramQualities.label(q.height)),
+                            detail = listOfNotNull(
+                                s.detailTelegramQualityDetail,
+                                q.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
+                            ).joinToString("  ·  "),
+                            selected = on,
+                            modifier = if (on) Modifier.focusRequester(focus) else Modifier,
+                        ) { if (on) onClose() else onQuality(q.height) }
+                    }
+                }
             }
         }
         FocusOnOpen(focus)

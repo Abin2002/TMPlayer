@@ -393,6 +393,10 @@ fun SettingsScreen(
     // The page open over the category list, or null for the list itself. Saved, so a rotation
     // keeps the viewer where they were.
     var page by rememberSaveable { mutableStateOf(initialPage) }
+    // The Devices page (CP83), over the list while it is open.
+    var devicesOpen by rememberSaveable { mutableStateOf(false) }
+    var devicesClosed by remember { mutableStateOf(false) }
+    val devicesFocus = remember { FocusRequester() }
     // A fresh scroll position for every page opened.
     val pageState = remember(page) { LazyListState() }
     // One per category row, so Back from a page can put focus on the row that opened it.
@@ -1782,6 +1786,17 @@ fun SettingsScreen(
                         onClick = { showPage(SettingsPage.Lock) },
                     )
                 }
+                // Where the account is signed in, and ending a session (CP83). Inside Settings, so
+                // behind its PIN when the lock or the kids lock asks for one.
+                item {
+                    ActionRow(
+                        title = s.settingsDevices,
+                        subtitle = s.settingsDevicesDetail,
+                        icon = TmIcons.Phone,
+                        modifier = Modifier.focusRequester(devicesFocus),
+                        onClick = { devicesOpen = true },
+                    )
+                }
                 item {
                     // An update waiting is said here as well as inside, in the same colour, so it
                     // is not hidden one level down.
@@ -1861,6 +1876,19 @@ fun SettingsScreen(
             showForgot = false,
         )
         return
+    }
+
+    if (devicesOpen) {
+        com.tmplayer.ui.settings.DevicesScreen(onClose = { devicesOpen = false; devicesClosed = true })
+        return
+    }
+    // Back from Devices on a television lands on its row again.
+    LaunchedEffect(devicesClosed) {
+        if (devicesClosed && !touch) {
+            kotlinx.coroutines.delay(60)
+            runCatching { devicesFocus.requestFocus() }
+        }
+        devicesClosed = false
     }
 
     if (touch && page != null) {
