@@ -529,7 +529,12 @@ fun BrowseScreen(
                                 tvHeader = if (touch) {
                                     null
                                 } else {
-                                    { _ -> TabHeading(tab, 0, insets, headerAccount, modifier = Modifier.padding(end = Tv.SafeH)) { RefreshAction(onRefreshHome) } }
+                                    if (TV_TOP_BAR) {
+                                        // Room for the bar, which stands over the carousel's picture.
+                                        { _ -> Spacer(Modifier.fillMaxWidth().height(TV_BAR_HEIGHT)) }
+                                    } else {
+                                        { _ -> TabHeading(tab, 0, insets, headerAccount, modifier = Modifier.padding(end = Tv.SafeH)) { RefreshAction(onRefreshHome) } }
+                                    }
                                 },
                             )
                         }
@@ -544,7 +549,7 @@ fun BrowseScreen(
                                 showsWatchLater -> watchLater.size
                                 else -> watchedHistory.size
                             }
-                            TabHeading(tab, shown, insets, headerAccount, blurb = historyTab.blurb) {
+                            val historyActions: @Composable () -> Unit = {
                                 LayoutAction(layout, onToggleLayout)
                                 // No Refresh here: History is read off this device and cannot be
                                 // behind, so the button would be one that visibly does nothing.
@@ -563,8 +568,24 @@ fun BrowseScreen(
                                     )
                                 }
                             }
+                            if (TV_TOP_BAR) {
+                                // No heading under the bar, which already names the page: the
+                                // chips lead, and the page's own buttons close their line.
+                                Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Box(Modifier.weight(1f)) { historyChips() }
+                                    Row(
+                                        Modifier.padding(start = 12.dp, end = insets.end),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) { historyActions() }
+                                }
+                            } else {
+                                TabHeading(tab, shown, insets, headerAccount, blurb = historyTab.blurb) { historyActions() }
+                                historyChips()
+                            }
+                        } else {
+                            historyChips()
                         }
-                        historyChips()
                         if (showsContinue) {
                             if (continuing.isEmpty()) {
                                 EmptyTab(tab, query = "", history = HistoryTab.Continue, onGoToChats = goToChats)
@@ -623,7 +644,7 @@ fun BrowseScreen(
                         }
                     } else {
                         if (!touch) {
-                            TabHeading(tab, visible.size, insets, headerAccount) {
+                            val chatActions: @Composable () -> Unit = {
                                 LayoutAction(layout, onToggleLayout)
                                 RefreshAction(onRefresh)
                                 // Stars are added one at a time from a menu, so the only way back
@@ -636,11 +657,18 @@ fun BrowseScreen(
                                     )
                                 }
                             }
-                            SearchRow(
-                                query = query,
-                                insets = insets,
-                                onQuery = { query = it },
-                            )
+                            if (TV_TOP_BAR) {
+                                // The bar names the page; the search line carries its buttons.
+                                Spacer(Modifier.height(4.dp))
+                                SearchRow(query = query, insets = insets, onQuery = { query = it }, actions = chatActions)
+                            } else {
+                                TabHeading(tab, visible.size, insets, headerAccount) { chatActions() }
+                                SearchRow(
+                                    query = query,
+                                    insets = insets,
+                                    onQuery = { query = it },
+                                )
+                            }
                             Spacer(Modifier.height(if (tab.onChatsPage) 4.dp else 20.dp))
                         }
                         // Up from the top of the list reaches the chips, and Up again the search.
@@ -1717,7 +1745,7 @@ private fun RailBrand(reveal: Float) {
  * loads or when there is none.
  */
 @Composable
-private fun AccountPicture(account: Account?) {
+internal fun AccountPicture(account: Account?) {
     Box(Modifier.size(Avatar.Compact).clip(CircleShape).background(Tone.surfaceHigh)) {
         if (account != null) {
             MediaPreview(
@@ -1881,6 +1909,8 @@ private fun LayoutAction(layout: CardLayout, onToggle: () -> Unit) {
  */
 @Composable
 private fun RefreshAction(onRefresh: () -> Unit) {
+    // Under the top bar Refresh is the bar's, beside Search.
+    if (TV_TOP_BAR) return
     val s = LocalStrings.current
     HeaderAction(
         label = s.commonRefresh,
@@ -2016,6 +2046,16 @@ private fun TabHeading(
  */
 @Composable
 internal fun TvStatusCluster(account: Account?, onArt: Boolean = false) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        TvClock(onArt)
+        Spacer(Modifier.width(14.dp))
+        AccountPicture(account)
+    }
+}
+
+/** The time and the date, end-aligned, as the corner of every television page carries them. */
+@Composable
+internal fun TvClock(onArt: Boolean = false) {
     var now by remember { mutableStateOf(java.util.Date()) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -2035,8 +2075,7 @@ internal fun TvStatusCluster(account: Account?, onArt: Boolean = false) {
     val day = remember(locale) { pattern("EEEdMMM") }
     val twentyFour = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Column(horizontalAlignment = Alignment.End) {
+    Column(horizontalAlignment = Alignment.End) {
             Text(
                 (if (twentyFour) clock24 else clock).format(now),
                 style = MaterialTheme.typography.titleMedium,
@@ -2049,9 +2088,6 @@ internal fun TvStatusCluster(account: Account?, onArt: Boolean = false) {
                 color = if (onArt) Tone.onArtMuted else Tone.muted,
                 maxLines = 1,
             )
-        }
-        Spacer(Modifier.width(14.dp))
-        AccountPicture(account)
     }
 }
 
@@ -2062,6 +2098,8 @@ private fun SearchRow(
     query: String,
     insets: BrowseInsets,
     onQuery: (String) -> Unit,
+    /** The page's own buttons at the end of the line, where the bar has taken the heading's place. */
+    actions: (@Composable () -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     // On Fire TV the voice button opens the keyboard, which the remote's mic dictates into.
@@ -2096,6 +2134,9 @@ private fun SearchRow(
                 runCatching { searchField.requestFocus() }
                 onQuery("")
             }
+        }
+        if (actions != null) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) { actions() }
         }
     }
 }
@@ -3132,7 +3173,12 @@ private class BrowseInsets(val start: Dp, val end: Dp, val top: Dp, val bottom: 
     fun clearing(extra: Dp) = BrowseInsets(start, end, top, bottom + extra)
 }
 
-private val TvInsets = BrowseInsets(start = 28.dp, end = Tv.FocusClearance, top = Tv.SafeV, bottom = Tv.SafeV)
+private val TvInsets = if (TV_TOP_BAR) {
+    // Under the top bar: the page starts at the bar's first tab, right under the bar.
+    BrowseInsets(start = TV_START, end = Tv.FocusClearance, top = 4.dp, bottom = Tv.SafeV)
+} else {
+    BrowseInsets(start = 28.dp, end = Tv.FocusClearance, top = Tv.SafeV, bottom = Tv.SafeV)
+}
 private val TouchInsets = BrowseInsets(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
 
 /** The longest chat list whose rows move to a new order rather than being redrawn in it. */
