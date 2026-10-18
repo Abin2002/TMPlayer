@@ -129,7 +129,7 @@ export const faqLd = {
       "name": "How much storage does it need?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "One video at a time. The previous one is cleared when you start a new one, so an 8 GB TV stick is enough."
+        "text": "On a phone or TV, playing a video keeps only that one: the one before it is cleared, so an 8 GB TV stick is enough. Videos you download stay until you delete them. On a computer, recently played videos are kept up to a size you set in Settings."
       }
     },
     {

@@ -60,6 +60,10 @@
     "fork_the_repository": "Forker le dépôt",
     "scan_for_github_sponsors": "Scanner pour GitHub Sponsors",
     "scan_for_buy_me_a_coffee": "Scanner pour Buy Me a Coffee",
+    "bmc_card_title": "TMPlayer vous plaît ?",
+    "bmc_modal_lede": "Scannez le code avec votre téléphone, ou ouvrez la page ici. Tout montant aide, et rien n'est débloqué : toutes les fonctions restent gratuites pour tous.",
+    "bmc_hide": "Masquer pour l'instant",
+    "bmc_close": "Fermer",
     "come_and_talk": "Venez discuter",
     "news_and_help_live_on": "Les nouveautés et l'aide se trouvent sur Telegram et dans GitHub Discussions.",
     "github_discussions": "GitHub Discussions"
@@ -155,7 +159,7 @@
     "does_tmplayer_provide_any_e5a6": "TMPlayer fournit-il des médias ?",
     "no_it_hosts_uploads_f0f5": "Non. Il n'héberge, ne publie, ne vend et ne recommande rien. Il affiche les vidéos déjà présentes dans les discussions et canaux que vous avez rejoints, et rien d'autre.",
     "how_much_storage_does_ade1": "De combien d'espace de stockage a-t-il besoin ?",
-    "one_video_at_a_9f80": "D'une seule vidéo à la fois. La précédente est effacée quand vous en lancez une nouvelle, donc une clé TV de 8 Go suffit.",
+    "on_a_phone_or_79da": "Sur un téléphone ou une TV, seule la vidéo en cours est gardée : la précédente est effacée, donc une clé TV de 8 Go suffit. Les vidéos que vous téléchargez restent jusqu'à ce que vous les supprimiez. Sur un ordinateur, les vidéos lues récemment sont gardées jusqu'à une taille que vous fixez dans les réglages.",
     "which_video_formats_does_8e50": "Quels formats vidéo lit-il ?",
     "mkv_mp4_avi_and_1855": "MKV, MP4, AVI et TS, avec sous-titres intégrés, y compris ceux en image, et plusieurs pistes audio que vous pouvez changer pendant la lecture.",
     "how_does_it_update_368f": "Comment se met-il à jour s'il n'est pas sur le Play Store ?",
@@ -615,7 +619,7 @@
     "still_stuck_with_your_device": "Toujours bloqué ? {a1} en indiquant votre appareil, sa version et ce que l'écran affichait.",
     "still_stuck_with_your_device__a1": "Ouvrez un ticket",
     "if_these_steps_got_your": "Si ces étapes ont fait apparaître vos vidéos à l'écran, une étoile aide la prochaine personne à le trouver.",
-    "description": "Installez TMPlayer : Downloader et la télécommande sur Android TV, l'APK sur un téléphone, une ligne PowerShell sous Windows, le DMG sur un Mac, l'AppImage sous Linux.",
+    "description": "Installer TMPlayer : Downloader et la télécommande sur Android TV, l'APK sur un téléphone, une ligne PowerShell sous Windows, le DMG sur Mac, l'AppImage sous Linux.",
     "pick_a_chat_and_press": "Choisissez une discussion et lancez la lecture"
   },
   "android_tv": {
@@ -781,8 +785,6 @@
     "yes_for_windows_10_11_macos__a1": "Le télécharger ici",
     "does_tmplayer_provide_any_media": "TMPlayer fournit-il des médias ?",
     "no_it_hosts_uploads_sells": "Non. Il n'héberge, ne publie, ne vend et ne recommande rien. Il affiche les vidéos déjà présentes dans les discussions et canaux que vous avez rejoints, et rien d'autre.",
-    "how_much_storage_does_it": "De combien d'espace de stockage a-t-il besoin ?",
-    "one_video_at_a_time": "D'une seule vidéo à la fois. La précédente est effacée quand vous en lancez une nouvelle, donc une clé TV de 8 Go suffit.",
     "which_video_formats_does_it": "Quels formats vidéo lit-il ?",
     "mkv_mp4_avi_and_ts": "MKV, MP4, AVI et TS, avec sous-titres intégrés, y compris ceux en image, et plusieurs pistes audio que vous pouvez changer pendant la lecture. {a1}.",
     "mkv_mp4_avi_and_ts__a1": "Tous les formats, par plateforme",
@@ -807,7 +809,7 @@
     "the_lists_what_stays_on__a1": "page de confidentialité",
     "the_lists_what_stays_on__a2": "L'usage licite",
     "no_money_no_account_no": "Pas d'argent, pas de compte, pas d'e-mail. Une étoile, c'est tout ce que demande le projet.",
-    "answers_about_tmplayer_streaming_without": "Réponses sur TMPlayer : lecture sans attendre, pas de serveur ni de bot, quel fichier télécharger, versions Windows, macOS et Linux, confidentialité et ce qu'il ne fera pas.",
+    "answers_about_tmplayer_streaming_without": "Réponses sur TMPlayer : lecture sans attente, ni serveur ni bot, quel fichier télécharger, versions Windows, macOS et Linux, confidentialité et limites.",
     "short_questions_open_the_one": "{count} questions courtes. Ouvrez celle qui vous intéresse."
   },
   "formats": {

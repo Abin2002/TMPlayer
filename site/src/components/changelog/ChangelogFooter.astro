@@ -1,5 +1,8 @@
 ---
 // The changelog's own footer: the English site footer, written out as the release pages had it.
+import { versioned } from '../../lib/asset-version';
+import { BMC_URL, SPONSORS_URL } from '../../lib/support';
+const cup = versioned('/brand/bmc-cup-on-yellow.svg');
 ---
 <footer class="site-footer">
   <div class="wrap footer-inner">
@@ -30,8 +33,8 @@
       <a href="https://t.me/tmplayerapp" rel="noopener">Telegram channel</a>
       <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
       <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener">Discussions</a>
-      <a href="https://github.com/sponsors/dracu-lah" rel="noopener">Sponsor</a>
-      <a href="https://buymeacoffee.com/nevil.dev" rel="noopener">Buy me a coffee</a>
+      <a class="footer-bmc" href={BMC_URL} rel="noopener"><img src={cup} alt="" width="10" height="14" loading="lazy" decoding="async"> Buy me a coffee</a>
+      <a href={SPONSORS_URL} rel="noopener">Sponsor</a>
       <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
     </nav>
     <p class="footer-legal muted small">GPL-3.0, &copy; 2026 dracu-lah. Unofficial, not affiliated with Telegram. Use it only with content you own or may access.</p>

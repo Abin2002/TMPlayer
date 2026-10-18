@@ -1529,3 +1529,86 @@ var tmT = (function () {
     });
   });
 })();
+
+
+/* The Buy Me a Coffee card and its dialog (src/components/CoffeeCard.astro). The card comes in once
+   the page has loaded and the browser is idle, so it is never part of the first paint and never
+   competes with the page for the network; it is fixed, so it shifts nothing. It steps away while
+   the footer or the page's own support offer is in view (an IntersectionObserver, no layout reads),
+   and comes back after. The x hides it for this page view only: nothing is stored, so the next page
+   or a reload shows it again (user, 2026-10-18). The dialog is a native modal: Esc closes it, the
+   rest of the page is inert while it is open, and the focus goes back to the card on close. */
+(function () {
+  'use strict';
+
+  var card = document.getElementById('bmc-float');
+  var dialog = document.getElementById('bmc-dialog');
+  if (!card || !dialog || typeof dialog.showModal !== 'function') { return; }
+  var opener = card.querySelector('.bmc-float-open');
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var away = {};
+  var gone = false;
+
+  function paint() {
+    var hidden = false;
+    for (var k in away) { if (away[k]) { hidden = true; } }
+    card.classList.toggle('is-away', hidden);
+  }
+
+  function show() {
+    if (gone) { return; }
+    card.hidden = false;
+    // One frame with the card in place and still transparent, so the slide and fade run.
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { card.classList.add('is-on'); });
+    });
+    if (window.IntersectionObserver) {
+      var targets = document.querySelectorAll('.site-footer, #sponsor');
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          away[entry.target.id || 'footer'] = entry.isIntersecting;
+        });
+        paint();
+      });
+      Array.prototype.forEach.call(targets, function (node) { observer.observe(node); });
+    }
+  }
+
+  function whenIdle() {
+    var go = function () {
+      var later = function () { setTimeout(show, reduced ? 600 : 1200); };
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(later, { timeout: 3000 });
+      } else {
+        later();
+      }
+    };
+    if (document.readyState === 'complete') { go(); } else { window.addEventListener('load', go); }
+  }
+
+  opener.addEventListener('click', function () {
+    dialog.showModal();
+  });
+
+  card.querySelector('[data-bmc-hide]').addEventListener('click', function () {
+    gone = true;
+    card.classList.remove('is-on');
+    setTimeout(function () { card.hidden = true; }, reduced ? 200 : 450);
+    var main = document.getElementById('main');
+    if (main) {
+      main.setAttribute('tabindex', '-1');
+      main.focus({ preventScroll: true });
+    }
+  });
+
+  dialog.querySelector('[data-bmc-close]').addEventListener('click', function () { dialog.close(); });
+  // A click on the backdrop lands on the dialog itself; the box inside covers everything else.
+  dialog.addEventListener('click', function (event) {
+    if (event.target === dialog) { dialog.close(); }
+  });
+  dialog.addEventListener('close', function () {
+    if (!card.hidden && opener) { opener.focus({ preventScroll: true }); }
+  });
+
+  whenIdle();
+})();

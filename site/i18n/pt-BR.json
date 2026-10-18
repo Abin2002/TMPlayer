@@ -60,6 +60,10 @@
     "fork_the_repository": "Fazer fork do repositório",
     "scan_for_github_sponsors": "Escaneie para o GitHub Sponsors",
     "scan_for_buy_me_a_coffee": "Escaneie para o Buy Me a Coffee",
+    "bmc_card_title": "Curtindo o TMPlayer?",
+    "bmc_modal_lede": "Escaneie o código com o celular ou abra a página aqui. Qualquer valor ajuda e não desbloqueia nada: todos os recursos continuam grátis para todos.",
+    "bmc_hide": "Ocultar por enquanto",
+    "bmc_close": "Fechar",
     "come_and_talk": "Venha conversar",
     "news_and_help_live_on": "Novidades e ajuda ficam no Telegram e no GitHub Discussions.",
     "github_discussions": "GitHub Discussions"
@@ -155,7 +159,7 @@
     "does_tmplayer_provide_any_e5a6": "O TMPlayer fornece alguma mídia própria?",
     "no_it_hosts_uploads_f0f5": "Não. Ele não hospeda, não envia, não vende nem recomenda nada. Mostra os vídeos que já estão nos chats e canais dos quais você participa, e nada além disso.",
     "how_much_storage_does_ade1": "Quanto armazenamento ele precisa?",
-    "one_video_at_a_9f80": "Um vídeo por vez. O anterior é apagado quando você começa um novo, então uma TV stick de 8 GB basta.",
+    "on_a_phone_or_79da": "No celular ou na TV, só o vídeo que está tocando fica guardado: o anterior é apagado, então um stick de TV de 8 GB basta. Os vídeos que você baixa ficam até você apagá-los. No computador, os vídeos reproduzidos recentemente ficam até o tamanho que você define nas Configurações.",
     "which_video_formats_does_8e50": "Quais formatos de vídeo ele reproduz?",
     "mkv_mp4_avi_and_1855": "MKV, MP4, AVI e TS, com legendas embutidas, inclusive as baseadas em imagem, e várias faixas de áudio que você pode trocar durante a reprodução.",
     "how_does_it_update_368f": "Como ele se atualiza se não está na Play Store?",
@@ -781,8 +785,6 @@
     "yes_for_windows_10_11_macos__a1": "Baixe aqui",
     "does_tmplayer_provide_any_media": "O TMPlayer fornece alguma mídia própria?",
     "no_it_hosts_uploads_sells": "Não. Ele não hospeda, não envia, não vende nem recomenda nada. Mostra os vídeos que já estão nos chats e canais dos quais você participa, e nada além disso.",
-    "how_much_storage_does_it": "Quanto armazenamento ele precisa?",
-    "one_video_at_a_time": "Um vídeo por vez. O anterior é apagado quando você começa um novo, então uma TV stick de 8 GB basta.",
     "which_video_formats_does_it": "Quais formatos de vídeo ele reproduz?",
     "mkv_mp4_avi_and_ts": "MKV, MP4, AVI e TS, com legendas embutidas, inclusive as baseadas em imagem, e várias faixas de áudio que você pode trocar durante a reprodução. {a1}.",
     "mkv_mp4_avi_and_ts__a1": "Todos os formatos, por plataforma",
@@ -807,7 +809,7 @@
     "the_lists_what_stays_on__a1": "página de privacidade",
     "the_lists_what_stays_on__a2": "Uso legal",
     "no_money_no_account_no": "Sem dinheiro, sem conta, sem e-mail. Uma estrela é tudo o que o projeto pede.",
-    "answers_about_tmplayer_streaming_without": "Respostas sobre o TMPlayer: transmitir sem esperar, sem servidor nem bot, qual arquivo baixar, versões para Windows, macOS e Linux, privacidade e o que ele não vai fazer.",
+    "answers_about_tmplayer_streaming_without": "Respostas sobre o TMPlayer: transmitir sem esperar, sem servidor nem bot, qual arquivo baixar, versões para Windows, macOS e Linux, privacidade e limites.",
     "short_questions_open_the_one": "{count} perguntas curtas. Abra a que você precisa."
   },
   "formats": {
@@ -872,7 +874,7 @@
     "in_the_player_s_menu__em1": "Carregar um arquivo de legenda",
     "drop_the_file_on_the": "Solte o arquivo sobre a imagem enquanto o vídeo reproduz. Os mesmos formatos funcionam: {code1}, {code2}, {code3}, {code4} e {code5}.",
     "picture_based_vobsub_files_cannot": "Arquivos {code1} VobSub, baseados em imagem, não podem ser carregados assim, embora as mesmas legendas dentro de um MKV reproduzam bem.",
-    "the_containers_video_and_audio": "Os contêineres, codecs de vídeo e áudio e legendas que o TMPlayer reproduz: Media3 com decodificadores FFmpeg no Android TV e em celulares, mpv no Windows, no macOS e no Linux."
+    "the_containers_video_and_audio": "Contêineres, codecs de vídeo e áudio e legendas do TMPlayer: Media3 com decodificadores FFmpeg no Android TV e em celulares, mpv no Windows, macOS e Linux."
   },
   "translate": {
     "help_translate_tmplayer_tmplayer": "Ajude a traduzir o TMPlayer para o seu idioma",

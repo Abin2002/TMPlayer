@@ -60,6 +60,10 @@
     "fork_the_repository": "Fork repositori",
     "scan_for_github_sponsors": "Pindai untuk GitHub Sponsors",
     "scan_for_buy_me_a_coffee": "Pindai untuk Buy Me a Coffee",
+    "bmc_card_title": "Suka TMPlayer?",
+    "bmc_modal_lede": "Pindai kodenya dengan ponsel, atau buka halamannya di sini. Berapa pun jumlahnya membantu, dan tidak membuka apa pun: semua fitur tetap gratis untuk semua orang.",
+    "bmc_hide": "Sembunyikan dulu",
+    "bmc_close": "Tutup",
     "come_and_talk": "Ayo ngobrol",
     "news_and_help_live_on": "Kabar terbaru dan bantuan ada di Telegram dan GitHub Discussions.",
     "github_discussions": "GitHub Discussions"
@@ -155,7 +159,7 @@
     "does_tmplayer_provide_any_e5a6": "Apakah TMPlayer menyediakan media sendiri?",
     "no_it_hosts_uploads_f0f5": "Tidak. TMPlayer tidak menyimpan, mengunggah, menjual, atau merekomendasikan apa pun. Aplikasi hanya menampilkan video yang sudah ada di obrolan dan channel yang kamu ikuti, tidak lebih.",
     "how_much_storage_does_ade1": "Berapa banyak penyimpanan yang dibutuhkan?",
-    "one_video_at_a_9f80": "Satu video dalam satu waktu. Video sebelumnya dihapus saat kamu memulai yang baru, jadi TV stick 8 GB sudah cukup.",
+    "on_a_phone_or_79da": "Di ponsel atau TV, hanya video yang sedang diputar yang disimpan: video sebelumnya dihapus, jadi stik TV 8 GB sudah cukup. Video yang Anda unduh tetap ada sampai Anda menghapusnya. Di komputer, video yang baru diputar disimpan hingga ukuran yang Anda atur di Pengaturan.",
     "which_video_formats_does_8e50": "Format video apa saja yang bisa diputar?",
     "mkv_mp4_avi_and_1855": "MKV, MP4, AVI, dan TS, dengan subtitle tertanam termasuk subtitle berbasis gambar, dan beberapa trek audio yang bisa diganti saat memutar.",
     "how_does_it_update_368f": "Bagaimana cara memperbaruinya kalau tidak ada di Play Store?",
@@ -781,8 +785,6 @@
     "yes_for_windows_10_11_macos__a1": "Dapatkan di sini",
     "does_tmplayer_provide_any_media": "Apakah TMPlayer menyediakan media sendiri?",
     "no_it_hosts_uploads_sells": "Tidak. TMPlayer tidak menyimpan, mengunggah, menjual, atau merekomendasikan apa pun. Aplikasi hanya menampilkan video yang sudah ada di obrolan dan channel yang kamu ikuti, tidak lebih.",
-    "how_much_storage_does_it": "Berapa banyak penyimpanan yang dibutuhkan?",
-    "one_video_at_a_time": "Satu video dalam satu waktu. Video sebelumnya dihapus saat kamu memulai yang baru, jadi TV stick 8 GB sudah cukup.",
     "which_video_formats_does_it": "Format video apa saja yang bisa diputar?",
     "mkv_mp4_avi_and_ts": "MKV, MP4, AVI, dan TS, dengan subtitle tertanam termasuk subtitle berbasis gambar, dan beberapa trek audio yang bisa diganti saat memutar. {a1}.",
     "mkv_mp4_avi_and_ts__a1": "Semua format, per platform",
@@ -807,7 +809,7 @@
     "the_lists_what_stays_on__a1": "Halaman privasi",
     "the_lists_what_stays_on__a2": "Penggunaan yang sah",
     "no_money_no_account_no": "Tanpa uang, tanpa akun, tanpa email. Bintang adalah satu-satunya yang diminta proyek ini.",
-    "answers_about_tmplayer_streaming_without": "Jawaban seputar TMPlayer: streaming tanpa menunggu, tanpa server atau bot, file mana yang diunduh, versi Windows, macOS, dan Linux, privasi, dan yang tidak dilakukannya.",
+    "answers_about_tmplayer_streaming_without": "Jawaban seputar TMPlayer: streaming tanpa menunggu, tanpa server atau bot, file yang diunduh, versi Windows, macOS, dan Linux, privasi, dan batasannya.",
     "short_questions_open_the_one": "{count} pertanyaan singkat. Buka yang kamu perlukan."
   },
   "formats": {

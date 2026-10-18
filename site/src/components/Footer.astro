@@ -1,6 +1,8 @@
 ---
 // The site footer of the localized pages. The home page leaves out the link to itself and names
 // the code signing page.
+import { versioned } from '../lib/asset-version';
+import { BMC_URL, SPONSORS_URL } from '../lib/support';
 import T from './T.astro';
 import { text } from '../i18n/t';
 import { l } from '../i18n/links';
@@ -9,6 +11,7 @@ interface Props { home?: boolean }
 const { home = false } = Astro.props;
 const lang = Astro.locals.lang;
 const t = (k: string) => text(lang, k);
+const cup = versioned('/brand/bmc-cup-on-yellow.svg');
 ---
 <footer class="site-footer">
   <div class="wrap footer-inner">
@@ -41,8 +44,8 @@ const t = (k: string) => text(lang, k);
       <a href="https://t.me/tmplayerapp" rel="noopener"><T k="home.telegram_channel" /></a>
       <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
       <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener"><T k="common.discussions" /></a>
-      <a href="https://github.com/sponsors/dracu-lah" rel="noopener"><T k="common.sponsor" /></a>
-      <a href="https://buymeacoffee.com/nevil.dev" rel="noopener"><T k="home.buy_me_a_coffee" /></a>
+      <a class="footer-bmc" href={BMC_URL} rel="noopener"><img src={cup} alt="" width="10" height="14" loading="lazy" decoding="async"> <T k="home.buy_me_a_coffee" /></a>
+      <a href={SPONSORS_URL} rel="noopener"><T k="common.sponsor" /></a>
       <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
     </nav>
     <p class="footer-legal muted small"><T k="common.gpl_3_0_2026_dracu" /></p>

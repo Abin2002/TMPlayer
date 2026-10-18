@@ -60,6 +60,10 @@
     "fork_the_repository": "Haz un fork del repositorio",
     "scan_for_github_sponsors": "Escanea para GitHub Sponsors",
     "scan_for_buy_me_a_coffee": "Escanea para Buy Me a Coffee",
+    "bmc_card_title": "¿Te gusta TMPlayer?",
+    "bmc_modal_lede": "Escanea el código con tu teléfono o abre la página aquí. Cualquier monto ayuda y no desbloquea nada: todas las funciones siguen gratis para todos.",
+    "bmc_hide": "Ocultar por ahora",
+    "bmc_close": "Cerrar",
     "come_and_talk": "Ven a platicar",
     "news_and_help_live_on": "Las novedades y la ayuda están en Telegram y en GitHub Discussions.",
     "github_discussions": "GitHub Discussions"
@@ -155,7 +159,7 @@
     "does_tmplayer_provide_any_e5a6": "¿TMPlayer ofrece contenido propio?",
     "no_it_hosts_uploads_f0f5": "No. No aloja, sube, vende ni recomienda nada. Muestra los videos que ya están en los chats y canales a los que te uniste, y nada más.",
     "how_much_storage_does_ade1": "¿Cuánto espacio necesita?",
-    "one_video_at_a_9f80": "Un video a la vez. El anterior se borra cuando empiezas uno nuevo, así que un TV stick de 8 GB es suficiente.",
+    "on_a_phone_or_79da": "En un teléfono o TV solo se guarda el video que estás reproduciendo: el anterior se borra, así que basta un stick de TV de 8 GB. Los videos que descargas se quedan hasta que los borres. En una computadora, los videos reproducidos hace poco se guardan hasta el tamaño que elijas en Ajustes.",
     "which_video_formats_does_8e50": "¿Qué formatos de video reproduce?",
     "mkv_mp4_avi_and_1855": "MKV, MP4, AVI y TS, con subtítulos integrados, incluidos los basados en imágenes, y varias pistas de audio que puedes cambiar durante la reproducción.",
     "how_does_it_update_368f": "¿Cómo se actualiza si no está en Play Store?",
@@ -781,8 +785,6 @@
     "yes_for_windows_10_11_macos__a1": "Descárgalo aquí",
     "does_tmplayer_provide_any_media": "¿TMPlayer ofrece contenido propio?",
     "no_it_hosts_uploads_sells": "No. No aloja, sube, vende ni recomienda nada. Muestra los videos que ya están en los chats y canales a los que te uniste, y nada más.",
-    "how_much_storage_does_it": "¿Cuánto almacenamiento necesita?",
-    "one_video_at_a_time": "Un video a la vez. El anterior se borra cuando empiezas uno nuevo, así que basta con un stick de TV de 8 GB.",
     "which_video_formats_does_it": "¿Qué formatos de video reproduce?",
     "mkv_mp4_avi_and_ts": "MKV, MP4, AVI y TS, con subtítulos incrustados, incluso los basados en imagen, y varias pistas de audio que puedes cambiar durante la reproducción. {a1}.",
     "mkv_mp4_avi_and_ts__a1": "Todos los formatos, por plataforma",
@@ -872,7 +874,7 @@
     "in_the_player_s_menu__em1": "Cargar archivo de subtítulos",
     "drop_the_file_on_the": "Arrastra el archivo sobre la imagen mientras se reproduce el video. Funcionan los mismos formatos: {code1}, {code2}, {code3}, {code4} y {code5}.",
     "picture_based_vobsub_files_cannot": "Los archivos VobSub {code1}, basados en imágenes, no se pueden cargar así, aunque esos mismos subtítulos dentro de un MKV se reproducen sin problema.",
-    "the_containers_video_and_audio": "Los contenedores, códecs de video y audio y subtítulos que reproduce TMPlayer: Media3 con decodificadores FFmpeg en Android TV y teléfonos, mpv en Windows, macOS y Linux."
+    "the_containers_video_and_audio": "Contenedores, códecs de video y audio y subtítulos de TMPlayer: Media3 con decodificadores FFmpeg en Android TV y teléfonos, mpv en Windows, macOS y Linux."
   },
   "translate": {
     "help_translate_tmplayer_tmplayer": "Ayuda a traducir TMPlayer a tu idioma",

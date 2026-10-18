@@ -1911,6 +1911,8 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   .to-top { transform: none; }
 }
+/* Mirrored on a right-to-left page, where the start edge (and the coffee card) is on the right. */
+[dir="rtl"] .to-top { right: auto; left: clamp(16px, 2.5vw, 32px); }
 
 /* ---------- Policy pages ---------- */
 
@@ -2701,12 +2703,24 @@ a.card:hover .card-go svg { transform: translateX(4px); }
     box-shadow: 0 0 0 1px var(--outline-variant);
   }
   .support-codes figcaption { color: var(--on-surface-variant); font-size: 0.9rem; }
+  .support-codes { align-items: flex-end; }
+  .support-codes .qr-minor .support-qr { width: 104px; height: 104px; padding: 8px; }
 }
 .support-talk { border-top: 0; margin-top: 0; }
 .support-talk .support-actions { max-width: 320px; }
 
 /* The footer's second row: where to talk and where to chip in. */
 .footer-community a { font-size: 0.9rem; }
+.footer-links a.footer-bmc {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bmc-yellow);
+  color: var(--bmc-ink);
+  font-weight: 600;
+}
+.footer-links a.footer-bmc:hover { background: var(--bmc-yellow); color: var(--bmc-ink); box-shadow: var(--bmc-glow); }
+.footer-bmc img { flex: none; width: 10px; height: 14px; }
 .footer-grid .footer-community { grid-column: 1 / -1; }
 
 /* ---------- Changelog ----------
@@ -3226,4 +3240,263 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
 }
 @media (prefers-reduced-motion: reduce) {
   .get-bar { transition: none; transform: none; }
+}
+
+
+/* ---------- Buy Me a Coffee ----------
+
+   Buy Me a Coffee is the first way to chip in (user, 2026-10-18), so wherever it stands beside
+   GitHub Sponsors it is the large button, drawn in Buy Me a Coffee's own brand: their yellow from
+   the brand kit, their near-black for the words and their cup (public/brand/, never redrawn), as
+   their official buttons are. The yellow stays the same in both themes, as a brand colour does;
+   the near-black on it is a contrast of about 14:1. GitHub Sponsors is the quieter link under it.
+
+   The floating card (src/components/CoffeeCard.astro) sits at the start edge's foot: a pill on a
+   phone, a card with the scan code on a wide screen. It is fixed, so its arrival moves nothing,
+   and app.js puts .is-on on it once the page is idle and .is-away while the footer or the page's
+   own support offer is on screen. Its dialog is a native modal <dialog>. */
+
+:root {
+  --bmc-yellow: #FFDD00;
+  --bmc-ink: #0D0C22;
+  --bmc-glow: 0 8px 24px rgba(204, 170, 0, 0.32);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bmc-glow: 0 8px 26px rgba(255, 221, 0, 0.16); }
+}
+:root[data-theme="dark"] { --bmc-glow: 0 8px 26px rgba(255, 221, 0, 0.16); }
+
+.btn-bmc {
+  background: var(--bmc-yellow);
+  color: var(--bmc-ink);
+  border-color: rgba(13, 12, 34, 0.08);
+  justify-content: center;
+}
+.btn-bmc:hover { background: var(--bmc-yellow); color: var(--bmc-ink); box-shadow: var(--bmc-glow); }
+.btn-bmc .bmc-cup { flex: none; width: 14px; height: 20px; }
+.btn-bmc-lg { min-height: 56px; padding: 14px 30px; gap: 12px; font-size: 1.04rem; }
+.btn-bmc-lg .bmc-cup { width: 17px; height: 24px; }
+
+.support-alt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--shape-full);
+  color: var(--on-surface-variant);
+  font-size: 0.94rem;
+  font-weight: 500;
+  transition: color 0.2s var(--ease-standard), background-color 0.2s var(--ease-standard);
+}
+.support-alt svg { flex: none; width: 16px; height: 16px; color: var(--quaternary); }
+.support-alt:hover { color: var(--on-surface); background: var(--surface-container); text-decoration: none; }
+
+/* The offer's own row: the coffee button wide enough to lead, the sponsor link under it. */
+.support-coffee {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: clamp(24px, 3vw, 32px) auto clamp(20px, 2.6vw, 28px);
+}
+.support-coffee .btn-bmc { width: min(100%, 340px); }
+.support-more-solo .support-coffee { margin-bottom: 0; }
+/* The support page is left-aligned prose. */
+.support-coffee-start { align-items: flex-start; margin-inline: 0; }
+.support-coffee-start .support-alt { margin-inline-start: -12px; }
+
+/* The yellow tile the cup stands on, in the card and the dialog. */
+.bmc-tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--shape-full);
+  background: var(--bmc-yellow);
+  transition: transform 0.3s var(--ease-emphasised);
+}
+.bmc-tile img { width: 14px; height: 20px; }
+.bmc-tile-lg { width: 48px; height: 48px; border-radius: var(--shape-m); }
+.bmc-tile-lg img { width: 20px; height: 28px; }
+
+/* The floating card. Above the page and the download bar, under the back to top button. */
+.bmc-float {
+  position: fixed;
+  inset-inline-start: clamp(12px, 2.5vw, 32px);
+  bottom: clamp(16px, 3vw, 32px);
+  z-index: 38;
+  display: flex;
+  align-items: center;
+  /* Clear of the back to top button on the other side. */
+  max-width: calc(100% - 96px);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-full);
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity 0.3s var(--ease-standard),
+              transform 0.45s var(--ease-emphasised),
+              visibility 0s linear 0.45s,
+              border-color 0.2s var(--ease-standard),
+              bottom 0.3s var(--ease-emphasised);
+}
+.bmc-float[hidden] { display: none; }
+.bmc-float.is-on:not(.is-away) { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.bmc-float:hover { border-color: var(--outline); }
+.bmc-float-open {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px;
+  padding-inline-end: 2px;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.bmc-float-open:hover .bmc-tile { transform: rotate(-8deg); }
+.bmc-float-text { display: grid; min-width: 0; }
+.bmc-float-title { display: none; }
+.bmc-float-line {
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bmc-float-qr { display: none; }
+.bmc-float-close {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-inline-end: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--shape-full);
+  background: transparent;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+.bmc-float-close svg { width: 18px; height: 18px; }
+.bmc-float-close:hover { background: var(--surface-container-high); color: var(--on-surface); }
+/* Above the download bar while it shows, as the back to top button does. */
+@media (max-width: 699px) {
+  .get-bar-on .bmc-float { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* From a small tablet up: a card, with the question over the brand's words. */
+@media (min-width: 640px) {
+  .bmc-float { border-radius: var(--shape-xl); max-width: 400px; }
+  .bmc-float-open { gap: 14px; padding: 12px; padding-inline-end: 4px; }
+  .bmc-float .bmc-tile { width: 44px; height: 44px; border-radius: var(--shape-m); }
+  .bmc-float .bmc-tile img { width: 17px; height: 24px; }
+  .bmc-float-title { display: block; overflow: hidden; font-size: 0.95rem; font-weight: 600; line-height: 1.35; white-space: nowrap; text-overflow: ellipsis; }
+  .bmc-float-line { color: var(--on-surface-variant); font-size: 0.86rem; font-weight: 500; line-height: 1.35; }
+  .bmc-float-close { align-self: flex-start; width: 32px; height: 32px; margin: 6px; margin-inline-start: 0; }
+  .bmc-float-close svg { width: 16px; height: 16px; }
+}
+/* On a wide screen the scan code is in the card too, for paying from the phone in the hand. */
+@media (min-width: 1024px) {
+  .bmc-float-open { padding-inline-end: 6px; }
+  .bmc-float-qr {
+    display: block;
+    flex: none;
+    width: 72px;
+    height: 72px;
+    margin-inline-start: 4px;
+    padding: 4px;
+    border-radius: var(--shape-s);
+    background: #fff;
+    box-shadow: 0 0 0 1px var(--outline-variant);
+  }
+  .bmc-float-qr svg { display: block; width: 100%; height: 100%; }
+}
+
+/* The dialog. */
+.bmc-dialog {
+  width: min(calc(100% - 32px), 420px);
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-xl);
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+  box-shadow: var(--shadow-3);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.bmc-dialog::backdrop { background: rgba(6, 8, 12, 0.55); }
+html:has(.bmc-dialog[open]) { overflow: hidden; }
+.bmc-dialog-box { display: flex; flex-direction: column; gap: 16px; padding: clamp(20px, 4vw, 28px); }
+.bmc-dialog-head { display: flex; align-items: center; gap: 14px; }
+.bmc-dialog-head h2 { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 1.3rem; letter-spacing: -0.02em; line-height: 1.25; }
+.bmc-dialog-close {
+  flex: none;
+  align-self: flex-start;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--shape-full);
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+.bmc-dialog-close:hover { background: var(--surface-container-highest); color: var(--on-surface); }
+.bmc-dialog-close svg { width: 18px; height: 18px; }
+.bmc-dialog p { margin: 0; color: var(--on-surface-variant); font-size: 0.95rem; }
+.bmc-dialog-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 0;
+  padding: 20px 16px 14px;
+  border-radius: var(--shape-l);
+  background: var(--surface-container);
+}
+/* Black on a white plate in both themes, which is what a camera reads best. */
+.bmc-dialog-qr svg {
+  display: block;
+  width: 200px;
+  height: 200px;
+  padding: 10px;
+  border-radius: var(--shape-m);
+  background: #fff;
+}
+.bmc-dialog-qr figcaption { color: var(--on-surface-variant); font-size: 0.88rem; }
+.bmc-dialog .btn-bmc { width: 100%; }
+.bmc-dialog .support-alt { align-self: center; margin-top: -6px; }
+@media (max-width: 400px) {
+  .bmc-dialog-qr svg { width: 168px; height: 168px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bmc-dialog[open] { animation: bmc-in 0.32s var(--ease-emphasised); }
+  .bmc-dialog[open]::backdrop { animation: bmc-fade 0.25s var(--ease-standard); }
+}
+@keyframes bmc-in { from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.98); } }
+@keyframes bmc-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .bmc-float { transform: none; transition: opacity 0.2s linear, visibility 0s linear 0.2s; }
+  .bmc-tile { transition: none; }
+  .bmc-float-open:hover .bmc-tile { transform: none; }
+}
+@media (hover: none) {
+  .btn-bmc:hover { box-shadow: none; }
+  .bmc-float:hover { border-color: var(--outline-variant); }
+  .bmc-float-open:hover .bmc-tile { transform: none; }
+  .support-alt:hover { background: transparent; color: var(--on-surface-variant); }
 }

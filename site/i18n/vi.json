@@ -60,6 +60,10 @@
     "fork_the_repository": "Fork kho mã nguồn",
     "scan_for_github_sponsors": "Quét để tài trợ qua GitHub Sponsors",
     "scan_for_buy_me_a_coffee": "Quét để mời ly cà phê qua Buy Me a Coffee",
+    "bmc_card_title": "Bạn thích TMPlayer?",
+    "bmc_modal_lede": "Quét mã bằng điện thoại, hoặc mở trang ngay tại đây. Số tiền nào cũng giúp ích và không mở khóa gì cả: mọi tính năng vẫn miễn phí cho tất cả mọi người.",
+    "bmc_hide": "Tạm ẩn",
+    "bmc_close": "Đóng",
     "come_and_talk": "Cùng trò chuyện",
     "news_and_help_live_on": "Tin tức và hỗ trợ có trên Telegram và GitHub Discussions.",
     "github_discussions": "GitHub Discussions"
@@ -155,7 +159,7 @@
     "does_tmplayer_provide_any_e5a6": "TMPlayer có cung cấp nội dung riêng không?",
     "no_it_hosts_uploads_f0f5": "Không. Nó không lưu trữ, không tải lên, không bán và không đề xuất gì cả. Nó chỉ hiển thị các video có sẵn trong những cuộc trò chuyện và kênh bạn đã tham gia.",
     "how_much_storage_does_ade1": "Cần bao nhiêu dung lượng?",
-    "one_video_at_a_9f80": "Mỗi lần một video. Video trước sẽ được xóa khi bạn mở video mới, nên TV stick 8 GB là đủ.",
+    "on_a_phone_or_79da": "Trên điện thoại hoặc TV, chỉ video đang phát được giữ lại: video trước đó bị xóa, nên một TV stick 8 GB là đủ. Video bạn tải xuống được giữ cho đến khi bạn xóa. Trên máy tính, các video phát gần đây được giữ đến dung lượng bạn đặt trong Cài đặt.",
     "which_video_formats_does_8e50": "Phát được những định dạng video nào?",
     "mkv_mp4_avi_and_1855": "MKV, MP4, AVI và TS, với phụ đề nhúng kể cả phụ đề dạng ảnh, và nhiều rãnh âm thanh có thể chuyển đổi khi đang phát.",
     "how_does_it_update_368f": "Nếu không có trên Play Store thì cập nhật bằng cách nào?",
@@ -781,8 +785,6 @@
     "yes_for_windows_10_11_macos__a1": "Tải tại đây",
     "does_tmplayer_provide_any_media": "TMPlayer có cung cấp nội dung riêng không?",
     "no_it_hosts_uploads_sells": "Không. Nó không lưu trữ, không tải lên, không bán và không đề xuất gì cả. Nó chỉ hiển thị các video có sẵn trong những cuộc trò chuyện và kênh bạn đã tham gia.",
-    "how_much_storage_does_it": "Cần bao nhiêu dung lượng?",
-    "one_video_at_a_time": "Mỗi lần một video. Video trước sẽ được xóa khi bạn mở video mới, nên TV stick 8 GB là đủ.",
     "which_video_formats_does_it": "Phát được những định dạng video nào?",
     "mkv_mp4_avi_and_ts": "MKV, MP4, AVI và TS, với phụ đề nhúng kể cả phụ đề dạng ảnh, và nhiều rãnh âm thanh có thể chuyển đổi khi đang phát. {a1}.",
     "mkv_mp4_avi_and_ts__a1": "Mọi định dạng, theo nền tảng",
@@ -872,7 +874,7 @@
     "in_the_player_s_menu__em1": "Tải tệp phụ đề",
     "drop_the_file_on_the": "Thả tệp lên hình khi video đang phát. Cùng các định dạng đó dùng được: {code1}, {code2}, {code3}, {code4} và {code5}.",
     "picture_based_vobsub_files_cannot": "Không thể tải tệp VobSub {code1} dạng ảnh theo cách này, dù cùng phụ đề đó nằm trong MKV thì phát bình thường.",
-    "the_containers_video_and_audio": "Các định dạng chứa, codec video, âm thanh và phụ đề mà TMPlayer phát được: Media3 với bộ giải mã FFmpeg trên Android TV và điện thoại, mpv trên Windows, macOS và Linux."
+    "the_containers_video_and_audio": "Định dạng chứa, codec video, âm thanh và phụ đề TMPlayer phát được: Media3 với bộ giải mã FFmpeg trên Android TV và điện thoại, mpv trên Windows, macOS và Linux."
   },
   "translate": {
     "help_translate_tmplayer_tmplayer": "Giúp dịch TMPlayer sang ngôn ngữ của bạn",

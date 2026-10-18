@@ -54,4 +54,4 @@ Every English page has a Markdown copy of its text, without navigation: add `ind
 - [Security](https://tmplayer.org/security/): how releases are built and how to check a download
 - [Privacy](https://tmplayer.org/privacy/): what stays on the device and which services it contacts
 - [Lawful use](https://tmplayer.org/legal/): use it only with content you own or may access
-- [Support](https://tmplayer.org/support/): sponsoring, starring and sharing
+- [Support](https://tmplayer.org/support/): Buy Me a Coffee, GitHub Sponsors, starring and sharing; all voluntary, nothing is locked

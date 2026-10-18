@@ -118,12 +118,23 @@ changed.
   `site/public/latest.json` is the installed apps' update feed: only the release job writes it.
 - **Download page** keeps its `preconnect` hints to GitHub's API, github.com and
   `release-assets.githubusercontent.com`, the host the release files are served from.
-- **Sponsoring.** Every content page ends with the "Support TMPlayer" offer (GitHub Sponsors and
-  Buy Me a Coffee): inside the page's star card where it has one, otherwise as a `support-slim`
-  card in the last band. Use the shared component for it, which carries the
-  `home.support_tmplayer`, `home.support_no_ads`, `home.sponsor_on_github` and
-  `home.buy_me_a_coffee` keys so it arrives translated; a new page gets it too. It stays an offer:
-  no popups, no nags, nothing locked.
+- **Sponsoring.** Every content page ends with the "Support TMPlayer" offer: inside the page's
+  star card where it has one, otherwise as a `support-slim` card in the last band. Use the shared
+  `SponsorOffer` component, which carries the `home.support_tmplayer`, `home.support_no_ads`,
+  `home.sponsor_on_github` and `home.buy_me_a_coffee` keys so it arrives translated; a new page
+  gets it too. Buy Me a Coffee is the primary way to chip in (user, 2026-10-18): wherever it
+  stands beside GitHub Sponsors (the offer, the support page, the footers, the QR codes) it is the
+  larger button in Buy Me a Coffee's own brand (`CoffeeButton`: their yellow `#FFDD00`, their
+  near-black text and their official cup from `site/public/brand/`, never redrawn or recoloured),
+  and GitHub Sponsors is the quieter link under it. The links live in `site/src/lib/support.ts`;
+  the page is `buymeacoffee.com/nevil.dev` (`/nevil` is somebody else). Every page but download,
+  install, support and the 404 also has the floating `CoffeeCard`: a pill on a phone, a card with
+  the scan code on a wide screen, at the bottom of the start edge, shown by app.js once the page is
+  idle, stepping aside for the footer, the page's own offer and the phone's download bar. A click
+  opens a modal `<dialog>` with a larger build-time QR code, the big Buy Me a Coffee button and the
+  Sponsors link. Its x hides it for that page view only and nothing is stored, so it is back on the
+  next page or a reload (the user's choice). It stays an offer: no popup that opens by itself, no
+  nag, nothing locked.
 - **After changing the site**, run `pnpm -C site build`, `python3 scripts/site-i18n-check.py` and
   `python3 scripts/site-links.py` (CI runs all three).
 

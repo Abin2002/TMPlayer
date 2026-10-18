@@ -12,8 +12,13 @@
 // read by people who just got the update, the moment the offer makes the most sense. Its heading
 // is an h2 in the notes' style, it is not revealed on scroll, and its line is the page's `lede`
 // followed by the release sentence below.
+//
+// Buy Me a Coffee comes first, as the large button in its own brand, and GitHub Sponsors is the
+// quieter link under it (user, 2026-10-18).
 import Icon from './Icon.astro';
+import CoffeeButton from './CoffeeButton.astro';
 import { text } from '../i18n/t';
+import { SPONSORS_URL } from '../lib/support';
 
 interface Props { slim?: boolean; release?: boolean; lede?: string }
 const { release = false, lede } = Astro.props;
@@ -30,9 +35,9 @@ const line = release
 <div class:list={['support-more', { 'support-more-solo': slim }]} id="sponsor">
   <H class={release ? 'release-notes-h' : undefined}>{t('home.support_tmplayer')}</H>
   <p>{line}</p>
-  <div class="support-actions support-give">
-    <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener"> <Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
-    <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener"> <Icon name="coffee-btn" /> {t('home.buy_me_a_coffee')}</a>
+  <div class="support-coffee">
+    <CoffeeButton label={t('home.buy_me_a_coffee')} large />
+    <a class="support-alt" href={SPONSORS_URL} rel="noopener"><Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
   </div>
   <slot />
 </div>

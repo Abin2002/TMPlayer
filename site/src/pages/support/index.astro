@@ -8,6 +8,8 @@ import { breadcrumb } from '../../components/breadcrumb';
 import HeaderPlain from '../../components/plain/HeaderPlain.astro';
 import FooterPlain from '../../components/plain/FooterPlain.astro';
 import QrCode from '../../components/QrCode.astro';
+import CoffeeButton from '../../components/CoffeeButton.astro';
+import { SPONSORS_URL } from '../../lib/support';
 import ShareLinks from '../../components/support/ShareLinks.astro';
 import { ENGLISH } from '../../i18n/langs';
 
@@ -30,19 +32,13 @@ Astro.locals.lang = ENGLISH;
     <section id="chip-in">
       <h2>Chip in</h2>
       <p>If TMPlayer saves you some bother, a coffee or a monthly sponsorship pays for the time that goes into it. Any amount is welcome, and one coffee is plenty.</p>
-      <div class="support-actions support-give">
-        <a class="btn btn-filled" href="https://github.com/sponsors/dracu-lah" rel="noopener">
-          <Icon name="heart-btn" />
-          Sponsor on GitHub
-        </a>
-        <a class="btn btn-outline" href="https://buymeacoffee.com/nevil.dev" rel="noopener">
-          <Icon name="coffee-btn-plain" />
-          Buy me a coffee
-        </a>
+      <div class="support-coffee support-coffee-start">
+        <CoffeeButton label="Buy me a coffee" large />
+        <a class="support-alt" href={SPONSORS_URL} rel="noopener"><Icon name="heart-btn" /> Sponsor on GitHub</a>
       </div>
       <div class="support-codes">
-        <QrCode icon="qr-sponsors" caption="Scan for GitHub Sponsors" />
         <QrCode icon="qr-coffee" caption="Scan for Buy Me a Coffee" />
+        <QrCode icon="qr-sponsors" caption="Scan for GitHub Sponsors" minor />
       </div>
     </section>
 

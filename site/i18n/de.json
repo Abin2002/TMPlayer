@@ -60,6 +60,10 @@
     "fork_the_repository": "Repository forken",
     "scan_for_github_sponsors": "Scannen für GitHub Sponsors",
     "scan_for_buy_me_a_coffee": "Scannen für Buy Me a Coffee",
+    "bmc_card_title": "Gefällt dir TMPlayer?",
+    "bmc_modal_lede": "Scanne den Code mit dem Smartphone oder öffne die Seite hier. Jeder Betrag hilft und schaltet nichts frei: Alle Funktionen bleiben für alle kostenlos.",
+    "bmc_hide": "Vorerst ausblenden",
+    "bmc_close": "Schließen",
     "come_and_talk": "Sprich mit uns",
     "news_and_help_live_on": "Neuigkeiten und Hilfe gibt es auf Telegram und in den GitHub Discussions.",
     "github_discussions": "GitHub Discussions"
@@ -155,7 +159,7 @@
     "does_tmplayer_provide_any_e5a6": "Stellt TMPlayer eigene Medien bereit?",
     "no_it_hosts_uploads_f0f5": "Nein. Es hostet, lädt hoch, verkauft und empfiehlt nichts. Es zeigt die Videos, die schon in den Chats und Kanälen liegen, denen du beigetreten bist, und sonst nichts.",
     "how_much_storage_does_ade1": "Wie viel Speicher braucht es?",
-    "one_video_at_a_9f80": "Ein Video auf einmal. Das vorherige wird gelöscht, wenn du ein neues startest, deshalb reicht ein TV-Stick mit 8 GB.",
+    "on_a_phone_or_79da": "Auf Smartphone oder TV bleibt nur das Video, das gerade läuft: Das vorherige wird gelöscht, deshalb reicht ein TV-Stick mit 8 GB. Heruntergeladene Videos bleiben, bis du sie löschst. Am Computer bleiben zuletzt abgespielte Videos bis zu einer Größe, die du in den Einstellungen festlegst.",
     "which_video_formats_does_8e50": "Welche Videoformate spielt es ab?",
     "mkv_mp4_avi_and_1855": "MKV, MP4, AVI und TS, mit eingebetteten Untertiteln, auch bildbasierten, und mehreren Tonspuren, zwischen denen du während der Wiedergabe wechseln kannst.",
     "how_does_it_update_368f": "Wie aktualisiert es sich, wenn es nicht im Play Store ist?",
@@ -615,7 +619,7 @@
     "still_stuck_with_your_device": "Immer noch Probleme? {a1} mit deinem Gerät, seiner Version und dem, was der Bildschirm gemeldet hat.",
     "still_stuck_with_your_device__a1": "Öffne ein Issue",
     "if_these_steps_got_your": "Wenn dich diese Schritte zu deinen Videos auf den Bildschirm gebracht haben, hilft ein Stern der nächsten Person, es zu finden.",
-    "description": "TMPlayer installieren: Downloader und Fernbedienung auf Android TV, die APK auf dem Smartphone, eine PowerShell-Zeile unter Windows, das DMG auf dem Mac, das AppImage unter Linux.",
+    "description": "TMPlayer installieren: Downloader und Fernbedienung auf Android TV, die APK am Smartphone, eine PowerShell-Zeile unter Windows, DMG am Mac, AppImage unter Linux.",
     "pick_a_chat_and_press": "Chat wählen und Play drücken"
   },
   "android_tv": {
@@ -781,8 +785,6 @@
     "yes_for_windows_10_11_macos__a1": "Hier bekommst du es",
     "does_tmplayer_provide_any_media": "Stellt TMPlayer eigene Medien bereit?",
     "no_it_hosts_uploads_sells": "Nein. Es hostet, lädt hoch, verkauft und empfiehlt nichts. Es zeigt die Videos, die schon in den Chats und Kanälen liegen, denen du beigetreten bist, und sonst nichts.",
-    "how_much_storage_does_it": "Wie viel Speicher braucht es?",
-    "one_video_at_a_time": "Ein Video auf einmal. Das vorherige wird gelöscht, wenn du ein neues startest, deshalb reicht ein TV-Stick mit 8 GB.",
     "which_video_formats_does_it": "Welche Videoformate spielt es ab?",
     "mkv_mp4_avi_and_ts": "MKV, MP4, AVI und TS, mit eingebetteten Untertiteln, auch bildbasierten, und mehreren Tonspuren, zwischen denen du während der Wiedergabe wechseln kannst. {a1}.",
     "mkv_mp4_avi_and_ts__a1": "Alle Formate, nach Plattform",
@@ -807,7 +809,7 @@
     "the_lists_what_stays_on__a1": "Datenschutzseite",
     "the_lists_what_stays_on__a2": "Rechtmäßige Nutzung",
     "no_money_no_account_no": "Kein Geld, kein Konto, keine E-Mail. Ein Stern ist alles, was das Projekt verlangt.",
-    "answers_about_tmplayer_streaming_without": "Antworten zu TMPlayer: Streamen ohne Warten, kein Server und kein Bot, welche Datei du herunterladen musst, Windows-, macOS- und Linux-Versionen, Datenschutz und was es nicht tut.",
+    "answers_about_tmplayer_streaming_without": "Antworten zu TMPlayer: Streamen ohne Warten, kein Server oder Bot, welche Datei du lädst, Versionen für Windows, macOS und Linux, Datenschutz und Grenzen.",
     "short_questions_open_the_one": "{count} kurze Fragen. Öffne die, die du brauchst."
   },
   "formats": {
@@ -872,7 +874,7 @@
     "in_the_player_s_menu__em1": "Untertitel-Datei laden",
     "drop_the_file_on_the": "Ziehe die Datei auf das Bild, während das Video spielt. Dieselben Formate funktionieren: {code1}, {code2}, {code3}, {code4} und {code5}.",
     "picture_based_vobsub_files_cannot": "Bildbasierte VobSub-{code1}-Dateien lassen sich so nicht laden, dieselben Untertitel in einer MKV laufen aber problemlos.",
-    "the_containers_video_and_audio": "Die Container, Video- und Audio-Codecs und Untertitel, die TMPlayer abspielt: Media3 mit FFmpeg-Decodern auf Android TV und Smartphones, mpv unter Windows, macOS und Linux."
+    "the_containers_video_and_audio": "Container, Video- und Audio-Codecs und Untertitel in TMPlayer: Media3 mit FFmpeg-Decodern auf Android TV und Smartphones, mpv unter Windows, macOS und Linux."
   },
   "translate": {
     "help_translate_tmplayer_tmplayer": "Hilf mit, TMPlayer in deine Sprache zu übersetzen",
