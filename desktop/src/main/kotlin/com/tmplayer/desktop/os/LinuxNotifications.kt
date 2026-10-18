@@ -29,13 +29,19 @@ internal interface DockProgress {
 }
 
 /**
- * A one-off notice that is not about a transfer: new videos in the starred chats, the sponsor
- * reminder. [onPress] is what a press on it does, where the platform can say so (a Linux
- * notification server with actions); elsewhere the notice only informs.
+ * A one-off notice that is not about a transfer: new videos in the starred chats, a new episode,
+ * the support ask (CP76). [onPress] is what a press on it does, where the platform can say so (a
+ * Linux notification server with actions, a Windows toast); elsewhere the notice only informs.
+ * [buttons] are drawn where the platform draws buttons, and left out where it does not.
  */
 internal interface DesktopNotices {
-    fun notice(title: String, body: String?, onPress: (() -> Unit)?)
+    fun notice(title: String, body: String?, onPress: (() -> Unit)?) = notice(title, body, onPress, emptyList())
+
+    fun notice(title: String, body: String?, onPress: (() -> Unit)?, buttons: List<NoticeButton>)
 }
+
+/** One button on a notice: its words, and what pressing it does. */
+internal class NoticeButton(val label: String, val onPress: () -> Unit)
 
 /**
  * Linux: transfer progress and completion as desktop notifications, through the session bus's
@@ -70,6 +76,13 @@ internal class LinuxNotifications(
     private val presses: MutableMap<Long, () -> Unit> = java.util.Collections.synchronizedMap(
         object : LinkedHashMap<Long, () -> Unit>() {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, () -> Unit>?) = size > MAX_TARGETS
+        },
+    )
+
+    /** A notice's buttons, by the server's id; bounded like [presses]. */
+    private val buttonPresses: MutableMap<Long, List<NoticeButton>> = java.util.Collections.synchronizedMap(
+        object : LinkedHashMap<Long, List<NoticeButton>>() {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, List<NoticeButton>>?) = size > MAX_TARGETS
         },
     )
 
@@ -198,18 +211,27 @@ internal class LinuxNotifications(
         }
     }
 
-    override fun notice(title: String, body: String?, onPress: (() -> Unit)?) = post {
+    override fun notice(title: String, body: String?, onPress: (() -> Unit)?, buttons: List<NoticeButton>) = post {
         val notifications = server()
         if (notifications != null) {
-            // "default" is a press on the body, which every server with actions offers.
-            val actions = if (onPress != null && serverActions) listOf(LinuxNotificationText.ACTION_DEFAULT, title) else emptyList()
+            // "default" is a press on the body, which every server with actions offers; each
+            // button is an action of its own, keyed by its place.
+            val actions = if (serverActions) {
+                (if (onPress != null) listOf(LinuxNotificationText.ACTION_DEFAULT, title) else emptyList()) +
+                    buttons.flatMapIndexed { index, button -> listOf("$BUTTON_PREFIX$index", button.label) }
+            } else {
+                emptyList()
+            }
             runCatching {
                 notifications.Notify(
                     APP_NAME, UInt32(0), ICON, title, body.orEmpty(), actions,
                     LinuxNotificationText.hints(LinuxNotificationText.CATEGORY_NOTICE, urgency = URGENCY_NORMAL, percent = null),
                     DEFAULT_EXPIRY,
                 )
-            }.onSuccess { serverId -> if (onPress != null) presses[serverId.toLong()] = onPress }
+            }.onSuccess { serverId ->
+                if (onPress != null) presses[serverId.toLong()] = onPress
+                if (buttons.isNotEmpty() && serverActions) buttonPresses[serverId.toLong()] = buttons
+            }
                 .onFailure { Logger.w(TAG, "notice refused: ${it.message}") }
             return@post
         }
@@ -260,6 +282,14 @@ internal class LinuxNotifications(
                 serverActions = "actions" in caps
                 if (serverActions) {
                     conn.addSigHandler(FdoNotifications.ActionInvoked::class.java) { signal ->
+                        val index = signal.actionKey.removePrefix(BUTTON_PREFIX).toIntOrNull()
+                            .takeIf { signal.actionKey.startsWith(BUTTON_PREFIX) }
+                        val buttons = buttonPresses.remove(signal.id.toLong())
+                        if (index != null) {
+                            presses.remove(signal.id.toLong())
+                            buttons?.getOrNull(index)?.let { runCatching(it.onPress) }
+                            return@addSigHandler
+                        }
                         presses.remove(signal.id.toLong())?.let { press ->
                             runCatching(press)
                             return@addSigHandler
@@ -306,6 +336,9 @@ internal class LinuxNotifications(
         const val NEVER_EXPIRE = 0
         const val DEFAULT_EXPIRY = -1
         private const val MAX_TARGETS = 32
+
+        /** A notice button's action key: "button0", "button1". */
+        private const val BUTTON_PREFIX = "button"
         private const val CAPABILITY_WAIT_MS = 2_000L
     }
 }

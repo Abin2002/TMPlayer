@@ -45,8 +45,10 @@ import androidx.compose.ui.unit.min
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.SupportReminder
 import com.tmplayer.i18n.L
+import kotlinx.coroutines.launch
 import com.tmplayer.ui.about.About
 import com.tmplayer.ui.about.BmcBrand
 import com.tmplayer.ui.about.BmcCupMark
@@ -192,7 +194,14 @@ fun CoffeeDialog(
                     androidx.compose.material3.TextButton(onClick = { openLink(context, About.SPONSORS) }) {
                         androidx.compose.material3.Text(s.supportSponsorGithub)
                     }
-                    androidx.compose.material3.TextButton(onClick = { openLink(context, About.SOURCE) }) {
+                    androidx.compose.material3.TextButton(
+                        onClick = {
+                            openLink(context, About.SOURCE)
+                            // A star given is never asked for again (CP76).
+                            val store = SettingsStore(context.applicationContext)
+                            com.tmplayer.App.backgroundScope.launch { runCatching { store.markSupportStarred() } }
+                        },
+                    ) {
                         androidx.compose.material3.Icon(TmIcons.StarOutline, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
                         androidx.compose.material3.Text(s.supportStarGithub)

@@ -132,6 +132,7 @@ class SupportReminderTest {
 
     @Test
     fun `a walk with a fake clock`() = runBlocking {
+        settings.setSponsorReminders(true)
         settings.noteSupportFirstSeen(start)
         // The first day: four finished videos, nothing yet.
         repeat(4) { settings.noteSupportCompleted("1_$it", start + it * 2 * hour) }
@@ -168,7 +169,10 @@ class SupportReminderTest {
     }
 
     @Test
-    fun `the sponsor reminders switch is on by default and kept through sign out`() = runBlocking {
+    fun `the sponsor reminders switch is off by default and kept through sign out`() = runBlocking {
+        assertFalse(settings.sponsorRemindersNow())
+        settings.setSponsorReminders(true)
+        settings.clearEverything()
         assertTrue(settings.sponsorRemindersNow())
         settings.setSponsorReminders(false)
         settings.clearEverything()

@@ -104,7 +104,7 @@ import kotlinx.coroutines.withContext
  * player, which is what the phone's gestures are for a finger.
  */
 enum class SettingsCategory {
-    SetupChoices, Appearance, Playback, Subtitles, Mouse, Library, Storage, Lock, About;
+    SetupChoices, Appearance, Playback, Subtitles, Mouse, Library, Notifications, Storage, Lock, About;
 
     internal val icon: androidx.compose.ui.graphics.vector.ImageVector
         get() = when (this) {
@@ -114,6 +114,7 @@ enum class SettingsCategory {
             Subtitles -> TmIcons.Subtitles
             Mouse -> SettingsGlyphs.Mouse
             Library -> TmIcons.Grid
+            Notifications -> TmIcons.Bell
             Storage -> TmIcons.Download
             Lock -> TmIcons.Lock
             About -> TmIcons.Info
@@ -140,6 +141,7 @@ internal fun titleOf(category: SettingsCategory): String {
         SettingsCategory.Subtitles -> s.settingsSubtitles
         SettingsCategory.Mouse -> s.settingsPageMouse
         SettingsCategory.Library -> s.settingsLibrary
+        SettingsCategory.Notifications -> s.settingsPageNotifications
         SettingsCategory.Storage -> s.settingsPageStorage
         SettingsCategory.Lock -> s.lockTitle
         SettingsCategory.About -> s.settingsPageAbout
@@ -423,6 +425,7 @@ private fun CategoryList(
                 }
                 SettingsCategory.Mouse -> s.settingsPageMouseSummary
                 SettingsCategory.Library -> s.settingsPageLibrarySummary
+                SettingsCategory.Notifications -> s.settingsPageNotificationsSummary
                 SettingsCategory.Storage -> disk?.takeIf { it.totalBytes > 0 }?.let {
                     s.settingsStorageFree(StorageRelocationPlan.size(it.freeBytes), StorageRelocationPlan.size(it.totalBytes))
                 } ?: s.settingsPageStorageSummary
@@ -478,6 +481,7 @@ internal class SettingsPages(
                     SettingsCategory.Subtitles -> SubtitlesRows(state)
                     SettingsCategory.Mouse -> MouseRows(state)
                     SettingsCategory.Library -> LibraryRows(state, version, chatList, jumps)
+                    SettingsCategory.Notifications -> NotificationRows(state)
                     SettingsCategory.Storage -> StorageGroup(state)
                     SettingsCategory.Lock -> LockRows(state, onPin, onKidsChats)
                     SettingsCategory.About -> AboutRows(state, version, onShowAbout)

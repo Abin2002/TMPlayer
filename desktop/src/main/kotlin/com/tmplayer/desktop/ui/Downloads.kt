@@ -458,6 +458,13 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
         if (cachedHeadingAt[0] > 0) runCatching { list.scrollToItem(cachedHeadingAt[0]) }
     }
 
+    // Opened from the low storage notification: Free up space, already up.
+    LaunchedEffect(state.downloadsOpenFreeUp) {
+        if (!state.downloadsOpenFreeUp) return@LaunchedEffect
+        state.downloadsOpenFreeUp = false
+        freeingUp = true
+    }
+
     if (freeingUp) {
         val f = figures
         val lines = com.tmplayer.data.FreeUpSpace.lines(

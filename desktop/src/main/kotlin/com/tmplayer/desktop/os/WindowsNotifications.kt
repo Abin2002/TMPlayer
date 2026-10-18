@@ -121,11 +121,12 @@ internal class WindowsNotifications(
      * A one-off notice. Its press reaches the app through a `tmplayer:` link ([ToastPresses]); where
      * the link could not be registered the toast only informs.
      */
-    override fun notice(title: String, body: String?, onPress: (() -> Unit)?) = post {
+    override fun notice(title: String, body: String?, onPress: (() -> Unit)?, buttons: List<NoticeButton>) = post {
         if (toastsOff) return@post
         if (input == null) start()
         val launch = if (onPress != null && pressable) ToastPresses.register(onPress) else null
-        run(WindowsToast.showDone(WindowsToast.doneXml(title, body.orEmpty(), launch)))
+        val actions = if (pressable) buttons.map { it.label to ToastPresses.register(it.onPress) } else emptyList()
+        run(WindowsToast.showDone(WindowsToast.doneXml(title, body.orEmpty(), launch, actions)))
     }
 
     private fun forget(id: Long) {
@@ -269,12 +270,20 @@ internal object WindowsToast {
             "</binding></visual></toast>"
 
     /** A finished or failed transfer; [launch] is a file URI opened when it is pressed. */
-    fun doneXml(title: String, body: String, launch: String?): String {
+    fun doneXml(title: String, body: String, launch: String?, buttons: List<Pair<String, String>> = emptyList()): String {
         val activation = launch?.let { " activationType=\"protocol\" launch=\"${xml(it)}\"" }.orEmpty() // i18n-ok: toast XML
+        // Each button opens its own tmplayer: link, as a press on the toast does.
+        val actions = if (buttons.isEmpty()) {
+            ""
+        } else {
+            "<actions>" + buttons.joinToString("") { (label, link) ->
+                "<action content=\"${xml(label)}\" activationType=\"protocol\" arguments=\"${xml(link)}\"/>" // i18n-ok: toast XML
+            } + "</actions>"
+        }
         return "<toast$activation><visual><binding template=\"ToastGeneric\">" +
             "<text>${xml(title)}</text>" +
             (if (body.isNotEmpty()) "<text>${xml(body)}</text>" else "") +
-            "</binding></visual></toast>"
+            "</binding></visual>$actions</toast>"
     }
 
     /**

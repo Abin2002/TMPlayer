@@ -41,6 +41,11 @@ class BackupCoverageTest {
         // Which video each starred chat had at the last new videos check, and whether the offer
         // after a star was made: this account on this device, started afresh on another.
         "new_video_seen", "new_video_offered",
+        // The star rung's bookkeeping (CP76), with the support card's above.
+        "support_star_asked_at", "support_starred",
+        // What the CP76 notifications already said and where each chat check got to: this
+        // device's, started afresh on another.
+        "episode_alert_seen", "episode_alert_told", "low_storage_alert", "piece_gaps", "update_alerted_version",
         // Records of files on this device's disk, and what Telegram said about them.
         "cached_video", "cached_video_ids", "wc_", "dl_", "duration_", "meta_",
     )

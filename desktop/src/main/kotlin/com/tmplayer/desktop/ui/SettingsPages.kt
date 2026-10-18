@@ -245,7 +245,6 @@ internal fun LibraryRows(state: ShellState, version: String, chatList: List<com.
     val openLast by settings.openLastChat.collectAsState(initial = false)
     val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
     val rememberSearches by settings.rememberSearches.collectAsState(initial = true)
-    val newVideoAlerts by settings.newVideoAlerts.collectAsState(initial = false)
     val history by settings.continueWatching.collectAsState(initial = emptyList())
     // Only those the kids lock shows, as the Favourites section counts them.
     val storedFavourites by settings.favorites.collectAsState(initial = emptySet())
@@ -289,11 +288,6 @@ internal fun LibraryRows(state: ShellState, version: String, chatList: List<com.
                 settings.setMinSizeBytes(SizeFilter.DEFAULT_MIN)
             }
         }
-    }
-
-    // A notification when a starred chat posts videos, checked while the app runs (DesktopChecks).
-    Toggle(s.settingsNewVideos, s.settingsNewVideosDetailDesktop, newVideoAlerts, icon = TmIcons.Bell) { on ->
-        scope.launch { settings.setNewVideoAlerts(on) }
     }
 
     // What opens first, in the same card as which videos show, as on the phone and the TV.
@@ -481,7 +475,6 @@ internal fun AboutRows(state: ShellState, version: String, onShowAbout: () -> Un
     val updateState by Updates.state.collectAsState()
     val developerOptions by settings.developerOptions.collectAsState(initial = false)
     val supportCounters by settings.supportCounters.collectAsState(initial = SupportReminder.Counters())
-    val sponsorReminders by settings.sponsorReminders.collectAsState(initial = true)
     var supporting by remember { mutableStateOf(false) }
     var whatsNew by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
@@ -579,12 +572,7 @@ internal fun AboutRows(state: ShellState, version: String, onShowAbout: () -> Un
             s.settingsSupportDetail,
             TmIcons.Favorite,
         ) { supporting = true }
-        // The occasional "Don't forget to sponsor" notification (see SupportReminder).
-        if (!supportCounters.finished) {
-            Toggle(s.settingsSponsorReminders, s.settingsSponsorRemindersDetail, sponsorReminders, icon = TmIcons.Bell) { on ->
-                scope.launch { settings.setSponsorReminders(on) }
-            }
-        }
+        // The occasional support notification's switch is on the Notifications page (CP76).
     }
     Action(s.settingsAbout, s.settingsAboutDetail(version), TmIcons.Info) { onShowAbout() }
     Text(
@@ -597,4 +585,34 @@ internal fun AboutRows(state: ShellState, version: String, onShowAbout: () -> Un
     if (supporting) SupportPopup(from = "settings", onClose = { supporting = false })
     if (whatsNew) WhatsNewPopup(onClose = { whatsNew = false })
     if (reporting) FeedbackPopup(onClose = { reporting = false })
+}
+
+/**
+ * Notifications (CP76): every system notification TMPlayer may post, one switch each, the phone's
+ * page with the desktop's wording. Off but for the finished downloads until the viewer turns one
+ * on; the checks behind them run while the app is open, minimised too (DesktopChecks).
+ */
+@Composable
+internal fun NotificationRows(state: ShellState) {
+    val s = LocalStrings.current
+    val settings = state.settings
+    val scope = rememberCoroutineScope()
+    val supportCounters by settings.supportCounters.collectAsState(initial = SupportReminder.Counters())
+    val rows = buildList {
+        add(Triple(com.tmplayer.data.Notice.Downloads, s.settingsAlertDownloads, s.settingsAlertDownloadsDetail))
+        add(Triple(com.tmplayer.data.Notice.NewEpisodes, s.settingsAlertEpisodes, s.settingsAlertEpisodesDetailDesktop))
+        add(Triple(com.tmplayer.data.Notice.NewVideos, s.settingsNewVideos, s.settingsNewVideosDetailDesktop))
+        add(Triple(com.tmplayer.data.Notice.MissingPieces, s.settingsAlertPieces, s.settingsAlertPiecesDetail))
+        add(Triple(com.tmplayer.data.Notice.LowStorage, s.settingsAlertLowStorage, s.settingsAlertLowStorageDetail))
+        if (Updates.enabled) add(Triple(com.tmplayer.data.Notice.UpdateReady, s.settingsAlertUpdate, s.settingsAlertUpdateDetailDesktop))
+        if (SupportReminder.enabled && !supportCounters.finished) {
+            add(Triple(com.tmplayer.data.Notice.Support, s.settingsSponsorReminders, s.settingsSponsorRemindersDetail))
+        }
+    }
+    for ((notice, title, detail) in rows) {
+        val on by settings.noticeOn(notice).collectAsState(initial = notice.defaultOn)
+        Toggle(title, detail, on, icon = TmIcons.Bell) { next ->
+            scope.launch { settings.setNoticeOn(notice, next) }
+        }
+    }
 }

@@ -3061,6 +3061,11 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         val all = pieces
         val notice = com.tmplayer.data.SplitPieces.playerNotice(all)
         val playable = com.tmplayer.data.SplitPieces.playablePieces(all)
+        // A piece missing is remembered, so "Missing parts of a video" can say when it is posted
+        // (CP76); a video found whole is forgotten.
+        val store = settings
+        val chat = chatTitle
+        com.tmplayer.App.backgroundScope.launch { runCatching { com.tmplayer.data.PieceAlerts.notePlayed(store, all, chat) } }
         if (playable.isEmpty()) {
             showError(notice ?: L.playerNothingToPlay, retryable = false)
             return false

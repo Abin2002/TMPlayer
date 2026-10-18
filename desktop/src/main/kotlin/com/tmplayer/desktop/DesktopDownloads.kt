@@ -1,6 +1,9 @@
 package com.tmplayer.desktop
 
 import com.tmplayer.data.CacheShelf
+import com.tmplayer.data.ChatGate
+import com.tmplayer.data.DownloadResults
+import com.tmplayer.data.Notice
 import com.tmplayer.data.Connectivity
 import com.tmplayer.data.ContentProtection
 import com.tmplayer.data.NetworkStatus
@@ -31,6 +34,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -471,12 +475,7 @@ class DesktopDownloadRunner(
             synchronized(lock) { requests.remove(fileId) }
             OfflineDownloads.forget(fileId)
             persistNow()
-            notifier.complete(
-                moveId,
-                L.downloadsDownloaded,
-                L.downloadsIsInDownloads(request.title),
-                TransferNotifier.OpenTarget.File(target.absolutePath),
-            )
+            settled(request, ok = true, notifierId = moveId, reason = null, target = target)
             _finished.tryEmit(Finished(request.title, target))
         }
     }
@@ -505,9 +504,41 @@ class DesktopDownloadRunner(
                     heldByPlayer = false,
                 ),
             )
-            notifier.fail(request.fileId.toLong(), request.title, text, retryable = true)
+            settled(request, ok = false, notifierId = request.fileId.toLong(), reason = text, target = null)
         }
         persistNow()
+    }
+
+    /**
+     * One video has finished or failed for good. Once nothing else of its season or cut video is
+     * on the queue, the one notification for all of it goes out ([DownloadResults], CP76), behind
+     * the "Finished downloads" switch; until then, and with the switch off, its own line just goes.
+     * A lone video keeps the wording and the Open of before; with the kids lock hiding its chat,
+     * or the app lock asked for on opening, it names nothing.
+     */
+    private suspend fun settled(request: DownloadRequest, ok: Boolean, notifierId: Long, reason: String?, target: File?) {
+        val outstanding = OfflineDownloads.ordered
+            .filter { it.fileId != request.fileId && it.stage != OfflineDownloads.Stage.Failed }
+            .map { it.request }
+        val result = DownloadResults.record(request, ok, outstanding)
+        if (result == null || !runCatching { settings.noticeOnNow(Notice.Downloads) }.getOrDefault(true)) {
+            notifier.cancel(notifierId)
+            return
+        }
+        val private = runCatching {
+            DownloadResults.isPrivate(request.chatId, ChatGate.awaitReady(), settings.appLock.first())
+        }.getOrDefault(false)
+        val words = DownloadResults.words(result, private, reason.takeIf { result.total == 1 })
+        when {
+            result.failed.isNotEmpty() -> notifier.fail(notifierId, words.title, words.body.orEmpty(), retryable = true)
+            result.total == 1 && target != null && !private -> notifier.complete(
+                notifierId,
+                L.downloadsDownloaded,
+                L.downloadsIsInDownloads(request.title),
+                TransferNotifier.OpenTarget.File(target.absolutePath),
+            )
+            else -> notifier.complete(notifierId, words.title, words.body.orEmpty(), TransferNotifier.OpenTarget.DownloadsScreen)
+        }
     }
 
     private fun persist() {

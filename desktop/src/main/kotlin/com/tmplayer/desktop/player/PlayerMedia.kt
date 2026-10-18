@@ -288,6 +288,8 @@ class TelegramPlayerMedia(
     private suspend fun openJoined(all: List<MediaItem>): MediaData {
         val notice = SplitPieces.playerNotice(all)
         val playable = SplitPieces.playablePieces(all)
+        // Remembered for "Missing parts of a video" (CP76); a video found whole is forgotten.
+        background.launch { runCatching { com.tmplayer.data.PieceAlerts.notePlayed(DesktopServices.settings, all, chatTitle) } }
         if (playable.isEmpty()) throw IOException(notice ?: L.playerNothingToPlay)
         joinedNotice = notice
         joinedIncomplete = notice != null

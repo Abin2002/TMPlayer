@@ -150,6 +150,9 @@ class ShellState(
      */
     var downloadsOpenRecent by mutableStateOf(false)
 
+    /** Set by the low storage notification (CP76): Downloads opens with Free up space up. */
+    var downloadsOpenFreeUp by mutableStateOf(false)
+
     /** History, on [tab]. */
     fun showHistory(tab: HistoryTab) {
         historyTab = tab
