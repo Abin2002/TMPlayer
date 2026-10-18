@@ -6469,8 +6469,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 // And with the sound playing on out of sight, which is an hour as easily.
                 val seen = lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
                 if ((seen || inBackgroundAudio) && player?.isPlaying == true) saveResumePosition()
-                // And while it plays on a TV, with the phone in a pocket.
-                else if (cast?.playing == true) saveResumePosition()
+                // And while it is on a TV, with the phone in a pocket: playing, paused there or
+                // between streams, the TV's place is the one kept.
+                else if (cast?.casting == true) saveResumePosition()
             }
         }
     }

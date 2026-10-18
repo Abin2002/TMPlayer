@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -54,7 +55,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import com.tmplayer.ui.components.pressScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -108,9 +111,12 @@ import kotlinx.coroutines.launch
  * generated cover. Under the title, one line of facts with dots between (year, length, quality,
  * size, the chat), then one bright Play or Resume pill and the other actions as round buttons.
  *
- * Close sits at the top end on both; Back closes as well.
+ * Close sits at the top end on both; Back closes as well. On a phone the page leaves by the round
+ * Back at the top start instead, and [topEndAction] (the Cast button) mirrors it at the top end;
+ * elsewhere the action stands just before Close, in one row with it.
  *
  * @param firstAction focused when the screen opens on a remote or a keyboard: Play or Resume.
+ * @param topEndAction one button over the picture at the top end (Cast), drawn the page's way.
  */
 @Composable
 fun MediaDetailScreen(
@@ -133,6 +139,7 @@ fun MediaDetailScreen(
     onPickCopy: ((MediaItem) -> Unit)? = onOpenItem,
     /** Whether a copy has a place saved, for the "Started" in its row. */
     copyStarted: (MediaItem) -> Boolean = { false },
+    topEndAction: (@Composable () -> Unit)? = null,
 ) {
     val meta = rememberMeta(item)
     val extras = rememberMetaExtras(meta)
@@ -164,20 +171,35 @@ fun MediaDetailScreen(
                     ),
             )
             // A phone's pages all leave by the round Back at the top start, so this one does too.
+            // A size up here, the page's picture behind it, and matched by the action opposite.
             com.tmplayer.ui.components.FloatingBackButton(
                 TmIcons.ArrowBack,
                 LocalStrings.current.commonBack,
                 onClose,
                 Modifier.align(Alignment.TopStart),
+                size = com.tmplayer.ui.components.FloatingChrome.PageButton,
+                iconSize = com.tmplayer.ui.components.FloatingChrome.PageButtonIcon,
             )
+            topEndAction?.let { action ->
+                Box(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+                        .padding(end = com.tmplayer.ui.components.FloatingChrome.Inset, top = 10.dp),
+                ) { action() }
+            }
         } else {
-            CloseButton(
-                onClose,
+            Row(
                 Modifier
                     .align(Alignment.TopEnd)
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .padding(if (wide && !isTouch()) 24.dp else 12.dp),
-            )
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                topEndAction?.invoke()
+                CloseButton(onClose)
+            }
         }
     }
 }
@@ -551,27 +573,60 @@ private fun CloseButton(onClose: () -> Unit, modifier: Modifier = Modifier) {
  * page's Close and a show page's Back.
  */
 @Composable
-fun PageDiscButton(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun PageDiscButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** On (Cast while a TV is connected): filled in the hero colour. */
+    active: Boolean = false,
+    /** The detail page's own pair over its picture, a size up on a phone ([FloatingChrome.PageButton]). */
+    prominent: Boolean = false,
+) {
     if (com.tmplayer.ui.components.usesFloatingChrome()) {
         // On a phone, the same round floating button every other page's Back is.
-        com.tmplayer.ui.components.FloatingRoundButton(icon, label, onClick, modifier)
+        val big = prominent
+        com.tmplayer.ui.components.FloatingRoundButton(
+            icon, label, onClick, modifier,
+            size = if (big) com.tmplayer.ui.components.FloatingChrome.PageButton else com.tmplayer.ui.components.FloatingChrome.Button,
+            iconSize = if (big) com.tmplayer.ui.components.FloatingChrome.PageButtonIcon else com.tmplayer.ui.components.FloatingChrome.ButtonIcon,
+            active = active,
+        )
         return
     }
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusVisibleAsState()
+    val fill = when {
+        focused -> Tone.focusFill
+        active -> Tone.hero
+        else -> Color.Black.copy(alpha = 0.55f)
+    }
+    val tint = when {
+        focused -> Tone.onFocusFill
+        active -> Tone.onHero
+        else -> Color.White
+    }
     // Its name under it: on a hover on the desktop, while the remote is on it on a television.
-    com.tmplayer.ui.components.IconTip(label, modifier, side = com.tmplayer.ui.components.TipSide.Below) {
-        Box(
-            Modifier
-                .size(if (tv) 48.dp else 40.dp)
-                .clip(CircleShape)
-                .background(if (focused) Tone.focusFill else Color.Black.copy(alpha = 0.55f))
-                .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClick)
-                .semantics { contentDescription = label },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(icon, contentDescription = null, tint = if (focused) Tone.onFocusFill else Color.White, modifier = Modifier.size(24.dp))
+    // The modifier on a Box of its own, so an align() given to it places the button (see FloatingRoundButton).
+    Box(modifier) {
+        com.tmplayer.ui.components.IconTip(label, side = com.tmplayer.ui.components.TipSide.Below) {
+            Box(
+                Modifier
+                    .pressScale(interactions)
+                    // A full touch target on a tablet too, as on a television.
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(fill)
+                    .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClick)
+                    .semantics {
+                        contentDescription = label
+                        if (active) selected = true
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
+            }
         }
     }
 }

@@ -108,8 +108,23 @@ private class GoogleCastSupport(context: Context) : CastSupport {
         override fun onRouteRemoved(router: MediaRouter, route: MediaRouter.RouteInfo) = refreshRoutes()
         override fun onRouteChanged(router: MediaRouter, route: MediaRouter.RouteInfo) = refreshRoutes()
         override fun onRouteSelected(router: MediaRouter, route: MediaRouter.RouteInfo, reason: Int) = refreshRoutes()
-        override fun onRouteUnselected(router: MediaRouter, route: MediaRouter.RouteInfo, reason: Int) = refreshRoutes()
+        override fun onRouteUnselected(router: MediaRouter, route: MediaRouter.RouteInfo, reason: Int) {
+            // The TV being connected to was let go by something other than us (the phone's own
+            // route selected under it, as on the device test's first tap): selected again, once.
+            val ours = SystemClock.elapsedRealtime() < releasingUntilMs
+            if (route.id == connectingId && !ours && reselectsLeft > 0 && _session.value is CastSessionState.Connecting) {
+                reselectsLeft--
+                Log.i(TAG, "Route ${route.name} unselected while connecting (reason $reason); selecting it again")
+                val id = route.id
+                main.postDelayed({ if (connectingId == id) router.routes.firstOrNull { it.id == id }?.let(router::selectRoute) }, RESELECT_DELAY_MS)
+            }
+            refreshRoutes()
+        }
     }
+
+    /** Until when an unselect of the TV's route is our own letting go of a stale selection. */
+    private var releasingUntilMs = 0L
+    private var reselectsLeft = 0
 
     private var client: RemoteMediaClient? = null
 
@@ -146,12 +161,15 @@ private class GoogleCastSupport(context: Context) : CastSupport {
             Log.w(TAG, "Cast session failed to start: $error")
             _session.value = CastSessionState.Failed(session.castDevice?.friendlyName.orEmpty())
             connectingId = null
+            releaseHeldDiscovery()
             refreshRoutes()
         }
 
         override fun onSessionEnding(session: CastSession) = Unit
 
         override fun onSessionEnded(session: CastSession, error: Int) {
+            connectingId = null
+            releaseHeldDiscovery()
             detach()
             _session.value = CastSessionState.Idle
         }
@@ -180,6 +198,7 @@ private class GoogleCastSupport(context: Context) : CastSupport {
         detach()
         val device = session.castDevice
         connectingId = null
+        releaseHeldDiscovery()
         session.addCastListener(castListener)
         currentSession = session
         client = session.remoteMediaClient?.also { c -> c.registerCallback(mediaCallback) }
@@ -306,16 +325,59 @@ private class GoogleCastSupport(context: Context) : CastSupport {
 
     override fun stopDiscovery() {
         val r = router ?: return
-        if (discovering > 0 && --discovering == 0) r.removeCallback(routeCallback)
+        if (discovering > 0 && --discovering == 0) {
+            // The picker closes the moment a TV is tapped; the route stays looked after until the
+            // session is up (or has failed), so it is not dropped from under the connection.
+            if (connectingId != null) discoveryHeld = true else r.removeCallback(routeCallback)
+        }
     }
 
+    /** Discovery kept on past the picker's close for a connection under way ([stopDiscovery]). */
+    private var discoveryHeld = false
+
+    private fun releaseHeldDiscovery() {
+        if (!discoveryHeld) return
+        discoveryHeld = false
+        if (discovering == 0) runCatching { router?.removeCallback(routeCallback) }
+    }
+
+    /**
+     * Connects to the receiver [id]. MediaRouter ignores a request to select the route it already
+     * has selected, and the first tap of the device test met exactly that: the TV's route was still
+     * selected from an earlier session ("Ignoring attempt to select selected route"), so no session
+     * started, and a moment later the phone's own route was selected again (onRouteUnselected
+     * reason 3). The second tap then worked, because by then the route was no longer selected. So a
+     * route selected without a session of ours is let go first (the phone's own route selected) and
+     * selected afresh a beat later, which is the second tap done for the viewer.
+     */
     override fun connect(id: String) {
         val r = router ?: return
         val route = r.routes.firstOrNull { it.id == id } ?: return
         connectingId = id
         _session.value = CastSessionState.Connecting(route.name)
         refreshRoutes()
-        r.selectRoute(route)
+        reselectsLeft = 1
+        val stale = r.selectedRoute.id == route.id && castContext?.sessionManager?.currentCastSession?.isConnected != true
+        if (stale) {
+            Log.i(TAG, "Route ${route.name} is still selected with no session; selecting it afresh")
+            releasingUntilMs = SystemClock.elapsedRealtime() + RESELECT_DELAY_MS
+            r.selectRoute(r.defaultRoute)
+            main.postDelayed({
+                if (connectingId == id) r.routes.firstOrNull { it.id == id }?.let(r::selectRoute)
+            }, RESELECT_DELAY_MS)
+        } else {
+            r.selectRoute(route)
+        }
+        // A connection that never answers is given up, so the picker does not say Connecting forever.
+        main.postDelayed({
+            if (connectingId == id && _session.value is CastSessionState.Connecting) {
+                Log.w(TAG, "No session from ${route.name} after ${CONNECT_TIMEOUT_MS} ms")
+                connectingId = null
+                _session.value = CastSessionState.Failed(route.name)
+                releaseHeldDiscovery()
+                refreshRoutes()
+            }
+        }, CONNECT_TIMEOUT_MS)
     }
 
     override fun endSession() {
@@ -418,5 +480,11 @@ private class GoogleCastSupport(context: Context) : CastSupport {
 
     private companion object {
         const val TAG = "TMPlayerCast"
+
+        /** Between letting a stale route go and selecting it again. */
+        const val RESELECT_DELAY_MS = 300L
+
+        /** How long a tapped TV has to start a session. */
+        const val CONNECT_TIMEOUT_MS = 30_000L
     }
 }

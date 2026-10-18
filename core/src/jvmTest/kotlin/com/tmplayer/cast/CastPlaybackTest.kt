@@ -130,6 +130,98 @@ class CastPlaybackTest {
         assertEquals(listOf(11L, 10L, 20L, 21L), renditions.map { map[it] })
     }
 
+    // ---- the place --------------------------------------------------------------------------
+
+    private fun view(phase: CastPhase, positionMs: Long) = CastView(phase, positionMs, phase == CastPhase.Playing)
+
+    @Test
+    fun `a failed tv saying zero does not lose the place, so try again and the fallback start there`() {
+        // The device test: playing at 1:23:30, the TV fails and reports 0, the rewrap started at 0.
+        val place = CastPlace(25 * 60_000L)
+        place.heard(view(CastPhase.Playing, 5_010_000), 1_000)
+        assertEquals(5_010_000, place.ms)
+        assertEquals(5_010_000, place.heard(view(CastPhase.Failed, 0), 2_000))
+        assertEquals(5_010_000, place.heard(view(CastPhase.Stopped, 0), 2_100))
+        assertEquals(5_010_000, place.heard(view(CastPhase.Loading, 0), 2_200))
+        assertEquals(5_010_000, place.heard(view(CastPhase.Starting, 0), 2_300))
+    }
+
+    @Test
+    fun `after a load the place is the start asked for until the tv gets there`() {
+        val place = CastPlace()
+        place.expect(5_010_000, nowMs = 10_000)
+        assertTrue(place.settling)
+        // A receiver handed a LOAD buffers at 0 before it has seeked to the start.
+        assertEquals(5_010_000, place.heard(view(CastPhase.Buffering, 0), 10_500))
+        assertEquals(5_010_000, place.heard(view(CastPhase.Playing, 0), 11_000))
+        // There at last, a segment's length before the start: taken.
+        assertEquals(5_004_000, place.heard(view(CastPhase.Playing, 5_004_000), 12_000))
+        assertFalse(place.settling)
+        assertEquals(5_006_000, place.heard(view(CastPhase.Playing, 5_006_000), 14_000))
+        // A pause on the TV remote is the TV's place too.
+        assertEquals(5_007_000, place.heard(view(CastPhase.Paused, 5_007_000), 15_000))
+    }
+
+    @Test
+    fun `a tv that plays on from somewhere else is believed after a while`() {
+        val place = CastPlace()
+        place.expect(600_000, nowMs = 0)
+        assertEquals(600_000, place.heard(view(CastPhase.Playing, 3_000), 5_000))
+        assertEquals(20_000, place.heard(view(CastPhase.Playing, 20_000), CastPlace.GIVE_UP_MS + 1))
+    }
+
+    // ---- the soundtrack picker ---------------------------------------------------------------
+
+    /** The device test's file: E-AC-3 5.1 as track 2 (and its AAC copy), AAC 2.0 as track 3. */
+    private val dolby = listOf(
+        HlsRendition(HlsRendition.Kind.Audio, "a2.m3u8", "DD+ 5.1", "ml", 2, null, true, converted = false),
+        HlsRendition(HlsRendition.Kind.Audio, "a2c.m3u8", "DD+ 5.1 (AAC)", "ml", 2, null, true, converted = true),
+        HlsRendition(HlsRendition.Kind.Audio, "a3.m3u8", "AAC 2.0", "ml", 3, null, false),
+    )
+
+    @Test
+    fun `the picker lists only what the tv kept and marks what it plays`() {
+        // Shaka dropped the E-AC-3 variant: the receiver lists the AAC copy and the AAC track.
+        val remote = listOf(
+            RemoteTrack(1, RemoteTrack.Type.Audio, "DD+ 5.1 (AAC)", "ml", null),
+            RemoteTrack(2, RemoteTrack.Type.Audio, "AAC 2.0", "ml", null),
+        )
+        val offers = HlsTrackMatch.audioOffers(dolby, remote, active = listOf(2), wanted = dolby[0])
+        assertEquals(listOf("a2c.m3u8", "a3.m3u8"), offers.map { it.rendition.uri })
+        assertEquals(listOf(false, true), offers.map { it.selected })
+        // The viewer wanted the Dolby track: the copy the TV kept is asked for instead.
+        assertEquals(dolby[1], HlsTrackMatch.settle(dolby[0], dolby, remote, active = listOf(2)))
+        assertEquals(dolby[1], HlsTrackMatch.renditionFor(2, dolby, remote))
+        assertEquals(dolby[2], HlsTrackMatch.playing(dolby, remote, listOf(2)))
+    }
+
+    @Test
+    fun `where the tv takes dolby the track is offered once, as it is`() {
+        val remote = listOf(
+            RemoteTrack(1, RemoteTrack.Type.Audio, "DD+ 5.1", "ml", null),
+            RemoteTrack(2, RemoteTrack.Type.Audio, "DD+ 5.1 (AAC)", "ml", null),
+            RemoteTrack(3, RemoteTrack.Type.Audio, "AAC 2.0", "ml", null),
+        )
+        // Shaka started on the stereo copy; the picker offers track 2 once, marked, by the copy that is on.
+        val offers = HlsTrackMatch.audioOffers(dolby, remote, active = listOf(2), wanted = dolby[0])
+        assertEquals(listOf("a2c.m3u8", "a3.m3u8"), offers.map { it.rendition.uri })
+        assertEquals(listOf(true, false), offers.map { it.selected })
+        assertEquals(dolby[0], HlsTrackMatch.settle(dolby[0], dolby, remote, active = listOf(2)))
+        assertEquals(dolby[0], HlsTrackMatch.renditionFor(2, dolby, remote))
+    }
+
+    @Test
+    fun `a tv that kept nothing it was asked for shows the track it plays`() {
+        val only = dolby.filter { !it.converted }
+        val remote = listOf(RemoteTrack(1, RemoteTrack.Type.Audio, "AAC 2.0", "ml", null))
+        assertEquals(only[1], HlsTrackMatch.settle(only[0], only, remote, active = listOf(1)))
+        val offers = HlsTrackMatch.audioOffers(only, remote, listOf(1), only[0])
+        assertEquals(listOf("a3.m3u8"), offers.map { it.rendition.uri })
+        assertTrue(offers.single().selected)
+        // Before the receiver's list is in, everything, the wanted one marked.
+        assertEquals(listOf(true, false), HlsTrackMatch.audioOffers(only, emptyList(), emptyList(), only[0]).map { it.selected })
+    }
+
     @Test
     fun `a soundtrack not found keeps the one on`() {
         val remote = listOf(RemoteTrack(7, RemoteTrack.Type.Audio, "x", null, null), RemoteTrack(8, RemoteTrack.Type.Audio, "y", null, null), RemoteTrack(9, RemoteTrack.Type.Audio, "z", null, null))
