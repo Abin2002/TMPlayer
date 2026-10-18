@@ -174,7 +174,10 @@ internal fun PhoneSearchScreen(
     }
 
     val query = text.text
-    val chatMatches = remember(chats, query, favourites) { GlobalSearch.localChats(chats, query, favourites) }
+    val byUsername = rememberUsernameChat(query)
+    val chatMatches = remember(chats, query, favourites, byUsername) {
+        withUsernameChat(GlobalSearch.localChats(chats, query, favourites), byUsername)
+    }
     val recentChats = remember(chats, favourites) { GlobalSearch.recentChats(chats, favourites) }
     val briefs = remember(state.chats, chats) { state.chats + chats.associate { it.id to ChatBrief.of(it) } }
     val titleOf: (Long) -> String = { id -> briefs[id]?.title.orEmpty() }

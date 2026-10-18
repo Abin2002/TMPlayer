@@ -9,6 +9,7 @@ import dev.g000sha256.tdl.dto.ChatListArchive
 import dev.g000sha256.tdl.dto.ChatListFolder
 import dev.g000sha256.tdl.dto.ChatListMain
 import dev.g000sha256.tdl.dto.ChatTypeBasicGroup
+import dev.g000sha256.tdl.dto.ChatTypePrivate
 import dev.g000sha256.tdl.dto.ChatTypeSupergroup
 import dev.g000sha256.tdl.dto.MessageTopicForum
 import dev.g000sha256.tdl.dto.SearchMessagesChatTypeFilterChannel
@@ -695,6 +696,58 @@ class ChatRepository(private val td: TdlClient) {
                 forceRead = true,
             )
         }
+
+    /**
+     * The chat a public @username names, as the chat list would show it, or null when no such
+     * username exists, it is not a chat (a sticker set, say), or the kids lock keeps it out. It is
+     * looked up on Telegram's servers, so it finds a channel or a person that is not in the list.
+     */
+    suspend fun findByUsername(text: String): ChatSummary? = withContext(Dispatchers.IO) {
+        val name = Usernames.clean(text) ?: return@withContext null
+        val chat = td.searchPublicChat(name).valueOrNull ?: return@withContext null
+        if (!KidsLock.allows(ChatGate.awaitReady(), chat.id)) return@withContext null
+        summarise(chat, Td.myId())
+    }
+
+    /**
+     * What a chat's info sheet shows: its name and picture, its public @username and t.me link
+     * when it has one, a person's bio or a group's or channel's description, and how many members
+     * or subscribers it has. Each part is asked for separately and left out when Telegram refuses
+     * it, so a private person still shows a name and a picture.
+     */
+    suspend fun chatInfo(chatId: Long): ChatInfo? = withContext(Dispatchers.IO) {
+        val chat = td.getChat(chatId).valueOrNull ?: return@withContext null
+        val myId = Td.myId()
+        val summary = summarise(chat, myId)
+        var username: String? = null
+        var about: String? = null
+        var members: Int? = null
+        when (val type = chat.type) {
+            is ChatTypePrivate -> {
+                username = td.getUser(type.userId).valueOrNull?.usernames?.activeUsernames?.firstOrNull()
+                about = td.getUserFullInfo(type.userId).valueOrNull?.bio?.text
+            }
+            is ChatTypeSupergroup -> {
+                username = td.getSupergroup(type.supergroupId).valueOrNull?.usernames?.activeUsernames?.firstOrNull()
+                val full = td.getSupergroupFullInfo(type.supergroupId).valueOrNull
+                about = full?.description
+                members = full?.memberCount?.takeIf { it > 0 }
+                    ?: td.getSupergroup(type.supergroupId).valueOrNull?.memberCount?.takeIf { it > 0 }
+            }
+            is ChatTypeBasicGroup -> {
+                about = td.getBasicGroupFullInfo(type.basicGroupId).valueOrNull?.description
+                members = td.getBasicGroup(type.basicGroupId).valueOrNull?.memberCount?.takeIf { it > 0 }
+            }
+            else -> Unit
+        }
+        ChatInfo(
+            summary = summary,
+            bigPhotoFileId = chat.photo?.big?.id ?: 0,
+            username = username?.takeIf { it.isNotBlank() && summary.kind != ChatKind.Saved },
+            about = about?.trim()?.takeIf { it.isNotEmpty() },
+            memberCount = members,
+        )
+    }
 
     /**
      * A supergroup is Telegram's one type for both broadcast channels and large groups; only the

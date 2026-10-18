@@ -1,5 +1,9 @@
 package com.tmplayer.desktop.ui
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -107,6 +111,12 @@ internal fun BoxScope.ChatTopChrome(state: ShellState, chat: ChatSummary) {
                 modifier = Modifier.widthIn(max = 420.dp),
             )
         }
+        // The chat's info: its picture, username, description and link (user, 2026-10-18).
+        var info by remember { mutableStateOf(false) }
+        BarTooltip(s.chatsInfoAbout, null) {
+            FloatingRoundButton(TmIcons.Info, s.chatsInfoAbout, onClick = { info = true })
+        }
+        if (info) ChatInfoPanel(chat, onDismiss = { info = false })
     }
 }
 

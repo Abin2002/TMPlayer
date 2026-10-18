@@ -382,7 +382,7 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
 val DesktopSheetHost = com.tmplayer.ui.components.SheetHost { onDismiss, _, content -> DesktopSheet(onDismiss, content) }
 
 @Composable
-private fun DesktopSheet(onDismiss: () -> Unit, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+internal fun DesktopSheet(onDismiss: () -> Unit, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),

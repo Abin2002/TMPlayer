@@ -119,8 +119,10 @@ internal fun TvSearchScreen(
     val fieldFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { if (voice != null) micFocus.requestFocus() else fieldFocus.requestFocus() } }
 
-    val chatMatches = remember(chats, text, favourites) {
-        if (text.isBlank()) GlobalSearch.recentChats(chats, favourites, limit = 10) else GlobalSearch.localChats(chats, text, favourites).take(10)
+    val byUsername = rememberUsernameChat(text)
+    val chatMatches = remember(chats, text, favourites, byUsername) {
+        if (text.isBlank()) GlobalSearch.recentChats(chats, favourites, limit = 10)
+        else withUsernameChat(GlobalSearch.localChats(chats, text, favourites), byUsername).take(10)
     }
     val briefs = remember(state.chats, chats) { state.chats + chats.associate { it.id to ChatBrief.of(it) } }
     var focusedGroup by remember { mutableStateOf<ResultGroup?>(null) }

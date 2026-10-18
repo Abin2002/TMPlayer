@@ -258,8 +258,9 @@ internal fun BoxScope.SearchPalette(
         }
     }
 
-    val rows = remember(ui, chats, favourites, recents, allowed, allChats, query.text) {
-        buildRows(ui, chats, favourites, if (allowed != null) emptyList() else recents, allChats, search) { word ->
+    val byUsername = com.tmplayer.ui.browse.rememberUsernameChat(query.text)
+    val rows = remember(ui, chats, favourites, recents, allowed, allChats, query.text, byUsername) {
+        buildRows(ui, chats, favourites, if (allowed != null) emptyList() else recents, allChats, search, byUsername) { word ->
             state.paletteQuery = TextFieldValue(word, TextRange(word.length))
             search.submit(word)
         }
@@ -424,6 +425,7 @@ private fun buildRows(
     recents: List<String>,
     allChats: Boolean,
     search: GlobalSearchViewModel,
+    byUsername: ChatSummary?,
     onSearchWord: (String) -> Unit,
 ): List<PaletteRow> = buildList {
     val s = com.tmplayer.i18n.L
@@ -442,7 +444,7 @@ private fun buildRows(
         Place.entries.forEach { add(PaletteRow.GoTo(it)) }
         return@buildList
     }
-    val matching = GlobalSearch.localChats(chats, query.text, favourites)
+    val matching = com.tmplayer.ui.browse.withUsernameChat(GlobalSearch.localChats(chats, query.text, favourites), byUsername)
     if (matching.isNotEmpty()) {
         add(PaletteRow.Heading(s.searchChatsHeading))
         val shown = if (allChats) matching else matching.take(GlobalSearch.CHAT_PREVIEW)

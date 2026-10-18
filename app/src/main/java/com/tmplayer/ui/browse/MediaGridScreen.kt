@@ -947,11 +947,17 @@ fun MediaGridScreen(
     val downloadSelected = { downloadThese(selected.values.toList()) }
         .takeIf { selected.isEmpty() || selected.values.any { it.canBeSaved } }
 
+    var chatInfoOpen by remember { mutableStateOf(false) }
+    if (chatInfoOpen) {
+        ChatInfoSheet(chatId, chatTitle, chatPhotoFileId, chatMiniThumbnail, onDismiss = { chatInfoOpen = false })
+    }
+
     if (touch) {
         TouchMediaScaffold(
             chatTitle = chatTitle,
             chatPhotoFileId = chatPhotoFileId,
             chatMiniThumbnail = chatMiniThumbnail,
+            onChatInfo = { chatInfoOpen = true },
             isFavorite = isFavorite,
             query = query,
             onQuery = { query = it },
@@ -1038,6 +1044,7 @@ fun MediaGridScreen(
                     recentSearches = recentSearches,
                     onClearRecent = clearRecent,
                     onSort = { sorting = true },
+                    onChatInfo = { chatInfoOpen = true },
                 )
             }
             // Under the heading and over the grid, so Up from the first row of tiles reaches it.
@@ -1095,6 +1102,8 @@ internal fun TouchMediaScaffold(
     chatTitle: String,
     chatPhotoFileId: Int,
     chatMiniThumbnail: ByteArray?,
+    /** Opens the chat's info sheet from its name at the top; null leaves the name inert. */
+    onChatInfo: (() -> Unit)? = null,
     isFavorite: Boolean,
     query: String,
     onQuery: (String) -> Unit,
@@ -1190,6 +1199,8 @@ internal fun TouchMediaScaffold(
                 .clip(CircleShape)
                 .background(FloatingTone.menu)
                 .border(floatingBorder(), CircleShape)
+                // The name is the way to the chat's info: its picture, username and description.
+                .then(if (onChatInfo != null) Modifier.clickable(onClickLabel = LocalStrings.current.chatsInfoAbout, onClick = onChatInfo) else Modifier)
                 .padding(start = 6.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -1377,6 +1388,8 @@ internal fun Header(
     alwaysShowRecent: Boolean = false,
     /** Opens the Sort menu ([VideoSortSheet]); null leaves it out. */
     onSort: (() -> Unit)? = null,
+    /** Opens the chat's info panel, from a button beside its name; null leaves it out. */
+    onChatInfo: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val s = LocalStrings.current
@@ -1414,6 +1427,10 @@ internal fun Header(
                     style = MaterialTheme.typography.bodyMedium,
                     color = Tone.muted,
                 )
+            }
+            if (onChatInfo != null) {
+                Spacer(Modifier.width(16.dp))
+                Pill(s.chatsInfoAbout, TmIcons.Info, showLabel = false, onClick = onChatInfo)
             }
         }
         Spacer(Modifier.height(12.dp))
