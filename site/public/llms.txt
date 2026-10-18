@@ -20,9 +20,9 @@ Key facts:
 - [Features](https://tmplayer.org/features/): streaming while downloading, instant seeking, subtitles, Home and series pages, skip intro, bookmarks, the app lock, the TV and desktop layouts, a row of new videos on the Android TV home screen, keyboard shortcuts
 - [Download](https://tmplayer.org/download/): the APK for Android TV and phones, the Windows installer, the macOS DMG and the Linux AppImage
 - [How to install](https://tmplayer.org/install/): Android TV with the Downloader app and `tmplayer.org/apk`, Android phones, Windows with one PowerShell line (`irm https://tmplayer.org/install.ps1 | iex`) or the MSI installer, Linux with the AppImage, macOS with the DMG and "Open Anyway" in Privacy and Security on the first launch
-- [Android TV](https://tmplayer.org/android-tv/): watching Telegram videos on Android TV and Google TV
+- [Android TV](https://tmplayer.org/android-tv/): the Telegram video player for Android TV and Google TV: the layout built for the remote, QR sign-in, voice search, light on storage (only the video playing is kept; downloads stay until deleted), which televisions and boxes run it, and the download
 - [Windows, macOS and Linux](https://tmplayer.org/desktop/): the desktop app, a Telegram video player for a computer built with Compose Multiplatform and played through mpv: signing in by QR code, streaming while downloading, self update, the main keyboard shortcuts, and which computers it runs on (no iPhone or iPad version)
-- [Fire TV](https://tmplayer.org/fire-tv/): installing on a Fire TV Stick, Cube or Fire TV Edition TV
+- [Fire TV](https://tmplayer.org/fire-tv/): the Telegram video player for Fire TV Stick, Fire TV Cube and Fire TV Edition TVs: which models run it (Fire OS 7 or newer, not Vega OS), the remote, voice search and updates, and the download
 - [Formats](https://tmplayer.org/formats/): the containers, codecs and subtitle formats it plays
 - [Questions](https://tmplayer.org/faq/): whether Telegram can be installed on a TV (Telegram has no TV app; TMPlayer runs on Android TV, Google TV and Fire TV, not on Samsung Tizen, LG webOS, Roku or Apple TV), Android TV, Fire TV, PC and Mac, price, safety, signing in with or without a phone, audio files (not listed: it plays videos only), streaming without waiting, which file to download, using an external player such as VLC (on Android, Open in another app hands a video over), what it will not do
 - [Changelog](https://tmplayer.org/changelog/): every release, newest first, with a page per release and an RSS feed at https://tmplayer.org/changelog/feed.xml
@@ -30,8 +30,8 @@ Key facts:
 ## Guides
 
 - [Guides](https://tmplayer.org/guides/): the three guides below, one line each
-- [How to watch Telegram videos on Android TV](https://tmplayer.org/guides/telegram-videos-on-android-tv/)
-- [How to watch Telegram videos on Fire TV](https://tmplayer.org/guides/telegram-videos-on-fire-tv/)
+- [How to watch Telegram videos on Android TV](https://tmplayer.org/guides/telegram-videos-on-android-tv/): step by step, from checking the television to installing the APK, signing in with a QR code and pressing play, with fixes for a stuck install
+- [How to watch Telegram videos on Fire TV](https://tmplayer.org/guides/telegram-videos-on-fire-tv/): step by step, the Downloader app with the remote screen by screen, adb or Send files to TV instead, signing in, and what to do when the install fails
 - [Telegram on TV: casting, mirroring or a TV player](https://tmplayer.org/guides/telegram-on-tv-without-casting/): casting, screen mirroring, Telegram's Android app on the TV, Telegram Web in the TV's browser and a player on the TV, compared in a table
 
 ## For agents

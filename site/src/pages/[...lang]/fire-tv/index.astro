@@ -1,6 +1,7 @@
 ---
-// Fire TV: whether a given Fire TV runs it, the five Downloader steps with the remote, the ways in
-// with a computer or a phone, the remote and updates, and what to do if it goes wrong.
+// Fire TV: the product page, for "Telegram video player for Fire TV". Whether a given Fire TV runs
+// it, what it is like with the remote, and the download. The install itself, step by step with its
+// troubleshooting and the HowTo JSON-LD, is the Fire TV guide's, so the two pages do not compete.
 import Base from '../../../layouts/Base.astro';
 import BgArt from '../../../components/BgArt.astro';
 import Header from '../../../components/Header.astro';
@@ -11,14 +12,11 @@ import Icon from '../../../components/Icon.astro';
 import PageHead from '../../../components/PageHead.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
+import { appLd } from '../../../lib/app-ld';
 import Band from '../../../components/Band.astro';
 import Cards from '../../../components/Cards.astro';
-import Steps from '../../../components/Steps.astro';
 import Panel from '../../../components/Panel.astro';
-import Step from '../../../components/Step.astro';
-import Way from '../../../components/Way.astro';
 import Card from '../../../components/Card.astro';
-import FaqItem from '../../../components/FaqItem.astro';
 import SponsorOffer from '../../../components/SponsorOffer.astro';
 import DownloadCard from '../../../components/DownloadCard.astro';
 import { langPaths } from '../../../i18n/paths';
@@ -30,61 +28,11 @@ const { lang } = Astro.props;
 Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
-
-
-// The install as a HowTo, in English for every language. Each step's url is the anchor of the
-// matching <Step> below, so the ids fire-1 to fire-5 stay as they are.
-const howTo = {
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  "name": "How to install TMPlayer on Fire TV",
-  "description": "Sideload the TMPlayer APK onto a Fire TV Stick, Fire TV Cube or Fire TV Edition television with the free Downloader app, then sign in to your own Telegram account.",
-  "totalTime": "PT10M",
-  "tool": [
-    { "@type": "HowToTool", "name": "A Fire TV device on Fire OS 7 or newer" },
-    { "@type": "HowToTool", "name": "The Downloader app by AFTVnews, free from the Amazon Appstore" }
-  ],
-  "supply": [
-    { "@type": "HowToSupply", "name": "The TMPlayer universal APK" }
-  ],
-  "step": [
-    {
-      "@type": "HowToStep",
-      "name": "Turn on Developer options",
-      "url": "https://tmplayer.org/fire-tv/#fire-1",
-      "text": "Open Settings, then My Fire TV, then About, and press OK on the device's name seven times until it says you are now a developer."
-    },
-    {
-      "@type": "HowToStep",
-      "name": "Install Downloader",
-      "url": "https://tmplayer.org/fire-tv/#fire-2",
-      "text": "Go to Find, then Search, type Downloader, pick the orange app by AFTVnews and install it."
-    },
-    {
-      "@type": "HowToStep",
-      "name": "Let Downloader install apps",
-      "url": "https://tmplayer.org/fire-tv/#fire-3",
-      "text": "In Settings, My Fire TV, Developer options, open Install unknown apps and turn it on for Downloader."
-    },
-    {
-      "@type": "HowToStep",
-      "name": "Fetch the APK",
-      "url": "https://tmplayer.org/fire-tv/#fire-4",
-      "text": "Open Downloader, type tmplayer.org/apk into the address box, press Go, then press Install when Fire OS asks."
-    },
-    {
-      "@type": "HowToStep",
-      "name": "Open it and sign in",
-      "url": "https://tmplayer.org/fire-tv/#fire-5",
-      "text": "Open TMPlayer from Your Apps and scan the QR code with Telegram on your phone: Settings, Devices, Link Desktop Device."
-    }
-  ]
-};
 ---
-<Base page="fire_tv" title={t('fire_tv.how_to_install_tmplayer_on')} description={t('fire_tv.install_the_tmplayer_telegram_video')}>
+<Base page="fire_tv" title={t('fire_tv.tmplayer_a_telegram_video_player')} description={t('fire_tv.a_free_open_source_telegram')}>
   <Fragment slot="head">
     <JsonLd data={breadcrumb(['Fire TV', '/fire-tv/'])} />
-    <JsonLd data={howTo} />
+    <JsonLd data={appLd()} />
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />
@@ -95,17 +43,11 @@ const howTo = {
 
   <PageHead lede={t('fire_tv.fire_tv_sticks_the_fire')}>
     <Fragment slot="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span>Fire TV</Fragment>
-    <Fragment slot="title"><T k="fire_tv.install_tmplayer"><em slot="em1">{t('fire_tv.install_tmplayer__em1')}</em></T></Fragment>
+    <Fragment slot="title"><T k="android_tv.a_telegram_video_player"><em slot="em1">{t('fire_tv.for_fire_tv')}</em></T></Fragment>
     <Fragment slot="actions">
-      <a class="btn btn-filled" href="#steps"> <Icon name="download-btn" /> {t('fire_tv.show_me_the_steps')}</a>
-      <a class="btn btn-outline" href={l('/install/')}>{t('fire_tv.other_devices')} <Icon name="arrow-right-sm" /></a>
+      <a class="btn btn-filled" href={l('/download/#android-tv')}> <Icon name="download-btn" /> {t('fire_tv.download_for_fire_tv')}</a>
+      <a class="btn btn-outline" href={l('/guides/telegram-videos-on-fire-tv/')}>{t('common.step_by_step_guide')} <Icon name="arrow-right-sm" /></a>
     </Fragment>
-    <nav class="platform-jump" aria-label={t('fire_tv.on_this_page')}>
-      <a href="#fit">{t('fire_tv.will_it_run')}</a>
-      <a href="#steps">{t('fire_tv.five_steps')}</a>
-      <a href="#other-ways">{t('fire_tv.with_a_computer_or_a')}</a>
-      <a href="#remote">{t('fire_tv.the_remote_and_updates')}</a>
-    </nav>
   </PageHead>
 
     <Band wave tonal id="fit" labelledby="fit-h" title={t('android_tv.will_it_run_on_yours')} sub={t('fire_tv.tmplayer_needs_android_8_0')}>
@@ -122,68 +64,20 @@ const howTo = {
     </div>
   </Band>
 
-    <Band wave id="steps" labelledby="steps-h" title={t('fire_tv.five_steps_with_the_remote')} sub={t('fire_tv.no_computer_needed_amazon_s')}>
-    <div class="section-body" data-reveal>
-      <Steps>
-        <Step id="fire-1" title={t('fire_tv.turn_on_developer_options')}>
-          <p><T k="fire_tv.open_and_press_ok_on"><em slot="em1">{t('fire_tv.open_and_press_ok_on__em1')}</em><em slot="em2">{t('fire_tv.open_and_press_ok_on__em2')}</em><em slot="em3">{t('fire_tv.open_and_press_ok_on__em3')}</em><em slot="em4">{t('fire_tv.open_and_press_ok_on__em4')}</em></T></p>
-          <p><T k="fire_tv.if_is_already_listed_under"><em slot="em1">{t('fire_tv.if_is_already_listed_under__em1')}</em><em slot="em2">{t('fire_tv.if_is_already_listed_under__em2')}</em></T></p>
-        </Step>
-        <Step id="fire-2" title={t('fire_tv.install_downloader')}>
-          <p><T k="fire_tv.go_to_then_type_and"><em slot="em1">{t('fire_tv.go_to_then_type_and__em1')}</em><em slot="em2">{t('fire_tv.go_to_then_type_and__em2')}</em><em slot="em3">Downloader</em><em slot="em4">{t('fire_tv.go_to_then_type_and__em4')}</em><em slot="em5">{t('fire_tv.go_to_then_type_and__em5')}</em></T></p>
-        </Step>
-        <Step id="fire-3" title={t('fire_tv.let_downloader_install_apps')}>
-          <p><T k="fire_tv.back_in_open_and_turn"><em slot="em1">{t('fire_tv.back_in_open_and_turn__em1')}</em><em slot="em2">{t('fire_tv.back_in_open_and_turn__em2')}</em><em slot="em3">{t('fire_tv.back_in_open_and_turn__em3')}</em><em slot="em4">{t('fire_tv.back_in_open_and_turn__em4')}</em><em slot="em5">Downloader</em><em slot="em6">{t('fire_tv.back_in_open_and_turn__em6')}</em></T></p>
-        </Step>
-        <Step id="fire-4" title={t('fire_tv.fetch_the_apk')}>
-          <p>{t('fire_tv.open_downloader_allow_it_access')}</p>
-          <pre class="code"><code>tmplayer.org/apk</code></pre>
-          <p><T k="fire_tv.press_go_the_apk"><em slot="em1">{t('fire_tv.press_go_the_apk__em1')}</em><em slot="em2">{t('fire_tv.press_go_the_apk__em2')}</em></T></p>
-          {/* DOWNLOADER-CODE: when the short Downloader code exists, replace this paragraph with the code, e.g. <p>Or type the code <code>1234567</code>.</p> */}
-          <p class="muted small">{t('fire_tv.a_short_downloader_code_is')}</p>
-        </Step>
-        <Step id="fire-5" title={t('fire_tv.open_it_and_sign_in')}>
-          <p><T k="fire_tv.tmplayer_lands_under_the_icon"><em slot="em1">{t('fire_tv.tmplayer_lands_under_the_icon__em1')}</em><em slot="em2">{t('fire_tv.tmplayer_lands_under_the_icon__em2')}</em></T></p>
-          <p><T k="fire_tv.open_it_and_scan_the"><em slot="em1">{t('fire_tv.open_it_and_scan_the__em1')}</em><em slot="em2">{t('fire_tv.open_it_and_scan_the__em2')}</em><em slot="em3">{t('fire_tv.open_it_and_scan_the__em3')}</em></T></p>
-        </Step>
-      </Steps>
-    </div>
-  </Band>
-
-    <Band wave tonal id="other-ways" labelledby="other-h" title={t('fire_tv.or_with_a_computer_or')} sub={t('fire_tv.both_still_need_developer_options')}>
-    <div class="section-body" data-reveal>
-      <div class="formats">
-        <Way title={t('fire_tv.adb_from_a_computer')}>
-          <p><T k="fire_tv.turn_on_in_and_find"><em slot="em1">{t('fire_tv.turn_on_in_and_find__em1')}</em><em slot="em2">{t('fire_tv.turn_on_in_and_find__em2')}</em><em slot="em3">{t('fire_tv.turn_on_in_and_find__em3')}</em><em slot="em4">{t('fire_tv.turn_on_in_and_find__em4')}</em><em slot="em5">{t('fire_tv.turn_on_in_and_find__em5')}</em><em slot="em6">{t('fire_tv.turn_on_in_and_find__em6')}</em><a href={l('/download/#android-tv')} slot="a1">{t('fire_tv.turn_on_in_and_find__a1')}</a></T></p>
-          <pre class="code"><code>adb connect &lt;fire-tv-ip&gt;:5555
-adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-universal.apk</span></code></pre>
-          <p>{t('fire_tv.accept_the_debugging_prompt_that')}</p>
-        </Way>
-        <Way title={t('fire_tv.send_files_to_tv')}>
-          <p><T k="fire_tv.install_on_your_phone_and"><a href="https://play.google.com/store/apps/details?id=com.yablio.sendfilestotv" rel="noopener" slot="a1">{t('fire_tv.install_on_your_phone_and__a1')}</a><em slot="em1">{t('fire_tv.install_on_your_phone_and__em1')}</em></T></p>
-        </Way>
-      </div>
-    </div>
-  </Band>
-
     <Band wave id="remote" labelledby="remote-h" title={t('fire_tv.the_remote_and_keeping_it')} sub={t('fire_tv.everything_works_from_the_fire')}>
     <Cards>
       <Card title={t('fire_tv.the_d_pad_does_it')}><T k="fire_tv.arrows_to_move_ok_to"><a href={l('/android-tv/')} slot="a1">{t('fire_tv.arrows_to_move_ok_to__a1')}</a></T></Card>
       <Card title={t('fire_tv.voice_search_where_fire_os')}>{t('fire_tv.tmplayer_s_own_search_can')}</Card>
-      <Card title={t('fire_tv.updates_come_to_you')}>{t('fire_tv.tmplayer_checks_for_new_versions')}</Card>
+      <Card title={t('fire_tv.updates_come_to_you')}>{t('guide_fire_tv.tmplayer_checks_for_new_versions')}</Card>
+      <Card title={t('android_tv.runs_on_a_1_gb')}>{t('android_tv.built_on_a_mi_tv')}</Card>
+      <Card title={t('android_tv.light_on_storage')}>{t('android_tv.only_the_video_playing_is')}</Card>
     </Cards>
   </Band>
 
-    <Band wave tonal labelledby="trouble-h" title={t('install.if_it_goes_wrong')}>
-    <div class="faq" data-reveal>
-      <FaqItem q={t('fire_tv.there_is_no_install_unknown')}>{t('fire_tv.developer_options_is_still_hidden')}</FaqItem>
-      <FaqItem q={t('fire_tv.it_says_there_was_a')}>{t('fire_tv.usually_the_fire_os_version')}</FaqItem>
-      <FaqItem q={t('fire_tv.i_cannot_find_tmplayer_after')}><T k="fire_tv.apps_installed_from_outside_the"><em slot="em1">{t('fire_tv.apps_installed_from_outside_the__em1')}</em><em slot="em2">{t('fire_tv.apps_installed_from_outside_the__em2')}</em><em slot="em3">{t('fire_tv.apps_installed_from_outside_the__em3')}</em><em slot="em4">{t('fire_tv.apps_installed_from_outside_the__em4')}</em></T></FaqItem>
-    </div>
+    <Band wave tonal id="install" labelledby="install-h" title={t('fire_tv.install_it_with_the_remote')} sub={t('fire_tv.no_computer_needed_amazon_s')}>
+    <p class="muted small section-note" data-reveal><T k="fire_tv.the_guide_walks_through"><a href={l('/guides/telegram-videos-on-fire-tv/')} slot="a1">{t('fire_tv.the_guide_walks_through__a1')}</a></T></p>
 
-    <p class="muted small section-note" data-reveal><T k="fire_tv.still_stuck_with_your_fire"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('fire_tv.still_stuck_with_your_fire__a1')}</a></T></p>
-
-    <DownloadCard more={false} />
+    <DownloadCard more={{ href: l('/guides/telegram-videos-on-fire-tv/'), label: t('common.step_by_step_guide') }} />
     <SponsorOffer slim />
   </Band>
 

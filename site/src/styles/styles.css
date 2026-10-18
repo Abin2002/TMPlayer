@@ -3133,7 +3133,7 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
   .brand { gap: 8px; }
 }
 
-/* The download card on /fire-tv/ has its button alone, which the even columns of a support card
+/* A download card with `more={false}` has its button alone, which the even columns of a support card
    would stretch across the whole card on a wide screen. */
 @media (min-width: 640px) {
   .get-card .support-actions > .btn:only-child { justify-self: center; min-width: 260px; }

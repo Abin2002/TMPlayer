@@ -1,6 +1,7 @@
 ---
-// Android TV: what the app is like on a television, the ten-foot layout, which devices it runs on,
-// and the star card.
+// Android TV: the product page, for "Telegram video player for Android TV". What the app is like
+// on a television, the ten-foot layout, which devices it runs on, and the star card. The install
+// step by step, with its troubleshooting and the HowTo JSON-LD, is the Android TV guide's.
 import Base from '../../../layouts/Base.astro';
 import BgArt from '../../../components/BgArt.astro';
 import Header from '../../../components/Header.astro';
@@ -43,11 +44,11 @@ const features = [
   { title: 'android_tv.sign_in_without_typing', body: 'android_tv.scan_a_qr_code_with', shot: shot('tv-sign-in', 'android_tv.sign_in_shot_alt') },
   { title: 'android_tv.voice_search_from_the_remote', body: 'android_tv.typos_and_missing_accents_still', shot: shot('tv-search', 'android_tv.search_shot_alt') },
   { title: 'android_tv.runs_on_a_1_gb', body: 'android_tv.built_on_a_mi_tv', icon: 'chip-large' },
-  { title: 'android_tv.one_video_on_disk_at', body: 'android_tv.the_previous_video_is_cleared', icon: 'sd-card-large' },
+  { title: 'android_tv.light_on_storage', body: 'android_tv.only_the_video_playing_is', icon: 'sd-card-large' },
   { title: 'android_tv.next_episode_on_its_own', body: 'android_tv.plays_the_next_episode_after', shot: { ...shot('tv-next-episode', 'android_tv.next_episode_shot_alt', false), width: 840, height: 420 } },
 ];
 ---
-<Base page="android_tv" title={t('android_tv.tmplayer_unofficial_telegram_video_player')} description={t('android_tv.watch_telegram_videos_on_android')}>
+<Base page="android_tv" title={t('android_tv.tmplayer_a_telegram_video_player')} description={t('android_tv.a_free_open_source_telegram')}>
   <Fragment slot="head">
     <JsonLd data={breadcrumb(['Android TV', '/android-tv/'])} />
     <JsonLd data={appLd()} />
@@ -64,7 +65,7 @@ const features = [
     <Fragment slot="title"><T k="android_tv.a_telegram_video_player"><em slot="em1">{t('android_tv.a_telegram_video_player__em1')}</em></T></Fragment>
     <Fragment slot="actions">
       <a class="btn btn-filled" href={l('/download/#android-tv')}> <Icon name="download-btn" /> {t('android_tv.download_for_android_tv')}</a>
-      <a class="btn btn-outline" href={l('/install/#android-tv')}>{t('android_tv.sideload_it_in_four_steps')} <Icon name="arrow-right-sm" /></a>
+      <a class="btn btn-outline" href={l('/guides/telegram-videos-on-android-tv/')}>{t('common.step_by_step_guide')} <Icon name="arrow-right-sm" /></a>
     </Fragment>
   </PageHead>
 

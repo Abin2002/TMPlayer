@@ -9,6 +9,7 @@ import Steps from '../../../../components/Steps.astro';
 import Step from '../../../../components/Step.astro';
 import Cards from '../../../../components/Cards.astro';
 import Card from '../../../../components/Card.astro';
+import FaqItem from '../../../../components/FaqItem.astro';
 import MoreHelp from '../../../../components/guides/MoreHelp.astro';
 import T from '../../../../components/T.astro';
 import type { Guide } from '../../../../components/guides/ld';
@@ -26,7 +27,7 @@ const ld: Guide = {
   path: '/guides/telegram-videos-on-android-tv/',
   crumb: 'Telegram videos on Android TV',
   headline: 'How to watch Telegram videos on Android TV',
-  description: 'Watch the videos in your own Telegram chats and channels on an Android TV or Google TV: install TMPlayer, scan a QR code with your phone, and press play.',
+  description: 'Step by step: install TMPlayer on an Android TV or Google TV, sign in with a QR code from your phone, play your Telegram videos, and fix a stuck install.',
   datePublished: '2026-10-06',
   howTo: {
     totalTime: 'PT10M',
@@ -39,11 +40,11 @@ const ld: Guide = {
   },
 };
 ---
-<GuidePage page="guide_android_tv" title={t('guide_android_tv.how_to_watch_telegram_videos')} socialTitle={t('guide_android_tv.how_to_watch_telegram_videos_2')} description={t('guide_android_tv.watch_the_videos_in_your')} ld={ld}>
+<GuidePage page="guide_android_tv" title={t('guide_android_tv.how_to_watch_telegram_videos')} socialTitle={t('guide_android_tv.how_to_watch_telegram_videos_2')} description={t('guide_android_tv.step_by_step_install_tmplayer')} ld={ld}>
 
   <PageHead lede={t('guide_android_tv.telegram_has_no_app_for')} updated={ld.path}>
     <Crumbs slot="crumbs" here="Android TV" />
-    <T slot="title" k="guide_android_tv.telegram_videos"><em slot="em1">{t('guide_android_tv.telegram_videos__em1')}</em></T>
+    <T slot="title" k="guide_android_tv.how_to_watch"><em slot="em1">{t('guide_android_tv.how_to_watch__em1')}</em></T>
     <Fragment slot="actions">
       <Action filled href="#steps">{t('fire_tv.show_me_the_steps')}</Action>
       <Action href={l('/download/')}>{t('home.download_tmplayer')}</Action>
@@ -91,7 +92,15 @@ const ld: Guide = {
     </Cards>
   </Band>
 
-  <MoreHelp>
+  <Band wave id="trouble" title={t('install.if_it_goes_wrong')} sub={t('install.the_fixes_for_nearly_every')}>
+    <div class="faq" data-reveal>
+      <FaqItem q={t('install.the_television_says_the_app')}>{t('install.unknown_sources_is_set_per')}</FaqItem>
+      <FaqItem q={t('install.adb_connect_refuses_the_connection')}>{t('install.turn_on_network_debugging_use')}</FaqItem>
+      <FaqItem q={t('install.the_qr_code_will_not')}>{t('install.stand_closer_and_hold_the')}</FaqItem>
+    </div>
+  </Band>
+
+  <MoreHelp tonal download={{ href: l('/android-tv/'), label: t('android_tv.tmplayer_on_android_tv') }}>
     <T k="guide_android_tv.questions_about_privacy_and_what"><a href={l('/faq/')} slot="a1">{t('guide_android_tv.questions_about_privacy_and_what__a1')}</a><a href="/security/" slot="a2">{t('guide_android_tv.questions_about_privacy_and_what__a2')}</a><a href={l('/guides/telegram-videos-on-fire-tv/')} slot="a3">{t('guide_android_tv.questions_about_privacy_and_what__a3')}</a></T>
   </MoreHelp>
 

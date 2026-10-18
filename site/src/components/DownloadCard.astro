@@ -1,11 +1,11 @@
 ---
 // The download offer that closes a page with no download button of its own (/fire-tv/, /formats/,
-// /translate/ and the Fire TV guide): a support-slim card like the "Support TMPlayer" one it sits
+// /translate/ and the guides): a support-slim card like the "Support TMPlayer" one it sits
 // above, so the last band ends on the two things a reader can do next, get the app or support it.
 // It is written in strings the site already has, the download page's heading and lede, so it
 // arrives translated. `more` adds an outline link after the button: by default the install steps,
-// or the page's own better next step; `more={false}` leaves it out (the Fire TV page, which is the
-// install steps).
+// or the page's own better next step (the Fire TV page's step by step guide); `more={false}` leaves
+// it out.
 import Icon from './Icon.astro';
 import { text } from '../i18n/t';
 import { l } from '../i18n/links';
