@@ -90,7 +90,9 @@ class AppearanceRenderTest {
             }
 
             runBlocking { settings.setThemeChoice(ThemeChoice.Light) }
-            idle(1_500)
+            // The setting is written on a background thread, so under a loaded full run it reaches
+            // the screen later than a fixed idle: wait for it, up to a few seconds, then fold.
+            repeat(30) { if (texts(activity).contains("Pure black")) { Thread.sleep(100); idle(200) } }
             assertFalse("the switch is folded away under Light", texts(activity).contains("Pure black"))
             save("appearance-$form-light.png", activity)
         }
