@@ -78,6 +78,8 @@ internal fun BoxScope.LoaderSheet(
     onDownloadFirst: (() -> Unit)? = null,
     /** Holds the clock for a test: the sheet as it is once the wait has stalled. */
     stalledOverride: Boolean? = null,
+    /** "Play Telegram's 480p" (CP80): the next lighter copy's label and its press; null for none. */
+    lighter: Pair<String, () -> Unit>? = null,
 ) {
     val s = LocalStrings.current
     val loading = phase as? Phase.Loading
@@ -119,9 +121,13 @@ internal fun BoxScope.LoaderSheet(
             stalled = OpeningStall.stalled(opening = true, local = (fraction ?: 0f) >= 1f, lastProgressAtMs = lastAt, nowMs = now)
             fraction?.let { meter.sample((it * item.sizeBytes).toLong(), now) }
             val rate = meter.bytesPerSec
+            // The line as measured while bytes move, for choosing a lighter copy next time (CP80).
+            if (fraction != null && fraction != 1f && now == lastAt) com.tmplayer.player.LineSpeed.note(rate)
             note = if (now - started > SLOW_MS && rate >= StreamStats.MIN_MEANINGFUL_SPEED && (fraction ?: 1f) < 1f) {
                 val figure = s.formatter.speed(rate)
-                if (real) s.playerDownloadingRate(figure) else s.playerCachingRate(figure)
+                val line = if (real) s.playerDownloadingRate(figure) else s.playerCachingRate(figure)
+                // Telegram's own cap on an account without Premium (CP83): said, nothing offered.
+                if (com.tmplayer.data.Td.speedLimitedNow()) line + "\n" + s.playerSpeedLimited else line
             } else {
                 null
             }
@@ -155,6 +161,7 @@ internal fun BoxScope.LoaderSheet(
                     },
                     onDownloadFirst = onDownloadFirst,
                     onBack = onBack,
+                    lighter = lighter,
                 )
             }
             Box(Modifier.align(Alignment.TopStart).padding(12.dp)) {
@@ -177,6 +184,7 @@ internal fun BoxScope.PlaybackStall(
     onRetry: () -> Unit,
     onDownloadFirst: (() -> Unit)?,
     onBack: () -> Unit,
+    lighter: Pair<String, () -> Unit>? = null,
 ) {
     val fraction by rememberUpdatedState(downloaded)
     val buffered by rememberUpdatedState(bufferedMs)
@@ -200,13 +208,19 @@ internal fun BoxScope.PlaybackStall(
         }
     }
     if (buffering && stalled) {
-        StalledPanel(onRetry = { tries++; onRetry() }, onDownloadFirst = onDownloadFirst, onBack = onBack, midPlay = true)
+        StalledPanel(onRetry = { tries++; onRetry() }, onDownloadFirst = onDownloadFirst, onBack = onBack, midPlay = true, lighter = lighter)
     }
 }
 
 /** Over the loader once nothing has arrived for a while: why, and the three ways on. */
 @Composable
-private fun BoxScope.StalledPanel(onRetry: () -> Unit, onDownloadFirst: (() -> Unit)?, onBack: () -> Unit, midPlay: Boolean = false) {
+private fun BoxScope.StalledPanel(
+    onRetry: () -> Unit,
+    onDownloadFirst: (() -> Unit)?,
+    onBack: () -> Unit,
+    midPlay: Boolean = false,
+    lighter: Pair<String, () -> Unit>? = null,
+) {
     val s = LocalStrings.current
     val link by Td.link.collectAsState()
     val focus = remember { FocusRequester() }
@@ -225,11 +239,21 @@ private fun BoxScope.StalledPanel(onRetry: () -> Unit, onDownloadFirst: (() -> U
                 color = Color.White.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center,
             )
+            val slow = OpeningStall.reason(link) == OpeningStall.Reason.Slow
+            if (slow && com.tmplayer.data.Td.speedLimitedNow()) {
+                Text(s.playerSpeedLimited, color = Color.White.copy(alpha = 0.65f), textAlign = TextAlign.Center)
+            }
+            if (slow && lighter != null) {
+                Text(s.playerLighterHint, color = Color.White.copy(alpha = 0.65f), textAlign = TextAlign.Center)
+            }
             if (onDownloadFirst != null) {
                 Text(s.playerStalledDownloadHint, color = Color.White.copy(alpha = 0.65f), textAlign = TextAlign.Center)
             }
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = onRetry, modifier = Modifier.focusRequester(focus)) { Text(s.commonTryAgain) }
+                if (slow && lighter != null) {
+                    OutlinedButton(onClick = lighter.second) { Text(lighter.first, color = Color.White) }
+                }
                 if (onDownloadFirst != null) {
                     OutlinedButton(onClick = onDownloadFirst) { Text(s.playerDownloadFirst, color = Color.White) }
                 }

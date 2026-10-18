@@ -248,6 +248,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var statusReload: android.widget.Button? = null
     private var statusOpenWith: android.widget.Button? = null
 
+    /** "Play Telegram's 480p" on the sheet that says nothing is arriving (CP80). */
+    private var statusLighter: android.widget.Button? = null
+
     /**
      * Whether Telegram lets this video be kept or handed on: false for a chat that restricts saving
      * content, null until that is known.
@@ -381,6 +384,31 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var downloadedFile: File? = null
     private var fileSizeBytes = 0L
     private var durationSec = 0
+
+    // ---- Telegram's own qualities, cover, start time and storyboard (CP80) --------------------
+
+    /** The message as Telegram has it now, once read: its lighter copies, its start time, its storyboard. */
+    private var postItem: MediaItem? = null
+
+    /** The height of Telegram's copy playing in place of the upload, or 0 for the upload. */
+    private var playingQuality = 0
+
+    /** The upload's file and size while [playingQuality] plays in its place. */
+    private var uploadFileId = 0
+    private var uploadSizeBytes = 0L
+
+    /** A t.me link's `?t=`, in seconds, for a player opened from one; 0 for none. See [PostStart]. */
+    private var startLinkSec = 0
+
+    /** Telegram's seek thumbnails for this video, once read. See [StoryboardThumbnails]. */
+    private var storyboardFrames: StoryboardThumbnails? = null
+
+    /** Why a lighter copy was picked by the player itself, said once it plays; null for none. */
+    private var qualityPickedWhy: com.tmplayer.data.TelegramQualities.Why? = null
+
+    /** The upload's id and size, whichever copy plays: what the place, a download and the copies speak of. */
+    private fun uploadId(): Int = if (playingQuality != 0 && uploadFileId != 0) uploadFileId else fileId
+    private fun uploadSize(): Long = if (playingQuality != 0 && uploadFileId != 0) uploadSizeBytes else fileSizeBytes
     private var resumeMs = 0L
 
     /**
@@ -713,6 +741,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         statusBack = findViewById<android.widget.Button>(R.id.status_back).apply {
             setOnClickListener { finish() }
         }
+        statusLighter = findViewById<android.widget.Button>(R.id.status_lighter).apply {
+            setOnClickListener { lighterQuality()?.let { switchQuality(it.height) } }
+        }
         // The layout carries English for the preview; the words on screen come from the catalog.
         statusRetry?.text = L.commonTryAgain
         statusReload?.text = L.commonReload
@@ -975,6 +1006,17 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         durationSec = from.getIntExtra(EXTRA_DURATION, 0)
         savable = if (from.getBooleanExtra(EXTRA_CAN_BE_SAVED, true)) null else false
         pieces = piecesFrom(from)
+        startLinkSec = from.getIntExtra(EXTRA_LINK_START_SEC, 0)
+        postItem = null
+        playingQuality = 0
+        uploadFileId = 0
+        uploadSizeBytes = 0
+        qualityPickedWhy = null
+        storyboardFrames?.let { board ->
+            board.release()
+            storyboardFrames = null
+            showScrubPictures()
+        }
         joinedSource = null
         piecesNotice = null
         piecesIncomplete = false
@@ -1013,6 +1055,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         findEpisodes()
         findCopies()
         findSkipTimes()
+        // Telegram's lighter copies and storyboard (CP80), for the quality list and the scrub bar.
+        if (hasMessage()) itemScope.launch { Td.awaitAuthorizedSession(); readPost() }
 
         // Reading the saved position is a disk hit; do it off the main thread and seek once it
         // lands. Under "download the whole video first" there is no player to seek yet, so
@@ -1027,6 +1071,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 // Whichever copy of the video was played last: a switch of quality, or the 720p
                 // started on the phone and the 1080p opened on the television, carries on.
                 ?: runCatching { settings.resumeStartFor(currentItem()) }.getOrDefault(0L)
+            // Never watched here: the moment the poster chose to start at (CP80), if any.
+            if (resumeMs <= 0 && hasMessage()) {
+                val post = postItem ?: kotlinx.coroutines.withTimeoutOrNull(POST_READ_MS) { readPost() }
+                val start = com.tmplayer.data.PostStart.startMs(linkSec = startLinkSec, savedMs = 0, postSec = post?.startSec ?: 0, durationSec = durationSec)
+                if (start > 0) {
+                    player?.seekTo(start)
+                    resumeMs = start
+                    return@launch
+                }
+            }
             if (resumeMs > 0) {
                 player?.seekTo(resumeMs)
                 resumeNotice = L.playerResumingFrom(Translator.messages.formatter.clock(resumeMs))
@@ -1072,6 +1126,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                         fileSizeBytes = fresh.sizeBytes
                     }
                 }
+                pickTelegramQuality()
                 val availability = Td.localFileAvailability(fileId)
                 if (
                     availability != LocalFileAvailability.Complete &&
@@ -1529,7 +1584,14 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         copies = all
         // The listed copy carries Telegram's picture size, which the start arguments do not.
         val playing = all.firstOrNull { it.id == here.id } ?: here
-        controls?.setCopy(if (all.size > 1) playing.copyQuality() else null)
+        val qualities = telegramQualities()
+        controls?.setCopy(
+            when {
+                playingQuality != 0 -> com.tmplayer.data.TelegramQualities.label(playingQuality)
+                all.size > 1 || qualities.isNotEmpty() -> playing.copyQuality() ?: postItem?.copyQuality() ?: L.detailUploadQuality
+                else -> null
+            },
+        )
     }
 
     /** The chat a copy is in, by name, for the copies list and for the player it opens. */
@@ -1538,9 +1600,20 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** The copy button: every copy, the one playing ticked; choosing another plays it from here. */
     fun openCopies() {
-        val list = copies.takeIf { it.size > 1 } ?: return
-        showSheet { it.showCopies(list, currentItem().id, ::copyChatTitle, ::switchCopy) }
+        val qualities = telegramQualities()
+        if (copies.size <= 1 && qualities.isEmpty()) return
+        val list = copies.ifEmpty { listOf(currentItem()) }
+        showSheet {
+            it.showCopies(
+                list, currentItem().id, ::copyChatTitle, ::switchCopy,
+                qualities = qualities, playingQuality = playingQuality, onQuality = ::switchQuality,
+            )
+        }
     }
+
+    /** Telegram's lighter copies of the upload playing (CP80); none for a download or a joined video. */
+    private fun telegramQualities(): List<com.tmplayer.data.TelegramQuality> =
+        if (downloadedFile != null || joinedSource != null) emptyList() else postItem?.qualities.orEmpty()
 
     /**
      * Plays [copy] in place of the copy playing, at the same moment ([VideoCopies.carryOver]
@@ -1561,13 +1634,88 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         playEpisode(copy, copyChatTitle(copy).ifBlank { chatTitle })
     }
 
+    // ---- Telegram's own qualities (CP80) -------------------------------------------------------
+
+    /** The message as Telegram has it now ([postItem]), read once per video. */
+    private suspend fun readPost(): MediaItem? {
+        postItem?.let { return it }
+        if (!hasMessage()) return null
+        val fresh = runCatching { Td.refreshMedia(chatId, messageId) }.getOrNull() ?: return null
+        postItem = fresh
+        lifecycleScope.launch { onPostRead(fresh) }
+        return fresh
+    }
+
+    /** What the message read again brings to a player already up: the quality button and the storyboard. */
+    private fun onPostRead(fresh: MediaItem) {
+        setCopies(copies)
+        startStoryboard(fresh)
+    }
+
+    /**
+     * Which copy to stream, decided before anything is asked about the file: the one chosen on the
+     * detail page or the player's quality list ([QualityWish]), else a lighter copy of Telegram's
+     * when Save mobile data is on over mobile data or the line measured on this run is too slow
+     * for the upload ([TelegramQualities.choose]); else the upload. Never for a video joined from
+     * pieces, a download, or an upload partly or wholly on this device already.
+     */
+    private suspend fun pickTelegramQuality() {
+        if (!hasMessage() || joinedSource != null || downloadedFile != null || playingQuality != 0) return
+        val wish = com.tmplayer.data.QualityWish.take(chatId, messageId)
+        if (wish == 0) return
+        val fresh = kotlinx.coroutines.withTimeoutOrNull(POST_READ_MS) { readPost() } ?: return
+        if (fresh.qualities.isEmpty()) return
+        val chosen = if (wish != null) {
+            fresh.qualities.firstOrNull { it.height == wish }
+        } else {
+            if (runCatching { Td.localDownloadedBytes(fileId) }.getOrDefault(0L) > 0) return
+            val saveData = NetworkMonitor.metered.value && MeteredPolicy.saveMobileDataInForce(
+                runCatching { settings.saveMobileDataNow() }.getOrDefault(false),
+                FormFactor.isTv(this),
+            )
+            val upload = fresh.copy(fileId = fileId, sizeBytes = fileSizeBytes.takeIf { it > 0 } ?: fresh.sizeBytes, durationSec = durationSec.takeIf { it > 0 } ?: fresh.durationSec)
+            com.tmplayer.data.TelegramQualities.choose(upload, saveData, com.tmplayer.player.LineSpeed.recent())
+                ?.also { qualityPickedWhy = it.why }?.quality
+        } ?: return
+        uploadFileId = fileId
+        uploadSizeBytes = fileSizeBytes
+        fileId = chosen.fileId
+        if (chosen.sizeBytes > 0) fileSizeBytes = chosen.sizeBytes
+        playingQuality = chosen.height
+        qualityPickedWhy?.let { why ->
+            val label = com.tmplayer.data.TelegramQualities.label(chosen.height)
+            val text = if (why == com.tmplayer.data.TelegramQualities.Why.SaveData) L.playerLighterPickedData(label) else L.playerLighterPickedSlow(label)
+            lifecycleScope.launch { showGestureFeedback(text) }
+        }
+    }
+
+    /**
+     * Plays Telegram's [height] copy (0 for the upload) in place of what plays now, from the same
+     * moment: a fresh player, as a switch of copy is, handed the choice through [QualityWish].
+     */
+    private fun switchQuality(height: Int) {
+        if (height == playingQuality) return
+        val at = player?.currentPosition ?: 0L
+        if (at > 0) BookmarkJump.request(chatId, messageId, at)
+        com.tmplayer.data.QualityWish.request(chatId, messageId, height)
+        playEpisode(currentItem())
+    }
+
+    /** "Play Telegram's 480p" on the sheet that says nothing is arriving: the next copy down. */
+    private fun lighterQuality(): com.tmplayer.data.TelegramQuality? {
+        val fresh = postItem ?: return null
+        if (downloadedFile != null || joinedSource != null) return null
+        val now = if (playingQuality != 0) com.tmplayer.data.TelegramQualities.withQuality(fresh, fresh.qualities.firstOrNull { it.height == playingQuality } ?: return null) else fresh
+        return com.tmplayer.data.TelegramQualities.lighter(now)
+    }
+
     /** The video playing, as the chat lists it, for the series view's grouping. */
     private fun currentItem(): MediaItem = MediaItem(
         chatId = chatId,
         messageId = messageId,
-        fileId = fileId,
+        fileId = uploadId(),
         title = mediaTitle,
-        sizeBytes = fileSizeBytes,
+        sizeBytes = uploadSize(),
         durationSec = durationSec,
         mimeType = mediaMime,
         thumbnailFileId = 0,
@@ -4029,7 +4177,36 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 durationMs = { player?.duration?.takeIf { it > 0 } ?: durationSec * 1_000L },
             )
             trickplay = frames
-            controls?.thumbnails = frames
+            showScrubPictures()
+        }
+    }
+
+    /**
+     * Telegram's storyboard for the video (CP80) under the scrub bar, where the setting allows
+     * scrub pictures: on its own on a device too short of memory for [TrickplayFrames], else
+     * behind them, for the parts of the video not on the disk yet.
+     */
+    private fun startStoryboard(fresh: MediaItem) {
+        val board = fresh.storyboard ?: return
+        if (storyboardFrames != null) return
+        lifecycleScope.launch {
+            if (!runCatching { settings.trickplayNow() }.getOrDefault(true)) return@launch
+            storyboardFrames = StoryboardThumbnails(
+                scope = lifecycleScope,
+                files = board,
+                durationMs = { player?.duration?.takeIf { it > 0 } ?: durationSec * 1_000L },
+            )
+            showScrubPictures()
+        }
+    }
+
+    /** The scrub bar's pictures from whatever there is: the video's own frames, the storyboard, or both. */
+    private fun showScrubPictures() {
+        val frames = trickplay
+        val board = storyboardFrames
+        controls?.thumbnails = when {
+            frames != null && board != null -> LayeredThumbnails(frames, board)
+            else -> frames ?: board
         }
     }
 
@@ -4064,6 +4241,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // zero and the meter reads that drop as the reset it is, where a window that jumped
         // forwards would look like a burst of speed.
         speed.sample(local.downloadedPrefixSize, SystemClock.elapsedRealtime())
+        // The line as measured, for choosing a lighter copy of the next video (CP80).
+        // Only while TDLib is fetching and the bytes move: a bounded stream that has its window
+        // reads as a slow line otherwise.
+        if (local.isDownloadingActive && !local.isDownloadingCompleted && local.downloadedPrefixSize != lastProgressBytes) {
+            com.tmplayer.player.LineSpeed.note(speed.bytesPerSec)
+        }
         // Any change of the prefix is TDLib doing something, a seek's reset to zero included.
         if (local.downloadedPrefixSize != lastProgressBytes) {
             lastProgressBytes = local.downloadedPrefixSize
@@ -5756,7 +5939,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         val rate = speed.bytesPerSec
         host.note = if (slow && rate >= StreamStats.MIN_MEANINGFUL_SPEED && !downloadComplete) {
             val figure = Translator.messages.formatter.speed(rate)
-            if (isRealDownload()) L.playerDownloadingRate(figure) else L.playerCachingRate(figure)
+            val line = if (isRealDownload()) L.playerDownloadingRate(figure) else L.playerCachingRate(figure)
+            // Telegram's own cap on an account without Premium (CP83): said, nothing offered.
+            if (Td.speedLimitedNow()) "$line\n${L.playerSpeedLimited}" else line
         } else {
             null
         }
@@ -5903,6 +6088,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         statusReload?.visibility = View.GONE
         statusOpenWith?.visibility = View.GONE
         statusBack?.visibility = View.GONE
+        statusLighter?.visibility = View.GONE
         statusName?.visibility = View.GONE
     }
 
@@ -5911,7 +6097,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * others the quiet one, so the sheet always has exactly one button that reads as the answer.
      */
     private fun markPrimaryAction(primary: View) {
-        for (button in listOf(statusReload, statusBack, statusOpenWith)) {
+        for (button in listOf(statusReload, statusBack, statusOpenWith, statusLighter)) {
             val chosen = button === primary
             button?.setBackgroundResource(if (chosen) R.drawable.bg_control_pill_primary else R.drawable.bg_control_pill)
             button?.setTextColor(getColorStateList(if (chosen) R.color.player_primary_text else R.color.player_control_icon))
@@ -6197,8 +6383,21 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             OpeningStall.Reason.Slow -> if (stalledMidPlay) L.playerStalledMidSlow else L.playerStalledSlow
         }
         val canDownload = canSaveToDownloads()
-        statusDetail.visibility = if (canDownload) View.VISIBLE else View.GONE
-        statusDetail.text = if (canDownload) L.playerStalledDownloadHint else ""
+        // Telegram's lighter copy (CP80), and Telegram's own cap on an account without Premium
+        // (CP83), each said where it applies.
+        val lighter = if (OpeningStall.reason(Td.link.value) == OpeningStall.Reason.Slow) lighterQuality() else null
+        val limited = Td.speedLimitedNow()
+        val detail = listOfNotNull(
+            L.playerSpeedLimited.takeIf { limited },
+            L.playerLighterHint.takeIf { lighter != null },
+            L.playerStalledDownloadHint.takeIf { canDownload },
+        ).joinToString("\n")
+        statusDetail.visibility = if (detail.isNotEmpty()) View.VISIBLE else View.GONE
+        statusDetail.text = detail
+        statusLighter?.apply {
+            text = lighter?.let { L.playerLighter(com.tmplayer.data.TelegramQualities.label(it.height)) }.orEmpty()
+            visibility = if (lighter != null) View.VISIBLE else View.GONE
+        }
         statusBack?.visibility = View.VISIBLE
         statusOpenWith?.apply {
             text = L.playerDownloadFirst
@@ -6238,7 +6437,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** Download first on [showSlowStart]: the video joins the download queue and the player steps back. */
     private fun downloadFirst() {
         if (!canSaveToDownloads()) return
-        OfflineDownloads.start(this, mediaItemForCache(), chatTitle)
+        OfflineDownloads.start(this, mediaItemForCache().copy(fileId = uploadId(), sizeBytes = uploadSize()), chatTitle)
         android.widget.Toast.makeText(applicationContext, L.playerDownloadFirstStarted, android.widget.Toast.LENGTH_LONG).show()
         finish()
     }
@@ -6338,6 +6537,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         controls?.thumbnails = null
         trickplay?.release()
         trickplay = null
+        storyboardFrames?.release()
+        storyboardFrames = null
         holdFile(0)
         stopDownload()
         trimCache()
@@ -6435,10 +6636,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // Written with the position so "Continue watching" can offer the video back without the
         // chat it came from being loaded, or still being in the list at all.
         val description = ResumeRecord.encode(
-            fileId = fileId,
+            fileId = uploadId(),
             title = mediaTitle,
             chatTitle = chatTitle,
-            sizeBytes = fileSizeBytes,
+            sizeBytes = uploadSize(),
             durationSec = durationSec,
             updatedAt = System.currentTimeMillis(),
             // The tracks and speed go with the position. A restore still waiting on the track
@@ -6556,6 +6757,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         private const val EXTRA_FILE_NAME = "file_name"
         private const val EXTRA_CAPTION = "caption"
         private const val EXTRA_TOPIC_ID = "topic_id"
+
+        /** A t.me link's `?t=` in seconds (CP80), for a player opened from a link. */
+        const val EXTRA_LINK_START_SEC = "link_start_sec"
         private const val EXTRA_SIZE = "size"
         private const val EXTRA_DURATION = "duration"
         private const val EXTRA_CHAT_TITLE = "chat_title"
@@ -6661,6 +6865,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         /** How often [watchOpening] looks at the opening wait. */
         private const val OPENING_WATCH_TICK_MS = 1_000L
+
+        /** How long the opening waits for the message to be read again before it picks a copy. */
+        private const val POST_READ_MS = 2_500L
 
         /** Twice a second: faster than the eye needs and slower than TDLib talks. */
         private const val PROGRESS_RENDER_MS = 500L
@@ -6779,8 +6986,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             lastOrientation = remembered
         }
 
-        fun intent(context: Context, item: MediaItem, chatTitle: String = ""): Intent =
+        fun intent(context: Context, picked: MediaItem, chatTitle: String = ""): Intent =
             Intent(context, PlayerActivity::class.java).apply {
+                // A Telegram copy (CP80) travels as the upload and a wish for that copy, so the
+                // player still knows the upload's file for the place, a download and its copies.
+                if (picked.playingQuality != 0) com.tmplayer.data.QualityWish.request(picked.chatId, picked.messageId, picked.playingQuality)
+                val item = com.tmplayer.data.TelegramQualities.upload(picked)
                 // A film's other copies go with it, for the player's copy button.
                 if (item.versions.size > 1) CopyHandoff.offer(item.versions, mapOf(item.chatId to chatTitle).filterValues { it.isNotBlank() })
                 putExtra(EXTRA_FILE_ID, item.fileId)

@@ -626,3 +626,77 @@ internal fun CopyRow(
         }
     }
 }
+
+/**
+ * Telegram's own lighter copies of a big video (CP80), on its detail page: one quiet line under
+ * the copies naming the one that plays ("As uploaded  ·  1080p  ·  2 GB", or "Telegram's 720p")
+ * with Change at its end, and under it, once pressed, the upload and each of Telegram's copies to
+ * choose from. The choice goes to the player through [com.tmplayer.data.QualityWish]; the page
+ * itself, its download line and its facts keep speaking of the upload, which is what a download
+ * keeps.
+ */
+@Composable
+fun TelegramQualityLine(item: MediaItem) {
+    val qualities = item.qualities
+    if (qualities.isEmpty() || item.isJoined) return
+    val s = LocalStrings.current
+    var open by rememberSaveable(item.id) { mutableStateOf(false) }
+    // 0 is the upload; null is no choice made, which also plays the upload unless the player
+    // finds the line too slow or Save mobile data on.
+    var chosen by remember(item.id) { mutableStateOf(com.tmplayer.data.QualityWish.peek(item.chatId, item.messageId)) }
+    val uploadName = listOfNotNull(
+        s.detailUploadQuality,
+        VideoCopies.heightOf(item)?.let { item.copyQuality() },
+        item.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
+    ).joinToString("  ·  ")
+    val playing = qualities.firstOrNull { it.height == chosen }
+    val summary = playing?.let { q ->
+        listOfNotNull(
+            s.detailTelegramQuality(com.tmplayer.data.TelegramQualities.label(q.height)),
+            q.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
+        ).joinToString("  ·  ")
+    } ?: uploadName
+    val count = s.detailTelegramQualities + ": " + qualities.joinToString(", ") { com.tmplayer.data.TelegramQualities.label(it.height) }
+    val pick: (Int) -> Unit = { height ->
+        chosen = height
+        com.tmplayer.data.QualityWish.request(item.chatId, item.messageId, height)
+        open = false
+    }
+    Column(Modifier.widthIn(max = 640.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        CopySummary(
+            summary = summary,
+            count = count,
+            action = if (open) s.detailCopyDone else s.detailCopyChange,
+            onClick = { open = !open },
+        )
+        AnimatedVisibility(open) {
+            Column {
+                var row = 0
+                val touch = isTouch()
+                CopyOption(
+                    copy = item,
+                    title = s.detailUploadQuality,
+                    what = listOfNotNull(VideoCopies.heightOf(item)?.let { item.copyQuality() }, MediaFacts.of(item).videoCodec).joinToString("  ·  "),
+                    facts = item.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) }.orEmpty(),
+                    chosen = playing == null,
+                    onClick = { pick(0) },
+                    modifier = Modifier.riseIn(row++, enabled = touch),
+                )
+                qualities.forEach { q ->
+                    CopyOption(
+                        copy = item,
+                        title = s.detailTelegramQuality(com.tmplayer.data.TelegramQualities.label(q.height)),
+                        what = s.detailTelegramQualityDetail,
+                        facts = listOfNotNull(
+                            q.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
+                            q.codec.uppercase(java.util.Locale.ROOT).replace("H265", "HEVC").replace("H264", "H.264").ifBlank { null },
+                        ).joinToString("  ·  "),
+                        chosen = playing == q,
+                        onClick = { pick(q.height) },
+                        modifier = Modifier.riseIn(row++, enabled = touch),
+                    )
+                }
+            }
+        }
+    }
+}

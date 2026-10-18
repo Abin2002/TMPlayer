@@ -284,6 +284,19 @@
                 android:visibility="gone" />
 
             <!--
+              On the sheet that says nothing is arriving: Telegram's own lighter copy of the video
+              (CP80), which asks less of the line. Only where Telegram made one.
+            -->
+            <Button
+                android:id="@+id/status_lighter"
+                style="@style/PlayerSheetButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Play Telegram's 480p"
+                android:visibility="gone" />
+
+            <!--
               The way out that is not another attempt.
 
               "Press Back to pick something else" is a sentence about a key, and on a phone there

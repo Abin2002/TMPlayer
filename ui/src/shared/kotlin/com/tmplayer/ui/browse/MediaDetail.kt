@@ -353,6 +353,8 @@ fun MediaDetailPanel(
 
         // A film the chat posted several times over: every copy by quality and size, one click away.
         Versions(item, onPickCopy, chatTitle, copyStarted)
+        // Telegram's own lighter copies of the upload (CP80), when it made any.
+        TelegramQualityLine(item)
 
         DetailBookmarks(bookmarks, onOpenBookmark)
 

@@ -144,7 +144,13 @@ import com.tmplayer.ui.components.tipFadeIn
  * The copies of the video playing ([copies], itself among them) and which is playing, for the
  * menu's Copies page. Handed down as a local: the menu is opened from five places in the overlay.
  */
-internal data class PlayerCopies(val copies: List<MediaItem> = emptyList(), val playing: String = "")
+internal data class PlayerCopies(
+    val copies: List<MediaItem> = emptyList(),
+    val playing: String = "",
+    /** Telegram's lighter copies of the upload playing (CP80), and the one playing (0 the upload). */
+    val qualities: List<com.tmplayer.data.TelegramQuality> = emptyList(),
+    val playingQuality: Int = 0,
+)
 
 internal val LocalPlayerCopies = androidx.compose.runtime.staticCompositionLocalOf { PlayerCopies() }
 
@@ -153,6 +159,9 @@ internal sealed interface MenuAction {
 
     /** Another copy of the video, played from the same moment. */
     data class SwitchCopy(val copy: MediaItem) : MenuAction
+
+    /** Telegram's copy of that height in place of the upload, or the upload for 0 (CP80). */
+    data class SwitchQuality(val height: Int) : MenuAction
     data class Track(val type: TrackType, val track: MediaTrack?) : MenuAction
     data class Speed(val speed: Float) : MenuAction
     data class Shape(val scale: VideoScale) : MenuAction
@@ -755,13 +764,29 @@ private fun TimeBar(
         }
         val labelX = dragX ?: hoverX
         if (labelX != null && duration > 0) {
+            val at = SeekMath.timeAt(labelX, width, duration)
+            // Telegram's storyboard tile for the moment under the pointer (CP80), over the time.
+            val board = LocalStoryboard.current
+            if (board != null) {
+                val half = TIP_WIDTH / 2
+                Box(
+                    Modifier.align(Alignment.CenterStart)
+                        .offset {
+                            // Kept inside the bar's ends, so the picture is never cut off by the window.
+                            val x = (labelX.roundToInt() - half.roundToPx()).coerceIn(0, (width.roundToInt() - TIP_WIDTH.roundToPx()).coerceAtLeast(0))
+                            IntOffset(x, -(48.dp.roundToPx() + (TIP_WIDTH * 9 / 16).roundToPx()))
+                        },
+                ) {
+                    StoryboardTip(board, at)
+                }
+            }
             Box(
                 Modifier.align(Alignment.CenterStart)
                     .offset { IntOffset(labelX.roundToInt() - 40.dp.roundToPx(), -30.dp.roundToPx()) }
                     .width(80.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Chip(SeekMath.clock(SeekMath.timeAt(labelX, width, duration)))
+                Chip(SeekMath.clock(at))
             }
         }
     }
@@ -848,9 +873,10 @@ internal fun PlayerMenu(
                 Entry(s.playerLockScreen, icon = TmIcons.Lock) { pick(MenuAction.LockScreen) }
                 HorizontalDivider()
                 // A video posted more than once: which copy is playing, and the way to another.
-                if (copies.copies.size > 1) {
+                if (copies.copies.size > 1 || copies.qualities.isNotEmpty()) {
                     val playing = copies.copies.firstOrNull { it.id == copies.playing }
-                    Entry(s.playerCopies, trailing = playing?.copyQuality()) { page(MenuPage.Copies) }
+                    val trailing = if (copies.playingQuality != 0) com.tmplayer.data.TelegramQualities.label(copies.playingQuality) else playing?.copyQuality()
+                    Entry(s.playerCopies, trailing = trailing) { page(MenuPage.Copies) }
                 }
                 if (alwaysOnTopAvailable) Entry(s.playerAlwaysOnTop, trailing = s.playerKeyCommandT(commandKey(s))) { pick(MenuAction.Do(PlayerAction.AlwaysOnTop)) }
                 Entry(s.playerPlaybackOptions) { page(MenuPage.Options) }
@@ -952,9 +978,29 @@ internal fun PlayerMenu(
                 val spans = VideoCopies.spansChats(copies.copies)
                 copies.copies.forEach { copy ->
                     val chat = if (spans) CopyHandoff.chatTitleOf(copy) else null
-                    val line = listOf(copyHeading(copy), copyDetail(copy, s.messages, chat)).filter { it.isNotBlank() }.joinToString("  ·  ")
-                    Entry(line, checked = copy.id == copies.playing) {
-                        if (copy.id == copies.playing) onClose() else pick(MenuAction.SwitchCopy(copy))
+                    val here = copy.id == copies.playing
+                    val shown = if (here) com.tmplayer.data.TelegramQualities.upload(copy) else copy
+                    val line = listOfNotNull(
+                        copyHeading(shown),
+                        s.detailUploadQuality.takeIf { here && copies.qualities.isNotEmpty() },
+                        copyDetail(shown, s.messages, chat),
+                    ).filter { it.isNotBlank() }.joinToString("  ·  ")
+                    val ticked = here && copies.playingQuality == 0
+                    Entry(line, checked = ticked) {
+                        when {
+                            ticked -> onClose()
+                            here -> pick(MenuAction.SwitchQuality(0))
+                            else -> pick(MenuAction.SwitchCopy(copy))
+                        }
+                    }
+                    // Telegram's own lighter copies of this upload, under it.
+                    if (here) copies.qualities.forEach { q ->
+                        val on = q.height == copies.playingQuality
+                        val name = listOfNotNull(
+                            s.detailTelegramQuality(com.tmplayer.data.TelegramQualities.label(q.height)),
+                            q.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
+                        ).joinToString("  ·  ")
+                        Entry(name, checked = on) { if (on) onClose() else pick(MenuAction.SwitchQuality(q.height)) }
                     }
                 }
             }
