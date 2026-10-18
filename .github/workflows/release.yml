@@ -434,32 +434,41 @@ jobs:
       # The TMPlayer source is the tag's tree and the archives GitHub attaches. The corresponding
       # source of the bundled GPL media extension does not change while its version does not, so
       # it is not rebuilt and attached to every release: the notes link to the archive that went
-      # up with 1.21.0, which GPL-3.0 section 6(d) allows as long as that link keeps working.
-      # A nextlib bump makes that archive the wrong one, so the release stops here until a new
-      # archive is up and LINKED, NEXTLIB_SOURCE and the link in the notes all point at it.
+      # up with the first release carrying that nextlib version, which GPL-3.0 section 6(d)
+      # allows as long as that link keeps working. scripts/build-nextlib-source.sh packs it for
+      # exactly one nextlib version, and the archive is uploaded by hand, so TAG works as the
+      # mediamp step's does: empty links this release's own copy, and once it is up, TAG names
+      # that release and every later one links there and checks the link still answers. A
+      # nextlib bump stops the release until a new archive covers it.
       - name: Check the nextlib source link still matches
+        id: nextlib
         run: |
-          LINKED="1.10.1-0.13.0"
+          LINKED="1.11.1-0.16.0"
+          TAG=""
           USED="$(sed -n 's/^nextlib = "\(.*\)"$/\1/p' gradle/libs.versions.toml)"
           if [ "$USED" != "$LINKED" ]; then
-            echo "::error::nextlib is $USED but the release notes link the source of $LINKED. Attach a corresponding source archive for $USED and update LINKED, NEXTLIB_SOURCE and the notes link in release.yml."
+            echo "::error::nextlib is $USED but the release notes link the source of $LINKED. Update scripts/build-nextlib-source.sh for $USED, attach its archive, and update LINKED and TAG here."
             exit 1
           fi
-          curl --fail --silent --show-error --head --location --max-time 60 "$NEXTLIB_SOURCE" > /dev/null
-        env:
-          NEXTLIB_SOURCE: https://github.com/${{ github.repository }}/releases/download/v1.21.0/nextlib-corresponding-source-1.21.0.tar.gz
+          URL="https://github.com/${{ github.repository }}/releases/download/${TAG:-$GITHUB_REF_NAME}/nextlib-corresponding-source-$LINKED.tar.gz"
+          if [ -n "$TAG" ]; then
+            curl --fail --silent --show-error --head --location --max-time 60 "$URL" > /dev/null
+          else
+            echo "::warning::Attach nextlib-corresponding-source-$LINKED.tar.gz (scripts/build-nextlib-source.sh) to this release, then set TAG to $GITHUB_REF_NAME in release.yml."
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
 
       # The same for the desktop builds' mpv runtime: libmpv, FFmpeg and the libraries bundled
       # beside them come in through mediamp, and scripts/build-mediamp-source.sh packs their
       # source for exactly one mediamp version. The archive is uploaded by hand, to the first
-      # release that carries this step, so TAG starts empty, which links this release's own copy.
-      # Once it is up, TAG names that release and every later one links there, checked like
-      # nextlib's. A mediamp bump stops the release until a new archive covers it.
+      # release that carries that mediamp version, so TAG starts empty, which links this release's
+      # own copy. Once it is up, TAG names that release and every later one links there, checked
+      # like nextlib's. A mediamp bump stops the release until a new archive covers it.
       - name: Check the mediamp source link still matches
         id: mediamp
         run: |
-          COVERED="0.5.0"
-          TAG="v1.24.0"
+          COVERED="0.5.2"
+          TAG=""
           USED="$(sed -n 's/^mediamp = "\(.*\)"$/\1/p' gradle/libs.versions.toml)"
           if [ "$USED" != "$COVERED" ]; then
             echo "::error::mediamp is $USED but the linked corresponding source covers $COVERED. Update scripts/build-mediamp-source.sh for $USED, attach its archive, and update COVERED and TAG here."
@@ -473,9 +482,9 @@ jobs:
           fi
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           # The macOS runtime's libraries are Homebrew's, not MSYS2's or Ubuntu's, so their source
-          # is a second archive (scripts/build-mediamp-source.sh --macos), first attached by hand to
-          # v1.26.0. MAC_TAG works as TAG does: empty links this release's own copy.
-          MAC_TAG="v1.26.0"
+          # is a second archive (scripts/build-mediamp-source.sh --macos), attached by hand next to
+          # the first. MAC_TAG works as TAG does: empty links this release's own copy.
+          MAC_TAG=""
           MAC_URL="https://github.com/${{ github.repository }}/releases/download/${MAC_TAG:-$GITHUB_REF_NAME}/mediamp-corresponding-source-$COVERED-macos.tar.gz"
           if [ -n "$MAC_TAG" ]; then
             curl --fail --silent --show-error --head --location --max-time 60 "$MAC_URL" > /dev/null
@@ -532,7 +541,7 @@ jobs:
             | Linux, glibc 2.38 or newer | `TMPlayer-${{ needs.version.outputs.name }}-x86_64.AppImage` |
             | Arch Linux | [the PKGBUILD](https://github.com/${{ github.repository }}/tree/${{ github.ref_name }}/desktop/packaging/aur), from `TMPlayer-${{ needs.version.outputs.name }}-linux-x64.tar.xz` |
 
-            Installed copies offer each update. [How to install](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/INSTALL.md) · [Moving from the deb, rpm, Flatpak or Windows zip](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/INSTALL.md#moving-from-a-format-that-is-no-longer-published) · [GPL-3.0](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/LICENSE) · [Third party notices](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/THIRD_PARTY_NOTICES.md) · [nextlib source](https://github.com/${{ github.repository }}/releases/download/v1.21.0/nextlib-corresponding-source-1.21.0.tar.gz) · [mediamp source](${{ steps.mediamp.outputs.url }}) · [mediamp macOS source](${{ steps.mediamp.outputs.url_mac }})
+            Installed copies offer each update. [How to install](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/INSTALL.md) · [Moving from the deb, rpm, Flatpak or Windows zip](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/INSTALL.md#moving-from-a-format-that-is-no-longer-published) · [GPL-3.0](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/LICENSE) · [Third party notices](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/THIRD_PARTY_NOTICES.md) · [nextlib source](${{ steps.nextlib.outputs.url }}) · [mediamp source](${{ steps.mediamp.outputs.url }}) · [mediamp macOS source](${{ steps.mediamp.outputs.url_mac }})
 
       # tmplayer.org is deployed by Vercel's git integration from main, which builds the Astro site
       # in site/ for every push, so a commit to main is the one way the site learns of the release:

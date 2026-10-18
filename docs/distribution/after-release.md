@@ -37,19 +37,27 @@ gh release view v<v>
 
 Depends on the release: yes.
 
-### 2. CP12: attach the mediamp corresponding source
+### 2. Attach the nextlib and mediamp corresponding source
 
-The release.yml step "Check the mediamp source link still matches" has `TAG=""`, so the next release
-links its own copy and prints a warning until the archive is attached.
+The release.yml steps "Check the nextlib source link still matches" and "Check the mediamp source
+link still matches" have `TAG=""` (and `MAC_TAG=""`) after a nextlib or mediamp bump, so that
+release links its own copies and prints a warning until the archives are attached. For 1.27.0
+(nextlib 1.11.1-0.16.0, mediamp 0.5.2):
 
 ```sh
+scripts/build-nextlib-source.sh
 scripts/build-mediamp-source.sh
-gh release upload v<v> build/mediamp-source/mediamp-corresponding-source-0.5.0.tar.gz
+scripts/build-mediamp-source.sh --macos
+gh release upload v<v> \
+  build/nextlib-source/nextlib-corresponding-source-1.11.1-0.16.0.tar.gz \
+  build/mediamp-source/mediamp-corresponding-source-0.5.2.tar.gz \
+  build/mediamp-source/mediamp-corresponding-source-0.5.2-macos.tar.gz
 ```
 
-Then set `TAG="v<v>"` in that step of `.github/workflows/release.yml`, commit and push, so every later
-release links to this one. Depends on the release: yes (it must be the first release that carries the
-step). Only with the user's OK.
+Then set `TAG="v<v>"` in the nextlib step and `TAG="v<v>"` and `MAC_TAG="v<v>"` in the mediamp step
+of `.github/workflows/release.yml`, commit and push, so every later release links to this one.
+Depends on the release: yes (it must be the first release that carries those versions). Only with
+the user's OK.
 
 ### 3. CP12: verify the provenance attestation
 

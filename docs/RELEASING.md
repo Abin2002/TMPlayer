@@ -50,16 +50,23 @@ Releases up to 1.25.0 also carried `TMPlayer.apk`, the same APK under a fixed na
 release carries one APK.
 
 The macOS build bundles Homebrew's libraries, so its corresponding source is a second archive,
-`mediamp-corresponding-source-0.5.0-macos.tar.gz` from `scripts/build-mediamp-source.sh --macos`.
-It is attached by hand to the first release with a DMG, after which `MAC_TAG` in `release.yml`
-names that release, exactly as `TAG` does for the Linux and Windows archive.
+`mediamp-corresponding-source-<mediamp>-macos.tar.gz` from `scripts/build-mediamp-source.sh --macos`.
+It is attached by hand, beside the Linux and Windows archive, to the first release that carries
+that mediamp version, after which `MAC_TAG` in `release.yml` names that release, exactly as `TAG`
+does for the Linux and Windows archive. mediamp 0.5.2 is first carried by 1.27.0, so both tags are
+empty until its archives are up.
 
 Nothing else is attached. GitHub adds the source archives of the tagged tree by itself and shows
 each file's SHA-256 beside it, so there is no checksum file. The release notes link to the
 licence, `THIRD_PARTY_NOTICES.md` and the nextlib corresponding source instead of carrying them.
-That source archive went up once, with 1.21.0, and is the same for every release while nextlib
-stays at 1.10.1-0.13.0; the publish job fails if `gradle/libs.versions.toml` moves nextlib on, so
-a bump comes with a new archive and new links in `release.yml`.
+That source archive, `nextlib-corresponding-source-<nextlib>.tar.gz` from
+`scripts/build-nextlib-source.sh`, goes up by hand once, to the first release that carries that
+nextlib version, and is the same for every release while nextlib stays there. The nextlib step in
+`release.yml` works as the mediamp one: an empty `TAG` links the release's own copy and warns until
+it is attached, then `TAG` names that release. nextlib 1.11.1-0.16.0 is first carried by 1.27.0
+(1.21.0 to 1.26.0 linked the 1.10.1-0.13.0 archive on 1.21.0). The publish job fails if
+`gradle/libs.versions.toml` moves nextlib or mediamp on without a matching `LINKED` or `COVERED`,
+so a bump comes with a new archive.
 
 Up to 1.21.0 a release also carried per-ABI APKs, a Windows portable zip, a deb, an rpm, a
 Flatpak, a TMPlayer source tarball, the R8 mapping, the licence files, the nextlib source and

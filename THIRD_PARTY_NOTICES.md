@@ -11,26 +11,34 @@ so each has its own section. Libraries both use are listed once, under "Shared".
 
 ## Android
 
-### NextLib Media3 Extensions 1.10.1-0.13.0
+### NextLib Media3 Extensions 1.11.1-0.16.0
 
 - Author: Anil Kumar Beesetti and contributors
 - Licence: GNU General Public License version 3
-- Source: <https://github.com/anilbeesetti/nextlib/tree/v1.10.1-0.13.0>
-- Exact commit: `773c841f86d9775abd0fe18c1fd0f84e00e355c8`
+- Source: <https://github.com/anilbeesetti/nextlib/tree/v1.11.1-0.16.0>
+- Exact commit: `2dc77cd2d9352bc308aa26782f9c77a320df510b`
 
 The released AAR contains native codec libraries built by NextLib's `ffmpeg/setup.sh` from these
 upstream sources:
 
-- FFmpeg 6.0: LGPL-3.0-or-later for the configuration used by NextLib (`--enable-version3`,
-  without `--enable-gpl` or non-free components): <https://ffmpeg.org/releases/ffmpeg-6.0.tar.gz>
-- libvpx 1.13.0: BSD-3-Clause: <https://github.com/webmproject/libvpx/tree/v1.13.0>
-- Mbed TLS 3.4.1: Apache-2.0 selected from its dual licence:
-  <https://github.com/Mbed-TLS/mbedtls/tree/v3.4.1>
+- FFmpeg 9.0.1 (libavcodec, libavutil, libswresample, libswscale): LGPL-3.0-or-later for the
+  configuration used by NextLib (`--enable-version3`, without `--enable-gpl` or non-free
+  components): <https://ffmpeg.org/releases/ffmpeg-9.0.1.tar.gz>
+- dav1d 1.5.4 (the AV1 decoder, linked statically into libavcodec): BSD-2-Clause:
+  <https://github.com/videolan/dav1d/tree/1.5.4>
+- Mbed TLS 3.6.7: Apache-2.0 selected from its dual licence:
+  <https://github.com/Mbed-TLS/mbedtls/tree/mbedtls-3.6.7>. NextLib builds it for FFmpeg's TLS
+  protocol in libavformat, which the AAR does not ship, so none of its code is in the app; its
+  source is in the archive because the build uses it.
 
-The corresponding source is one archive, linked from every TMPlayer release's notes:
-<https://github.com/dracu-lah/TMPlayer/releases/download/v1.21.0/nextlib-corresponding-source-1.21.0.tar.gz>.
-It holds the exact NextLib 1.10.1-0.13.0 source and build scripts plus the three upstream source
-archives above, and stays the right archive for as long as TMPlayer bundles that version.
+The VP8 and VP9 decoders are FFmpeg's own; libvpx is no longer part of the build.
+
+The corresponding source is one archive, `nextlib-corresponding-source-1.11.1-0.16.0.tar.gz`,
+linked as "nextlib source" from every TMPlayer release's notes and first attached to 1.27.0. It
+holds the exact NextLib 1.11.1-0.16.0 source and build scripts plus the three upstream source
+archives above; `scripts/build-nextlib-source.sh` in this repository rebuilds it from permanent
+addresses and SHA-256 sums. It stays the right archive for as long as TMPlayer bundles that
+version.
 
 ### TDLib with OpenSSL 1.1.1w
 
@@ -57,11 +65,11 @@ additional permission to be combined with it; see
 
 ## Desktop (Windows and Linux)
 
-### mediamp 0.5.0 and its mpv runtime
+### mediamp 0.5.2 and its mpv runtime
 
 - Author: Open Ani and contributors (`org.openani.mediamp`)
 - Licence: Apache License 2.0
-- Source: <https://github.com/open-ani/mediamp/tree/v0.5.0>
+- Source: <https://github.com/open-ani/mediamp/tree/v0.5.2>
 
 mediamp's runtime jars for Windows x64 and Linux x64 bundle libmpv, FFmpeg and the shared libraries
 they need:
@@ -74,24 +82,24 @@ they need:
 | libass | 0.17.5 | 0.17.1 | ISC |
 | libplacebo | 7.360.1 | 6.338.2 | LGPL-2.1-or-later |
 | Little CMS | 2.19.1 | 2.14 | MIT |
-| FreeType | 2.14.3 | 2.13.2 | FTL or GPL-2.0-or-later |
-| FriBidi | 1.0.16 | 1.0.13 | LGPL-2.1-or-later |
-| HarfBuzz | 14.4.0 | 8.3.0 | MIT |
+| FreeType | 2.15.0 | 2.13.2 | FTL or GPL-2.0-or-later |
+| FriBidi | 1.0.17 | 1.0.13 | LGPL-2.1-or-later |
+| HarfBuzz | 14.6.0 | 8.3.0 | MIT |
 | Graphite2 | 1.3.15 | 1.3.14 | LGPL-2.1-or-later |
 | libunibreak | 7.0 | 5.1 | Zlib |
-| libpng | 1.6.58 | 1.6.43 | libpng-2.0 |
+| libpng | 1.6.59 | 1.6.43 | libpng-2.0 |
 | zlib | 1.3.2 | 1.3 | Zlib |
 | bzip2 | 1.0.8 | 1.0.8 | bzip2-1.0.6 |
 | Brotli | 1.2.0 | 1.1.0 | MIT |
-| GLib | 2.90.0 | 2.80.0 | LGPL-2.1-or-later |
-| PCRE2 | 10.48 | 10.42 | BSD-3-Clause |
-| OpenSSL | 3.6.4 | 3.0.13 | Apache-2.0 |
-| shaderc, with glslang 16.3.0 and SPIRV-Tools 1.4.357.0 inside | 2026.3 | not shipped | Apache-2.0; glslang BSD-3-Clause and others |
-| SPIRV-Cross | 1.4.357.0 | not shipped | Apache-2.0 |
-| Vulkan loader | 1.4.357.0 | not shipped | Apache-2.0 |
+| GLib | 2.90.1 | 2.80.0 | LGPL-2.1-or-later |
+| PCRE2 | 10.49 | 10.42 | BSD-3-Clause |
+| OpenSSL | 3.6.5 | 3.0.13 | Apache-2.0 |
+| shaderc, with glslang 16.3.0 and SPIRV-Tools 1.4.363.0 inside | 2026.4 | not shipped | Apache-2.0; glslang BSD-3-Clause and others |
+| SPIRV-Cross | 1.4.363.0 | not shipped | Apache-2.0 |
+| Vulkan loader | 1.4.363.0 | not shipped | Apache-2.0 |
 | libdovi | 3.4.0 | not shipped | MIT |
 | Fontconfig | 2.18.3 | from the system | HPND-style Fontconfig licence |
-| Expat | 2.8.4 | not shipped | MIT |
+| Expat | 2.9.0 | not shipped | MIT |
 | GNU libintl (gettext) | 1.0 | not shipped | LGPL-2.1-or-later |
 | GNU libiconv | 1.19 | not shipped | LGPL-2.1-or-later |
 | GCC runtime (libgcc_s, libstdc++) | 16.2.0 | from the system | GPL-3.0-or-later WITH GCC-exception-3.1 |
@@ -102,15 +110,16 @@ they need:
 The Windows libraries are MSYS2 UCRT64 packages and the Linux ones Ubuntu 24.04 packages; mpv,
 FFmpeg and dav1d are built from source by mediamp. The corresponding source of every row, with the
 exact package versions, MSYS2's and Ubuntu's patches and mediamp's build scripts, is one archive,
-`mediamp-corresponding-source-0.5.0.tar.gz`, linked as "mediamp source" from every TMPlayer release's
+`mediamp-corresponding-source-0.5.2.tar.gz`, linked as "mediamp source" from every TMPlayer release's
 notes. `scripts/build-mediamp-source.sh` in this repository rebuilds it from permanent addresses
 and SHA-256 sums, and its README lists each file. It stays the right archive for as long as
-TMPlayer bundles mediamp 0.5.0.
+TMPlayer bundles mediamp 0.5.2. Earlier releases bundled mediamp 0.5.0 and link its archives on
+1.24.0 (Windows and Linux) and 1.26.0 (macOS).
 
 The macOS Apple Silicon build (a preview, from 1.26.0) bundles mediamp's macos-arm64 runtime
 instead. mpv, FFmpeg and dav1d are the same as above, built without mpv's `gpl` feature (so mpv is
-LGPL-2.1-or-later there); the other libraries are Homebrew bottles for macOS 15, each matched to
-the shipped file by its Mach-O UUID and code:
+LGPL-2.1-or-later there); the other libraries are Homebrew bottles, for macOS 15 or, where marked,
+macOS 26, each matched to the shipped file by its Mach-O UUID and code:
 
 | Component | macOS arm64 | Licence |
 |---|---|---|
@@ -118,20 +127,20 @@ the shipped file by its Mach-O UUID and code:
 | libass | 0.17.4 | ISC |
 | libplacebo | 7.351.0 | LGPL-2.1-or-later |
 | Little CMS | 2.17 | MIT |
-| FreeType | 2.13.3 | FTL or GPL-2.0-or-later |
+| FreeType (macOS 26 bottle) | 2.14.3 | FTL or GPL-2.0-or-later |
 | FriBidi | 1.0.16 | LGPL-2.1-or-later |
-| HarfBuzz | 11.4.5 | MIT |
-| Graphite2 | 1.3.14 | LGPL-2.1-or-later |
+| HarfBuzz (macOS 26 bottle) | 14.2.1 | MIT |
+| Graphite2 (macOS 26 bottle) | 1.3.15 | LGPL-2.1-or-later |
 | libunibreak | 6.1 | Zlib |
-| libpng | 1.6.50 | libpng-2.0 |
-| GLib | 2.84.4 | LGPL-2.1-or-later |
-| PCRE2 | 10.46 | BSD-3-Clause |
-| GNU libintl (gettext) | 0.26 | LGPL-2.1-or-later |
+| libpng (macOS 26 bottle) | 1.6.58 | libpng-2.0 |
+| GLib (macOS 26 bottle) | 2.88.2 | LGPL-2.1-or-later |
+| PCRE2 (macOS 26 bottle) | 10.47 | BSD-3-Clause |
+| GNU libintl, from gettext (macOS 26 bottle) | 1.0 | LGPL-2.1-or-later |
 | shaderc, with glslang 15.3.0 and SPIRV-Tools inside | 2025.3 | Apache-2.0; glslang BSD-3-Clause and others |
 | Vulkan loader | 1.4.326 | Apache-2.0 |
 
 Their corresponding source, with Homebrew's formulas and patches, is a second archive,
-`mediamp-corresponding-source-0.5.0-macos.tar.gz` (`scripts/build-mediamp-source.sh --macos`),
+`mediamp-corresponding-source-0.5.2-macos.tar.gz` (`scripts/build-mediamp-source.sh --macos`),
 linked as "mediamp macOS source" from the release notes.
 
 ### TDLib on the desktop
@@ -151,7 +160,7 @@ source at <https://github.com/adoptium/jdk21u>.
 
 ### Desktop libraries
 
-- Compose Multiplatform 1.12.1 and Material 3 for Compose Multiplatform: Apache License 2.0:
+- Compose Multiplatform 1.12.2 and Material 3 for Compose Multiplatform: Apache License 2.0:
   <https://github.com/JetBrains/compose-multiplatform>
 - Skiko (Skia for Kotlin), which Compose for desktop draws with, including the Skia library it
   bundles: Apache License 2.0 (Skiko) and BSD-3-Clause (Skia): <https://github.com/JetBrains/skiko>
