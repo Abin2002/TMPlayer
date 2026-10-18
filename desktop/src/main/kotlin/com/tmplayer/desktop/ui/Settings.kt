@@ -274,7 +274,7 @@ fun SettingsPage(
                     state = state,
                     version = version,
                     account = account,
-                    selected = if (wide) open ?: SettingsCategory.Appearance else null,
+                    selected = if (wide) open ?: SettingsCategory.entries.first() else null,
                     focus = categoryFocus,
                     onOpen = { category ->
                         cameFromStep = null
@@ -285,7 +285,7 @@ fun SettingsPage(
                 )
             }
             if (wide) {
-                val shown = open ?: SettingsCategory.Appearance
+                val shown = open ?: SettingsCategory.entries.first()
                 Column(Modifier.fillMaxSize()) {
                     PageHeader(s().settingsTitle, s().settingsSavesAsYouGo)
                     Row(

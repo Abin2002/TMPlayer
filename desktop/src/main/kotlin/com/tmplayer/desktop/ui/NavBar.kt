@@ -102,9 +102,9 @@ import com.tmplayer.ui.theme.rememberReducedMotion
 /**
  * The window's navigation, the phone's floating bar brought to the desktop: one rounded pill
  * centred at the foot of the page, floating over it with the floating hairline and a soft shadow,
- * holding Home, Chats, Search (the Ctrl+K palette) and the viewer's picture, which opens their own
- * lists and Settings (Favourites, Downloads, History, Watch later, Settings, and Update when there
- * is one), the phone's bar and popover as they are now.
+ * holding Home, Chats, Settings, Search (the Ctrl+K palette) and the viewer's picture, which opens
+ * their own lists (Favourites, Downloads, History, Watch later, and Update when there is one), the
+ * phone's bar and popover as they are now.
  *
  * It replaces the side bar of earlier versions, so the desktop and the phone are one app: the
  * pages get the whole width of the window, and the same places sit in the same order. A pointer
@@ -148,7 +148,7 @@ fun NavFrame(
 }
 
 /** Which of the bar's buttons the page on screen lights, or null for none (a page behind the picture). */
-internal enum class NavPlace { Home, Chats, Search }
+internal enum class NavPlace { Home, Chats, Settings, Search }
 
 /** The bar's lit button for where the window is. */
 internal fun navPlaceOf(state: ShellState): NavPlace? = when {
@@ -157,14 +157,15 @@ internal fun navPlaceOf(state: ShellState): NavPlace? = when {
     else -> when (state.destination) {
         Destination.Home -> NavPlace.Home
         Destination.Chats -> NavPlace.Chats
-        Destination.Settings, Destination.Favourites, Destination.History, Destination.Downloads -> null
+        Destination.Settings -> NavPlace.Settings
+        Destination.Favourites, Destination.History, Destination.Downloads -> null
     }
 }
 
 /** True on the pages behind the picture, which then wears a ring. */
 private fun inProfile(state: ShellState): Boolean =
     !state.paletteOpen && state.openChat == null &&
-        state.destination in setOf(Destination.Favourites, Destination.History, Destination.Downloads, Destination.Settings)
+        state.destination in setOf(Destination.Favourites, Destination.History, Destination.Downloads)
 
 /** The command key as the OS names it, for the tooltips. */
 private val COMMAND = if (OsInfo.isMac) "⌘" else "Ctrl+"
@@ -222,6 +223,7 @@ private fun NavBar(
                         val open = state.chatSection
                         state.showChats(if (open.onChatsPage) open else BrowseSection.of(BrowseTab.Chats))
                     }
+                    NavButton(TmIcons.Settings, s.navSettings, "$COMMAND,", current == NavPlace.Settings) { state.go(Destination.Settings) }
                     NavButton(TmIcons.Search, s.commonSearch, "${COMMAND}K", current == NavPlace.Search) { state.paletteOpen = !state.paletteOpen }
                     ProfileButton(
                         account = account,
@@ -467,7 +469,6 @@ private fun BoxScope.ProfilePopover(state: ShellState, update: NavUpdate?, ancho
                 PopoverRow(TmIcons.Download, s.navDownloads, inFlight.takeIf { it > 0 }?.toString(), onClick = close { state.go(Destination.Downloads) })
                 PopoverRow(TmIcons.History, s.browseTabHistory, null, onClick = close { state.showHistory(HistoryTab.Continue) })
                 PopoverRow(TmIcons.Clock, s.browseTabWatchLater, null, onClick = close { state.showHistory(HistoryTab.WatchLater) })
-                PopoverRow(TmIcons.Settings, s.navSettings, null, shortcut = if (OsInfo.isMac) "⌘," else "Ctrl+,", onClick = close { state.go(Destination.Settings) })
                 if (update != null) {
                     // Amber, as on the television's rail and the phone's popover: the one row that is news.
                     HorizontalDivider(Modifier.padding(horizontal = 14.dp, vertical = 4.dp), color = Tone.outline)
