@@ -143,6 +143,8 @@ internal fun TvTopBar(
     modifier: Modifier = Modifier,
     /** How much of the page's ground stands behind the bar: 1 once Home's rows are under it. */
     solid: () -> Float = { 0f },
+    /** Down from the bar, for a page with a place of its own to land (Home's Play): true if it took the remote. */
+    onDown: (() -> Boolean)? = null,
 ) {
     val s = LocalStrings.current
     var profileOpen by remember { mutableStateOf(false) }
@@ -177,7 +179,7 @@ internal fun TvTopBar(
                 // Down goes into the page, whatever stands below this item: the page's own place.
                 .onPreviewKeyEvent { event ->
                     if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionDown) {
-                        runCatching { contentFocus.requestFocus() }
+                        if (onDown?.invoke() != true) runCatching { contentFocus.requestFocus() }
                         true
                     } else {
                         false

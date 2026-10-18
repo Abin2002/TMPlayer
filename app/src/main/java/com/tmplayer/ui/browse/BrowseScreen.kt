@@ -416,6 +416,9 @@ internal fun BrowseScreen(
     var chipsFocused by remember { mutableStateOf(false) }
     // Nor while the remote is on the television's top bar: picking a page there keeps it there.
     var tvBarHasFocus by remember { mutableStateOf(false) }
+    // Home's carousel Play: Down from the TV top bar lands there at once, with nothing scrolled,
+    // while the carousel is on screen.
+    val tvPlayFocus = remember { FocusRequester() }
     val listMayTakeFocus: () -> Boolean = { !chipsFocused && !tvBarHasFocus }
     // The Chats page's chips: the order, Telegram's own filters, then each folder, which is where
     // the folders went when they left the sidebar. A folder chip is a section of its own, so the
@@ -527,6 +530,7 @@ internal fun BrowseScreen(
                                 onOpenWatchLater = openLater,
                                 onLaterArtWanted = onHomeLaterArtWanted,
                                 mayTakeFocus = listMayTakeFocus,
+                                tvPlayFocus = tvPlayFocus,
                                 onSeeWatchLater = {
                                     pickHistory(HistoryTab.WatchLater)
                                     onPickTab(BrowseSection.of(BrowseTab.History))
@@ -995,6 +999,7 @@ internal fun BrowseScreen(
                 overArt = homeShown,
                 modifier = Modifier.onFocusChanged { tvBarHasFocus = it.hasFocus },
                 solid = { barGround },
+                onDown = { homeShown && runCatching { tvPlayFocus.requestFocus(FocusDirection.Enter) }.getOrDefault(false) },
             )
         }
     } else {

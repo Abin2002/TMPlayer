@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
@@ -113,6 +114,8 @@ internal fun TvFeaturedCarousel(
     modifier: Modifier = Modifier,
     /** The page's heading, standing on the picture's top; null leaves it to the page. */
     header: (@Composable () -> Unit)? = null,
+    /** On Play, for Down from the TV top bar. */
+    playFocus: androidx.compose.ui.focus.FocusRequester? = null,
 ) {
     var headerPx by remember { mutableIntStateOf(0) }
     // Home gives the carousel the whole width to the screen's edge, as a backdrop should have;
@@ -191,7 +194,7 @@ internal fun TvFeaturedCarousel(
             HeroPill(
                 label = playLabel,
                 onClick = { onPlay(playItem, chatTitle(playItem.chatId)) },
-                modifier = Modifier.onPreviewKeyEvent { event ->
+                modifier = Modifier.then(if (playFocus != null) Modifier.focusRequester(playFocus) else Modifier).onPreviewKeyEvent { event ->
                     // Back a page; from the first page Left carries on to the rail as usual.
                     if (event.type == KeyEventType.KeyDown && event.key == back && count > 1 && index > 0) {
                         go(index - 1)
