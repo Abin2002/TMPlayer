@@ -1029,6 +1029,9 @@ object TmIcons {
                 strokeLineWidth = part.width,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
+                // The round join is not always honoured, and a sharp corner (the Archive lid's ends)
+                // then grows a miter spike past the glyph; a limit of 1 bevels it instead.
+                strokeLineMiter = 1f,
             )
         }
         return builder.build()
