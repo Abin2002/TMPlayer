@@ -34,11 +34,24 @@ class PlayerLoaderHost(
     private val root: FrameLayout,
     above: View,
     private val tv: Boolean,
-    private val fileName: String,
-    private val caption: String?,
-    private val fallbackTitle: String,
-    private val durationSec: Int,
+    fileName: String,
+    caption: String?,
+    fallbackTitle: String,
+    durationSec: Int,
 ) {
+    private var fileName by mutableStateOf(fileName)
+    private var caption by mutableStateOf(caption)
+    private var fallbackTitle by mutableStateOf(fallbackTitle)
+    private var durationSec by mutableStateOf(durationSec)
+
+    /** Another video opened in the same player (the next episode played out of sight). */
+    fun describe(fileName: String, caption: String?, fallbackTitle: String, durationSec: Int) {
+        this.fileName = fileName
+        this.caption = caption
+        this.fallbackTitle = fallbackTitle
+        this.durationSec = durationSec
+    }
+
     var progress by mutableFloatStateOf(0f)
     var status by mutableStateOf("")
     var note by mutableStateOf<String?>(null)

@@ -118,8 +118,9 @@ keeps it up to date.
 
 The jump length, the hold speed, how long the controls stay up, each drag and the vibration are
 all in Settings, Player. Settings, Playback can keep the sound playing with the screen off or in
-another app, with play, pause and seeking in the notification; it is off until you turn it on,
-and picture in picture still comes first where it can.
+another app, with play, pause and seeking in the notification, and it goes on to the next
+episode when autoplay is on; it is off until you turn it on, and picture in picture still comes
+first where it can.
 
 Chapters are read from MKV files and from MP4 files whose index is at the start (most files made
 for streaming); an MP4 with its index at the end shows them when played from Downloads.

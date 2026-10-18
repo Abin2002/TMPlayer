@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem as Media3Item
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
@@ -58,10 +59,17 @@ class SubtitleFiles(
             .onFailure { say(L.tracksNoFilePicker) }
     }
 
+    /**
+     * What the media session shows of the video (the notification, the lock screen), carried into
+     * every rebuild of the item so loading a subtitle file does not blank it.
+     */
+    var metadata: MediaMetadata = MediaMetadata.EMPTY
+
     /** The video's media item with every subtitle file loaded so far, for building or rebuilding. */
     fun item(video: Uri): Media3Item = Media3Item.Builder()
         .setUri(video)
         .setSubtitleConfigurations(loaded.toList())
+        .setMediaMetadata(metadata)
         .build()
 
     /** Selects a just loaded file's track once the player lists it. Call from onTracksChanged. */

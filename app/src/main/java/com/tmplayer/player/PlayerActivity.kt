@@ -33,6 +33,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem as Media3Item
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
@@ -65,6 +66,7 @@ import androidx.media3.ui.SubtitleView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.withStarted
 import com.tmplayer.App
 import com.tmplayer.R
 import com.tmplayer.data.ChatRepository
@@ -132,6 +134,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -459,6 +463,29 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var inBackgroundAudio = false
 
     /**
+     * True while the video track is off because nobody can see it ([BackgroundPlayback.withoutVideo]),
+     * so coming back turns on only what going away turned off.
+     */
+    private var videoHiddenUnseen = false
+
+    /**
+     * Set when the sound stopped out of sight for a reason other than the viewer
+     * ([stopUnseen]), with "Playback stopped, tap to resume" up: coming back carries on.
+     */
+    private var resumeWhenSeen = false
+
+    /** The app lock asks on open: the session names no video ([sessionMetadata]). */
+    private var sessionPrivate = false
+
+    /**
+     * The work that belongs to the video now open: its searches, its saved place, its stream.
+     * Cancelled and made again when [continueUnseen] changes the video in place, so nothing late
+     * from the last one lands on this one. A child of the activity's own scope.
+     */
+    private lateinit var itemJob: Job
+    private val itemScope: CoroutineScope get() = CoroutineScope(lifecycleScope.coroutineContext + itemJob)
+
+    /**
      * When picture in picture last ended. Closing the corner window stops the activity a moment
      * later, and that is the viewer saying stop, not "keep the sound going".
      */
@@ -608,18 +635,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         settings = SettingsStore(this)
         watchedStore = WatchedStore(this)
         bookmarkStore = BookmarkStore(this)
-        fileId = intent.getIntExtra(EXTRA_FILE_ID, 0)
-        chatId = intent.getLongExtra(EXTRA_CHAT_ID, 0)
-        messageId = intent.getLongExtra(EXTRA_MESSAGE_ID, 0)
-        mediaTitle = intent.getStringExtra(EXTRA_TITLE).orEmpty()
-        mediaSubtitle = intent.getStringExtra(EXTRA_SUBTITLE).orEmpty()
-        mediaFileName = intent.getStringExtra(EXTRA_FILE_NAME).orEmpty()
-        mediaCaption = intent.getStringExtra(EXTRA_CAPTION).orEmpty()
-        mediaTopicId = intent.getIntExtra(EXTRA_TOPIC_ID, 0)
-        chatTitle = intent.getStringExtra(EXTRA_CHAT_TITLE).orEmpty()
-        fileSizeBytes = intent.getLongExtra(EXTRA_SIZE, 0)
-        durationSec = intent.getIntExtra(EXTRA_DURATION, 0)
-        if (!intent.getBooleanExtra(EXTRA_CAN_BE_SAVED, true)) savable = false
+        itemJob = Job(lifecycleScope.coroutineContext[Job])
+        readItem(intent)
 
         subtitleView = findViewById(R.id.subtitles)
         statusOverlay = findViewById(R.id.status_overlay)
@@ -745,19 +762,24 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         buildNextUpCard()
         startTrickplay()
         startStillWatchingCounts()
-        if (hasMessage()) {
-            lifecycleScope.launch {
-                onWatchedList = runCatching { watchedStore.isWatched(chatId, messageId) }.getOrDefault(false)
-            }
-            lifecycleScope.launch {
-                runCatching { bookmarkStore.bookmarks(chatId, messageId).collect { bookmarkList.value = it } }
-            }
-        }
         // Followed rather than read once, so turning it on in Settings with a video open applies
         // the next time the player is left. A phone's setting: a television never plays on unseen.
         if (!FormFactor.isTv(this)) {
             lifecycleScope.launch {
                 runCatching { settings.backgroundAudio.collect { backgroundAudioOn = it } }
+            }
+        }
+        // With the app lock asking on open, the media notification, the lock screen's controls
+        // and the system's media panel name no video: the lock keeps out anybody who picks the
+        // phone up, and a title on the lock screen would tell them what was on.
+        lifecycleScope.launch {
+            runCatching {
+                settings.appLock.collect { lock ->
+                    val private = lock.pinSet && lock.onOpen
+                    if (private == sessionPrivate) return@collect
+                    sessionPrivate = private
+                    refreshSessionMetadata()
+                }
             }
         }
         // On a television too: the controls timeout and the remaining time readout apply there.
@@ -784,6 +806,40 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         subtitleView.setApplyEmbeddedStyles(true)
         applySubtitleStyle()
 
+        if (fileId > 0) {
+            // Once for the activity: each follows the fields, so a video changed in place
+            // ([continueUnseen]) is followed too.
+            watchEpisodes()
+            observeDownload()
+            observeConnectivity()
+            startResumeHeartbeat()
+        }
+        openItem()
+    }
+
+    /** The video's own fields, from the intent that opened it or the one [continueUnseen] set. */
+    private fun readItem(from: Intent) {
+        fileId = from.getIntExtra(EXTRA_FILE_ID, 0)
+        chatId = from.getLongExtra(EXTRA_CHAT_ID, 0)
+        messageId = from.getLongExtra(EXTRA_MESSAGE_ID, 0)
+        mediaTitle = from.getStringExtra(EXTRA_TITLE).orEmpty()
+        mediaSubtitle = from.getStringExtra(EXTRA_SUBTITLE).orEmpty()
+        mediaFileName = from.getStringExtra(EXTRA_FILE_NAME).orEmpty()
+        mediaCaption = from.getStringExtra(EXTRA_CAPTION).orEmpty()
+        mediaTopicId = from.getIntExtra(EXTRA_TOPIC_ID, 0)
+        chatTitle = from.getStringExtra(EXTRA_CHAT_TITLE).orEmpty()
+        fileSizeBytes = from.getLongExtra(EXTRA_SIZE, 0)
+        durationSec = from.getIntExtra(EXTRA_DURATION, 0)
+        savable = if (from.getBooleanExtra(EXTRA_CAN_BE_SAVED, true)) null else false
+    }
+
+    /**
+     * Everything one video asks for as it opens: the loading sheet, the searches for its episodes,
+     * copies and skip times, its saved place, and the stream itself. Run from [onCreate], and again
+     * by [continueUnseen] for the next episode played in place; the work that belongs to one video
+     * runs in [itemScope], which a change of video cancels.
+     */
+    private fun openItem() {
         if (fileId <= 0) {
             showError(L.playerNothingToPlay, retryable = false)
             return
@@ -796,10 +852,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         statusMeta?.text = mediaSubtitle.ifBlank { chatTitle }
         statusMeta?.visibility =
             if (statusMeta?.text.isNullOrBlank()) View.GONE else View.VISIBLE
-        watchEpisodes()
-        observeDownload()
-        observeConnectivity()
-        startResumeHeartbeat()
+        // The setting as the end of this video will find it ([endLeadsOn]).
+        itemScope.launch { autoplayNext = runCatching { settings.autoplayNextNow() }.getOrDefault(true) }
+        if (hasMessage()) {
+            itemScope.launch {
+                onWatchedList = runCatching { watchedStore.isWatched(chatId, messageId) }.getOrDefault(false)
+            }
+            itemScope.launch {
+                runCatching { bookmarkStore.bookmarks(chatId, messageId).collect { bookmarkList.value = it } }
+            }
+        }
         findEpisodes()
         findCopies()
         findSkipTimes()
@@ -808,7 +870,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // lands. Under "download the whole video first" there is no player to seek yet, so
         // [startPlayback] applies the same position as well; whichever arrives second sets it again.
         // A few seconds before the saved point, as Settings has it ([ResumeRewind]).
-        lifecycleScope.launch {
+        itemScope.launch {
             // A bookmark chosen on the detail page opens the video at its moment, once.
             resumeMs = BookmarkJump.take(chatId, messageId)
                 // Whichever copy of the video was played last: a switch of quality, or the 720p
@@ -823,13 +885,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         }
 
         if (savable == null) {
-            lifecycleScope.launch {
+            itemScope.launch {
                 Td.awaitAuthorizedSession()
                 savable = Td.maySave(chatId, messageId)
             }
         }
 
-        lifecycleScope.launch {
+        itemScope.launch {
             val session = Td.awaitAuthorizedSession()
             // The download index first. Every way into this screen passes here, the next episode
             // and autoplay included, so a downloaded episode plays from its file however it was
@@ -906,6 +968,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             // A plain file for a download, which the default data source reads directly; the TDLib
             // stream for everything else.
             val source = downloadedFile?.let { android.net.Uri.fromFile(it) } ?: tdFileUri(fileId)
+            // A stream also holds the Wi-Fi up while it plays, which matters once the screen is
+            // off and the sound plays on ([PlaybackService]); a file on the disk needs only the CPU.
+            built.setWakeMode(if (downloadedFile != null) C.WAKE_MODE_LOCAL else C.WAKE_MODE_NETWORK)
+            // Built out of sight (the next episode, or a stream opened again, behind the
+            // notification): no video decoding until somebody can see it.
+            if (inBackgroundAudio) hideVideoUnseen(built)
+            subtitleFiles.metadata = sessionMetadata()
             built.setMediaItem(subtitleFiles.item(source))
             if (resumeMs > 0) built.seekTo(resumeMs)
             built.prepare()
@@ -1122,7 +1191,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private fun stepEpisode(forward: Boolean): Boolean {
         val found = _episodes.value
         val item = (if (forward) found.next else found.previous) ?: return false
-        playEpisode(item)
+        // From the notification or a headset with the player out of sight, where Android lets
+        // no activity start: the episode plays in this one, behind the same notification.
+        if (inBackgroundAudio) continueUnseen(item) else playEpisode(item)
         return true
     }
 
@@ -1246,7 +1317,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         val played = copies.firstOrNull { it.id == here.id } ?: here
         App.backgroundScope.launch { runCatching { settings.notePlayedQuality(played) } }
         if (VideoCopies.keyOf(here) == null) return
-        lifecycleScope.launch {
+        itemScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 episodes.collect { steps ->
                     val episode = steps.series?.episodes?.firstOrNull { ep -> ep.copies.any { it.id == here.id } }
@@ -1255,7 +1326,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             }
         }
         if (chatId == 0L || SeriesShelf.episodeOf(here).episode != null) return
-        lifecycleScope.launch {
+        itemScope.launch {
             val session = Td.awaitAuthorizedSession()
             val title = SeriesShelf.episodeOf(here).title.ifBlank { return@launch }
             val found = runCatching { ChatRepository(session.client).mediaPage(chatId, query = title).items }.getOrNull().orEmpty()
@@ -1585,6 +1656,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** The prompt itself: the loading sheet, holding, with one button that carries on. */
     private suspend fun awaitMeteredConsent(): Boolean {
+        // The next episode reached out of sight: the question waits for the viewer.
+        awaitSeen()
         val consented = CompletableDeferred<Boolean>()
         openingFilm = false
         statusOverlay.visibility = View.VISIBLE
@@ -1803,7 +1876,6 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             .apply {
                 setAudioAttributes(movieAudioAttributes, /* handleAudioFocus = */ true)
                 setHandleAudioBecomingNoisy(true)
-                setWakeMode(C.WAKE_MODE_LOCAL)
                 setPlaybackSpeed(playbackSpeed)
                 skipSilenceEnabled = skipSilence
                 videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
@@ -1853,15 +1925,81 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * makes picture in picture's own play and pause buttons work.
      */
     private fun attachMediaSession(exo: ExoPlayer) {
-        mediaSession?.release()
+        // A session already made (a stream opened again, the next episode played in place) takes
+        // the new player rather than going: the notification, the lock screen's controls and,
+        // with the player out of sight, [PlaybackService]'s foreground all carry on through it.
+        mediaSession?.let { session ->
+            val swapped = runCatching { session.player = EpisodeStepping(exo) }.isSuccess
+            if (swapped) return
+            session.release()
+        }
         mediaSession = runCatching {
             MediaSession.Builder(this, EpisodeStepping(exo))
                 // Distinct per activity instance: stepping to the next episode builds a second
                 // activity before the first has been destroyed, and two sessions sharing an id
                 // is the one thing the builder refuses outright.
                 .setId("tmplayer-$chatId-$messageId-${SystemClock.elapsedRealtime()}")
+                // Before Android 13 the notification draws its own buttons: seek back and
+                // forward by the player's amounts either side of play, the episodes in the
+                // expanded view. From 13 the system's controls have a seek bar instead.
+                .setMediaButtonPreferences(BackgroundPlayback.notificationButtons(Skip.BACK_MS, Skip.FORWARD_MS))
                 .build()
         }.getOrNull()
+    }
+
+    /**
+     * The name the session gives the video, which is what the media notification, the lock
+     * screen and the system's media controls show: the show or the video's name over the episode and the
+     * chat, and its thumbnail. With the app lock asking on open, only the app's name.
+     */
+    private fun sessionMetadata(): MediaMetadata {
+        // Every field is set, blank where there is nothing to say: Media3 fills an unset one
+        // from the file's own tags, which with the lock on is exactly what must not show.
+        if (sessionPrivate) {
+            return MediaMetadata.Builder()
+                .setTitle(applicationInfo.loadLabel(packageManager))
+                .setDisplayTitle("")
+                .setArtist("")
+                .setAlbumTitle("")
+                .setSubtitle("")
+                .setDescription("")
+                .build()
+        }
+        val here = currentItem()
+        val parsed = SeriesShelf.episodeOf(here)
+        val episode = _episodes.value.current ?: EpisodeNeighbours.tagOf(here)
+        val name = (episode?.show ?: parsed.title).ifBlank { parsed.title }.ifBlank { mediaTitle }
+        val detail = listOfNotNull(
+            episode?.label,
+            chatTitle.takeIf { it.isNotBlank() },
+        ).joinToString("  ·  ")
+        return MediaMetadata.Builder()
+            .setTitle(name)
+            .setDisplayTitle(name)
+            .setArtist(detail)
+            .setAlbumTitle("")
+            .setSubtitle(detail)
+            .setDescription("")
+            .setMediaType(MediaMetadata.MEDIA_TYPE_VIDEO)
+            .apply { sessionArtwork?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
+            .build()
+    }
+
+    /** The thumbnail as JPEG bytes, for [sessionMetadata]; null until one has been read. */
+    private var sessionArtwork: ByteArray? = null
+
+    /**
+     * Puts a changed [sessionMetadata] into the playing item: the app lock turned on or off,
+     * the thumbnail read, the episode named. The same uri and subtitle files, so ExoPlayer takes
+     * it as the same item and carries on without opening the file again.
+     */
+    private fun refreshSessionMetadata() {
+        val metadata = sessionMetadata()
+        if (metadata == subtitleFiles.metadata) return
+        subtitleFiles.metadata = metadata
+        val exo = player ?: return
+        val playing = exo.currentMediaItem ?: return
+        runCatching { exo.replaceMediaItem(exo.currentMediaItemIndex, playing.buildUpon().setMediaMetadata(metadata).build()) }
     }
 
     /**
@@ -1916,13 +2054,37 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private fun keepsPlayingUnseen(): Boolean =
         backgroundAudioOn && !FormFactor.isTv(this) && !isFinishing && !inPictureInPicture &&
             mediaSession != null && player?.playWhenReady == true &&
-            statusOverlay.visibility != View.VISIBLE &&
+            // The sheet is up for a failure, a question or "Still watching?", none of which
+            // plays on; the countdown to the next episode is the one sheet that does.
+            (statusOverlay.visibility != View.VISIBLE || countingDownToNext) &&
             SystemClock.elapsedRealtime() - pictureInPictureEndedAt > PIP_CLOSE_GRACE_MS
+
+    /** The failure sheet is up for something worth trying again ([showError]). */
+    private var failedRetryable = false
+
+    /** True while the sheet counts down to the next episode ([onVideoEnded]). */
+    private var countingDownToNext = false
 
     private fun startBackgroundAudio() {
         val session = mediaSession ?: return
+        val started = PlaybackService.start(
+            context = this,
+            session = session,
+            playWhenReady = player?.playWhenReady == true,
+            onStop = { endBackgroundAudio(finish = true) },
+            onCannotContinue = { stopUnseen() },
+        )
+        if (!started) {
+            // Android would not start the service: the sound cannot go on unseen, and stopping
+            // without a word would look like a crash.
+            player?.pause()
+            resumeWhenSeen = true
+            PlaybackService.notifyStopped(this)
+            return
+        }
         inBackgroundAudio = true
-        PlaybackService.start(this, session) { endBackgroundAudio(finish = true) }
+        resumeWhenSeen = false
+        player?.let(::hideVideoUnseen)
     }
 
     /** Takes the session back from the service; [finish] when playback is over with the player unseen. */
@@ -1934,6 +2096,142 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             player?.pause()
             finish()
         }
+    }
+
+    /**
+     * The sound has stopped out of sight for a reason that is not the viewer's: a failure no
+     * retry got past, a question the next episode has to ask (mobile data, room on the disk), or
+     * Android refusing the foreground. Says so with "Playback stopped, tap to resume" rather
+     * than going quiet, hands the session back, and leaves [resumeWhenSeen] for [onStart].
+     */
+    private fun stopUnseen() {
+        if (!inBackgroundAudio) return
+        player?.pause()
+        resumeWhenSeen = true
+        endBackgroundAudio()
+        PlaybackService.notifyStopped(this)
+    }
+
+    /**
+     * Turns the video track off for a player nobody can see, which stops the decoder working for
+     * frames that land nowhere ([BackgroundPlayback.withoutVideo]). Not in picture in picture,
+     * where the picture is the point.
+     */
+    private fun hideVideoUnseen(exo: ExoPlayer) {
+        if (inPictureInPicture) return
+        val hidden = BackgroundPlayback.withoutVideo(exo.trackSelectionParameters) ?: return
+        exo.trackSelectionParameters = hidden
+        videoHiddenUnseen = true
+    }
+
+    /**
+     * Puts back what [hideVideoUnseen] took, as the player comes back into view ([onStart]); not
+     * before, so a player that stopped out of sight does not start decoding pictures for nobody.
+     */
+    private fun showVideoAgain() {
+        if (!videoHiddenUnseen) return
+        videoHiddenUnseen = false
+        val exo = player ?: return
+        videoBackAskedAt = SystemClock.elapsedRealtime()
+        exo.trackSelectionParameters = BackgroundPlayback.withVideo(exo.trackSelectionParameters)
+    }
+
+    /**
+     * When [showVideoAgain] asked for the picture, so the log can say how long it took to come
+     * back (`adb logcat -s TMPlayer`, "picture back"): the figure a device check reads.
+     */
+    private var videoBackAskedAt = 0L
+
+    /**
+     * Waits until the player can be seen before something has to be asked of the viewer (mobile
+     * data, room on the disk). Out of sight that is the end of the sound for now, said with
+     * [stopUnseen]; the question is there when they come back.
+     */
+    private suspend fun awaitSeen() {
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) return
+        stopUnseen()
+        lifecycle.withStarted { }
+    }
+
+    /**
+     * The next episode with the player out of sight, where [playEpisode]'s new activity is not
+     * allowed to start: played in this activity instead, through the same opening as any video
+     * ([openItem]) and into the same media session, so the notification carries on with the new
+     * title and the player shows this episode when the viewer comes back. What the last video
+     * had (its place, its stream, its searches) is put away first, the way leaving it would.
+     */
+    private fun continueUnseen(next: MediaItem) {
+        if (handingOver) return
+        // The one ending: its place, the Watched list and the home screen row, as on the way out.
+        saveResumePosition(leaving = true)
+        // The service keeps the foreground while the new player opens.
+        PlaybackService.setPlayWhenReady(true)
+        holdFile(0)
+        releasePlayerAndSurface()
+        // Its stream, now that the player and its reads are gone (see [onDestroy]).
+        stopDownload()
+        if (lowStorageFileId != 0) LowStorageStreams.revoke(lowStorageFileId)
+        if (saveDataFileId != 0) SaveDataStreams.revoke(saveDataFileId)
+        lowStorageFileId = 0
+        saveDataFileId = 0
+        trimCache()
+        val outside = intent.getBooleanExtra(EXTRA_OUTSIDE_APP_TASK, false)
+        intent = intent(this, next, chatTitle).putExtra(EXTRA_OUTSIDE_APP_TASK, outside)
+        readItem(intent)
+        forgetTheLastVideo()
+        openItem()
+    }
+
+    /** What belonged to the last video, cleared for the next one played in place. */
+    private fun forgetTheLastVideo() {
+        itemJob.cancel()
+        itemJob = Job(lifecycleScope.coroutineContext[Job])
+        recoveryJob = null
+        recoveryAttempts = 0
+        reSourced = false
+        downloadedFile = null
+        downloadComplete = false
+        downloadedFraction = 0f
+        lastProgressRender = 0L
+        waitingForWholeFilm = false
+        speed.reset()
+        trickplayPath = null
+        trickplaySpans = emptyList()
+        resumeMs = 0L
+        resumeNotice = null
+        resumeTracks = null
+        chapters = emptyList()
+        chaptersAsked = false
+        controls?.chapters = emptyList()
+        skipSegments = emptyList()
+        skippedSegments.clear()
+        offeredSkip = null
+        hideSkipPill()
+        creditsSkipped = false
+        hideNextUp()
+        nextUpShown = false
+        nextUpDismissed = false
+        firstFrameReady = false
+        startOverOffered = false
+        abLoop = null
+        loopHandler.removeCallbacks(loopWatch)
+        seekUndo.clear()
+        undoChip?.hide()
+        markedWatchedHere = false
+        watchedHere = false
+        onWatchedList = false
+        videoWidth = 0
+        videoHeight = 0
+        copies = emptyList()
+        controls?.setCopy(null)
+        bookmarkList.value = emptyList()
+        _episodes.value = EpisodeSteps()
+        sessionArtwork = null
+        loaderHost?.thumbnail = null
+        loaderHost?.describe(mediaFileName, mediaCaption.ifBlank { null }, mediaTitle, durationSec)
+        statusArt?.setImageDrawable(null)
+        statusPoster?.setImageDrawable(null)
+        renderControlsTitle()
     }
 
     /**
@@ -1968,7 +2266,15 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             subtitleFiles.onTracksChanged(tracks)
         }
 
+        override fun onRenderedFirstFrame() {
+            if (videoBackAskedAt == 0L) return
+            Log.i("TMPlayer", "Background audio: picture back in ${SystemClock.elapsedRealtime() - videoBackAskedAt} ms")
+            videoBackAskedAt = 0L
+        }
+
         override fun onVideoSizeChanged(size: VideoSize) {
+            // The track turned off out of sight reports no size, which is not a new shape.
+            if (videoHiddenUnseen && (size.width <= 0 || size.height <= 0)) return
             videoWidth = size.width
             videoHeight = size.height
             followVideoOrientation()
@@ -1978,6 +2284,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         }
 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            // Heard here before Media3's notification hears it: a pause lets the service out of
+            // the foreground at once, so the paused notification can be swiped away.
+            if (inBackgroundAudio) PlaybackService.setPlayWhenReady(playWhenReady)
             onPauseChanged(playWhenReady, reason)
         }
 
@@ -2026,7 +2335,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     }
                 }
                 // Already moved on from the credits; the file running out behind it changes nothing.
-                Player.STATE_ENDED -> if (!creditsSkipped) onVideoEnded()
+                Player.STATE_ENDED -> {
+                    // Said to the service before Media3's notification hears of the end: the
+                    // foreground lasts through the gap only when another episode follows.
+                    if (inBackgroundAudio) PlaybackService.setPlayWhenReady(!creditsSkipped && endLeadsOn())
+                    if (!creditsSkipped) onVideoEnded()
+                }
                 else -> Unit
             }
         }
@@ -2195,11 +2509,14 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         val resumeAt = exo.currentPosition.coerceAtLeast(0)
         recoveryJob?.cancel()
-        recoveryJob = lifecycleScope.launch {
+        recoveryJob = itemScope.launch {
             showRebuffering()
             // Being offline is a wait, not a failure, so it never spends the retry budget: on a
             // phone leaving the house that budget would be gone long before the signal came back.
-            if (networkOffline) {
+            // Read afresh as well as followed: [observeConnectivity] follows only while the
+            // player is on screen, and out of sight the sound plays on.
+            val offlineNow = NetworkMonitor.status.value == NetworkStatus.Offline && !Td.connected.value
+            if (networkOffline || offlineNow) {
                 combine(NetworkMonitor.status, Td.connected) { network, connected ->
                     network != NetworkStatus.Offline || connected
                 }.first { it }
@@ -2235,7 +2552,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         if (downloadedFile != null) return false
         if (reSourced || chatId == 0L || messageId == 0L) return false
         reSourced = true
-        lifecycleScope.launch {
+        itemScope.launch {
             showStatus(L.playerAskingAgain)
             val fresh = runCatching { Td.refreshMedia(chatId, messageId) }.getOrNull()
             if (fresh == null || fresh.fileId == fileId) {
@@ -2255,17 +2572,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     }
 
     /**
-     * Takes down the player, its session and its surface, for the two callers that cannot re-prepare.
+     * Takes down the player and its surface, for the callers that cannot re-prepare.
      *
      * Both [reloadFromScratch] and [resourceAgain] change the bytes underneath a media source that
      * has already been built over them, and preparing over that reads the file the press was meant
-     * to get away from. The order matters: the view lets go of the player before the player is
-     * released, so nothing is ever holding a released one.
+     * to get away from; [continueUnseen] moves on to another file. The order matters: the view
+     * lets go of the player before the player is released, so no view is ever holding a released
+     * one. The session alone does, for the moment until [startPlayback] hands it the new player.
      */
     private fun releasePlayerAndSurface() {
-        endBackgroundAudio()
-        mediaSession?.release()
-        mediaSession = null
+        // The media session stays and takes the next player ([attachMediaSession]), so a rebuild
+        // out of sight keeps [PlaybackService] and its notification; meanwhile it holds a player
+        // that is idle and still meaning to play, which keeps the foreground through the gap.
         touchSurface?.player = null
         touchSurface?.let { findViewById<FrameLayout>(R.id.playback_container).removeView(it) }
         touchSurface = null
@@ -2383,7 +2701,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         val show = EpisodeNeighbours.showOf(here) ?: return
         _episodes.value = EpisodeSteps(current = EpisodeNeighbours.tagOf(here))
 
-        lifecycleScope.launch {
+        itemScope.launch {
             if (chatId == 0L) return@launch
             val session = Td.awaitAuthorizedSession()
             val repository = ChatRepository(session.client)
@@ -2397,9 +2715,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 runCatching { repository.mediaPage(chatId, cursors, query = query, topicId = topic) }.getOrNull()
             }
             _episodes.value = steps
+            refreshSessionMetadata()
             // The providers' episode names, where lookups are on: a label first, then a better one.
             val named = withContext(Dispatchers.IO) { EpisodeNames.named(steps, here, OnlineMetadata.current) }
-            if (named != steps) _episodes.value = named
+            if (named != steps) {
+                _episodes.value = named
+                refreshSessionMetadata()
+            }
         }
     }
 
@@ -2457,6 +2779,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** Shows the Low storage offer over the loading screen and waits for the answer. */
     private suspend fun askToSwitchToLowStorage(): Boolean {
         val host = sheets ?: return false
+        // A sheet cannot go up over a player nobody can see; it waits for the viewer.
+        awaitSeen()
         val answer = CompletableDeferred<Boolean>()
         host.showLowStorageOffer { answer.complete(it) }
         return answer.await()
@@ -2602,26 +2926,45 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             val next = _episodes.value.next
             val autoplay = runCatching { settings.autoplayNextNow() }.getOrDefault(true)
             hideNextUp()
-            if (sleepAtTheEnd) {
-                sleepAtTheEnd = false
-                askStillWatching(L.playerStillWatchingSleepEnd, next)
-                return@launch
+            val unseen = inBackgroundAudio
+            val end = BackgroundPlayback.atTheEnd(
+                hasNext = next != null,
+                autoplay = autoplay,
+                nextUpDismissed = nextUpDismissed,
+                sleepAtTheEnd = sleepAtTheEnd,
+                askBeforeAutoplay = StillWatching.askBeforeAutoplay(autoplayedInARow),
+                nextUpShown = nextUpShown,
+                unseen = unseen,
+            )
+            when (end) {
+                BackgroundPlayback.AtTheEnd.SleepEnded -> {
+                    sleepAtTheEnd = false
+                    askStillWatching(L.playerStillWatchingSleepEnd, next)
+                    return@launch
+                }
+                BackgroundPlayback.AtTheEnd.Finished -> {
+                    showFinished()
+                    return@launch
+                }
+                BackgroundPlayback.AtTheEnd.AskFirst -> {
+                    askStillWatching(L.playerStillWatchingAutoplay(StillWatching.AUTOPLAY_LIMIT), next)
+                    return@launch
+                }
+                is BackgroundPlayback.AtTheEnd.Next -> Unit
             }
-            if (next == null || !autoplay || nextUpDismissed) {
-                showFinished()
-                return@launch
-            }
-            if (StillWatching.askBeforeAutoplay(autoplayedInARow)) {
-                askStillWatching(L.playerStillWatchingAutoplay(StillWatching.AUTOPLAY_LIMIT), next)
-                return@launch
-            }
-            // The card already counted the last half minute down in front of the viewer; a second
-            // countdown after it would be a wait for nothing.
-            if (nextUpShown) {
+            next ?: return@launch
+            // The card already counted the last half minute down in front of the viewer, and out
+            // of sight there is nobody to count down to: a countdown then is a wait for nothing.
+            if (!end.countdown) {
                 autoplay(next)
                 return@launch
             }
+            countingDownToNext = true
             for (second in AUTOPLAY_COUNTDOWN_SEC downTo 1) {
+                // Left mid-count with background audio on ([keepsPlayingUnseen]): nobody is
+                // watching the count, and the next episode should start while Android still
+                // lets the service into the foreground.
+                if (inBackgroundAudio) break
                 showStatus(L.playerNextTitle(_episodes.value.nextTag?.label ?: com.tmplayer.data.SeriesShelf.tileTitle(next)))
                 statusDetail.text = L.playerAutoplayCountdown(second)
                 showLoadingProgress(
@@ -2629,13 +2972,35 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 )
                 delay(1_000)
             }
+            countingDownToNext = false
             autoplay(next)
         }
     }
 
+    /**
+     * Whether the end now reached goes on to the next episode, decided at once from what is
+     * known (the autoplay setting as last read), for the service's foreground; [onVideoEnded]
+     * decides the same with the setting read afresh.
+     */
+    private fun endLeadsOn(): Boolean = BackgroundPlayback.atTheEnd(
+        hasNext = _episodes.value.next != null,
+        autoplay = autoplayNext,
+        nextUpDismissed = nextUpDismissed,
+        sleepAtTheEnd = sleepAtTheEnd,
+        askBeforeAutoplay = StillWatching.askBeforeAutoplay(autoplayedInARow),
+        nextUpShown = nextUpShown,
+        unseen = true,
+    ) is BackgroundPlayback.AtTheEnd.Next
+
     /** [playEpisode] for an episode nobody asked for, counted towards "Still watching?". */
     private fun autoplay(next: MediaItem) {
         autoplayedInARow++
+        // Out of sight no new activity may start, so the episode plays in this one; the count
+        // carries on in it as it would across activities.
+        if (inBackgroundAudio) {
+            continueUnseen(next)
+            return
+        }
         openedByAutoplay = true
         playEpisode(next)
     }
@@ -3632,7 +3997,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         if (chaptersAsked) return
         chaptersAsked = true
         val language = Translator.messages.tag
-        lifecycleScope.launch {
+        itemScope.launch {
             repeat(CHAPTER_TRIES) { attempt ->
                 if (attempt > 0) delay(CHAPTER_RETRY_MS)
                 val local = downloadedFile
@@ -4236,7 +4601,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private fun findSkipTimes() {
         val metadata = OnlineMetadata.current ?: return
-        lifecycleScope.launch {
+        itemScope.launch {
             var seconds = durationSec
             if (seconds <= 0) {
                 withTimeoutOrNull(SKIP_TIMES_WAIT_MS) {
@@ -4580,7 +4945,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         val thumbnailId = intent.getIntExtra(EXTRA_THUMBNAIL_ID, 0)
         if (thumbnailId <= 0) return
-        lifecycleScope.launch {
+        itemScope.launch {
             val frame = runCatching { Thumbnails.full(thumbnailId) }.getOrNull() ?: return@launch
             // The loader takes the thumbnail only when it is shaped like a frame of the film. A
             // square or upright one is, as a rule, the channel's logo, and a logo blown up across
@@ -4589,6 +4954,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 loaderHost?.thumbnail = frame
             }
             val full = frame.asAndroidBitmap()
+            // The notification's and the lock screen's picture too.
+            sessionArtwork = withContext(Dispatchers.Default) { artworkOf(full) }
+            refreshSessionMetadata()
             statusPoster?.setImageBitmap(full)
             // Where there was a minithumbnail the backdrop keeps it: stretching a real thumbnail
             // across 1080p is a soft, ugly photograph, while stretching a forty-pixel one is a
@@ -4597,6 +4965,17 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             revealArtwork()
         }
     }
+
+    /**
+     * [bitmap] as PNG bytes for the session's artwork: Telegram's thumbnail as it came, which is
+     * already the size a notification draws.
+     */
+    private fun artworkOf(bitmap: android.graphics.Bitmap): ByteArray? = runCatching {
+        java.io.ByteArrayOutputStream().use { out ->
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
+            out.toByteArray()
+        }
+    }.getOrNull()
 
     /**
      * Brings the artwork up, and keeps the backdrop moving while the viewer waits.
@@ -4841,6 +5220,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      *   certain to fail again is worse than offering none.
      */
     private fun showError(message: String, retryable: Boolean = true) {
+        // Out of sight the sheet waits for the viewer, and the notification says it is there.
+        stopUnseen()
+        failedRetryable = retryable
         openingFilm = false
         undoChip?.hide()
         keepScreenOn(false)
@@ -5032,6 +5414,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * the episode search are already set up against this file, so there is nothing to rebuild.
      */
     private fun retryPlayback() {
+        failedRetryable = false
         statusRetry?.visibility = View.GONE
         recoveryAttempts = 0
         showStatus(L.playerTryingAgain)
@@ -5048,6 +5431,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     }
 
     private fun hideStatus() {
+        failedRetryable = false
         openingFilm = false
         statusOverlay.visibility = View.GONE
         stopArtDrift()
@@ -5066,11 +5450,11 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private fun startResumeHeartbeat() {
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                while (true) {
-                    delay(RESUME_TICK_MS)
-                    if (player?.isPlaying == true) saveResumePosition()
-                }
+            while (true) {
+                delay(RESUME_TICK_MS)
+                // And with the sound playing on out of sight, which is an hour as easily.
+                val seen = lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+                if ((seen || inBackgroundAudio) && player?.isPlaying == true) saveResumePosition()
             }
         }
     }
@@ -5082,8 +5466,23 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     override fun onStart() {
         super.onStart()
-        // Back in front: the session comes home from the notification, the sound never stopped.
+        // Back in front: the session comes home from the notification, the sound never stopped,
+        // and the picture comes back on (turned off only while nobody could see it).
         endBackgroundAudio()
+        showVideoAgain()
+        PlaybackService.clearStopped(this)
+        // It stopped out of sight for a reason that was not the viewer's ([stopUnseen]), and the
+        // notification promised a tap would carry on: a failure is tried again, a pause plays.
+        // A question the next episode asks (mobile data, room) is already on screen waiting.
+        if (resumeWhenSeen) {
+            resumeWhenSeen = false
+            val exo = player
+            if (failedRetryable) {
+                retryPlayback()
+            } else if (exo != null && statusOverlay.visibility != View.VISIBLE && exo.playbackState != Player.STATE_ENDED) {
+                exo.play()
+            }
+        }
         if (com.tmplayer.data.AppLockSession.unlocked.value) return
         lifecycleScope.launch {
             val askOnOpen = runCatching { settings.appLock.first().onOpen }.getOrDefault(false)
