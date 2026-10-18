@@ -166,6 +166,7 @@ import com.tmplayer.ui.components.PosterArt
 @Composable
 fun MediaGridPage(state: ShellState, chat: ChatSummary) {
     val s = LocalStrings.current
+    val toast = rememberToast()
     val minSize by state.settings.minSizeBytes.collectAsState(initial = null)
     val maxSize by state.settings.maxSizeBytes.collectAsState(initial = null)
     val min = minSize
@@ -268,7 +269,15 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         val skeleton: @Composable () -> Unit = {
             VideoGridSkeleton(if (postersLast) CHAT_POSTER_WIDTH * POSTER_SHARE else CHAT_POSTER_WIDTH, posters = postersLast)
         }
-        StateBox(ui, onRetry = { model.load() }, onAction = model::act, skeleton = skeleton) { content ->
+        StateBox(
+            ui,
+            onRetry = { model.load() },
+            onAction = { action ->
+                // The same words across every chat: the palette opens on them over this chat.
+                if (action == com.tmplayer.ui.components.StateAction.SearchAllChats) state.searchEverywhere(model.searchText) else model.act(action)
+            },
+            skeleton = skeleton,
+        ) { content ->
             val back = gridReturn
             val grid = rememberLazyGridState(back?.first ?: 0, back?.second ?: 0)
             LaunchedEffect(grid) { gridReturn = null }
@@ -365,6 +374,22 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                     }
                 },
                 loadingMore = content.loadingMore,
+                footerSlow = { SlowAnswerLine(content.items.size, onRetry = model::retryMore) },
+                footer = if (!content.moreFailed && content.archives.isEmpty()) null else {
+                    {
+                        Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // The last page failed: said, with Try again, not a listing that stops short.
+                            if (content.moreFailed) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                    Text(s.gridMoreFailed, color = Tone.muted)
+                                    Spacer(Modifier.width(12.dp))
+                                    OutlinedButton(onClick = model::retryMore) { Text(s.commonTryAgain) }
+                                }
+                            }
+                            ArchiveList(content.archives, noVideos = content.items.isEmpty(), onExplain = { toast(it) })
+                        }
+                    }
+                },
                 rows = state.chatRows,
                 rowsGrid = rowsGrid,
                 topPadding = (if (underChrome) ChatTopClearance else 8.dp) + noticeRoom,
@@ -435,6 +460,10 @@ internal fun VideoGrid(
     posterWidth: Dp = state.posterWidth,
     /** The page's own bar at the foot, which a selection's bar takes the place of while it is up. */
     bottomBar: (@Composable () -> Unit)? = null,
+    /** Full width under the last cell: a failed page's Try again, the chat's archives. */
+    footer: (@Composable () -> Unit)? = null,
+    /** Under the next page's spinner once it runs long: [SlowAnswerLine] with its Try again. */
+    footerSlow: (@Composable () -> Unit)? = null,
 ) {
     val watch = if (series.isEmpty()) null else rememberSeriesWatch(state)
     // Every file on its own, episodes included: a chat lists what was posted, one by one.
@@ -491,10 +520,14 @@ internal fun VideoGrid(
             }
             if (loadingMore) {
                 item(key = "more", span = { GridItemSpan(maxLineSpan) }) {
-                    Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(Modifier.size(28.dp))
+                        footerSlow?.invoke()
                     }
                 }
+            }
+            if (footer != null) {
+                item(key = "footer", span = { GridItemSpan(maxLineSpan) }) { footer() }
             }
         }
         }
@@ -1422,3 +1455,40 @@ private val SPONSORED_ART = 112.dp
 
 /** A value worked out off the main thread, so "not answered yet" and "answered null" differ. */
 private class Computed<T>(val value: T)
+
+
+/**
+ * A chat's compressed files under its videos ([com.tmplayer.data.Archives]): what TMPlayer met
+ * among the chat's documents and cannot play, each with why, so a chat of ZIPs does not read as
+ * an empty one. A click says the reason again as a message.
+ */
+@Composable
+internal fun ArchiveList(archives: List<com.tmplayer.data.ArchiveFile>, noVideos: Boolean, onExplain: (String) -> Unit) {
+    if (archives.isEmpty()) return
+    val s = LocalStrings.current
+    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (noVideos) Text(s.browseNoPlayableVideos, style = MaterialTheme.typography.titleMedium)
+        Text(s.gridArchivesHeading(archives.size), color = Tone.muted, style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(4.dp))
+        archives.forEach { file ->
+            val size = file.sizeBytes.takeIf { it > 0 }?.let { s.messages.formatter.bytes(it) }
+            androidx.compose.material3.Surface(
+                onClick = { onExplain(file.reason) },
+                shape = MaterialTheme.shapes.medium,
+                color = Tone.surface,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(TmIcons.Archive, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(16.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(file.fileName.ifBlank { file.kind.label }, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        Text(file.reason, color = Tone.muted, style = MaterialTheme.typography.bodySmall)
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Text(listOfNotNull(file.kind.label, size).joinToString(" · "), color = Tone.muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+}

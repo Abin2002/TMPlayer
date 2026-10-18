@@ -222,7 +222,13 @@ internal fun BoxScope.SearchPalette(
     BackHandler(enabled = true) { state.paletteOpen = false }
     LaunchedEffect(Unit) {
         // Back with the last query selected whole, so typing starts a new one.
-        state.paletteQuery = text.copy(selection = TextRange(0, text.text.length))
+        if (state.paletteSubmit) {
+            // Opened by "Search all chats": the words are the search, asked at once.
+            state.paletteSubmit = false
+            search.submit(text.text)
+        } else {
+            state.paletteQuery = text.copy(selection = TextRange(0, text.text.length))
+        }
         runCatching { field.requestFocus() }
     }
     LaunchedEffect(query.text) { allChats = false }

@@ -10,8 +10,15 @@ import kotlin.math.abs
 import kotlin.math.pow
 
 /**
- * Volume boost, the night mode: a gain to lift quiet dialogue and a compressor behind it to hold
- * the loud scenes back down, so the explosion that follows a whisper does not wake the house.
+ * Volume boost and Night mode, one processor: a gain to lift quiet dialogue and a compressor
+ * behind it to hold the loud scenes back down, so the explosion that follows a whisper does not
+ * wake the house.
+ *
+ * Volume boost makes everything louder and keeps the peaks from clipping. Night mode ([night])
+ * squeezes the range itself: a smaller lift ([NIGHT_GAIN], about 6 dB) and a compressor that
+ * starts far lower ([NIGHT_THRESHOLD], about -15 dBFS) at a steeper [NIGHT_RATIO], so a full scale
+ * peak lands near -11 dBFS while dialogue at -30 dBFS comes up to -24: the loud moments end up
+ * quieter than they were, the quiet ones louder. The two together stack their gains.
  *
  * The gain is [BOOST], about 9 dB. The compressor follows the loudest channel of each frame with a
  * fast attack and a slow release, and above [THRESHOLD] squeezes anything louder at [RATIO] to one,
@@ -32,6 +39,10 @@ class VolumeBoostProcessor : BaseAudioProcessor() {
     @Volatile
     var enabled: Boolean = false
 
+    /** Night mode. Set from the main thread, read on the playback thread, like [enabled]. */
+    @Volatile
+    var night: Boolean = false
+
     /** The gain actually applied, walking towards 1 or [BOOST]. */
     private var gain = 1f
 
@@ -51,7 +62,7 @@ class VolumeBoostProcessor : BaseAudioProcessor() {
         val rate = inputAudioFormat.sampleRate.toFloat()
         attack = coefficient(ATTACK_SECONDS, rate)
         release = coefficient(RELEASE_SECONDS, rate)
-        rampStep = (BOOST - 1f) / (RAMP_SECONDS * rate)
+        rampStep = (BOOST * NIGHT_GAIN - 1f) / (RAMP_SECONDS * rate)
         frame = FloatArray(inputAudioFormat.channelCount)
         return inputAudioFormat
     }
@@ -60,7 +71,8 @@ class VolumeBoostProcessor : BaseAudioProcessor() {
         val remaining = inputBuffer.remaining()
         if (remaining == 0) return
         val out = replaceOutputBuffer(remaining)
-        if (!enabled && gain == 1f) {
+        val night = night
+        if (!enabled && !night && gain == 1f) {
             envelope = 0f
             out.put(inputBuffer).flip()
             return
@@ -69,7 +81,9 @@ class VolumeBoostProcessor : BaseAudioProcessor() {
         val float = inputAudioFormat.encoding == C.ENCODING_PCM_FLOAT
         val channels = frame.size
         val frames = remaining / inputAudioFormat.bytesPerFrame
-        val target = if (enabled) BOOST else 1f
+        val target = targetGain(enabled, night)
+        val threshold = if (night) NIGHT_THRESHOLD else THRESHOLD
+        val ratio = if (night) NIGHT_RATIO else RATIO
         repeat(frames) {
             for (c in 0 until channels) {
                 frame[c] = if (float) input.getFloat() else input.getShort() / SHORT_SCALE
@@ -79,7 +93,7 @@ class VolumeBoostProcessor : BaseAudioProcessor() {
             for (c in 0 until channels) peak = maxOf(peak, abs(frame[c]))
             peak *= gain
             envelope += (if (peak > envelope) attack else release) * (peak - envelope)
-            val squeeze = if (envelope > THRESHOLD) (THRESHOLD / envelope).pow(1f - 1f / RATIO) else 1f
+            val squeeze = squeeze(envelope, threshold, ratio)
             val scale = gain * squeeze
             for (c in 0 until channels) {
                 val sample = (frame[c] * scale).coerceIn(-1f, 1f)
@@ -109,6 +123,32 @@ class VolumeBoostProcessor : BaseAudioProcessor() {
         /** About -9 dBFS, where the squeeze starts. */
         const val THRESHOLD = 0.35f
         const val RATIO = 4f
+
+        /** Night mode's lift, about +6 dB. */
+        const val NIGHT_GAIN = 2f
+
+        /** About -15 dBFS: Night mode squeezes everything above dialogue level. */
+        const val NIGHT_THRESHOLD = 0.18f
+        const val NIGHT_RATIO = 6f
+
+        /** The gain the ramp walks towards for these switches. */
+        fun targetGain(boost: Boolean, night: Boolean): Float =
+            (if (boost) BOOST else 1f) * (if (night) NIGHT_GAIN else 1f)
+
+        /** What a level of [envelope] is multiplied by: 1 below [threshold], [ratio] to one above. */
+        fun squeeze(envelope: Float, threshold: Float, ratio: Float): Float =
+            if (envelope > threshold) (threshold / envelope).pow(1f - 1f / ratio) else 1f
+
+        /**
+         * Where a steady level [input] (full scale units) comes out once the compressor has
+         * settled on it, for the tests and the sentence above.
+         */
+        fun settledOutput(input: Float, boost: Boolean, night: Boolean): Float {
+            val lifted = input * targetGain(boost, night)
+            val threshold = if (night) NIGHT_THRESHOLD else THRESHOLD
+            val ratio = if (night) NIGHT_RATIO else RATIO
+            return (lifted * squeeze(lifted, threshold, ratio)).coerceAtMost(1f)
+        }
 
         private const val ATTACK_SECONDS = 0.005f
         private const val RELEASE_SECONDS = 0.25f

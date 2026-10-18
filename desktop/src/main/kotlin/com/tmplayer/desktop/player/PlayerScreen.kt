@@ -108,7 +108,8 @@ private val playerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 internal sealed interface Phase {
     data class Loading(val message: String) : Phase
     data object Playing : Phase
-    data class Failed(val message: String) : Phase
+    /** [noRoom]: refused for space on the drive, which Free up space answers better than Try again. */
+    data class Failed(val message: String, val noRoom: Boolean = false) : Phase
     data class Countdown(val next: MediaItem, val seconds: Int) : Phase
     data object Finished : Phase
 
@@ -225,6 +226,8 @@ fun PlayerScreen(
     onLockedChanged: (Boolean) -> Unit = {},
     /** Start locked, with the Unlock button up: the render test's. */
     lockedAtStart: Boolean = false,
+    /** "Not enough space": close the player for Downloads with Free up space up. Null hides it. */
+    onFreeUpSpace: (() -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     val engine = remember { engineFactory() }
@@ -447,6 +450,7 @@ fun PlayerScreen(
             volume = prefs.now.volume,
             muted = prefs.now.muted,
             volumeBoost = runCatching { settings.volumeBoostNow() }.getOrDefault(false),
+            nightMode = runCatching { settings.nightModeNow() }.getOrDefault(false),
             hwdec = OpenPrefs.hwdecFor(prefs.now.softwareDecoding),
             subtitleStyle = runCatching { settings.subtitleStyleNow() }.getOrDefault(SubtitleStyle()),
             delays = delays,
@@ -461,7 +465,7 @@ fun PlayerScreen(
             throw e
         } catch (e: Exception) {
             Logger.w("PlayerScreen", "Could not open ${item.title}", e)
-            phase = Phase.Failed(e.message ?: s.playerOpenFailed)
+            phase = Phase.Failed(e.message ?: s.playerOpenFailed, noRoom = e is com.tmplayer.desktop.NotEnoughRoom)
             return@LaunchedEffect
         } finally {
             preparing.cancel()
@@ -738,6 +742,14 @@ fun PlayerScreen(
         engine.setVolumeBoost(on)
         showFlash(Flash.Kind.Text, if (on) L.playerVolumeBoostOn else L.playerVolumeBoostOff)
         playerScope.launch { runCatching { settings.setVolumeBoost(on) } }
+    }
+
+    /** The menu's Night mode: switched on the sound already playing, and kept for every video. */
+    fun toggleNightMode() {
+        val on = !status.nightMode
+        engine.setNightMode(on)
+        showFlash(Flash.Kind.Text, if (on) L.playerNightModeOn else L.playerNightModeOff)
+        playerScope.launch { runCatching { settings.setNightMode(on) } }
     }
 
     val left = status.durationMs - status.positionMs
@@ -1433,6 +1445,7 @@ fun PlayerScreen(
                             showFlash(Flash.Kind.Text, if (on) s.playerDownmixOn else s.playerDownmixOff)
                         }
                         MenuAction.ToggleVolumeBoost -> toggleVolumeBoost()
+                        MenuAction.ToggleNightMode -> toggleNightMode()
                         is MenuAction.Sleep -> setSleepTimer(action.minutes)
                         is MenuAction.SubtitleDelay -> stepSubtitleDelay(action.direction)
                         is MenuAction.AudioDelay -> stepAudioDelay(action.direction)
@@ -1606,6 +1619,7 @@ fun PlayerScreen(
                     refocus()
                 },
                 onBack = onBack,
+                onFreeUpSpace = onFreeUpSpace,
                 onWatchAgain = {
                     if (engine.state.value.opened) {
                         phase = Phase.Playing

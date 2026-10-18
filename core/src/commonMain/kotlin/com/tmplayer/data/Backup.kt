@@ -149,6 +149,7 @@ object Backups {
         "media_layout" to Kind.TEXT,
         "min_size_bytes" to Kind.LONG,
         "new_video_alerts" to Kind.BOOL,
+        "night_mode" to Kind.BOOL,
         "open_last_chat" to Kind.BOOL,
         "preferred_audio_language" to Kind.TEXT,
         "preferred_subtitle_language" to Kind.TEXT,

@@ -150,6 +150,19 @@ class ShellState(
      */
     var downloadsOpenRecent by mutableStateOf(false)
 
+    /**
+     * Set by the player's "Not enough space": Downloads opens with Free up space already up, the
+     * device counted as short so Low storage mode is offered. The page clears it once shown.
+     */
+    var downloadsFreeUp by mutableStateOf(false)
+
+    /** The player refused a video for room: closed, and Downloads open on Free up space. */
+    fun freeUpSpace() {
+        closePlayer()
+        downloadsFreeUp = true
+        go(Destination.Downloads)
+    }
+
     /** History, on [tab]. */
     fun showHistory(tab: HistoryTab) {
         historyTab = tab
@@ -199,6 +212,20 @@ class ShellState(
     var paletteOpen by mutableStateOf(false)
 
     var paletteQuery by mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(""))
+
+    /**
+     * Set with the palette's text when something other than typing opened it ([searchEverywhere]),
+     * so the palette runs the search at once rather than waiting for a key.
+     */
+    var paletteSubmit by mutableStateOf(false)
+
+    /** "Search all chats" from a listing that matched nothing: the palette, open on [text]. */
+    fun searchEverywhere(text: String) {
+        if (text.isBlank()) return
+        paletteQuery = androidx.compose.ui.text.input.TextFieldValue(text, androidx.compose.ui.text.TextRange(text.length))
+        paletteSubmit = true
+        paletteOpen = true
+    }
 
     /** Whichever search field the page on screen has; "/" and Ctrl+F focus it. */
     val searchFocus = FocusRequester()

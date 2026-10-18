@@ -213,8 +213,38 @@ object TmSchemes {
         scrim = Color(0xFF000000),
     )
 
-    fun of(dark: Boolean): ColorScheme = if (dark) Dark else Light
+    /**
+     * Black, for an OLED screen ([com.tmplayer.data.ThemeChoice.Black]): [Dark] with the ground
+     * at true black. See [pureBlack].
+     */
+    val Black: ColorScheme = Dark.pureBlack()
+
+    fun of(dark: Boolean, black: Boolean = false): ColorScheme = when {
+        dark && black -> Black
+        dark -> Dark
+        else -> Light
+    }
 }
+
+/**
+ * This dark scheme with its ground at true black, so an OLED panel turns those pixels off. The
+ * accent, the text and the outline stay as they are; the surfaces step up from black by the same
+ * small amounts the dark scheme steps up from its own ground, so a card, a sheet or a focused row
+ * still stands apart. Applied to the wallpaper's scheme too, on a phone that takes its colours
+ * from it.
+ */
+fun ColorScheme.pureBlack(): ColorScheme = copy(
+    background = Color.Black,
+    surface = Color.Black,
+    surfaceDim = Color.Black,
+    surfaceContainerLowest = Color.Black,
+    surfaceContainerLow = Color(0xFF0B0C0D),
+    surfaceContainer = Color(0xFF111315),
+    surfaceContainerHigh = Color(0xFF1A1D1F),
+    surfaceContainerHighest = Color(0xFF23272A),
+    surfaceBright = Color(0xFF2B2F32),
+    outlineVariant = Color(0xFF26292C),
+)
 
 /** Material's own shape scale, wired to [Corner] so a stock component and a hand-drawn one agree. */
 val TmShapes = Shapes(
@@ -261,7 +291,9 @@ val TmTouchTypography = Typography(
 @Composable
 fun TmMaterialTheme(
     dark: Boolean,
-    scheme: ColorScheme = TmSchemes.of(dark),
+    /** Dark on a true black ground ([TmSchemes.Black]); only with [dark]. */
+    black: Boolean = false,
+    scheme: ColorScheme = TmSchemes.of(dark, black),
     content: @Composable () -> Unit,
 ) {
     MaterialTheme(colorScheme = scheme, shapes = TmShapes, typography = TmTouchTypography) {

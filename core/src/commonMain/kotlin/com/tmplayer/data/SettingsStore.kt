@@ -37,6 +37,7 @@ private val DETAIL_FIRST = booleanPreferencesKey("detail_first")
 private val COMPACT_NAV = booleanPreferencesKey("compact_nav")
 private val DOWNMIX_STEREO = booleanPreferencesKey("downmix_stereo")
 private val VOLUME_BOOST = booleanPreferencesKey("volume_boost")
+private val NIGHT_MODE = booleanPreferencesKey("night_mode")
 private val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
 private val BACKGROUND_AUDIO = booleanPreferencesKey("background_audio")
 // Not "resume_...": that prefix is a resume point's, and the sweeps over resume points (the
@@ -622,6 +623,20 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /** Read before the player is built, so the first second of sound is already at its level. */
     suspend fun volumeBoostNow(): Boolean = prefs.data.first()[VOLUME_BOOST] ?: false
+
+    /**
+     * Night mode for sound: the loud and the quiet brought close together, so dialogue is heard at
+     * a low volume and an explosion does not wake the house. Unlike [volumeBoost] it makes the
+     * loudest moments quieter rather than everything louder. Off until turned on, then kept.
+     */
+    val nightMode: Flow<Boolean> = read { it[NIGHT_MODE] ?: false }
+
+    suspend fun setNightMode(value: Boolean) {
+        prefs.edit { it[NIGHT_MODE] = value }
+    }
+
+    /** Read before the player is built, like [volumeBoostNow]. */
+    suspend fun nightModeNow(): Boolean = prefs.data.first()[NIGHT_MODE] ?: false
 
     /**
      * Skip silence, from the speed picker: the quiet stretches of a lecture or a talk played

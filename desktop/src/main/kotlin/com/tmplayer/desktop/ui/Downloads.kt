@@ -160,7 +160,11 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
     var figures by remember { mutableStateOf<StorageFigures?>(null) }
     var refresh by remember { mutableStateOf(0) }
     LaunchedEffect(refresh, history.size, cached.size) { figures = runCatching { measureStorage(state) }.getOrNull() }
-    var freeingUp by remember { mutableStateOf(false) }
+    // Up at once when the player sent the viewer here for room ("Not enough space").
+    var freeingUp by remember { mutableStateOf(state.downloadsFreeUp) }
+    // Asked for room: the device counts as short, so Low storage mode is offered while it is off.
+    val askedForRoom = remember { state.downloadsFreeUp }
+    LaunchedEffect(Unit) { state.downloadsFreeUp = false }
     var confirmClearCache by remember { mutableStateOf(false) }
     var confirmPictures by remember { mutableStateOf(false) }
     var confirmUnfinished by remember { mutableStateOf(false) }
@@ -349,7 +353,11 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                             at += 1
                         }
                         if (history.isEmpty()) {
-                            item(key = "e-done") { Empty(s.downloadsEmptyDone(downloadsDir.path)) }
+                            item(key = "e-done") {
+                                Empty(s.downloadsEmptyDone(downloadsDir.path), s.browseGoToChats) {
+                                    state.showChats(com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats))
+                                }
+                            }
                             at += 1
                         }
                         shelf.forEach { entry ->
@@ -462,7 +470,7 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
         val f = figures
         val lines = com.tmplayer.data.FreeUpSpace.lines(
             lowStorageOn = lowStorageOn,
-            short = com.tmplayer.data.FreeUpSpace.isShort(f?.diskFreeBytes ?: -1, f?.diskTotalBytes ?: 0, askedForRoom = false),
+            short = com.tmplayer.data.FreeUpSpace.isShort(f?.diskFreeBytes ?: -1, f?.diskTotalBytes ?: 0, askedForRoom = askedForRoom),
             recentBytes = if (state.extras.watchCache != null) f?.cachedBytes ?: 0 else 0,
             recentCount = f?.cachedCount ?: 0,
             unfinishedBytes = unfinished.sumOf { it.downloadedBytes },
@@ -746,7 +754,7 @@ private fun ShowHeading(title: String, detail: String) {
 
 /** An empty section: the phone's download mark and its words, on the card's fill. */
 @Composable
-private fun Empty(text: String) {
+private fun Empty(text: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
     Surface(
         shape = RoundedCornerShape(Corner.Large),
         color = Tone.surface,
@@ -755,7 +763,12 @@ private fun Empty(text: String) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             com.tmplayer.ui.components.SettingIconChip(TmIcons.Download)
             Spacer(Modifier.width(16.dp))
-            Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = Modifier.weight(1f))
+            // The way on from an empty list: the chats, where every video has its Download.
+            if (actionLabel != null && onAction != null) {
+                Spacer(Modifier.width(16.dp))
+                androidx.compose.material3.OutlinedButton(onClick = onAction) { Text(actionLabel) }
+            }
         }
     }
 }

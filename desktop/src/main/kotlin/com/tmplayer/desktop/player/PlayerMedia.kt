@@ -580,7 +580,7 @@ class TelegramPlayerMedia(
                     runCatching { settings.setLowStorageMode(true) }
                     return ensureRoom()
                 }
-                throw java.io.IOException(RoomOnDisk.refusal(decision.shortBytes, DesktopPaths.filesDir))
+                throw com.tmplayer.desktop.NotEnoughRoom(RoomOnDisk.refusal(decision.shortBytes, DesktopPaths.filesDir))
             }
         }
     }

@@ -126,7 +126,7 @@ fun <T> StateBox(
 
 /** Nothing until the wait for [key] passes [afterMs], then the line and a Retry button. */
 @Composable
-private fun SlowAnswerLine(key: Any, onRetry: () -> Unit, afterMs: Long) {
+internal fun SlowAnswerLine(key: Any, onRetry: () -> Unit, afterMs: Long = SlowAnswer.AFTER_MS) {
     var slow by remember(key) { mutableStateOf(false) }
     LaunchedEffect(key) {
         delay(afterMs)
@@ -171,10 +171,17 @@ fun RecentSearchRow(searches: List<String>, onPick: (String) -> Unit, onClear: (
  * television draw it) over one muted line, centred.
  */
 @Composable
-fun EmptyNote(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+fun EmptyNote(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    /** The one way on, drawn as a button under the line, as [StateBox] draws an empty state's action. */
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
     Centred {
         EmptyArt(icon, modifier = Modifier.padding(bottom = 4.dp))
         Text(text, color = Tone.muted, textAlign = TextAlign.Center)
+        if (actionLabel != null && onAction != null) OutlinedButton(onClick = onAction) { Text(actionLabel) }
     }
 }
 

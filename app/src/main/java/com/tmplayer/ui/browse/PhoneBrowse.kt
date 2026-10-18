@@ -138,6 +138,14 @@ internal fun PhoneBrowse(
     }
     LaunchedEffect(searchState.filters, searchState.sort) { savedFilters = encodeFilters(searchState.filters, searchState.sort) }
     LaunchedEffect(searchText.text) { search.type(searchText.text) }
+    // "Search all chats" from a chat whose listing matched nothing: the search page, on those words.
+    val asked by SearchRequest.pending.collectAsState()
+    LaunchedEffect(asked) {
+        val text = SearchRequest.take() ?: return@LaunchedEffect
+        searchText = TextFieldValue(text, TextRange(text.length))
+        search.submit(text)
+        searchOpen = true
+    }
 
     // What the local half of the search matches besides the chat listings already seen.
     val downloads by remember(settings) { settings.downloadHistory }.collectAsState(initial = emptyList())

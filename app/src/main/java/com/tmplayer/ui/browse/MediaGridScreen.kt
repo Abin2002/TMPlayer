@@ -174,6 +174,8 @@ import com.tmplayer.ui.components.FocusOnOpen
 import com.tmplayer.ui.components.MediaGridSkeleton
 import com.tmplayer.ui.components.MediaPreview
 import com.tmplayer.ui.components.Spinner
+import com.tmplayer.ui.components.SlowAnswerNotice
+import com.tmplayer.ui.components.TmButton
 import com.tmplayer.ui.components.StateScaffold
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.TvSearchField
@@ -492,7 +494,11 @@ fun MediaGridScreen(
             state,
             onRetry = viewModel::load,
             loading = { MediaGridSkeleton(layout = layout) },
-            onAction = viewModel::act,
+            onAction = { action ->
+                viewModel.act(action)
+                // The search across every chat lives with the chat list: back there, where it opens.
+                if (action == com.tmplayer.ui.components.StateAction.SearchAllChats) onBack()
+            },
         ) { list ->
             // On a phone the column count follows the width, which follows the orientation.
             // Everything that counts in columns, the paging lead included, reads it from here so
@@ -720,6 +726,8 @@ fun MediaGridScreen(
                                         )
                                     }
                             }
+                            // The chat's compressed files, which cannot be played, each with why.
+                            archiveItems(list.archives, noVideos = feed.isEmpty(), first = if (feed.isEmpty()) firstItem else null, onExplain = onOfflineAction)
                         }
     
                         CardLayout.List -> LazyColumn(
@@ -783,6 +791,7 @@ fun MediaGridScreen(
                                 }
                               }
                             }
+                            archiveItems(list.archives, noVideos = feed.isEmpty(), first = if (feed.isEmpty()) firstItem else null, onExplain = onOfflineAction)
                         }
                     }
                 }
@@ -891,6 +900,33 @@ fun MediaGridScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Tone.muted,
                             )
+                            // A page that will not come says so, with a way to ask again.
+                            SlowAnswerNotice(key = list.items.size, onRetry = viewModel::retryMore)
+                        }
+                    }
+                }
+                // The last page failed: said where the chip was, with Try again, rather than the
+                // listing quietly stopping short.
+                if (list.moreFailed && !list.loadingMore) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Tone.surfaceHigh,
+                        contentColor = Tone.text,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(
+                                bottom = (if (touch) navigationBarPadding() else Tv.SafeV) +
+                                    (if (standingOn != null) 46.dp else 0.dp) +
+                                    connectionOffset,
+                            ),
+                    ) {
+                        Row(
+                            Modifier.padding(start = 16.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Text(s.gridMoreFailed, style = MaterialTheme.typography.bodyMedium)
+                            TmButton(onClick = viewModel::retryMore) { Text(s.commonTryAgain) }
                         }
                     }
                 }

@@ -134,6 +134,12 @@ object DesktopStorage {
  * place of the phone's one video: the least recently played cached videos go first, and only as
  * many as the room needs.
  */
+/**
+ * A video refused before it starts because the drive is short even with the cache emptied: its
+ * own type, so the player's error sheet can offer Free up space rather than only Try again.
+ */
+class NotEnoughRoom(message: String) : java.io.IOException(message)
+
 object RoomOnDisk {
 
     sealed interface Decision {

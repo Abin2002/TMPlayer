@@ -1654,6 +1654,11 @@ private fun Root() {
                         onBack = leaveDownloads,
                         openOnCached = downloadsOnCached,
                         openFreeUp = downloadsFreeUp > 0,
+                        // An empty Downloads page: to the chats, where Download is.
+                        onBrowse = {
+                            pickedTabKey = BrowseSection.encode(BrowseSection.of(BrowseTab.Chats))
+                            screen = Screen.Chats
+                        },
                     )
                 }
             }

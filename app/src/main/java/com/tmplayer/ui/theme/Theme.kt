@@ -172,14 +172,15 @@ private val phoneTypography = Typography(
  * have the blue can say so, and a phone older than Android 12 has nothing to offer either way.
  */
 @Composable
-private fun phoneScheme(dark: Boolean, dynamic: Boolean): ColorScheme {
+private fun phoneScheme(dark: Boolean, dynamic: Boolean, black: Boolean): ColorScheme {
     val context = LocalContext.current
     val wallpaper = dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     return when {
+        // The wallpaper's accent on a true black ground: the two choices do not fight.
+        wallpaper && dark && black -> dynamicDarkColorScheme(context).pureBlack()
         wallpaper && dark -> dynamicDarkColorScheme(context)
         wallpaper -> dynamicLightColorScheme(context)
-        dark -> TmSchemes.Dark
-        else -> TmSchemes.Light
+        else -> TmSchemes.of(dark, black)
     }
 }
 
@@ -202,14 +203,15 @@ fun TMPlayerTheme(content: @Composable () -> Unit) {
     // Dark are the viewer's own answer, on either device: a television in a bright room is real.
     val dark = when {
         choice == ThemeChoice.Light -> false
-        choice == ThemeChoice.Dark -> true
+        choice.alwaysDark -> true
         !touch -> true
         else -> systemDark
     }
 
     // One scheme for both devices. The television has no wallpaper to take colours from, but
     // everything else about it is the phone's palette.
-    val scheme = if (touch) phoneScheme(dark, dynamic) else TmSchemes.of(dark)
+    val black = choice == ThemeChoice.Black
+    val scheme = if (touch) phoneScheme(dark, dynamic, black) else TmSchemes.of(dark, black)
 
     // Both themes, always, and the form factor decides only the type scale. Two theme systems are
     // live because the two devices need different controls, and a shared screen reads one theme

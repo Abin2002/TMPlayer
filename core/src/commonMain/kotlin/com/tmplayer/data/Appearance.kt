@@ -16,7 +16,17 @@ enum class ThemeChoice(private val labelText: () -> String, private val descript
     System({ L.themeSystem }, { L.themeSystemDetail }),
     Light({ L.themeLight }, { L.themeLightDetail }),
     Dark({ L.themeDark }, { L.themeDarkDetail }),
+
+    /**
+     * Dark with a pure black ground, for an OLED panel, where black pixels are off: no glow
+     * round the picture in a dark room, and less power on a phone. Cards and sheets keep a step
+     * of grey so they still read as raised.
+     */
+    Black({ L.themeBlack }, { L.themeBlackDetail }),
     ;
+
+    /** Whether this choice is drawn dark whatever the device says: Dark and Black. */
+    val alwaysDark: Boolean get() = this == Dark || this == Black
 
     /** The one word shown in a segment, in the UI language. */
     val label: String get() = labelText()
@@ -35,6 +45,7 @@ enum class ThemeChoice(private val labelText: () -> String, private val descript
             System -> L.themeSystemTvDetail
             Light -> L.themeLightDetail
             Dark -> L.themeDarkDetail
+            Black -> L.themeBlackDetail
         }
 
     companion object {

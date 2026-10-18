@@ -158,6 +158,7 @@ internal sealed interface MenuAction {
     data class Shape(val scale: VideoScale) : MenuAction
     data object ToggleDownmix : MenuAction
     data object ToggleVolumeBoost : MenuAction
+    data object ToggleNightMode : MenuAction
 
     /** Minutes from now, [SleepTimer.END_OF_VIDEO], or null to turn the timer off. */
     data class Sleep(val minutes: Int?) : MenuAction
@@ -873,6 +874,7 @@ internal fun PlayerMenu(
             MenuPage.Options -> {
                 Entry(s.playerDownmix, checked = status.downmix) { pick(MenuAction.ToggleDownmix) }
                 Entry(s.playerVolumeBoost, checked = status.volumeBoost) { pick(MenuAction.ToggleVolumeBoost) }
+                Entry(s.playerNightMode, checked = status.nightMode) { pick(MenuAction.ToggleNightMode) }
                 Entry(s.playerSleepTimer, trailing = sleepTimer ?: s.commonOff) { page(MenuPage.Sleep) }
                 val repeat = when {
                     loop == null -> s.playerLoopSetStart
@@ -1310,6 +1312,8 @@ internal fun BoxScope.StatusSheet(
     onPlayNext: (MediaItem) -> Unit,
     onCancelNext: () -> Unit,
     onKeepWatching: () -> Unit = {},
+    /** For a video refused for room ([Phase.Failed.noRoom]): Downloads, with Free up space up. */
+    onFreeUpSpace: (() -> Unit)? = null,
     /** What to call the episode a countdown or "Still watching?" offers: see [labelFor]. */
     nextLabel: (MediaItem) -> String = { Episodes().labelFor(it) },
 ) {
@@ -1327,6 +1331,14 @@ internal fun BoxScope.StatusSheet(
                     Text(phase.message, color = Color.White, fontSize = 15.sp, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(12.dp))
                     Row {
+                        // Short of room, trying again finds the same drive: the first button is
+                        // the one that makes room, focused so Enter takes it.
+                        if (phase.noRoom && onFreeUpSpace != null) {
+                            val free = remember { FocusRequester() }
+                            Button(onClick = onFreeUpSpace, modifier = Modifier.focusRequester(free)) { Text(s.downloadsFreeUpSpace) }
+                            Spacer(Modifier.width(8.dp))
+                            LaunchedEffect(phase) { runCatching { free.requestFocus() } }
+                        }
                         TextButton(onClick = onRetry) { Text(s.commonTryAgain) }
                         TextButton(onClick = onBack) { Text(s.commonBack) }
                     }

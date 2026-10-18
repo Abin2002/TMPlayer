@@ -34,6 +34,8 @@ sealed interface UiState<out T> {
         val picture: ImageVector get() = icon ?: when (action) {
             StateAction.ShowHidden -> TmIcons.FilterHorizontal
             StateAction.KeepLooking -> TmIcons.Search
+            StateAction.SearchAllChats -> TmIcons.SearchRemove
+            StateAction.Refresh -> TmIcons.Refresh
             null -> TmIcons.VideoOff
         }
     }
@@ -51,12 +53,23 @@ enum class StateAction {
 
     /** Ask again: the scaffold's ordinary retry. */
     KeepLooking,
+
+    /**
+     * Nothing here matched the search: run the same words across every chat ([com.tmplayer.ui.browse.SearchRequest]),
+     * which also finds a chat by its @username.
+     */
+    SearchAllChats,
+
+    /** Ask Telegram again, for a list that may still be on its way (a first sign in). */
+    Refresh,
     ;
 
     /** The button's words. */
     val label: String get() = when (this) {
         ShowHidden -> L.commonShowHidden
         KeepLooking -> L.commonKeepLooking
+        SearchAllChats -> L.searchAllChats
+        Refresh -> L.commonRefresh
     }
 }
 

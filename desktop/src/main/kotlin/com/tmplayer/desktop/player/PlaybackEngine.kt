@@ -49,6 +49,12 @@ interface PlaybackEngine {
      */
     fun setVolumeBoost(on: Boolean)
 
+    /**
+     * Night mode for sound: the loud and the quiet brought closer, on the sound already playing.
+     * See [MpvPlaybackEngine.setNightMode] for what the bundled FFmpeg allows.
+     */
+    fun setNightMode(on: Boolean) {}
+
     /** Size, box and position for plain text subtitles; a file's own ASS styling is left alone. */
     fun setSubtitleStyle(style: SubtitleStyle)
 
@@ -88,6 +94,7 @@ data class OpenPrefs(
     val volume: Int = 100,
     val muted: Boolean = false,
     val volumeBoost: Boolean = false,
+    val nightMode: Boolean = false,
     /** mpv's `hwdec`: [HWDEC_AUTO] or [HWDEC_SOFTWARE]. */
     val hwdec: String = HWDEC_AUTO,
     val subtitleStyle: SubtitleStyle = SubtitleStyle(),
@@ -126,6 +133,7 @@ data class PlaybackStatus(
     val scale: VideoScale = VideoScale.Fit,
     val downmix: Boolean = false,
     val volumeBoost: Boolean = false,
+    val nightMode: Boolean = false,
     val subtitleStyle: SubtitleStyle = SubtitleStyle(),
     val subtitleDelayMs: Long = 0,
     val audioDelayMs: Long = 0,

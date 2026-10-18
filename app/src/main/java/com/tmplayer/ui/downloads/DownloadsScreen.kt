@@ -212,6 +212,8 @@ fun DownloadsScreen(
      * so the device counts as short and Low storage mode is offered while it is off.
      */
     openFreeUp: Boolean = false,
+    /** The way on from an empty page: the chats, where every video has its Download. */
+    onBrowse: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -815,6 +817,8 @@ fun DownloadsScreen(
                     BigEmpty(
                         L.downloadsEmptyDownloaded(folder = LegacyDownloads.FOLDER),
                         icon = TmIcons.Download,
+                        actionLabel = onBrowse?.let { L.browseGoToChats },
+                        onAction = onBrowse,
                     )
                 }
             }
@@ -888,7 +892,12 @@ fun DownloadsScreen(
         if (counted && rows.isEmpty()) {
             item(key = "e-done") {
                 Box(emptyStateHeight(0.4f)) {
-                    BigEmpty(L.downloadsEmptyDownloaded(folder = LegacyDownloads.FOLDER), icon = TmIcons.Download)
+                    BigEmpty(
+                        L.downloadsEmptyDownloaded(folder = LegacyDownloads.FOLDER),
+                        icon = TmIcons.Download,
+                        actionLabel = onBrowse?.let { L.browseGoToChats },
+                        onAction = onBrowse,
+                    )
                 }
             }
             at++

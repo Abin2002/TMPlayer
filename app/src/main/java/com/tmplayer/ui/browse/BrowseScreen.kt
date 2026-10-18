@@ -457,6 +457,11 @@ fun BrowseScreen(
     // A phone lists chats as rows, always: tiles of chat pictures are for a television across the
     // room. History's videos keep the choice, and so does every list on a television.
     val chatLayout: (BrowseSection) -> CardLayout = { section -> if (touch && !section.listsVideos) CardLayout.List else layout }
+    val goToChats: () -> Unit = {
+        pickFilter(ChatFilter.All)
+        onPickTab(BrowseSection.of(BrowseTab.Chats))
+        query = ""
+    }
     val paneOf: @Composable (BrowseSection) -> Unit = { tab ->
         val showsContinue = tab.listsVideos && historyTab == HistoryTab.Continue
         val showsWatched = tab.listsVideos && historyTab == HistoryTab.Watched
@@ -466,6 +471,8 @@ fun BrowseScreen(
             state,
             onRetry = onRetry,
             loading = { ChatListSkeleton(layout = chatLayout(tab)) },
+            // "No chats yet" offers Refresh: the list may still be on its way after a sign in.
+            onAction = { onRetry() },
         ) { data ->
             val visible = remember(data.chats, tab, favorites, query, chatFilter, chatSort) {
                 filterChats(data.chats, tab, favorites, query, chatFilter, chatSort)
@@ -556,7 +563,7 @@ fun BrowseScreen(
                         historyChips()
                         if (showsContinue) {
                             if (continuing.isEmpty()) {
-                                EmptyTab(tab, query = "", history = HistoryTab.Continue)
+                                EmptyTab(tab, query = "", history = HistoryTab.Continue, onGoToChats = goToChats)
                             } else {
                                 ContinueSection(
                                     records = continuing,
@@ -573,7 +580,7 @@ fun BrowseScreen(
                             }
                         } else if (showsWatchLater) {
                             if (watchLater.isEmpty()) {
-                                EmptyTab(tab, query = "", history = HistoryTab.WatchLater)
+                                EmptyTab(tab, query = "", history = HistoryTab.WatchLater, onGoToChats = goToChats)
                             } else {
                                 ContinueSection(
                                     records = watchLater,
@@ -589,7 +596,7 @@ fun BrowseScreen(
                             }
                         } else {
                             if (watchedHistory.isEmpty()) {
-                                EmptyTab(tab, query = "", history = HistoryTab.Watched)
+                                EmptyTab(tab, query = "", history = HistoryTab.Watched, onGoToChats = goToChats)
                             } else {
                                 // Read once per visit rather than ticking: "5 minutes ago" going
                                 // stale while the tab is open is harmless, and a clock here would
@@ -636,7 +643,7 @@ fun BrowseScreen(
                         if (tab.onChatsPage) chatChips(tab)
 
                         if (visible.isEmpty()) {
-                            EmptyTab(tab, query, chatFilter)
+                            EmptyTab(tab, query, chatFilter, onGoToChats = goToChats)
                         } else {
                             // A first run's chat list says how to get a first video in (CP42).
                             if (query.isBlank() && tab != BrowseSection.of(BrowseTab.Saved)) {
@@ -823,6 +830,13 @@ fun BrowseScreen(
             runCatching { railSelected.requestFocus() }
         }
         BackHandler(enabled = tvSearchOpen) { tvSearchOpen = false }
+        // "Search all chats" from a chat or the list's filter: the rail's search page, on those words.
+        val asked by SearchRequest.pending.collectAsState()
+        LaunchedEffect(asked) {
+            val text = SearchRequest.take() ?: return@LaunchedEffect
+            search.submit(text)
+            tvSearchOpen = true
+        }
         // Whether the viewer has pressed anything since this screen came up: until then the rail
         // may keep putting the remote back on the item Back returned to (NavRail's returnTo).
         val pressedSinceArrival = remember { booleanArrayOf(false) }
@@ -2938,7 +2952,18 @@ private fun TouchChatRow(
 }
 
 @Composable
-private fun EmptyTab(tab: BrowseSection, query: String, filter: ChatFilter = ChatFilter.All, history: HistoryTab? = null) {
+private fun EmptyTab(
+    tab: BrowseSection,
+    query: String,
+    filter: ChatFilter = ChatFilter.All,
+    history: HistoryTab? = null,
+    /**
+     * Back to every chat, with Telegram's filters cleared: the way on from a tab that fills from
+     * the chats (Favourites, Unread, Archived, the History tabs), which on a television saves a
+     * trip through the rail. Null where the tab is already all of them.
+     */
+    onGoToChats: (() -> Unit)? = null,
+) {
     val s = LocalStrings.current
     // Each empty tab says what to do about it, in its own words. A folder is the one section this
     // app has no way to fill from here: folders are made and edited in Telegram itself, so the
@@ -2965,7 +2990,15 @@ private fun EmptyTab(tab: BrowseSection, query: String, filter: ChatFilter = Cha
     // the glyph follows whichever one the viewer is looking at, drawn for the empty page where the
     // tab's own icon would say less (an open folder, a ticked bubble for nothing unread).
     val icon = emptyTabIcon(tab, query, filter, history)
-    BigEmpty(message, icon = icon)
+    when {
+        // Nothing in the list by that name: the same words across every chat, which also asks
+        // Telegram for a chat with that @username.
+        query.isNotBlank() -> BigEmpty(message, icon = icon, actionLabel = s.searchAllChats, onAction = { SearchRequest.ask(query) })
+        // A folder fills in Telegram and Saved Messages by forwarding, both said in the message.
+        tab is BrowseSection.Folder || tab == BrowseSection.of(BrowseTab.Saved) -> BigEmpty(message, icon = icon)
+        tab.isChats && filter == ChatFilter.All -> BigEmpty(message, icon = icon)
+        else -> BigEmpty(message, icon = icon, actionLabel = onGoToChats?.let { s.browseGoToChats }, onAction = onGoToChats)
+    }
 }
 
 private const val RECENT_COUNT = 8
