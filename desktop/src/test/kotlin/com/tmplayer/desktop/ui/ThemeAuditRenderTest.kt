@@ -155,7 +155,7 @@ class ThemeAuditRenderTest {
             shot("card") {
                 Box(Modifier.fillMaxSize()) {
                     ChatsList()
-                    SupportCard(rung = 1, counters = com.tmplayer.data.SupportReminder.Counters(completedWatches = 7, watchTimeMs = 11L * 60 * 60 * 1000), onSupport = {}, onStar = {}, onShare = {}, onLater = {}, onAlready = {}, modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp))
+                    CoffeeDialog(counters = com.tmplayer.data.SupportReminder.Counters(completedWatches = 7, watchTimeMs = 11L * 60 * 60 * 1000), asking = true, onLater = {}, onNever = {})
                 }
             }
             shot("signin", sidebar = false) { SignInScreen(AuthState.Phone()) }

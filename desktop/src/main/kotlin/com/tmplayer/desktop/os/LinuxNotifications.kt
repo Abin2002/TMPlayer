@@ -29,6 +29,15 @@ internal interface DockProgress {
 }
 
 /**
+ * A one-off notice that is not about a transfer: new videos in the starred chats, the sponsor
+ * reminder. [onPress] is what a press on it does, where the platform can say so (a Linux
+ * notification server with actions); elsewhere the notice only informs.
+ */
+internal interface DesktopNotices {
+    fun notice(title: String, body: String?, onPress: (() -> Unit)?)
+}
+
+/**
  * Linux: transfer progress and completion as desktop notifications, through the session bus's
  * `org.freedesktop.Notifications`, and a bar on the dock icon through Unity's LauncherEntry signal.
  *
@@ -51,11 +60,18 @@ internal class LinuxNotifications(
     private val connect: () -> DBusConnection = {
         DBusConnectionBuilder.forSessionBus().withShared(false).build()
     },
-) : TransferNotifier, DockProgress {
+) : TransferNotifier, DockProgress, DesktopNotices {
 
     private val worker: ExecutorService = Executors.newSingleThreadExecutor { r ->
         Thread(r, "tmplayer-notify").apply { isDaemon = true }
     }
+
+    /** What pressing a notice does, by the server's id; bounded like [targets]. */
+    private val presses: MutableMap<Long, () -> Unit> = java.util.Collections.synchronizedMap(
+        object : LinkedHashMap<Long, () -> Unit>() {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, () -> Unit>?) = size > MAX_TARGETS
+        },
+    )
 
     // Everything below is touched only on the worker thread.
     private var bus: DBusConnection? = null
@@ -182,6 +198,24 @@ internal class LinuxNotifications(
         }
     }
 
+    override fun notice(title: String, body: String?, onPress: (() -> Unit)?) = post {
+        val notifications = server()
+        if (notifications != null) {
+            // "default" is a press on the body, which every server with actions offers.
+            val actions = if (onPress != null && serverActions) listOf(LinuxNotificationText.ACTION_DEFAULT, title) else emptyList()
+            runCatching {
+                notifications.Notify(
+                    APP_NAME, UInt32(0), ICON, title, body.orEmpty(), actions,
+                    LinuxNotificationText.hints(LinuxNotificationText.CATEGORY_NOTICE, urgency = URGENCY_NORMAL, percent = null),
+                    DEFAULT_EXPIRY,
+                )
+            }.onSuccess { serverId -> if (onPress != null) presses[serverId.toLong()] = onPress }
+                .onFailure { Logger.w(TAG, "notice refused: ${it.message}") }
+            return@post
+        }
+        notifySend()?.send(title, body.orEmpty(), LinuxNotificationText.CATEGORY_NOTICE, "normal", null, replaces = null)
+    }
+
     override fun dockProgress(fraction: Float?) = post {
         val percent = fraction?.let { (it.coerceIn(0f, 1f) * 100).toInt() }
         if (percent == lastDock) return@post
@@ -226,6 +260,10 @@ internal class LinuxNotifications(
                 serverActions = "actions" in caps
                 if (serverActions) {
                     conn.addSigHandler(FdoNotifications.ActionInvoked::class.java) { signal ->
+                        presses.remove(signal.id.toLong())?.let { press ->
+                            runCatching(press)
+                            return@addSigHandler
+                        }
                         val target = targets[signal.id.toLong()] ?: return@addSigHandler
                         open(target)
                     }
@@ -282,6 +320,9 @@ internal object LinuxNotificationText {
     const val CATEGORY_PROGRESS = "transfer"
     const val CATEGORY_COMPLETE = "transfer.complete"
     const val CATEGORY_ERROR = "transfer.error"
+
+    /** A notice that is not about a transfer: new videos, the sponsor reminder. */
+    const val CATEGORY_NOTICE = "im.received"
 
     /** The key of the action that opens what finished; "default" is a press on the body. */
     const val ACTION_OPEN = "open"

@@ -35,6 +35,11 @@
     -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!--
+      Keeps the two background checks (new videos in starred chats, the sponsor reminder) scheduled
+      across a restart: JobScheduler drops a persisted job without it. Nothing runs at boot itself.
+    -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!--
       The Android TV home screen's "Play next" row, written only when the viewer turns it on in
       Settings (WatchNextPublisher). The TV provider refuses the write without this; it grants
       nothing else, and a phone has no such provider to write to.
@@ -158,6 +163,12 @@
             android:name=".player.PlaybackService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
+
+        <!-- The phone's background checks (BackgroundChecks); only the system's job scheduler binds it. -->
+        <service
+            android:name=".data.BackgroundChecks"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
 </application>
 </manifest>

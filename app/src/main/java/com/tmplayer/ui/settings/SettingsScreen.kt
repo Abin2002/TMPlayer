@@ -349,6 +349,8 @@ fun SettingsScreen(
     var qrLink by remember { mutableStateOf<Pair<String, String>?>(null) }
     var supporting by remember { mutableStateOf(false) }
     val supportCounters by settings.supportCounters.collectAsState(initial = SupportReminder.Counters())
+    val sponsorReminders by settings.sponsorReminders.collectAsStateWithLifecycle(initialValue = true)
+    val newVideoAlerts by settings.newVideoAlerts.collectAsStateWithLifecycle(initialValue = false)
     // The language picker, the "What's new" sheet and "Report a problem", each over the list.
     var pickingLanguage by remember { mutableStateOf(false) }
     var stylingSubtitles by remember { mutableStateOf(false) }
@@ -806,8 +808,6 @@ fun SettingsScreen(
                         onToggle = { scope.launch { settings.setDownmix(!downmix) } },
                     )
                 }
-                // The soundtrack a video opens in when neither the file nor its series has one saved.
-                item {
                 // The phone only: a television has no screen to turn off and nothing else to switch to.
                 // Off by default, so leaving the player pauses it as it always has; read as the
                 // player is left, so it applies to the video playing now.
@@ -822,6 +822,8 @@ fun SettingsScreen(
                         )
                     }
                 }
+                // The soundtrack a video opens in when neither the file nor its series has one saved.
+                item {
                     ActionRow(
                         title = s.settingsAudioLanguage,
                         subtitle = trackPrefs.audioSummary,
@@ -1026,6 +1028,34 @@ fun SettingsScreen(
                         icon = TmIcons.List,
                         onClick = { editingSizes = true },
                     )
+                }
+
+                // A phone's notification for new videos in the starred chats (a TV's Home rows
+                // already show them). Turning it on is where Android 13 asks for the permission.
+                if (touch) {
+                    item {
+                        ToggleRow(
+                            title = s.settingsNewVideos,
+                            subtitle = s.settingsNewVideosDetail,
+                            icon = TmIcons.Bell,
+                            checked = newVideoAlerts,
+                            onToggle = {
+                                val next = !newVideoAlerts
+                                if (next) {
+                                    com.tmplayer.ui.browse.askForNotifications(context)
+                                    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU &&
+                                        !com.tmplayer.data.BackgroundChecks.canNotify(context)
+                                    ) {
+                                        toast(s.notifyBlocked)
+                                    }
+                                }
+                                scope.launch {
+                                    settings.setNewVideoAlerts(next)
+                                    com.tmplayer.data.BackgroundChecks.schedule(context.applicationContext)
+                                }
+                            },
+                        )
+                    }
                 }
 
                 // What opens first, in the same card as which videos show: a heading of its own
@@ -1544,6 +1574,25 @@ fun SettingsScreen(
                             icon = TmIcons.Favorite,
                             onClick = { supporting = true },
                         )
+                    }
+                    // The occasional "Don't forget to sponsor" notification. Not on a TV, which
+                    // never sends it.
+                    if (touch && !supportCounters.finished) {
+                        item {
+                            ToggleRow(
+                                title = s.settingsSponsorReminders,
+                                subtitle = s.settingsSponsorRemindersDetail,
+                                icon = TmIcons.Bell,
+                                checked = sponsorReminders,
+                                onToggle = {
+                                    val next = !sponsorReminders
+                                    scope.launch {
+                                        settings.setSponsorReminders(next)
+                                        com.tmplayer.data.BackgroundChecks.schedule(context.applicationContext)
+                                    }
+                                },
+                            )
+                        }
                     }
                 }
 

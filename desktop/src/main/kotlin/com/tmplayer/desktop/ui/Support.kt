@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,6 +21,7 @@ import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.floatingSurface
 import com.tmplayer.ui.components.TmAlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -37,12 +40,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tmplayer.data.SupportReminder
 import com.tmplayer.desktop.os.OpenExternal
 import com.tmplayer.platform.Background
 import com.tmplayer.ui.about.About
+import com.tmplayer.ui.about.BmcBrand
+import com.tmplayer.ui.about.BmcCupMark
 import com.tmplayer.ui.auth.QrCode
 import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.Dispatchers
@@ -103,67 +109,97 @@ private fun SupportCode(link: About.Link, modifier: Modifier) {
 }
 
 /**
- * The gentle ask: a small card in the window's corner, at a good moment and at most three times
- * for good (see [SupportReminder]). [rung] is which of the three it is. Nothing behind it is
- * blocked, and it is never over the player. "Star" opens the repository and "Share" copies the
- * site's link with a line about TMPlayer, since a desktop has no share sheet.
+ * The Buy Me a Coffee window on the desktop: the ask itself when [asking] (after real use, at most
+ * every two weeks, see [SupportReminder]), or the same window opened from About.
+ *
+ * Buy Me a Coffee comes first and in its own colours: their yellow button, which opens the page in
+ * the browser, and a code on their yellow for paying from the phone. GitHub Sponsors is the
+ * quieter link under the button. "Don't show again" ends the asks and the notification for good.
  */
 @Composable
-fun SupportCard(
-    rung: Int,
+fun CoffeeDialog(
     counters: SupportReminder.Counters,
-    onSupport: () -> Unit,
-    onStar: () -> Unit,
-    onShare: () -> Unit,
+    asking: Boolean,
     onLater: () -> Unit,
-    onAlready: () -> Unit,
-    modifier: Modifier = Modifier,
+    onNever: () -> Unit,
 ) {
     val s = LocalStrings.current
-    var copied by remember { mutableStateOf(false) }
-    Column(
-        modifier
-            .width(440.dp)
-            .floatingSurface()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+    TmAlertDialog(
+        onDismissRequest = onLater,
+        title = { Text(if (asking) About.reminderTitle(1) else About.SUPPORT_TITLE) },
+        text = {
+            Column(Modifier.widthIn(max = 480.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                Text(
+                    if (asking) About.reminderText(1, counters) else About.SUPPORT_NOTE,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                    CoffeeCode()
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CoffeeButton(onClick = { OpenExternal.browse(About.COFFEE) }, modifier = Modifier.fillMaxWidth())
+                        TextButton(onClick = { OpenExternal.browse(About.SPONSORS) }) { Text(s.supportSponsorGithub) }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onLater) { Text(if (asking) s.supportMaybeLater else s.commonClose) } },
+        dismissButton = if (asking) ({ TextButton(onClick = onNever) { Text(s.supportDontShow) } }) else null,
+    )
+}
+
+/** Buy Me a Coffee's own button: their yellow, their near-black words and their cup ([BmcBrand]). */
+@Composable
+fun CoffeeButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 48.dp),
+        shape = RoundedCornerShape(Corner.Medium),
+        colors = ButtonDefaults.buttonColors(containerColor = BmcBrand.Yellow, contentColor = BmcBrand.Ink),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Icon(TmIcons.Favorite, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(22.dp))
-            Text(About.reminderTitle(rung), style = MaterialTheme.typography.titleMedium)
+        BmcCupMark(height = 22.dp)
+        Spacer(Modifier.width(10.dp))
+        Text(LocalStrings.current.supportBuyCoffee, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+/** The code for Buy Me a Coffee on their yellow, with the cup and the address in their ink. */
+@Composable
+private fun CoffeeCode() {
+    val s = LocalStrings.current
+    val bitmap by produceState<ImageBitmap?>(initialValue = null, key1 = About.COFFEE) {
+        value = withContext(Dispatchers.Default) { QrCode.render(About.COFFEE, QR_PIXELS) }
+    }
+    Column(
+        Modifier.clip(RoundedCornerShape(Corner.Large)).background(BmcBrand.Yellow).padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            Modifier.size(150.dp).clip(RoundedCornerShape(Corner.Medium)).background(Color.White),
+            contentAlignment = Alignment.Center,
+        ) {
+            bitmap?.let { Image(it, contentDescription = s.supportScanCoffee, modifier = Modifier.fillMaxSize().padding(8.dp)) }
         }
-        Text(About.reminderText(rung, counters), style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End)) {
-            if (rung == 3) {
-                TextButton(onClick = onAlready) { Text(s.supportDone) }
-            } else {
-                TextButton(onClick = onAlready) { Text(s.supportAlready) }
-                TextButton(onClick = onLater) { Text(s.supportLater) }
-            }
-            if (rung == 2) {
-                OutlinedButton(onClick = {
-                    copied = true
-                    onShare()
-                }) { Text(if (copied) s.supportLinkCopied else s.supportShare) }
-                Button(onClick = onStar) { Text(s.supportStar) }
-            } else {
-                Button(onClick = onSupport) { Text(s.supportSupport) }
-            }
-        }
+        Text(
+            About.COFFEE.removePrefix("https://"),
+            style = MaterialTheme.typography.labelSmall,
+            color = BmcBrand.Ink,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
 /**
- * Counts the videos the window finishes, and puts the ask up at a good moment: back on Home, Chats
- * or Downloads after a watch to the end, or after a download finished. Never over the player or the
- * update popup. A card is forced on with `-Dtmplayer.supportRung=N` (1 to 3) or
- * `TMPLAYER_SUPPORT_RUNG=N`, and `-Dtmplayer.supportReminder=true` forces the first.
+ * Counts the videos the window finishes, and puts the Buy Me a Coffee window up at a good moment:
+ * back on Home, Chats or Downloads after a watch to the end, or after a download finished, or as
+ * soon as it may after its notification was pressed. Never over the player or the update popup.
+ * It is forced on with `-Dtmplayer.supportRung=N` (any N above 0) or `TMPLAYER_SUPPORT_RUNG=N`,
+ * and `-Dtmplayer.supportReminder=true`.
  */
 @Composable
-fun SupportCardHost(state: ShellState, modifier: Modifier = Modifier) {
-    var rung by remember { mutableStateOf(0) }
+fun SupportAskHost(state: ShellState) {
+    var asking by remember { mutableStateOf(false) }
     var counters by remember { mutableStateOf(SupportReminder.Counters()) }
-    var popup by remember { mutableStateOf<String?>(null) }
     var forcedShown by remember { mutableStateOf(false) }
     val settings = state.settings
 
@@ -181,58 +217,52 @@ fun SupportCardHost(state: ShellState, modifier: Modifier = Modifier) {
         }
     }
     val moment by SupportReminder.moment.collectAsState()
+    val openRequested by SupportReminder.openRequested.collectAsState()
     val playing = state.nowPlaying != null
     val onGoodPage = state.destination == Destination.Home || state.destination == Destination.Chats ||
         state.destination == Destination.Downloads
-    LaunchedEffect(moment, playing, onGoodPage, state.updatePopup, rung) {
-        if (playing || !onGoodPage || state.updatePopup || rung != 0) return@LaunchedEffect
-        val forced = SupportReminder.forcedRung
-        if (forced > 0) {
+    LaunchedEffect(moment, openRequested, playing, onGoodPage, state.updatePopup, asking) {
+        if (playing || !onGoodPage || state.updatePopup || asking) return@LaunchedEffect
+        if (openRequested) {
+            // Its notification was pressed: the window the viewer asked for, counted as an ask.
+            delay(CARD_DELAY_MS / 4)
+            if (!SupportReminder.takeOpenRequest()) return@LaunchedEffect
+            val now = System.currentTimeMillis()
+            counters = runCatching { settings.supportCountersNow() }.getOrNull() ?: SupportReminder.Counters()
+            runCatching { settings.recordSupportAsk(now) }
+            SupportReminder.sessionShown = true
+            asking = true
+            return@LaunchedEffect
+        }
+        if (SupportReminder.forcedRung > 0) {
             if (forcedShown) return@LaunchedEffect
             delay(CARD_DELAY_MS)
             forcedShown = true
             counters = SupportReminder.Counters(completedWatches = 7, watchTimeMs = 11L * 60 * 60 * 1000)
-            rung = forced
+            asking = true
             return@LaunchedEffect
         }
         if (moment == 0L) return@LaunchedEffect
         delay(CARD_DELAY_MS)
         if (!SupportReminder.takeMoment(System.currentTimeMillis())) return@LaunchedEffect
         val before = runCatching { settings.supportCountersNow() }.getOrNull() ?: return@LaunchedEffect
-        val shown = runCatching { SupportReminder.claim(settings, System.currentTimeMillis()) }.getOrDefault(0)
-        if (shown > 0) {
+        if (runCatching { SupportReminder.claim(settings, System.currentTimeMillis()) }.getOrDefault(false)) {
             counters = before
-            rung = shown
+            asking = true
         }
     }
 
-    if (rung > 0 && !playing && !state.updatePopup) {
-        val shown = rung
-        SupportCard(
-            rung = shown,
+    if (asking && !playing && !state.updatePopup) {
+        CoffeeDialog(
             counters = counters,
-            onSupport = { rung = 0; popup = "card$shown" },
-            onStar = {
-                rung = 0
-                OpenExternal.browse(About.SOURCE)
+            asking = true,
+            onLater = { asking = false },
+            onNever = {
+                asking = false
+                if (SupportReminder.forcedRung == 0) Background.scope.launch { runCatching { settings.markSupportNever() } }
             },
-            onShare = {
-                // No share sheet on a desktop: the line goes to the clipboard, ready to paste.
-                java.awt.Toolkit.getDefaultToolkit().systemClipboard.setContents(
-                    java.awt.datatransfer.StringSelection(com.tmplayer.i18n.L.supportShareText(About.SITE)),
-                    null,
-                )
-                rung = 0
-            },
-            onLater = { rung = 0 },
-            onAlready = {
-                rung = 0
-                if (SupportReminder.forcedRung == 0) Background.scope.launch { runCatching { settings.markSupporter() } }
-            },
-            modifier = modifier,
         )
     }
-    popup?.let { from -> SupportPopup(from = from, onClose = { popup = null }) }
 }
 
 private val PLATE = 180.dp

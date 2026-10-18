@@ -2,6 +2,7 @@ package com.tmplayer.ui.settings
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -33,7 +35,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.tv.material3.Icon
@@ -42,6 +48,8 @@ import androidx.tv.material3.Text
 import com.tmplayer.data.SupportReminder
 import com.tmplayer.i18n.L
 import com.tmplayer.ui.about.About
+import com.tmplayer.ui.about.BmcBrand
+import com.tmplayer.ui.about.BmcCupMark
 import com.tmplayer.ui.auth.QrCode
 import com.tmplayer.ui.components.FloatingWindow
 import com.tmplayer.ui.components.PhonePad
@@ -137,100 +145,209 @@ private fun SupportCode(link: About.Link, onOpen: (() -> Unit)?) {
     }
 }
 
-/** The system share sheet with a line about TMPlayer and its site, for the second rung's "Share". */
-fun shareTmplayer(context: android.content.Context) {
-    val text = L.supportShareText(About.SITE)
-    val send = android.content.Intent(android.content.Intent.ACTION_SEND)
-        .setType("text/plain")
-        .putExtra(android.content.Intent.EXTRA_TEXT, text)
-    runCatching {
-        context.startActivity(
-            android.content.Intent.createChooser(send, L.supportShareTitle)
-                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+/**
+ * The Buy Me a Coffee window: the ask itself when [asking] (at a good moment, at most every two
+ * weeks, see [SupportReminder]), or the same window opened from About to pay from the phone.
+ *
+ * Buy Me a Coffee comes first and in its own colours: a large code to it on their yellow, and on a
+ * phone a big yellow button that opens it in the browser. GitHub Sponsors is the quieter way
+ * under it. A TV has no browser, so the code is the way there, with a small one for GitHub
+ * Sponsors beside the words; the remote starts on "Maybe later", so a stray OK costs nothing.
+ * "Don't show again" ends the asks and the notification for good. Back is "Maybe later".
+ */
+@Composable
+fun CoffeeDialog(
+    counters: SupportReminder.Counters,
+    asking: Boolean,
+    onLater: () -> Unit,
+    onNever: () -> Unit,
+) {
+    val s = LocalStrings.current
+    val touch = isTouch()
+    val context = LocalContext.current
+    val calm = remember { FocusRequester() }
+    val title = if (asking) About.reminderTitle(1) else About.SUPPORT_TITLE
+    val text = if (asking) About.reminderText(1, counters) else About.SUPPORT_NOTE
+
+    FloatingWindow(onDismiss = onLater, ignoreRelease = true) {
+        if (touch) {
+            val panel = min(maxWidth - PhonePad.Side * 2, 440.dp)
+            Column(
+                Modifier
+                    .width(panel)
+                    .floatingSurface()
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(title, style = MaterialTheme.typography.headlineSmall, color = Tone.text, textAlign = TextAlign.Center)
+                Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, textAlign = TextAlign.Center)
+                CoffeeButton(onClick = { openLink(context, About.COFFEE) }, modifier = Modifier.fillMaxWidth())
+                CoffeeCode(plate = 188.dp)
+                androidx.compose.material3.TextButton(onClick = { openLink(context, About.SPONSORS) }) {
+                    androidx.compose.material3.Text(s.supportSponsorGithub)
+                }
+                if (asking) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        androidx.compose.material3.TextButton(onClick = onNever, modifier = Modifier.weight(1f)) {
+                            androidx.compose.material3.Text(s.supportDontShow, textAlign = TextAlign.Center)
+                        }
+                        TmSecondaryButton(onClick = onLater, modifier = Modifier.weight(1f)) { Label(s.supportMaybeLater) }
+                    }
+                } else {
+                    TmSecondaryButton(onClick = onLater) { Label(s.commonClose) }
+                }
+            }
+        } else {
+            val panel = min(maxWidth - PhonePad.Side * 2, 820.dp)
+            Row(
+                Modifier.width(panel).floatingSurface().padding(28.dp),
+                horizontalArrangement = Arrangement.spacedBy(28.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CoffeeCode(plate = 260.dp)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Text(title, style = MaterialTheme.typography.headlineSmall, color = Tone.text)
+                    Text(text, style = MaterialTheme.typography.bodyLarge, color = Tone.muted)
+                    SponsorsCode()
+                    // The card floats, so a button at rest takes the step above its fill.
+                    CompositionLocalProvider(LocalOnFloating provides true) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            TmSecondaryButton(onClick = onLater, modifier = Modifier.focusRequester(calm)) {
+                                Text(if (asking) s.supportMaybeLater else s.commonClose)
+                            }
+                            if (asking) TmSecondaryButton(onClick = onNever) { Text(s.supportDontShow) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (!touch) {
+        BackHandler(onBack = onLater)
+        LaunchedEffect(Unit) { runCatching { calm.requestFocus() } }
+    }
+}
+
+/**
+ * Buy Me a Coffee's own button: their yellow, their near-black words and their cup, as their
+ * official buttons are drawn ([BmcBrand]). For a phone, where it opens the page in the browser.
+ */
+@Composable
+fun CoffeeButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val s = LocalStrings.current
+    if (!isTouch()) {
+        // The remote's version, for About, where it opens the code: the same yellow at rest and
+        // under the focus, which TV Material marks by growing the button and ringing it in ink.
+        androidx.tv.material3.Button(
+            onClick = onClick,
+            modifier = modifier.heightIn(min = 56.dp),
+            shape = androidx.tv.material3.ButtonDefaults.shape(RoundedCornerShape(Corner.Medium)),
+            colors = androidx.tv.material3.ButtonDefaults.colors(
+                containerColor = BmcBrand.Yellow,
+                contentColor = BmcBrand.Ink,
+                focusedContainerColor = BmcBrand.Yellow,
+                focusedContentColor = BmcBrand.Ink,
+                pressedContainerColor = BmcBrand.Yellow,
+                pressedContentColor = BmcBrand.Ink,
+            ),
+            border = androidx.tv.material3.ButtonDefaults.border(
+                focusedBorder = androidx.tv.material3.Border(
+                    androidx.compose.foundation.BorderStroke(3.dp, BmcBrand.Ink),
+                    shape = RoundedCornerShape(Corner.Medium),
+                ),
+            ),
+        ) {
+            BmcCupMark(height = 24.dp)
+            Spacer(Modifier.width(12.dp))
+            Text(s.supportBuyCoffee, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        }
+        return
+    }
+    androidx.compose.material3.Button(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 56.dp),
+        shape = RoundedCornerShape(Corner.Medium),
+        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = BmcBrand.Yellow,
+            contentColor = BmcBrand.Ink,
+        ),
+    ) {
+        BmcCupMark(height = 24.dp)
+        Spacer(Modifier.width(12.dp))
+        androidx.compose.material3.Text(
+            s.supportBuyCoffee,
+            style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
 
 /**
- * The gentle ask: a small card over the chat list or Downloads, never over the player, at a good
- * moment and at most three times for good (see [com.tmplayer.data.SupportReminder]). [rung] is
- * which of the three it is. Nothing behind it is blocked. On a TV it takes the remote's focus, on
- * the calm button, since a card the D-pad cannot reach could not be dismissed; Back is "Later".
+ * The code for Buy Me a Coffee on their yellow: the cup and the name over a white plate with the
+ * code, and the address under it in their ink. The yellow holds whatever the app's theme is.
  */
 @Composable
-fun SupportCard(
-    rung: Int,
-    counters: SupportReminder.Counters,
-    onSupport: () -> Unit,
-    onStar: () -> Unit,
-    onShare: () -> Unit,
-    onLater: () -> Unit,
-    onAlready: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun CoffeeCode(plate: Dp) {
     val s = LocalStrings.current
-    val touch = isTouch()
-    val calm = remember { FocusRequester() }
-    if (!touch) BackHandler(onBack = onLater)
-
-    // Rung 1 and 3 ask for money; rung 2 asks for a star or a share, which a TV cannot do, so a
-    // TV's second card opens the codes for the page that has both. The last card ends with "Done".
-    val primaries: List<Pair<String, () -> Unit>> = when {
-        rung == 2 && touch -> listOf(s.supportStar to onStar, s.supportShare to onShare)
-        rung == 2 -> listOf(s.supportStarOrShare to onSupport)
-        else -> listOf(s.supportSupport to onSupport)
+    val bitmap by produceState<ImageBitmap?>(initialValue = null, key1 = About.COFFEE) {
+        value = withContext(Dispatchers.Default) { QrCode.render(About.COFFEE, QR_PIXELS) }
     }
-    val secondaries: List<Pair<String, () -> Unit>> =
-        if (rung == 3) listOf(s.supportDone to onAlready) else listOf(s.supportLater to onLater, s.supportAlready to onAlready)
-
     Column(
-        modifier
-            .widthIn(max = if (touch) 520.dp else 560.dp)
-            .floatingSurface()
-            .padding(if (touch) 16.dp else 24.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        Modifier
+            .clip(RoundedCornerShape(Corner.Large))
+            .background(BmcBrand.Yellow)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(TmIcons.Favorite, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(24.dp))
-            Text(About.reminderTitle(rung), style = MaterialTheme.typography.titleMedium, color = Tone.text)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BmcCupMark(height = 22.dp)
+            BasicText("Buy Me a Coffee", style = TextStyle(color = BmcBrand.Ink, fontSize = 16.sp, fontWeight = FontWeight.Bold)) // i18n-ok: brand name
         }
-        Text(About.reminderText(rung, counters), style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
-        if (touch) {
-            // A phone held upright has no room for four buttons in a row: what the card asks for
-            // shares the first row, the two quiet answers the second.
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                primaries.forEach { (label, action) ->
-                    TmButton(onClick = action, modifier = Modifier.weight(1f)) { Label(label) }
-                }
+        Box(
+            Modifier.size(plate).clip(RoundedCornerShape(Corner.Medium)).background(Color.White),
+            contentAlignment = Alignment.Center,
+        ) {
+            bitmap?.let {
+                Image(
+                    bitmap = it,
+                    contentDescription = s.supportScanCoffee,
+                    // A scanner needs a quiet margin of the code's own white to find it.
+                    modifier = Modifier.fillMaxSize().padding(10.dp),
+                )
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                secondaries.forEach { (label, action) ->
-                    TmSecondaryButton(onClick = action, modifier = Modifier.weight(1f)) { Label(label) }
-                }
+        }
+        BasicText(
+            readableUrl(About.COFFEE),
+            style = TextStyle(color = BmcBrand.Ink, fontSize = 14.sp, textAlign = TextAlign.Center),
+        )
+    }
+}
+
+/** GitHub Sponsors on a TV: a small code and its address, the quieter way beside the big one. */
+@Composable
+private fun SponsorsCode() {
+    val s = LocalStrings.current
+    val bitmap by produceState<ImageBitmap?>(initialValue = null, key1 = About.SPONSORS) {
+        value = withContext(Dispatchers.Default) { QrCode.render(About.SPONSORS, QR_PIXELS / 2) }
+    }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        Box(
+            Modifier.size(96.dp).clip(RoundedCornerShape(Corner.Small)).background(Color.White),
+            contentAlignment = Alignment.Center,
+        ) {
+            bitmap?.let {
+                Image(it, contentDescription = s.supportQrFor(s.supportSponsorGithub), modifier = Modifier.fillMaxSize().padding(6.dp))
             }
-        } else {
-            // The card floats, so a button at rest takes the step above its fill (see FloatingTone.control).
-            CompositionLocalProvider(LocalOnFloating provides true) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // "I already support" first, then the calm button, which holds the focus.
-                    secondaries.asReversed().forEachIndexed { index, (label, action) ->
-                        val isCalm = index == secondaries.lastIndex
-                        TmSecondaryButton(
-                            onClick = action,
-                            modifier = if (isCalm) Modifier.focusRequester(calm) else Modifier,
-                        ) { Label(label) }
-                    }
-                    primaries.forEach { (label, action) -> TmButton(onClick = action) { Label(label) } }
-                }
-            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(s.supportSponsorGithub, style = MaterialTheme.typography.titleSmall, color = Tone.text)
+            Text(readableUrl(About.SPONSORS), style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
         }
     }
-
-    if (!touch) LaunchedEffect(Unit) { runCatching { calm.requestFocus() } }
 }
 
 /**

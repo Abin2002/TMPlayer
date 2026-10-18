@@ -31,6 +31,7 @@ object DesktopTransferNotifier {
             OsInfo.isWindows -> WindowsNotifications(window)
             else -> NoTransferNotifier
         }
+        notices = platform as? DesktopNotices
         val notifier = CoalescingTransferNotifier(platform)
         if (platform is DockProgress) {
             scope.launch { notifier.aggregate.collect { platform.dockProgress(it) } }
@@ -39,4 +40,12 @@ object DesktopTransferNotifier {
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** The same surface's one-off notices, once [create] has run; null where there is none. */
+    @Volatile
+    internal var notices: DesktopNotices? = null
+
+    /** Brings the main window to the front, for a press on a notice. Set by the window. */
+    @Volatile
+    var raise: () -> Unit = {}
 }

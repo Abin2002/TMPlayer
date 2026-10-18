@@ -241,6 +241,8 @@ DRAWABLES: list[Drawable] = [
     Drawable("ic_notify_pause", "Pause", "The download notification's Pause action.", tint=True),
     Drawable("ic_notify_resume", "Play", "The download notification's Resume action.", tint=True),
     Drawable("ic_notify_cancel", "Cancel01", "The download notification's Cancel action.", tint=True),
+    Drawable("ic_stat_new_videos", "ListVideo", "The new videos notification's status bar icon.", tint=True),
+    Drawable("ic_stat_support", "Favourite", "The sponsor reminder's status bar icon.", tint=True),
 ]
 
 

@@ -37,7 +37,7 @@ import java.util.concurrent.Executors
  */
 internal class WindowsNotifications(
     private val window: () -> Window?,
-) : TransferNotifier, DockProgress {
+) : TransferNotifier, DockProgress, DesktopNotices {
 
     private val worker: ExecutorService = Executors.newSingleThreadExecutor { r ->
         Thread(r, "tmplayer-toast").apply { isDaemon = true }
@@ -109,6 +109,11 @@ internal class WindowsNotifications(
     }
 
     override fun cancel(id: Long) = post { forget(id) }
+
+    /** A toast that informs: a press cannot reach back into the app without an activator of its own. */
+    override fun notice(title: String, body: String?, onPress: (() -> Unit)?) = post {
+        run(WindowsToast.showDone(WindowsToast.doneXml(title, body.orEmpty(), null)))
+    }
 
     private fun forget(id: Long) {
         if (sequence.remove(id) != null) run(WindowsToast.remove(tag(id)))

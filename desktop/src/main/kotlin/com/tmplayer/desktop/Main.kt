@@ -233,6 +233,7 @@ fun main(args: Array<String>) {
                 // Transfers show outside the window too, once there is a window for the taskbar bar.
                 LaunchedEffect(Unit) {
                     DesktopStorage.closePlayer = { shell.closePlayer() }
+                    DesktopTransferNotifier.raise = { java.awt.EventQueue.invokeLater { raise() } }
                     DesktopStorage.notifier = DesktopTransferNotifier.create({ window }) {
                         java.awt.EventQueue.invokeLater {
                             raise()

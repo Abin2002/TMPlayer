@@ -143,7 +143,7 @@ import com.tmplayer.ui.update.openLink
 import com.tmplayer.ui.settings.AboutScreen
 import com.tmplayer.ui.settings.SettingsPage
 import com.tmplayer.ui.settings.SettingsScreen
-import com.tmplayer.ui.settings.SupportCard
+import com.tmplayer.ui.settings.CoffeeDialog
 import com.tmplayer.ui.settings.LanguageDialog
 import com.tmplayer.ui.settings.LanguageNoticeCard
 import com.tmplayer.ui.settings.WhatsNewDialog
@@ -152,7 +152,6 @@ import com.tmplayer.ui.i18n.rememberWhatsNew
 import com.tmplayer.data.WhatsNew
 import com.tmplayer.data.AppLocales
 import com.tmplayer.ui.settings.SupportDialog
-import com.tmplayer.ui.settings.shareTmplayer
 import com.tmplayer.ui.theme.TMPlayerTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -398,7 +397,19 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun noteRequestedScreen(intent: Intent?) {
+        // A new videos notification: the chat it is about, or the list (0). Taken off the intent,
+        // so a rotation does not open it again.
+        if (intent?.hasExtra(com.tmplayer.data.BackgroundChecks.EXTRA_OPEN_CHAT) == true) {
+            requestedChat.value = intent.getLongExtra(com.tmplayer.data.BackgroundChecks.EXTRA_OPEN_CHAT, 0L)
+            intent.removeExtra(com.tmplayer.data.BackgroundChecks.EXTRA_OPEN_CHAT)
+        }
         val asked = intent?.getStringExtra(EXTRA_OPEN) ?: return
+        // The sponsor reminder: the Buy Me a Coffee window, once the shell is free for it.
+        if (asked == com.tmplayer.data.BackgroundChecks.OPEN_SUPPORT) {
+            intent.removeExtra(EXTRA_OPEN)
+            SupportReminder.requestOpen()
+            return
+        }
         requestedScreen.value = asked
     }
 
@@ -422,6 +433,9 @@ class MainActivity : ComponentActivity() {
          * rotation would send the viewer back to Downloads every time they turned the phone.
          */
         internal val requestedScreen = MutableStateFlow<String?>(null)
+
+        /** The chat a new videos notification asks for (0: the chat list), until it is opened. */
+        internal val requestedChat = MutableStateFlow<Long?>(null)
     }
 }
 
@@ -547,10 +561,18 @@ private fun Root() {
     val whatsNew = rememberWhatsNew(settings, BuildConfig.VERSION_NAME, hold = !inShell)
     var changelogQr by remember { mutableStateOf(false) }
 
-    // The support ask: at most three for good, and only at a good moment (a video watched to the
-    // end, a download finished) while this list or Downloads is up, never in the player. The
-    // ladder and its counters are SupportReminder's. [supportRung] is the card on screen, 0 for none.
+    // The Buy Me a Coffee window: after real use, at most every two weeks, and only at a good
+    // moment (a video watched to the end, a download finished) while this list or Downloads is up,
+    // never in the player or over another window; or at once when its notification is pressed.
+    // The rules and counters are SupportReminder's. [supportRung] is 1 while it is up, else 0.
     var supportRung by remember { mutableStateOf(0) }
+    // "New videos in starred chats", offered once, on a phone, just after a chat was starred.
+    var newVideoOffer by remember { mutableStateOf(false) }
+    val offerNewVideos: suspend () -> Unit = {
+        if (!FormFactor.isTv(context) && runCatching { !settings.newVideoOfferedNow() }.getOrDefault(false)) {
+            newVideoOffer = true
+        }
+    }
     var supportCounters by remember { mutableStateOf(SupportReminder.Counters()) }
     var supporting by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(Unit) { runCatching { settings.noteSupportFirstSeen(System.currentTimeMillis()) } }
@@ -746,8 +768,24 @@ private fun Root() {
     val supportMoment by SupportReminder.moment.collectAsStateWithLifecycle()
     val supportScreen = screen is Screen.Chats || screen is Screen.Downloads
     var supportForcedShown by remember { mutableStateOf(false) }
-    LaunchedEffect(supportMoment, supportScreen, inShell, showUpdate, languageNotice.language, supportRung) {
-        if (!inShell || !supportScreen || showUpdate || languageNotice.language != null || supportRung != 0) {
+    val supportOpenRequested by SupportReminder.openRequested.collectAsStateWithLifecycle()
+    val crashAsking by CrashReports.pending.collectAsStateWithLifecycle()
+    // Anything else up: the update, the language notice, the crash question, What's new, the
+    // support page's own codes. The window waits for all of them.
+    val otherWindowUp = showUpdate || languageNotice.language != null || crashAsking || whatsNew.showing || supporting != null
+    LaunchedEffect(supportMoment, supportOpenRequested, supportScreen, inShell, otherWindowUp, supportRung) {
+        if (!inShell || !supportScreen || otherWindowUp || supportRung != 0) {
+            return@LaunchedEffect
+        }
+        if (supportOpenRequested) {
+            // The notification was pressed: the window the viewer asked for, counted as an ask.
+            delay(SUPPORT_CARD_DELAY_MS / 4)
+            if (!SupportReminder.takeOpenRequest()) return@LaunchedEffect
+            val now = System.currentTimeMillis()
+            supportCounters = runCatching { settings.supportCountersNow() }.getOrNull() ?: SupportReminder.Counters()
+            runCatching { settings.recordSupportAsk(now) }
+            SupportReminder.sessionShown = true
+            supportRung = 1
             return@LaunchedEffect
         }
         val forced = SupportReminder.forcedRung
@@ -765,10 +803,9 @@ private fun Root() {
         if (!SupportReminder.takeMoment(System.currentTimeMillis())) return@LaunchedEffect
         val now = System.currentTimeMillis()
         val counters = runCatching { settings.supportCountersNow() }.getOrNull() ?: return@LaunchedEffect
-        val rung = runCatching { SupportReminder.claim(settings, now) }.getOrDefault(0)
-        if (rung > 0) {
+        if (runCatching { SupportReminder.claim(settings, now) }.getOrDefault(false)) {
             supportCounters = counters
-            supportRung = rung
+            supportRung = 1
         }
     }
     // Saveable, not just remembered. Playing a video puts a second activity in front of this one
@@ -1227,6 +1264,22 @@ private fun Root() {
             autoOpenDecided = true
         }
 
+        // A new videos notification pressed: the chat it named, once the list has it, in place of
+        // whatever the launch would have opened. A chat the kids lock hides is not in the list.
+        val requestedChat by MainActivity.requestedChat.collectAsStateWithLifecycle()
+        LaunchedEffect(requestedChat, chatsState) {
+            val wanted = requestedChat ?: return@LaunchedEffect
+            if (wanted == 0L) {
+                screen = Screen.Chats
+            } else {
+                if (chatsState is UiState.Loading) return@LaunchedEffect
+                chats.firstOrNull { it.id == wanted }?.let { screen = Screen.Media(it) }
+            }
+            autoOpened = true
+            autoOpenDecided = true
+            MainActivity.requestedChat.value = null
+        }
+
         // At the top level Back would leave the app outright, and on a remote it sits right next
         // to the D-pad and is very easy to hit by accident. Two presses, the way every other app
         // on this television does it.
@@ -1412,6 +1465,7 @@ private fun Root() {
                             // told, since in the Favourites tab the row leaves the screen.
                             val nowFavorite = settings.toggleFavorite(chat.id)
                             if (!nowFavorite) toast(L.mainFavouriteRemoved(title = chat.title))
+                            if (nowFavorite) offerNewVideos()
                         }
                     },
                     onRestartMedia = { record ->
@@ -1516,7 +1570,7 @@ private fun Root() {
                     onToggleFavorite = {
                         scope.launch {
                             // The star on the chat's own bar fills in or empties: that is the answer.
-                            settings.toggleFavorite(current.chat.id)
+                            if (settings.toggleFavorite(current.chat.id)) offerNewVideos()
                         }
                     },
                     onPlay = { play(it, chatTitle = current.chat.title) },
@@ -1806,26 +1860,41 @@ private fun Root() {
         }
         if (changelogQr) LinkQrDialog(WhatsNew.CHANGELOG, s.settingsQrChangelogPage, onClose = { changelogQr = false })
 
+        if (newVideoOffer) {
+            TvConfirm(
+                title = s.settingsNewVideos,
+                message = s.notifyNewVideosOffer,
+                detail = s.settingsNewVideosDetail,
+                confirmLabel = s.notifyNewVideosTurnOn,
+                cancelLabel = s.deviceNotNow,
+                destructive = false,
+                icon = com.tmplayer.ui.icons.TmIcons.Bell,
+                onConfirm = {
+                    newVideoOffer = false
+                    // Android 13 asks for the permission here, at the switch, and nowhere else.
+                    com.tmplayer.ui.browse.askForNotifications(context)
+                    App.backgroundScope.launch {
+                        runCatching {
+                            settings.setNewVideoAlerts(true)
+                            com.tmplayer.data.BackgroundChecks.schedule(context.applicationContext)
+                        }
+                    }
+                },
+                onDismiss = {
+                    newVideoOffer = false
+                    scope.launch { runCatching { settings.markNewVideoOffered() } }
+                },
+            )
+        }
         if (supportRung > 0 && noticeLanguage == null && (screen is Screen.Chats || screen is Screen.Downloads) && !showUpdate) {
-            val rung = supportRung
-            SupportCard(
-                rung = rung,
+            CoffeeDialog(
                 counters = supportCounters,
-                onSupport = { supportRung = 0; supporting = "card$rung" },
-                onStar = {
-                    supportRung = 0
-                    if (!openLink(context, com.tmplayer.ui.about.About.SOURCE)) supporting = "card$rung"
-                },
-                onShare = { supportRung = 0; shareTmplayer(context) },
+                asking = true,
                 onLater = { supportRung = 0 },
-                onAlready = {
+                onNever = {
                     supportRung = 0
-                    if (SupportReminder.forcedRung == 0) scope.launch { runCatching { settings.markSupporter() } }
+                    if (SupportReminder.forcedRung == 0) scope.launch { runCatching { settings.markSupportNever() } }
                 },
-                modifier = Modifier
-                    .align(if (FormFactor.isTv(context)) Alignment.BottomEnd else Alignment.BottomCenter)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .padding(if (FormFactor.isTv(context)) 40.dp else 16.dp),
             )
         }
         supporting?.let { from -> SupportDialog(from = from, onClose = { supporting = null }) }

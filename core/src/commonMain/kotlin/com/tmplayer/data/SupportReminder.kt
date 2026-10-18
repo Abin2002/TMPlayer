@@ -7,53 +7,58 @@ import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Asking for support: the one switch that turns every donation link off, and the rules for the
- * small card that asks whether TMPlayer has earned a coffee.
+ * Buy Me a Coffee window and the rare notification that points at it.
  *
- * The card is rare and it is polite. It asks at most [MAX_ASKS] times for good, in a ladder:
+ * Both wait for real use, never the first day, and both stop for good at "Don't show again" (or
+ * the older "I already support", which also turns the About heading into a thank you):
  *
- * 1. Money, after [MIN_DAYS] days and [MIN_WATCHES] finished videos.
- * 2. Something cheaper, [SECOND_GAP_DAYS] days after the first: a star on GitHub, or a friend told.
- * 3. A last, short note, [THIRD_GAP_DAYS] days after the second.
+ * - The window, after [MIN_WATCHES] finished videos, or [MIN_DAYS] days of use with at least one
+ *   finished video, then at most once every [GAP_DAYS] days. Only at a good moment: back on the
+ *   chat list or Downloads after a video was watched to the end, or after a download finished.
+ *   Never in the player, during the setup or sign in, while another window is up, or twice in one
+ *   run of the app. "Maybe later" and closing it both count as asked.
+ * - The notification ("Don't forget to sponsor"), on a phone and the desktop only, at most once
+ *   every [NUDGE_GAP_DAYS] days, never within [NUDGE_AFTER_ASK_DAYS] days of the window, and only
+ *   while the "Sponsor reminders" switch is on. Pressing it opens the window.
  *
- * "I already support" and the last ask's "Done" are permanent and turn the About heading into a
- * thank you. Ignoring a card counts as having been asked, so nothing nags.
- *
- * It only ever appears at a good moment: back on the chat list or Downloads after a video was
- * watched to the end, or after a download finished. Never in the player, never twice in one run of
- * the app, and each shell holds it back behind the update popup and the language notice.
+ * An install that saw the old three card ladder to its end was told it would not be asked again,
+ * and that holds: [Counters.ladderDone] keeps it quiet.
  */
 object SupportReminder {
 
     /**
-     * Every donation link and the card, together. On in every build that exists today. The `play`
-     * flavor planned for Google Play (CP35) turns it off at startup, since Play does not allow
-     * donation links outside its own billing, and then the Settings row, the About group and the
-     * card all go with it. This is the only gate.
+     * Every donation link, the window and the notification, together. On in every build that
+     * exists today. The `play` flavor planned for Google Play (CP35) turns it off at startup, since
+     * Play does not allow donation links outside its own billing, and then the Settings row, the
+     * About group, the window and the notification all go with it. This is the only gate.
      */
     @Volatile
     var enabled: Boolean = true
 
     /**
-     * Shows the card of this rung (1 to 3) whatever the counters say, for screenshots and for
-     * checking it by eye: a debug build's `--ei support_rung N`, the promo fixture's same extra, or
-     * the desktop's `-Dtmplayer.supportRung=N`. 0 is off. Still nothing when [enabled] is off, and
-     * a forced card leaves the counters alone.
+     * Shows the window whatever the counters say, for screenshots and for checking it by eye: a
+     * debug build's `--ei support_rung N`, the promo fixture's same extra, or the desktop's
+     * `-Dtmplayer.supportRung=N`. 0 is off, any other number is on (the old ladder's rungs are
+     * gone). Still nothing when [enabled] is off, and a forced window leaves the counters alone.
      */
     @Volatile
     var forcedRung: Int = 0
 
-    /** The older switch: `--ez support_reminder true` forces the first rung's card. */
+    /** The older switch: `--ez support_reminder true` forces the window. */
     var forced: Boolean
         get() = forcedRung > 0
         set(value) {
             forcedRung = if (value) 1 else 0
         }
 
-    const val MIN_DAYS = 7
     const val MIN_WATCHES = 5
-    const val SECOND_GAP_DAYS = 30
-    const val THIRD_GAP_DAYS = 90
-    const val MAX_ASKS = 3
+    const val MIN_DAYS = 3
+    const val GAP_DAYS = 14
+    const val NUDGE_GAP_DAYS = 30
+    const val NUDGE_AFTER_ASK_DAYS = 7
+
+    /** The old ladder's length: an install that was asked this often heard its last ask. */
+    const val LADDER_ASKS = 3
 
     /** Which of the two wordings kept in en.json is shown ("a" or "b"). */
     const val COPY_VARIANT = "a"
@@ -70,28 +75,45 @@ object SupportReminder {
         val firstSeenAt: Long = 0L,
         val completedWatches: Int = 0,
         val watchTimeMs: Long = 0L,
-        /** How many cards have been shown, 0 to [MAX_ASKS]. */
+        /** How many cards the old ladder showed, 0 to [LADDER_ASKS]. */
         val asked: Int = 0,
-        /** The next card may not appear before this. */
+        /** The next window may not appear before this. */
         val snoozedUntil: Long = 0L,
-        /** The old "Don't ask again". Silent, with no thank you. */
+        /** "Don't show again", and the old "Don't ask again". Silent, with no thank you. */
         val neverAgain: Boolean = false,
-        /** "I already support", or the last ask's "Done": silent, and About says thanks. */
+        /** The old "I already support", or the last card's "Done": silent, and About says thanks. */
         val supporter: Boolean = false,
-    )
+        /** When the window was last shown, or 0. */
+        val askedAt: Long = 0L,
+        /** How many windows have been shown. */
+        val windows: Int = 0,
+        /** When the last notification went out, or 0. */
+        val nudgedAt: Long = 0L,
+    ) {
+        /** The old ladder ran to its end before the window replaced it: "we will not ask again". */
+        val ladderDone: Boolean get() = asked >= LADDER_ASKS
 
-    /** The rung that would be shown next, 1 to 3, or 0 when the ladder is finished. */
-    fun nextRung(counters: Counters): Int =
-        if (counters.neverAgain || counters.supporter || counters.asked >= MAX_ASKS) 0 else counters.asked + 1
-
-    /** When the card after the one shown at [now] (rung [shown]) may first appear. */
-    fun snoozedUntil(now: Long, shown: Int): Long = now + when (shown) {
-        1 -> SECOND_GAP_DAYS
-        else -> THIRD_GAP_DAYS
-    } * DAY_MS
+        /** Nothing may ask any more. */
+        val finished: Boolean get() = neverAgain || supporter || ladderDone
+    }
 
     /**
-     * The rung to show at a good moment at [now], or 0 for none. [sessionShown] is whether a card
+     * Whether the viewer has really used the app: past its first day, and either [MIN_WATCHES]
+     * videos watched to the end, or [MIN_DAYS] days since the first launch with one of them.
+     */
+    fun realUse(counters: Counters, now: Long): Boolean {
+        if (counters.firstSeenAt <= 0L) return false
+        val age = now - counters.firstSeenAt
+        if (age < DAY_MS) return false
+        return counters.completedWatches >= MIN_WATCHES ||
+            (age >= MIN_DAYS * DAY_MS && counters.completedWatches >= 1)
+    }
+
+    /** When the window after the one shown at [now] may first appear. */
+    fun snoozedUntil(now: Long): Long = now + GAP_DAYS * DAY_MS
+
+    /**
+     * Whether the window may appear at a good moment at [now]. [sessionShown] is whether one
      * already appeared in this run of the app.
      */
     fun due(
@@ -100,44 +122,80 @@ object SupportReminder {
         enabled: Boolean = this.enabled,
         forcedRung: Int = this.forcedRung,
         sessionShown: Boolean = this.sessionShown,
-    ): Int {
-        if (!enabled) return 0
-        if (forcedRung > 0) return forcedRung.coerceAtMost(MAX_ASKS)
-        val rung = nextRung(counters)
-        if (rung == 0 || sessionShown || counters.firstSeenAt <= 0L) return 0
-        if (now - counters.firstSeenAt < MIN_DAYS * DAY_MS) return 0
-        return when {
-            rung == 1 -> if (counters.completedWatches >= MIN_WATCHES) 1 else 0
-            now >= counters.snoozedUntil -> rung
-            else -> 0
-        }
+    ): Boolean {
+        if (!enabled) return false
+        if (forcedRung > 0) return true
+        if (counters.finished || sessionShown) return false
+        return realUse(counters, now) && now >= counters.snoozedUntil
     }
 
     /**
-     * Whether to show a card now, and which. If so it counts as asked at once: a card the viewer
-     * never answered (the app closed under it) is still a card they saw. A forced card leaves the
-     * counters alone.
+     * Whether to show the window now. If so it counts as asked at once: a window the viewer never
+     * answered (the app closed under it) is still one they saw. A forced one leaves the counters
+     * alone.
      */
-    suspend fun claim(store: SettingsStore, now: Long): Int {
-        val rung = due(store.supportCountersNow(), now)
-        if (rung == 0) return 0
+    suspend fun claim(store: SettingsStore, now: Long): Boolean {
+        if (!due(store.supportCountersNow(), now)) return false
         if (forcedRung == 0) {
-            store.recordSupportAsk(now, rung)
+            store.recordSupportAsk(now)
             sessionShown = true
         }
-        return rung
+        return true
+    }
+
+    /**
+     * Whether the "Don't forget to sponsor" notification may go out at [now]. [switchOn] is the
+     * "Sponsor reminders" setting. A TV never asks: its notifications are mostly out of sight.
+     */
+    fun nudgeDue(
+        counters: Counters,
+        now: Long,
+        switchOn: Boolean,
+        enabled: Boolean = this.enabled,
+    ): Boolean {
+        if (!enabled || !switchOn || counters.finished) return false
+        if (!realUse(counters, now)) return false
+        if (counters.nudgedAt > 0L && now - counters.nudgedAt < NUDGE_GAP_DAYS * DAY_MS) return false
+        if (counters.askedAt > 0L && now - counters.askedAt < NUDGE_AFTER_ASK_DAYS * DAY_MS) return false
+        return true
+    }
+
+    /** The notification, if due: recorded as sent at once, so a second check cannot repeat it. */
+    suspend fun claimNudge(store: SettingsStore, now: Long): Boolean {
+        if (!nudgeDue(store.supportCountersNow(), now, store.sponsorRemindersNow())) return false
+        store.recordSupportNudge(now)
+        return true
+    }
+
+    /**
+     * A press on the notification: the shell opens the window as soon as it is free to (in the
+     * shell, nothing else up, not in the player), and takes the request with [takeOpenRequest].
+     */
+    private val openRequest = MutableStateFlow(false)
+
+    val openRequested: StateFlow<Boolean> get() = openRequest
+
+    fun requestOpen() {
+        openRequest.value = true
+    }
+
+    fun takeOpenRequest(): Boolean {
+        val wanted = openRequest.value
+        openRequest.value = false
+        return wanted
     }
 
     // ---- positive moments -----------------------------------------------------------------------
 
-    /** True once a card has appeared in this run of the app. */
+    /** True once the window has appeared in this run of the app. */
     @Volatile
     var sessionShown: Boolean = false
 
-    /** Forgets that a card appeared and any pending moment, for tests. */
+    /** Forgets that a window appeared, any pending moment and any open request, for tests. */
     fun resetSession() {
         sessionShown = false
         pending.value = 0L
+        openRequest.value = false
     }
 
     /** One video watched to the end, as the player saw it. */
@@ -152,11 +210,11 @@ object SupportReminder {
 
     /**
      * When the last positive moment happened, or 0. The shell's chat list and Downloads screen show
-     * a card when this is set and consume it with [takeMoment].
+     * the window when this is set and consume it with [takeMoment].
      */
     val moment: StateFlow<Long> get() = pending
 
-    /** A moment older than this is stale: the card would not feel like a thank you any more. */
+    /** A moment older than this is stale: the window would not feel like a thank you any more. */
     const val MOMENT_LIFETIME_MS = 30L * 60 * 1000
 
     /** The player saw [key] (see [SettingsStore.progressKey]) through to the end. */
@@ -229,7 +287,7 @@ object SupportReminder {
             )
         }
 
-    /** The hours shown in the first card, never below one. */
+    /** The hours the window quotes, never below one. */
     fun hoursWatched(counters: Counters): Int =
         ((counters.watchTimeMs + HOUR_MS / 2) / HOUR_MS).toInt().coerceAtLeast(1)
 }

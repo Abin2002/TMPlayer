@@ -82,7 +82,7 @@ import com.tmplayer.ui.onboarding.SetupStep
 import com.tmplayer.ui.settings.AboutScreen
 import com.tmplayer.ui.settings.SettingsPage
 import com.tmplayer.ui.settings.SettingsScreen
-import com.tmplayer.ui.settings.SupportCard
+import com.tmplayer.ui.settings.CoffeeDialog
 import com.tmplayer.ui.settings.SupportDialog
 import com.tmplayer.ui.settings.LanguageDialog
 import com.tmplayer.ui.settings.LanguageNoticeCard
@@ -410,19 +410,11 @@ class PromoCaptureActivity : ComponentActivity() {
                         )
                     }
                     if (supportRung > 0 && screen == "chats") {
-                        val rung = supportRung
-                        SupportCard(
-                            rung = rung,
+                        CoffeeDialog(
                             counters = promoCounters,
-                            onSupport = { supportRung = 0; supporting = true },
-                            onStar = { supportRung = 0 },
-                            onShare = { supportRung = 0 },
+                            asking = true,
                             onLater = { supportRung = 0 },
-                            onAlready = { supportRung = 0 },
-                            modifier = Modifier
-                                .align(if (tv) Alignment.BottomEnd else Alignment.BottomCenter)
-                                .windowInsetsPadding(WindowInsets.safeDrawing)
-                                .padding(if (tv) 40.dp else 16.dp),
+                            onNever = { supportRung = 0 },
                         )
                     }
                     if (supporting) SupportDialog(from = "card1", onClose = { supporting = false })

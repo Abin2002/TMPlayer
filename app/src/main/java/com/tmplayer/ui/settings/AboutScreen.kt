@@ -73,6 +73,7 @@ import com.tmplayer.ui.theme.Tv
 import com.tmplayer.ui.theme.focusRing
 import com.tmplayer.ui.update.LinkQrDialog
 import com.tmplayer.ui.update.openLink
+import com.tmplayer.ui.update.readableUrl
 import kotlinx.coroutines.launch
 
 /**
@@ -95,6 +96,7 @@ fun AboutScreen(onBack: () -> Unit) {
     val touch = isTouch()
     var qr by remember { mutableStateOf<About.Link?>(null) }
     var supporting by remember { mutableStateOf(false) }
+    var coffee by remember { mutableStateOf(false) }
     val supporter by remember { com.tmplayer.data.SettingsStore(context).supportCounters }
         .collectAsState(initial = com.tmplayer.data.SupportReminder.Counters())
     val first = remember { FocusRequester() }
@@ -155,6 +157,26 @@ fun AboutScreen(onBack: () -> Unit) {
                         )
                     }
                 }
+                // Buy Me a Coffee first and in its own yellow, then GitHub Sponsors, then the
+                // codes and the page that lists every way to help.
+                if (group.support) {
+                    item {
+                        CoffeeButton(
+                            onClick = { if (touch) open(About.Link(s.supportBuyCoffee, "", About.COFFEE)) else coffee = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = if (touch) 16.dp else 0.dp, vertical = 8.dp),
+                        )
+                    }
+                    item {
+                        ActionRow(
+                            title = s.supportSponsorGithub,
+                            subtitle = readableUrl(About.SPONSORS),
+                            icon = TmIcons.Favorite,
+                            onClick = { open(About.Link(s.supportSponsorGithub, "", About.SPONSORS)) },
+                        )
+                    }
+                }
                 // Both support links as codes on one screen, to scan from any device.
                 if (group.support) {
                     item {
@@ -205,6 +227,7 @@ fun AboutScreen(onBack: () -> Unit) {
     }
 
     if (supporting) SupportDialog(from = "about", onClose = { supporting = false })
+    if (coffee) CoffeeDialog(supporter, asking = false, onLater = { coffee = false }, onNever = { coffee = false })
 
     qr?.let { link ->
         LinkQrDialog(url = link.url, what = link.title.replaceFirstChar { it.lowercase() }.let { s.aboutLinkQrWhat(it) }) {

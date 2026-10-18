@@ -238,6 +238,7 @@ internal fun LibraryRows(state: ShellState, version: String, chatList: List<com.
     val openLast by settings.openLastChat.collectAsState(initial = false)
     val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
     val rememberSearches by settings.rememberSearches.collectAsState(initial = true)
+    val newVideoAlerts by settings.newVideoAlerts.collectAsState(initial = false)
     val history by settings.continueWatching.collectAsState(initial = emptyList())
     // Only those the kids lock shows, as the Favourites section counts them.
     val storedFavourites by settings.favorites.collectAsState(initial = emptySet())
@@ -281,6 +282,11 @@ internal fun LibraryRows(state: ShellState, version: String, chatList: List<com.
                 settings.setMinSizeBytes(SizeFilter.DEFAULT_MIN)
             }
         }
+    }
+
+    // A notification when a starred chat posts videos, checked while the app runs (DesktopChecks).
+    Toggle(s.settingsNewVideos, s.settingsNewVideosDetailDesktop, newVideoAlerts, icon = TmIcons.Bell) { on ->
+        scope.launch { settings.setNewVideoAlerts(on) }
     }
 
     // What opens first, in the same card as which videos show, as on the phone and the TV.
@@ -468,6 +474,7 @@ internal fun AboutRows(state: ShellState, version: String, onShowAbout: () -> Un
     val updateState by Updates.state.collectAsState()
     val developerOptions by settings.developerOptions.collectAsState(initial = false)
     val supportCounters by settings.supportCounters.collectAsState(initial = SupportReminder.Counters())
+    val sponsorReminders by settings.sponsorReminders.collectAsState(initial = true)
     var supporting by remember { mutableStateOf(false) }
     var whatsNew by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
@@ -560,6 +567,12 @@ internal fun AboutRows(state: ShellState, version: String, onShowAbout: () -> Un
             s.settingsSupportDetail,
             TmIcons.Favorite,
         ) { supporting = true }
+        // The occasional "Don't forget to sponsor" notification (see SupportReminder).
+        if (!supportCounters.finished) {
+            Toggle(s.settingsSponsorReminders, s.settingsSponsorRemindersDetail, sponsorReminders, icon = TmIcons.Bell) { on ->
+                scope.launch { settings.setSponsorReminders(on) }
+            }
+        }
     }
     Action(s.settingsAbout, s.settingsAboutDetail(version), TmIcons.Info) { onShowAbout() }
     Text(

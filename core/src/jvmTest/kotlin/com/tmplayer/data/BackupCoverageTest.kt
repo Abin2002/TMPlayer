@@ -36,7 +36,11 @@ class BackupCoverageTest {
         // The update check's and the support card's bookkeeping.
         "update_last_check", "update_popup_shown", "update_skipped_version", "update_snoozed_until",
         "support_asked", "support_first_seen", "support_never", "support_recent", "support_snoozed_until",
-        "support_supporter", "support_watches", "support_watch_ms",
+        "support_supporter", "support_watches", "support_watch_ms", "support_asked_at", "support_windows",
+        "support_nudged_at",
+        // Which video each starred chat had at the last new videos check, and whether the offer
+        // after a star was made: this account on this device, started afresh on another.
+        "new_video_seen", "new_video_offered",
         // Records of files on this device's disk, and what Telegram said about them.
         "cached_video", "cached_video_ids", "wc_", "dl_", "duration_", "meta_",
     )

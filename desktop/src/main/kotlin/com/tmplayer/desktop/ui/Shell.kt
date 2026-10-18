@@ -215,6 +215,8 @@ private fun Browse(state: ShellState, player: PlayerContent) {
     DisposableEffect(chats) { onDispose { chats.reset() } }
     LaunchedEffect(Unit) { chats.refreshIfStale() }
     LaunchedEffect(state) { state.settings.detailFirst.collect { state.detailFirst = it } }
+    // New videos in the starred chats and the sponsor reminder, for as long as the app runs.
+    DesktopChecks(state)
     // "Only my folders" is retired: somebody who had it on finds their first folder's chip picked
     // on the Chats page, once, and nothing hidden.
     val shellFolders by Td.folders.collectAsState()
@@ -376,7 +378,7 @@ private fun Browse(state: ShellState, player: PlayerContent) {
             }
         }
         if (SupportReminder.enabled && !setupPending) {
-            SupportCardHost(state, Modifier.align(Alignment.BottomEnd).padding(24.dp))
+            SupportAskHost(state)
         }
 
         ConnectionBanner(connection, Modifier.align(Alignment.TopCenter).padding(top = 12.dp))

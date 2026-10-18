@@ -150,6 +150,9 @@ class App : Application() {
                 delete = { LocalDownloads.deleteAnyKind(settings, it) },
             ).run()
         }
+        // The checks a phone makes while the app is closed (new videos in starred chats, the
+        // sponsor reminder), scheduled or cancelled to match the settings.
+        backgroundScope.launch { runCatching { com.tmplayer.data.BackgroundChecks.schedule(this@App) } }
         // Kept off the launch path: the storage ceiling is about tomorrow's disk, not this frame,
         // and TDLib has a database to open first. Waits for an authorized session, so on a device
         // nobody has signed into yet it never runs.
@@ -169,10 +172,12 @@ class App : Application() {
 
         override fun onActivityStarted(activity: android.app.Activity) {
             started++
+            inFront = true
         }
 
         override fun onActivityStopped(activity: android.app.Activity) {
             started = (started - 1).coerceAtLeast(0)
+            inFront = started > 0
             // A rotation stops and starts the same activity; it is not the app being left.
             if (started == 0 && !activity.isChangingConfigurations) AppLockSession.lock()
         }
@@ -202,6 +207,14 @@ class App : Application() {
          * stopped, trimming the cache), where a lifecycle scope would be cancelled too early.
          */
         val backgroundScope: CoroutineScope = com.tmplayer.platform.Background.scope
+
+        /**
+         * Whether one of this app's activities is on screen, for the background checks: a new
+         * videos or sponsor notification is not posted over the app itself.
+         */
+        @Volatile
+        var inFront: Boolean = false
+            private set
 
         /** Long enough to be past the first screen and whatever it wanted off the disk. */
         private const val CACHE_TRIM_DELAY_MS = 20_000L

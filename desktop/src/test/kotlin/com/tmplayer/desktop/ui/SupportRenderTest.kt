@@ -3,14 +3,11 @@ package com.tmplayer.desktop.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.use
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.RGBLuminanceSource
@@ -38,7 +35,7 @@ import java.nio.file.Files
 
 /**
  * "Support TMPlayer" on the desktop: the Settings row and its QR codes, the About row, and the
- * card over the chat list. With TMPLAYER_SHOTS=<dir> the frames are written there as PNGs.
+ * Buy Me a Coffee window over the chat list. With TMPLAYER_SHOTS=<dir> the frames are written there as PNGs.
  */
 class SupportRenderTest {
 
@@ -90,39 +87,49 @@ class SupportRenderTest {
     }
 
     @Test
-    fun reminderCard() {
+    fun coffeeWindow() {
         val chats = listOf(
             ChatSummary(id = 1, title = "Saved Messages", miniThumbnail = null, photoFileId = 0, kind = ChatKind.Saved),
-            ChatSummary(id = 2, title = "Film Club", miniThumbnail = null, photoFileId = 0, kind = ChatKind.Channel, unreadCount = 12),
+            ChatSummary(id = 2, title = "Video Club", miniThumbnail = null, photoFileId = 0, kind = ChatKind.Channel, unreadCount = 12),
             ChatSummary(id = 3, title = "Weekend series", miniThumbnail = null, photoFileId = 0, kind = ChatKind.Group),
         )
         val counters = com.tmplayer.data.SupportReminder.Counters(completedWatches = 7, watchTimeMs = 11L * 60 * 60 * 1000)
         for (dark in listOf(true, false)) {
-            for (rung in 1..3) {
-                val name = "support-card-rung$rung" + if (dark) "" else "-light"
-                save(
-                    "$name.png",
-                    render(dark = dark) {
-                        Box(Modifier.fillMaxSize()) {
-                            Column(Modifier.fillMaxSize()) {
-                                PageHeader("Chats", "Everything, newest first")
-                                chats.forEach { ChatRow(it, favourite = false, onOpen = {}, onStar = {}) }
-                            }
-                            SupportCard(
-                                rung = rung,
-                                counters = counters,
-                                onSupport = {},
-                                onStar = {},
-                                onShare = {},
-                                onLater = {},
-                                onAlready = {},
-                                modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
-                            )
+            val name = "support-coffee" + if (dark) "" else "-light"
+            save(
+                "$name.png",
+                render(dark = dark) {
+                    Box(Modifier.fillMaxSize()) {
+                        Column(Modifier.fillMaxSize()) {
+                            PageHeader("Chats", "Everything, newest first")
+                            chats.forEach { ChatRow(it, favourite = false, onOpen = {}, onStar = {}) }
                         }
-                    },
-                )
-            }
+                        CoffeeDialog(counters = counters, asking = true, onLater = {}, onNever = {})
+                    }
+                },
+            )
         }
+    }
+
+    @Test
+    fun errorWithSendLogs() {
+        for (dark in listOf(true, false)) {
+            save(
+                "error-send-logs" + (if (dark) "" else "-light") + ".png",
+                render(dark = dark) {
+                    StateBox<Unit>(com.tmplayer.ui.components.UiState.Error("Telegram did not answer. Check the connection and try again."), onRetry = {}) {}
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `the coffee code reads back as the Buy Me a Coffee page`() {
+        val bitmap = requireNotNull(QrCode.render(About.COFFEE, 400))
+        val pixels = IntArray(bitmap.width * bitmap.height)
+        bitmap.readPixels(pixels)
+        val source = RGBLuminanceSource(bitmap.width, bitmap.height, pixels)
+        assertEquals("https://buymeacoffee.com/nevil.dev", QRCodeReader().decode(BinaryBitmap(HybridBinarizer(source))).text)
     }
 
     private fun render(dark: Boolean, height: Int = HEIGHT, page: @Composable () -> Unit): ByteArray =

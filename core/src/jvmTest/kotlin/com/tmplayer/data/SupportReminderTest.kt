@@ -10,9 +10,11 @@ import org.junit.Test
 import java.nio.file.Files
 
 /**
- * The support ladder: three asks at most, at good moments only, with a 7 day grace, a 30 and a 90
- * day gap, "I already support" for good, counters that never count a re-open within the hour twice,
- * and the one switch that silences it all.
+ * The Buy Me a Coffee window and its notification: real use first (five finished videos, or three
+ * days with one), never the first day, then one window every 14 days at most; a notification at
+ * most every 30 days and never within a week of a window; "Don't show again" and the old
+ * "I already support" for good, the old ladder's last promise kept, counters that never count a
+ * re-open within the hour twice, and the one switch that silences it all.
  */
 class SupportReminderTest {
 
@@ -42,6 +44,8 @@ class SupportReminderTest {
         snoozedUntil: Long = 0L,
         never: Boolean = false,
         supporter: Boolean = false,
+        askedAt: Long = 0L,
+        nudgedAt: Long = 0L,
     ) = SupportReminder.Counters(
         firstSeenAt = start - days * day,
         completedWatches = watches,
@@ -49,110 +53,161 @@ class SupportReminderTest {
         snoozedUntil = snoozedUntil,
         neverAgain = never,
         supporter = supporter,
+        askedAt = askedAt,
+        nudgedAt = nudgedAt,
     )
 
     @Test
-    fun `the first ask waits for seven days and five finished videos`() {
-        assertEquals(0, SupportReminder.due(counters(days = 6, watches = 50), start))
-        assertEquals(0, SupportReminder.due(counters(days = 30, watches = 4), start))
-        assertEquals(1, SupportReminder.due(counters(days = 7, watches = 5), start))
-        // Never counted at all: no first day, no card.
-        assertEquals(0, SupportReminder.due(SupportReminder.Counters(completedWatches = 99), start))
+    fun `the first window waits for five finished videos or three days of use`() {
+        // Five videos on the second day: real use.
+        assertTrue(SupportReminder.due(counters(days = 1, watches = 5), start))
+        assertFalse(SupportReminder.due(counters(days = 2, watches = 0), start))
+        // Three days with at least one video watched to the end.
+        assertTrue(SupportReminder.due(counters(days = 3, watches = 1), start))
+        assertFalse(SupportReminder.due(counters(days = 2, watches = 4), start))
+        // Three days of the app open and nothing watched is not use.
+        assertFalse(SupportReminder.due(counters(days = 30, watches = 0), start))
+        // Never counted at all: no first day, no window.
+        assertFalse(SupportReminder.due(SupportReminder.Counters(completedWatches = 99), start))
     }
 
     @Test
-    fun `later gaps are thirty and ninety days, and the ladder ends at three`() {
+    fun `never on the first day, however much was watched`() {
+        val firstLaunch = SupportReminder.Counters(firstSeenAt = start - 2 * hour, completedWatches = 40)
+        assertFalse(SupportReminder.due(firstLaunch, start))
+        assertFalse(SupportReminder.realUse(firstLaunch, start))
+        assertTrue(SupportReminder.due(firstLaunch, start - 2 * hour + day))
+    }
+
+    @Test
+    fun `later windows wait fourteen days each, for as long as it takes`() {
         val shownAt = start
-        // After the first ask the second waits 30 days from that moment.
-        val afterFirst = counters(days = 60, asked = 1, snoozedUntil = SupportReminder.snoozedUntil(shownAt, 1))
-        assertEquals(shownAt + 30 * day, afterFirst.snoozedUntil)
-        assertEquals(0, SupportReminder.due(afterFirst, shownAt + 30 * day - 1))
-        assertEquals(2, SupportReminder.due(afterFirst, shownAt + 30 * day))
-        // After the second the third waits 90 days, whatever the viewer watched meanwhile.
-        val afterSecond = counters(days = 200, watches = 0, asked = 2, snoozedUntil = SupportReminder.snoozedUntil(shownAt, 2))
-        assertEquals(shownAt + 90 * day, afterSecond.snoozedUntil)
-        assertEquals(0, SupportReminder.due(afterSecond, shownAt + 90 * day - 1))
-        assertEquals(3, SupportReminder.due(afterSecond, shownAt + 90 * day))
-        // Three asked: never again.
-        assertEquals(0, SupportReminder.due(counters(days = 900, asked = 3), start + 900 * day))
+        val after = counters(days = 60, snoozedUntil = SupportReminder.snoozedUntil(shownAt), askedAt = shownAt)
+        assertEquals(shownAt + 14 * day, after.snoozedUntil)
+        assertFalse(SupportReminder.due(after, shownAt + 14 * day - 1))
+        assertTrue(SupportReminder.due(after, shownAt + 14 * day))
     }
 
     @Test
-    fun `i already support and the old never are permanent`() {
-        assertEquals(0, SupportReminder.due(counters(days = 400, watches = 400, supporter = true), start))
-        assertEquals(0, SupportReminder.due(counters(days = 400, watches = 400, never = true), start))
-        assertEquals(0, SupportReminder.due(counters(days = 400, asked = 1, supporter = true), start + 400 * day))
+    fun `don't show again, i already support and the old ladder's end are permanent`() {
+        assertFalse(SupportReminder.due(counters(days = 400, watches = 400, supporter = true), start))
+        assertFalse(SupportReminder.due(counters(days = 400, watches = 400, never = true), start))
+        // The ladder's third card said it was the last ask.
+        assertFalse(SupportReminder.due(counters(days = 900, asked = 3), start + 900 * day))
+        // One or two cards of the ladder seen: the window takes over.
+        assertTrue(SupportReminder.due(counters(days = 900, asked = 2), start + 900 * day))
+        assertFalse(SupportReminder.nudgeDue(counters(days = 400, never = true), start, switchOn = true))
+        assertFalse(SupportReminder.nudgeDue(counters(days = 400, asked = 3), start, switchOn = true))
     }
 
     @Test
     fun `the switch turns it off, even when forced`() {
         SupportReminder.forcedRung = 2
-        assertEquals(2, SupportReminder.due(SupportReminder.Counters(), start))
+        assertTrue(SupportReminder.due(SupportReminder.Counters(), start))
         SupportReminder.enabled = false
-        assertEquals(0, SupportReminder.due(SupportReminder.Counters(), start))
-        assertEquals(0, SupportReminder.due(counters(days = 100, watches = 100), start))
+        assertFalse(SupportReminder.due(SupportReminder.Counters(), start))
+        assertFalse(SupportReminder.due(counters(days = 100, watches = 100), start))
+        assertFalse(SupportReminder.nudgeDue(counters(days = 100, watches = 100), start, switchOn = true))
     }
 
     @Test
     fun `never twice in one session`() {
-        assertEquals(1, SupportReminder.due(counters(), start))
-        assertEquals(0, SupportReminder.due(counters(), start, sessionShown = true))
+        assertTrue(SupportReminder.due(counters(), start))
+        assertFalse(SupportReminder.due(counters(), start, sessionShown = true))
     }
 
     @Test
-    fun `a ladder walk with a fake clock`() = runBlocking {
+    fun `the notification waits for real use, thirty days between, a week after a window`() {
+        assertFalse(SupportReminder.nudgeDue(counters(days = 2, watches = 0), start, switchOn = true))
+        assertTrue(SupportReminder.nudgeDue(counters(), start, switchOn = true))
+        // The Sponsor reminders switch off.
+        assertFalse(SupportReminder.nudgeDue(counters(), start, switchOn = false))
+        // Thirty days after the last one, not a moment sooner.
+        assertFalse(SupportReminder.nudgeDue(counters(nudgedAt = start - 30 * day + 1), start, switchOn = true))
+        assertTrue(SupportReminder.nudgeDue(counters(nudgedAt = start - 30 * day), start, switchOn = true))
+        // Not hard on the heels of the window.
+        assertFalse(SupportReminder.nudgeDue(counters(askedAt = start - 6 * day), start, switchOn = true))
+        assertTrue(SupportReminder.nudgeDue(counters(askedAt = start - 7 * day), start, switchOn = true))
+    }
+
+    @Test
+    fun `a walk with a fake clock`() = runBlocking {
         settings.noteSupportFirstSeen(start)
-        // Five finished videos, each a different one, on day 2: nothing yet, it is too early.
-        repeat(5) { settings.noteSupportCompleted("1_$it", start + 2 * day + it * 2 * hour) }
-        assertEquals(0, SupportReminder.claim(settings, start + 3 * day))
-
-        // Day 7: the first ask. Shown means asked, and the second waits 30 days.
-        val first = start + 7 * day
-        assertEquals(1, SupportReminder.claim(settings, first))
-        assertEquals(1, settings.supportCountersNow().asked)
-        assertEquals(first + 30 * day, settings.supportCountersNow().snoozedUntil)
+        // The first day: four finished videos, nothing yet.
+        repeat(4) { settings.noteSupportCompleted("1_$it", start + it * 2 * hour) }
+        assertFalse(SupportReminder.claim(settings, start + 20 * hour))
+        // The fifth on day 2: the window. Shown means asked, and the next waits 14 days.
+        settings.noteSupportCompleted("1_9", start + day + hour)
+        val first = start + day + 2 * hour
+        assertTrue(SupportReminder.claim(settings, first))
+        val after = settings.supportCountersNow()
+        assertEquals(1, after.windows)
+        assertEquals(first, after.askedAt)
+        assertEquals(first + 14 * day, after.snoozedUntil)
         // Not again in the same run of the app, whatever the day.
-        assertEquals(0, SupportReminder.claim(settings, first + 60 * day))
+        assertFalse(SupportReminder.claim(settings, first + 60 * day))
 
-        // A new run, day 36: still inside the gap, so no. Day 37: the second ask.
+        // A new run inside the gap: no. Fourteen days on: the second window.
         SupportReminder.resetSession()
-        assertEquals(0, SupportReminder.claim(settings, first + 30 * day - 1))
-        assertEquals(2, SupportReminder.claim(settings, first + 30 * day))
-        val second = first + 30 * day
-        assertEquals(second + 90 * day, settings.supportCountersNow().snoozedUntil)
+        assertFalse(SupportReminder.claim(settings, first + 14 * day - 1))
+        assertTrue(SupportReminder.claim(settings, first + 14 * day))
+        assertEquals(2, settings.supportCountersNow().windows)
 
-        // Later (pressing nothing) simply leaves it there; the third ask comes 90 days after.
-        SupportReminder.resetSession()
-        assertEquals(0, SupportReminder.claim(settings, second + 90 * day - 1))
-        assertEquals(3, SupportReminder.claim(settings, second + 90 * day))
+        // The notification: not within a week of that window, then once, then not for 30 days.
+        val second = first + 14 * day
+        assertFalse(SupportReminder.claimNudge(settings, second + 6 * day))
+        assertTrue(SupportReminder.claimNudge(settings, second + 7 * day))
+        assertFalse(SupportReminder.claimNudge(settings, second + 7 * day + 29 * day))
+        assertTrue(SupportReminder.claimNudge(settings, second + 7 * day + 30 * day))
 
-        // Cap at three: no fourth, ever.
+        // Don't show again: nothing more of either, ever.
+        settings.markSupportNever()
         SupportReminder.resetSession()
-        assertEquals(0, SupportReminder.claim(settings, second + 2000 * day))
+        assertFalse(SupportReminder.claim(settings, second + 2000 * day))
+        assertFalse(SupportReminder.claimNudge(settings, second + 2000 * day))
     }
 
     @Test
-    fun `i already support stops the ladder for good and survives sign out`() = runBlocking {
+    fun `the sponsor reminders switch is on by default and kept through sign out`() = runBlocking {
+        assertTrue(settings.sponsorRemindersNow())
+        settings.setSponsorReminders(false)
+        settings.clearEverything()
+        assertFalse(settings.sponsorRemindersNow())
+        assertFalse(SupportReminder.claimNudge(settings, start + 400 * day))
+    }
+
+    @Test
+    fun `i already support stops it for good and survives sign out`() = runBlocking {
         settings.noteSupportFirstSeen(start)
         repeat(6) { settings.noteSupportCompleted("1_$it", start + it * 2 * hour) }
-        assertEquals(1, SupportReminder.claim(settings, start + 8 * day))
+        assertTrue(SupportReminder.claim(settings, start + 8 * day))
         settings.markSupporter()
         settings.clearEverything()
         val kept = settings.supportCountersNow()
         assertTrue(kept.supporter)
         assertEquals(start, kept.firstSeenAt)
         assertEquals(6, kept.completedWatches)
-        assertEquals(1, kept.asked)
+        assertEquals(1, kept.windows)
+        assertEquals(start + 8 * day, kept.askedAt)
         SupportReminder.resetSession()
-        assertEquals(0, SupportReminder.claim(settings, start + 1000 * day))
+        assertFalse(SupportReminder.claim(settings, start + 1000 * day))
     }
 
     @Test
-    fun `a forced card leaves the counters alone`() = runBlocking {
+    fun `a forced window leaves the counters alone`() = runBlocking {
         SupportReminder.forcedRung = 3
-        assertEquals(3, SupportReminder.claim(settings, start))
-        assertEquals(3, SupportReminder.claim(settings, start + 1))
+        assertTrue(SupportReminder.claim(settings, start))
+        assertTrue(SupportReminder.claim(settings, start + 1))
         assertEquals(SupportReminder.Counters(), settings.supportCountersNow())
+    }
+
+    @Test
+    fun `a press on the notification is one open request`() {
+        assertFalse(SupportReminder.takeOpenRequest())
+        SupportReminder.requestOpen()
+        assertTrue(SupportReminder.openRequested.value)
+        assertTrue(SupportReminder.takeOpenRequest())
+        assertFalse(SupportReminder.takeOpenRequest())
     }
 
     @Test

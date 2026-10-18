@@ -120,16 +120,28 @@ private val UPDATE_POPUP_SHOWN = stringPreferencesKey("update_popup_shown")
 // Telegram account, so signing out keeps them: "I already support" must not come undone.
 private val SUPPORT_FIRST_SEEN = longPreferencesKey("support_first_seen")
 private val SUPPORT_SNOOZED_UNTIL = longPreferencesKey("support_snoozed_until")
-// Written by the old "Don't ask again", which is gone. Still read, so an install that asked for
-// no more cards keeps getting none.
+// Written by the window's "Don't show again", as it was by the old "Don't ask again".
 private val SUPPORT_NEVER = booleanPreferencesKey("support_never")
 private val SUPPORT_WATCHES = longPreferencesKey("support_watches")
 private val SUPPORT_WATCH_MS = longPreferencesKey("support_watch_ms")
 private val SUPPORT_ASKED = longPreferencesKey("support_asked")
 private val SUPPORT_SUPPORTER = booleanPreferencesKey("support_supporter")
 private val SUPPORT_RECENT = stringPreferencesKey("support_recent")
+// The Buy Me a Coffee window and the notification that replaced the ladder (2026-10-18).
+private val SUPPORT_ASKED_AT = longPreferencesKey("support_asked_at")
+private val SUPPORT_WINDOWS = longPreferencesKey("support_windows")
+private val SUPPORT_NUDGED_AT = longPreferencesKey("support_nudged_at")
+// "New videos in starred chats" (phone and desktop): the switch, whether the offer after a star
+// was made, and the newest video message each starred chat had at the last check. The account's,
+// so signing out clears them with everything else.
+private val NEW_VIDEO_ALERTS = booleanPreferencesKey("new_video_alerts")
+private val NEW_VIDEO_OFFERED = booleanPreferencesKey("new_video_offered")
+private val NEW_VIDEO_SEEN = stringPreferencesKey("new_video_seen")
+// "Sponsor reminders", the notification's switch. The device's, like the counters.
+private val SPONSOR_REMINDERS = booleanPreferencesKey("sponsor_reminders")
 private val SUPPORT_KEYS = listOf(
     SUPPORT_FIRST_SEEN, SUPPORT_SNOOZED_UNTIL, SUPPORT_WATCHES, SUPPORT_WATCH_MS, SUPPORT_ASKED,
+    SUPPORT_ASKED_AT, SUPPORT_WINDOWS, SUPPORT_NUDGED_AT,
 )
 
 /**
@@ -324,6 +336,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             val support = SUPPORT_KEYS.mapNotNull { key -> prefs[key]?.let { Pair(key, it) } }
             val supportNever = prefs[SUPPORT_NEVER]
             val supporter = prefs[SUPPORT_SUPPORTER]
+            val reminders = prefs[SPONSOR_REMINDERS]
             val recent = prefs[SUPPORT_RECENT]
             val kept = if (keepDownloads) {
                 prefs.asMap().mapNotNull { (key, value) ->
@@ -342,6 +355,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             for ((key, value) in support) prefs[key] = value
             supportNever?.let { prefs[SUPPORT_NEVER] = it }
             supporter?.let { prefs[SUPPORT_SUPPORTER] = it }
+            reminders?.let { prefs[SPONSOR_REMINDERS] = it }
             recent?.let { prefs[SUPPORT_RECENT] = it }
             if (keepDownloads) {
                 for ((key, value) in kept) prefs[key] = value
@@ -616,6 +630,19 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
     suspend fun skipSilenceNow(): Boolean = prefs.data.first()[SKIP_SILENCE] ?: false
 
     /**
+     * The phone keeps the sound of a video playing with the screen off or in another app, from a
+     * media notification with play, pause and seeking. Off until turned on: leaving the player
+     * pauses it, as it always has. Picture in picture still comes first where it can. Phone only.
+     */
+    val backgroundAudio: Flow<Boolean> = read { it[BACKGROUND_AUDIO] ?: false }
+
+    suspend fun setBackgroundAudio(value: Boolean) {
+        prefs.edit { it[BACKGROUND_AUDIO] = value }
+    }
+
+    suspend fun backgroundAudioNow(): Boolean = prefs.data.first()[BACKGROUND_AUDIO] ?: false
+
+    /**
      * How far before the saved position a resumed video starts, one of [ResumeRewind.CHOICES_MS]
      * (zero is off). A stored value off the list reads as the default.
      */
@@ -629,19 +656,6 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /**
      * Where a video with a saved position opens: that position, a few seconds earlier as the
-    /**
-     * The phone keeps the sound of a video playing with the screen off or in another app, from a
-     * media notification with play, pause and seeking. Off until turned on: leaving the player
-     * pauses it, as it always has. Picture in picture still comes first where it can. Phone only.
-     */
-    val backgroundAudio: Flow<Boolean> = read { it[BACKGROUND_AUDIO] ?: false }
-
-    suspend fun setBackgroundAudio(value: Boolean) {
-        prefs.edit { it[BACKGROUND_AUDIO] = value }
-    }
-
-    suspend fun backgroundAudioNow(): Boolean = prefs.data.first()[BACKGROUND_AUDIO] ?: false
-
      * viewer has set ([ResumeRewind]), or zero for one without. Continue watching and the history
      * keep the saved position itself; only the player starts from this.
      */
@@ -822,7 +836,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         prefs.edit { it[TV_CHANNELS] = value }
     }
 
-    // ---- the support card -------------------------------------------------------------------
+    // ---- the support window ----------------------------------------------------------------
 
     /** What [SupportReminder] decides from. */
     val supportCounters: Flow<SupportReminder.Counters> = read(::supportCountersOf)
@@ -833,10 +847,13 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         firstSeenAt = prefs[SUPPORT_FIRST_SEEN] ?: 0L,
         completedWatches = (prefs[SUPPORT_WATCHES] ?: 0L).coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
         watchTimeMs = prefs[SUPPORT_WATCH_MS] ?: 0L,
-        asked = (prefs[SUPPORT_ASKED] ?: 0L).coerceIn(0L, SupportReminder.MAX_ASKS.toLong()).toInt(),
+        asked = (prefs[SUPPORT_ASKED] ?: 0L).coerceIn(0L, SupportReminder.LADDER_ASKS.toLong()).toInt(),
         snoozedUntil = prefs[SUPPORT_SNOOZED_UNTIL] ?: 0L,
         neverAgain = prefs[SUPPORT_NEVER] ?: false,
         supporter = prefs[SUPPORT_SUPPORTER] ?: false,
+        askedAt = prefs[SUPPORT_ASKED_AT] ?: 0L,
+        windows = (prefs[SUPPORT_WINDOWS] ?: 0L).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt(),
+        nudgedAt = prefs[SUPPORT_NUDGED_AT] ?: 0L,
     )
 
     /**
@@ -867,19 +884,69 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
     }
 
     /**
-     * A card of [rung] was shown, whatever the viewer did with it: the ladder moves up one step and
-     * the next card waits its gap (see [SupportReminder.snoozedUntil]).
+     * The window was shown at [now], whatever the viewer did with it: the next one waits its gap
+     * (see [SupportReminder.snoozedUntil]).
      */
-    suspend fun recordSupportAsk(now: Long, rung: Int) {
+    suspend fun recordSupportAsk(now: Long) {
         prefs.edit {
-            it[SUPPORT_ASKED] = rung.toLong().coerceIn(1L, SupportReminder.MAX_ASKS.toLong())
-            it[SUPPORT_SNOOZED_UNTIL] = SupportReminder.snoozedUntil(now, rung)
+            it[SUPPORT_ASKED_AT] = now
+            it[SUPPORT_WINDOWS] = (it[SUPPORT_WINDOWS] ?: 0L) + 1
+            it[SUPPORT_SNOOZED_UNTIL] = SupportReminder.snoozedUntil(now)
         }
     }
 
-    /** "I already support", or the last ask's "Done": no more cards, and About says thank you. */
+    /** The "Don't forget to sponsor" notification went out at [now]. */
+    suspend fun recordSupportNudge(now: Long) {
+        prefs.edit { it[SUPPORT_NUDGED_AT] = now }
+    }
+
+    /** The old "I already support", or the last card's "Done": no more asks, and About says thank you. */
     suspend fun markSupporter() {
         prefs.edit { it[SUPPORT_SUPPORTER] = true }
+    }
+
+    /** "Don't show again" on the window: no more windows or notifications, and no thank you. */
+    suspend fun markSupportNever() {
+        prefs.edit { it[SUPPORT_NEVER] = true }
+    }
+
+    /** "Sponsor reminders": the occasional notification. On until the viewer turns it off. */
+    val sponsorReminders: Flow<Boolean> = read { it[SPONSOR_REMINDERS] ?: true }
+
+    suspend fun sponsorRemindersNow(): Boolean = prefs.data.first()[SPONSOR_REMINDERS] ?: true
+
+    suspend fun setSponsorReminders(value: Boolean) {
+        prefs.edit { it[SPONSOR_REMINDERS] = value }
+    }
+
+    // ---- new videos in starred chats --------------------------------------------------------
+
+    /** "New videos in starred chats": off until the viewer turns it on. */
+    val newVideoAlerts: Flow<Boolean> = read { it[NEW_VIDEO_ALERTS] ?: false }
+
+    suspend fun newVideoAlertsNow(): Boolean = prefs.data.first()[NEW_VIDEO_ALERTS] ?: false
+
+    /** Turning it on starts from what each chat has now: what was posted before is not news. */
+    suspend fun setNewVideoAlerts(value: Boolean) {
+        prefs.edit {
+            it[NEW_VIDEO_ALERTS] = value
+            it[NEW_VIDEO_OFFERED] = true
+            if (value) it.remove(NEW_VIDEO_SEEN)
+        }
+    }
+
+    /** Whether the one offer after a star has been made (or the switch was touched). */
+    suspend fun newVideoOfferedNow(): Boolean = prefs.data.first()[NEW_VIDEO_OFFERED] ?: false
+
+    suspend fun markNewVideoOffered() {
+        prefs.edit { it[NEW_VIDEO_OFFERED] = true }
+    }
+
+    /** The newest video message id of each starred chat at the last check. See [NewVideoAlerts]. */
+    suspend fun newVideoSeenNow(): Map<Long, Long> = NewVideoAlerts.decode(prefs.data.first()[NEW_VIDEO_SEEN])
+
+    suspend fun setNewVideoSeen(seen: Map<Long, Long>) {
+        prefs.edit { it[NEW_VIDEO_SEEN] = NewVideoAlerts.encode(seen) }
     }
 
     // ---- updates ----------------------------------------------------------------------------

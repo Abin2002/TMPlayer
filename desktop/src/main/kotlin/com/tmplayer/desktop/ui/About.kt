@@ -108,6 +108,15 @@ private fun Links(version: String, supporter: Boolean, onRead: () -> Unit) {
             }
         }
         if (group.support) {
+            // Buy Me a Coffee first and in its own yellow, GitHub Sponsors the quieter one beside it.
+            Row(
+                Modifier.padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CoffeeButton(onClick = { OpenExternal.browse(About.COFFEE) })
+                OutlinedButton(onClick = { OpenExternal.browse(About.SPONSORS) }) { Text(s.supportSponsorGithub) }
+            }
             Setting(s.aboutShowQr, s.aboutShowQrDetail) {
                 OutlinedButton(onClick = { supporting = true }) { Text(s.commonShow) }
             }

@@ -170,6 +170,8 @@ shows through in the background. They are listed under Selected twins below.
 | `ic_notify_pause` | Pause |  | 24 dp | The download notification's Pause action. |
 | `ic_notify_resume` | Play |  | 24 dp | The download notification's Resume action. |
 | `ic_notify_cancel` | Cancel01 |  | 24 dp | The download notification's Cancel action. |
+| `ic_stat_new_videos` | ListVideo |  | 24 dp | The new videos notification's status bar icon. |
+| `ic_stat_support` | Favourite |  | 24 dp | The sponsor reminder's status bar icon. |
 
 ## Not from the set
 
