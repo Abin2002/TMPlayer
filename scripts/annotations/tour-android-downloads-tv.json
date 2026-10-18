@@ -3,39 +3,39 @@
   "output": "app/src/main/res/drawable-nodpi/tour_downloads_tv.webp",
   "crop": [
     0,
-    40,
+    0,
     1920,
-    930
+    1080
   ],
   "width": 1280,
   "marks": [
     {
       "type": "circle",
       "box": [
-        150,
-        710,
-        730,
-        96
+        120,
+        860,
+        720,
+        95
       ],
       "seed": 93
     },
     {
       "type": "circle",
       "box": [
-        850,
-        205,
-        230,
-        50
+        431,
+        191,
+        348,
+        96
       ],
       "seed": 94
     },
     {
       "type": "circle",
       "box": [
-        150,
-        348,
+        120,
+        365,
         340,
-        92
+        100
       ],
       "seed": 95
     }

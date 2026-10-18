@@ -40,7 +40,7 @@ No messages, no server, no account except yours.
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/desktop-grid.webp" width="45%" alt="A chat's videos in the TMPlayer desktop app, a sidebar of chat sections beside a grid of posters with running times and sizes" />
+  <img src="docs/screenshots/desktop-grid.webp" width="45%" alt="A chat's videos in the TMPlayer desktop app, a grid of posters with years and sizes under the chat's name, and the chat's bar of actions at the foot" />
   <img src="docs/screenshots/desktop-player.webp" width="45%" alt="The TMPlayer desktop player, its title, timebar and controls over a playing video" />
 </p>
 

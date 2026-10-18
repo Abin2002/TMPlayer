@@ -7,6 +7,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.CompositionLocalProvider
+import com.tmplayer.desktop.ui.ChatBar
+import com.tmplayer.desktop.ui.ChatBarClearance
+import com.tmplayer.desktop.ui.ChatTopChrome
+import com.tmplayer.desktop.ui.ChatTopClearance
+import com.tmplayer.desktop.ui.Choice
+import com.tmplayer.desktop.ui.ChoiceChips
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -165,19 +173,30 @@ class PromoShots {
         SignInScreen(AuthState.Qr("tg://login?token=TMPlayerPromoFixtureSignsNobodyIn"))
     }
 
+    /**
+     * The Chats page as [com.tmplayer.desktop.ui.ChatsPage] draws it: the name at the start, the
+     * search and refresh beside it, the order and the filter chips under it, the floating bar.
+     */
     @Test
     fun chats() = both("chats", before = { shell.showChats(shell.chatSection) }) {
         withSidebar {
             val list = rememberLazyListState()
             val nav = rememberKeyboardNav(remember(list) { ListSurface(list) })
             val section = shell.chatSection
+            val chips = remember { com.tmplayer.ui.browse.chatPageChips(emptyList()) }
             Column(Modifier.fillMaxSize()) {
                 PageHeader(
                     title = section.heading,
-                    subtitle = section.blurb,
                     actions = {
-                        SearchField("", {}, "Search chats", shell.searchFocus, Modifier.width(320.dp))
+                        SearchField("", {}, "Search chats", shell.searchFocus, Modifier.widthIn(min = 160.dp, max = 280.dp))
                         IconButton(onClick = {}) { Icon(TmIcons.Refresh, contentDescription = "Refresh") }
+                    },
+                )
+                ChoiceChips(
+                    buildList {
+                        val sort = shell.chatSort
+                        add(Choice("sort", sort.label, sort.icon, selected = false) {})
+                        chips.forEach { chip -> add(Choice(chip.label, chip.label, chip.icon, selected = chip == chips.first()) {}) }
                     },
                 )
                 ChatList(chats, favourites = library.favourites, listState = list, nav = nav, onOpen = {}, onStar = {})
@@ -193,38 +212,42 @@ class PromoShots {
     fun grid() {
         installMeta()
         try {
-            both("grid", before = { seedWatching(); shell.showChats(shell.chatSection) }) {
-                withSidebar {
-                    Column(Modifier.fillMaxSize()) {
-                        PageHeader(
-                            title = cinema.title,
-                            subtitle = "${library.cinema.size} videos",
-                            leading = {
-                                IconButton(onClick = {}) { Icon(TmIcons.ArrowBack, contentDescription = "Back to chats") }
-                                ChatAvatar(cinema.miniThumbnail, 0, cinema.title, 40.dp)
-                            },
-                            actions = {
-                                SearchField("", {}, "Search this chat", shell.searchFocus, Modifier.width(300.dp))
-                                PosterSizeStep(shell)
-                                IconButton(onClick = {}) { Icon(TmIcons.Refresh, contentDescription = "Refresh") }
-                            },
-                        )
-                        val arranged = remember { SeriesShelf.arrange(library.cinema) }
-                        val posters = arranged.filter(SeriesShelf::isPoster)
-                        val cells = (posters + arranged.filterNot(SeriesShelf::isPoster)).map {
-                            if (it is ShelfEntry.Show) it.series.cover else (it as ShelfEntry.File).item
+            both("grid", before = { seedWatching(); shell.showChats(shell.chatSection); shell.openChat(cinema) }) {
+                // As [com.tmplayer.desktop.ui.MediaGridPage] draws a chat: Back, the picture and
+                // the name floating over the grid's top, the chat's own bar at the foot in the
+                // floating bar's place.
+                NavFrame(shell, null, null, barShown = false) {
+                    CompositionLocalProvider(com.tmplayer.ui.components.LocalBottomChrome provides ChatBarClearance) {
+                        Box(Modifier.fillMaxSize()) {
+                            val anchor = com.tmplayer.ui.components.rememberPopoverAnchor()
+                            val arranged = remember { SeriesShelf.arrange(library.cinema) }
+                            val posters = arranged.filter(SeriesShelf::isPoster)
+                            val cells = (posters + arranged.filterNot(SeriesShelf::isPoster)).map {
+                                if (it is ShelfEntry.Show) it.series.cover else (it as ShelfEntry.File).item
+                            }
+                            VideoGrid(
+                                shell,
+                                cells,
+                                cinema.title,
+                                series = arranged.filterIsInstance<ShelfEntry.Show>().associate { it.series.cover.id to it.series },
+                                posters = posters.mapTo(HashSet()) { if (it is ShelfEntry.Show) it.series.cover.id else (it as ShelfEntry.File).item.id },
+                                topPadding = ChatTopClearance,
+                                bottomBar = {
+                                    ChatBar(
+                                        state = shell, searching = false, query = "", onQuery = {}, onOpenSearch = {}, onCloseSearch = {},
+                                        onSearchDown = {}, recent = emptyList(), onClearRecent = {},
+                                        favourite = cinema.id in library.favourites, onToggleFavourite = {}, onSort = {},
+                                        sortAnchor = anchor, onRefresh = {},
+                                    )
+                                },
+                            )
+                            ChatTopChrome(shell, cinema)
                         }
-                        VideoGrid(
-                            shell,
-                            cells,
-                            cinema.title,
-                            series = arranged.filterIsInstance<ShelfEntry.Show>().associate { it.series.cover.id to it.series },
-                            posters = posters.mapTo(HashSet()) { if (it is ShelfEntry.Show) it.series.cover.id else (it as ShelfEntry.File).item.id },
-                        )
                     }
                 }
             }
         } finally {
+            shell.closeChat()
             com.tmplayer.online.OnlineMetadata.current = null
         }
     }
@@ -495,7 +518,7 @@ class PromoShots {
     @Test
     fun tourDownloads() {
         val folder = dir.resolve("Downloads").apply { mkdirs() }
-        both("tour-downloads", before = {
+        both("tour-downloads", settleMs = 2_500, before = {
             runBlocking {
                 listOf("Saltwater.Lanterns.2023.1080p", "Harbour.Lines.S01E04", "Skybound Academy - 04", "Lesson 04")
                     .mapNotNull { part -> library.all.firstOrNull { part in it.fileName } }
@@ -513,32 +536,40 @@ class PromoShots {
     }
 
     /**
-     * The quick tour's Settings page (CP69). The desktop has no page list, only one long page, so
-     * the picture is four windows onto that one page, stacked: Appearance, Playback, Storage (down
-     * to its space line, before the folder row names this machine's home) and App lock. Each window
-     * is the real page laid out at [SETTINGS_PAGE_WIDTH], cut at the dp offsets in [SETTINGS_WINDOWS].
+     * The quick tour's Settings page (CP69): Settings as a wide window shows it, the list of pages
+     * on the left (the tour marks Playback, Storage and downloads, App lock and Appearance there,
+     * as on the phone) and Appearance open beside it.
      */
     @Test
-    fun tourSettings() = both(
-        "tour-settings",
-        width = (SETTINGS_PAGE_WIDTH * DENSITY).toInt(),
-        height = ((SETTINGS_WINDOWS.size * SETTINGS_WINDOW + (SETTINGS_WINDOWS.size - 1) * SETTINGS_GAP) * DENSITY).toInt(),
-        before = { shell.go(com.tmplayer.desktop.ui.Destination.Settings) },
-    ) {
-        Column(Modifier.fillMaxSize()) {
-            SETTINGS_WINDOWS.forEachIndexed { index, top ->
-                if (index > 0) androidx.compose.material3.HorizontalDivider(thickness = SETTINGS_GAP.dp, color = Tone.outline)
-                Box(Modifier.width(SETTINGS_PAGE_WIDTH.dp).height(SETTINGS_WINDOW.dp).clipToBounds()) {
-                    Box(
-                        Modifier
-                            .wrapContentHeight(align = androidx.compose.ui.Alignment.Top, unbounded = true)
-                            .height(SETTINGS_PAGE_HEIGHT.dp)
-                            .offset(y = (-top).dp),
-                    ) {
-                        com.tmplayer.desktop.ui.SettingsPage(shell, version = "1.26.0")
-                    }
+    fun tourSettings() = both("tour-settings", before = { shell.go(com.tmplayer.desktop.ui.Destination.Settings) }) {
+        withSidebar { com.tmplayer.desktop.ui.SettingsPage(shell, version = "1.26.0") }
+    }
+
+    /**
+     * Home on a 1920 by 1080 screen at 100 per cent, with the posters and backdrops looked up:
+     * only checked, for the carousel's pictures and their sharpness at that size.
+     */
+    @Test
+    fun homeFullHd() {
+        installMeta()
+        try {
+            val rows = com.tmplayer.data.HomeRows.build(
+                continueWatching = library.continueWatching,
+                favourites = com.tmplayer.data.HomeRows.favouriteChats(chats, library.favourites),
+                loaded = library.byChat.filterKeys { it in library.favourites },
+                recent = library.all,
+                watchLater = library.watchLater,
+                fresh = library.newEpisodes,
+            )
+            both("home-meta-1080p", width = 1920, height = 1080, density = 1f, before = ::seedWatching) {
+                withSidebar {
+                    com.tmplayer.desktop.ui.HomeRowsView(
+                        shell, rows, chats, library.art, onRowShown = {}, onArtWanted = {}, onRefresh = {},
+                    )
                 }
             }
+        } finally {
+            com.tmplayer.online.OnlineMetadata.current = null
         }
     }
 
@@ -547,18 +578,34 @@ class PromoShots {
         NavFrame(shell, null, null) { page() }
     }
 
-    private fun both(name: String, before: () -> Unit = {}, darkOnly: Boolean = false, width: Int = WIDTH, height: Int = HEIGHT, content: @Composable () -> Unit) {
+    private fun both(
+        name: String,
+        before: () -> Unit = {},
+        darkOnly: Boolean = false,
+        width: Int = WIDTH,
+        height: Int = HEIGHT,
+        density: Float = DENSITY,
+        settleMs: Long = 0,
+        content: @Composable () -> Unit,
+    ) {
         before()
         for (dark in if (darkOnly) listOf(true) else listOf(true, false)) {
-            val png = render(dark, width, height, content)
+            val png = render(dark, width, height, density, settleMs, content)
             assertTrue("$name drew nothing", png.size > 10_000)
             val out = System.getenv("TMPLAYER_PROMO")?.takeIf { it.isNotBlank() } ?: continue
             File(out).apply { mkdirs() }.resolve(if (dark) "$name.png" else "$name-light.png").writeBytes(png)
         }
     }
 
-    private fun render(dark: Boolean, width: Int = WIDTH, height: Int = HEIGHT, content: @Composable () -> Unit): ByteArray =
-        ImageComposeScene(width, height, Density(DENSITY)) {
+    private fun render(
+        dark: Boolean,
+        width: Int = WIDTH,
+        height: Int = HEIGHT,
+        density: Float = DENSITY,
+        settleMs: Long = 0,
+        content: @Composable () -> Unit,
+    ): ByteArray =
+        ImageComposeScene(width, height, Density(density)) {
             TmMaterialTheme(dark = dark) {
                 Surface(Modifier.fillMaxSize(), color = Tone.background) { content() }
             }
@@ -572,7 +619,16 @@ class PromoShots {
             // A second pass, so whatever answered during the first (the player's open, the
             // posters) has its fade finished in the frame.
             Thread.sleep(200)
-            scene.render(1_600_000_000).encodeToData(EncodedImageFormat.PNG)!!.bytes
+            scene.render(1_600_000_000)
+            // Pages that measure something off the composition thread (Downloads' storage card)
+            // get longer, so the frame shows the figures rather than "Working it out".
+            var waited = 0L
+            while (waited < settleMs) {
+                Thread.sleep(100)
+                waited += 100
+                scene.render(1_600_000_000 + waited * 1_000_000)
+            }
+            scene.render(2_400_000_000 + settleMs * 1_000_000).encodeToData(EncodedImageFormat.PNG)!!.bytes
         }
 
     /** A picture from the Android promo build, so both fixtures show the same made-up media. */
@@ -634,16 +690,6 @@ class PromoShots {
         const val WIDE = 2880
         const val HEIGHT = 1200
 
-        /** The Settings page's width beside the side bar in the other shots, so it wraps the same. */
-        const val SETTINGS_PAGE_WIDTH = 1000
-
-        /** Tall enough for the whole page, so nothing scrolls. */
-        const val SETTINGS_PAGE_HEIGHT = 4800
-
-        /** Each window's height, the rule between windows, and where each starts on the page. */
-        const val SETTINGS_WINDOW = 250
-        const val SETTINGS_GAP = 4
-        val SETTINGS_WINDOWS = listOf(98, 474, 1700, 2946)
         const val DENSITY = 1.5f
 
         /** Gradle runs the tests from the module directory. */
