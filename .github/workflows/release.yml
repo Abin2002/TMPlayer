@@ -143,11 +143,11 @@ jobs:
           done
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
-      # Debug only: the promo and release variants run the same test sources, so :app:test ran
-      # every test three times for nothing.
+      # Debug only: the promo and release variants run the same test sources, and since AGP 9
+      # only the tested build type (debug) gets a unit test task at all.
       - name: Run unit tests
         if: steps.tested.outputs.skip != 'true'
-        run: ./gradlew :core:jvmTest :app:testDebugUnitTest
+        run: ./gradlew :core:jvmTest :ui:jvmTest :app:testDebugUnitTest
 
       - name: Build the signed APK
         env:

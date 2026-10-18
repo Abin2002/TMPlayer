@@ -50,9 +50,9 @@ additional permission to be combined with it; see
 
 ### Android libraries
 
-- AndroidX Core, Activity, Compose, TV Material, Lifecycle, Media3 1.10.1, Leanback, Fragment and
+- AndroidX Core, Activity, Compose, TV Material, Lifecycle, Media3 1.11.1, Leanback, Fragment and
   DataStore: Apache License 2.0: <https://github.com/androidx/androidx>
-- Sentry Android SDK 8.16.0 (crash reports, see the privacy page): MIT:
+- Sentry Android SDK 8.61.0 (crash reports, see the privacy page): MIT:
   <https://github.com/getsentry/sentry-java>
 
 ## Desktop (Windows and Linux)

@@ -11,9 +11,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 // com.tmplayer.platform and the runner interfaces next to the code that needs them.
 //
 // The Android target uses AGP's own Kotlin Multiplatform library plugin rather than
-// com.android.library with androidTarget(): AGP 9 no longer lets the two be combined, so this is
-// the shape the project will need anyway, and a library with no resources and no build variants
-// is exactly what the plugin is for (one variant, consumed by every build type of :app).
+// com.android.library with androidTarget(): AGP 9 does not let the two be combined, and a library
+// with no resources and no build variants is exactly what the plugin is for (one variant,
+// consumed by every build type of :app).
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)

@@ -1,6 +1,13 @@
 [versions]
+# AGP 9 because the current AndroidX generation (core 1.19, Compose 1.12 in BOM 2026.09.00 and on)
+# declares minAndroidGradlePluginVersion 9.1.0. AGP 9.4 needs Gradle 9.6 or newer, compiles Kotlin
+# itself (no org.jetbrains.kotlin.android plugin) and supports compileSdk 37. Kotlin 2.4.21's own
+# table lists AGP up to 9.3.1 and Gradle up to 9.7.0 as fully supported; 9.4.1 on Gradle 9.8.1
+# builds and tests cleanly here, and 9.3.x on Gradle 9.7.x is the tested pair to fall back to.
 agp = "9.4.1"
-# tdl-coroutines 15.0.0 is built against kotlin-stdlib 2.4.10, so the compiler has to be at least 2.4
+# tdl-coroutines 15.0.0 is built against kotlin-stdlib 2.4.10, so the compiler has to be at least 2.4.
+# The Kotlin Gradle plugin still comes from here: AGP 9 builds :app with it, and :core, :ui and
+# :desktop apply the multiplatform and jvm plugins at this version.
 kotlin = "2.4.21"
 coreKtx = "1.19.1"
 activityCompose = "1.13.0"
@@ -120,7 +127,9 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-# AGP's own plugin for the Android target of a Kotlin Multiplatform library, used by `:core`.
+# AGP's own plugin for the Android target of a Kotlin Multiplatform library, used by `:core` and
+# `:ui` (configured in `kotlin { android { } }`). AGP 9 no longer lets com.android.library sit
+# beside the multiplatform plugin. It has one variant and no Android resources or host tests here.
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 sentry-android = { id = "io.sentry.android.gradle", version.ref = "sentryGradle" }

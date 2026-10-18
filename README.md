@@ -110,7 +110,7 @@ in the app menu and on the taskbar, the remote, touch and keyboard references, a
 
 ## Build it yourself
 
-You need JDK 21, Android SDK platform 36, and your own free Telegram credentials from
+You need JDK 21, Android SDK platform 37, and your own free Telegram credentials from
 [my.telegram.org](https://my.telegram.org) in `local.properties`:
 
 ```properties

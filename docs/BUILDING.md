@@ -2,8 +2,11 @@
 
 ## What you need
 
-JDK 21 and Android SDK platform 36. JDK 17 still builds the Android app, but the desktop app
-needs 21, so 21 is the one to install. Any recent Android Studio works, but the project builds
+JDK 21 and Android SDK platform 37 with build tools 36.0.0 or newer (AGP 9.4's floor; Gradle
+fetches missing SDK packages itself when the licences are accepted). JDK 17 is the least Gradle 9
+and AGP 9 will run on and still builds the Android app, but the desktop app needs 21, so 21 is the
+one to install. Newer JDKs are not supported by the build yet: JDK 25 fails, so point
+`JAVA_HOME` (or Android Studio's Gradle JDK) at a 21. Any recent Android Studio works, but the project builds
 fine from the command line. The Android app runs on API 26 and up; the desktop app on Windows 10
 and 11 and on 64-bit Linux.
 
@@ -39,8 +42,8 @@ Downloads work without an account; signing in with a free one gives the viewer t
 ## The commands
 
 ```bash
-./gradlew :core:jvmTest     # tests of the shared core, on a plain JVM
-./gradlew test              # the Android app's own unit tests
+./gradlew :core:jvmTest :ui:jvmTest   # tests of the shared core and Compose half, on a plain JVM
+./gradlew :app:testDebugUnitTest      # the Android app's own unit tests (AGP 9 makes them for debug only)
 ./gradlew assembleDebug     # one debug APK, every architecture, emulator included
 ./gradlew assembleRelease   # signed release, needs keystore.properties
 ```
@@ -92,16 +95,51 @@ If it is smooth there, it is smooth everywhere. An Android TV emulator (API 28 o
 
 ## Toolchain notes
 
-These version constraints are not free choices, and changing them breaks the build:
+These version constraints are not free choices, and changing them breaks the build. The whole
+toolchain was moved forward on 2026-10-18 (Gradle 9.8.1, AGP 9.4.1, Kotlin 2.4.21, media3 1.11.1).
 
 - **Kotlin must be 2.4.x or newer.** `dev.g000sha256:tdl-coroutines` 15 is built against
   `kotlin-stdlib` 2.4.10 and ships Kotlin 2.4 metadata; an older compiler rejects it outright.
-- **`compileSdk` is 37** because `tdl-coroutines` 14+ declares that minimum in its AAR metadata,
-  and **AGP stays on 8.x** because `androidx.core` 1.19 / `lifecycle` 2.11 would drag in AGP 9
-  and Gradle 9. AGP 8.13 is only tested up to API 36.1, so `gradle.properties` silences its
-  warning about 37; it builds and tests cleanly. `targetSdk` deliberately stays at 35.
+- **AGP 9, because the libraries now require it.** `androidx.core` 1.19, Compose 1.12 (the BOM
+  from 2026.09.00 on) and the rest of that generation declare `minAndroidGradlePluginVersion`
+  9.1.0 in their AAR metadata, so staying on AGP 8 would freeze every AndroidX dependency.
+  AGP 9.4 needs Gradle 9.6 or newer and supports API 37, so no `compileSdk` warning has to be
+  silenced any more.
+- **AGP 9 compiles Kotlin itself.** There is no `org.jetbrains.kotlin.android` plugin: `:app`
+  applies `com.android.application` and the Compose compiler plugin, configures Kotlin under
+  `kotlin { compilerOptions { } }`, and adds extra source folders through
+  `android.sourceSets.<name>.kotlin.directories` (a folder added to `java` is no longer
+  compiled as Kotlin). AGP 9 also only makes unit test tasks for the tested build type, so the
+  app's tests are `:app:testDebugUnitTest` and there is no `testReleaseUnitTest`.
+- **Kotlin and AGP compatibility.** The Kotlin Gradle plugin's own table lists 2.4.21 as fully
+  supported with Gradle up to 9.7.0 and AGP up to 9.3.1. Gradle 9.8.1 and AGP 9.4.1 build, test
+  and package everything here with no compatibility warning, so they are used; if a later Kotlin
+  or AGP bump misbehaves, AGP 9.3.x on Gradle 9.7.x is the officially tested pair to fall back
+  to. Check https://kotlinlang.org/docs/gradle-configure-project.html before moving either.
+- **`:core` and `:ui` use `com.android.kotlin.multiplatform.library`**, AGP's plugin for the
+  Android target of a Kotlin Multiplatform library, configured in `kotlin { android { } }`
+  (`androidLibrary { }` is the deprecated spelling). AGP 9 does not allow
+  `org.jetbrains.kotlin.multiplatform` beside `com.android.library`. The plugin has one variant
+  and no build types, so neither module has a `BuildConfig` (the app's flags reach them through
+  the platform interfaces), no Android resources (Android strings and drawables live in `:app`,
+  the desktop's fonts and onboarding pictures in `ui/src/jvmMain/resources`, so the plugin's
+  known gap with Compose Multiplatform resources does not apply) and no Android host tests:
+  their tests are `jvmTest`.
+- **`compileSdk` is 37** because `tdl-coroutines` 14+ declares that minimum in its AAR metadata.
+  `targetSdk` deliberately stays at 35.
 - **media3 and NextLib versions are coupled**: `nextlib-media3ext` is published as
-  `<media3-version>-<nextlib-version>`, so bumping one means bumping both to a pair that exists.
+  `<media3-version>-<nextlib-version>`, and its FFmpeg renderers are built against that exact
+  media3, so bumping one means bumping both to a pair that exists. A nextlib bump also changes
+  the GPL corresponding source the release links to, which `release.yml` checks (see
+  RELEASING.md), and a mediamp bump does the same for the desktop's mpv runtime.
+- **Media3 1.11 sizes PCM AudioTrack buffers by one fixed length** and ignores the old floor and
+  ceiling. The player asks for 1.5 s with `setTargetPcmBufferDurationUs` (the stutter fix for
+  FFmpeg decoded tracks on the stick); a future media3 that renames that again has to keep it.
+- **AGP 9 shrinks resources inside R8** (`android.r8.optimizedResourceShrinking`). Compared with
+  AGP 8 the release APK carries about 360 fewer resource entries: library layouts, strings and
+  PNG fallbacks that no surviving code reaches (pre-Android 7 notification templates, unused
+  leanback widgets, density PNGs behind vectors that minSdk 26 always uses). A resource looked
+  up by name with `getIdentifier` in a release build would need a keep rule.
 - **`org.json` belongs to `:core`'s jvm target only and must stay that way.** Android already
   ships `org.json` at runtime, and the Android side of `:core` compiles against that copy. Adding
   it to `commonMain` or to `:app` would ship a second copy of a library the platform already

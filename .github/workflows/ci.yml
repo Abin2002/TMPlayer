@@ -49,13 +49,15 @@ jobs:
 
       # No credentials on this path. The app compiles fine without them and says so at runtime,
       # which is exactly what a fork or a pull request should get.
-      # :core is the shared half (TDLib, settings, downloads, the streaming window) that the
-      # desktop app builds on too. Its tests run on a plain JVM, the way the desktop runs it.
-      - name: Run core tests
-        run: ./gradlew :core:jvmTest
+      # :core is the shared half (TDLib, settings, downloads, the streaming window) and :ui the
+      # shared Compose half that the desktop app builds on too. Their tests run on a plain JVM,
+      # the way the desktop runs them. Both are Kotlin Multiplatform libraries on AGP's own
+      # plugin, which has no Android host tests here, so jvmTest is the whole of their suites.
+      - name: Run core and ui tests
+        run: ./gradlew :core:jvmTest :ui:jvmTest
 
-      # Debug only: the promo and release variants run the same test sources, so :app:test ran
-      # every test three times.
+      # Debug only: the promo and release variants run the same test sources. Since AGP 9 only
+      # the tested build type (debug) gets a unit test task at all, so this is every app test.
       - name: Run unit tests
         run: ./gradlew :app:testDebugUnitTest
 
@@ -77,6 +79,7 @@ jobs:
           name: test-results
           path: |
             core/build/reports/tests/
+            ui/build/reports/tests/
             app/build/reports/tests/
           retention-days: 14
           if-no-files-found: ignore
