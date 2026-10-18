@@ -93,6 +93,7 @@ import com.tmplayer.ui.nav.LocalBackStack
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.lock.PinPad
 import com.tmplayer.ui.lock.PinPurpose
+import com.tmplayer.ui.components.BrandLoaderHandOff
 
 /**
  * What the player draws for a [PlayRequest], given a way to close itself.
@@ -164,6 +165,16 @@ fun DesktopShell(
                 } else {
                     SignInScreen(auth)
                 }
+                // The loader after launch, over the window until Telegram has something to ask
+                // or the session is open, then fading out over what is drawn under it.
+                BrandLoaderHandOff(
+                    label = if (auth == AuthState.Connecting || auth == AuthState.ChooseMethod) {
+                        LocalStrings.current.signinConnecting
+                    } else {
+                        null
+                    },
+                    modifier = Modifier.windowDrag(),
+                ) { ConnectingStalled() }
                 // At the foot, centred just over the floating bar or a chat's bar, as a desktop
                 // app's messages sit: the top of a window is Back, the chat's name and the window's
                 // own buttons, which a message there covered.

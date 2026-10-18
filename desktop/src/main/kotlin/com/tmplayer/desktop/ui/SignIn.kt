@@ -89,8 +89,9 @@ fun SignInScreen(auth: AuthState) {
         ) {
             Image(AppLogo.Mark, contentDescription = null, modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)))
             when (auth) {
-                AuthState.Connecting -> ConnectingPane()
-                AuthState.ChooseMethod, AuthState.Ready -> Waiting(s.signinConnecting)
+                // Under the shell's loader, which fades out over whichever pane comes next.
+                AuthState.Connecting, AuthState.ChooseMethod -> Unit
+                AuthState.Ready -> Waiting(s.signinConnecting)
                 is AuthState.Qr -> QrPane(auth.link)
                 is AuthState.Phone -> PhonePane(auth.wrong)
                 is AuthState.Code -> CodePane(auth)
@@ -114,18 +115,23 @@ private fun Waiting(label: String) {
 }
 
 /**
- * The spinner, and once it has run for [com.tmplayer.data.Td.signInStalled]'s while, the likely
- * reasons and a Retry: a firewall or a VPN that drops Telegram's traffic leaves TDLib waiting with
- * no error to show, and a spinner alone gives the viewer nothing to check and nothing to press.
+ * What the loader adds once it has waited for [com.tmplayer.data.Td.signInStalled]'s while: the
+ * likely reasons and a Retry. A firewall or a VPN that drops Telegram's traffic leaves TDLib
+ * waiting with no error to show, and a loader alone gives the viewer nothing to check and nothing
+ * to press.
  */
 @Composable
-private fun ConnectingPane() {
+internal fun ConnectingStalled() {
     val s = LocalStrings.current
     val scope = rememberCoroutineScope()
     val stalled by Td.signInStalled.collectAsState()
-    Waiting(s.signinConnecting)
     if (stalled) {
-        Text(s.signinUnreachable, color = Tone.muted, textAlign = TextAlign.Center)
+        Text(
+            s.signinUnreachable,
+            color = Tone.muted,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(max = 460.dp).padding(top = 24.dp, bottom = 16.dp),
+        )
         Button(onClick = { scope.launch { Td.retryConnecting() } }) { Text(s.commonRetry) }
     }
 }

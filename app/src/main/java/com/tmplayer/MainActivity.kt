@@ -1,6 +1,7 @@
 package com.tmplayer
 
 import com.tmplayer.ui.components.TopMessageHost
+import androidx.compose.ui.zIndex
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
@@ -1040,6 +1041,12 @@ private fun Root() {
                 false
             },
     ) {
+        // The loader after the system splash, over everything while Telegram is being reached,
+        // then fading out over the sign in pane or the home screen, whichever is drawn under it.
+        com.tmplayer.ui.components.BrandLoaderHandOff(
+            label = com.tmplayer.ui.auth.loaderLabel(auth, LocalStrings.current),
+            modifier = Modifier.zIndex(1f),
+        )
         if (auth !is AuthState.Ready) {
             // Signing out drops straight back to the login screen, so forget where we were.
             LaunchedEffect(Unit) {
@@ -1110,6 +1117,8 @@ private fun Root() {
                 notice = connectionNotice,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+                    // Above the loader, which is where being offline matters most.
+                    .zIndex(2f)
                     .padding(bottom = 20.dp),
             )
             return@Box

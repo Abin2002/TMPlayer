@@ -64,7 +64,7 @@ import com.tmplayer.data.SignInMethod
 import com.tmplayer.data.Td
 import com.tmplayer.ui.components.BigError
 import com.tmplayer.ui.components.BigLoader
-import com.tmplayer.ui.components.ConnectingPane
+import com.tmplayer.ui.components.BrandLoader
 import com.tmplayer.ui.components.Pane
 import com.tmplayer.ui.components.TmButton
 import com.tmplayer.ui.components.TmSecondaryButton
@@ -77,6 +77,18 @@ import com.tmplayer.ui.theme.Tv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+
+/**
+ * What the loader says over the sign in screens while Telegram has nothing to ask yet, or null
+ * once it has. The host draws [com.tmplayer.ui.components.BrandLoaderHandOff] with it over the
+ * window, so the loader fades out over whichever screen comes next; [LoginScreen] leaves those
+ * states empty under it.
+ */
+fun loaderLabel(state: AuthState, s: com.tmplayer.i18n.Messages): String? = when (state) {
+    is AuthState.Connecting -> s.stateConnecting
+    is AuthState.ChooseMethod -> s.loginGettingReady
+    else -> null
+}
 
 @Composable
 fun LoginScreen(
@@ -99,7 +111,8 @@ fun LoginScreen(
     val touch = isTouch()
 
     when (state) {
-        is AuthState.Connecting -> ConnectingPane()
+        // Under the host's loader (see [loaderLabel]).
+        is AuthState.Connecting -> Box(Modifier.fillMaxSize())
         // Answered by the device rather than by the viewer: typing a number on a television costs
         // a minute of D-pad, and scanning a code with the phone displaying it cannot be done at
         // all. Each device opens on the way in that suits it and carries a button to the other.
@@ -107,7 +120,7 @@ fun LoginScreen(
             LaunchedEffect(touch) {
                 onChooseMethod(if (touch) SignInMethod.Phone else SignInMethod.Qr)
             }
-            ConnectingPane(s.loginGettingReady)
+            Box(Modifier.fillMaxSize())
         }
         is AuthState.Qr -> QrPane(
             link = state.link,
@@ -143,7 +156,7 @@ fun LoginScreen(
             }
         is AuthState.Password ->
             PasswordPane(state, submitError, onSubmitPassword, onStartOver)
-        is AuthState.Ready -> ConnectingPane(s.loginSigningInStatus)
+        is AuthState.Ready -> BrandLoader(s.loginSigningInStatus)
         // Starting over is the way out of every failure here, including a client that could not
         // start at all, which it tries again.
         is AuthState.Failed -> BigError(state.message, onRetry = onStartOver)
