@@ -336,6 +336,7 @@ fun SettingsScreen(
         initialValue = ThemeChoice.Default,
     )
     val dynamicColour by settings.dynamicColour.collectAsStateWithLifecycle(initialValue = false)
+    val pureBlack by settings.pureBlack.collectAsStateWithLifecycle(initialValue = false)
     val uiScale by rememberUiScale(settings)
     val lighterPictures by settings.lighterPictures.collectAsStateWithLifecycle(initialValue = false)
     val reduceMotion by settings.reduceMotion.collectAsStateWithLifecycle(initialValue = false)
@@ -675,6 +676,21 @@ fun SettingsScreen(
                                 val next = ThemeChoice.entries.getOrNull(themeChoice.ordinal + direction)
                                 if (next != null) scope.launch { settings.setThemeChoice(next) }
                             },
+                        )
+                    }
+                }
+
+                // Pure black, the usual switch under the theme: wherever the app can be dark, so
+                // System and Dark, and folded away under Light. Right under Theme on a TV too, one
+                // press of Down away.
+                item(key = "pure_black") {
+                    com.tmplayer.ui.components.RevealUnder(themeChoice.offersPureBlack) {
+                        ToggleRow(
+                            title = s.settingsPureBlack,
+                            subtitle = s.themeBlackDetail,
+                            icon = TmIcons.PureBlack,
+                            checked = pureBlack,
+                            onToggle = { scope.launch { settings.setPureBlack(!pureBlack) } },
                         )
                     }
                 }

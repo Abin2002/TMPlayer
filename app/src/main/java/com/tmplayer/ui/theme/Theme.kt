@@ -25,6 +25,7 @@ import androidx.tv.material3.lightColorScheme as tvLightColorScheme
 import com.tmplayer.data.FormFactor
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ThemeChoice
+import com.tmplayer.data.pureBlackGround
 
 /*
  * The Android entry point to the theme. The palette, the shapes, the touch type scale and [Tone]
@@ -201,16 +202,13 @@ fun TMPlayerTheme(content: @Composable () -> Unit) {
 
     // A television has no system light mode to follow, so "System" there means dark. Light and
     // Dark are the viewer's own answer, on either device: a television in a bright room is real.
-    val dark = when {
-        choice == ThemeChoice.Light -> false
-        choice.alwaysDark -> true
-        !touch -> true
-        else -> systemDark
-    }
+    val dark = choice.isDark(systemDark = systemDark || !touch)
 
     // One scheme for both devices. The television has no wallpaper to take colours from, but
-    // everything else about it is the phone's palette.
-    val black = choice == ThemeChoice.Black
+    // everything else about it is the phone's palette. Pure black is a switch under the theme and
+    // applies whenever the app is dark, System on a dark phone included.
+    val pureBlack by settings.pureBlack.collectAsState(initial = false)
+    val black = pureBlackGround(choice, pureBlack, systemDark = systemDark || !touch)
     val scheme = if (touch) phoneScheme(dark, dynamic, black) else TmSchemes.of(dark, black)
 
     // Both themes, always, and the form factor decides only the type scale. Two theme systems are
@@ -239,6 +237,7 @@ fun TMPlayerTheme(content: @Composable () -> Unit) {
                 // inherits Compose's fallback, so a light theme would draw dark theme grey.
                 LocalContentColor provides scheme.onSurface,
                 LocalDarkTheme provides dark,
+                LocalPureBlack provides black,
             ) {
                 UiScaled(scale) { ProvideStrings(content) }
             }

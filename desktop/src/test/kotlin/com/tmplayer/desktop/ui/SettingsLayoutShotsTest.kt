@@ -10,6 +10,7 @@ import androidx.compose.ui.use
 import com.tmplayer.data.DownloadRequest
 import com.tmplayer.data.DownloadRunner
 import com.tmplayer.data.SettingsStore
+import com.tmplayer.data.ThemeChoice
 import com.tmplayer.data.UpdateScheduler
 import com.tmplayer.data.WatchedStore
 import com.tmplayer.desktop.DesktopPrefs
@@ -22,6 +23,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Files
 
@@ -83,6 +85,23 @@ class SettingsLayoutShotsTest {
         }
     }
 
+    /**
+     * The Pure black switch under the theme: there under Dark, drawn on true black once it is on,
+     * and folded away under Light.
+     */
+    @Test
+    fun pureBlackFollowsTheTheme() {
+        val laptop = sizes.first { it.name == "laptop" }
+        val page: @Composable () -> Unit = { SettingsPage(shell, "2.0.0", initialCategory = SettingsCategory.Appearance) }
+        runBlocking { settings.setThemeChoice(ThemeChoice.Dark); settings.setPureBlack(false) }
+        save("settings-pure-black-dark-off.png", render(laptop, dark = true, page = page))
+        runBlocking { settings.setPureBlack(true) }
+        save("settings-pure-black-dark-on.png", render(laptop, dark = true, black = true, page = page))
+        runBlocking { settings.setThemeChoice(ThemeChoice.Light) }
+        save("settings-pure-black-light.png", render(laptop, dark = false, page = page))
+        runBlocking { settings.setThemeChoice(ThemeChoice.System); settings.setPureBlack(false) }
+    }
+
     @Test
     fun systemAppearanceWords() {
         assertEquals(true, SystemAppearance.portalScheme(org.freedesktop.dbus.types.UInt32(1)))
@@ -95,9 +114,9 @@ class SettingsLayoutShotsTest {
         assertNull(SystemAppearance.gsettingsScheme(null, null))
     }
 
-    private fun render(size: Size, dark: Boolean, page: @Composable () -> Unit): ByteArray =
+    private fun render(size: Size, dark: Boolean, black: Boolean = false, page: @Composable () -> Unit): ByteArray =
         ImageComposeScene(size.width, size.height, Density(size.scale)) {
-            TmMaterialTheme(dark = dark) {
+            TmMaterialTheme(dark = dark, black = black) {
                 Surface(Modifier.fillMaxSize(), color = Tone.background) { page() }
             }
         }.use { scene ->

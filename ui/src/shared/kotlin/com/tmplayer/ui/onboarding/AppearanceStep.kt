@@ -69,8 +69,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * The first run's Appearance step: the theme (System, Light, Dark), the interface size (Smaller to
- * Largest, CP59) and, on a phone with Android 12 or later, the wallpaper's colours. Each answer is
+ * The first run's Appearance step: the theme (System, Light, Dark) with the Pure black switch
+ * under it, the interface size (Smaller to Largest, CP59) and, on a phone with Android 12 or later, the wallpaper's colours. Each answer is
  * written as it is picked, and the whole app is drawn from those settings, so this very screen
  * turns light or dark and grows or shrinks at once: the step is its own preview, with a small
  * mock of Home beside it to show a row of posters in the new look.
@@ -96,6 +96,7 @@ fun AppearanceStep(
     val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
     val scale by rememberUiScale(settings)
     val wallpaper by settings.dynamicColour.collectAsState(initial = false)
+    val pureBlack by settings.pureBlack.collectAsState(initial = false)
     val primaryFocus = remember { FocusRequester() }
     var focused by remember { mutableStateOf(false) }
 
@@ -117,6 +118,16 @@ fun AppearanceStep(
             Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 Section(s.settingsTheme, themeDetail(s, theme, form)) {
                     Pills(ThemeChoice.entries, theme, { it.label }) { scope.launch { settings.setThemeChoice(it) } }
+                }
+                // Pure black, the usual switch under the theme, offered wherever the app can be
+                // dark; the gap above it is the column's, so it folds away with no space left over.
+                com.tmplayer.ui.components.RevealUnder(theme.offersPureBlack) {
+                    OptionRow(
+                        title = s.settingsPureBlack,
+                        detail = s.themeBlackDetail,
+                        selected = pureBlack,
+                        role = Role.Switch,
+                    ) { scope.launch { settings.setPureBlack(!pureBlack) } }
                 }
                 Section(s.interfaceSize, s.interfaceSizeDetail) {
                     Pills(UiScale.entries, scale, { it.label }) { scope.launch { settings.setUiScale(it) } }

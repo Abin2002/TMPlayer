@@ -16,17 +16,26 @@ enum class ThemeChoice(private val labelText: () -> String, private val descript
     System({ L.themeSystem }, { L.themeSystemDetail }),
     Light({ L.themeLight }, { L.themeLightDetail }),
     Dark({ L.themeDark }, { L.themeDarkDetail }),
-
-    /**
-     * Dark with a pure black ground, for an OLED panel, where black pixels are off: no glow
-     * round the picture in a dark room, and less power on a phone. Cards and sheets keep a step
-     * of grey so they still read as raised.
-     */
-    Black({ L.themeBlack }, { L.themeBlackDetail }),
     ;
 
-    /** Whether this choice is drawn dark whatever the device says: Dark and Black. */
-    val alwaysDark: Boolean get() = this == Dark || this == Black
+    /** Whether this choice is drawn dark whatever the device says: Dark. */
+    val alwaysDark: Boolean get() = this == Dark
+
+    /**
+     * Whether the app is drawn dark under this choice, with [systemDark] the device's own setting
+     * (a television, which has none, passes true).
+     */
+    fun isDark(systemDark: Boolean): Boolean = when (this) {
+        Light -> false
+        Dark -> true
+        System -> systemDark
+    }
+
+    /**
+     * Whether the Pure black switch is offered under this choice: wherever the app can be dark,
+     * so System and Dark. Light hides it, since it changes nothing there.
+     */
+    val offersPureBlack: Boolean get() = this != Light
 
     /** The one word shown in a segment, in the UI language. */
     val label: String get() = labelText()
@@ -45,16 +54,29 @@ enum class ThemeChoice(private val labelText: () -> String, private val descript
             System -> L.themeSystemTvDetail
             Light -> L.themeLightDetail
             Dark -> L.themeDarkDetail
-            Black -> L.themeBlackDetail
         }
 
     companion object {
         val Default = System
 
+        /**
+         * The name Black was stored under while it was a fourth choice (until 2026-10-19). It now
+         * reads as [Dark] with the Pure black switch on; see [SettingsStore.pureBlack].
+         */
+        const val LEGACY_BLACK = "Black"
+
         fun from(stored: String?): ThemeChoice =
-            entries.firstOrNull { it.name == stored } ?: Default
+            if (stored == LEGACY_BLACK) Dark else entries.firstOrNull { it.name == stored } ?: Default
     }
 }
+
+/**
+ * Whether the app is drawn on true black: the Pure black switch is on and the app is dark, from
+ * [choice] or, under System, from the device ([systemDark]). Off in a light theme, whatever the
+ * switch says, so turning Light back to System on a dark phone brings the black back.
+ */
+fun pureBlackGround(choice: ThemeChoice, pureBlack: Boolean, systemDark: Boolean): Boolean =
+    pureBlack && choice.isDark(systemDark)
 
 /**
  * How large the whole interface is drawn, under Appearance as "Interface size" (CP59).

@@ -91,6 +91,7 @@ import com.tmplayer.player.PlayerActivity
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.LocalDarkTheme
 import com.tmplayer.ui.theme.Tone
+import androidx.compose.ui.graphics.toArgb
 import com.tmplayer.ui.theme.Tv
 import com.tmplayer.ui.auth.LoginScreen
 import com.tmplayer.ui.browse.BrowseScreen
@@ -498,6 +499,12 @@ private fun Root() {
             isAppearanceLightStatusBars = !dark
             isAppearanceLightNavigationBars = !dark
         }
+    }
+    // The window's own ground, from the theme rather than the launch resource, so what shows
+    // behind a screen's edge or during a transition is true black under Pure black too.
+    val ground = Tone.background
+    LaunchedEffect(ground, activity) {
+        activity?.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(ground.toArgb()))
     }
 
     // The setup after sign in (CP67), armed by a sign in screen. False until the store answers,

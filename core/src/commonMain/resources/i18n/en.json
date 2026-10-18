@@ -2101,6 +2101,7 @@
     "privacy_computer": "What stays on this computer and which services TMPlayer contacts",
     "privacy_detail": "{device, select, tv {What stays on this TV and which services TMPlayer contacts} other {What stays on this phone and which services TMPlayer contacts}}",
     "privacy_note": "TMPlayer talks directly to Telegram for your chats and videos, and to tmplayer.org, or GitHub when the site cannot be reached, to see whether a newer version is out. That check reads one static file, the same for everyone, and sends nothing about you. TMPlayer has no account or backend of its own, and no analytics or advertising SDK.",
+    "pure_black": "Pure black",
     "qr_changelog_page": "the changelog",
     "qr_lawful_use_page": "the lawful use page",
     "qr_privacy_page": "the privacy page",

@@ -108,6 +108,12 @@ object Corner {
 val LocalDarkTheme = staticCompositionLocalOf { true }
 
 /**
+ * True when the dark theme is drawn on true black (the Pure black switch, with the app dark), for
+ * the few things that paint the ground themselves rather than read the scheme, such as the loader.
+ */
+val LocalPureBlack = staticCompositionLocalOf { false }
+
+/**
  * A ring around whatever the remote is on, for the theme where the fill alone is not enough.
  *
  * In daylight [Tone.focusFill] is a pale blue, a 1.24:1 step on near-white and well under the 3:1
@@ -214,8 +220,8 @@ object TmSchemes {
     )
 
     /**
-     * Black, for an OLED screen ([com.tmplayer.data.ThemeChoice.Black]): [Dark] with the ground
-     * at true black. See [pureBlack].
+     * Black, for an OLED screen (the Pure black switch, [com.tmplayer.data.pureBlackGround]):
+     * [Dark] with the ground at true black. See [pureBlack].
      */
     val Black: ColorScheme = Dark.pureBlack()
 
@@ -300,6 +306,7 @@ fun TmMaterialTheme(
         CompositionLocalProvider(
             LocalContentColor provides scheme.onSurface,
             LocalDarkTheme provides dark,
+            LocalPureBlack provides (dark && black),
         ) {
             ProvideFallbackFonts { ProvideStrings(content) }
         }
