@@ -1063,7 +1063,7 @@
     "title": "Poster und Details",
     "toggle": "Poster und Handlungen anzeigen",
     "toggle_off": "Aus. Nichts wird online nachgeschlagen",
-    "toggle_on": "Wird über den bereinigten Namen jedes Videos bei TMDB, TVmaze und AniList nachgeschlagen",
+    "toggle_on": "Wird über den bereinigten Titel jedes Videos bei TMDB, TVmaze und AniList nachgeschlagen",
     "trailer": "Trailer ansehen",
     "trailer_on_youtube": "Auf YouTube ansehen",
     "trailer_qr": "QR-Code für den Trailer auf YouTube",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "Nicht heruntergeladene Videos laufen nicht über mobile Daten, und Downloads warten auf WLAN"
   },
   "setup": {
-    "appearance_body": "Wähle ein Design und wie groß alles dargestellt wird. Der Bildschirm ändert sich bei deiner Auswahl, so siehst du gleich das Ergebnis.",
+    "appearance_body": "Wähle ein Design und wie groß alles dargestellt wird. Der Bildschirm ändert sich bei deiner Auswahl.",
     "appearance_title": "Design und Größe",
     "back": "Zurück",
     "choices_also_in": "Auch unter {place}",

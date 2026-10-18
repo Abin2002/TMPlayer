@@ -575,7 +575,7 @@
   "episodes": {
     "autoplay": "Sonraki bölümü otomatik oynat",
     "hint_desktop": "İzlendi veya izlenmedi olarak işaretlemek için bir bölüme sağ tıklayın",
-    "hint_touch": "İzlendi veya izlenmedi olarak işaretlemek için bir bölüme uzun basın",
+    "hint_touch": "İzlendi veya izlenmedi olarak işaretlemek için bir bölümü basılı tutun",
     "hint_tv": "İzlendi veya izlenmedi olarak işaretlemek için bir bölümde OK tuşunu basılı tutun",
     "playing": "Oynatılıyor",
     "title": "Bölümler"
@@ -1063,7 +1063,7 @@
     "title": "Afişler ve ayrıntılar",
     "toggle": "Afişleri ve özetleri göster",
     "toggle_off": "Kapalı. Çevrimiçi hiçbir şey aranmaz",
-    "toggle_on": "Her videonun temizlenmiş adıyla TMDB, TVmaze ve AniList'te aranır",
+    "toggle_on": "Her videonun temizlenmiş başlığıyla TMDB, TVmaze ve AniList'te aranır",
     "trailer": "Fragmanı izle",
     "trailer_on_youtube": "YouTube'da izle",
     "trailer_qr": "YouTube'daki fragman için QR kodu",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "İndirmediğin videolar mobil veride oynatılmaz, indirmeler de Wi-Fi'ı bekler"
   },
   "setup": {
-    "appearance_body": "Bir tema ve öğelerin ne kadar büyük çizileceğini seç. Sen seçtikçe ekran değişir, böylece sonucu görebilirsin.",
+    "appearance_body": "Bir tema ve öğelerin ne kadar büyük çizileceğini seç. Sen seçtikçe ekran değişir.",
     "appearance_title": "Tema ve boyut",
     "back": "Geri",
     "choices_also_in": "Ayrıca {place} içinde",

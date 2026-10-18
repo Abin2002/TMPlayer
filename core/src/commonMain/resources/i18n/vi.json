@@ -1063,7 +1063,7 @@
     "title": "Poster và chi tiết",
     "toggle": "Hiện poster và tóm tắt",
     "toggle_off": "Tắt. Không tra cứu gì trên mạng",
-    "toggle_on": "Tra cứu theo tên đã làm sạch của từng video trên TMDB, TVmaze và AniList",
+    "toggle_on": "Tra cứu trên TMDB, TVmaze và AniList theo tiêu đề đã làm gọn của từng video",
     "trailer": "Xem trailer",
     "trailer_on_youtube": "Xem trên YouTube",
     "trailer_qr": "Mã QR của trailer trên YouTube",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "Video bạn chưa tải sẽ không phát được trên dữ liệu di động, còn tải xuống sẽ chờ có Wi-Fi"
   },
   "setup": {
-    "appearance_body": "Chọn chủ đề và kích thước hiển thị. Màn hình thay đổi ngay khi bạn chọn, nên bạn thấy được kết quả.",
+    "appearance_body": "Chọn chủ đề và kích thước hiển thị. Màn hình thay đổi ngay khi bạn chọn.",
     "appearance_title": "Chủ đề và kích thước",
     "back": "Quay lại",
     "choices_also_in": "Cũng có trong {place}",

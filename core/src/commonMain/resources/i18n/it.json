@@ -1063,7 +1063,7 @@
     "title": "Locandine e dettagli",
     "toggle": "Mostra locandine e trame",
     "toggle_off": "No. Non si cerca nulla online",
-    "toggle_on": "Cercati per nome ripulito di ogni video su TMDB, TVmaze e AniList",
+    "toggle_on": "Cercati su TMDB, TVmaze e AniList in base al titolo ripulito di ogni video",
     "trailer": "Guarda il trailer",
     "trailer_on_youtube": "Guarda su YouTube",
     "trailer_qr": "Codice QR per il trailer su YouTube",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "I video che non hai scaricato non si riproducono con i dati mobili, e i download aspettano il Wi-Fi"
   },
   "setup": {
-    "appearance_body": "Scegli un tema e quanto grandi appaiono le cose. Lo schermo cambia mentre scegli, così vedi subito il risultato.",
+    "appearance_body": "Scegli un tema e quanto grandi appaiono le cose. Lo schermo cambia mentre scegli.",
     "appearance_title": "Tema e dimensioni",
     "back": "Indietro",
     "choices_also_in": "Anche in {place}",

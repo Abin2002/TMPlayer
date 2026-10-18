@@ -1063,7 +1063,7 @@
     "title": "Pôsteres e detalhes",
     "toggle": "Mostrar pôsteres e sinopses",
     "toggle_off": "Desativado. Nada é buscado online",
-    "toggle_on": "Buscado pelo nome limpo de cada vídeo no TMDB, TVmaze e AniList",
+    "toggle_on": "Buscado no TMDB, TVmaze e AniList pelo título limpo de cada vídeo",
     "trailer": "Ver trailer",
     "trailer_on_youtube": "Ver no YouTube",
     "trailer_qr": "QR code do trailer no YouTube",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "Vídeos que você não baixou não tocam com dados móveis, e os downloads esperam pelo Wi-Fi"
   },
   "setup": {
-    "appearance_body": "Escolha um tema e o tamanho das coisas na tela. A tela muda enquanto você escolhe, então dá para ver o resultado.",
+    "appearance_body": "Escolha um tema e o tamanho das coisas na tela. A tela muda enquanto você escolhe.",
     "appearance_title": "Tema e tamanho",
     "back": "Voltar",
     "choices_also_in": "Também em {place}",

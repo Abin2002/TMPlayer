@@ -13,20 +13,20 @@ Astro.locals.lang = ENGLISH;
 <Base path="/signing/" title="Code signing policy - TMPlayer" description="How TMPlayer releases are built by GitHub Actions from the tagged source and signed, and how to check a download's signature and SHA-256.">
   <JsonLd slot="head" data={breadcrumb(['Code signing', '/signing/'])} />
   <HeaderPlain />
-  <PolicyPage eyebrow="Effective 5 October 2026" title="Code Signing Policy">
-    <p class="policy-lede">This document outlines the code signing policy for TMPlayer binaries, detailing how we ensure the integrity and authenticity of our releases.</p>
+  <PolicyPage eyebrow="Effective 5 October 2026" title="Code signing policy">
+    <p class="policy-lede">This is the code signing policy for TMPlayer's release files: how they are built, who can start a signed release, and how to check a signature.</p>
     <p class="policy-lede"><strong>Status:</strong> our application to the SignPath Foundation is pending. Until it is approved, the Windows installer is not code signed, and Windows SmartScreen may warn before it runs. The policy below is what applies once signing starts.</p>
 
-    <PolicySection title="Build Process">
-      <p>All TMPlayer releases are built exclusively via automated Continuous Integration (CI) pipelines on GitHub Actions. No releases are built manually on developer machines. The CI pipeline pulls the source code directly from the repository, builds the artifacts, and prepares them for signing.</p>
+    <PolicySection title="Build process">
+      <p>Every TMPlayer release is built by GitHub Actions, the repository's continuous integration (CI). No release is built by hand on a developer's machine. The release job checks out the source from the repository, builds the files and prepares them for signing.</p>
     </PolicySection>
 
-    <PolicySection title="Code Signing">
-      <p>To ensure that users receive untampered binaries, we will digitally sign our Windows releases using a certificate provided by the <a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a>. The signing step will run in our automated CI pipeline and only for official release tags.</p>
-      <p>Android releases are signed with our own secure keystore, managed via GitHub Secrets.</p>
+    <PolicySection title="Code signing">
+      <p>So that you can tell a file has not been changed since it was built, the Windows releases will be signed with a certificate from the <a href="https://about.signpath.io/" rel="noopener">SignPath Foundation</a>. The signing step will run in the release job, and only for official release tags.</p>
+      <p>Android releases are signed with the project's own key, kept as a GitHub Actions secret.</p>
     </PolicySection>
 
-    <PolicySection title="Access Control">
+    <PolicySection title="Access control">
       <p>Only authorized maintainers (currently dracu-lah) have write access to the TMPlayer repository and the ability to push tags that trigger the release and signing pipeline. Branch protection rules are in place for the main branch to ensure all changes go through proper review.</p>
     </PolicySection>
 

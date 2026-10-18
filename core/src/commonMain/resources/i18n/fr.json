@@ -1063,7 +1063,7 @@
     "title": "Affiches et détails",
     "toggle": "Afficher les affiches et les résumés",
     "toggle_off": "Désactivé. Rien n'est recherché en ligne",
-    "toggle_on": "Recherchés d'après le nom nettoyé de chaque vidéo sur TMDB, TVmaze et AniList",
+    "toggle_on": "Recherchés sur TMDB, TVmaze et AniList d'après le titre nettoyé de chaque vidéo",
     "trailer": "Voir la bande-annonce",
     "trailer_on_youtube": "Voir sur YouTube",
     "trailer_qr": "QR code de la bande-annonce sur YouTube",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "Les vidéos non téléchargées ne se lisent pas en données mobiles, et les téléchargements attendent le Wi-Fi"
   },
   "setup": {
-    "appearance_body": "Choisissez un thème et la taille de l'affichage. L'écran change au fil de vos choix, pour que vous voyiez le résultat.",
+    "appearance_body": "Choisissez un thème et la taille de l'affichage. L'écran change au fil de vos choix.",
     "appearance_title": "Thème et taille",
     "back": "Retour",
     "choices_also_in": "Aussi dans {place}",

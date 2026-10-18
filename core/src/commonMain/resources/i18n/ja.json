@@ -1063,7 +1063,7 @@
     "title": "ポスターと詳細",
     "toggle": "ポスターとあらすじを表示",
     "toggle_off": "オフです。オンラインでは何も検索しません",
-    "toggle_on": "動画名を整えて、TMDB、TVmaze、AniListで検索します",
+    "toggle_on": "各動画の整えたタイトルで、TMDB、TVmaze、AniListを検索します",
     "trailer": "予告編を見る",
     "trailer_on_youtube": "YouTubeで見る",
     "trailer_qr": "YouTubeの予告編のQRコード",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "ダウンロードしていない動画はモバイルデータでは再生されず、ダウンロードはWi-Fiを待ちます"
   },
   "setup": {
-    "appearance_body": "テーマと表示の大きさを選んでください。選ぶとすぐ画面が変わるので、結果を確かめられます。",
+    "appearance_body": "テーマと表示の大きさを選んでください。選ぶとすぐ画面が変わります。",
     "appearance_title": "テーマとサイズ",
     "back": "戻る",
     "choices_also_in": "{place} にもあります",

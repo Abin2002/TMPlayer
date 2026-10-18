@@ -575,7 +575,7 @@
   "episodes": {
     "autoplay": "Putar episode berikutnya otomatis",
     "hint_desktop": "Klik kanan sebuah episode untuk menandainya sudah atau belum ditonton",
-    "hint_touch": "Tekan lama sebuah episode untuk menandainya sudah atau belum ditonton",
+    "hint_touch": "Tekan dan tahan sebuah episode untuk menandainya sudah atau belum ditonton",
     "hint_tv": "Tahan OK pada sebuah episode untuk menandainya sudah atau belum ditonton",
     "playing": "Diputar",
     "title": "Episode"
@@ -1063,7 +1063,7 @@
     "title": "Poster dan detail",
     "toggle": "Tampilkan poster dan sinopsis",
     "toggle_off": "Mati. Tidak ada yang dicari secara online",
-    "toggle_on": "Dicari lewat nama bersih tiap video di TMDB, TVmaze, dan AniList",
+    "toggle_on": "Dicari di TMDB, TVmaze, dan AniList berdasarkan judul tiap video yang sudah dirapikan",
     "trailer": "Tonton trailer",
     "trailer_on_youtube": "Tonton di YouTube",
     "trailer_qr": "Kode QR untuk trailer di YouTube",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "Video yang belum kamu unduh tidak akan diputar lewat data seluler, dan unduhan menunggu Wi-Fi"
   },
   "setup": {
-    "appearance_body": "Pilih tema dan seberapa besar tampilannya. Layar langsung berubah saat kamu memilih, jadi kamu bisa melihat hasilnya.",
+    "appearance_body": "Pilih tema dan seberapa besar tampilannya. Layar langsung berubah saat kamu memilih.",
     "appearance_title": "Tema dan ukuran",
     "back": "Kembali",
     "choices_also_in": "Juga di {place}",

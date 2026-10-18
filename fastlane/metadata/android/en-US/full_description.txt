@@ -1,11 +1,11 @@
-TMPlayer plays the videos in your own Telegram chats and channels on an Android TV, a phone, or a Windows or Linux computer. It starts within seconds while the file is still downloading, and seeking re-aims the download instead of waiting for it.
+TMPlayer plays the videos in your own Telegram chats and channels on an Android TV, a phone, or a Windows, macOS or Linux computer. It starts within seconds while the file is still downloading, and seeking re-aims the download instead of waiting for it.
 
 Sign in by scanning a QR code with your phone, pick a chat, and only its playable videos appear. No messages, no server, no account except yours.
 
 Features:
-- **Instant Playback**: Start watching within seconds, even for large files.
-- **Secure**: Communicates directly with Telegram's servers. No third-party analytics or developer-operated backends.
-- **Cross-Platform**: Available for Android TV, mobile, Windows, and Linux.
-- **Open Source**: Fully open-source and transparent.
+- Starts within seconds, even for large files.
+- Talks to Telegram directly through TDLib, Telegram's own library. No analytics and no server run by the developer.
+- Runs on Android TV, Android phones, Windows, Linux and, as a preview, Macs with Apple Silicon.
+- Open source under the GPL-3.0.
 
 TMPlayer is an unofficial client. It is not affiliated with, endorsed by, or connected to Telegram FZ-LLC.

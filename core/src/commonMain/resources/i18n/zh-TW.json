@@ -1063,7 +1063,7 @@
     "title": "海報與詳細資料",
     "toggle": "顯示海報和簡介",
     "toggle_off": "已關閉。不會上網查詢任何內容",
-    "toggle_on": "依每部影片整理後的名稱，到 TMDB、TVmaze 和 AniList 查詢",
+    "toggle_on": "依每部影片整理後的標題，到 TMDB、TVmaze 和 AniList 查詢",
     "trailer": "觀看預告片",
     "trailer_on_youtube": "在 YouTube 上觀看",
     "trailer_qr": "YouTube 預告片的 QR 碼",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "尚未下載的影片不會在行動數據上播放，下載也會等到連上 Wi-Fi"
   },
   "setup": {
-    "appearance_body": "選擇主題和介面大小。畫面會隨你的選擇即時改變，你可以直接看到效果。",
+    "appearance_body": "選擇主題和介面大小。畫面會隨你的選擇即時改變。",
     "appearance_title": "主題和大小",
     "back": "返回",
     "choices_also_in": "也可在{place}中變更",

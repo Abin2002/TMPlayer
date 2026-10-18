@@ -1063,7 +1063,7 @@
     "title": "海报和详情",
     "toggle": "显示海报和简介",
     "toggle_off": "已关闭。不会在线查询任何内容",
-    "toggle_on": "根据每个视频整理后的名称，在 TMDB、TVmaze 和 AniList 上查询",
+    "toggle_on": "按每个视频整理后的标题，在 TMDB、TVmaze 和 AniList 上查询",
     "trailer": "观看预告片",
     "trailer_on_youtube": "在 YouTube 上观看",
     "trailer_qr": "YouTube 预告片的二维码",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "未下载的视频无法在移动数据下播放，下载也会等到连上 Wi-Fi"
   },
   "setup": {
-    "appearance_body": "选择主题和界面大小。屏幕会随你的选择即时变化，你可以直接看到效果。",
+    "appearance_body": "选择主题和界面大小。屏幕会随你的选择即时变化。",
     "appearance_title": "主题和大小",
     "back": "返回",
     "choices_also_in": "也可在{place}中更改",

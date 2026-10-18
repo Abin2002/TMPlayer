@@ -1063,7 +1063,7 @@
     "title": "Plakaty i szczegóły",
     "toggle": "Pokazuj plakaty i opisy",
     "toggle_off": "Wyłączone. Nic nie jest wyszukiwane online",
-    "toggle_on": "Wyszukiwane według oczyszczonej nazwy każdego filmu w TMDB, TVmaze i AniList",
+    "toggle_on": "Wyszukiwane w TMDB, TVmaze i AniList według oczyszczonego tytułu każdego filmu",
     "trailer": "Obejrzyj zwiastun",
     "trailer_on_youtube": "Obejrzyj na YouTube",
     "trailer_qr": "Kod QR do zwiastuna na YouTube",
@@ -1833,7 +1833,7 @@
     "wifi_only_on": "Filmy, których nie pobrano, nie odtworzą się na danych komórkowych, a pobieranie czeka na Wi-Fi"
   },
   "setup": {
-    "appearance_body": "Wybierz motyw i wielkość elementów. Ekran zmienia się razem z wyborem, więc od razu widać efekt.",
+    "appearance_body": "Wybierz motyw i wielkość elementów. Ekran zmienia się razem z wyborem.",
     "appearance_title": "Motyw i wielkość",
     "back": "Wstecz",
     "choices_also_in": "Także w {place}",
