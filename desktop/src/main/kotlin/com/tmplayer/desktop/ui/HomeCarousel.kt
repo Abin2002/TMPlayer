@@ -386,7 +386,7 @@ private fun FeaturedPage(
     ) {
         // The picture at the end, melting into the page at its start and foot: the words at the
         // start stand on the page, and the window's buttons on a glow of its colour.
-        EdgeBackdrop(source, Modifier.fillMaxSize(), cornerShade = TOP_SCRIM * 2)
+        EdgeBackdrop(source, Modifier.fillMaxSize(), cornerShade = TOP_SCRIM)
         Column(
             Modifier
                 .align(Alignment.BottomStart)

@@ -12,8 +12,8 @@ root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
 # The PWA icon is the plain mark. A density of 512 over the 108 unit viewBox renders the vector at
 # its final size rather than upscaling a small raster.
-magick -background none -density 512 "$root/site/logo.svg" \
-    -resize 512x512 -strip "$root/site/icon-512.png"
+magick -background none -density 512 "$root/site/public/logo.svg" \
+    -resize 512x512 -strip "$root/site/public/icon-512.png"
 
 # The social card is drawn in HTML from the site's own stylesheet, so the type and the TV and phone
 # frames match the home page hero. It is served over a local web server because Chromium will not
@@ -30,6 +30,6 @@ chromium-browser --headless=new --disable-gpu --no-sandbox --hide-scrollbars \
     --force-device-scale-factor=1 --force-prefers-reduced-motion --window-size=1200,630 \
     --virtual-time-budget=6000 --screenshot="$tmp/og.png" \
     "http://127.0.0.1:$port/scripts/og-card.html" 2>/dev/null
-magick "$tmp/og.png" -strip -depth 8 -define png:color-type=2 "$root/site/og.png"
+magick "$tmp/og.png" -strip -depth 8 -define png:color-type=2 "$root/site/public/og.png"
 
 echo "wrote site/public/icon-512.png and site/public/og.png"
