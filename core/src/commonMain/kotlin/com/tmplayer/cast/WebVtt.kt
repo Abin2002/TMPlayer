@@ -136,6 +136,83 @@ object WebVtt {
         }
     }
 
+    /** The cues of a subtitle file in the format [extension] names, for the HLS subtitle renditions. */
+    fun cues(bytes: ByteArray, extension: String): List<Cue> {
+        val text = SubtitleText.decode(bytes)
+        return when (extension.lowercase(Locale.ROOT)) {
+            "vtt" -> parseVtt(text)
+            "ass", "ssa" -> parseAss(text)
+            else -> if (looksLikeAss(text)) parseAss(text) else parseSrt(text)
+        }
+    }
+
+    private val vttTiming = Regex("""(?:(\d+):)?(\d{1,2}):(\d{1,2})\.(\d{1,3})\s*-->\s*(?:(\d+):)?(\d{1,2}):(\d{1,2})\.(\d{1,3})""")
+
+    /** A WebVTT file's cues, their text as it is (WebVTT markup is what the receiver reads). */
+    fun parseVtt(text: String): List<Cue> {
+        val lines = text.replace("\r\n", "\n").replace('\r', '\n').split('\n')
+        val cues = ArrayList<Cue>()
+        var i = 0
+        while (i < lines.size) {
+            val match = vttTiming.find(lines[i])
+            if (match == null) {
+                i++
+                continue
+            }
+            val g = match.groupValues
+            val start = ms(g[1].ifEmpty { "0" }, g[2], g[3], g[4])
+            val end = ms(g[5].ifEmpty { "0" }, g[6], g[7], g[8])
+            i++
+            val body = StringBuilder()
+            while (i < lines.size && lines[i].isNotBlank()) {
+                if (body.isNotEmpty()) body.append('\n')
+                body.append(lines[i].trim())
+                i++
+            }
+            cues += Cue(start, end, body.toString())
+        }
+        return cues
+    }
+
+    /**
+     * One subtitle block out of a Matroska file as a cue: SubRip's text with its tags cleaned, an
+     * ASS event's text (the fields before it dropped, its styling taken out), WebVTT as it is.
+     * Null for an empty event or a drawing.
+     */
+    fun fromMatroska(codec: String, data: ByteArray, startMs: Long, endMs: Long): Cue? {
+        val raw = String(data, Charsets.UTF_8).trimEnd('\u0000')
+        val text = when (codec) {
+            Codecs.ASS, Codecs.SSA -> {
+                // ReadOrder, Layer, Style, Name, MarginL, MarginR, MarginV, Effect, Text.
+                val body = raw.split(',', limit = 9).let { if (it.size == 9) it[8] else raw }
+                if (Regex("""\\p[1-9]""").containsMatchIn(body)) return null
+                body.replace(Regex("""\{[^}]*\}"""), "")
+                    .replace("\\N", "\n").replace("\\n", "\n").replace("\\h", " ")
+                    .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                    .trim()
+            }
+            Codecs.VTT -> raw.trim()
+            else -> cleanSrt(raw.replace("\r\n", "\n").trim())
+        }
+        if (text.isBlank() || endMs <= startMs) return null
+        return Cue(startMs, endMs, text)
+    }
+
+    /**
+     * One HLS subtitle segment: the cues that start in it. The timestamp map ties the cue times to
+     * the media's own clock, which here starts at zero with the video, as the fMP4 segments do.
+     */
+    fun segment(cues: List<Cue>): String {
+        val sb = StringBuilder("WEBVTT\nX-TIMESTAMP-MAP=MPEGTS=0,LOCAL=00:00:00.000\n\n")
+        cues.sortedBy { it.startMs }.forEach { cue ->
+            if (cue.text.isBlank() || cue.endMs <= cue.startMs) return@forEach
+            sb.append(stamp(cue.startMs)).append(" --> ").append(stamp(cue.endMs)).append('\n')
+            sb.append(cue.text.replace("-->", "->").lines().filter { it.isNotBlank() }.joinToString("\n"))
+            sb.append("\n\n")
+        }
+        return sb.toString()
+    }
+
     private fun assTime(t: String): Long? {
         val parts = t.split(':')
         if (parts.size != 3) return null

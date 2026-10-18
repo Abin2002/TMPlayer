@@ -455,7 +455,7 @@ internal object Matroska {
     }
 
     /** Every cue in the file, in time order; empty when there are none or they cannot be read. */
-    fun cues(c: CastCursor, h: MkvHeader, track: Int?): List<MkvCue> {
+    fun cues(c: CastCursor, h: MkvHeader, track: Int?, strict: Boolean = false): List<MkvCue> {
         val at = h.cuesAt ?: return emptyList()
         return runCatching {
             c.seek(at)
@@ -484,7 +484,9 @@ internal object Matroska {
                                     else -> c.seek(k.end)
                                 }
                             }
-                            if (pos >= 0 && (cluster < 0 || track == null || t == track.toLong())) cluster = pos
+                            if (pos >= 0 && (cluster < 0 || track == null || t == track.toLong())) {
+                                if (!strict || track == null || t == track.toLong()) cluster = pos
+                            }
                         }
                         else -> c.seek(e.end)
                     }
@@ -501,7 +503,7 @@ internal object Matroska {
      * The frames of [wanted] tracks from the cluster at [from] on, in file order, laced frames
      * split and header removal undone. Stops at the end of the segment.
      */
-    class Frames(private val c: CastCursor, private val h: MkvHeader, from: Long, private val wanted: Set<Int>) {
+    class Frames(private val c: CastCursor, private val h: MkvHeader, from: Long, val wanted: Set<Int>) {
 
         private val byNumber = h.tracks.associateBy { it.number }
         private var clusterEnd = Long.MAX_VALUE
@@ -516,9 +518,12 @@ internal object Matroska {
         /** Where the next element is read from, for the remuxer's progress. */
         val position: Long get() = c.position
 
+        /** Once a block of any track is later than this, [next] says the frames have ended. */
+        var stopAfterNs: Long = Long.MAX_VALUE
+
         fun next(): MkvFrame? {
             while (pending.isEmpty()) {
-                if (done) return null
+                if (done || lastTimeNs > stopAfterNs) return null
                 step()
             }
             return pending.removeFirst()
@@ -553,7 +558,7 @@ internal object Matroska {
             }
             when (e.id) {
                 TIMECODE -> clusterTime = uint(c, e)
-                SIMPLE_BLOCK -> block(c.readBytes(e.size.toInt()), simple = true, duration = -1, reference = false)
+                SIMPLE_BLOCK -> wantedBlock(e)?.let { block(it, simple = true, duration = -1, reference = false) }
                 BLOCK_GROUP -> {
                     var data: ByteArray? = null
                     var duration = -1L
@@ -561,7 +566,7 @@ internal object Matroska {
                     while (c.position < e.end) {
                         val k = element(c) ?: break
                         when (k.id) {
-                            BLOCK -> data = c.readBytes(k.size.toInt())
+                            BLOCK -> data = wantedBlock(k)
                             BLOCK_DURATION -> duration = uint(c, k)
                             REFERENCE_BLOCK -> {
                                 reference = true
@@ -575,6 +580,46 @@ internal object Matroska {
                 }
                 else -> if (e.size == UNKNOWN) done = true else c.seek(e.end)
             }
+        }
+
+        /**
+         * The time of the last block passed, of any track, wanted or not: how a reader that wants
+         * one stretch of the video knows it has gone past it.
+         */
+        var lastTimeNs: Long = Long.MIN_VALUE
+            private set
+
+        /**
+         * The whole of the block [e] when its track is wanted, or null with the block skipped. Only
+         * its head (the track number and the time) is read for a track nobody asked for, so a pass
+         * for the sound alone does not copy the picture's frames.
+         */
+        private fun wantedBlock(e: Element): ByteArray? {
+            val size = e.size.toInt()
+            if (size < 4) {
+                c.seek(e.end)
+                return null
+            }
+            val first = c.read()
+            if (first <= 0) throw IOException("Bad block at ${c.position - 1}")
+            val len = Integer.numberOfLeadingZeros(first) - 23
+            if (len + 3 > size) {
+                c.seek(e.end)
+                return null
+            }
+            val head = ByteArray(len + 2)
+            head[0] = first.toByte()
+            val restOfHead = c.readBytes(len + 1)
+            System.arraycopy(restOfHead, 0, head, 1, restOfHead.size)
+            var track = (first and (0xFF shr len)).toLong()
+            for (i in 1 until len) track = (track shl 8) or (head[i].toLong() and 0xFF)
+            val relative = ((head[len].toInt() shl 8) or (head[len + 1].toInt() and 0xFF)).toShort().toLong()
+            lastTimeNs = (clusterTime + relative) * h.timecodeScaleNs
+            if (track.toInt() !in wanted) {
+                c.seek(e.end)
+                return null
+            }
+            return head + c.readBytes(size - head.size)
         }
 
         private fun block(b: ByteArray, simple: Boolean, duration: Long, reference: Boolean) {

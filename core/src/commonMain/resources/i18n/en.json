@@ -246,7 +246,9 @@
     "devices": "TVs on this network",
     "load_failed": "The TV couldn't play this video.",
     "lost": "Lost the connection to {name}",
+    "mute_tv": "Mute the TV",
     "none_found": "No Chromecast or Google TV found yet. Make sure the TV is on and on the same Wi-Fi.",
+    "on_device": "On {name}",
     "play_here": "Play here",
     "reconnect": "Reconnect",
     "searching": "Looking for TVs on this network…",
@@ -258,9 +260,12 @@
     "state_ended": "Finished",
     "state_paused": "Paused",
     "state_playing": "Playing",
+    "state_stopped": "Stopped on the TV",
     "stop": "Stop casting",
     "subtitles_inside": "Subtitles inside this file can't be shown on the TV yet. Load a subtitle file, or find one online, to show them.",
-    "tv_volume": "TV volume"
+    "tv_volume": "TV volume",
+    "unmute_tv": "Unmute the TV",
+    "volume_fixed": "The TV sets its own volume: use its remote"
   },
   "chats": {
     "archive": "Archive",

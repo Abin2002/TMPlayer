@@ -1,15 +1,20 @@
 package com.tmplayer.desktop.cast
 
 import com.tmplayer.cast.CastFormats
+import com.tmplayer.cast.CastPhase
 import com.tmplayer.cast.CastPlan
 import com.tmplayer.cast.CastRefusal
 import com.tmplayer.cast.CastRoute
 import com.tmplayer.cast.CastServer
 import com.tmplayer.cast.CastSource
+import com.tmplayer.cast.CastStateMapper
 import com.tmplayer.cast.CastStreams
-import com.tmplayer.cast.Codecs
+import com.tmplayer.cast.CastView
+import com.tmplayer.cast.HlsRendition
+import com.tmplayer.cast.HlsTrackMatch
 import com.tmplayer.cast.LanAddress
 import com.tmplayer.cast.MediaProbe
+import com.tmplayer.cast.MkvHls
 import com.tmplayer.cast.ReceiverCaps
 import com.tmplayer.desktop.player.AbLoop
 import com.tmplayer.desktop.player.MediaTrack
@@ -50,8 +55,10 @@ data class CastTitle(val title: String, val subtitle: String = "")
  *
  * [open] reads what the video is ([MediaProbe]), plans how the receiver can play it
  * ([CastFormats.plan]), serves it from this computer ([CastServer], [CastStreams]) and loads it,
- * walking down the plan's routes when the receiver turns one away. A rewrapped stream has no
- * seeking of its own on the receiver, so a seek there is a new stream from the cue before it.
+ * walking down the plan's routes when the receiver turns one away. Matroska goes as HLS where it
+ * can, so the receiver seeks itself and switches soundtracks and subtitles by EDIT_TRACKS_INFO; a
+ * rewrapped stream has no seeking of its own on the receiver, so a seek there is a new stream
+ * from the cue before it. What the overlay shows follows the receiver ([CastStateMapper]).
  */
 class CastPlaybackEngine(
     val client: CastClient,
@@ -69,6 +76,11 @@ class CastPlaybackEngine(
     /** A line for the casting panel: what was converted, what will not play, what cannot show. */
     val note: StateFlow<String?> = _note.asStateFlow()
 
+    private val _phase = MutableStateFlow(CastPhase.Starting)
+
+    /** What the TV is doing, for the casting panel. */
+    val phase: StateFlow<CastPhase> = _phase.asStateFlow()
+
     private var server: CastServer? = null
     private var streams: CastStreams? = null
     private var data: MediaData? = null
@@ -85,19 +97,29 @@ class CastPlaybackEngine(
 
     private val subs = ArrayList<Sub>()
     private var activeSub: Int? = null
+    private var hlsAudio: HlsRendition? = null
+    private var hlsText: HlsRendition? = null
+    private var tracksSent = false
+    private val mapper = CastStateMapper()
     private var wantPlaying = true
     private var speed = 1f
     private var loadedAt = 0L
     private var loading = false
+    private var targetMs = 0L
     private var watcher: Job? = null
+
+    private fun nowMs() = System.nanoTime() / 1_000_000
 
     override suspend fun open(data: MediaData, startAtMs: Long, prefs: OpenPrefs) {
         withContext(Dispatchers.IO) {
             closeData()
             this@CastPlaybackEngine.data = data
             _state.value = PlaybackStatus(buffering = true, volume = volumePercent())
+            _phase.value = CastPhase.Starting
             subs.clear()
             activeSub = null
+            hlsText = null
+            targetMs = startAtMs
             try {
                 val src = StreamBytesCastSource.of(data) ?: throw IOException(L.castCannotCastContainer)
                 source = src
@@ -121,14 +143,14 @@ class CastPlaybackEngine(
                 speed = prefs.speed
                 ensureServer()
                 routeIndex = 0
-                startRoute(startAtMs)
-                publishTracks()
                 watch()
+                startRoute(startAtMs)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Logger.w(TAG, "Cast open failed", e)
                 _state.value = PlaybackStatus(error = e.message ?: L.castLoadFailed)
+                _phase.value = CastPhase.Failed
             }
         }
     }
@@ -159,8 +181,11 @@ class CastPlaybackEngine(
         val src = source ?: return false
         val p = probe ?: return false
         loading = true
+        targetMs = atMs
+        publishState()
         try {
             val chosen = when (r) {
+                is CastRoute.Hls -> r.copy(audioTrack = audio?.takeIf { a -> r.audio.any { it.number == a } } ?: r.audioTrack)
                 is CastRoute.Remux -> r.copy(audioTrack = audio?.takeIf { a -> p.audio.firstOrNull { it.number == a }?.codec in CastFormats.MP4_AUDIO })
                 else -> r
             }
@@ -177,8 +202,12 @@ class CastPlaybackEngine(
                         if (title.subtitle.isNotBlank()) put("subtitle", title.subtitle)
                     },
                 )
-            if (p.durationMs > 0) media.put("duration", (p.durationMs - pub.offsetMs).coerceAtLeast(0) / 1000.0)
-            if (subs.isNotEmpty()) {
+            val duration = pub.durationMs.takeIf { it > 0 } ?: if (p.durationMs > 0) (p.durationMs - pub.offsetMs).coerceAtLeast(0) else 0
+            if (duration > 0) media.put("duration", duration / 1000.0)
+            if (pub.hls) {
+                // fMP4 segments for the sound and the picture alike (CMAF), not MPEG-TS.
+                media.put("hlsSegmentFormat", "fmp4").put("hlsVideoSegmentFormat", "fmp4")
+            } else if (subs.isNotEmpty()) {
                 media.put(
                     "tracks",
                     JSONArray(
@@ -191,7 +220,12 @@ class CastPlaybackEngine(
                 )
                 media.put("textTrackStyle", JSONObject().put("backgroundColor", "#00000000").put("edgeType", "OUTLINE").put("edgeColor", "#000000FF"))
             }
-            val answer = client.load(media, if (pub.seekable) atMs else 0L, autoplay = wantPlaying, activeTrackIds = listOfNotNull(activeSub))
+            val answer = client.load(
+                media,
+                if (pub.seekable) atMs else 0L,
+                autoplay = wantPlaying,
+                activeTrackIds = if (pub.hls) emptyList() else listOfNotNull(activeSub),
+            )
             val type = answer.optString("type")
             if (type != "MEDIA_STATUS") {
                 Logger.w(TAG, "Receiver refused ${chosen::class.simpleName}: $answer")
@@ -200,9 +234,18 @@ class CastPlaybackEngine(
             published = pub
             route = chosen
             loadedAt = System.nanoTime()
+            mapper.loaded(nowMs(), wantPlaying)
+            if (pub.hls) {
+                hlsAudio = pub.renditions.firstOrNull { it.kind == HlsRendition.Kind.Audio && it.trackNumber == audio }
+                    ?: pub.renditions.firstOrNull { it.kind == HlsRendition.Kind.Audio && it.isDefault }
+                hlsText = pub.renditions.firstOrNull { it.fileId != null && it.fileId == activeSub?.toLong() }
+                    ?: hlsText?.let { prev -> pub.renditions.firstOrNull { it.uri == prev.uri } }
+                tracksSent = false
+            }
             if (speed != 1f) client.setRate(speed.toDouble())
             _note.value = noteFor(chosen)
-            _state.value = _state.value.copy(opened = true, error = null, positionMs = atMs, durationMs = p.durationMs, playing = wantPlaying)
+            _state.value = _state.value.copy(opened = true, error = null, durationMs = p.durationMs.takeIf { it > 0 } ?: duration)
+            publishTracks()
             return true
         } catch (e: CancellationException) {
             throw e
@@ -211,6 +254,7 @@ class CastPlaybackEngine(
             return false
         } finally {
             loading = false
+            publishState()
         }
     }
 
@@ -220,6 +264,7 @@ class CastPlaybackEngine(
         return when {
             r is CastRoute.TranscodeVideo -> L.castConvertingComputer
             r is CastRoute.ConvertAudio -> L.castSoundConvertedComputer
+            r is CastRoute.Hls -> if (r.audio.isEmpty() && p.audio.isNotEmpty()) L.castSilent else null
             audioCodec != null && CastFormats.audioSupport(audioCodec, ReceiverCaps.forModel(client.device.model)) == com.tmplayer.cast.Support.No -> L.castSilent
             r is CastRoute.Remux && r.audioTrack == null && p.audio.isNotEmpty() -> L.castSilent
             p.text.any { it.isText } && subs.isEmpty() -> L.castSubtitlesInside
@@ -243,39 +288,65 @@ class CastPlaybackEngine(
     private suspend fun onMedia(m: RemoteMediaStatus) {
         val pub = published ?: return
         if (m.contentId != null && m.contentId != pub.url) return
-        if (m.playerState == "IDLE" && m.idleReason == "ERROR" && !loading) {
+        publishState()
+        if (_phase.value == CastPhase.Failed && !loading) {
             val sinceLoad = (System.nanoTime() - loadedAt) / 1_000_000
             val pl = plan
             if (pl != null && sinceLoad < EARLY_FAILURE_MS && routeIndex + 1 < pl.routes.size) {
                 Logger.i(TAG, "Receiver failed on ${route?.let { it::class.simpleName }}, trying the next way")
                 routeIndex++
-                runCatching { startRoute(_state.value.positionMs) }.onFailure { _state.value = _state.value.copy(error = L.castLoadFailed) }
-                return
+                published = null
+                runCatching { startRoute(targetMs) }.onFailure { _state.value = _state.value.copy(error = L.castLoadFailed) }
             }
-            _state.value = _state.value.copy(error = L.castLoadFailed, playing = false)
             return
         }
-        publishState()
+        if (pub.hls && !tracksSent && m.tracks.isNotEmpty()) {
+            tracksSent = true
+            sendTracks(force = false)
+        }
+    }
+
+    private fun sendTracks(force: Boolean) {
+        val pub = published ?: return
+        val m = client.media.value
+        val map = HlsTrackMatch.match(pub.renditions, m.tracks)
+        val active = m.activeTrackIds.map { it.toLong() }
+        val ids = HlsTrackMatch.activeIds(map, m.tracks, active, hlsAudio, hlsText)
+        Logger.i(TAG, "Tracks ${m.tracks} matched $map; active $active -> $ids")
+        if (force || ids.toSet() != active.toSet()) client.setActiveTracks(ids)
     }
 
     private fun publishState() {
-        val pub = published ?: return
+        val pub = published
         val m = client.media.value
-        if (m.contentId != null && m.contentId != pub.url) return
+        val mine = pub != null && (m.contentId == null || m.contentId == pub.url)
         val v = client.volume.value
         val p = probe
-        val ended = m.playerState == "IDLE" && m.idleReason == "FINISHED"
-        val position = if (loading) _state.value.positionMs else pub.offsetMs + m.positionAt()
-        val duration = p?.durationMs?.takeIf { it > 0 } ?: (m.durationMs + pub.offsetMs)
+        val duration = p?.durationMs?.takeIf { it > 0 } ?: pub?.durationMs ?: 0L
+        val media = if (mine) m.toReceiverMedia().let { it.copy(positionMs = it.positionMs + pub.offsetMs) } else null
+        val view = if (pub == null && !loading) {
+            CastView(CastPhase.Starting, targetMs, wantPlaying)
+        } else {
+            mapper.map(media, loading, nowMs(), targetMs, duration)
+        }
+        if (!loading && pub != null) targetMs = view.positionMs
+        _phase.value = view.phase
+        val error = when (view.phase) {
+            CastPhase.Failed -> _state.value.error ?: L.castLoadFailed
+            // The TV playing again clears an old complaint.
+            CastPhase.Playing, CastPhase.Paused, CastPhase.Buffering -> null
+            else -> _state.value.error
+        }
         _state.value = _state.value.copy(
-            opened = true,
-            positionMs = position.coerceIn(0, duration.coerceAtLeast(position)),
+            opened = pub != null,
+            positionMs = view.positionMs,
             durationMs = duration,
-            bufferedMs = position,
-            playing = wantPlaying && !ended,
-            buffering = loading || m.playerState == "BUFFERING" || m.playerState == "LOADING",
+            bufferedMs = view.positionMs,
+            playing = view.showsPause,
+            buffering = view.busy,
             seekPending = loading,
-            ended = ended,
+            ended = view.phase == CastPhase.Ended,
+            error = error,
             volume = (v.level * 100).toInt(),
             muted = v.muted,
             speed = speed,
@@ -284,6 +355,18 @@ class CastPlaybackEngine(
 
     private fun publishTracks() {
         val p = probe ?: return
+        val pub = published
+        if (pub?.hls == true) {
+            val audioTracks = pub.renditions.filter { it.kind == HlsRendition.Kind.Audio }.mapNotNull { r ->
+                val a = p.audio.firstOrNull { it.number == r.trackNumber } ?: return@mapNotNull null
+                MediaTrack(a.number, TrackType.Audio, a.name, a.language, a.codec, a.channels.takeIf { it > 0 }, r.uri == hlsAudio?.uri, a.isDefault, false)
+            }
+            val texts = pub.renditions.filter { it.kind == HlsRendition.Kind.Text }.mapIndexed { i, r ->
+                MediaTrack(TEXT_BASE + i, TrackType.Subtitle, r.name, r.language, "webvtt", null, r.uri == hlsText?.uri, false, r.fileId != null)
+            }
+            _tracks.value = audioTracks + texts
+            return
+        }
         val audioTracks = p.audio.map { a ->
             MediaTrack(a.number, TrackType.Audio, a.name, a.language, a.codec, a.channels.takeIf { it > 0 }, a.number == audio, a.isDefault, false)
         }
@@ -297,13 +380,23 @@ class CastPlaybackEngine(
 
     override fun play() {
         wantPlaying = true
-        if (_state.value.ended) seekTo(0)
-        client.play()
+        when (_phase.value) {
+            CastPhase.Ended -> {
+                seekTo(0)
+                client.play()
+            }
+            CastPhase.Stopped, CastPhase.Failed -> retry()
+            else -> {
+                mapper.requested(true, nowMs())
+                client.play()
+            }
+        }
         publishState()
     }
 
     override fun pause() {
         wantPlaying = false
+        mapper.requested(false, nowMs())
         client.pause()
         publishState()
     }
@@ -314,11 +407,23 @@ class CastPlaybackEngine(
         _state.value = _state.value.copy(playing = false)
     }
 
-    override fun togglePlay() = if (wantPlaying && !_state.value.ended) pause() else play()
+    override fun togglePlay() = if (_state.value.playing && !_state.value.ended) pause() else play()
+
+    /** After the TV refused or was stopped: the same way again from where it was, or the plan from the top. */
+    fun retry() {
+        _state.value = _state.value.copy(error = null)
+        val at = targetMs
+        scope.launch {
+            val r = route
+            val ok = if (r != null && published != null) load(r, at) else runCatching { routeIndex = 0; startRoute(at) }.isSuccess
+            if (!ok) _state.value = _state.value.copy(error = L.castLoadFailed)
+        }
+    }
 
     override fun seekTo(positionMs: Long) {
         val pub = published ?: return
         val target = positionMs.coerceAtLeast(0).let { t -> _state.value.durationMs.takeIf { it > 0 }?.let { t.coerceAtMost(it - 500) } ?: t }
+        targetMs = target
         _state.value = _state.value.copy(positionMs = target, seekPending = true)
         if (pub.seekable) {
             client.seek(target)
@@ -339,14 +444,34 @@ class CastPlaybackEngine(
         publishState()
     }
 
-    override fun setVolume(percent: Int) = client.setVolume(percent.coerceIn(0, 100) / 100.0)
+    override fun setVolume(percent: Int) {
+        if (client.volume.value.fixed) return
+        client.setVolume(percent.coerceIn(0, 100) / 100.0)
+    }
 
     override fun setMuted(muted: Boolean) = client.setMuted(muted)
 
     override fun selectTrack(type: TrackType, id: Int?) {
+        val pub = published
         when (type) {
             TrackType.Audio -> {
-                if (id == null || id == audio) return
+                if (id == null) return
+                if (pub?.hls == true) {
+                    val r = pub.renditions.firstOrNull { it.kind == HlsRendition.Kind.Audio && it.trackNumber == id } ?: return
+                    if (r.uri == hlsAudio?.uri) return
+                    audio = id
+                    hlsAudio = r
+                    publishTracks()
+                    if (HlsTrackMatch.match(pub.renditions, client.media.value.tracks)[r] != null) {
+                        sendTracks(force = true)
+                    } else {
+                        // No match in the receiver's list: the playlist again, starting on that soundtrack.
+                        val at = targetMs
+                        route?.let { rt -> scope.launch { load(rt, at) } }
+                    }
+                    return
+                }
+                if (id == audio) return
                 val r = route
                 if (r is CastRoute.Direct) {
                     // The receiver plays the file's own soundtrack; no other is reachable.
@@ -359,8 +484,16 @@ class CastPlaybackEngine(
                 scope.launch { load(CastRoute.Remux(id), at) }
             }
             TrackType.Subtitle -> {
+                if (pub?.hls == true) {
+                    val texts = pub.renditions.filter { it.kind == HlsRendition.Kind.Text }
+                    hlsText = id?.let { texts.getOrNull(it - TEXT_BASE) }
+                    activeSub = hlsText?.fileId?.toInt()
+                    publishTracks()
+                    sendTracks(force = true)
+                    return
+                }
                 activeSub = id
-                client.setActiveTracks(listOfNotNull(id))
+                client.setActiveTracks(listOfNotNull(id?.toLong()))
                 publishTracks()
             }
             TrackType.Video -> Unit
@@ -372,11 +505,12 @@ class CastPlaybackEngine(
         val file = File(path)
         val bytes = runCatching { file.readBytes() }.getOrNull() ?: return false
         val id = SUB_BASE + subs.size
-        val url = runCatching { st.subtitle(id, bytes, file.extension.ifBlank { "srt" }) }.getOrNull() ?: return false
+        val url = runCatching { st.subtitle(id, bytes, file.extension.ifBlank { "srt" }, file.nameWithoutExtension) }.getOrNull() ?: return false
         subs += Sub(id, file.nameWithoutExtension, null, url)
         activeSub = id
         publishTracks()
-        // Side tracks are declared in the LOAD itself, so the video is loaded again where it is.
+        // Side tracks are declared in the LOAD, and HLS renditions in the playlist, so the video
+        // is loaded again where it is.
         val r = route ?: return true
         val at = _state.value.positionMs
         scope.launch { load(r, at) }
@@ -398,7 +532,7 @@ class CastPlaybackEngine(
         out += L.castCastingTo(client.device.name) to client.device.model
         p?.video?.let { out += "Video" to "${it.codec} ${it.width}x${it.height}" }
         p?.audio?.firstOrNull { it.number == audio }?.let { out += "Audio" to "${it.codec} ${it.channels}ch" }
-        route?.let { out += "Route" to it.toString() }
+        route?.let { out += "Route" to (if (it is CastRoute.Hls) "HLS (${MkvHls.CONTENT_TYPE})" else it.toString()) }
         return out
     }
 
@@ -438,8 +572,9 @@ class CastPlaybackEngine(
 
     private companion object {
         const val TAG = "CastEngine"
-        const val TICK_MS = 500L
+        const val TICK_MS = 250L
         const val EARLY_FAILURE_MS = 20_000L
         const val SUB_BASE = 1000
+        const val TEXT_BASE = 2000
     }
 }

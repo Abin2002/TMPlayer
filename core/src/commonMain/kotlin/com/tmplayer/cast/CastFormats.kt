@@ -63,6 +63,13 @@ sealed interface CastRoute {
     /** Rewrapped, with the sound of [audioTrack] turned into AAC on this device. */
     data class ConvertAudio(val audioTrack: Int) : CastRoute
 
+    /**
+     * Matroska served as HLS ([MkvHls]): the picture rewrapped into fMP4 segments, each of [audio]
+     * a soundtrack rendition (converted where it says), [audioTrack] the one it starts on, and the
+     * text subtitles inside the file as WebVTT renditions.
+     */
+    data class Hls(val audioTrack: Int?, val audio: List<HlsAudio>) : CastRoute
+
     /** The picture itself re-encoded on this device: the last resort, said so on screen. */
     data class TranscodeVideo(val audioTrack: Int?) : CastRoute
 }
@@ -170,6 +177,14 @@ object CastFormats {
                     (audioTrack == null || audioTrack.codec == Codecs.OPUS || audioTrack.codec == Codecs.VORBIS)
                 val remuxable = (video == null || video.codec in MP4_VIDEO)
                 if (webmLike) routes += CastRoute.Direct("video/webm")
+                // HLS first: the receiver knows the length, seeks itself and switches tracks. The
+                // one rewrapped stream stays behind it for a receiver that refuses the playlist
+                // (or a file without cues).
+                if (remuxable && !webmLike && video != null) {
+                    val renditions = hlsAudio(probe.audio, caps, canConvertAudio)
+                    val default = audioTrack?.number?.takeIf { n -> renditions.any { it.number == n } } ?: renditions.firstOrNull()?.number
+                    routes += CastRoute.Hls(default, renditions)
+                }
                 val directMkv = caps.matroska != Support.No && audioOk != Support.No && !webmLike
                 if (directMkv && caps.matroska == Support.Yes) routes += CastRoute.Direct("video/x-matroska")
                 // Vorbis plays on the receiver but has no place in MP4: converted like DTS.
@@ -178,7 +193,7 @@ object CastFormats {
                 if (directMkv && caps.matroska == Support.Maybe) routes += CastRoute.Direct("video/x-matroska")
                 if (remuxable && convert != null && (audioOk == Support.No || !audioRewraps)) routes += convert
                 // A soundtrack nothing here can play or convert: the picture goes alone, said so.
-                if (remuxable && routes.isEmpty()) routes += CastRoute.Remux(null)
+                if (remuxable && routes.all { it is CastRoute.Hls }) routes += CastRoute.Remux(null)
             }
             Container.MpegTs, Container.Avi -> Unit
             Container.Other -> routes += CastRoute.Direct("video/mp4")
@@ -195,8 +210,22 @@ object CastFormats {
         }
         val first = routes.first()
         val silent = (audioOk == Support.No && first is CastRoute.Direct) ||
-            (first is CastRoute.Remux && first.audioTrack == null && probe.audio.isNotEmpty())
+            (first is CastRoute.Remux && first.audioTrack == null && probe.audio.isNotEmpty()) ||
+            (first is CastRoute.Hls && first.audio.isEmpty() && probe.audio.isNotEmpty())
         return CastPlan(routes.distinct(), audioTrack?.number, silent = silent)
+    }
+
+    /**
+     * The soundtracks an HLS cast offers, in the file's order: each one MP4 carries that the
+     * receiver plays or passes through as it is, and, where this device converts, every other one
+     * as AAC. One the receiver cannot take and nothing here can turn into AAC is left out.
+     */
+    fun hlsAudio(tracks: List<AudioTrack>, caps: ReceiverCaps, canConvert: Boolean): List<HlsAudio> = tracks.mapNotNull { t ->
+        when {
+            t.codec in MP4_AUDIO && audioSupport(t.codec, caps) != Support.No -> HlsAudio(t.number, convert = false)
+            canConvert -> HlsAudio(t.number, convert = true)
+            else -> null
+        }
     }
 
     /** The plan's chosen soundtrack and how well the receiver takes it. */
