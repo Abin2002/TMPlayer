@@ -56,11 +56,14 @@ class BrandLoaderRenderTest {
 
     @Test
     fun `the light moves on its own and stands still with less motion`() {
-        val moving = scene(1366, 768, dark = true) { frames(it, listOf(700L, 1_400L)) }
+        // One line, so nothing steps: the lines change on real time, and a slow runner (macOS on
+        // CI) let 1.2 s of it pass between the two frames, which read as motion.
+        val oneLine = listOf(L.stateConnectingSession)
+        val moving = scene(1366, 768, dark = true, lines = oneLine) { frames(it, listOf(700L, 1_400L)) }
         assertTrue(!moving[0].contentEquals(moving[1]))
         Motion.reduced = true
         try {
-            val still = scene(1366, 768, dark = true) { frames(it, listOf(700L, 1_400L)) }
+            val still = scene(1366, 768, dark = true, lines = oneLine) { frames(it, listOf(700L, 1_400L)) }
             assertTrue(still[0].contentEquals(still[1]))
         } finally {
             Motion.reduced = false
@@ -119,14 +122,25 @@ class BrandLoaderRenderTest {
     private fun render(w: Int, h: Int, dark: Boolean, sweepAt: Float): ByteArray =
         scene(w, h, dark, sweepAt) { frames(it, listOf(800L)).single() }
 
-    private fun <T> scene(w: Int, h: Int, dark: Boolean, sweepAt: Float? = null, block: (ImageComposeScene) -> T): T =
+    private fun <T> scene(
+        w: Int,
+        h: Int,
+        dark: Boolean,
+        sweepAt: Float? = null,
+        lines: List<String>? = null,
+        block: (ImageComposeScene) -> T,
+    ): T =
         ImageComposeScene(w, h, Density(1f)) {
-            TmMaterialTheme(dark = dark) { Loader(sweepAt) }
+            TmMaterialTheme(dark = dark) { Loader(sweepAt, lines) }
         }.use(block)
 
     @Composable
-    private fun Loader(sweepAt: Float?) {
-        BrandLoader(label = L.signinConnecting, sweepAt = sweepAt)
+    private fun Loader(sweepAt: Float?, lines: List<String>?) {
+        if (lines == null) {
+            BrandLoader(label = L.signinConnecting, sweepAt = sweepAt)
+        } else {
+            BrandLoader(label = L.signinConnecting, lines = lines, sweepAt = sweepAt)
+        }
     }
 
     private fun frames(scene: ImageComposeScene, millis: List<Long>): List<ByteArray> {
