@@ -67,10 +67,8 @@ fun ChatInfoSheet(
     miniThumbnail: ByteArray?,
     onDismiss: () -> Unit,
 ) {
-    val info by produceState<ChatInfo?>(initialValue = null, chatId) {
-        val session = Td.awaitConnectedSessionOrNull() ?: return@produceState
-        value = runCatching { ChatRepository(session.client).chatInfo(chatId) }.getOrNull()
-    }
+    val load = rememberChatInfo(chatId)
+    val info = load.info
     if (isTouch()) {
         PhoneSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)) {
             Column(
@@ -83,6 +81,7 @@ fun ChatInfoSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ChatInfoBody(info, title, photoFileId, miniThumbnail, touch = true)
+                ChatInfoFailed(load)
             }
         }
     } else {
@@ -92,9 +91,19 @@ fun ChatInfoSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ChatInfoBody(info, title, photoFileId, miniThumbnail, touch = false)
+                ChatInfoFailed(load)
             }
         }
     }
+}
+
+/** The rest could not be loaded: said, with Try again, so a failure does not pass for a wait. */
+@Composable
+private fun ChatInfoFailed(load: ChatInfoLoad) {
+    if (!load.failed) return
+    val s = LocalStrings.current
+    Text(s.chatsInfoFailed, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, textAlign = TextAlign.Center)
+    com.tmplayer.ui.components.TmButton(onClick = load.retry) { Text(s.commonTryAgain) }
 }
 
 @Composable

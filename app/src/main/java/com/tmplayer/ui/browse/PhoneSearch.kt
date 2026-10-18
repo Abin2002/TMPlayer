@@ -108,6 +108,7 @@ import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingBorder
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import com.tmplayer.ui.components.SlowAnswerNotice
 
 /**
  * The phone's search across every chat (CP73): a page of its own over the browser, its field
@@ -515,14 +516,20 @@ private fun androidx.compose.foundation.lazy.LazyListScope.results(
     searchStatus(state)?.let { status ->
         item(key = "status") {
             Note(status, spinner = state.stillSearching || state.floodWait > 0) {
-                if (state.error != null) TmSecondaryButton(onClick = onRetry) { Text(LocalStrings.current.commonRetry) }
+                // Offline too: the search runs again on its own once back, and this is the way
+                // to ask sooner, so the line is never one with nothing to press.
+                if (state.error != null || state.offline) TmSecondaryButton(onClick = onRetry) { Text(LocalStrings.current.commonRetry) }
             }
         }
     }
     val shown = state.shown
     when {
-        shown.isEmpty() && state.searching -> items(SKELETONS, key = { "sk-$it" }) {
-            SearchResultSkeleton(Modifier.padding(horizontal = 8.dp))
+        shown.isEmpty() && state.searching -> {
+            items(SKELETONS, key = { "sk-$it" }) {
+                SearchResultSkeleton(Modifier.padding(horizontal = 8.dp))
+            }
+            // A first page that will not come: Telegram is slow, with Retry, after the usual wait.
+            item(key = "slow") { SlowAnswerNotice(key = state.query, onRetry = onRetry, modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp)) }
         }
         shown.isEmpty() && !state.busy && state.error == null -> item(key = "none") {
             val s = LocalStrings.current

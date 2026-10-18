@@ -37,6 +37,8 @@ import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.Alignment
 
 /** Which of the section's prompts is open over Settings. */
 enum class OnlineDialog { SignIn, SignOut, SubdlKey }
@@ -209,6 +211,13 @@ fun OnlineSubtitlesDialog(dialog: OnlineDialog, onClose: () -> Unit) {
                             visualTransformation = PasswordVisualTransformation(),
                         )
                         error?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = Danger) }
+                        // A press is answered: the sign in is on its way, and a long one says so.
+                        if (busy) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                com.tmplayer.ui.components.Spinner(size = 18.dp, strokeWidth = 2.dp)
+                                Text(s.onlineSigningIn, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
+                            }
+                        }
                     }
                 },
             )

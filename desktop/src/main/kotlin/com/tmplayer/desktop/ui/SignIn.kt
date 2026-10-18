@@ -226,6 +226,8 @@ private fun PhonePane(wrong: Boolean) {
     var number by remember { mutableStateOf("+") }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    // Never "Sending" or "Checking" for good: past the ceiling the button is pressable again.
+    LaunchedEffect(busy) { if (busy) { kotlinx.coroutines.delay(SIGN_IN_PENDING_CEILING_MS); busy = false } }
     val focus = remember { FocusRequester() }
 
     // Telegram guesses the country from the address it sees, which saves typing the dial code.
@@ -272,6 +274,8 @@ private fun CodePane(state: AuthState.Code) {
     var code by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    // Never "Sending" or "Checking" for good: past the ceiling the button is pressable again.
+    LaunchedEffect(busy) { if (busy) { kotlinx.coroutines.delay(SIGN_IN_PENDING_CEILING_MS); busy = false } }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
 
@@ -323,6 +327,8 @@ private fun PasswordPane(state: AuthState.Password) {
     var password by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    // Never "Sending" or "Checking" for good: past the ceiling the button is pressable again.
+    LaunchedEffect(busy) { if (busy) { kotlinx.coroutines.delay(SIGN_IN_PENDING_CEILING_MS); busy = false } }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
 
@@ -365,6 +371,8 @@ private fun EmailAddressPane(state: AuthState.EmailAddress) {
     var address by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    // Never "Sending" or "Checking" for good: past the ceiling the button is pressable again.
+    LaunchedEffect(busy) { if (busy) { kotlinx.coroutines.delay(SIGN_IN_PENDING_CEILING_MS); busy = false } }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
     val ready = '@' in address && '.' in address.substringAfter('@')
@@ -403,6 +411,8 @@ private fun EmailCodePane(state: AuthState.EmailCode) {
     var code by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    // Never "Sending" or "Checking" for good: past the ceiling the button is pressable again.
+    LaunchedEffect(busy) { if (busy) { kotlinx.coroutines.delay(SIGN_IN_PENDING_CEILING_MS); busy = false } }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
     val submit = {
@@ -449,3 +459,10 @@ private val QR_WIDE_COLUMN = 820.dp
 
 /** From this width inside the column the steps stand beside the code rather than over it. */
 private val QR_SIDE_BY_SIDE = 640.dp
+
+/**
+ * How long a sign in button may say Sending or Checking before it can be pressed again, as on the
+ * phone: every step answers with a new state or an error long before this, and the slow connect
+ * help ([com.tmplayer.ui.connect]) covers a line that is not answering at all.
+ */
+private const val SIGN_IN_PENDING_CEILING_MS = 20_000L

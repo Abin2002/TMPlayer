@@ -13,6 +13,7 @@ import com.tmplayer.ui.components.ChoiceList
 import com.tmplayer.ui.components.ChoiceSheet
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.i18n.LocalStrings
+import androidx.compose.ui.focus.focusRequester
 
 /**
  * A chat's Sort menu: the orders of [VideoSort] as one radio group, the [current] one marked.
@@ -21,12 +22,19 @@ import com.tmplayer.ui.i18n.LocalStrings
 @Composable
 internal fun VideoSortSheet(current: VideoSort, onPick: (VideoSort) -> Unit, onDismiss: () -> Unit) {
     val s = LocalStrings.current
+    // The remote opens on the order in force, not on the first line, as every other picker does.
+    val chosen = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
     ChoiceSheet(title = s.gridSortLabel, onDismiss = onDismiss, onClose = onDismiss, ignoreRelease = !isTouch()) {
         ChoiceList {
             for (sort in VideoSort.entries) {
-                ChoiceLine(sortLabel(sort, s), selected = sort == current) { onPick(sort) }
+                ChoiceLine(
+                    sortLabel(sort, s),
+                    modifier = if (sort == current) androidx.compose.ui.Modifier.focusRequester(chosen) else androidx.compose.ui.Modifier,
+                    selected = sort == current,
+                ) { onPick(sort) }
             }
         }
+        com.tmplayer.ui.components.FocusOnOpen(chosen)
     }
 }
 

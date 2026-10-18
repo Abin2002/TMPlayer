@@ -612,6 +612,14 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var lastBufferedMs = -1L
     private var slowStartUp = false
 
+    /**
+     * The same watch for a stall once playback has begun ([watchRebuffering]): a spinner over the
+     * picture that runs past [OpeningStall.STALL_MS] with no new byte turns into the same sheet,
+     * worded for a video that stopped arriving rather than one that never started.
+     */
+    private var rebufferWatch: Job? = null
+    private var stalledMidPlay = false
+
     /** Automatic recoveries since playback was last healthy, and the one currently pending. */
     private var recoveryAttempts = 0
     private var recoveryJob: Job? = null
@@ -1135,12 +1143,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             topBar.updatePadding(left = barLeft + safe.left, right = barRight + safe.right, top = safe.top)
             corner?.updatePadding(right = safe.right, top = safe.top + underTheBar)
             nextUpCard?.view?.updateLayoutParams<FrameLayout.LayoutParams> {
-                rightMargin = safe.right + NextUpCard.MARGIN_PX
-                bottomMargin = safe.bottom + NextUpCard.BOTTOM_PX
+                rightMargin = safe.right + NextUpCard.marginPx(root)
+                bottomMargin = safe.bottom + NextUpCard.bottomPx(root)
             }
             skipPill?.view?.updateLayoutParams<FrameLayout.LayoutParams> {
-                rightMargin = safe.right + NextUpCard.MARGIN_PX
-                bottomMargin = safe.bottom + NextUpCard.BOTTOM_PX
+                rightMargin = safe.right + NextUpCard.marginPx(root)
+                bottomMargin = safe.bottom + NextUpCard.bottomPx(root)
+            }
+            // "Back to" on the start side keeps clear of a cutout or the bar in landscape too.
+            undoChip?.view?.updateLayoutParams<FrameLayout.LayoutParams> {
+                leftMargin = safe.left + NextUpCard.marginPx(root)
+                marginStart = safe.left + NextUpCard.marginPx(root)
+                bottomMargin = safe.bottom + NextUpCard.bottomPx(root)
             }
             insets
         }
@@ -3533,6 +3547,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     override fun attachOnlineSubtitle(file: File, label: String) = subtitleFiles.attachFile(file, label)
 
+    override val pickSubtitleFile: (() -> Unit)?
+        get() = if (FormFactor.isTv(this)) null else ({ subtitleFiles.pick() })
+
     fun showTrackPicker(trackType: Int) {
         TrackPickerFragment.show(supportFragmentManager, R.id.overlay_container, trackType)
     }
@@ -5616,6 +5633,37 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             rebufferText.text = if (offline) L.playerOfflineWaiting else L.commonLoading
         }
         updateDownloadChip()
+        watchRebuffering()
+    }
+
+    /** See [rebufferWatch]. Ends with the stall, or once the sheet is up. */
+    private fun watchRebuffering() {
+        if (rebufferWatch?.isActive == true) return
+        lastProgressAtMs = SystemClock.elapsedRealtime()
+        lastBufferedMs = -1L
+        rebufferWatch = lifecycleScope.launch {
+            while (true) {
+                delay(OPENING_WATCH_TICK_MS)
+                val exo = player ?: return@launch
+                if (openingFilm || exo.playbackState != Player.STATE_BUFFERING) return@launch
+                val buffered = exo.bufferedPosition
+                if (buffered > lastBufferedMs) {
+                    if (lastBufferedMs >= 0) noteOpeningProgress()
+                    lastBufferedMs = buffered
+                }
+                val local = downloadComplete || downloadedFile != null || (joinedSource != null && joinedAllLocal)
+                // Offline has its own words on the chip, and carries on by itself once back.
+                if (networkOffline) {
+                    lastProgressAtMs = SystemClock.elapsedRealtime()
+                    continue
+                }
+                if (OpeningStall.stalled(opening = true, local = local, lastProgressAtMs, SystemClock.elapsedRealtime())) {
+                    stalledMidPlay = true
+                    showSlowStart()
+                    return@launch
+                }
+            }
+        }
     }
 
     /**
@@ -5917,7 +5965,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** A byte arrived: the count starts again, and a sheet that said nothing was arriving goes. */
     private fun noteOpeningProgress() {
         lastProgressAtMs = SystemClock.elapsedRealtime()
-        if (slowStartUp) showStatus(L.playerStarting)
+        if (slowStartUp && stalledMidPlay) {
+            // Bytes again in the middle of a video: back to the small spinner, not "Starting".
+            stalledMidPlay = false
+            slowStartUp = false
+            statusOverlay.visibility = View.GONE
+            hideFailureActions()
+            showRebuffering()
+        } else if (slowStartUp) {
+            showStatus(L.playerStarting)
+        }
     }
 
     /**
@@ -5942,10 +5999,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             text = mediaTitle
             visibility = if (mediaTitle.isBlank()) View.GONE else View.VISIBLE
         }
-        statusTitle.text = L.playerStalledTitle
+        statusTitle.text = if (stalledMidPlay) L.playerStalledMidTitle else L.playerStalledTitle
         statusText.text = when (OpeningStall.reason(Td.link.value)) {
             OpeningStall.Reason.NoLine -> L.playerStalledNoLine
-            OpeningStall.Reason.Slow -> L.playerStalledSlow
+            OpeningStall.Reason.Slow -> if (stalledMidPlay) L.playerStalledMidSlow else L.playerStalledSlow
         }
         val canDownload = canSaveToDownloads()
         statusDetail.visibility = if (canDownload) View.VISIBLE else View.GONE
@@ -5972,6 +6029,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private fun tryOpeningAgain() {
         slowStartUp = false
+        stalledMidPlay = false
         recoveryAttempts = 0
         App.backgroundScope.launch { runCatching { Td.retryConnecting() } }
         showStatus(L.playerTryingAgain)
@@ -5995,6 +6053,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     private fun hideStatus() {
         slowStartUp = false
+        stalledMidPlay = false
         failedRetryable = false
         openingFilm = false
         statusOverlay.visibility = View.GONE
@@ -6062,6 +6121,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         super.onStop()
         // Counted again from the start when the viewer is back ([onStart]).
         openingWatch?.cancel()
+        rebufferWatch?.cancel()
         saveResumePosition(leaving = !inPictureInPicture)
         // In picture in picture the activity is stopped while the video is still on screen and
         // still the point of it; pausing here would stop the very thing the mode exists for.

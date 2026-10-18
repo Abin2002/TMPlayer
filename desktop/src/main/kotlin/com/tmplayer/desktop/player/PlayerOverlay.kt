@@ -1339,8 +1339,11 @@ internal fun BoxScope.StatusSheet(
                             Spacer(Modifier.width(8.dp))
                             LaunchedEffect(phase) { runCatching { free.requestFocus() } }
                         }
-                        TextButton(onClick = onRetry) { Text(s.commonTryAgain) }
+                        // Otherwise Try again takes the keyboard, so Enter answers the sheet.
+                        val retry = remember { FocusRequester() }
+                        TextButton(onClick = onRetry, modifier = Modifier.focusRequester(retry)) { Text(s.commonTryAgain) }
                         TextButton(onClick = onBack) { Text(s.commonBack) }
+                        if (!(phase.noRoom && onFreeUpSpace != null)) LaunchedEffect(phase) { runCatching { retry.requestFocus() } }
                     }
                     // The logs to send with a report of it: saved and shown, or straight to GitHub.
                     Spacer(Modifier.height(8.dp))
@@ -1351,16 +1354,21 @@ internal fun BoxScope.StatusSheet(
                     Text(s.playerStartingIn(phase.seconds), color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
                     Spacer(Modifier.height(12.dp))
                     Row {
-                        TextButton(onClick = { onPlayNext(phase.next) }) { Text(s.playerPlayNow) }
+                        val now = remember { FocusRequester() }
+                        TextButton(onClick = { onPlayNext(phase.next) }, modifier = Modifier.focusRequester(now)) { Text(s.playerPlayNow) }
                         TextButton(onClick = onCancelNext) { Text(s.commonCancel) }
+                        // Keyed on the episode, not the second, so the count does not steal focus each tick.
+                        LaunchedEffect(phase.next) { runCatching { now.requestFocus() } }
                     }
                 }
                 Phase.Finished -> {
                     Text(s.playerTheEnd, color = Color.White, fontSize = 15.sp)
                     Spacer(Modifier.height(12.dp))
                     Row {
-                        TextButton(onClick = onWatchAgain) { Text(s.playerWatchAgain) }
+                        val again = remember { FocusRequester() }
+                        TextButton(onClick = onWatchAgain, modifier = Modifier.focusRequester(again)) { Text(s.playerWatchAgain) }
                         TextButton(onClick = onBack) { Text(s.commonBack) }
+                        LaunchedEffect(Unit) { runCatching { again.requestFocus() } }
                     }
                 }
                 is Phase.StillWatching -> {

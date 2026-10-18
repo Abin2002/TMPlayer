@@ -173,10 +173,11 @@ internal fun StorageGroup(state: ShellState) {
     }
     Action(s.downloadsFreePictures, s.storageClearPicturesDetail, TmIcons.Image, end = RowEnd.None) {
         scope.launch {
-            runCatching { Td.clearPicturesAndPreviews() }
+            val ok = runCatching { Td.clearPicturesAndPreviews() }.isSuccess
             runCatching { withContext(Dispatchers.IO) { com.tmplayer.online.OnlineMetadata.current?.purgeImages() } }
             refresh++
-            toast(s.storagePicturesCleared)
+            // Only claimed when it happened; a failure says so, and the row is still there to try.
+            toast(if (ok) s.storagePicturesCleared else s.settingsClearFailed)
         }
     }
     Action(s.storageClearAll, s.storageClearAllDetail, TmIcons.Delete, iconTint = Tone.danger, end = RowEnd.None) {

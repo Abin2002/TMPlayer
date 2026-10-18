@@ -335,6 +335,8 @@ class TrackPickerFragment : Fragment() {
                     Spacer(Modifier.width(10.dp))
                     Text(L.onlineSearching, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
                 }
+                // A search that runs long says so, with Retry, rather than spinning in silence.
+                com.tmplayer.ui.components.SlowAnswerNotice(key = attempt, onRetry = { attempt++ }, modifier = Modifier.padding(top = 12.dp))
                 // Nothing to choose yet, so the remote waits on Close.
                 FocusOnOpen(closeFocus)
                 return@ChoiceSheet
@@ -380,6 +382,14 @@ class TrackPickerFragment : Fragment() {
                 }
                 if (notice == SubtitleNotice.Offline || notice == SubtitleNotice.Busy) {
                     add(Line("retry", L.commonTryAgain, icon = TmIcons.Refresh, group = Group.Online) { attempt++ })
+                }
+                // Nothing found online: a file of the viewer's own is the way on, where there is a picker.
+                val pick = host?.pickSubtitleFile
+                if (shown.hits.isEmpty() && notice == null && pick != null) {
+                    add(Line("file", L.playerLoadSubtitleFile, icon = TmIcons.Folder, group = Group.Online) {
+                        close()
+                        pick()
+                    })
                 }
             }
             val focusKey = lines.firstOrNull { it.enabled }?.key

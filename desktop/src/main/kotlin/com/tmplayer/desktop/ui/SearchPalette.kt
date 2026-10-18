@@ -265,11 +265,20 @@ internal fun BoxScope.SearchPalette(
     }
 
     val byUsername = com.tmplayer.ui.browse.rememberUsernameChat(query.text)
-    val rows = remember(ui, chats, favourites, recents, allowed, allChats, query.text, byUsername) {
-        buildRows(ui, chats, favourites, if (allowed != null) emptyList() else recents, allChats, search, byUsername) { word ->
+    // A first page that will not come says so, with Retry, after the app's usual wait.
+    var slow by remember(query) { mutableStateOf(false) }
+    LaunchedEffect(query, ui.searching) {
+        slow = false
+        if (ui.searching) {
+            kotlinx.coroutines.delay(com.tmplayer.ui.components.SlowAnswer.AFTER_MS)
+            slow = true
+        }
+    }
+    val rows = remember(ui, chats, favourites, recents, allowed, allChats, query.text, byUsername, slow) {
+        buildRows(ui, chats, favourites, if (allowed != null) emptyList() else recents, allChats, search, byUsername, onSearchWord = { word ->
             state.paletteQuery = TextFieldValue(word, TextRange(word.length))
             search.submit(word)
-        }
+        }, slow = slow)
     }
 
     fun pick(row: PaletteRow, play: Boolean = false) {
@@ -435,6 +444,8 @@ private fun buildRows(
     search: GlobalSearchViewModel,
     byUsername: ChatSummary?,
     onSearchWord: (String) -> Unit,
+    /** The first page has been on its way past [com.tmplayer.ui.components.SlowAnswer.AFTER_MS]. */
+    slow: Boolean = false,
 ): List<PaletteRow> = buildList {
     val s = com.tmplayer.i18n.L
     val query = ui.query
@@ -461,7 +472,9 @@ private fun buildRows(
     }
     val videos = ui.shown
     if (videos.isNotEmpty() || ui.searching) add(PaletteRow.Heading(s.searchVideosHeading))
-    searchStatus(ui)?.let { add(PaletteRow.Note(it, retry = ui.error != null)) }
+    // Offline too: the search runs again once back, and Retry asks sooner.
+    searchStatus(ui)?.let { add(PaletteRow.Note(it, retry = ui.error != null || ui.offline)) }
+    if (slow && ui.searching && videos.isEmpty()) add(PaletteRow.Note(com.tmplayer.ui.components.SlowAnswer.MESSAGE, retry = true))
     when {
         videos.isNotEmpty() -> videos.forEach { add(PaletteRow.Video(it)) }
         ui.searching -> repeat(SKELETONS) { add(PaletteRow.Skeleton(it)) }

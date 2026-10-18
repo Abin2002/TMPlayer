@@ -282,6 +282,8 @@ fun DownloadsScreen(
     // Settings' Recently played row opens the page with that section unfolded and in view.
     var cachedOpen by rememberSaveable { mutableStateOf(openOnCached) }
     var freeingUp by remember { mutableStateOf(false) }
+    // Deletes so far, for the television's page to put the remote back on its tab after each.
+    var deleted by remember { mutableStateOf(0) }
     var confirmingClearCached by remember { mutableStateOf(false) }
     var confirmingClearPictures by remember { mutableStateOf(false) }
     var confirmingDeleteUnfinished by remember { mutableStateOf(false) }
@@ -716,6 +718,7 @@ fun DownloadsScreen(
                         onPause = { OfflineDownloads.pause(context, progress.fileId) },
                         onResume = { OfflineDownloads.resume(context, progress.fileId) },
                         onCancel = { scope.launch { dropUnfinished(progress.fileId) } },
+                        onFreeUp = { freeingUp = true },
                     )
                 }
             } else {
@@ -851,6 +854,7 @@ fun DownloadsScreen(
                     onPause = { OfflineDownloads.pause(context, progress.fileId) },
                     onResume = { OfflineDownloads.resume(context, progress.fileId) },
                     onCancel = { scope.launch { dropUnfinished(progress.fileId) } },
+                    onFreeUp = { freeingUp = true },
                 )
             }
             at += 1 + active.size
@@ -998,6 +1002,7 @@ fun DownloadsScreen(
             onShareChosen = { share(chosen) },
             onDeleteChosen = { confirmingDeleteMany = true },
             listState = listState,
+            refocus = deleted,
             body = body,
         )
     } else {
@@ -1108,6 +1113,7 @@ fun DownloadsScreen(
             onConfirm = {
                 delete(row)
                 confirmingDelete = null
+                deleted++
             },
             onDismiss = { confirmingDelete = null },
         )
@@ -1128,6 +1134,7 @@ fun DownloadsScreen(
             onConfirm = {
                 confirmingDeleteMany = false
                 deleteMany(chosen)
+                deleted++
             },
             onDismiss = { confirmingDeleteMany = false },
         )
@@ -1863,6 +1870,8 @@ private fun ActiveDownloadCard(
     onPause: () -> Unit,
     onResume: () -> Unit,
     onCancel: () -> Unit,
+    /** Free up space, for a row that failed because the drive was full. */
+    onFreeUp: (() -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     val stage = progress.stage
@@ -1970,8 +1979,13 @@ private fun ActiveDownloadCard(
                     PrimaryAction(s.commonResume, TmIcons.Play, onResume)
                 // Refused because the chat forbids keeping a copy: trying again is refused the
                 // same way, so the only offer left is Dismiss below.
+                // Refused for room: Try again would find the same full drive, so the first
+                // offer is the one that makes room, and Try again stays beside it for after.
                 OfflineDownloads.Stage.Failed ->
-                    if (progress.failure != ContentProtection.NOT_SAVABLE) {
+                    if (com.tmplayer.data.isNoSpaceFailure(progress.failure) && onFreeUp != null) {
+                        PrimaryAction(s.downloadsFreeUpSpace, TmIcons.Delete, onFreeUp)
+                        PrimaryAction(s.commonTryAgain, TmIcons.Refresh, onResume)
+                    } else if (progress.failure != ContentProtection.NOT_SAVABLE) {
                         PrimaryAction(s.commonTryAgain, TmIcons.Refresh, onResume)
                     }
                 // It will start itself the moment the signal is back, so the useful offer is the
@@ -2137,10 +2151,17 @@ private fun TvDownloads(
     onShareChosen: () -> Unit,
     onDeleteChosen: () -> Unit,
     listState: androidx.compose.foundation.lazy.LazyListState,
+    /** Bumped after a delete, whose row took the remote with it: focus goes back to the tab. */
+    refocus: Int = 0,
     body: LazyListScope.() -> Unit,
 ) {
     val s = LocalStrings.current
     val tabFocus = remember { List(3) { FocusRequester() } }
+    LaunchedEffect(refocus) {
+        if (refocus == 0) return@LaunchedEffect
+        withFrameNanos { }
+        runCatching { tabFocus[tab].requestFocus() }
+    }
     // The remote lands on the tab being shown, as the rail lands on the page being shown: before
     // this nothing held focus until the first press, which then went to Back.
     LaunchedEffect(Unit) {

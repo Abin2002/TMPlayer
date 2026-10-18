@@ -77,8 +77,8 @@ class NextUpCard(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 Gravity.END or Gravity.BOTTOM,
             ).apply {
-                rightMargin = MARGIN_PX
-                bottomMargin = BOTTOM_PX
+                rightMargin = marginPx(root)
+                bottomMargin = bottomPx(root)
             },
         )
     }
@@ -129,10 +129,18 @@ class NextUpCard(
         }
 
     companion object {
-        /** Clear of the screen edge, before the system's own insets are added. */
-        const val MARGIN_PX = 48
+        /**
+         * Clear of the screen edge, before the system's own insets are added. In dp, so the offers
+         * stand the same distance in on every screen: these were raw pixels, which put them 24 dp
+         * in on a 2x television and 16 dp on a 3x phone.
+         */
+        private const val MARGIN_DP = 24f
 
-        /** Clear of the transport row's cluster. */
-        const val BOTTOM_PX = 220
+        /** Clear of the transport row's cluster: the 2x television's figure, as dp. */
+        private const val BOTTOM_DP = 110f
+
+        fun marginPx(view: android.view.View): Int = (MARGIN_DP * view.resources.displayMetrics.density).toInt()
+
+        fun bottomPx(view: android.view.View): Int = (BOTTOM_DP * view.resources.displayMetrics.density).toInt()
     }
 }

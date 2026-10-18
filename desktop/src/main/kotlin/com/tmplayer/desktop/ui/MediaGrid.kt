@@ -604,7 +604,7 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
         val list = records
         when {
             list == null -> VideoGridSkeleton(state.posterWidth * CONTINUE_WIDTH, posters = false, nameBelow = false)
-            list.isEmpty() -> EmptyNote(HistoryTab.Continue.emptyIcon, s.continueEmpty)
+            list.isEmpty() -> EmptyNote(HistoryTab.Continue.emptyIcon, s.continueEmpty, s.browseGoToChats) { state.showChats(com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats)) }
             else -> {
                 val grid = rememberLazyGridState()
                 val records by rememberUpdatedState(list)
@@ -1055,7 +1055,22 @@ internal fun Poster(
             when {
                 selected -> TileBadge(s.browseBadgeSelected, corner, icon = TmIcons.CheckCircle)
                 record != null -> TileBadge(s.downloadsDownloaded, corner, icon = TmIcons.CheckCircle)
-                download != null && download.busy -> TileBadge(s.downloadsDownloading, corner, icon = TmIcons.Download)
+                // Every stage the queue can be in, as the phone's tiles say it: a failed download
+                // shows on its tile in red rather than looking like nothing was asked for.
+                download != null -> TileBadge(
+                    when (download.stage) {
+                        OfflineDownloads.Stage.Running -> download.fraction?.let { s.formatter.percent(it.toDouble()) } ?: s.gridStageDownloading
+                        OfflineDownloads.Stage.Queued -> s.gridStageQueued
+                        OfflineDownloads.Stage.Paused -> s.gridStagePaused
+                        OfflineDownloads.Stage.Offline -> s.gridStageWaiting
+                        OfflineDownloads.Stage.NoWifi -> s.gridStageNoWifi
+                        OfflineDownloads.Stage.Moving -> s.gridStageMoving
+                        OfflineDownloads.Stage.Failed -> s.gridStageFailed
+                    },
+                    corner,
+                    icon = TmIcons.Download,
+                    fill = if (download.stage == OfflineDownloads.Stage.Failed) Tone.danger.copy(alpha = 0.92f) else com.tmplayer.ui.components.TileBadgeFill,
+                )
                 item.onDevice -> TileBadge(s.browseBadgeCached, corner, icon = TmIcons.Download)
                 finished -> WatchedBadge(corner)
             }
@@ -1065,7 +1080,7 @@ internal fun Poster(
             if (!showing) when {
                 badge != null -> Box(Modifier.align(Alignment.TopEnd).padding(TileBadgeInset)) { badge() }
                 // Only on its own: two chips across a narrow poster would meet in the middle.
-                poster && quality != null && !selected && record == null && download?.busy != true && !item.onDevice && !finished -> TileBadge(quality, Modifier.align(Alignment.TopEnd).padding(TileBadgeInset))
+                poster && quality != null && !selected && record == null && download == null && !item.onDevice && !finished -> TileBadge(quality, Modifier.align(Alignment.TopEnd).padding(TileBadgeInset))
             }
             if (showing) {
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)))

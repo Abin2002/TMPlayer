@@ -329,7 +329,7 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                                     }
                                 }
                             }
-                            items(queue, key = { "a${it.fileId}" }) { row -> ActiveRow(state, row) }
+                            items(queue, key = { "a${it.fileId}" }) { row -> ActiveRow(state, row, onFreeUp = { freeingUp = true }) }
                             at += 1 + queue.size
                         }
 
@@ -886,7 +886,7 @@ private fun RowScope.Words(title: String, detail: String, detailColor: Color = T
 }
 
 @Composable
-private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
+private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress, onFreeUp: (() -> Unit)? = null) {
     val s = LocalStrings.current
     val status = when (row.stage) {
         OfflineDownloads.Stage.Running -> buildString {
@@ -909,11 +909,18 @@ private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
     val scope = rememberCoroutineScope()
     // Cancel deletes what it had fetched too: a part file left behind is space nothing names.
     val cancel: () -> Unit = { scope.launch { dropUnfinished(state, row.fileId) } }
+    // Refused for room: Free up space first, since Try again finds the same full drive. Refused
+    // because the chat forbids keeping a copy: no Try again at all, as on the phone.
+    val noSpace = failed && onFreeUp != null && com.tmplayer.data.isNoSpaceFailure(row.failure)
+    val savable = row.failure != com.tmplayer.data.ContentProtection.NOT_SAVABLE
     val menu = buildList {
         when {
             row.stage == OfflineDownloads.Stage.Moving -> Unit
             row.busy -> add(RowMenuEntry(s.playerPause, TmIcons.Pause, action = pause))
-            failed -> add(RowMenuEntry(s.commonTryAgain, TmIcons.Refresh, action = resume))
+            failed -> {
+                if (noSpace) add(RowMenuEntry(s.downloadsFreeUpSpace, TmIcons.Delete, action = onFreeUp!!))
+                if (savable) add(RowMenuEntry(s.commonTryAgain, TmIcons.Refresh, action = resume))
+            }
             else -> add(RowMenuEntry(s.downloadsResume, TmIcons.Play, action = resume))
         }
         add(RowMenuEntry(s.commonCancel, TmIcons.Close, danger = true, action = cancel))
@@ -938,10 +945,13 @@ private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
         when {
             row.stage == OfflineDownloads.Stage.Moving -> Unit
             row.busy -> TipIconButton(TmIcons.Pause, s.playerPause, pause)
-            failed -> TipIconButton(TmIcons.Refresh, s.commonTryAgain, resume)
+            failed -> {
+                if (noSpace) TipIconButton(TmIcons.Delete, s.downloadsFreeUpSpace, onFreeUp!!)
+                if (savable) TipIconButton(TmIcons.Refresh, s.commonTryAgain, resume)
+            }
             else -> TipIconButton(TmIcons.Play, s.downloadsResume, resume)
         }
-        TipIconButton(TmIcons.Close, s.commonCancel, cancel)
+        TipIconButton(TmIcons.Close, if (failed) s.commonDismiss else s.commonCancel, cancel)
     }
 }
 

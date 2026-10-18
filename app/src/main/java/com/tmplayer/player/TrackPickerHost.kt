@@ -25,4 +25,10 @@ interface TrackPickerHost {
 
     /** Loads a downloaded online subtitle over the video, as a picked file would be. */
     fun attachOnlineSubtitle(file: File, label: String)
+
+    /**
+     * The way on when the online search found nothing: pick a subtitle file from the device.
+     * Null where there is no picker (a television, the fixture).
+     */
+    val pickSubtitleFile: (() -> Unit)? get() = null
 }

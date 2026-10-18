@@ -113,7 +113,7 @@ fun WatchedPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
         val list = records
         when {
             list == null -> VideoGridSkeleton(state.posterWidth, posters = false)
-            list.isEmpty() -> EmptyNote(HistoryTab.Watched.emptyIcon, s.watchedEmpty)
+            list.isEmpty() -> EmptyNote(HistoryTab.Watched.emptyIcon, s.watchedEmpty, s.browseGoToChats) { state.showChats(com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats)) }
             else -> {
                 val grid = rememberLazyGridState()
                 val current by rememberUpdatedState(list)
@@ -215,7 +215,7 @@ fun WatchLaterPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
         val list = records
         when {
             list == null -> VideoGridSkeleton(state.posterWidth, posters = false)
-            list.isEmpty() -> EmptyNote(HistoryTab.WatchLater.emptyIcon, s.browseEmptyWatchLater)
+            list.isEmpty() -> EmptyNote(HistoryTab.WatchLater.emptyIcon, s.browseEmptyWatchLater, s.browseGoToChats) { state.showChats(com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats)) }
             else -> {
                 val grid = rememberLazyGridState()
                 val current by rememberUpdatedState(list)

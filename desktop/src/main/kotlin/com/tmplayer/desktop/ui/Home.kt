@@ -113,9 +113,16 @@ fun HomePage(state: ShellState, chats: ChatListViewModel) {
     val later by state.watched.watchLater.items.collectAsState(initial = emptyList())
     val watched by state.watched.watched.collectAsState(initial = emptyMap())
     val art by model.art.collectAsState()
+    val rows = rememberHomeRows(model, list, favourites, history, later, watched.values)
+    // With nothing of its own to show yet, Home waits on the chat list, or says why it failed,
+    // rather than greet somebody with starred chats as a first run.
+    if (rows.isEmpty() && (chatState is UiState.Loading || chatState is UiState.Error)) {
+        StateBox(chatState, onRetry = { chats.load() }) {}
+        return
+    }
     HomeRowsView(
         state = state,
-        rows = rememberHomeRows(model, list, favourites, history, later, watched.values),
+        rows = rows,
         chats = list,
         art = art,
         onRowShown = { row ->

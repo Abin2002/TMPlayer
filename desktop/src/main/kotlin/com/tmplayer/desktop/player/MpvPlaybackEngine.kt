@@ -539,6 +539,10 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
      */
     private fun applySubtitleStyle(style: SubtitleStyle) {
         val h = handle
+        // Lines inside the picture, never down in a wide video's black bars: where the phone and
+        // the television put them, so a letterboxed video has its subtitles at the same height
+        // on every device (PlayerActivity.subtitleBottomFraction).
+        runCatching { h.setPropertyString("sub-use-margins", "no") }
         runCatching { h.setPropertyString("sub-font-size", style.size.mpvFontSize.toString()) }
         runCatching { h.setPropertyString("sub-pos", style.position.mpvSubPos.toString()) }
         if (!style.box) {

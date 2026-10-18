@@ -356,6 +356,10 @@ fun BrowseScreen(
         },
     )
     val searchState by search.state.collectAsState()
+    // Back online: a search that could only list this device's videos asks Telegram again, as
+    // the desktop's does, rather than saying "offline" until the viewer types something new.
+    val searchConnected by com.tmplayer.data.Td.connected.collectAsState()
+    LaunchedEffect(searchConnected) { if (searchConnected) search.reconnected() }
     val panelScope = rememberCoroutineScope()
     val panelContext = LocalContext.current
     // A hold, the info key or a right click: the quick menu, which leads to the page by Details.
@@ -1259,10 +1263,23 @@ private fun <T : Any> ContinueSection(
     val sections: List<Pair<DayGroup?, List<T>>> = days ?: listOf(null to records)
     fun cardOf(record: T, day: DayGroup?): VideoCardText =
         if (day != null && dayText != null) dayText(record, day) else text(record)
+    // The card a hold menu was opened on, and where it stood: when the menu removes it (Forget,
+    // Mark unwatched, Remove from Watch later) the remote moves to the card that took its place,
+    // rather than being left on nothing.
+    var held by remember { mutableStateOf<Pair<String, Int>?>(null) }
+    val refocus = remember { FocusRequester() }
+    val heldGone = held?.let { (key, _) -> records.none { text(it).key == key } } == true
+    val standIn: T? = if (heldGone) records.getOrNull(minOf(held!!.second, records.lastIndex)) else null
+    val holdThis: (T) -> Unit = { record ->
+        held = text(record).key to records.indexOf(record)
+        onHold(record)
+    }
     // Only the first card asks for focus, and which card that is does not change with the
     // arrangement, so the two branches can share one modifier.
-    fun focusOf(record: T): Modifier =
-        if (record === records.firstOrNull()) Modifier.focusRequester(first) else Modifier
+    fun focusOf(record: T): Modifier {
+        val base = if (record === records.firstOrNull()) Modifier.focusRequester(first) else Modifier
+        return if (record === standIn) base.focusRequester(refocus) else base
+    }
 
     // The same start inset the chat list uses, so the cards line up under their heading instead of
     // butting against the rail.
@@ -1298,7 +1315,7 @@ private fun <T : Any> ContinueSection(
                         fraction = card.fraction,
                         finished = card.fraction >= 1f,
                         onClick = { onResume(record) },
-                        onHold = { onHold(record) },
+                        onHold = { holdThis(record) },
                         modifier = focusOf(record),
                     )
                 }
@@ -1319,7 +1336,7 @@ private fun <T : Any> ContinueSection(
                     ContinueTile(
                         text = cardOf(record, day),
                         onResume = { onResume(record) },
-                        onHold = { onHold(record) },
+                        onHold = { holdThis(record) },
                         modifier = focusOf(record),
                     )
                 }
@@ -1337,6 +1354,14 @@ private fun <T : Any> ContinueSection(
     // list from scratch, and the card that was holding focus leaves the composition with it.
     LaunchedEffect(records.firstOrNull()?.let { text(it).key }, layout, autoFocus) {
         if (autoFocus && mayTakeFocus()) runCatching { first.requestFocus() }
+    }
+    LaunchedEffect(standIn?.let { text(it).key }, heldGone) {
+        if (!heldGone) return@LaunchedEffect
+        if (autoFocus && standIn != null) {
+            androidx.compose.runtime.withFrameNanos { }
+            runCatching { refocus.requestFocus() }
+        }
+        held = null
     }
 }
 

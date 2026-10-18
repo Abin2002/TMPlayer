@@ -422,3 +422,19 @@ interface DownloadRunner {
         val REFUSED_ANYWHERE: String get() = L.downloadsRefusedAnywhere
     }
 }
+
+/**
+ * Whether [failure], a failed row's sentence, says the drive was full: the downloads' own refusals
+ * and TDLib's "no space left", in the language they were written in. A row that failed for room
+ * offers Free up space before Try again, which would only find the same full drive.
+ */
+fun isNoSpaceFailure(failure: String?): Boolean {
+    if (failure.isNullOrBlank()) return false
+    val mark = "\u0000"
+    val stems = listOf(
+        com.tmplayer.i18n.L.downloadsNoSpace(mark),
+        com.tmplayer.i18n.L.downloadsNoSpaceFolder(mark),
+        com.tmplayer.i18n.L.downloadsNotEnoughSpace(mark),
+    ).map { it.substringBefore(mark) }.filter { it.isNotBlank() }
+    return failure == com.tmplayer.i18n.L.errorsNoSpace || stems.any { failure.startsWith(it) }
+}

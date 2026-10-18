@@ -169,7 +169,7 @@ internal fun SignInDialog(onClose: () -> Unit) {
                     }
                     busy = false
                 }
-            }) { Text(s.onlineSignInButton) }
+            }) { Text(if (busy) s.onlineSigningIn else s.onlineSignInButton) }
         },
         dismissButton = { TextButton(onClick = onClose) { Text(s.commonCancel) } },
     )

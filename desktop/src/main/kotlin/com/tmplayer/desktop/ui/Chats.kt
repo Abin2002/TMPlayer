@@ -210,8 +210,21 @@ fun ChatsPage(
                     },
                     // No chat by that name in the list: the same words across every chat, which
                     // also asks Telegram for a chat with that @username.
-                    actionLabel = if (query.isNotBlank()) s.searchAllChats else null,
-                    onAction = { state.searchEverywhere(query) },
+                    actionLabel = when {
+                        query.isNotBlank() -> s.searchAllChats
+                        // An empty filter or folder of the chats: back to all of them.
+                        section.isChats && filter != ChatFilter.All -> s.browseGoToChats
+                        favouritesOnly -> s.browseGoToChats
+                        else -> null
+                    },
+                    onAction = {
+                        if (query.isNotBlank()) {
+                            state.searchEverywhere(query)
+                        } else {
+                            state.chatFilter = ChatFilter.All
+                            state.showChats(BrowseSection.of(BrowseTab.Chats))
+                        }
+                    },
                 )
             } else {
                 LaunchedEffect(Unit) {

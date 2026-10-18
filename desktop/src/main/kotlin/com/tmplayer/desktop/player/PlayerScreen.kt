@@ -1610,6 +1610,28 @@ fun PlayerScreen(
                 },
             )
 
+            // A stall while playing that runs on says why, with the opening's three ways on.
+            PlaybackStall(
+                buffering = phase == Phase.Playing && status.buffering && !status.seekPending,
+                bufferedMs = status.bufferedMs,
+                downloaded = downloaded,
+                onRetry = {
+                    // The connections reopened and the stream asked for again from where it stands.
+                    scope.launch { runCatching { com.tmplayer.data.Td.retryConnecting() } }
+                    engine.seekTo(status.positionMs)
+                    refocus()
+                },
+                onDownloadFirst = if (savable && !current.isDownload) {
+                    {
+                        current.download()
+                        onBack()
+                    }
+                } else {
+                    null
+                },
+                onBack = onBack,
+            )
+
             StatusSheet(
                 phase = phase,
                 title = title,
