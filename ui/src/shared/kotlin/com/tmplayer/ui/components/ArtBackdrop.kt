@@ -71,11 +71,10 @@ fun ArtBackdrop(
     val art = rememberBackdropArt(source, drawn)
 
     Box(modifier.onSizeChanged { drawn = it.width }) {
-        // No fade for the first step: a cross-fade starts on whatever it is first given, so it
-        // only runs between two steps of the chain.
-        val shown = art ?: return@Box
-        Crossfade(targetState = shown, animationSpec = Motion.standard()) { step ->
+        // From nothing too, so the first picture fades in rather than popping.
+        Crossfade(targetState = art, animationSpec = Motion.standard(), label = "artBackdrop") { step ->
             when {
+                step == null -> Unit
                 step.picture != null && step.field == null -> Image(
                     bitmap = step.picture,
                     contentDescription = null,

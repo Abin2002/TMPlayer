@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 /**
  * Whether Home has drawn its first whole screen since the app started: its rows, and the
  * carousel's first picture when it has a carousel. Until then the brand loader stays over the
- * window (see MainActivity), so a cold start goes from the loader straight to a finished Home
+ * window (MainActivity on Android, Shell on the desktop), so a cold start goes from the loader straight to a finished Home
  * rather than a skeleton filling in piece by piece and the rows jumping down when the carousel
  * lands (user, 2026-10-19). [HOLD_MAX_MS] bounds the wait, so a slow chat never keeps the loader
  * up; whatever is still on its way then arrives under its own placeholders.

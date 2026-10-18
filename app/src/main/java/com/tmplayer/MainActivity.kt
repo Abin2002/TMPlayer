@@ -1151,7 +1151,7 @@ private fun Root() {
             kotlinx.coroutines.delay(com.tmplayer.ui.browse.HomeFirstPaint.HOLD_MAX_MS)
             homeHoldOver = true
         }
-        val holdForHome = reached && !setupPending && !homeHoldOver && !com.tmplayer.ui.browse.HomeFirstPaint.ready
+        val holdForHome = reached && !setupPending && !(appLock?.onOpen == true && !appUnlocked) && !homeHoldOver && !com.tmplayer.ui.browse.HomeFirstPaint.ready
         com.tmplayer.ui.components.BrandLoaderHandOff(
             label = com.tmplayer.ui.auth.loaderLabel(auth, LocalStrings.current)
                 ?: if (holdForHome) LocalStrings.current.loginGettingReady else null,

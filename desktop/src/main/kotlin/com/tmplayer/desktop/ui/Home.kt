@@ -210,6 +210,7 @@ internal fun HomeRowsView(
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             if (rows.isEmpty()) {
+                LaunchedEffect(Unit) { com.tmplayer.ui.browse.HomeFirstPaint.markReady() }
                 Box(Modifier.fillMaxWidth().height(TOP_DRAG).windowDrag())
                 // Nothing played and nothing starred: a first run, so say how to get a first video in:
                 // forward it to Saved Messages, which the button opens.
@@ -238,6 +239,11 @@ internal fun HomeRowsView(
                     // With nothing to feature, a strip the window can be dragged by stands in for it.
                     item(key = "featured", contentType = "featured") {
                         if ((recentRow == null && continueRow == null) || featured?.isEmpty() == true) {
+                            // No carousel: the rows are the first screen, once one has had a moment to turn up.
+                            LaunchedEffect(Unit) {
+                                kotlinx.coroutines.delay(1_500L)
+                                com.tmplayer.ui.browse.HomeFirstPaint.markReady()
+                            }
                             Box(Modifier.fillMaxWidth().height(TOP_DRAG).windowDrag())
                         } else {
                             FeaturedCarousel(
