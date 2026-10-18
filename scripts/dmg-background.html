@@ -1,0 +1,47 @@
+<!doctype html>
+<!--
+  Source of desktop/packaging/macos/dmg-background.png and its @2x twin: the picture behind the
+  window the macOS DMG opens to, 660 by 400 points. Finder draws the TMPlayer icon on the left
+  circle and the Applications folder on the right one (the positions are in
+  desktop/packaging/macos/dmg-settings.py, and must move with the circles here); this draws the
+  words and the arrow between them. Render it with scripts/render-dmg-background.sh, which serves
+  the repository so Chromium loads the site's Poppins.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Poppins"; font-weight: 500; src: url("../site/public/fonts/poppins-500.woff2") format("woff2"); }
+  @font-face { font-family: "Poppins"; font-weight: 600; src: url("../site/public/fonts/poppins-600.woff2") format("woff2"); }
+  :root { --ink: #10213b; --muted: #55627a; --primary: #1b64da; --ground: #f6f8fc; --wash: #d9e6ff; }
+  html, body { margin: 0; width: 660px; height: 400px; overflow: hidden; }
+  body {
+    position: relative;
+    background:
+      radial-gradient(560px 300px at 50% 118%, var(--wash) 0%, rgba(217, 230, 255, 0) 70%),
+      var(--ground);
+    font-family: "Poppins", sans-serif;
+    color: var(--ink);
+  }
+  h1 {
+    position: absolute; left: 0; right: 0; top: 46px; margin: 0;
+    text-align: center; font-weight: 600; font-size: 25px; line-height: 1.28; letter-spacing: -0.01em;
+  }
+  h1 em { font-style: normal; color: var(--primary); }
+  /* Finder puts the icons with their centres at x 170 and 490, y 220; the arrow runs between. */
+  .arrow { position: absolute; left: 270px; top: 196px; width: 120px; height: 48px; }
+  .hint {
+    position: absolute; left: 0; right: 0; bottom: 40px; margin: 0;
+    text-align: center; font-weight: 500; font-size: 12px; color: var(--muted);
+  }
+</style>
+</head>
+<body>
+  <h1>Drag <em>TMPlayer</em> into your<br>Applications folder</h1>
+  <svg class="arrow" viewBox="0 0 120 48" fill="none" aria-hidden="true">
+    <path d="M10 24 H100" stroke="#1b64da" stroke-width="5" stroke-linecap="round" stroke-dasharray="0.1 13"/>
+    <path d="M90 11 L106 24 L90 37" stroke="#1b64da" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <p class="hint">Blocked on first launch? System Settings, Privacy and Security, Open Anyway.</p>
+</body>
+</html>

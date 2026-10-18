@@ -53,11 +53,18 @@ runs:
         V="${{ inputs.version }}"
         stage="$RUNNER_TEMP/dmg"
         rm -rf "$stage" && mkdir -p "$stage" dist
-        # ditto keeps the signature's extended attributes; the Applications link is the usual
-        # drag target beside the app.
+        # ditto keeps the signature's extended attributes. The window the DMG opens to is laid out
+        # like every Mac app's installer (desktop/packaging/macos/dmg-settings.py): the app on the
+        # left, Applications on the right, and a background saying to drag one onto the other.
+        # dmgbuild writes Finder's layout file itself, so no Finder or AppleScript is needed here.
         ditto desktop/build/compose/binaries/main-release/app/TMPlayer.app "$stage/TMPlayer.app"
-        ln -s /Applications "$stage/Applications"
-        hdiutil create -volname "TMPlayer $V" -srcfolder "$stage" -fs APFS -format ULMO -ov "dist/TMPlayer-$V-macos-arm64.dmg"
+        tiffutil -cathidpicheck desktop/packaging/macos/dmg-background.png \
+          desktop/packaging/macos/dmg-background@2x.png -out "$RUNNER_TEMP/dmg-background.tiff"
+        python3 -m pip install --quiet --break-system-packages dmgbuild==1.6.7
+        python3 -m dmgbuild -s desktop/packaging/macos/dmg-settings.py \
+          -D app="$stage/TMPlayer.app" -D background="$RUNNER_TEMP/dmg-background.tiff" \
+          -D icon=desktop/packaging/icons/tmplayer.icns \
+          "TMPlayer $V" "dist/TMPlayer-$V-macos-arm64.dmg"
 
     - name: Self-test the app from the DMG, without Homebrew
       shell: bash
