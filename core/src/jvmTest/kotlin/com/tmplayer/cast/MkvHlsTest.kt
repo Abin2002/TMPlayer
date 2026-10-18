@@ -188,7 +188,9 @@ class MkvHlsTest {
     fun `subtitle tracks inside the file become webvtt segments at their own times`() {
         val h = hls()
         val first = h.textSegment("s3", 0)
-        assertTrue(first.startsWith("WEBVTT\nX-TIMESTAMP-MAP=MPEGTS=0,LOCAL=00:00:00.000\n"))
+        // RFC 8216's form, with colons: Shaka fails the whole video on a map it cannot read.
+        assertTrue(first, first.startsWith("WEBVTT\nX-TIMESTAMP-MAP=MPEGTS:0,LOCAL:00:00:00.000\n\n"))
+        assertTrue(Regex("""MPEGTS:(\d+)""").containsMatchIn(first) && Regex("""LOCAL:((?:(\d+):)?(\d{2}):(\d{2})\.(\d{3}))""").containsMatchIn(first))
         assertTrue(first, "00:00:01.000 --> 00:00:03.000\nHello <i>there</i>" in first)
         assertFalse("Second" in first)
         val second = h.textSegment("s3", 1)
@@ -267,5 +269,49 @@ class MkvHlsTest {
         val main10 = byteArrayOf(1, 0x22, 0x20, 0, 0, 0, 0x90.toByte(), 0, 0, 0, 0, 0, 153.toByte())
         assertEquals("hev1.2.4.H153.90", Mp4Entries.hevcCodecs(main10))
         assertEquals("av01.0.08M.10", Mp4Entries.av1Codecs(byteArrayOf(0x81.toByte(), 0x08, 0x4C), 0))
+    }
+
+    // ---- a soundtrack sent twice -----------------------------------------------------------
+
+    /** A converter that only says what it would make: enough for the playlists and the init segments. */
+    private class FakeConverter : AudioConverter {
+        override fun start(track: AudioTrack) = AacOutput(48_000, 2, byteArrayOf(0x11, 0x90.toByte()))
+        override fun convert(frame: ByteArray, ptsUs: Long) = emptyList<ConvertedAudio>()
+        override fun finish() = emptyList<ConvertedAudio>()
+        override fun close() = Unit
+    }
+
+    @Test
+    fun `a track sent as it is and as aac is two renditions, each the default of its own codec's group`() {
+        val source = BytesCastSource(TinyMkv.file(clusters = 6, subtitles = subtitles))
+        val probe = MediaProbe.of(source, "video.mkv")
+        val h = MkvHls.prepare(
+            source, probe, listOf(HlsAudio(2, false), HlsAudio(2, true), HlsAudio(4, false)), 2,
+            converterFactory = { FakeConverter() }, targetNs = 3_500_000_000L,
+        )
+        val audio = h.renditions.filter { it.kind == HlsRendition.Kind.Audio }
+        assertEquals(listOf("a2.m3u8", "a2c.m3u8", "a4.m3u8"), audio.map { it.uri })
+        assertEquals(listOf(false, true, false), audio.map { it.converted })
+        assertEquals(listOf(true, true, false), audio.map { it.isDefault })
+        // Names stay unique, so the receiver's list can be matched back by them.
+        assertEquals(audio.size, audio.map { it.name }.toSet().size)
+        assertTrue(audio[1].name, audio[1].name.endsWith("(AAC)"))
+        assertNotNull(h.resolve("a2c.m3u8"))
+        assertTrue("#EXT-X-MAP:URI=\"a2c-init.mp4\"" in h.audioPlaylist("2c"))
+        assertNotNull(h.resolve("a2c-init.mp4"))
+        assertNotNull(h.resolve("a2c-0.m4s"))
+        assertNull(h.resolve("a3c.m3u8"))
+        assertNull(h.resolve("a4c.m3u8"))
+    }
+
+    @Test
+    fun `without subtitles the master names no subtitle group`() {
+        val source = BytesCastSource(TinyMkv.file(clusters = 6, subtitles = subtitles))
+        val probe = MediaProbe.of(source, "video.mkv")
+        val h = MkvHls.prepare(source, probe, listOf(HlsAudio(2, false)), 2, targetNs = 3_500_000_000L, subtitles = false)
+        assertTrue(h.renditions.none { it.kind == HlsRendition.Kind.Text })
+        val master = h.master()
+        assertFalse(master, "SUBTITLES" in master)
+        assertNull(h.resolve("s3.m3u8"))
     }
 }

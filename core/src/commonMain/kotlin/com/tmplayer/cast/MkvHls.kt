@@ -8,7 +8,10 @@ import java.util.PriorityQueue
 import kotlin.math.ceil
 
 /** One soundtrack of an HLS cast, and whether this device turns it into AAC first. */
-data class HlsAudio(val number: Int, val convert: Boolean)
+data class HlsAudio(val number: Int, val convert: Boolean) {
+    /** Its name in the rendition's file names: "2" as it is, "2c" turned into AAC. */
+    val key: String get() = if (convert) "${number}c" else number.toString()
+}
 
 /** A subtitle file loaded beside the video, as cues, for an HLS subtitle rendition. */
 class HlsSubtitleFile(val id: Long, val name: String, val language: String?, val cues: List<WebVtt.Cue>)
@@ -28,6 +31,8 @@ data class HlsRendition(
     /** The subtitle file's id, or null. */
     val fileId: Long?,
     val isDefault: Boolean,
+    /** A soundtrack turned into AAC on this device, rather than sent as it is. */
+    val converted: Boolean = false,
 ) {
     enum class Kind { Audio, Text }
 }
@@ -108,7 +113,12 @@ class MkvHls internal constructor(
 ) {
 
     private val video: MkvTrack = header.tracks.first { it.type == 1 && Codecs.fromMatroska(it.codecId) in CastFormats.MP4_VIDEO }
-    private val audioTracks: List<MkvTrack> = audio.mapNotNull { a -> header.tracks.firstOrNull { it.number == a.number && it.type == 2 } }
+    private val audioTracks: List<MkvTrack> = audio.map { it.number }.distinct().mapNotNull { n -> header.tracks.firstOrNull { it.number == n && it.type == 2 } }
+
+    /** The soundtracks as sent, by [HlsAudio.key]: one the file has, as it is or as AAC. */
+    private val sent: Map<String, HlsAudio> = audio.filter { a -> audioTracks.any { it.number == a.number } }.associateBy { it.key }
+
+    private fun audioOf(r: HlsRendition): HlsAudio? = r.trackNumber?.let { n -> sent[HlsAudio(n, r.converted).key] }
     private val textTracks: List<MkvTrack> =
         if (subtitles) header.tracks.filter { it.type == 17 && Codecs.fromMatroska(it.codecId) in Codecs.TEXT_SUBTITLES } else emptyList()
 
@@ -128,10 +138,15 @@ class MkvHls internal constructor(
             return name
         }
         // A soundtrack whose sample entry cannot be made (no frame to describe, no converter) is left out.
-        val usable = audioTracks.filter { audioEntry(it.number) != null }
+        val usable = sent.values.filter { audioEntry(it) != null }
         val chosen = defaultAudio?.takeIf { d -> usable.any { it.number == d } } ?: usable.firstOrNull()?.number
-        for (t in usable) {
-            add(HlsRendition(HlsRendition.Kind.Audio, "a${t.number}.m3u8", unique(HlsRendition.Kind.Audio, HlsNames.label(t.name, t.language, "Audio ${t.number}")), HlsNames.languageTag(t.language), t.number, null, t.number == chosen))
+        for (a in usable) {
+            val t = audioTracks.first { it.number == a.number }
+            val base = HlsNames.label(t.name, t.language, "Audio ${t.number}")
+            // The AAC copy of a Dolby track sent as it is too gets a name of its own.
+            val label = if (a.convert && usable.any { it.number == a.number && !it.convert }) "$base (AAC)" else base
+            // Each copy of the chosen track is the default of its own group (one group per codec).
+            add(HlsRendition(HlsRendition.Kind.Audio, "a${a.key}.m3u8", unique(HlsRendition.Kind.Audio, label), HlsNames.languageTag(t.language), t.number, null, t.number == chosen, a.convert))
         }
         for (t in textTracks) {
             add(HlsRendition(HlsRendition.Kind.Text, "s${t.number}.m3u8", unique(HlsRendition.Kind.Text, HlsNames.label(t.name, t.language, "Subtitles ${t.number}")), HlsNames.languageTag(t.language), t.number, null, false))
@@ -150,7 +165,7 @@ class MkvHls internal constructor(
         val sb = StringBuilder("#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-INDEPENDENT-SEGMENTS\n")
         val audioByCodec = LinkedHashMap<String, MutableList<Pair<HlsRendition, AudioEntry>>>()
         for (r in renditions.filter { it.kind == HlsRendition.Kind.Audio }) {
-            val entry = audioEntry(r.trackNumber!!) ?: continue
+            val entry = audioOf(r)?.let(::audioEntry) ?: continue
             audioByCodec.getOrPut(entry.codecs) { ArrayList() } += r to entry
         }
         // The variant with the default soundtrack goes first: a player starts on the first variant.
@@ -211,7 +226,10 @@ class MkvHls internal constructor(
     }
 
     fun videoPlaylist(): String = media("v-init.mp4") { "v-$it.m4s" }
-    fun audioPlaylist(number: Int): String = media("a$number-init.mp4") { "a$number-$it.m4s" }
+    fun audioPlaylist(number: Int): String = audioPlaylist(number.toString())
+
+    /** A soundtrack's playlist by its [HlsAudio.key]: "2" as it is, "2c" as AAC. */
+    fun audioPlaylist(key: String): String = media("a$key-init.mp4") { "a$key-$it.m4s" }
     fun textPlaylist(prefix: String): String = media(null) { "$prefix-$it.vtt" }
 
     /** What the server answers for [path] under this cast's folder, or null for a 404. */
@@ -224,17 +242,17 @@ class MkvHls internal constructor(
             name.startsWith("v-") && name.endsWith(".m4s") -> segmentIndex(name.removePrefix("v-").removeSuffix(".m4s"))?.let { i ->
                 CastResource.Chunked("video/mp4") { out -> writeVideoSegment(i, out) }
             }
-            name.startsWith("a") && name.endsWith(".m3u8") -> name.removePrefix("a").removeSuffix(".m3u8").toIntOrNull()?.takeIf(::hasAudio)?.let {
-                CastResource.Text(audioPlaylist(it), PLAYLIST_MIME)
+            name.startsWith("a") && name.endsWith(".m3u8") -> sent[name.removePrefix("a").removeSuffix(".m3u8")]?.let {
+                CastResource.Text(audioPlaylist(it.key), PLAYLIST_MIME)
             }
-            name.startsWith("a") && name.endsWith("-init.mp4") -> name.removePrefix("a").removeSuffix("-init.mp4").toIntOrNull()?.takeIf(::hasAudio)?.let { n ->
-                audioInit(n)?.let { CastResource.Text(it, "audio/mp4") }
+            name.startsWith("a") && name.endsWith("-init.mp4") -> sent[name.removePrefix("a").removeSuffix("-init.mp4")]?.let { a ->
+                audioInit(a)?.let { CastResource.Text(it, "audio/mp4") }
             }
             name.startsWith("a") && name.endsWith(".m4s") -> {
                 val parts = name.removePrefix("a").removeSuffix(".m4s").split('-')
-                val n = parts.getOrNull(0)?.toIntOrNull()?.takeIf(::hasAudio)
+                val a = parts.getOrNull(0)?.let { sent[it] }
                 val i = parts.getOrNull(1)?.let(::segmentIndex)
-                if (n == null || i == null) null else CastResource.Chunked("audio/mp4") { out -> writeAudioSegment(n, i, out) }
+                if (a == null || i == null) null else CastResource.Chunked("audio/mp4") { out -> writeAudioSegment(a, i, out) }
             }
             (name.startsWith("s") || name.startsWith("f")) && name.endsWith(".m3u8") -> {
                 val prefix = name.removeSuffix(".m3u8")
@@ -250,7 +268,6 @@ class MkvHls internal constructor(
     }
 
     private fun segmentIndex(s: String): Int? = s.toIntOrNull()?.takeIf { it in segments.indices }
-    private fun hasAudio(n: Int) = audioTracks.any { it.number == n }
     private fun hasText(prefix: String): Boolean = when (prefix.firstOrNull()) {
         's' -> prefix.drop(1).toIntOrNull()?.let { n -> textTracks.any { it.number == n } } == true
         'f' -> prefix.drop(1).toLongOrNull()?.let { id -> files.any { it.id == id } } == true
@@ -261,24 +278,29 @@ class MkvHls internal constructor(
 
     @Volatile
     private var videoInitBytes: ByteArray? = null
-    private val audioEntries = HashMap<Int, AudioEntry?>()
+    private val audioEntries = HashMap<String, AudioEntry?>()
 
     fun videoInit(): ByteArray = videoInitBytes ?: Fmp4.init(
         listOf(Fmp4Track(TRACK_ID, true, VIDEO_TIMESCALE, Mp4Entries.video(video), video.width, video.height)),
         durationMs,
     ).also { videoInitBytes = it }
 
-    fun audioInit(number: Int): ByteArray? {
-        val entry = audioEntry(number) ?: return null
+    /** The init segment of track [number] as it is sent first: as it is where it goes so, else as AAC. */
+    fun audioInit(number: Int): ByteArray? =
+        (sent[number.toString()] ?: sent["${number}c"])?.let(::audioInit)
+
+    fun audioInit(a: HlsAudio): ByteArray? {
+        val entry = audioEntry(a) ?: return null
         return Fmp4.init(listOf(Fmp4Track(TRACK_ID, false, entry.timescale, entry.entry)), durationMs)
     }
 
     /** A soundtrack's sample entry, from its first frame where the codec needs one (AC-3, E-AC-3). */
     @Synchronized
-    private fun audioEntry(number: Int): AudioEntry? {
-        if (audioEntries.containsKey(number)) return audioEntries[number]
+    private fun audioEntry(a: HlsAudio): AudioEntry? {
+        if (audioEntries.containsKey(a.key)) return audioEntries[a.key]
+        val number = a.number
         val t = audioTracks.firstOrNull { it.number == number } ?: return null
-        val convert = audio.firstOrNull { it.number == number }?.convert == true
+        val convert = a.convert
         val entry = runCatching {
             if (convert) {
                 val factory = converterFactory ?: throw IOException("No audio converter")
@@ -287,8 +309,8 @@ class MkvHls internal constructor(
                 val needsFrame = Codecs.fromMatroska(t.codecId) in setOf(Codecs.AC3, Codecs.EAC3)
                 Mp4Entries.audio(t, if (needsFrame) firstFrame(t.number) else null)
             }
-        }.onFailure { Logger.w(TAG, "No sample entry for track $number", it) }.getOrNull()
-        audioEntries[number] = entry
+        }.onFailure { Logger.w(TAG, "No sample entry for track ${a.key}", it) }.getOrNull()
+        audioEntries[a.key] = entry
         return entry
     }
 
@@ -393,12 +415,18 @@ class MkvHls internal constructor(
 
     /** Segment [index] of soundtrack [number]: every frame that starts within the segment. */
     fun writeAudioSegment(number: Int, index: Int, out: OutputStream) {
+        val a = sent[number.toString()] ?: sent["${number}c"] ?: throw IOException("No track $number")
+        writeAudioSegment(a, index, out)
+    }
+
+    /** Segment [index] of soundtrack [a], as it is or as AAC. */
+    fun writeAudioSegment(a: HlsAudio, index: Int, out: OutputStream) {
+        val number = a.number
         val t = audioTracks.firstOrNull { it.number == number } ?: throw IOException("No track $number")
-        val entry = audioEntry(number) ?: throw IOException("Track $number cannot be sent")
+        val entry = audioEntry(a) ?: throw IOException("Track ${a.key} cannot be sent")
         val seg = segments[index]
         val last = index == segments.size - 1
-        val convert = audio.firstOrNull { it.number == number }?.convert == true
-        if (convert) {
+        if (a.convert) {
             writeConverted(t, entry, seg, last, out)
             return
         }

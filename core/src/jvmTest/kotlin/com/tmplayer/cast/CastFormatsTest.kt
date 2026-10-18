@@ -168,7 +168,8 @@ class CastFormatsTest {
     fun `hls offers every soundtrack the receiver takes, converting the rest where it can`() {
         val tracks = listOf(audio(1, Codecs.AAC), audio(2, Codecs.AC3), audio(3, Codecs.DTS), audio(4, Codecs.VORBIS), audio(5, Codecs.EAC3))
         assertEquals(
-            listOf(HlsAudio(1, false), HlsAudio(2, false), HlsAudio(3, true), HlsAudio(4, true), HlsAudio(5, false)),
+            // Dolby twice: as it is, and as AAC for a TV that turns it away (the Mi TV Stick did).
+            listOf(HlsAudio(1, false), HlsAudio(2, false), HlsAudio(2, true), HlsAudio(3, true), HlsAudio(4, true), HlsAudio(5, false), HlsAudio(5, true)),
             CastFormats.hlsAudio(tracks, ReceiverCaps.GOOGLE_TV, canConvert = true),
         )
         assertEquals(listOf(HlsAudio(1, false), HlsAudio(2, false), HlsAudio(5, false)), CastFormats.hlsAudio(tracks, ReceiverCaps.GOOGLE_TV, canConvert = false))

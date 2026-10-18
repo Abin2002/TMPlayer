@@ -149,6 +149,59 @@ class CastStateMapper {
     }
 }
 
+/**
+ * Where the video has got to on the TV, as the sender keeps it: for the clock on screen, the place
+ * saved for Continue watching, Try again, a fallback to the next route, and the hand back to the
+ * phone when the cast stops.
+ *
+ * The receiver's own position is taken only while it says it is playing, paused or buffering. Its
+ * word in any other state is no word on the place: a failed or stopped player reports zero, and a
+ * player just handed a LOAD reports zero (or wherever it was) until it has got to the start it was
+ * given. So after [expect] (a LOAD or a seek) the place stays at the start asked for until the TV
+ * is seen near it, or has played on for [GIVE_UP_MS] from somewhere else (a receiver that could not
+ * start there). The device test lost an hour this way: the TV failed at 1:23:30, said 0, and the
+ * fallback stream started from the beginning.
+ */
+class CastPlace(startMs: Long = 0) {
+    var ms: Long = startMs.coerceAtLeast(0)
+        private set
+    private var pending: Long? = null
+    private var pendingAtMs = 0L
+
+    /** True until the TV has been seen at the start last asked for. */
+    val settling: Boolean get() = pending != null
+
+    /** A LOAD or a seek to [atMs] went to the TV at [nowMs]. */
+    fun expect(atMs: Long, nowMs: Long) {
+        ms = atMs.coerceAtLeast(0)
+        pending = ms
+        pendingAtMs = nowMs
+    }
+
+    /** The receiver's [view] at [nowMs]; the place after it. */
+    fun heard(view: CastView, nowMs: Long): Long {
+        if (view.phase !in TRUSTED) return ms
+        val target = pending
+        if (target == null) {
+            ms = view.positionMs
+        } else if (kotlin.math.abs(view.positionMs - target) <= ARRIVED_MS || (view.phase == CastPhase.Playing && nowMs - pendingAtMs > GIVE_UP_MS)) {
+            pending = null
+            ms = view.positionMs
+        }
+        return ms
+    }
+
+    companion object {
+        /** Near enough the start asked for: a receiver lands on the segment before it, about 6 s. */
+        const val ARRIVED_MS = 15_000L
+
+        /** How long a TV may play from somewhere else before that is taken as where it is. */
+        const val GIVE_UP_MS = 15_000L
+
+        private val TRUSTED = setOf(CastPhase.Playing, CastPhase.Paused, CastPhase.Buffering)
+    }
+}
+
 /** One track in the receiver's list, as its media status gives it (the receiver numbers HLS renditions itself). */
 data class RemoteTrack(val id: Long, val type: Type, val name: String?, val language: String?, val contentId: String?) {
     enum class Type { Audio, Text, Video }
@@ -200,6 +253,62 @@ object HlsTrackMatch {
             audioId?.let(::add)
             text?.let { map[it] }?.let(::add)
         }.distinct()
+    }
+
+    /**
+     * The soundtracks the TV can play, for the phone's picker: once the receiver has its track list,
+     * only the renditions it kept (Shaka drops a variant whose codec the TV refuses, as the Mi TV
+     * Stick did E-AC-3), one per track of the file, the one [active] on the TV marked. A track sent
+     * twice (Dolby as it is, and as AAC) is offered once, by the copy that is on, else the one as it
+     * is. Before the receiver has said anything, every rendition, with [wanted] marked.
+     */
+    fun audioOffers(renditions: List<HlsRendition>, remote: List<RemoteTrack>, active: List<Long>, wanted: HlsRendition?): List<Offer> {
+        val playable = playableAudio(renditions, remote)
+        val on = playing(renditions, remote, active) ?: wanted?.takeIf { it in playable }
+        return playable.groupBy { it.trackNumber }.values.map { copies ->
+            val r = copies.firstOrNull { it == on } ?: copies.firstOrNull { !it.converted } ?: copies.first()
+            Offer(r, r == on)
+        }
+    }
+
+    /** One line of the soundtrack picker: the rendition it asks for, and whether the TV plays it now. */
+    data class Offer(val rendition: HlsRendition, val selected: Boolean)
+
+    /** The soundtrack renditions the receiver kept; all of them while its list is not in. */
+    fun playableAudio(renditions: List<HlsRendition>, remote: List<RemoteTrack>): List<HlsRendition> {
+        val audio = renditions.filter { it.kind == HlsRendition.Kind.Audio }
+        if (remote.none { it.type == RemoteTrack.Type.Audio }) return audio
+        val map = match(renditions, remote)
+        // Nothing found at all is a receiver naming its tracks some other way, not one playing none.
+        return audio.filter { map[it] != null }.ifEmpty { audio }
+    }
+
+    /** The soundtrack rendition the TV has on, by [active]; null when that is not known. */
+    fun playing(renditions: List<HlsRendition>, remote: List<RemoteTrack>, active: List<Long>): HlsRendition? {
+        val map = match(renditions, remote)
+        return renditions.firstOrNull { it.kind == HlsRendition.Kind.Audio && map[it]?.let { id -> id in active } == true }
+    }
+
+    /**
+     * The rendition to ask for when the viewer wants track [number]: the copy as it is where the TV
+     * kept it, else the AAC copy, else (the receiver's list not in yet, or neither kept) any copy.
+     */
+    fun renditionFor(number: Int, renditions: List<HlsRendition>, remote: List<RemoteTrack>): HlsRendition? {
+        val copies = renditions.filter { it.kind == HlsRendition.Kind.Audio && it.trackNumber == number }
+        val kept = playableAudio(renditions, remote).filter { it.trackNumber == number }
+        return kept.firstOrNull { !it.converted } ?: kept.firstOrNull() ?: copies.firstOrNull { !it.converted } ?: copies.firstOrNull()
+    }
+
+    /**
+     * What the sender should want once the receiver's list is in: [wanted] if the TV kept it, else
+     * another copy of the same track it kept, else whatever the TV has on (so the picker shows the
+     * track actually playing), else [wanted] as it was.
+     */
+    fun settle(wanted: HlsRendition?, renditions: List<HlsRendition>, remote: List<RemoteTrack>, active: List<Long>): HlsRendition? {
+        val playable = playableAudio(renditions, remote)
+        if (wanted != null && wanted in playable) return wanted
+        wanted?.trackNumber?.let { n -> renditionFor(n, renditions, remote)?.takeIf { it in playable } }?.let { return it }
+        return playing(renditions, remote, active) ?: playable.firstOrNull { it.isDefault } ?: playable.firstOrNull() ?: wanted
     }
 
     private fun sameLanguage(a: String?, b: String?): Boolean {

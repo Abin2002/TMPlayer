@@ -105,7 +105,9 @@ class CastPlaybackEngine(
     private var speed = 1f
     private var loadedAt = 0L
     private var loading = false
-    private var targetMs = 0L
+    /** Where the TV is, taken only from a playing, paused or buffering TV, so a reload or fallback keeps it. */
+    private var place = com.tmplayer.cast.CastPlace()
+    private val targetMs: Long get() = place.ms
     private var watcher: Job? = null
 
     private fun nowMs() = System.nanoTime() / 1_000_000
@@ -119,7 +121,7 @@ class CastPlaybackEngine(
             subs.clear()
             activeSub = null
             hlsText = null
-            targetMs = startAtMs
+            place = com.tmplayer.cast.CastPlace(startAtMs)
             try {
                 val src = StreamBytesCastSource.of(data) ?: throw IOException(L.castCannotCastContainer)
                 source = src
@@ -181,7 +183,7 @@ class CastPlaybackEngine(
         val src = source ?: return false
         val p = probe ?: return false
         loading = true
-        targetMs = atMs
+        place.expect(atMs, nowMs())
         publishState()
         try {
             val chosen = when (r) {
@@ -302,8 +304,12 @@ class CastPlaybackEngine(
         }
         if (pub.hls && !tracksSent && m.tracks.isNotEmpty()) {
             tracksSent = true
+            // A soundtrack the TV left out of its list: what it has on instead, so the menu shows that.
+            hlsAudio = HlsTrackMatch.settle(hlsAudio, pub.renditions, m.tracks, m.activeTrackIds.map { it.toLong() })
+            hlsAudio?.trackNumber?.let { audio = it }
             sendTracks(force = false)
         }
+        if (pub.hls) publishTracks()
     }
 
     private fun sendTracks(force: Boolean) {
@@ -329,7 +335,8 @@ class CastPlaybackEngine(
         } else {
             mapper.map(media, loading, nowMs(), targetMs, duration)
         }
-        if (!loading && pub != null) targetMs = view.positionMs
+        // A failed or reloading receiver says 0, which must not become the place ([CastPlace]).
+        if (!loading && mine) place.heard(view, nowMs())
         _phase.value = view.phase
         val error = when (view.phase) {
             CastPhase.Failed -> _state.value.error ?: L.castLoadFailed
@@ -339,9 +346,9 @@ class CastPlaybackEngine(
         }
         _state.value = _state.value.copy(
             opened = pub != null,
-            positionMs = view.positionMs,
+            positionMs = place.ms,
             durationMs = duration,
-            bufferedMs = view.positionMs,
+            bufferedMs = place.ms,
             playing = view.showsPause,
             buffering = view.busy,
             seekPending = loading,
@@ -357,9 +364,11 @@ class CastPlaybackEngine(
         val p = probe ?: return
         val pub = published
         if (pub?.hls == true) {
-            val audioTracks = pub.renditions.filter { it.kind == HlsRendition.Kind.Audio }.mapNotNull { r ->
-                val a = p.audio.firstOrNull { it.number == r.trackNumber } ?: return@mapNotNull null
-                MediaTrack(a.number, TrackType.Audio, a.name, a.language, a.codec, a.channels.takeIf { it > 0 }, r.uri == hlsAudio?.uri, a.isDefault, false)
+            // Only the soundtracks the TV kept, the one it has on marked.
+            val m = client.media.value
+            val audioTracks = HlsTrackMatch.audioOffers(pub.renditions, m.tracks, m.activeTrackIds.map { it.toLong() }, hlsAudio).mapNotNull { o ->
+                val a = p.audio.firstOrNull { it.number == o.rendition.trackNumber } ?: return@mapNotNull null
+                MediaTrack(a.number, TrackType.Audio, a.name, a.language, a.codec, a.channels.takeIf { it > 0 }, o.selected, a.isDefault, false)
             }
             val texts = pub.renditions.filter { it.kind == HlsRendition.Kind.Text }.mapIndexed { i, r ->
                 MediaTrack(TEXT_BASE + i, TrackType.Subtitle, r.name, r.language, "webvtt", null, r.uri == hlsText?.uri, false, r.fileId != null)
@@ -423,7 +432,7 @@ class CastPlaybackEngine(
     override fun seekTo(positionMs: Long) {
         val pub = published ?: return
         val target = positionMs.coerceAtLeast(0).let { t -> _state.value.durationMs.takeIf { it > 0 }?.let { t.coerceAtMost(it - 500) } ?: t }
-        targetMs = target
+        place.expect(target, nowMs())
         _state.value = _state.value.copy(positionMs = target, seekPending = true)
         if (pub.seekable) {
             client.seek(target)
@@ -457,8 +466,9 @@ class CastPlaybackEngine(
             TrackType.Audio -> {
                 if (id == null) return
                 if (pub?.hls == true) {
-                    val r = pub.renditions.firstOrNull { it.kind == HlsRendition.Kind.Audio && it.trackNumber == id } ?: return
-                    if (r.uri == hlsAudio?.uri) return
+                    val m = client.media.value
+                    val r = HlsTrackMatch.renditionFor(id, pub.renditions, m.tracks) ?: return
+                    if (r == HlsTrackMatch.playing(pub.renditions, m.tracks, m.activeTrackIds.map { it.toLong() })) return
                     audio = id
                     hlsAudio = r
                     publishTracks()

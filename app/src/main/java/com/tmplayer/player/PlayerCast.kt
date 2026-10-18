@@ -26,6 +26,7 @@ import com.tmplayer.cast.CastServer
 import com.tmplayer.cast.CastSessionState
 import com.tmplayer.cast.CastSource
 import com.tmplayer.cast.CAST_SUBTITLES
+import com.tmplayer.cast.CastPlace
 import com.tmplayer.cast.CastStateMapper
 import com.tmplayer.cast.CastStreams
 import com.tmplayer.cast.CastSubtitle
@@ -171,6 +172,15 @@ class PlayerCast(
     private var hlsText: HlsRendition? = null
     private var tracksSent = false
 
+    /** This phone turns sound into AAC (NextLib's FFmpeg decoders are there). */
+    private var canConvert = false
+
+    /**
+     * Codecs this TV was seen to turn away: an HLS soundtrack sent as it is that the receiver left
+     * out of its track list (E-AC-3 on the Mi TV Stick). A fallback to the rewrap converts them.
+     */
+    private val refusedCodecs = HashSet<String>()
+
     private val mapper = CastStateMapper()
     private var view = CastView(CastPhase.Starting, 0, true)
     private var device = ""
@@ -182,7 +192,9 @@ class PlayerCast(
     private var loading = false
     private var loadedAt = 0L
     private var endedReported = false
-    private var lastKnownMs = 0L
+    /** Where the TV is in the video, taken only from a playing, paused or buffering TV ([CastPlace]). */
+    private var place = CastPlace()
+    private val lastKnownMs: Long get() = place.ms
     private var seekTarget: Long? = null
     private var seekAt = 0L
     private var starting: Job? = null
@@ -206,8 +218,12 @@ class PlayerCast(
 
     val connected: Boolean get() = support.session.value is CastSessionState.Connected
 
-    /** Where the TV is in the video, for the resume writes; null while not casting. */
-    val positionMs: Long? get() = if (casting && published != null) lastKnownMs else null
+    /**
+     * Where the TV is in the video, for the resume writes; null while not casting. Kept through a
+     * reload or a fallback too (published is null then), so a write in between saves the TV's place
+     * and not the stopped phone player's, which is still where the cast began.
+     */
+    val positionMs: Long? get() = if (casting) lastKnownMs else null
     val durationMs: Long get() = probe?.durationMs ?: 0L
     val playing: Boolean get() = casting && view.phase == CastPhase.Playing
 
@@ -250,7 +266,7 @@ class PlayerCast(
         note = null
         rate = 1f
         published = null
-        lastKnownMs = startMs ?: 0L
+        place = CastPlace(startMs ?: 0L)
         device = connectedState.name
         view = CastView(CastPhase.Starting, lastKnownMs, true)
         refresh()
@@ -263,7 +279,7 @@ class PlayerCast(
                 val (src, file) = hooks.source() ?: throw IOException(L.castCannotCastContainer)
                 source = src
                 name = file
-                val canConvert = AndroidAudioConverter.available()
+                canConvert = AndroidAudioConverter.available()
                 val p = withContext(Dispatchers.IO) { MediaProbe.of(src, file) }
                 probe = p
                 val preferred = hooks.audioLanguage()?.let { lang -> p.audio.firstOrNull { sameLanguage(it.language, lang) }?.number }
@@ -324,12 +340,19 @@ class PlayerCast(
         val src = source ?: return false
         val p = probe ?: return false
         loading = true
-        lastKnownMs = atMs
+        // Every load starts where it was asked to, and the place stays there until the TV is.
+        place.expect(atMs, SystemClock.elapsedRealtime())
         refresh()
         try {
             val chosen = when (r) {
                 is CastRoute.Hls -> r.copy(audioTrack = audio?.takeIf { a -> r.audio.any { it.number == a } } ?: r.audioTrack)
-                is CastRoute.Remux -> r.copy(audioTrack = r.audioTrack?.let { audio ?: it }?.takeIf { a -> p.audio.firstOrNull { it.number == a }?.codec in CastFormats.MP4_AUDIO })
+                is CastRoute.Remux -> {
+                    val number = r.audioTrack?.let { audio ?: it }
+                    val codec = p.audio.firstOrNull { it.number == number }?.codec
+                    // A soundtrack this TV turned away in the playlist goes as AAC in the rewrap too.
+                    if (number != null && codec in refusedCodecs && canConvert) CastRoute.ConvertAudio(number)
+                    else r.copy(audioTrack = number?.takeIf { codec in CastFormats.MP4_AUDIO })
+                }
                 is CastRoute.ConvertAudio -> audio?.let { CastRoute.ConvertAudio(it) } ?: r
                 else -> r
             }
@@ -357,7 +380,9 @@ class PlayerCast(
             mapper.loaded(SystemClock.elapsedRealtime(), wantPlaying)
             if (pub.hls) {
                 val renditions = pub.renditions
-                hlsAudio = renditions.firstOrNull { it.kind == HlsRendition.Kind.Audio && it.trackNumber == audio }
+                // The viewer's soundtrack, as it is where it is sent so; the receiver's list, once
+                // in, says which copy the TV actually takes ([onRemote]).
+                hlsAudio = audio?.let { HlsTrackMatch.renditionFor(it, renditions, emptyList()) }
                     ?: renditions.firstOrNull { it.kind == HlsRendition.Kind.Audio && it.isDefault }
                 // A subtitle file the viewer had on, else the one picked before a reload, else none.
                 hlsText = renditions.firstOrNull { it.fileId != null && it.fileId == activeSub }
@@ -408,7 +433,7 @@ class PlayerCast(
             r is CastRoute.TranscodeVideo -> L.castConvertingPhone
             r is CastRoute.ConvertAudio -> L.castSoundConvertedPhone
             r is CastRoute.Hls && r.audio.isEmpty() && p.audio.isNotEmpty() -> L.castSilent
-            r is CastRoute.Hls && r.audio.firstOrNull { it.number == audio }?.convert == true -> L.castSoundConvertedPhone
+            r is CastRoute.Hls && hlsAudio?.converted == true -> L.castSoundConvertedPhone
             r is CastRoute.Remux && r.audioTrack == null && p.audio.isNotEmpty() -> L.castSilent
             r is CastRoute.Direct && audioCodec != null && CastFormats.audioSupport(audioCodec, ReceiverCaps.forModel(model)) == Support.No -> L.castSilent
             CAST_SUBTITLES && r !is CastRoute.Hls && p.text.any { it.isText } && subs.isEmpty() -> L.castSubtitlesInside
@@ -443,12 +468,34 @@ class PlayerCast(
         }
         if (pub.hls && !tracksSent && m.tracks.isNotEmpty()) {
             tracksSent = true
+            settleAudio(pub, m)
             sendTracks(force = false)
         }
+        // The picker follows what the TV has on, whoever changed it.
+        if (pub.hls) publishChoices()
         if (view.phase == CastPhase.Ended && !endedReported) {
             endedReported = true
             hooks.onEnded()
         }
+    }
+
+    /**
+     * The receiver's track list is in: the soundtracks it left out are ones this TV cannot play
+     * (remembered, so the rewrap converts them too), and the soundtrack wanted becomes a copy the
+     * TV kept: the same track as AAC where its Dolby was turned away, else what the TV has on, so
+     * the picker never shows a track the TV is not playing.
+     */
+    private fun settleAudio(pub: CastStreams.Published, m: RemoteStatus) {
+        val p = probe ?: return
+        val playable = HlsTrackMatch.playableAudio(pub.renditions, m.tracks)
+        pub.renditions.filter { it.kind == HlsRendition.Kind.Audio && !it.converted && it !in playable }.forEach { r ->
+            p.audio.firstOrNull { it.number == r.trackNumber }?.codec?.let(refusedCodecs::add)
+        }
+        val settled = HlsTrackMatch.settle(hlsAudio, pub.renditions, m.tracks, m.activeTrackIds)
+        if (settled != hlsAudio) Log.i(TAG, "Soundtrack ${hlsAudio?.name} not on the TV's list; ${settled?.name} instead")
+        hlsAudio = settled
+        settled?.trackNumber?.let { audio = it }
+        route?.let { note = noteFor(it) }
     }
 
     /** The HLS soundtrack and subtitles the viewer wants, as the receiver's track ids. */
@@ -472,12 +519,14 @@ class PlayerCast(
             pub == null && !loading -> CastView(CastPhase.Starting, lastKnownMs, wantPlaying)
             else -> mapper.map(media, loading, now, lastKnownMs, duration)
         }
-        var shown = view.positionMs
+        // The place moves only on the TV's word while it plays, pauses or buffers this video: a
+        // failed or reloading receiver says 0, which must not become the place.
+        if (!loading && mine) place.heard(view, now)
+        var shown = place.ms
         // A seek just asked for: its target, until the TV is there.
         seekTarget?.let { target ->
             if (now - seekAt < SEEK_HOLD_MS && kotlin.math.abs(shown - target) > 2_000) shown = target else seekTarget = null
         }
-        if (!loading && pub != null) lastKnownMs = shown
         screen.value = CastRemoteState(
             title = hooks.title(),
             subtitle = hooks.subtitleLine(),
@@ -504,9 +553,10 @@ class PlayerCast(
         val p = probe ?: return
         val pub = published
         audioChoices.value = if (pub?.hls == true) {
-            pub.renditions.filter { it.kind == HlsRendition.Kind.Audio }.mapNotNull { r ->
-                val a = p.audio.firstOrNull { it.number == r.trackNumber } ?: return@mapNotNull null
-                CastChoice(a.number.toLong(), audioLabel(a), r.uri == hlsAudio?.uri)
+            // Only what the TV kept, the one it has on marked ([HlsTrackMatch.audioOffers]).
+            HlsTrackMatch.audioOffers(pub.renditions, remote.tracks, remote.activeTrackIds, hlsAudio).mapNotNull { o ->
+                val a = p.audio.firstOrNull { it.number == o.rendition.trackNumber } ?: return@mapNotNull null
+                CastChoice(a.number.toLong(), audioLabel(a, converted = o.rendition.converted), o.selected)
             }
         } else {
             p.audio.map { a -> CastChoice(a.number.toLong(), audioLabel(a), a.number == audio) }
@@ -522,12 +572,14 @@ class PlayerCast(
         }
     }
 
-    private fun audioLabel(a: com.tmplayer.cast.AudioTrack): String {
+    /** A soundtrack's line, with the codec the TV is sent: AAC for one this phone converts. */
+    private fun audioLabel(a: com.tmplayer.cast.AudioTrack, converted: Boolean = false): String {
         val label = listOfNotNull(
             a.name?.takeIf { it.isNotBlank() },
             a.language?.let { L.messages.formatter.trackLanguage(it) ?: it },
         ).distinct().joinToString(" · ").ifBlank { L.playerTrackNumber(a.number.toString()) }
-        return "$label (${a.codec.uppercase(Locale.ROOT)})"
+        val codec = if (converted) com.tmplayer.cast.Codecs.AAC else a.codec
+        return "$label (${codec.uppercase(Locale.ROOT)})"
     }
 
     private fun textLabel(name: String?, language: String?, fallback: String): String =
@@ -561,7 +613,7 @@ class PlayerCast(
         val pub = published ?: return
         val duration = screen.value.durationMs
         val target = positionMs.coerceAtLeast(0).let { if (duration > 0) it.coerceAtMost(duration - 500) else it }
-        lastKnownMs = target
+        place.expect(target, SystemClock.elapsedRealtime())
         endedReported = false
         seekTarget = target
         seekAt = SystemClock.elapsedRealtime()
@@ -588,10 +640,12 @@ class PlayerCast(
         val pub = published
         val r = route
         if (pub?.hls == true) {
-            val rendition = pub.renditions.firstOrNull { it.kind == HlsRendition.Kind.Audio && it.trackNumber == number } ?: return
-            if (rendition.uri == hlsAudio?.uri) return
+            // The copy the TV kept: the track as it is, else as AAC.
+            val rendition = HlsTrackMatch.renditionFor(number, pub.renditions, remote.tracks) ?: return
+            if (rendition == HlsTrackMatch.playing(pub.renditions, remote.tracks, remote.activeTrackIds)) return
             audio = number
             hlsAudio = rendition
+            r?.let { note = noteFor(it) }
             publishChoices()
             val map = HlsTrackMatch.match(pub.renditions, remote.tracks)
             if (map[rendition] != null) {

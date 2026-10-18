@@ -580,7 +580,7 @@ fun PlayerScreen(
                 attempt++
             }
             (cs is com.tmplayer.desktop.cast.DesktopCast.State.Idle) && casting != null -> {
-                val at = casting.positionMs.takeIf { casting.state.value.opened }
+                val at = casting.positionMs.takeIf { casting.state.value.opened || it > 0 }
                 engine.switchTo(engine.local, tellReceiver = false)
                 if (at != null) reopenAt = at
                 attempt++
@@ -591,7 +591,7 @@ fun PlayerScreen(
     /** Play here: the video comes back to this computer where the TV left it. */
     fun playHere() {
         val casting = engine.cast ?: return
-        val at = casting.positionMs.takeIf { casting.state.value.opened }
+        val at = casting.positionMs.takeIf { casting.state.value.opened || it > 0 }
         engine.switchTo(engine.local, tellReceiver = castState is com.tmplayer.desktop.cast.DesktopCast.State.Connected)
         com.tmplayer.desktop.cast.DesktopCast.forget()
         if (at != null) reopenAt = at

@@ -219,12 +219,20 @@ object CastFormats {
      * The soundtracks an HLS cast offers, in the file's order: each one MP4 carries that the
      * receiver plays or passes through as it is, and, where this device converts, every other one
      * as AAC. One the receiver cannot take and nothing here can turn into AAC is left out.
+     *
+     * Dolby (AC-3, E-AC-3) goes twice where this device converts: as it is, and as AAC beside it.
+     * Whether the receiver passes Dolby on is up to the TV or amplifier behind it, which no sender
+     * can see: the receiver's Shaka drops a variant whose codec its MSE refuses (the Mi TV Stick of
+     * the device test dropped E-AC-3 that way and played only the AAC track), so the AAC copy is
+     * what still plays there, and where Dolby is taken the sender asks for it by its track id.
      */
-    fun hlsAudio(tracks: List<AudioTrack>, caps: ReceiverCaps, canConvert: Boolean): List<HlsAudio> = tracks.mapNotNull { t ->
+    fun hlsAudio(tracks: List<AudioTrack>, caps: ReceiverCaps, canConvert: Boolean): List<HlsAudio> = tracks.flatMap { t ->
         when {
-            t.codec in MP4_AUDIO && audioSupport(t.codec, caps) != Support.No -> HlsAudio(t.number, convert = false)
-            canConvert -> HlsAudio(t.number, convert = true)
-            else -> null
+            t.codec in MP4_AUDIO && audioSupport(t.codec, caps) != Support.No ->
+                if (t.codec in PASSTHROUGH_AUDIO && canConvert) listOf(HlsAudio(t.number, convert = false), HlsAudio(t.number, convert = true))
+                else listOf(HlsAudio(t.number, convert = false))
+            canConvert -> listOf(HlsAudio(t.number, convert = true))
+            else -> emptyList()
         }
     }
 
