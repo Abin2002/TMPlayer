@@ -928,6 +928,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         override fun takeBack(positionMs: Long) {
             val exo = player ?: return
+            // Back from the TV at the TV's place: that is where this carries on, so the opening's
+            // "Resuming from" (the place before casting) is neither offered nor applied again.
+            resumeMs = positionMs
+            startOverOffered = true
             keepScreenOn(true)
             attachMediaSession(exo)
             exo.seekTo(positionMs)
