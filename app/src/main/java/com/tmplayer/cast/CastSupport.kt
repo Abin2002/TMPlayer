@@ -28,38 +28,24 @@ sealed interface CastSessionState {
     data class Failed(val name: String) : CastSessionState
 }
 
-/** The receiver's player, as of its last status. */
+/** The receiver's player and the TV's volume, as of the last status. */
 data class RemoteStatus(
-    /** One of [IDLE], [BUFFERING], [PLAYING], [PAUSED], [LOADING]. */
-    val playerState: Int = IDLE,
-    /** Why it is [IDLE]: [IDLE_FINISHED], [IDLE_ERROR] or another reason; 0 for none. */
-    val idleReason: Int = 0,
-    val positionMs: Long = 0,
+    /** The media status, its position and when it was heard; null with nothing loaded. */
+    val media: ReceiverMedia? = null,
     val durationMs: Long = 0,
     /** The device's volume, 0 to 1. */
     val volume: Double = 1.0,
     val muted: Boolean = false,
+    /** The TV takes no volume from a sender: its own remote sets it. */
+    val volumeFixed: Boolean = false,
     /** What the receiver is playing; null when nothing. */
     val contentId: String? = null,
     val activeTrackIds: List<Long> = emptyList(),
-) {
-    val playing: Boolean get() = playerState == PLAYING
-    val ended: Boolean get() = playerState == IDLE && idleReason == IDLE_FINISHED
-    val failed: Boolean get() = playerState == IDLE && idleReason == IDLE_ERROR
-
-    companion object {
-        const val IDLE = 1
-        const val PLAYING = 2
-        const val PAUSED = 3
-        const val BUFFERING = 4
-        const val LOADING = 5
-
-        const val IDLE_FINISHED = 1
-        const val IDLE_CANCELED = 2
-        const val IDLE_INTERRUPTED = 3
-        const val IDLE_ERROR = 4
-    }
-}
+    /** The receiver's track list, which for HLS it makes itself from the playlist. */
+    val tracks: List<RemoteTrack> = emptyList(),
+    /** The receiver changes its playback rate. */
+    val supportsRate: Boolean = false,
+)
 
 /** A subtitle side track, already on the cast server as WebVTT. */
 data class CastSubtitle(val id: Long, val name: String, val language: String?, val url: String)
@@ -75,6 +61,8 @@ data class CastLoadRequest(
     val autoplay: Boolean = true,
     val subtitles: List<CastSubtitle> = emptyList(),
     val activeTrackIds: List<Long> = emptyList(),
+    /** An HLS master playlist with fMP4 segments, rather than a file. */
+    val hls: Boolean = false,
 )
 
 /**

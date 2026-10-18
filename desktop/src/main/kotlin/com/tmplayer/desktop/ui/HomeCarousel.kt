@@ -386,7 +386,7 @@ private fun FeaturedPage(
     ) {
         // The picture at the end, melting into the page at its start and foot: the words at the
         // start stand on the page, and the window's buttons on a glow of its colour.
-        EdgeBackdrop(source, Modifier.fillMaxSize(), cornerShade = TOP_SCRIM)
+        EdgeBackdrop(source, Modifier.fillMaxSize(), cornerShade = TOP_SCRIM, onPictured = com.tmplayer.ui.browse.HomeFirstPaint::markReady)
         Column(
             Modifier
                 .align(Alignment.BottomStart)
@@ -531,11 +531,16 @@ internal fun rememberFeatured(recent: HomeRow.Recent?, resume: HomeRow.Continue?
     var ranked by remember { mutableStateOf<List<FeaturedPick>?>(null) }
     LaunchedEffect(fresh, going, online) {
         if (recent != null && fresh == null) return@LaunchedEffect
-        ranked = withContext(Dispatchers.IO) {
-            val sharp = { pick: FeaturedPick -> sharpOnline(pick, online) }
+        suspend fun order(sharp: (FeaturedPick) -> Boolean) = withContext(Dispatchers.IO) {
             val mixed = HomeFeatured.mix(fresh.orEmpty(), going, online = sharp)
             if (mixed.isEmpty()) mixed else HomeFeatured.rank(mixed, sharp)
         }
+        val online = { pick: FeaturedPick -> sharpOnline(pick, online) }
+        // Asking for every pick's online picture can take seconds: after a moment the carousel
+        // shows the picks without it, and takes the ranked order once it is in.
+        val quick = kotlinx.coroutines.withTimeoutOrNull(RANK_WAIT_MS) { order(online) }
+        ranked = quick ?: order { false }
+        if (quick == null) ranked = order(online)
     }
     return ranked
 }
@@ -577,3 +582,6 @@ private val PAGE_FOOT = 12.dp
 /** Between a page's lines: the name, the facts, the segments' slot and Play. */
 private val WORDS_GAP = 8.dp
 private val SEGMENT_GAP = 4.dp
+
+/** How long the carousel waits for its ranked order before showing the picks without it. */
+private const val RANK_WAIT_MS = 1_200L

@@ -41,27 +41,28 @@ class CastFormatsTest {
     }
 
     @Test
-    fun `matroska with h264 and aac is rewrapped on an older chromecast`() {
+    fun `matroska with h264 and aac goes as hls, the rewrap behind it, on an older chromecast`() {
         val p = plan(Container.Matroska, video(Codecs.H264), listOf(audio(2, Codecs.AAC)), ReceiverCaps.LEGACY)
-        assertEquals(listOf(CastRoute.Remux(2)), p.routes)
+        assertEquals(listOf(CastRoute.Hls(2, listOf(HlsAudio(2, false))), CastRoute.Remux(2)), p.routes)
     }
 
     @Test
-    fun `matroska is rewrapped first and tried as it is after on a google tv`() {
+    fun `matroska goes as hls, then rewrapped, then tried as it is on a google tv`() {
         val p = plan(Container.Matroska, video(Codecs.H264), listOf(audio(2, Codecs.AAC)), ReceiverCaps.GOOGLE_TV)
-        assertEquals(listOf(CastRoute.Remux(2), CastRoute.Direct("video/x-matroska")), p.routes)
+        assertEquals(listOf(CastRoute.Hls(2, listOf(HlsAudio(2, false))), CastRoute.Remux(2), CastRoute.Direct("video/x-matroska")), p.routes)
     }
 
     @Test
     fun `dolby passes through in the rewrap`() {
         val p = plan(Container.Matroska, video(Codecs.HEVC), listOf(audio(2, Codecs.EAC3)), ReceiverCaps.ULTRA)
-        assertEquals(CastRoute.Remux(2), p.routes.first())
+        assertEquals(CastRoute.Hls(2, listOf(HlsAudio(2, false))), p.routes.first())
+        assertEquals(CastRoute.Remux(2), p.routes[1])
     }
 
     @Test
     fun `dts is converted to aac where the device can`() {
         val p = plan(Container.Matroska, video(Codecs.H264), listOf(audio(2, Codecs.DTS, default = true)), ReceiverCaps.LEGACY, convert = true)
-        assertEquals(listOf(CastRoute.ConvertAudio(2)), p.routes)
+        assertEquals(listOf(CastRoute.Hls(2, listOf(HlsAudio(2, true))), CastRoute.ConvertAudio(2)), p.routes)
     }
 
     @Test
@@ -73,7 +74,8 @@ class CastFormatsTest {
             ReceiverCaps.LEGACY,
         )
         assertEquals(3, p.audioTrack)
-        assertEquals(listOf(CastRoute.Remux(3)), p.routes)
+        // The DTS track is left out of the renditions: nothing here turns it into AAC.
+        assertEquals(listOf(CastRoute.Hls(3, listOf(HlsAudio(3, false))), CastRoute.Remux(3)), p.routes)
     }
 
     @Test
@@ -87,13 +89,13 @@ class CastFormatsTest {
             convert = true,
         )
         assertEquals(3, p.audioTrack)
-        assertEquals(listOf(CastRoute.ConvertAudio(3)), p.routes)
+        assertEquals(listOf(CastRoute.Hls(3, listOf(HlsAudio(2, false), HlsAudio(3, true))), CastRoute.ConvertAudio(3)), p.routes)
     }
 
     @Test
     fun `dts only with no converter sends the picture alone`() {
         val p = plan(Container.Matroska, video(Codecs.H264), listOf(audio(2, Codecs.DTS)), ReceiverCaps.LEGACY)
-        assertEquals(listOf(CastRoute.Remux(null)), p.routes)
+        assertEquals(listOf(CastRoute.Hls(null, emptyList()), CastRoute.Remux(null)), p.routes)
         assertTrue(p.silent)
     }
 
@@ -160,5 +162,31 @@ class CastFormatsTest {
         assertEquals(ReceiverCaps.GOOGLE_TV, ReceiverCaps.forModel("BRAVIA 4K VH2"))
         assertEquals(ReceiverCaps.UNKNOWN, ReceiverCaps.forModel("Chromecast"))
         assertEquals(ReceiverCaps.UNKNOWN, ReceiverCaps.forModel(null))
+    }
+
+    @Test
+    fun `hls offers every soundtrack the receiver takes, converting the rest where it can`() {
+        val tracks = listOf(audio(1, Codecs.AAC), audio(2, Codecs.AC3), audio(3, Codecs.DTS), audio(4, Codecs.VORBIS), audio(5, Codecs.EAC3))
+        assertEquals(
+            listOf(HlsAudio(1, false), HlsAudio(2, false), HlsAudio(3, true), HlsAudio(4, true), HlsAudio(5, false)),
+            CastFormats.hlsAudio(tracks, ReceiverCaps.GOOGLE_TV, canConvert = true),
+        )
+        assertEquals(listOf(HlsAudio(1, false), HlsAudio(2, false), HlsAudio(5, false)), CastFormats.hlsAudio(tracks, ReceiverCaps.GOOGLE_TV, canConvert = false))
+        // No Dolby passthrough: AC-3 becomes AAC where it can, and goes otherwise.
+        val noDolby = ReceiverCaps.GOOGLE_TV.copy(dolbyPassthrough = Support.No)
+        assertEquals(listOf(HlsAudio(1, false), HlsAudio(2, true), HlsAudio(3, true), HlsAudio(4, true), HlsAudio(5, true)), CastFormats.hlsAudio(tracks, noDolby, canConvert = true))
+        assertEquals(listOf(HlsAudio(1, false)), CastFormats.hlsAudio(tracks, noDolby, canConvert = false))
+    }
+
+    @Test
+    fun `hls starts on the viewer's soundtrack`() {
+        val p = plan(Container.Matroska, video(Codecs.HEVC), listOf(audio(2, Codecs.AC3, "en", default = true), audio(3, Codecs.AC3, "ja")), preferred = 3)
+        assertEquals(CastRoute.Hls(3, listOf(HlsAudio(2, false), HlsAudio(3, false))), p.routes.first())
+    }
+
+    @Test
+    fun `matroska with a picture mp4 cannot carry gets no hls`() {
+        val p = plan(Container.Matroska, video(Codecs.VP9), listOf(audio(2, Codecs.AAC)), ReceiverCaps.GOOGLE_TV)
+        assertTrue(p.routes.none { it is CastRoute.Hls })
     }
 }

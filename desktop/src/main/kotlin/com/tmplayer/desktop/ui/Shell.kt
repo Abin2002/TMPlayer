@@ -178,9 +178,20 @@ fun DesktopShell(
                 // The loader after launch, over the window until Telegram has something to ask
                 // or the session is open, then fading out over what is drawn under it. Its second
                 // line is the live step (ConnectingHelp), and past the long wait, help.
+                // Once signed in it waits on for Home's first whole screen (rows and the carousel's
+                // first picture), at most HOLD_MAX_MS, so Home appears finished rather than filling in.
+                var homeHoldOver by remember { mutableStateOf(false) }
+                LaunchedEffect(signedIn) {
+                    if (!signedIn) return@LaunchedEffect
+                    kotlinx.coroutines.delay(com.tmplayer.ui.browse.HomeFirstPaint.HOLD_MAX_MS)
+                    homeHoldOver = true
+                }
+                val holdForHome = signedIn && !askOnOpen && !homeHoldOver && !com.tmplayer.ui.browse.HomeFirstPaint.ready
                 BrandLoaderHandOff(
                     label = if (auth == AuthState.Connecting || auth == AuthState.ChooseMethod) {
                         LocalStrings.current.signinConnecting
+                    } else if (holdForHome) {
+                        LocalStrings.current.loginGettingReady
                     } else {
                         null
                     },

@@ -172,11 +172,32 @@ class CastServer(
             return false
         }
         val segments = request.path.trimStart('/').split('/')
-        if (segments.size != 2 || segments[0] != token) return notFound(out)
+        if (segments.size < 2 || segments[0] != token) return notFound(out)
         val name = segments[1]
-        val resource = resources[name] ?: return notFound(out)
+        val published = resources[name] ?: return notFound(out)
+        // A folder (an HLS cast) answers for the paths under it; anything else has none.
+        val resource = when {
+            published is CastResource.Tree -> if (segments.size > 2) published.resolve(segments.drop(2).joinToString("/")) else null
+            segments.size == 2 -> published
+            else -> null
+        } ?: return notFound(out)
         val head = request.method == "HEAD"
         return when (resource) {
+            is CastResource.Tree -> notFound(out)
+            is CastResource.Chunked -> {
+                writeHead(out, 200, "OK", mapOf("Content-Type" to resource.mime, "Transfer-Encoding" to "chunked"), null)
+                if (head) return true
+                val body = ChunkedOutput(out)
+                try {
+                    resource.write(body)
+                } catch (e: IOException) {
+                    // A broken read of the source: the body cannot be finished, so neither can the connection.
+                    Logger.i(TAG, "Segment ${request.path.substringAfterLast('/')} failed: ${e.message}")
+                    return false
+                }
+                body.finish()
+                true
+            }
             is CastResource.Text -> {
                 writeHead(out, 200, "OK", mapOf("Content-Type" to resource.mime), resource.bytes.size.toLong())
                 if (!head) out.write(resource.bytes)
@@ -317,6 +338,64 @@ sealed interface CastResource {
      * of a seek, for the remuxer) and writes the body until it is done or the receiver hangs up.
      */
     class Stream(val mime: String, val write: (query: Map<String, String>, out: OutputStream) -> Unit) : CastResource
+
+    /**
+     * Bytes made when they are asked for, whose length is not known before (an HLS segment): sent
+     * with chunked transfer encoding, so the connection stays open for the next request.
+     */
+    class Chunked(val mime: String, val write: (out: OutputStream) -> Unit) : CastResource
+
+    /** A folder of resources made on request, by the path under its name (an HLS cast's playlists and segments). */
+    class Tree(val resolve: (path: String) -> CastResource?) : CastResource
+}
+
+/** HTTP/1.1 chunked transfer encoding over [out]: each full buffer a chunk, [finish] the last one. */
+internal class ChunkedOutput(private val out: OutputStream) : OutputStream() {
+    private val buffer = ByteArray(CHUNK)
+    private var used = 0
+
+    override fun write(b: Int) {
+        if (used == buffer.size) drain()
+        buffer[used++] = b.toByte()
+    }
+
+    override fun write(b: ByteArray, off: Int, len: Int) {
+        var at = off
+        var left = len
+        while (left > 0) {
+            if (used == buffer.size) drain()
+            val n = minOf(left, buffer.size - used)
+            System.arraycopy(b, at, buffer, used, n)
+            used += n
+            at += n
+            left -= n
+        }
+    }
+
+    override fun flush() {
+        drain()
+        out.flush()
+    }
+
+    private fun drain() {
+        if (used == 0) return
+        out.write((Integer.toHexString(used) + "\r\n").toByteArray(Charsets.ISO_8859_1))
+        out.write(buffer, 0, used)
+        out.write(CRLF)
+        used = 0
+    }
+
+    /** The last chunk: what is buffered, then the empty one that ends the body. */
+    fun finish() {
+        drain()
+        out.write("0\r\n\r\n".toByteArray(Charsets.ISO_8859_1))
+        out.flush()
+    }
+
+    private companion object {
+        const val CHUNK = 64 * 1024
+        val CRLF = byteArrayOf('\r'.code.toByte(), '\n'.code.toByte())
+    }
 }
 
 /** A `Range: bytes=` header against a file of a known length. */
