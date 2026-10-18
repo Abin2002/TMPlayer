@@ -34,7 +34,7 @@ import kotlin.coroutines.CoroutineContext
  * @param onClose runs once, after the bytes are closed: where the caller stops the download.
  */
 class TdMediaData(
-    private val bytes: StreamBytes,
+    internal val bytes: StreamBytes,
     override val uri: String,
     private val prefetchTail: Boolean,
     private val onClose: () -> Unit = {},

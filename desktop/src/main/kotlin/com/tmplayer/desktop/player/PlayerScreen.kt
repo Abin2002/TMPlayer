@@ -227,14 +227,26 @@ fun PlayerScreen(
     lockedAtStart: Boolean = false,
 ) {
     val s = LocalStrings.current
-    val engine = remember { engineFactory() }
+    // What the TV is told the video is called, read when a cast loads it.
+    val castTitle = remember { arrayOf(com.tmplayer.desktop.cast.CastTitle("")) }
+    // mpv on this computer, or the TV while a cast is on (CP73): a video opened with a session up
+    // goes to the TV from the start.
+    val engine = remember {
+        com.tmplayer.desktop.cast.SwitchingEngine(engineFactory()).also { e ->
+            (com.tmplayer.desktop.cast.DesktopCast.state.value as? com.tmplayer.desktop.cast.DesktopCast.State.Connected)?.let { c ->
+                e.switchTo(com.tmplayer.desktop.cast.CastPlaybackEngine(c.client) { castTitle[0] })
+            }
+        }
+    }
     val desktop by prefs.state.collectAsState()
     DisposableEffect(engine) { onDispose { engine.close() } }
     LaunchedEffect(engine) { onEngine(engine) }
 
     val scope = rememberCoroutineScope()
-    val status by engine.state.collectAsState()
-    val tracks by engine.tracks.collectAsState()
+    val activeEngine by engine.activeFlow.collectAsState()
+    val status by activeEngine.state.collectAsState()
+    val tracks by activeEngine.tracks.collectAsState()
+    val castState by com.tmplayer.desktop.cast.DesktopCast.state.collectAsState()
 
     var current by remember(media) { mutableStateOf(media) }
     var ignoreSavedPosition by remember(media) { mutableStateOf(startFromBeginning) }
@@ -469,7 +481,8 @@ fun PlayerScreen(
         phase = Phase.Loading(if (start > 0) s.playerResumingFrom(SeekMath.clock(start)) else s.playerOpeningVideo)
         engine.open(data, start, prefs)
         val error = engine.state.value.error
-        if (error != null) {
+        // On a TV the casting panel says what went wrong, with Play here beside it.
+        if (error != null && engine.cast == null) {
             phase = Phase.Failed(error)
             return@LaunchedEffect
         }
@@ -482,6 +495,37 @@ fun PlayerScreen(
         if (start > 0 && !reopening) resumedFrom = start
         onPlayingItemChanged(item)
         refocus()
+    }
+
+    // Casting (CP73): a session coming up moves the video to the TV at the place it had reached,
+    // and the session ending (Stop casting, or Play here after the TV was lost) brings it back.
+    LaunchedEffect(castState) {
+        val cs = castState
+        val casting = engine.cast
+        when {
+            cs is com.tmplayer.desktop.cast.DesktopCast.State.Connected && casting?.client !== cs.client -> {
+                val at = engine.state.value.takeIf { it.opened }?.positionMs
+                engine.switchTo(com.tmplayer.desktop.cast.CastPlaybackEngine(cs.client) { castTitle[0] }, tellReceiver = false)
+                if (at != null) reopenAt = at
+                attempt++
+            }
+            (cs is com.tmplayer.desktop.cast.DesktopCast.State.Idle) && casting != null -> {
+                val at = casting.positionMs.takeIf { casting.state.value.opened }
+                engine.switchTo(engine.local, tellReceiver = false)
+                if (at != null) reopenAt = at
+                attempt++
+            }
+        }
+    }
+
+    /** Play here: the video comes back to this computer where the TV left it. */
+    fun playHere() {
+        val casting = engine.cast ?: return
+        val at = casting.positionMs.takeIf { casting.state.value.opened }
+        engine.switchTo(engine.local, tellReceiver = castState is com.tmplayer.desktop.cast.DesktopCast.State.Connected)
+        com.tmplayer.desktop.cast.DesktopCast.forget()
+        if (at != null) reopenAt = at
+        attempt++
     }
 
     /**
@@ -1341,7 +1385,12 @@ fun PlayerScreen(
                 )
                 .subtitleDropTarget(onDrop = ::loadSubtitle, onRefused = { showFlash(Flash.Kind.Text, it) }),
         ) {
-            (engine as? MpvPlaybackEngine)?.let { MpvMediampPlayerSurface(it.player, Modifier.fillMaxSize()) }
+            val casting = activeEngine as? com.tmplayer.desktop.cast.CastPlaybackEngine
+            if (casting == null) {
+                (engine.local as? MpvPlaybackEngine)?.let { MpvMediampPlayerSurface(it.player, Modifier.fillMaxSize()) }
+            } else {
+                CastingPanel(casting, status, onPlayHere = ::playHere)
+            }
 
             VideoGestures(
                 onClick = {
@@ -1373,6 +1422,7 @@ fun PlayerScreen(
                 episode?.label,
                 current.chatTitle.takeIf { it.isNotBlank() },
             ).joinToString("  ·  ")
+            castTitle[0] = com.tmplayer.desktop.cast.CastTitle(title, subtitle)
 
             CompositionLocalProvider(LocalPlayerCopies provides PlayerCopies(copies, current.item.id)) { PlayerOverlay(
                 visible = showControls,
@@ -1473,6 +1523,7 @@ fun PlayerScreen(
                 } else {
                     null
                 },
+                castButton = { CastButton() },
             ) }
 
             FeedbackLayer(

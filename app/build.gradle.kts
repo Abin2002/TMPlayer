@@ -41,6 +41,9 @@ val releaseAbis: List<String> = (findProperty("tmAbis") as String?)
 // F-Droid installs and updates the app itself, so in that build the app never asks GitHub for a
 // newer release, draws nothing about one (BuildConfig.UPDATE_CHECK, read into Updates.enabled),
 // and leaves REQUEST_INSTALL_PACKAGES out of the release manifest (src/fdroid/AndroidManifest.xml).
+// It also has no Cast button: Google's Cast framework is not a dependency there at all, the code
+// that speaks to it (src/cast) is swapped for a stand-in that offers nothing (src/nocast), and
+// the overlay takes the framework's options provider back out of the manifest.
 // Off, which is every other build, nothing changes.
 val fdroidBuild: Boolean = (findProperty("tmFdroid") as String?)?.trim()?.toBoolean() ?: false
 
@@ -216,6 +219,9 @@ android {
     if (fdroidBuild) {
         sourceSets.getByName("release").manifest.srcFile("src/fdroid/AndroidManifest.xml")
     }
+    // Casting (CP73): Google's Cast framework behind CastBuild in the regular build, a stand-in
+    // with no Google code in the F-Droid one. Every build type of one build gets the same side.
+    sourceSets.getByName("main").kotlin.directories += if (fdroidBuild) "src/nocast/java" else "src/cast/java"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -283,6 +289,15 @@ dependencies {
     implementation(libs.androidx.leanback)
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.nextlib.media3ext)
+
+    // Casting to a Chromecast or Google TV (CP73), in every build but F-Droid's: see fdroidBuild.
+    // Looked up by name rather than through the typed accessor, so a recipe that deletes the
+    // library's line from the catalog (F-Droid's scanner reads it) still has a script that compiles.
+    if (!fdroidBuild) {
+        val catalog = project.extensions.getByType<VersionCatalogsExtension>().named("libs")
+        implementation(catalog.findLibrary("play-services-cast-framework").get())
+        implementation(libs.androidx.mediarouter)
+    }
 
     // Crash reporting, off unless the viewer turns it on in Settings. Nothing here runs at
     // startup: auto-init is switched off in the manifest and CrashReports does the rest.

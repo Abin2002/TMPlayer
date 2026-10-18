@@ -1,5 +1,7 @@
 package com.tmplayer.desktop
 
+import com.tmplayer.desktop.cast.stateUpdates
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -122,7 +124,8 @@ fun PlayerHost(
         val e = engine ?: return@LaunchedEffect
         val name = playing.fileName.ifBlank { playing.title }
         val title = MediaName.parse(name).title.ifBlank { name }
-        e.state.collect { s ->
+        // Through a cast too: the OS media controls follow the TV while it plays.
+        e.stateUpdates().collect { s ->
             if (s.playing && s.opened && !s.ended) keepAwake.acquire() else keepAwake.release()
             session.update(title, s.durationMs, s.positionMs, s.playing && !s.ended)
         }

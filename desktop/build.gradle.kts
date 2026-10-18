@@ -276,6 +276,9 @@ dependencies {
     implementation(libs.jna)
     implementation(libs.jna.platform)
     implementation(libs.filekit.dialogs.compose)
+    // The Cast protocol's messages are JSON (CP73). Already on the runtime classpath through
+    // :core's jvm target; named here so the cast client compiles against it.
+    implementation(libs.json)
     runtimeOnly(libs.slf4j.nop)
 
     testImplementation(libs.junit)

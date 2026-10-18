@@ -127,6 +127,10 @@ shows through in the background. They are listed under Selected twins below.
 | `ShapeCrop` | Crop |  |  | The picture shape button on Crop: filled, the edges cut. |
 | `ShapeStretch` | MaximizeScreen |  |  | The picture shape button on Stretch: pulled out to the screen's edges. |
 | `Trailer` | Clapperboard |  | TrailerIcon | A title's trailer. |
+| `Cast` | Cast |  |  | Cast to a Chromecast or Google TV. |
+| `Tv` | Tv01 |  |  | A TV in the cast picker. |
+| `Rewind` | Backward01 |  |  | Skip back, on the cast screen. |
+| `FastForward` | Forward01 |  |  | Skip forward, on the cast screen. |
 
 ## Selected twins: `TmIcons.selectedOf`
 
@@ -166,6 +170,7 @@ shows through in the background. They are listed under Selected twins below.
 | `ic_rotate_landscape` | SmartPhoneLandscape |  | 36 dp | Rotation held in landscape. |
 | `ic_rotate_portrait` | SmartPhone01 |  | 36 dp | Rotation held in portrait. |
 | `ic_pip` | PictureInPictureOn |  | 24 dp | Picture in picture. |
+| `ic_cast` | Cast |  | 24 dp | The player's Cast button. |
 | `ic_lock` | SquareLock02 |  | 24 dp | Lock the player's screen, on its menu. |
 | `ic_lock_open` | SquareUnlock02 |  | 24 dp | Unlock the locked player. |
 | `ic_brightness` | Sun03 |  | 24 dp | The brightness swipe. |

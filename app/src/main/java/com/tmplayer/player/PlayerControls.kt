@@ -656,6 +656,7 @@ class PlayerControls(
         val names = listOf(
             R.id.control_back to L.commonBack,
             R.id.control_more to L.playerMoreOptions,
+            R.id.control_cast to L.castButton,
             R.id.center_previous to L.playerPreviousEpisode,
             R.id.center_play_pause to L.commonPause,
             R.id.center_next to L.playerNextEpisode,

@@ -132,6 +132,19 @@
                 android:visibility="gone" />
         </LinearLayout>
 
+        <!-- Cast to a TV (CP73): shown only where casting exists, by the activity. -->
+        <ImageButton
+            android:id="@+id/control_cast"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_control_button"
+            android:contentDescription="Cast to a TV"
+            android:padding="12dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_cast"
+            android:tint="@color/player_control_icon"
+            android:visibility="gone" />
+
         <ImageButton
             android:id="@+id/control_more"
             android:layout_width="48dp"

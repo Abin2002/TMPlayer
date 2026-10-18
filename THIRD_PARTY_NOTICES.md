@@ -62,6 +62,12 @@ additional permission to be combined with it; see
   DataStore: Apache License 2.0: <https://github.com/androidx/androidx>
 - Sentry Android SDK 8.61.0 (crash reports, see the privacy page): MIT:
   <https://github.com/getsentry/sentry-java>
+- AndroidX MediaRouter 1.8.1 (casting to a TV): Apache License 2.0:
+  <https://github.com/androidx/androidx>
+- Google Play services Cast framework 22.3.1 (casting to a Chromecast or Google TV), in the APKs
+  published on GitHub only: the F-Droid build is made without it and has no Cast button. Google's
+  own terms: <https://developers.google.com/terms>, with the Android Software Development Kit
+  License for the Play services libraries: <https://developer.android.com/studio/terms>
 
 ## Desktop (Windows and Linux)
 
