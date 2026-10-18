@@ -835,6 +835,7 @@ p.muted a { text-decoration: underline; text-underline-offset: 2px; }
 
 .section-body { display: block; }
 .section-note { margin: var(--space-block) 0 0; }
+.section-note .sep { padding: 0 10px; }
 
 /* ---------- Showcase and facts ---------- */
 
@@ -3205,7 +3206,7 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
   .get-bar[hidden] { display: none; }
   .get-bar.is-on { visibility: visible; transform: none; transition-delay: 0s; }
   .get-bar p { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 0.92rem; font-weight: 600; line-height: 1.3; }
-  .get-bar .get-bar-go { flex: none; min-height: 44px; padding: 0 18px; justify-content: center; }
+  .get-bar .get-bar-go { flex: none; min-height: 44px; padding: 0 16px; justify-content: center; }
   .get-bar-close {
     flex: none;
     display: inline-grid;

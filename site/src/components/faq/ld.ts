@@ -6,6 +6,14 @@ export const faqLd = {
   "mainEntity": [
     {
       "@type": "Question",
+      "name": "Can I download Telegram on my TV?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Telegram makes no app for televisions. Its Android phone app can be installed on an Android TV by hand, but it is laid out for touch and hard to use with a remote. TMPlayer is made for the TV: on an Android TV, Google TV or Fire TV it signs in to your own Telegram account with a QR code and plays the videos in your chats, without the messages. Samsung TVs on Tizen, LG TVs on webOS, Roku and Apple TV cannot install it, because they do not run Android; plug an Android TV stick or a Fire TV Stick into the TV's HDMI port instead."
+      }
+    },
+    {
+      "@type": "Question",
       "name": "Can I watch Telegram videos on Android TV?",
       "acceptedAnswer": {
         "@type": "Answer",

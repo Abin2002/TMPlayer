@@ -95,7 +95,7 @@
     "guides": "ガイド",
     "community": "コミュニティ",
     "updated": "{time1}更新",
-    "get_tmplayer_for_your_tv": "テレビにTMPlayerを入れる"
+    "get_tmplayer": "TMPlayerを入手"
   },
   "ld": {
     "a_free_open_source_4a30": "ご自身のチャットにある動画をストリーミング再生する、Android TV、Androidスマートフォン、Windows、macOS、Linux向けの無料のオープンソースTelegram動画プレーヤー。",
@@ -208,7 +208,9 @@
     "not_always_you_need_579a": "必ずしも必要ではありません。必要なのはTelegramアカウントと、2つの方法のどちらかです。1つはQRコードで、テレビとパソコンでは最初に表示されます。スマートフォンのTelegramで設定、デバイス、デスクトップデバイスをリンクの順に開き、読み取ってください。もう1つは電話番号でログインで、スマートフォンでは最初に、テレビとパソコンでは2番目の選択肢として表示されます。電話番号を入力し、Telegramから届くコードを入力します。コードは通常、パソコンなどすでにサインインしている端末のTelegramに届き、そうでなければSMSか電話で届きます。2段階認証をオンにしている場合は、続けてTelegramのパスワードを入力します。",
     "does_it_play_music_a59f": "音楽や音声ファイルは再生できますか?",
     "no_tmplayer_lists_videos_4257": "いいえ。TMPlayerが一覧に出すのは動画だけです。Telegramの動画、音のない短いクリップ、そしてTelegramが動画として扱うファイルや、MKVやMP4などの動画形式の名前で終わるファイルです。音楽、ボイスメッセージ、単体で送られたMP3やFLACなどの音声ファイルは表示されないので、Telegramで開いてください。動画の中の音声は別です。AAC、MP3、Opus、FLAC、Dolby Digital、DTS、TrueHDなどはすべて再生でき、複数の音声トラックを持つ動画なら再生中に切り替えられます。",
-    "guides_929a": "ガイド"
+    "guides_929a": "ガイド",
+    "can_i_download_telegram_2c9f": "テレビにTelegramをダウンロードできますか?",
+    "telegram_makes_no_app_732d": "Telegramにはテレビ向けのアプリがありません。スマートフォン用のAndroidアプリは手動でAndroid TVに入れられますが、タッチ操作向けに作られているため、リモコンでは使いにくいです。TMPlayerはテレビ向けに作られています。Android TV、Google TV、Fire TVで、QRコードを使ってご自身のTelegramアカウントにサインインし、チャットの動画をメッセージなしで再生します。TizenのSamsung製テレビ、webOSのLG製テレビ、Roku、Apple TVはAndroidではないため、インストールできません。代わりにAndroid TVのスティックかFire TV StickをテレビのHDMI端子に挿してください。"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayerの機能: TVとPCでTelegram動画をストリーミング再生",
@@ -655,7 +657,7 @@
     "not_apple_tv_and_not": "Apple TVや、Google TVなしのChromecastでも動きません。",
     "not_a_device_where_sideloading": "サイドロードが禁止されている端末でも動きません。",
     "a_tv_app_outside_the": "Playストア以外のテレビアプリは、口コミで広がります。スターが、いちばん簡単な広め方です。",
-    "watch_telegram_videos_on_android": "Android TVとGoogle TVでTelegramの動画を見ましょう。TMPlayerは無料のオープンソースで、リモコン操作を第一にしたレイアウト、QRコードでのサインイン、RAM 1 GBのスティックでの快適な再生に対応しています。",
+    "watch_telegram_videos_on_android": "Android TVとGoogle TVでTelegramの動画を。TMPlayerは無料のオープンソースで、リモコン向けの画面とQRコードのサインインを備え、RAM 1 GBのスティックでも快適です。",
     "rail_shot_alt": "テレビで表示した TMPlayer のホーム。左にカテゴリのレールがあります。",
     "sign_in_shot_alt": "テレビのサインイン画面。スマホの Telegram で読み取る QR コードと、その横に3つの手順。",
     "search_shot_alt": "テレビのデモチャットで harbor lines と入力した検索。Harbour Lines の全エピソードが見つかります。",
@@ -971,7 +973,7 @@
     "questions_about_privacy_and_what__a1": "よくある質問",
     "questions_about_privacy_and_what__a2": "セキュリティのページ",
     "questions_about_privacy_and_what__a3": "Fire TVガイドをご覧ください",
-    "watch_the_videos_in_your": "Android TVまたはGoogle TVで、ご自身のTelegramのチャットやチャンネルにある動画を見ましょう。TMPlayerをインストールし、スマートフォンでQRコードを読み取って、再生を押すだけです。",
+    "watch_the_videos_in_your": "Android TVやGoogle TVで、ご自身のTelegramのチャットやチャンネルの動画を。TMPlayerを入れて、スマートフォンでQRコードを読み取り、再生するだけです。",
     "how_to_watch_telegram_videos_2": "Android TVでTelegramの動画を見る方法"
   },
   "guide_fire_tv": {
@@ -1013,11 +1015,11 @@
     "stuck_on_a_step_lists": "途中で止まりましたか?よくある原因は{a1}に載っています。Android TVやGoogle TVをお使いなら、{a2}。",
     "stuck_on_a_step_lists__a1": "うまくいかないとき",
     "stuck_on_a_step_lists__a2": "Android TVガイドをご覧ください",
-    "watch_the_videos_in_your": "Downloaderアプリでインストールできる無料プレーヤーTMPlayerで、Fire TV Stick、Fire TV Cube、Fire TV Editionテレビから、ご自身のTelegramチャットにある動画を見ましょう。",
+    "watch_the_videos_in_your": "Downloaderで入れる無料プレーヤーTMPlayerで、Fire TV Stick、Fire TV Cube、Fire TV EditionテレビからTelegramチャットの動画を見ましょう。",
     "how_to_watch_telegram_videos_2": "Fire TVでTelegramの動画を見る方法"
   },
   "guide_no_casting": {
-    "telegram_on_your_tv_without": "キャストなしで、テレビでTelegram | TMPlayer",
+    "telegram_on_your_tv_without": "テレビでTelegram: キャストか、テレビ用プレーヤーか | TMPlayer",
     "without_casting": "{a1}{span1}{span2}{span3}キャストなし",
     "without_casting__a1": "ホーム",
     "without_casting__span2": "ガイド",
@@ -1053,7 +1055,7 @@
     "tmplayer_also_runs_on_windows__a1": "ダウンロード",
     "tmplayer_does_not_provide_media": "TMPlayerはメディアを提供しません。ご自身のチャットやチャンネルにすでにあるものを再生します。見られる内容と見られない内容は、{a1}で説明しています。",
     "tmplayer_does_not_provide_media__a1": "よくある質問",
-    "watch_telegram_videos_on_a": "スマートフォンのキャストやミラーリングなしで、テレビでTelegramの動画を。テレビのプレーヤーがあなたのアカウントにサインインし、チャットの動画をストリーミング再生します。",
+    "watch_telegram_videos_on_a": "スマートフォンのキャストやミラーリングなしで、テレビでTelegramの動画を。テレビのプレーヤーがアカウントにサインインし、チャットの動画を再生します。",
     "telegram_on_your_tv_without_2": "キャストなしで、テレビでTelegram",
     "five_ways_to_get_telegram": "Telegramの動画をテレビで見る5つの方法を比較",
     "way": "方法",
@@ -1077,8 +1079,8 @@
     "it_is_installed_from_the": "テレビのアプリストアではなくAPKからインストールし、再生するのはチャットの動画だけです。メッセージ、音楽、写真は扱いません。Apple TV版はありません。"
   },
   "desktop": {
-    "title": "TMPlayer: Windows・Mac・Linux用Telegramプレーヤー",
-    "description": "Windows、macOS、Linux向けの無料の非公式Telegram動画プレーヤー。QRコードでサインインし、チャットの動画をダウンロードしながらmpvで再生します。",
+    "title": "TMPlayer: Windows PC・Mac・Linux用Telegram動画プレーヤー",
+    "description": "PC向けの無料の非公式Telegramプレーヤー。Windows、macOS、Linuxに対応。QRコードでサインインし、チャットの動画をダウンロードしながらmpvで再生します。",
     "a_telegram_video_player": "{em1}Telegram動画プレーヤー",
     "a_telegram_video_player__em1": "Windows、Mac、Linux向けの",
     "lede": "TMPlayerは、無料でオープンソースの非公式Telegramメディアプレーヤーです。パソコンではご自身のアカウントにサインインし、チャットの動画をポスターとして並べ、ダウンロードしながら再生します。",

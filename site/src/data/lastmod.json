@@ -97,7 +97,7 @@
   },
   {
     "path": "/download/",
-    "lastmod": "2026-10-17",
+    "lastmod": "2026-10-18",
     "changefreq": "weekly",
     "priority": "0.9"
   },
@@ -109,7 +109,7 @@
   },
   {
     "path": "/android-tv/",
-    "lastmod": "2026-10-17",
+    "lastmod": "2026-10-18",
     "changefreq": "monthly",
     "priority": "0.8",
     "images": [
@@ -209,7 +209,7 @@
   },
   {
     "path": "/fire-tv/",
-    "lastmod": "2026-10-15",
+    "lastmod": "2026-10-18",
     "changefreq": "monthly",
     "priority": "0.8"
   },
@@ -233,13 +233,13 @@
   },
   {
     "path": "/guides/telegram-videos-on-android-tv/",
-    "lastmod": "2026-10-14",
+    "lastmod": "2026-10-18",
     "changefreq": "monthly",
     "priority": "0.7"
   },
   {
     "path": "/guides/telegram-videos-on-fire-tv/",
-    "lastmod": "2026-10-14",
+    "lastmod": "2026-10-18",
     "changefreq": "monthly",
     "priority": "0.7"
   },

@@ -95,7 +95,7 @@
     "guides": "راهنماها",
     "community": "جامعه",
     "updated": "به‌روزرسانی: {time1}",
-    "get_tmplayer_for_your_tv": "TMPlayer را برای تلویزیون خود بگیرید"
+    "get_tmplayer": "TMPlayer را بگیرید"
   },
   "ld": {
     "a_free_open_source_4a30": "پخش‌کنندهٔ رایگان و متن‌باز ویدیوهای Telegram برای Android TV، گوشی Android، Windows، macOS و Linux که ویدیوهای چت‌های خودتان را پخش زنده می‌کند.",
@@ -208,7 +208,9 @@
     "not_always_you_need_579a": "نه همیشه. به حساب Telegram خود و یکی از دو راه ورود نیاز دارید. کد QR، که تلویزیون و رایانه اول نشان می‌دهند: در Telegram روی گوشی، تنظیمات، دستگاه‌ها، Link Desktop Device را باز کنید و آن را اسکن کنید. یا ورود با شمارهٔ تلفن، که گوشی اول نشان می‌دهد و تلویزیون و رایانه به‌عنوان گزینهٔ دوم پیشنهاد می‌کنند: شماره‌تان را وارد کنید، سپس کدی که Telegram می‌فرستد، معمولاً به Telegram روی دستگاهی که از قبل وارد شده، مثل رایانه، وگرنه با پیامک یا تماس. اگر تأیید دومرحله‌ای روشن باشد، بعد از آن رمز Telegram شما خواسته می‌شود.",
     "does_it_play_music_a59f": "آیا موسیقی و فایل‌های صوتی را پخش می‌کند؟",
     "no_tmplayer_lists_videos_4257": "نه. TMPlayer فقط ویدیو فهرست می‌کند: ویدیوهای Telegram، کلیپ‌های کوتاه بی‌صدا، و فایل‌هایی که Telegram آن‌ها را ویدیو می‌داند یا نامشان به یک قالب ویدیویی مثل MKV یا MP4 ختم می‌شود. موسیقی، پیام‌های صوتی و فایل‌های صوتی که جداگانه فرستاده شده‌اند، مثل MP3 یا FLAC، در آن نمایش داده نمی‌شوند، پس آن‌ها را در Telegram باز کنید. صدای داخل ویدیو موضوع دیگری است: AAC، MP3، Opus، FLAC، Dolby Digital، DTS، TrueHD و بقیه پخش می‌شوند، و در ویدیویی با چند ترک صوتی می‌توانید هنگام پخش بین آن‌ها جابه‌جا شوید.",
-    "guides_929a": "راهنماها"
+    "guides_929a": "راهنماها",
+    "can_i_download_telegram_2c9f": "آیا می‌توانم Telegram را روی تلویزیون دانلود کنم؟",
+    "telegram_makes_no_app_732d": "Telegram برنامه‌ای برای تلویزیون ندارد. برنامهٔ Android آن برای گوشی را می‌شود دستی روی Android TV نصب کرد، اما برای صفحهٔ لمسی ساخته شده و با ریموت سخت کار می‌کند. TMPlayer برای تلویزیون ساخته شده است: روی Android TV، Google TV یا Fire TV با کد QR وارد حساب Telegram خودتان می‌شود و ویدیوهای چت‌هایتان را بدون پیام‌ها پخش می‌کند. تلویزیون‌های Samsung با Tizen، تلویزیون‌های LG با webOS، Roku و Apple TV نمی‌توانند آن را نصب کنند، چون Android ندارند؛ به‌جایش یک Stick با Android TV یا یک Fire TV Stick را به درگاه HDMI تلویزیون وصل کنید."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "امکانات TMPlayer: پخش ویدیوهای Telegram روی تلویزیون و رایانه",
@@ -617,7 +619,7 @@
     "pick_a_chat_and_press": "یک چت انتخاب کنید و پخش را بزنید"
   },
   "android_tv": {
-    "tmplayer_unofficial_telegram_video_player": "Telegram روی Android TV: ویدیوهای چت‌ها با TMPlayer",
+    "tmplayer_unofficial_telegram_video_player": "Telegram (تلگرام) روی Android TV: ویدیوهای چت‌ها با TMPlayer",
     "a_telegram_video_player": "پخش‌کنندهٔ ویدیوهای Telegram {em1}",
     "a_telegram_video_player__em1": "ساخته‌شده برای ریموت",
     "designed_for_a_d_pad": "اول از همه برای D-pad طراحی شده: نواری که بدون نگاه کردن به آن می‌رسید، کارت‌هایی که از روی مبل خوانده می‌شوند، و فوکوس واضح.",
@@ -755,7 +757,7 @@
     "apps_installed_from_outside_the__em4": "Manage Installed Applications",
     "still_stuck_with_your_fire": "هنوز گیر کرده‌اید؟ {a1} با مدل Fire TV، نسخهٔ Fire OS و آنچه صفحه گفت.",
     "still_stuck_with_your_fire__a1": "یک مشکل ثبت کنید",
-    "install_the_tmplayer_telegram_video": "پخش‌کنندهٔ ویدیوهای Telegram به نام TMPlayer را روی Fire TV Stick، Fire TV Cube یا تلویزیون Fire TV Edition با برنامهٔ رایگان Downloader، adb یا Send files to TV نصب کنید.",
+    "install_the_tmplayer_telegram_video": "پخش‌کنندهٔ ویدیوی Telegram، یعنی TMPlayer، را روی Fire TV Stick، Fire TV Cube یا تلویزیون Fire TV Edition با Downloader، adb یا Send files to TV نصب کنید.",
     "on_this_page": "در این صفحه"
   },
   "faq": {
@@ -1013,11 +1015,11 @@
     "stuck_on_a_step_lists": "در یک مرحله گیر کرده‌اید؟ {a1} دلایل معمول را فهرست می‌کند. به‌جایش روی Android TV یا Google TV هستید؟ {a2}.",
     "stuck_on_a_step_lists__a1": "اگر خراب شد",
     "stuck_on_a_step_lists__a2": "راهنمای Android TV را بخوانید",
-    "watch_the_videos_in_your": "ویدیوهای چت‌های Telegram خودتان را روی Fire TV Stick، Fire TV Cube یا تلویزیون Fire TV Edition با TMPlayer ببینید، پخش‌کننده‌ای رایگان که با برنامهٔ Downloader نصب می‌شود.",
+    "watch_the_videos_in_your": "ویدیوهای چت‌های Telegram خودتان را روی Fire TV Stick، Fire TV Cube یا تلویزیون Fire TV Edition با TMPlayer ببینید، پخش‌کننده‌ای رایگان که با Downloader نصب می‌شود.",
     "how_to_watch_telegram_videos_2": "چطور ویدیوهای Telegram را روی Fire TV ببینیم"
   },
   "guide_no_casting": {
-    "telegram_on_your_tv_without": "Telegram روی تلویزیون شما بدون کست | TMPlayer",
+    "telegram_on_your_tv_without": "Telegram روی تلویزیون: کست یا پخش‌کنندهٔ تلویزیون | TMPlayer",
     "without_casting": "{a1}{span1}{span2}{span3}بدون کست",
     "without_casting__a1": "خانه",
     "without_casting__span2": "راهنماها",
@@ -1077,8 +1079,8 @@
     "it_is_installed_from_the": "از APK نصب می‌شود، نه از فروشگاه برنامهٔ تلویزیون، و فقط ویدیوهای چت‌های شما را پخش می‌کند و نه چیز دیگری: نه پیام، نه موسیقی، نه عکس. نسخه‌ای برای Apple TV وجود ندارد."
   },
   "desktop": {
-    "title": "TMPlayer: پخش‌کنندهٔ Telegram برای Windows، Mac و Linux",
-    "description": "پخش‌کنندهٔ رایگان و غیررسمی ویدیوهای Telegram برای Windows، macOS و Linux. با کد QR وارد شوید و ویدیوهای چت‌هایتان را هنگام دانلود با mpv پخش کنید.",
+    "title": "TMPlayer: پخش‌کنندهٔ Telegram برای رایانهٔ Windows، Mac و Linux",
+    "description": "پخش‌کنندهٔ رایگان و غیررسمی Telegram برای رایانهٔ شما: Windows، macOS یا Linux. با کد QR وارد شوید و ویدیوهای چت‌هایتان را هنگام دانلود با mpv پخش کنید.",
     "a_telegram_video_player": "پخش‌کنندهٔ ویدیوهای Telegram {em1}",
     "a_telegram_video_player__em1": "برای Windows، Mac و Linux",
     "lede": "TMPlayer یک پخش‌کنندهٔ رسانهٔ Telegram رایگان، متن‌باز و غیررسمی است. روی رایانه وارد حساب خودتان می‌شود، ویدیوهای چت‌هایتان را به شکل پوستر نشان می‌دهد و هنگام دانلود پخششان می‌کند.",

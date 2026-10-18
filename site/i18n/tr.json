@@ -95,7 +95,7 @@
     "guides": "Rehberler",
     "community": "Topluluk",
     "updated": "Güncellendi: {time1}",
-    "get_tmplayer_for_your_tv": "TV'niz için TMPlayer'ı edinin"
+    "get_tmplayer": "TMPlayer'ı edin"
   },
   "ld": {
     "a_free_open_source_4a30": "Kendi sohbetlerindeki videoları akıtan, Android TV, Android telefonlar, Windows, macOS ve Linux için ücretsiz, açık kaynak bir Telegram video oynatıcı.",
@@ -208,10 +208,12 @@
     "not_always_you_need_579a": "Her zaman değil. Telegram hesabın ve iki giriş yolundan biri gerekir. TV'nin ve bilgisayarın önce gösterdiği QR kod: telefonundaki Telegram'da Ayarlar, Cihazlar, Masaüstü Cihazı Bağla'yı aç ve kodu tara. Ya da telefonun önce gösterdiği, TV'nin ve bilgisayarın ikinci seçenek olarak sunduğu Telefon numarasıyla giriş yap: numaranı gir, sonra Telegram'ın gönderdiği kodu; kod genellikle bilgisayar gibi zaten giriş yapılmış bir cihazdaki Telegram'a, yoksa SMS ya da aramayla gelir. İki adımlı doğrulama açıksa ardından Telegram şifren istenir.",
     "does_it_play_music_a59f": "Müzik ve ses dosyalarını oynatıyor mu?",
     "no_tmplayer_lists_videos_4257": "Hayır. TMPlayer yalnızca videoları listeler: Telegram videoları, kısa sessiz klipler ve Telegram'ın video saydığı ya da adı MKV veya MP4 gibi bir video biçimiyle biten dosyalar. Müzik, sesli mesajlar ve tek başına gönderilmiş MP3 ya da FLAC gibi ses dosyaları onda görünmez, bunları Telegram'da aç. Bir videonun içindeki ses ise başka konu: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD ve diğerleri oynar, birden çok ses izi olan bir videoda oynatma sırasında aralarında geçiş yapabilirsin.",
-    "guides_929a": "Rehberler"
+    "guides_929a": "Rehberler",
+    "can_i_download_telegram_2c9f": "Telegram'ı televizyonuma indirebilir miyim?",
+    "telegram_makes_no_app_732d": "Telegram'ın televizyonlar için bir uygulaması yok. Telefonlar için Android uygulaması bir Android TV'ye elle kurulabilir, ama dokunmatik ekran için tasarlandığından kumandayla kullanmak zordur. TMPlayer televizyon için yapıldı: Android TV, Google TV ya da Fire TV'de QR kodla kendi Telegram hesabına giriş yapar ve sohbetlerindeki videoları mesajlar olmadan oynatır. Tizen'li Samsung televizyonlar, webOS'lu LG televizyonlar, Roku ve Apple TV onu kuramaz, çünkü Android çalıştırmazlar; bunun yerine televizyonun HDMI girişine bir Android TV çubuğu ya da Fire TV Stick tak."
   },
   "features": {
-    "tmplayer_features_stream_telegram_videos": "TMPlayer özellikleri: Telegram videolarını TV'de ve bilgisayarda akıt",
+    "tmplayer_features_stream_telegram_videos": "TMPlayer özellikleri: Telegram videoları TV'de ve PC'de",
     "features": "{a1}{span1}Özellikler",
     "features__a1": "Ana sayfa",
     "what_a_telegram_video_player": "Bir Telegram video oynatıcının {em1}",
@@ -655,7 +657,7 @@
     "not_apple_tv_and_not": "Apple TV değil ve Google TV'siz Chromecast değil.",
     "not_a_device_where_sideloading": "Yan yüklemenin kilitli olduğu bir cihaz değil.",
     "a_tv_app_outside_the": "Play Store dışındaki bir TV uygulaması ağızdan ağza yayılır. Yıldız, yaymanın en kolay yolu.",
-    "watch_telegram_videos_on_android": "Telegram videolarını Android TV ve Google TV'de izle. TMPlayer ücretsiz ve açık kaynak; kumanda öncelikli arayüz, QR ile giriş ve 1 GB'lık çubuklarda akıcı oynatma sunar.",
+    "watch_telegram_videos_on_android": "Telegram videolarını Android TV ve Google TV'de izle. TMPlayer ücretsiz ve açık kaynak; kumandaya göre tasarlandı, QR ile giriş var, 1 GB'lık çubukta akıcı.",
     "rail_shot_alt": "Bir televizyonda TMPlayer Ana Sayfa, solda kategori çubuğuyla.",
     "sign_in_shot_alt": "Televizyonda giriş ekranı: telefondaki Telegram ile taranacak bir QR kod ve yanında üç adım.",
     "search_shot_alt": "Televizyonda bir demo sohbette harbor lines diye yazılan arama, Harbour Lines'ın tüm bölümlerini buluyor.",
@@ -1013,11 +1015,11 @@
     "stuck_on_a_step_lists": "Bir adımda mı takıldın? {a1} olağan nedenleri listeler. Bunun yerine Android TV ya da Google TV mi var? {a2}.",
     "stuck_on_a_step_lists__a1": "Ters giderse bölümü",
     "stuck_on_a_step_lists__a2": "Android TV rehberini oku",
-    "watch_the_videos_in_your": "Telegram sohbetlerindeki videoları bir Fire TV Stick, Fire TV Cube ya da Fire TV Edition televizyonda, Downloader uygulamasıyla kurulan ücretsiz oynatıcı TMPlayer ile izle.",
+    "watch_the_videos_in_your": "Telegram sohbetlerindeki videoları Fire TV Stick, Fire TV Cube ya da Fire TV Edition TV'de, Downloader ile kurulan ücretsiz oynatıcı TMPlayer ile izle.",
     "how_to_watch_telegram_videos_2": "Fire TV'de Telegram videoları nasıl izlenir"
   },
   "guide_no_casting": {
-    "telegram_on_your_tv_without": "TV'nde yansıtmadan Telegram | TMPlayer",
+    "telegram_on_your_tv_without": "TV'de Telegram: yansıtma mı, TV oynatıcı mı? | TMPlayer",
     "without_casting": "{a1}{span1}{span2}{span3}Yansıtmadan",
     "without_casting__a1": "Ana sayfa",
     "without_casting__span2": "Rehberler",
@@ -1077,8 +1079,8 @@
     "it_is_installed_from_the": "TV'nin uygulama mağazasından değil, APK'dan kurulur ve sohbetlerindeki videoları oynatır, başka bir şey değil: mesaj, müzik ya da fotoğraf yok. Apple TV sürümü yok."
   },
   "desktop": {
-    "title": "TMPlayer: Windows, Mac ve Linux için Telegram video oynatıcı",
-    "description": "Windows, macOS ve Linux için ücretsiz, resmi olmayan bir Telegram video oynatıcı. QR kodla giriş yap, sohbetlerindeki videoları inerken mpv ile oynat.",
+    "title": "TMPlayer: Windows PC, Mac ve Linux için Telegram oynatıcı",
+    "description": "Bilgisayarın için ücretsiz, resmi olmayan bir Telegram oynatıcı: Windows, macOS ya da Linux. QR kodla giriş yap, sohbetlerindeki videoları inerken mpv ile oynat.",
     "a_telegram_video_player": "{em1} bir Telegram video oynatıcı",
     "a_telegram_video_player__em1": "Windows, Mac ve Linux için",
     "lede": "TMPlayer ücretsiz, açık kaynak ve resmi olmayan bir Telegram medya oynatıcıdır. Bilgisayarda kendi hesabınla giriş yapar, sohbetlerindeki videoları afişler halinde gösterir ve inerken oynatır.",

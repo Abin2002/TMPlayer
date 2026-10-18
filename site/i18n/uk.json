@@ -68,7 +68,7 @@
     "skip_to_content": "Перейти до вмісту",
     "home": "Головна",
     "features": "Можливості",
-    "download": "Завантажити",
+    "download": "Скачати",
     "install": "Встановлення",
     "questions": "Запитання",
     "changelog": "Список змін",
@@ -95,7 +95,7 @@
     "guides": "Посібники",
     "community": "Спільнота",
     "updated": "Оновлено {time1}",
-    "get_tmplayer_for_your_tv": "Встановіть TMPlayer на телевізор"
+    "get_tmplayer": "Встановіть TMPlayer"
   },
   "ld": {
     "a_free_open_source_4a30": "Безкоштовний відеоплеєр для Telegram з відкритим кодом для Android TV, телефонів Android, Windows, macOS і Linux, який відтворює відео з ваших власних чатів.",
@@ -208,7 +208,9 @@
     "not_always_you_need_579a": "Не завжди. Вам потрібен обліковий запис Telegram і один із двох способів увійти. QR-код, який телевізор і комп’ютер показують першим: у Telegram на телефоні відкрийте Налаштування, Пристрої, Під’єднати пристрій і відскануйте його. Або вхід за номером телефона, який телефон показує першим, а телевізор і комп’ютер пропонують другим: введіть свій номер, а потім код, який надішле Telegram, зазвичай у Telegram на пристрої, де ви вже ввійшли, наприклад на комп’ютері, а інакше SMS або дзвінком. Якщо ввімкнено двоетапну перевірку, далі знадобиться ваш пароль Telegram.",
     "does_it_play_music_a59f": "Чи відтворює він музику й аудіофайли?",
     "no_tmplayer_lists_videos_4257": "Ні. TMPlayer показує лише відео: відео Telegram, короткі беззвучні кліпи та файли, які Telegram вважає відео або назви яких закінчуються відеоформатом, як-от MKV чи MP4. Музика, голосові повідомлення й окремо надіслані аудіофайли, як-от MP3 чи FLAC, у ньому не з’являються, тож відкривайте їх у Telegram. Звук усередині відео це інша справа: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD та інші відтворюються, а у відео з кількома аудіодоріжками між ними можна перемикатися під час перегляду.",
-    "guides_929a": "Посібники"
+    "guides_929a": "Посібники",
+    "can_i_download_telegram_2c9f": "Чи можна завантажити Telegram на телевізор?",
+    "telegram_makes_no_app_732d": "У Telegram немає застосунку для телевізорів. Його Android-застосунок для телефона можна встановити на Android TV вручну, але він зроблений для сенсорного екрана, і з пультом ним користуватися незручно. TMPlayer зроблений для телевізора: на Android TV, Google TV чи Fire TV він входить у ваш власний обліковий запис Telegram за QR-кодом і відтворює відео з ваших чатів, без повідомлень. Телевізори Samsung на Tizen, LG на webOS, Roku та Apple TV не можуть його встановити, бо це не Android; натомість підключіть до HDMI-порту телевізора приставку з Android TV або Fire TV Stick."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "Можливості TMPlayer: відтворення відео з Telegram на ТВ і ПК",
@@ -655,7 +657,7 @@
     "not_apple_tv_and_not": "Не Apple TV і не Chromecast без Google TV.",
     "not_a_device_where_sideloading": "Не пристрій, де встановлення вручну заблоковано.",
     "a_tv_app_outside_the": "Застосунок для телевізора поза Play Store живе чутками. Зірка це найпростіший спосіб його поширити.",
-    "watch_telegram_videos_on_android": "Дивіться відео з Telegram на Android TV і Google TV. TMPlayer безкоштовний і з відкритим кодом, з інтерфейсом для пульта, входом за QR-кодом і плавним відтворенням на приставках з 1 ГБ.",
+    "watch_telegram_videos_on_android": "Дивіться відео з Telegram на Android TV і Google TV. TMPlayer безкоштовний, з відкритим кодом, зроблений для пульта, із входом за QR-кодом і плавний на 1 ГБ.",
     "rail_shot_alt": "Головна TMPlayer на телевізорі, з панеллю розділів ліворуч.",
     "sign_in_shot_alt": "Екран входу на телевізорі: QR-код, який скануєте в Telegram на телефоні, і три кроки поруч.",
     "search_shot_alt": "Пошук у демо-чаті на телевізорі, набраний як harbor lines, знаходить усі серії Harbour Lines.",
@@ -755,7 +757,7 @@
     "apps_installed_from_outside_the__em4": "Manage Installed Applications",
     "still_stuck_with_your_fire": "Досі не виходить? {a1} з моделлю вашого Fire TV, версією Fire OS і тим, що показав екран.",
     "still_stuck_with_your_fire__a1": "Створіть issue",
-    "install_the_tmplayer_telegram_video": "Установіть відеоплеєр TMPlayer для Telegram на Fire TV Stick, Fire TV Cube або телевізор Fire TV Edition за допомогою безкоштовного застосунку Downloader, adb чи Send files to TV.",
+    "install_the_tmplayer_telegram_video": "Установіть відеоплеєр TMPlayer для Telegram на Fire TV Stick, Fire TV Cube або телевізор Fire TV Edition через Downloader, adb чи Send files to TV.",
     "on_this_page": "На цій сторінці"
   },
   "faq": {
@@ -1013,11 +1015,11 @@
     "stuck_on_a_step_lists": "Застрягли на кроці? {a1} перелічує типові причини. Маєте Android TV чи Google TV? {a2}.",
     "stuck_on_a_step_lists__a1": "Розділ «Якщо щось пішло не так»",
     "stuck_on_a_step_lists__a2": "Прочитайте посібник для Android TV",
-    "watch_the_videos_in_your": "Дивіться відео зі своїх чатів Telegram на Fire TV Stick, Fire TV Cube або телевізорі Fire TV Edition з TMPlayer, безкоштовним плеєром, який установлюється через застосунок Downloader.",
+    "watch_the_videos_in_your": "Дивіться відео з чатів Telegram на Fire TV Stick, Fire TV Cube або телевізорі Fire TV Edition у безкоштовному плеєрі TMPlayer, що встановлюється через Downloader.",
     "how_to_watch_telegram_videos_2": "Як дивитися відео з Telegram на Fire TV"
   },
   "guide_no_casting": {
-    "telegram_on_your_tv_without": "Telegram на вашому телевізорі без трансляції | TMPlayer",
+    "telegram_on_your_tv_without": "Telegram на телевізорі: трансляція чи плеєр на ТВ | TMPlayer",
     "without_casting": "{a1}{span1}{span2}{span3}Без трансляції",
     "without_casting__a1": "Головна",
     "without_casting__span2": "Посібники",
@@ -1077,8 +1079,8 @@
     "it_is_installed_from_the": "Він установлюється з APK, а не з магазину застосунків телевізора, і відтворює відео з ваших чатів і нічого більше: ні повідомлень, ні музики, ні фото. Версії для Apple TV немає."
   },
   "desktop": {
-    "title": "TMPlayer: відеоплеєр для Telegram на Windows, Mac і Linux",
-    "description": "Безкоштовний неофіційний відеоплеєр для Telegram на Windows, macOS і Linux. Увійдіть за QR-кодом і дивіться відео з чатів через mpv, поки вони завантажуються.",
+    "title": "TMPlayer: плеєр Telegram для ПК на Windows, Mac і Linux",
+    "description": "Безкоштовний неофіційний плеєр Telegram для вашого ПК: Windows, macOS або Linux. Увійдіть за QR-кодом і дивіться відео з чатів через mpv, поки вони завантажуються.",
     "a_telegram_video_player": "Відеоплеєр для Telegram {em1}",
     "a_telegram_video_player__em1": "для Windows, Mac і Linux",
     "lede": "TMPlayer: безкоштовний, відкритий і неофіційний медіаплеєр для Telegram. На комп’ютері він входить у ваш власний обліковий запис, показує відео з ваших чатів як постери й відтворює їх, поки вони завантажуються.",

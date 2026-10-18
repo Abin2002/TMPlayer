@@ -35,9 +35,10 @@ type Question =
   | { q: string; a: string; href?: string; id?: string }
   | { ld: string; more?: { k: string; href: string } };
 const questions: Question[] = [
+  { ld: 'Can I download Telegram on my TV?', more: { k: 'guide_no_casting.the_ways_to_get_telegram', href: l('/guides/telegram-on-tv-without-casting/') } },
   { ld: 'Can I watch Telegram videos on Android TV?', more: { k: 'guide_no_casting.install_the_apk_and_sign__a1', href: l('/guides/telegram-videos-on-android-tv/') } },
   { ld: 'Is there a Telegram app for Fire TV Stick?', more: { k: 'guide_no_casting.install_it_with_the_downloader__a1', href: l('/guides/telegram-videos-on-fire-tv/') } },
-  { ld: 'How do I play Telegram videos on a PC or Mac?', more: { k: 'faq.which_file_answer__a1', href: l('/download/') } },
+  { ld: 'How do I play Telegram videos on a PC or Mac?', more: { k: 'desktop.features_link__a1', href: l('/desktop/') } },
   { ld: 'Is TMPlayer free? Is there a paid version?' },
   { ld: 'Is TMPlayer safe? Can it read my messages?', more: { k: 'faq.neither_the_app_talks_to__a1', href: '/security/' } },
   { ld: 'Is it the same as the official Telegram app?' },
@@ -62,7 +63,7 @@ const onPage = questions.map((x) => ('ld' in x ? x.ld : english[x.q]));
 if (onPage.join('\n') !== faqLd.mainEntity.map((e) => e.name).join('\n')) {
   throw new Error('the FAQ page and its FAQPage JSON-LD list different questions');
 }
-------
+---
 <Base page="faq" title={t('faq.tmplayer_faq_unofficial_telegram_video')} description={t('faq.answers_about_tmplayer_streaming_without')}>
   <Fragment slot="head">
     <JsonLd data={breadcrumb(['Questions', '/faq/'])} />

@@ -95,7 +95,7 @@
     "guides": "الأدلة",
     "community": "المجتمع",
     "updated": "آخر تحديث: {time1}",
-    "get_tmplayer_for_your_tv": "احصل على TMPlayer لتلفازك"
+    "get_tmplayer": "احصل على TMPlayer"
   },
   "ld": {
     "a_free_open_source_4a30": "مشغّل فيديو Telegram مجاني ومفتوح المصدر لأجهزة Android TV وهواتف Android وWindows وmacOS وLinux، يبث الفيديوهات الموجودة في محادثاتك.",
@@ -208,7 +208,9 @@
     "not_always_you_need_579a": "ليس دائمًا. تحتاج إلى حسابك على Telegram وإحدى طريقتين للدخول. الأولى رمز QR، وهو ما يعرضه التلفاز والكمبيوتر أولًا: في Telegram على هاتفك افتح الإعدادات، ثم الأجهزة، ثم ربط جهاز كمبيوتر، وامسحه. والثانية تسجيل الدخول برقم الهاتف، وهو ما يعرضه الهاتف أولًا ويقدّمه التلفاز والكمبيوتر خيارًا ثانيًا: أدخل رقمك، ثم الرمز الذي يرسله Telegram، ويصل عادةً إلى Telegram على جهاز مسجّل الدخول بالفعل مثل الكمبيوتر، وإلا فبرسالة نصية أو مكالمة. وإذا كان التحقق بخطوتين مفعّلًا، فستُطلب بعدها كلمة مرور Telegram.",
     "does_it_play_music_a59f": "هل يشغّل الموسيقى والملفات الصوتية؟",
     "no_tmplayer_lists_videos_4257": "لا. يعرض TMPlayer الفيديوهات فقط: فيديوهات Telegram، والمقاطع القصيرة الصامتة، والملفات التي يعدّها Telegram فيديو أو التي تنتهي أسماؤها بصيغة فيديو مثل MKV أو MP4. أما الموسيقى والرسائل الصوتية والملفات الصوتية المرسلة وحدها، مثل MP3 أو FLAC، فلا تظهر فيه، لذا افتحها في Telegram. والصوت داخل الفيديو أمر آخر: تعمل صيغ AAC وMP3 وOpus وFLAC وDolby Digital وDTS وTrueHD وغيرها، والفيديو الذي فيه عدة مسارات صوت يتيح لك التبديل بينها أثناء التشغيل.",
-    "guides_929a": "الأدلة"
+    "guides_929a": "الأدلة",
+    "can_i_download_telegram_2c9f": "هل يمكنني تنزيل Telegram على التلفاز؟",
+    "telegram_makes_no_app_732d": "ليس لدى Telegram تطبيق للتلفاز. يمكن تثبيت تطبيقه لهواتف Android يدويًا على Android TV، لكنه مصمم للّمس ويصعب استخدامه بجهاز التحكم. أما TMPlayer فمصنوع للتلفاز: على Android TV أو Google TV أو Fire TV يسجّل الدخول إلى حسابك على Telegram برمز QR ويشغّل الفيديوهات الموجودة في محادثاتك، من دون الرسائل. لا يمكن تثبيته على تلفازات Samsung بنظام Tizen ولا LG بنظام webOS ولا Roku ولا Apple TV، لأنها لا تعمل بنظام Android؛ وصّل بدلًا من ذلك عصا Android TV أو Fire TV Stick بمنفذ HDMI في التلفاز."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "ميزات TMPlayer: بث فيديوهات Telegram على التلفاز والكمبيوتر",
@@ -1013,11 +1015,11 @@
     "stuck_on_a_step_lists": "عالق في خطوة ما؟ يسرد قسم {a1} الأسباب المعتادة. لديك Android TV أو Google TV بدلًا من ذلك؟ {a2}.",
     "stuck_on_a_step_lists__a1": "إذا حدث خطأ",
     "stuck_on_a_step_lists__a2": "اقرأ دليل Android TV",
-    "watch_the_videos_in_your": "شاهد المقاطع الموجودة في محادثاتك على Telegram عبر Fire TV Stick أو Fire TV Cube أو تلفاز Fire TV Edition باستخدام TMPlayer، المشغّل المجاني الذي يُثبَّت بتطبيق Downloader.",
+    "watch_the_videos_in_your": "شاهد مقاطع محادثاتك على Telegram عبر Fire TV Stick أو Fire TV Cube أو تلفاز Fire TV Edition باستخدام TMPlayer، المشغّل المجاني الذي يُثبَّت عبر Downloader.",
     "how_to_watch_telegram_videos_2": "كيف تشاهد مقاطع Telegram على Fire TV"
   },
   "guide_no_casting": {
-    "telegram_on_your_tv_without": "Telegram على تلفازك دون بث من الهاتف | TMPlayer",
+    "telegram_on_your_tv_without": "Telegram على التلفاز: البث أو مشغّل على التلفاز | TMPlayer",
     "without_casting": "{a1}{span1}{span2}{span3}دون بث",
     "without_casting__a1": "الرئيسية",
     "without_casting__span2": "الأدلة",
@@ -1077,8 +1079,8 @@
     "it_is_installed_from_the": "يُثبَّت من ملف APK لا من متجر تطبيقات التلفاز، ويشغّل الفيديوهات الموجودة في محادثاتك ولا شيء غيرها: لا رسائل ولا موسيقى ولا صور. ولا توجد نسخة لـ Apple TV."
   },
   "desktop": {
-    "title": "TMPlayer: مشغّل فيديو Telegram لأنظمة Windows وMac وLinux",
-    "description": "مشغّل فيديو Telegram مجاني وغير رسمي لأنظمة Windows وmacOS وLinux. سجّل الدخول برمز QR وشغّل الفيديوهات الموجودة في محادثاتك عبر mpv أثناء تنزيلها.",
+    "title": "TMPlayer: مشغّل Telegram للكمبيوتر بنظام Windows وMac وLinux",
+    "description": "مشغّل Telegram مجاني وغير رسمي لجهاز الكمبيوتر: Windows أو macOS أو Linux. سجّل الدخول برمز QR وشغّل الفيديوهات الموجودة في محادثاتك عبر mpv أثناء تنزيلها.",
     "a_telegram_video_player": "مشغّل فيديو Telegram {em1}",
     "a_telegram_video_player__em1": "لأنظمة Windows وMac وLinux",
     "lede": "TMPlayer مشغّل وسائط Telegram مجاني ومفتوح المصدر وغير رسمي. على الكمبيوتر يسجّل الدخول إلى حسابك أنت، ويعرض فيديوهات محادثاتك كملصقات، ويشغّلها أثناء تنزيلها.",

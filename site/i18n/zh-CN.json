@@ -95,7 +95,7 @@
     "guides": "指南",
     "community": "社区",
     "updated": "更新于 {time1}",
-    "get_tmplayer_for_your_tv": "为你的电视安装 TMPlayer"
+    "get_tmplayer": "获取 TMPlayer"
   },
   "ld": {
     "a_free_open_source_4a30": "免费开源的 Telegram 视频播放器，适用于 Android TV、Android 手机、Windows、macOS 和 Linux，可串流你自己聊天中的视频。",
@@ -208,7 +208,9 @@
     "not_always_you_need_579a": "不一定。你需要 Telegram 账号，以及两种登录方式之一。一种是二维码，电视和电脑会首先显示它：在手机上的 Telegram 中打开“设置”、“设备”、“链接桌面设备”并扫描。另一种是手机号登录，手机会首先显示它，电视和电脑则作为第二选项提供：输入你的号码，再输入 Telegram 发来的验证码，通常发到已登录设备（例如电脑）上的 Telegram，否则通过短信或电话发送。如果开启了两步验证，接下来还要输入你的 Telegram 密码。",
     "does_it_play_music_a59f": "它能播放音乐和音频文件吗？",
     "no_tmplayer_lists_videos_4257": "不能。TMPlayer 只列出视频：Telegram 视频、无声短片，以及 Telegram 视为视频或文件名以 MKV、MP4 等视频格式结尾的文件。音乐、语音消息以及单独发送的音频文件（如 MP3 或 FLAC）不会出现在其中，请在 Telegram 中打开它们。视频里的声音则另当别论：AAC、MP3、Opus、FLAC、Dolby Digital、DTS、TrueHD 等都能播放，带多条音轨的视频还可以在播放时切换。",
-    "guides_929a": "指南"
+    "guides_929a": "指南",
+    "can_i_download_telegram_2c9f": "可以在电视上下载 Telegram 吗？",
+    "telegram_makes_no_app_732d": "Telegram 没有电视应用。它的 Android 手机应用可以手动装到 Android TV 上，但那是为触屏设计的，用遥控器很难操作。TMPlayer 是为电视做的：在 Android TV、Google TV 或 Fire TV 上，它用二维码登录你自己的 Telegram 账号，播放你聊天中的视频，不显示消息。运行 Tizen 的三星电视、运行 webOS 的 LG 电视、Roku 和 Apple TV 都无法安装，因为它们不是 Android；可以在电视的 HDMI 接口插一根 Android TV 电视棒或 Fire TV Stick。"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer 功能：在电视和电脑上串流 Telegram 视频",
@@ -1017,7 +1019,7 @@
     "how_to_watch_telegram_videos_2": "如何在 Fire TV 上观看 Telegram 视频"
   },
   "guide_no_casting": {
-    "telegram_on_your_tv_without": "无需投屏的电视版 Telegram | TMPlayer",
+    "telegram_on_your_tv_without": "电视上看 Telegram：投屏、镜像还是电视播放器 | TMPlayer",
     "without_casting": "{a1}{span1}{span2}{span3}无需投屏",
     "without_casting__a1": "首页",
     "without_casting__span2": "指南",
@@ -1077,8 +1079,8 @@
     "it_is_installed_from_the": "需要通过 APK 安装，而不是电视的应用商店，并且只播放你聊天中的视频：没有消息、音乐或照片。没有 Apple TV 版本。"
   },
   "desktop": {
-    "title": "TMPlayer：Windows、Mac、Linux 版 Telegram 播放器",
-    "description": "免费的非官方 Telegram 视频播放器，支持 Windows、macOS 和 Linux。扫描二维码登录，聊天中的视频边下载边用 mpv 播放。",
+    "title": "TMPlayer：Windows 电脑、Mac、Linux 版 Telegram 播放器",
+    "description": "免费的非官方 Telegram 电脑播放器，支持 Windows、macOS 和 Linux。扫描二维码登录，聊天中的视频边下载边用 mpv 播放。",
     "a_telegram_video_player": "Telegram 视频播放器，{em1}",
     "a_telegram_video_player__em1": "支持 Windows、Mac 和 Linux",
     "lede": "TMPlayer 是一款免费、开源的非官方 Telegram 媒体播放器。在电脑上，它登录你自己的账号，把聊天中的视频显示为海报，并边下载边播放。",

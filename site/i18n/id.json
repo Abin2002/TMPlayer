@@ -95,7 +95,7 @@
     "guides": "Panduan",
     "community": "Komunitas",
     "updated": "Diperbarui {time1}",
-    "get_tmplayer_for_your_tv": "Pasang TMPlayer di TV kamu"
+    "get_tmplayer": "Dapatkan TMPlayer"
   },
   "ld": {
     "a_free_open_source_4a30": "Pemutar video Telegram gratis dan open source untuk Android TV, HP Android, Windows, macOS, dan Linux yang memutar video di obrolan kamu sendiri secara streaming.",
@@ -208,7 +208,9 @@
     "not_always_you_need_579a": "Tidak selalu. Kamu perlu akun Telegram dan salah satu dari dua cara masuk. Kode QR, yang muncul lebih dulu di TV dan komputer: di Telegram pada HP kamu, buka Pengaturan, Perangkat, Tautkan Perangkat Desktop, lalu pindai. Atau Masuk dengan nomor telepon, yang muncul lebih dulu di HP dan jadi pilihan kedua di TV dan komputer: masukkan nomor kamu, lalu kode yang dikirim Telegram, biasanya ke Telegram di perangkat yang sudah masuk, seperti komputer, kalau tidak lewat SMS atau panggilan. Kalau verifikasi dua langkah aktif, berikutnya masukkan kata sandi Telegram kamu.",
     "does_it_play_music_a59f": "Apakah bisa memutar musik dan file audio?",
     "no_tmplayer_lists_videos_4257": "Tidak. TMPlayer hanya menampilkan video: video Telegram, klip pendek tanpa suara, dan file yang disebut video oleh Telegram atau yang namanya berakhiran format video seperti MKV atau MP4. Musik, pesan suara, dan file audio yang dikirim tersendiri, seperti MP3 atau FLAC, tidak muncul di sana, jadi buka di Telegram. Suara di dalam video lain lagi ceritanya: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD, dan lainnya bisa diputar, dan video dengan beberapa trek audio bisa kamu ganti trek audionya selama pemutaran.",
-    "guides_929a": "Panduan"
+    "guides_929a": "Panduan",
+    "can_i_download_telegram_2c9f": "Bisakah saya mengunduh Telegram di TV?",
+    "telegram_makes_no_app_732d": "Telegram tidak punya aplikasi untuk televisi. Aplikasi Android untuk HP bisa dipasang manual di Android TV, tapi dibuat untuk layar sentuh dan susah dipakai dengan remote. TMPlayer dibuat untuk TV: di Android TV, Google TV, atau Fire TV, ia masuk ke akun Telegram kamu sendiri dengan kode QR dan memutar video di obrolan kamu, tanpa pesannya. TV Samsung dengan Tizen, TV LG dengan webOS, Roku, dan Apple TV tidak bisa memasangnya karena tidak menjalankan Android; sebagai gantinya, colokkan stick Android TV atau Fire TV Stick ke port HDMI TV."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "Fitur TMPlayer: streaming video Telegram di TV dan PC",
@@ -655,7 +657,7 @@
     "not_apple_tv_and_not": "Bukan Apple TV, dan bukan Chromecast tanpa Google TV.",
     "not_a_device_where_sideloading": "Bukan perangkat yang sideload-nya dikunci.",
     "a_tv_app_outside_the": "Aplikasi TV di luar Play Store hidup dari mulut ke mulut. Bintang adalah cara termudah untuk menyebarkannya.",
-    "watch_telegram_videos_on_android": "Tonton video Telegram di Android TV dan Google TV. TMPlayer gratis dan open source, dengan tampilan yang mengutamakan remote, login QR, dan pemutaran lancar di stick 1 GB.",
+    "watch_telegram_videos_on_android": "Nonton video Telegram di TV dengan Android TV atau Google TV. TMPlayer gratis dan open source, dibuat untuk remote, dengan login QR, dan lancar di stick 1 GB.",
     "rail_shot_alt": "Beranda TMPlayer di TV, dengan rel kategori di sebelah kiri.",
     "sign_in_shot_alt": "Layar masuk di TV: kode QR untuk dipindai dengan Telegram di ponsel, dan tiga langkah di sebelahnya.",
     "search_shot_alt": "Pencarian di chat demo di TV, diketik harbor lines, menemukan semua episode Harbour Lines.",
@@ -928,7 +930,7 @@
     "help_translate_tmplayer": "Bantu terjemahkan TMPlayer"
   },
   "guide_android_tv": {
-    "how_to_watch_telegram_videos": "Cara menonton video Telegram di Android TV | TMPlayer",
+    "how_to_watch_telegram_videos": "Cara nonton video Telegram di TV Android | TMPlayer",
     "telegram_videos": "Video Telegram {em1}",
     "telegram_videos__em1": "di Android TV",
     "telegram_has_no_app_for": "Telegram tidak punya aplikasi untuk televisi, dan aplikasi HP-nya tidak enak dipakai dengan remote. TMPlayer adalah pemutar gratis tidak resmi yang masuk ke akun kamu sendiri dan memutar video di obrolan kamu di layar besar.",
@@ -1013,11 +1015,11 @@
     "stuck_on_a_step_lists": "Macet di satu langkah? {a1} mendaftar penyebab yang umum. Pakai Android TV atau Google TV? {a2}.",
     "stuck_on_a_step_lists__a1": "Kalau ada masalah",
     "stuck_on_a_step_lists__a2": "Baca panduan Android TV",
-    "watch_the_videos_in_your": "Tonton video di obrolan Telegram kamu di Fire TV Stick, Fire TV Cube, atau TV Fire TV Edition dengan TMPlayer, pemutar gratis yang dipasang lewat aplikasi Downloader.",
+    "watch_the_videos_in_your": "Nonton video di obrolan Telegram kamu di Fire TV Stick, Fire TV Cube, atau TV Fire TV Edition dengan TMPlayer, pemutar gratis yang dipasang lewat Downloader.",
     "how_to_watch_telegram_videos_2": "Cara menonton video Telegram di Fire TV"
   },
   "guide_no_casting": {
-    "telegram_on_your_tv_without": "Telegram di TV kamu tanpa casting | TMPlayer",
+    "telegram_on_your_tv_without": "Cara nonton Telegram di TV: casting atau pemutar TV | TMPlayer",
     "without_casting": "{a1}{span1}{span2}{span3}Tanpa casting",
     "without_casting__a1": "Beranda",
     "without_casting__span2": "Panduan",
@@ -1077,8 +1079,8 @@
     "it_is_installed_from_the": "Dipasang dari APK, bukan dari toko aplikasi TV, dan hanya memutar video di obrolan kamu: tanpa pesan, musik, atau foto. Tidak ada versi untuk Apple TV."
   },
   "desktop": {
-    "title": "TMPlayer: pemutar video Telegram untuk Windows, Mac, Linux",
-    "description": "Pemutar video Telegram gratis dan tidak resmi untuk Windows, macOS, dan Linux. Masuk dengan kode QR, lalu putar video di obrolanmu lewat mpv selagi mengunduh.",
+    "title": "TMPlayer: pemutar video Telegram untuk PC Windows, Mac, Linux",
+    "description": "Pemutar Telegram gratis dan tidak resmi untuk PC kamu: Windows, macOS, atau Linux. Masuk dengan kode QR, lalu putar video di obrolanmu lewat mpv selagi mengunduh.",
     "a_telegram_video_player": "Pemutar video Telegram {em1}",
     "a_telegram_video_player__em1": "untuk Windows, Mac, dan Linux",
     "lede": "TMPlayer adalah pemutar media Telegram yang gratis, open source, dan tidak resmi. Di komputer, aplikasi ini masuk ke akun kamu sendiri, menampilkan video di obrolanmu sebagai poster, dan memutarnya selagi mengunduh.",

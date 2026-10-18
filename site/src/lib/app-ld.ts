@@ -25,6 +25,6 @@ export function appLd(): Record<string, unknown> {
     license: 'https://www.gnu.org/licenses/gpl-3.0.html',
     isAccessibleForFree: true,
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-    codeRepository: 'https://github.com/dracu-lah/TMPlayer',
+    sameAs: ['https://github.com/dracu-lah/TMPlayer'],
   };
 }

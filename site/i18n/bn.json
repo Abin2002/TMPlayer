@@ -95,7 +95,7 @@
     "guides": "গাইড",
     "community": "কমিউনিটি",
     "updated": "আপডেট: {time1}",
-    "get_tmplayer_for_your_tv": "আপনার টিভির জন্য TMPlayer নিন"
+    "get_tmplayer": "TMPlayer নিন"
   },
   "ld": {
     "a_free_open_source_4a30": "Android TV, Android ফোন, Windows, macOS ও Linux-এর জন্য বিনামূল্যের, ওপেন সোর্স Telegram ভিডিও প্লেয়ার, যা আপনার নিজের চ্যাটের ভিডিও স্ট্রিম করে।",
@@ -208,7 +208,9 @@
     "not_always_you_need_579a": "সব সময় নয়। আপনার Telegram অ্যাকাউন্ট আর ঢোকার দুটি উপায়ের একটি লাগবে। QR কোড, যা টিভি ও কম্পিউটার আগে দেখায়: ফোনের Telegram-এ Settings, Devices, Link Desktop Device খুলে সেটি স্ক্যান করুন। অথবা ফোন নম্বর দিয়ে লগ ইন, যা ফোন আগে দেখায় এবং টিভি ও কম্পিউটার দ্বিতীয় বিকল্প হিসেবে দেয়: আপনার নম্বর দিন, তারপর Telegram যে কোড পাঠায় সেটি, সাধারণত আগে থেকে সাইন ইন করা কোনো ডিভাইসের Telegram-এ, যেমন কম্পিউটারে, নইলে SMS বা কলে। টু-স্টেপ ভেরিফিকেশন চালু থাকলে এরপর আপনার Telegram পাসওয়ার্ড চাওয়া হবে।",
     "does_it_play_music_a59f": "এটা কি গান ও অডিও ফাইল চালায়?",
     "no_tmplayer_lists_videos_4257": "না। TMPlayer শুধু ভিডিওর তালিকা দেখায়: Telegram ভিডিও, শব্দহীন ছোট ক্লিপ, আর যেসব ফাইলকে Telegram ভিডিও বলে বা যাদের নাম MKV বা MP4-এর মতো ভিডিও ফরম্যাটে শেষ হয়। গান, ভয়েস মেসেজ এবং আলাদাভাবে পাঠানো অডিও ফাইল, যেমন MP3 বা FLAC, এতে দেখা যায় না, তাই সেগুলো Telegram-এ খুলুন। ভিডিওর ভেতরের শব্দ অবশ্য আলাদা ব্যাপার: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD ও বাকিগুলো চলে, আর একাধিক অডিও ট্র্যাকের ভিডিওতে চলার সময়ই ট্র্যাক বদলানো যায়।",
-    "guides_929a": "গাইড"
+    "guides_929a": "গাইড",
+    "can_i_download_telegram_2c9f": "আমি কি টিভিতে Telegram ডাউনলোড করতে পারি?",
+    "telegram_makes_no_app_732d": "টিভির জন্য Telegram-এর কোনো অ্যাপ নেই। এর Android ফোন অ্যাপ হাতে করে Android TV-তে ইনস্টল করা যায়, কিন্তু সেটা টাচের জন্য বানানো, রিমোট দিয়ে চালানো কঠিন। TMPlayer টিভির জন্য বানানো: Android TV, Google TV বা Fire TV-তে এটা QR কোড দিয়ে আপনার নিজের Telegram অ্যাকাউন্টে সাইন ইন করে এবং মেসেজ ছাড়াই আপনার চ্যাটের ভিডিও চালায়। Tizen চালিত Samsung টিভি, webOS চালিত LG টিভি, Roku আর Apple TV-তে এটা ইনস্টল করা যায় না, কারণ এগুলো Android চালায় না; তার বদলে টিভির HDMI পোর্টে একটা Android TV স্টিক বা Fire TV Stick লাগান।"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer-এর ফিচার: টিভি ও পিসিতে Telegram ভিডিও স্ট্রিম করুন",
@@ -1017,7 +1019,7 @@
     "how_to_watch_telegram_videos_2": "Fire TV-তে Telegram ভিডিও দেখার নিয়ম"
   },
   "guide_no_casting": {
-    "telegram_on_your_tv_without": "কাস্ট ছাড়া আপনার টিভিতে Telegram | TMPlayer",
+    "telegram_on_your_tv_without": "টিভিতে Telegram: কাস্ট, মিরর নাকি টিভি প্লেয়ার | TMPlayer",
     "without_casting": "{a1}{span1}{span2}{span3}কাস্ট ছাড়া",
     "without_casting__a1": "হোম",
     "without_casting__span2": "গাইড",
@@ -1077,8 +1079,8 @@
     "it_is_installed_from_the": "এটা টিভির অ্যাপ স্টোর থেকে নয়, APK থেকে ইনস্টল হয়, আর শুধু আপনার চ্যাটের ভিডিও চালায়, অন্য কিছু নয়: মেসেজ, গান বা ছবি নয়। Apple TV সংস্করণ নেই।"
   },
   "desktop": {
-    "title": "TMPlayer: Windows, Mac ও Linux-এর Telegram ভিডিও প্লেয়ার",
-    "description": "Windows, macOS ও Linux-এর জন্য বিনামূল্যের, অনানুষ্ঠানিক Telegram ভিডিও প্লেয়ার। QR কোড দিয়ে সাইন ইন করুন এবং ডাউনলোড চলাকালীনই mpv দিয়ে চ্যাটের ভিডিও চালান।",
+    "title": "TMPlayer: Windows PC, Mac ও Linux-এর Telegram ভিডিও প্লেয়ার",
+    "description": "আপনার PC-র জন্য বিনামূল্যের, অনানুষ্ঠানিক Telegram প্লেয়ার: Windows, macOS বা Linux। QR কোড দিয়ে সাইন ইন করুন এবং ডাউনলোড চলাকালীনই mpv দিয়ে চ্যাটের ভিডিও চালান।",
     "a_telegram_video_player": "{em1} একটি Telegram ভিডিও প্লেয়ার",
     "a_telegram_video_player__em1": "Windows, Mac ও Linux-এর জন্য",
     "lede": "TMPlayer একটি বিনামূল্যের, ওপেন সোর্স ও অনানুষ্ঠানিক Telegram মিডিয়া প্লেয়ার। কম্পিউটারে এটি আপনার নিজের অ্যাকাউন্টে সাইন ইন করে, চ্যাটের ভিডিওগুলো পোস্টার হিসেবে দেখায় এবং ডাউনলোড চলাকালীনই চালায়।",

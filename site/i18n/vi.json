@@ -95,7 +95,7 @@
     "guides": "Hướng dẫn",
     "community": "Cộng đồng",
     "updated": "Cập nhật {time1}",
-    "get_tmplayer_for_your_tv": "Cài TMPlayer cho TV của bạn"
+    "get_tmplayer": "Cài TMPlayer"
   },
   "ld": {
     "a_free_open_source_4a30": "Trình phát video Telegram miễn phí, mã nguồn mở cho Android TV, điện thoại Android, Windows, macOS và Linux, phát video trong các cuộc trò chuyện của chính bạn.",
@@ -208,7 +208,9 @@
     "not_always_you_need_579a": "Không phải lúc nào cũng cần. Bạn cần tài khoản Telegram và một trong hai cách đăng nhập. Mã QR, thứ TV và máy tính hiển thị trước: trong Telegram trên điện thoại, mở Cài đặt, Thiết bị, Liên kết thiết bị máy tính và quét mã. Hoặc Đăng nhập bằng số điện thoại, thứ điện thoại hiển thị trước còn TV và máy tính đưa ra làm lựa chọn thứ hai: nhập số của bạn, rồi nhập mã Telegram gửi đến, thường là tới Telegram trên một thiết bị đã đăng nhập sẵn, như máy tính, nếu không thì qua tin nhắn SMS hoặc cuộc gọi. Nếu bật xác minh hai bước, bạn sẽ nhập tiếp mật khẩu Telegram.",
     "does_it_play_music_a59f": "Ứng dụng có phát nhạc và tệp âm thanh không?",
     "no_tmplayer_lists_videos_4257": "Không. TMPlayer chỉ liệt kê video: video Telegram, clip ngắn không tiếng, và các tệp mà Telegram coi là video hoặc có tên kết thúc bằng định dạng video như MKV hay MP4. Nhạc, tin nhắn thoại và tệp âm thanh gửi riêng, như MP3 hay FLAC, không xuất hiện trong đó, nên hãy mở chúng trong Telegram. Âm thanh bên trong video thì khác: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD và các định dạng khác đều phát được, và video có nhiều rãnh âm thanh cho phép bạn chuyển đổi giữa chúng khi đang xem.",
-    "guides_929a": "Hướng dẫn"
+    "guides_929a": "Hướng dẫn",
+    "can_i_download_telegram_2c9f": "Tôi có tải Telegram về TV được không?",
+    "telegram_makes_no_app_732d": "Telegram không có ứng dụng cho TV. Ứng dụng Android dành cho điện thoại có thể cài thủ công lên Android TV, nhưng nó được làm cho màn hình cảm ứng và khó dùng bằng điều khiển từ xa. TMPlayer được làm cho TV: trên Android TV, Google TV hoặc Fire TV, nó đăng nhập vào tài khoản Telegram của chính bạn bằng mã QR và phát video trong các cuộc trò chuyện của bạn, không kèm tin nhắn. TV Samsung chạy Tizen, TV LG chạy webOS, Roku và Apple TV không cài được nó vì không chạy Android; thay vào đó, hãy cắm một stick Android TV hoặc Fire TV Stick vào cổng HDMI của TV."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "Tính năng TMPlayer: phát video Telegram trên TV và PC",
@@ -655,7 +657,7 @@
     "not_apple_tv_and_not": "Không phải Apple TV, và không phải Chromecast không có Google TV.",
     "not_a_device_where_sideloading": "Không phải thiết bị đã khóa việc cài thủ công.",
     "a_tv_app_outside_the": "Một ứng dụng TV ngoài Play Store sống nhờ truyền miệng. Gắn sao là cách dễ nhất để lan tỏa nó.",
-    "watch_telegram_videos_on_android": "Xem video Telegram trên Android TV và Google TV. TMPlayer miễn phí và mã nguồn mở, với giao diện ưu tiên điều khiển từ xa, đăng nhập bằng QR và phát mượt trên TV stick 1 GB.",
+    "watch_telegram_videos_on_android": "Xem video Telegram trên Android TV và Google TV. TMPlayer miễn phí, mã nguồn mở, làm cho điều khiển từ xa, đăng nhập bằng QR và phát mượt trên stick 1 GB.",
     "rail_shot_alt": "Trang chủ TMPlayer trên TV, với thanh danh mục ở bên trái.",
     "sign_in_shot_alt": "Màn hình đăng nhập trên TV: mã QR để quét bằng Telegram trên điện thoại, và ba bước bên cạnh.",
     "search_shot_alt": "Tìm kiếm trong một cuộc trò chuyện mẫu trên TV, gõ là harbor lines, vẫn tìm ra mọi tập Harbour Lines.",
@@ -1013,11 +1015,11 @@
     "stuck_on_a_step_lists": "Bị kẹt ở một bước? {a1} liệt kê các nguyên nhân thường gặp. Dùng Android TV hoặc Google TV? {a2}.",
     "stuck_on_a_step_lists__a1": "Nếu có sự cố",
     "stuck_on_a_step_lists__a2": "Đọc hướng dẫn Android TV",
-    "watch_the_videos_in_your": "Xem video trong các cuộc trò chuyện Telegram trên Fire TV Stick, Fire TV Cube hoặc TV Fire TV Edition bằng TMPlayer, trình phát miễn phí được cài qua ứng dụng Downloader.",
+    "watch_the_videos_in_your": "Xem video trong các cuộc trò chuyện Telegram trên Fire TV Stick, Fire TV Cube hoặc TV Fire TV Edition bằng TMPlayer, trình phát miễn phí cài qua Downloader.",
     "how_to_watch_telegram_videos_2": "Cách xem video Telegram trên Fire TV"
   },
   "guide_no_casting": {
-    "telegram_on_your_tv_without": "Telegram trên TV của bạn mà không cần truyền màn hình | TMPlayer",
+    "telegram_on_your_tv_without": "Xem Telegram trên TV: truyền hay trình phát TV | TMPlayer",
     "without_casting": "{a1}{span1}{span2}{span3}Không cần truyền màn hình",
     "without_casting__a1": "Trang chủ",
     "without_casting__span2": "Hướng dẫn",
@@ -1053,7 +1055,7 @@
     "tmplayer_also_runs_on_windows__a1": "Tải về",
     "tmplayer_does_not_provide_media": "TMPlayer không cung cấp nội dung: nó phát những gì đã có trong cuộc trò chuyện và kênh của chính bạn. {a1} nói rõ những gì nó thấy được và không thấy được.",
     "tmplayer_does_not_provide_media__a1": "Phần câu hỏi",
-    "watch_telegram_videos_on_a": "Xem video Telegram trên TV mà không cần truyền hay chiếu màn hình điện thoại: một trình phát trên TV đăng nhập vào tài khoản của bạn và phát video trong các cuộc trò chuyện.",
+    "watch_telegram_videos_on_a": "Xem video Telegram trên TV mà không cần truyền hay chiếu màn hình điện thoại: trình phát trên TV đăng nhập tài khoản của bạn và phát video từ cuộc trò chuyện.",
     "telegram_on_your_tv_without_2": "Telegram trên TV của bạn mà không cần truyền màn hình",
     "five_ways_to_get_telegram": "Năm cách đưa video Telegram lên TV, đặt cạnh nhau để so sánh",
     "way": "Cách",
@@ -1077,8 +1079,8 @@
     "it_is_installed_from_the": "Ứng dụng được cài từ APK, không phải từ kho ứng dụng của TV, và chỉ phát video trong các cuộc trò chuyện của bạn: không có tin nhắn, nhạc hay ảnh. Không có bản cho Apple TV."
   },
   "desktop": {
-    "title": "TMPlayer: trình phát video Telegram cho Windows, Mac, Linux",
-    "description": "Trình phát video Telegram miễn phí, không chính thức cho Windows, macOS và Linux. Đăng nhập bằng mã QR và xem video trong cuộc trò chuyện qua mpv khi đang tải.",
+    "title": "TMPlayer: trình phát video Telegram cho PC Windows, Mac, Linux",
+    "description": "Trình phát Telegram miễn phí, không chính thức cho PC: Windows, macOS hoặc Linux. Đăng nhập bằng mã QR, xem video trong cuộc trò chuyện qua mpv khi đang tải.",
     "a_telegram_video_player": "Trình phát video Telegram {em1}",
     "a_telegram_video_player__em1": "cho Windows, Mac và Linux",
     "lede": "TMPlayer là trình phát media Telegram miễn phí, mã nguồn mở và không chính thức. Trên máy tính, nó đăng nhập vào tài khoản của chính bạn, hiển thị video trong các cuộc trò chuyện dưới dạng ảnh bìa và phát ngay khi đang tải.",

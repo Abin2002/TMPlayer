@@ -142,7 +142,7 @@ const hasMac = Boolean((latest.assets as Record<string, unknown>)['macos-arm64-d
               <T slot="note" k="download.win_msi_note"><em slot="em1">{t('download.win_msi_note__em1')}</em><em slot="em2">{t('download.win_msi_note__em2')}</em></T>
               <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_windows_x64_msi')}</p>
             </AbiRow>
-            <a slot="foot" href={l('/install/#windows')}>{t('download.how_to_install_on_windows')}</a>
+            <Fragment slot="foot"><a href={l('/install/#windows')}>{t('download.how_to_install_on_windows')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/desktop/')}>{t('desktop.features_link__a1')}</a></Fragment>
           </Platform>
 
           {/*
@@ -200,7 +200,7 @@ const hasMac = Boolean((latest.assets as Record<string, unknown>)['macos-arm64-d
     <div class="two-col" data-reveal>
       <Panel kind="yes" title={t('download.what_you_are_getting')}>
           <li><T k="download.on_a_tv_stick_box"><strong slot="strong1">{t('download.on_a_tv_stick_box__strong1')}</strong></T></li>
-          <li><T k="download.with_the_same_library_and"><strong slot="strong1">{t('download.with_the_same_library_and__strong1')}</strong></T></li>
+          <li><T k="download.with_the_same_library_and"><a href={l('/desktop/')} slot="strong1"><strong>{t('download.with_the_same_library_and__strong1')}</strong></a></T></li>
           <li><T k="download.every_release_links_the_source"><strong slot="strong1">{t('download.every_release_links_the_source__strong1')}</strong></T></li>
       </Panel>
       <Panel kind="no" title={t('download.what_it_will_not_do')}>

@@ -95,7 +95,7 @@
     "guides": "Anleitungen",
     "community": "Community",
     "updated": "Aktualisiert: {time1}",
-    "get_tmplayer_for_your_tv": "Hol dir TMPlayer für deinen Fernseher"
+    "get_tmplayer": "Hol dir TMPlayer"
   },
   "ld": {
     "a_free_open_source_4a30": "Ein kostenloser Open-Source-Telegram-Videoplayer für Android TV, Android-Smartphones, Windows, macOS und Linux, der die Videos in deinen eigenen Chats streamt.",
@@ -208,7 +208,9 @@
     "not_always_you_need_579a": "Nicht immer. Du brauchst dein Telegram-Konto und einen von zwei Wegen hinein. Der QR-Code, den ein Fernseher und ein Computer zuerst zeigen: Öffne in Telegram auf deinem Smartphone Einstellungen, Geräte, Desktop-Gerät verknüpfen und scanne ihn. Oder Mit Telefonnummer anmelden, was ein Smartphone zuerst zeigt und ein Fernseher und ein Computer als zweite Wahl anbieten: Gib deine Nummer ein, dann den Code, den Telegram schickt, meist an Telegram auf einem schon angemeldeten Gerät wie einem Computer, sonst per SMS oder Anruf. Ist die zweistufige Bestätigung aktiv, folgt danach dein Telegram-Passwort.",
     "does_it_play_music_a59f": "Spielt es Musik und Audiodateien ab?",
     "no_tmplayer_lists_videos_4257": "Nein. TMPlayer listet nur Videos auf: Telegram-Videos, kurze stumme Clips und Dateien, die Telegram als Video führt oder deren Namen auf ein Videoformat wie MKV oder MP4 enden. Musik, Sprachnachrichten und einzeln gesendete Audiodateien wie MP3 oder FLAC erscheinen darin nicht, öffne sie also in Telegram. Der Ton in einem Video ist etwas anderes: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD und der Rest werden abgespielt, und bei einem Video mit mehreren Tonspuren kannst du während der Wiedergabe zwischen ihnen wechseln.",
-    "guides_929a": "Anleitungen"
+    "guides_929a": "Anleitungen",
+    "can_i_download_telegram_2c9f": "Kann ich Telegram auf meinen Fernseher herunterladen?",
+    "telegram_makes_no_app_732d": "Telegram hat keine App für Fernseher. Die Android-App fürs Smartphone lässt sich von Hand auf einem Android TV installieren, ist aber für Touch gebaut und mit der Fernbedienung mühsam. TMPlayer ist für den Fernseher gemacht: Auf Android TV, Google TV oder Fire TV meldet es sich per QR-Code bei deinem eigenen Telegram-Konto an und spielt die Videos aus deinen Chats ab, ohne die Nachrichten. Samsung-Fernseher mit Tizen, LG-Fernseher mit webOS, Roku und Apple TV können es nicht installieren, weil sie kein Android haben; steck stattdessen einen Android-TV-Stick oder einen Fire TV Stick in den HDMI-Anschluss des Fernsehers."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer-Funktionen: Telegram-Videos auf TV und PC streamen",
@@ -655,7 +657,7 @@
     "not_apple_tv_and_not": "Nicht Apple TV und kein Chromecast ohne Google TV.",
     "not_a_device_where_sideloading": "Kein Gerät, auf dem Sideloading gesperrt ist.",
     "a_tv_app_outside_the": "Eine TV-App außerhalb des Play Stores lebt von Mundpropaganda. Ein Stern ist der einfachste Weg, sie zu verbreiten.",
-    "watch_telegram_videos_on_android": "Schau Telegram-Videos auf Android TV und Google TV. TMPlayer ist kostenlos und Open Source, mit einem Layout für die Fernbedienung, QR-Anmeldung und flüssiger Wiedergabe auf 1-GB-Sticks.",
+    "watch_telegram_videos_on_android": "Telegram-Videos auf Android TV und Google TV: TMPlayer ist kostenlos und Open Source, für die Fernbedienung gebaut, mit QR-Anmeldung und flüssig auf 1-GB-Sticks.",
     "rail_shot_alt": "Die Startseite von TMPlayer auf einem Fernseher, mit der Leiste der Kategorien links.",
     "sign_in_shot_alt": "Die Anmeldung auf einem Fernseher: ein QR-Code zum Scannen mit Telegram auf dem Handy, daneben die drei Schritte.",
     "search_shot_alt": "Eine Suche in einem Demo-Chat auf einem Fernseher, getippt als harbor lines, findet jede Folge von Harbour Lines.",
@@ -755,7 +757,7 @@
     "apps_installed_from_outside_the__em4": "Installierte Anwendungen verwalten",
     "still_stuck_with_your_fire": "Immer noch Probleme? {a1} mit deinem Fire-TV-Modell, seiner Fire-OS-Version und dem, was der Bildschirm gemeldet hat.",
     "still_stuck_with_your_fire__a1": "Öffne ein Issue",
-    "install_the_tmplayer_telegram_video": "Installiere den TMPlayer-Telegram-Videoplayer auf einem Fire TV Stick, Fire TV Cube oder Fire TV Edition Fernseher mit der kostenlosen App Downloader, adb oder Send files to TV.",
+    "install_the_tmplayer_telegram_video": "Installiere den Telegram-Videoplayer TMPlayer auf Fire TV Stick, Fire TV Cube oder Fire-TV-Edition-Fernseher mit Downloader, adb oder Send files to TV.",
     "on_this_page": "Auf dieser Seite"
   },
   "faq": {
@@ -971,7 +973,7 @@
     "questions_about_privacy_and_what__a1": "den Fragen",
     "questions_about_privacy_and_what__a2": "der Sicherheitsseite",
     "questions_about_privacy_and_what__a3": "Lies die Fire-TV-Anleitung",
-    "watch_the_videos_in_your": "Schau die Videos in deinen eigenen Telegram-Chats und Kanälen auf einem Android TV oder Google TV: TMPlayer installieren, mit dem Smartphone einen QR-Code scannen und Play drücken.",
+    "watch_the_videos_in_your": "Schau die Videos aus deinen Telegram-Chats und Kanälen auf Android TV oder Google TV: TMPlayer installieren, QR-Code mit dem Smartphone scannen, Play drücken.",
     "how_to_watch_telegram_videos_2": "So schaust du Telegram-Videos auf Android TV"
   },
   "guide_fire_tv": {
@@ -1013,11 +1015,11 @@
     "stuck_on_a_step_lists": "Hängst du bei einem Schritt? {a1} listet die üblichen Ursachen. Stattdessen auf Android TV oder Google TV? {a2}.",
     "stuck_on_a_step_lists__a1": "Wenn etwas schiefgeht",
     "stuck_on_a_step_lists__a2": "Lies die Android-TV-Anleitung",
-    "watch_the_videos_in_your": "Schau die Videos in deinen Telegram-Chats auf einem Fire TV Stick, Fire TV Cube oder Fire TV Edition Fernseher mit TMPlayer, einem kostenlosen Player, den du mit der App Downloader installierst.",
+    "watch_the_videos_in_your": "Schau die Videos aus deinen Telegram-Chats auf Fire TV Stick, Fire TV Cube oder Fire-TV-Edition-Fernseher mit TMPlayer, einem kostenlosen Player via Downloader.",
     "how_to_watch_telegram_videos_2": "So schaust du Telegram-Videos auf Fire TV"
   },
   "guide_no_casting": {
-    "telegram_on_your_tv_without": "Telegram auf deinem TV ohne Casting | TMPlayer",
+    "telegram_on_your_tv_without": "Telegram auf dem Fernseher: Casting oder TV-Player | TMPlayer",
     "without_casting": "{a1}{span1}{span2}{span3}Ohne Casting",
     "without_casting__a1": "Startseite",
     "without_casting__span2": "Anleitungen",
@@ -1053,7 +1055,7 @@
     "tmplayer_also_runs_on_windows__a1": "Downloads",
     "tmplayer_does_not_provide_media": "TMPlayer stellt keine Medien bereit: Es spielt ab, was schon in deinen eigenen Chats und Kanälen liegt. {a1} erklären, was es sehen kann und was nicht.",
     "tmplayer_does_not_provide_media__a1": "Die Fragen",
-    "watch_telegram_videos_on_a": "Schau Telegram-Videos auf dem Fernseher, ohne dein Smartphone zu casten oder zu spiegeln: Ein Player auf dem Fernseher meldet sich bei deinem Konto an und streamt die Videos in deinen Chats.",
+    "watch_telegram_videos_on_a": "Telegram-Videos auf dem Fernseher, ohne Casting oder Spiegeln: Ein Player auf dem TV meldet sich bei deinem Konto an und streamt die Videos aus deinen Chats.",
     "telegram_on_your_tv_without_2": "Telegram auf deinem TV ohne Casting",
     "five_ways_to_get_telegram": "Fünf Wege, Telegram-Videos auf den Fernseher zu bringen, im direkten Vergleich",
     "way": "Weg",
@@ -1077,8 +1079,8 @@
     "it_is_installed_from_the": "Es wird aus der APK installiert, nicht aus dem App-Store des Fernsehers, und spielt die Videos in deinen Chats ab, sonst nichts: keine Nachrichten, keine Musik, keine Fotos. Eine Version für Apple TV gibt es nicht."
   },
   "desktop": {
-    "title": "TMPlayer: Telegram-Videoplayer für Windows, Mac und Linux",
-    "description": "Kostenloser, inoffizieller Telegram-Videoplayer für Windows, macOS und Linux. Per QR-Code anmelden und Videos aus deinen Chats über mpv beim Laden abspielen.",
+    "title": "TMPlayer: Telegram-Videoplayer für Windows-PC, Mac und Linux",
+    "description": "Ein kostenloser, inoffizieller Telegram-Player für deinen PC: Windows, macOS oder Linux. Per QR-Code anmelden und Videos aus deinen Chats über mpv abspielen.",
     "a_telegram_video_player": "Ein Telegram-Videoplayer {em1}",
     "a_telegram_video_player__em1": "für Windows, Mac und Linux",
     "lede": "TMPlayer ist ein kostenloser, quelloffener und inoffizieller Telegram-Mediaplayer. Auf dem Computer meldet er sich bei deinem eigenen Konto an, zeigt die Videos in deinen Chats als Poster und spielt sie ab, während sie laden.",

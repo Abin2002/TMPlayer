@@ -14,7 +14,7 @@ const lang = Astro.locals.lang;
 const close = buildString(lang, 'build.kao_close');
 ---
 <aside class="get-bar" id="get-bar" aria-labelledby="get-bar-text" hidden>
-  <p id="get-bar-text">{text(lang, 'common.get_tmplayer_for_your_tv')}</p>
+  <p id="get-bar-text">{text(lang, 'common.get_tmplayer')}</p>
   <a class="btn btn-filled get-bar-go" href={l(lang, '/download/')}>{text(lang, 'common.download')}</a>
   <button type="button" class="get-bar-close" data-get-close aria-label={close} title={close}><Icon name="close" /></button>
 </aside>
