@@ -1,7 +1,6 @@
 package com.tmplayer.ui.browse
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -27,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,7 +57,6 @@ import com.tmplayer.ui.theme.focusRing
 import com.tmplayer.ui.theme.rememberReducedMotion
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 
 /**
  * Experimental (diag/tv-top-bar): the television's slim bar across the top of the page in place
@@ -98,9 +95,9 @@ internal object TvBarSignals {
 
 /**
  * The bar: Home, Chats and Settings at the start, the phone's tabs in the phone's order; then, as
- * one group at the end, Search, Refresh where the page has something to refresh, the clock and the
- * account's picture, which opens what the phone's picture opens (Favourites, Downloads, History,
- * Watch later, and Update when there is one).
+ * one group at the end, Search, the clock and the account's picture, which opens what the phone's
+ * picture opens (Favourites, Downloads, History, Watch later, and Update when there is one) and
+ * Refresh where the page has something to fetch again ([onRefresh]).
  *
  * The page being shown is marked with an underline in the accent whether or not the remote is on
  * the bar; the item the remote is on fills and grows. Over the Home carousel ([overArt]) the page's
@@ -181,7 +178,6 @@ internal fun TvTopBar(
             // One group, one gap: the two buttons, the clock and the picture.
             Row(horizontalArrangement = Arrangement.spacedBy(CLUSTER_GAP), verticalAlignment = Alignment.CenterVertically) {
                 BarIconButton(s.commonSearch, TmIcons.Search, chosen = searchOpen, onClick = onSearch, modifier = Modifier.focusRequester(searchRequester))
-                if (onRefresh != null) RefreshButton(s.commonRefresh, onRefresh)
                 TvClock(onArt = false)
                 ProfileButton(
                     account = nav.account,
@@ -216,6 +212,9 @@ internal fun TvTopBar(
                 add(MenuAction(s.navDownloads, TmIcons.Download, detail = nav.downloadCount.takeIf { it > 0 }?.toString(), onSelect = go(nav.onDownloads)))
                 add(MenuAction(s.browseTabHistory, TmIcons.History, onSelect = go { nav.onHistory(HistoryTab.Continue) }))
                 add(MenuAction(s.browseTabWatchLater, TmIcons.Clock, onSelect = go { nav.onHistory(HistoryTab.WatchLater) }))
+                // Home and the chat list fetch again from here: Home also refreshes itself when
+                // the app comes back after a while (MainActivity).
+                if (onRefresh != null) add(MenuAction(s.commonRefresh, TmIcons.Refresh, onSelect = { profileOpen = false; onRefresh() }))
                 nav.updateVersion?.let { version -> add(MenuAction(s.navUpdate, TmIcons.Refresh, detail = version, onSelect = go(nav.onUpdate))) }
             },
         )
@@ -295,7 +294,7 @@ private fun BarTab(label: String, icon: ImageVector, selected: Boolean, onClick:
     }
 }
 
-/** A round icon button in the end group: Search. Filled and grown under the remote. */
+/** The round Search button in the end group: filled and grown under the remote. */
 @Composable
 private fun BarIconButton(
     label: String,
@@ -303,7 +302,6 @@ private fun BarIconButton(
     chosen: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    rotation: () -> Float = { 0f },
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
@@ -343,7 +341,7 @@ private fun BarIconButton(
                 .clickable(interactionSource = interactions, indication = null, role = Role.Button, onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, contentDescription = label, tint = ink, modifier = Modifier.size(22.dp).graphicsLayer { rotationZ = rotation() })
+            Icon(icon, contentDescription = label, tint = ink, modifier = Modifier.size(22.dp))
         }
         if (chosen) {
             Box(
@@ -357,29 +355,6 @@ private fun BarIconButton(
             )
         }
     }
-}
-
-/** Refresh, which turns once round every time it is pressed, so the press is never silent. */
-@Composable
-private fun RefreshButton(label: String, onRefresh: () -> Unit) {
-    val scope = rememberCoroutineScope()
-    val turn = remember { Animatable(0f) }
-    val still = rememberReducedMotion() || Motion.reduced
-    BarIconButton(
-        label = label,
-        icon = TmIcons.Refresh,
-        chosen = false,
-        rotation = { turn.value },
-        onClick = {
-            onRefresh()
-            if (!still) {
-                scope.launch {
-                    turn.snapTo(turn.value % 360f)
-                    turn.animateTo(turn.value + 360f, Motion.standard(Motion.Slow * 2))
-                }
-            }
-        },
-    )
 }
 
 /** The account's picture, last in the bar: opens the account's menu. Ringed while one of its pages is shown. */
