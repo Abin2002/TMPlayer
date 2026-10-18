@@ -123,6 +123,9 @@ shows through in the background. They are listed under Selected twins below.
 | `FullscreenExit` | ArrowShrink |  | PlayerIcons.FullscreenExit | Leave full screen. |
 | `PictureInPicture` | PictureInPictureOn |  | PlayerIcons.PictureInPicture | Picture in picture. |
 | `AspectRatio` | AspectRatio |  | PlayerIcons.AspectRatio | Fit, fill, zoom. |
+| `ShapeFit` | FitToScreen |  |  | The picture shape button on Fit: the video's own shape inside the screen. |
+| `ShapeCrop` | Crop |  |  | The picture shape button on Crop: filled, the edges cut. |
+| `ShapeStretch` | MaximizeScreen |  |  | The picture shape button on Stretch: pulled out to the screen's edges. |
 | `Trailer` | Clapperboard |  | TrailerIcon | A title's trailer. |
 
 ## Selected twins: `TmIcons.selectedOf`
@@ -156,6 +159,9 @@ shows through in the background. They are listed under Selected twins below.
 | `ic_audio_language` | Headphones |  | 36 dp | Audio track, on the player row and in settings. |
 | `ic_speed` | DashboardSpeed02 |  | 36 dp | Playback speed. |
 | `ic_aspect` | AspectRatio |  | 36 dp | Fit, fill, zoom. |
+| `ic_shape_fit` | FitToScreen |  | 36 dp | The row's picture shape button on Fit. |
+| `ic_shape_crop` | Crop |  | 36 dp | The row's picture shape button on Crop. |
+| `ic_shape_stretch` | MaximizeScreen |  | 36 dp | The row's picture shape button on Stretch. |
 | `ic_rotate_auto` | ScreenRotation |  | 36 dp | Rotation follows the phone. |
 | `ic_rotate_landscape` | SmartPhoneLandscape |  | 36 dp | Rotation held in landscape. |
 | `ic_rotate_portrait` | SmartPhone01 |  | 36 dp | Rotation held in portrait. |

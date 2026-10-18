@@ -240,6 +240,77 @@ class PlayerExtrasRenderTest {
         drawWindow(activity, "extras-swipe-half.png")
     }
 
+    // ---- the row: picture shape on the bar ------------------------------------------------------
+
+    /**
+     * The row as a video in a series with a second copy leaves it: every button the row can carry,
+     * so a crowded row shows its worst. [rtl] lays the window out right to left (the row itself
+     * stays left to right, as media controls do).
+     */
+    private fun row(tv: Boolean, name: String, rtl: Boolean = false, focus: Int? = null, shape: VideoScale = VideoScale.Fit): PlayerControls {
+        FormFactor.override(tv)
+        var controls: PlayerControls? = null
+        val activity = picture { activity, root ->
+            FormFactor.override(tv)
+            if (rtl) activity.window.decorView.layoutDirection = View.LAYOUT_DIRECTION_RTL
+            LayoutInflater.from(activity).inflate(R.layout.player_controls, root, true)
+            controls = PlayerControls(
+                root = root,
+                isTv = tv,
+                player = { player },
+                onVisibility = {},
+                onTogglePlay = {},
+                onPickSubtitles = {},
+                onPickAudio = {},
+                onPickSpeed = {},
+                onCycleOrientation = {},
+                onPlayEpisode = {},
+            ).also {
+                it.setTitle("Night Train", "S01E04  ·  The Lighthouse")
+                it.setEpisodesAvailable(true)
+                it.setCopy("1080p")
+                it.setShape(shape)
+                it.show()
+            }
+        }
+        idle(600)
+        // From touch, which takes the window out of touch mode, so the focus circle is drawn as on a remote.
+        focus?.let { assertTrue(activity.findViewById<View>(it).requestFocusFromTouch()) }
+        idle(300)
+        drawWindow(activity, name)
+        return requireNotNull(controls)
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w891dp-h411dp-land-night-xhdpi")
+    fun rowPhoneSideways() {
+        val controls = row(tv = false, name = "extras-row-phone-land.png")
+        assertTrue("picture shape on the row", controls.shapeOnRow)
+        assertTrue("the lock on the row", controls.lockOnRow)
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w891dp-h411dp-land-night-xhdpi")
+    fun rowPhoneSidewaysRtl() {
+        row(tv = false, name = "extras-row-phone-land-rtl.png", rtl = true, shape = VideoScale.Crop)
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w411dp-h891dp-port-night-xhdpi")
+    fun rowPhoneUpright() {
+        val controls = row(tv = false, name = "extras-row-phone-port.png")
+        // Upright the row has no room: both stay in the overflow, which then offers picture shape.
+        assertTrue(!controls.shapeOnRow && !controls.lockOnRow)
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w960dp-h540dp-land-night-xhdpi")
+    fun rowTelevisionOnShape() {
+        val controls = row(tv = true, name = "extras-row-tv-shape.png", focus = R.id.control_shape, shape = VideoScale.Stretch)
+        assertTrue(controls.shapeOnRow)
+        assertTrue("the television keeps its lock in More", !controls.lockOnRow)
+    }
+
     @Test
     @Config(sdk = [35], qualifiers = "w891dp-h411dp-land-night-xhdpi")
     fun barScrubHint() {

@@ -89,7 +89,7 @@ keeps it up to date.
 | **OK** | Play / pause in one press; a pause brings the controls up with a play sign in the middle. **Up / Down** show the controls without pausing |
 | **⏯** (if your remote has it) | Play / pause; paused, the controls stay up with a play sign in the middle |
 | **Left / Right** (on the seek bar) | Travel: 30 seconds a press, presses pile up and land as one seek a moment after the last |
-| **Down** (controls up) | The button row: subtitles, audio, speed (the presets, then Slower and Faster lines for 0.05x steps), and More at the end. More holds the previous and next episode, the previous and next chapter of a video that has chapters, picture shape, picture in picture, start over, volume boost, sleep timer and the rest |
+| **Down** (controls up) | The button row: subtitles, audio, speed (the presets, then Slower and Faster lines for 0.05x steps), picture shape (each press steps Fit, Crop, Stretch), and More at the end. More holds the lock, the previous and next chapter of a video that has chapters, picture in picture, start over, volume boost, sleep timer and the rest |
 | **0 - 9** (if your remote has them) | Jump to that tenth of the video; 5 is halfway |
 | **Up** (after a long jump) | Back to where you were before it, while the "Back to" sign is up in the corner |
 | **⏪ / ⏩** (if your remote has them) | Jump back 5 / forward 10 seconds |
@@ -114,7 +114,9 @@ keeps it up to date.
 | **Hold a button** | Show its name |
 | **Start over** | Appears for a few seconds when a video opens where you left off |
 | **Speed button** | The preset speeds, and a fine control under them: 0.05x a press, from 0.25x to 4x |
-| **⋮ menu** | Lock the screen, picture in picture, picture shape, volume boost, sleep timer, the previous and next chapter of a video that has chapters, save a frame (into Pictures/TMPlayer, with Share; not for chats that restrict saving, needs Android 10), open in another app, subtitle file, copy link, save to Downloads, mark watched, details |
+| **Picture shape button** | Steps Fit, Crop, Stretch; on the row when the phone is held sideways, in the ⋮ menu when upright |
+| **Lock button** | On the row when the phone is held sideways; always first in the ⋮ menu |
+| **⋮ menu** | Lock the screen, picture in picture, picture shape (phone held upright), volume boost, sleep timer, the previous and next chapter of a video that has chapters, save a frame (into Pictures/TMPlayer, with Share; not for chats that restrict saving, needs Android 10), open in another app, subtitle file, copy link, save to Downloads, mark watched, details |
 
 The jump length, the hold speed, how long the controls stay up, each drag and the vibration are
 all in Settings, Player. Settings, Playback can keep the sound playing with the screen off or in

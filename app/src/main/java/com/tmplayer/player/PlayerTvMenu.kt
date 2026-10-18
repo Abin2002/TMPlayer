@@ -61,8 +61,8 @@ import com.tmplayer.ui.theme.focusRing
  * over the player. The menu draws in a dialog window of its own, which also takes the remote's
  * keys away from the activity while it is up: nothing behind it seeks or pauses by accident.
  *
- * Four pages: the list itself ([PlayerMenu.tvEntries]), the picture shapes, the sleep timer's
- * lengths, and the remote's keys. The speeds are not here: the row's Speed button opens them.
+ * Three pages: the list itself ([PlayerMenu.tvEntries]), the sleep timer's lengths, and the
+ * remote's keys. The speeds and the picture shape are not here: the row has a button for each.
  * The activity keeps every action; this only shows the lines and reports which one was chosen.
  */
 class PlayerTvMenu(
@@ -70,8 +70,6 @@ class PlayerTvMenu(
     root: ViewGroup,
     private val title: () -> String,
     private val pictureInPicture: () -> Boolean,
-    /** The picture shape in force, for the Picture shape line's detail and its page's tick. */
-    private val shape: () -> VideoScale = { VideoScale.Fit },
     /** Whether Save to Downloads is offered, asked each time the menu opens. */
     private val saveToDownloads: () -> Boolean = { false },
     /** Whether Mark as watched is offered at all, and whether the video is on the list already. */
@@ -97,10 +95,9 @@ class PlayerTvMenu(
     /** The chapter playing ("Chapter 3 of 12: The Station"), or null for a file without chapters. */
     private val chapter: () -> String? = { null },
     private val onEntry: (PlayerMenuEntry) -> Unit,
-    private val onShape: (VideoScale) -> Unit = {},
     private val onClosed: () -> Unit,
 ) {
-    private enum class Page { Closed, Main, Shape, Sleep, Keys }
+    private enum class Page { Closed, Main, Sleep, Keys }
 
     private val page = mutableStateOf(Page.Closed)
 
@@ -148,15 +145,6 @@ class PlayerTvMenu(
             )
             // Pick one of a few, so the pickers' panel, as the subtitles and the phone's overflow
             // draw it; Back steps back to the menu, Close shuts it.
-            Page.Shape -> ShapeSheet(
-                current = shape(),
-                onPick = { choice ->
-                    onShape(choice)
-                    close()
-                },
-                onDismiss = { page.value = Page.Main },
-                onClose = ::close,
-            )
             Page.Sleep -> SleepSheet(
                 running = sleepTimer(),
                 chosen = sleepChoice(),
@@ -179,11 +167,6 @@ class PlayerTvMenu(
             PlayerMenuEntry.LockScreen -> MenuAction(s.playerLockScreen, TmIcons.Lock, detail = s.playerHoldOkToUnlock) { choose(entry) }
             PlayerMenuEntry.PlaybackDetails -> MenuAction(s.playerPlaybackDetails, TmIcons.Info) { choose(entry) }
             PlayerMenuEntry.StartOver -> MenuAction(s.playerStartOver, TmIcons.Refresh) { choose(entry) }
-            PlayerMenuEntry.PictureShape -> MenuAction(
-                label = s.playerPictureShape,
-                icon = ImageVector.vectorResource(R.drawable.ic_aspect),
-                detail = shape().label,
-            ) { page.value = Page.Shape }
             PlayerMenuEntry.VolumeBoost -> MenuAction(
                 label = s.playerVolumeBoost,
                 icon = ImageVector.vectorResource(R.drawable.ic_volume),

@@ -1,5 +1,6 @@
 package com.tmplayer.desktop.player
 
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
@@ -496,12 +497,16 @@ class PlayerMouseTest {
             )
         }
         open(fromStart = false)
+        // The offer comes once the saved point has been read, which a slow runner (Windows on CI)
+        // had not done yet when the click was made.
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("Start over").fetchSemanticsNodes().isNotEmpty() }
         onNodeWithText("Start over").performClick()
         waitForIdle()
         press(Key.K)
         assertEquals(1, engine.count("toggle"))
         engine.end()
         waitForIdle()
+        waitUntil(timeoutMillis = 5_000) { onAllNodesWithText("Watch again").fetchSemanticsNodes().isNotEmpty() }
         onNodeWithText("Watch again").performClick()
         waitForIdle()
         press(Key.K)

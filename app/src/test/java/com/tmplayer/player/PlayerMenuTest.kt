@@ -22,7 +22,6 @@ class PlayerMenuTest {
                 PlayerMenuEntry.Bookmarks,
                 PlayerMenuEntry.SaveToDownloads,
                 PlayerMenuEntry.MarkWatched,
-                PlayerMenuEntry.PictureShape,
                 PlayerMenuEntry.PictureInPicture,
                 PlayerMenuEntry.OpenInAnotherApp,
                 PlayerMenuEntry.RemoteKeys,
@@ -169,7 +168,22 @@ class PlayerMenuTest {
                 saveFrame = true,
             ),
         )
-        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true, paused = true, bookmarks = true, chapters = true, saveFrame = true).toSet())
+        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true, paused = true, bookmarks = true, chapters = true, saveFrame = true, pictureShape = true).toSet())
+    }
+
+    @Test
+    fun `picture shape is in the phone's menu only while the row has no button for it`() {
+        assertFalse(PhoneMenuEntry.PictureShape in PlayerMenu.phoneEntries(true, true, true, true))
+        val upright = PlayerMenu.phoneEntries(true, true, true, true, pictureShape = true)
+        // After the lock and picture in picture, the other lines about the screen itself.
+        assertEquals(2, upright.indexOf(PhoneMenuEntry.PictureShape))
+        assertEquals("Picture shape (Crop)", PhoneMenuEntry.PictureShape.label(shape = VideoScale.Crop))
+    }
+
+    @Test
+    fun `the television's More has no picture shape line, the row's button steps it`() {
+        val all = PlayerMenu.tvEntries(pictureInPicture = true, saveToDownloads = true, markWatched = true, paused = true, bookmarks = true, chapters = true)
+        assertFalse(all.any { it.name == "PictureShape" })
     }
 
     @Test

@@ -41,8 +41,8 @@ enum class PlayerMenuEntry {
     SaveToDownloads,
     /** "Mark as watched", or "Mark as unwatched" once it is on the list. */
     MarkWatched,
-    /** Fit, crop or stretch: a page of the three. Its only home on the television, the row has no button for it. */
-    PictureShape,
+    // Picture shape is not here: the row's own button steps it (2026-10-18), a press per shape
+    // rather than More, a line and a page.
     PictureInPicture,
     OpenInAnotherApp,
     RemoteKeys,
@@ -58,6 +58,11 @@ enum class PhoneMenuEntry {
     /** First and set apart with its icon: the line people come to the menu for (user, 2026-10-18). */
     LockScreen,
     PictureInPicture,
+    /**
+     * Fit, crop or stretch, as a page of the three: only while the row has no room for its
+     * button (a phone held upright), so the pinch is not the only way there.
+     */
+    PictureShape,
     VolumeBoost,
     SleepTimer,
     /** A-B repeat, as on the television: one line that says what the next press does. */
@@ -94,9 +99,11 @@ fun PhoneMenuEntry.label(
     watched: Boolean = false,
     loop: AbLoop? = null,
     bookmarks: Int = 0,
+    shape: VideoScale? = null,
 ): String = when (this) {
     PhoneMenuEntry.LockScreen -> L.playerLockScreen
     PhoneMenuEntry.PictureInPicture -> L.playerPictureInPicture
+    PhoneMenuEntry.PictureShape -> shape?.let { L.commonWithDetail(L.playerPictureShape, it.label) } ?: L.playerPictureShape
     PhoneMenuEntry.VolumeBoost -> L.playerVolumeBoost
     PhoneMenuEntry.SleepTimer -> sleepDetail?.let { L.playerSleepTimerNow(it) } ?: L.playerSleepTimer
     PhoneMenuEntry.AbLoop -> PlayerMenu.loopLabel(loop)
@@ -178,7 +185,6 @@ object PlayerMenu {
         }
         if (saveToDownloads) add(PlayerMenuEntry.SaveToDownloads)
         if (markWatched) add(PlayerMenuEntry.MarkWatched)
-        add(PlayerMenuEntry.PictureShape)
         if (pictureInPicture) add(PlayerMenuEntry.PictureInPicture)
         if (openInAnotherApp) add(PlayerMenuEntry.OpenInAnotherApp)
         add(PlayerMenuEntry.RemoteKeys)
@@ -191,6 +197,8 @@ object PlayerMenu {
      * can still become one; [paused] adds the frame steps. Lines rather than buttons, so the row
      * CP37 cleared stays clear. [chapters] adds the chapter steps. [saveFrame] is false for a
      * chat that restricts saving (or while that is still being asked), whose frames stay in it.
+     * [pictureShape] is whether the row has no picture shape button right now, which puts its
+     * page here instead. The lock stays first either way: the line people come here for.
      */
     fun phoneEntries(
         pictureInPicture: Boolean,
@@ -201,9 +209,11 @@ object PlayerMenu {
         bookmarks: Boolean = false,
         chapters: Boolean = false,
         saveFrame: Boolean = false,
+        pictureShape: Boolean = false,
     ): List<PhoneMenuEntry> = buildList {
         add(PhoneMenuEntry.LockScreen)
         if (pictureInPicture) add(PhoneMenuEntry.PictureInPicture)
+        if (pictureShape) add(PhoneMenuEntry.PictureShape)
         add(PhoneMenuEntry.VolumeBoost)
         add(PhoneMenuEntry.SleepTimer)
         add(PhoneMenuEntry.AbLoop)

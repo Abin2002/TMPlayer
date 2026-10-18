@@ -872,6 +872,35 @@ object TmIcons {
         )
     }
 
+    /** The picture shape button on Fit: the video's own shape inside the screen. Hugeicons FitToScreen. */
+    val ShapeFit: ImageVector by lazy {
+        icon(
+            "ShapeFit",
+            s("M3 4V20"),
+            s("M21 4V20"),
+            s("M15.6216 9L16.5002 9.87868C17.5002 10.8787 18.0002 11.3787 18.0002 12C18.0002 12.6213 17.5002 13.1213 16.5002 14.1213L15.6216 15M8.37892 9L7.50024 9.87868C6.50024 10.8787 6.00024 11.3787 6.00024 12C6.00024 12.6213 6.50024 13.1213 7.50024 14.1213L8.37892 15M6.37892 12H17.6216"),
+        )
+    }
+
+    /** The picture shape button on Crop: filled, the edges cut. Hugeicons Crop. */
+    val ShapeCrop: ImageVector by lazy {
+        icon(
+            "ShapeCrop",
+            s("M4 2V4M22 20H20M16.5 20H10C7.17157 20 5.75736 20 4.87868 19.1213C4 18.2426 4 16.8284 4 14V7.5"),
+            s("M20 22L20 12C20 8.22877 20 6.34315 18.8284 5.17158C17.6569 4 15.7712 4 12 4L2 4"),
+        )
+    }
+
+    /** The picture shape button on Stretch: pulled out to the screen's edges. Hugeicons MaximizeScreen. */
+    val ShapeStretch: ImageVector by lazy {
+        icon(
+            "ShapeStretch",
+            s("M12.5667 7.93408L15.3088 8.03416C15.7163 8.04903 16.0391 8.38374 16.0391 8.79156V11.4064M10.5391 13.4341L15.5828 8.41565"),
+            s("M2 17C2 15.1144 2 14.1716 2.58579 13.5858C3.17157 13 4.11438 13 6 13H7C8.88562 13 9.82843 13 10.4142 13.5858C11 14.1716 11 15.1144 11 17V18C11 19.8856 11 20.8284 10.4142 21.4142C9.82843 22 8.88562 22 7 22H6C4.11438 22 3.17157 22 2.58579 21.4142C2 20.8284 2 19.8856 2 18V17Z"),
+            s("M2 8.5V10.5M14 2H10M22 14V10M13.5 22H15.5M2.05986 5.5C2.21387 4.43442 2.51347 3.67903 3.09625 3.09625C3.67903 2.51347 4.43442 2.21387 5.5 2.05986M18.5 2.05986C19.5656 2.21387 20.321 2.51347 20.9037 3.09625C21.4865 3.67903 21.7861 4.43442 21.9401 5.5M21.9401 18.5C21.7861 19.5656 21.4865 20.321 20.9037 20.9037C20.321 21.4865 19.5656 21.7861 18.5 21.9401"),
+        )
+    }
+
     /** A title's trailer. Hugeicons Clapperboard. */
     val Trailer: ImageVector by lazy {
         icon(

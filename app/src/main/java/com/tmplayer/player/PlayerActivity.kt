@@ -695,6 +695,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             onPlayEpisode = ::playEpisode,
             onEpisodes = ::openEpisodes,
             onCopies = ::openCopies,
+            // The row's picture shape button: the next shape along, as W does on the desktop.
+            onCycleShape = { applyScale(videoScale.next()) },
+            onLock = ::lockScreen,
             onBack = ::finish,
             onMore = ::showOverflow,
             onRemainingToggled = { remaining ->
@@ -713,7 +716,6 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 root = findViewById(R.id.player_root),
                 title = { mediaTitle },
                 pictureInPicture = { packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) },
-                shape = { videoScale },
                 saveToDownloads = ::canSaveToDownloads,
                 markWatched = ::hasMessage,
                 watched = { onWatchedList },
@@ -731,7 +733,6 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     else Chapters.labelAt(chapters, player?.currentPosition ?: 0L) ?: L.playerBeforeFirstChapter
                 },
                 onEntry = ::onTvMenuEntry,
-                onShape = ::applyScale,
                 onClosed = { menuOpen = false; holdControls(); controls?.show(); controls?.focusRow() },
             )
         }
@@ -1025,6 +1026,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         findViewById<FrameLayout>(R.id.playback_container).addView(view)
         touchSurface = view
         view.resizeMode = videoScale.resizeMode
+        controls?.setShape(videoScale)
         if (!FormFactor.isTv(this)) {
             view.findViewById<View>(androidx.media3.ui.R.id.exo_content_frame)
                 ?.addOnLayoutChangeListener { frame, _, _, _, _, _, _, _, _ -> fitSubtitlesTo(frame) }
@@ -1570,6 +1572,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         videoScale = scale
         touchSurface?.resizeMode = scale.resizeMode
         player?.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT
+        controls?.setShape(scale, animate = true)
         showGestureFeedback(scale.label)
         lifecycleScope.launch { runCatching { settings.setVideoScale(scale.name) } }
     }
@@ -3797,6 +3800,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             chapters = chapters.isNotEmpty(),
             // Only once the chat is known to allow saving: a protected chat's frames stay in it.
             saveFrame = savable == true,
+            // Only while the row has no button for it: a phone held upright.
+            pictureShape = controls?.shapeOnRow != true,
         )
         // Speed and the sleep timer open the pickers' sheet rather than a submenu, so a choice
         // of one of several looks the same here as the subtitle and audio pickers.
@@ -3806,6 +3811,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 watched = onWatchedList,
                 loop = abLoop,
                 bookmarks = bookmarkList.value.size,
+                shape = videoScale,
             )
             // Lock the screen heads the menu in a group of its own, under a divider, with the
             // lock the television's and the desktop's menus draw beside the same words.
@@ -3820,6 +3826,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             when (PhoneMenuEntry.entries[item.itemId]) {
                 PhoneMenuEntry.LockScreen -> lockScreen()
                 PhoneMenuEntry.PictureInPicture -> enterPictureInPictureNow()
+                PhoneMenuEntry.PictureShape -> showSheet { it.showShape(videoScale, ::applyScale) }
                 PhoneMenuEntry.VolumeBoost -> toggleVolumeBoost()
                 PhoneMenuEntry.SleepTimer -> showSheet { it.showSleep(sleepTimerDetail(), sleepChoice(), ::setSleepTimer) }
                 PhoneMenuEntry.AbLoop -> pressLoop()
@@ -3864,7 +3871,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             PlayerMenuEntry.AddBookmark -> addBookmark(player?.currentPosition ?: 0L, "")
             PlayerMenuEntry.Bookmarks -> showSheet { it.showBookmarks(bookmarkActions()) }
             // Pages of the menu itself, opened there.
-            PlayerMenuEntry.PictureShape, PlayerMenuEntry.SleepTimer, PlayerMenuEntry.RemoteKeys -> Unit
+            PlayerMenuEntry.SleepTimer, PlayerMenuEntry.RemoteKeys -> Unit
         }
     }
 

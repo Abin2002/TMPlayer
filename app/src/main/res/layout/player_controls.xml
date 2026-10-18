@@ -28,11 +28,12 @@
   A phone gets three more pieces, all gone on a television: a top bar (back, title, the overflow
   menu), a centre cluster (previous episode, play or pause, next episode) of the kind every phone
   player draws, and an elapsed and total line over the bar. The bottom row keeps four buttons on
-  a phone: subtitles, audio, speed and rotate. Everything else (lock, picture in picture, picture
-  shape) lives in the overflow, and the jumps are the double tap and the keys. A television drops
+  a phone held upright: subtitles, audio, speed and rotate. Given the room (held sideways, a
+  tablet) it adds picture shape after speed and the lock at the end. What the row leaves out
+  lives in the overflow, and the jumps are the double tap and the keys. A television drops
   the transport altogether, because the remote's own keys already play, pause, jump and change
   episode, and keeps only the play disc from the centre cluster, as a cue shown while paused
-  rather than a button. Its row is subtitles, audio, speed and More. PlayerControls.kt decides
+  rather than a button. Its row is subtitles, audio, speed, picture shape and More. PlayerControls.kt decides
   which pieces a device shows.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -378,7 +379,8 @@
             <!--
               Scrolls only when it must. A television fits the whole row. A phone moves its
               transport into the centre cluster and keeps four buttons here, which fit a 360dp
-              screen held upright with room to spare; the scroll is only a safety net.
+              screen held upright with room to spare, and adds two more only when the row is
+              wide enough (PlayerControls.fitRow); the scroll is only a safety net.
             -->
             <HorizontalScrollView
                 android:layout_width="0dp"
@@ -440,6 +442,24 @@
                         android:src="@drawable/ic_speed"
                         android:tint="@color/player_control_icon" />
 
+                    <!-- Picture shape: Fit, Crop, Stretch, a press each, the glyph showing the
+                         one in force. On both devices: on a television it was a page inside More,
+                         three presses and a list for the one control a sofa reaches for when a
+                         wide video leaves bars. A phone shows it only while the row has room. -->
+                    <ImageButton
+                        android:id="@+id/control_shape"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/bg_control_button"
+                        android:contentDescription="Picture shape"
+                        android:nextFocusUp="@id/controls_timebar"
+                        android:padding="12dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_shape_fit"
+                        android:tint="@color/player_control_icon"
+                        android:visibility="gone" />
+
                     <ImageButton
                         android:id="@+id/control_rotate"
                         android:layout_width="48dp"
@@ -451,6 +471,21 @@
                         android:padding="12dp"
                         android:scaleType="fitCenter"
                         android:src="@drawable/ic_rotate_landscape"
+                        android:tint="@color/player_control_icon"
+                        android:visibility="gone" />
+
+                    <!-- Phone only, and only while the row has room: the lock, a press away
+                         rather than first in the overflow. A phone held upright keeps it there. -->
+                    <ImageButton
+                        android:id="@+id/control_lock"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/bg_control_button"
+                        android:contentDescription="Lock the screen"
+                        android:padding="12dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_lock"
                         android:tint="@color/player_control_icon"
                         android:visibility="gone" />
 

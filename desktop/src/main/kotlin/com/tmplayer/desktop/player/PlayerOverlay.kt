@@ -515,6 +515,8 @@ internal fun BoxScope.PlayerOverlay(
                                 PlayerMenu(menu, status, tracks, fullscreen, ignoreClicks, miniPlayerAvailable, alwaysOnTopAvailable, fromTelegram, savable, watchedLabel, sleepTimer, bookmarks, loop, onOpenMenu, onCloseMenu, onMenuAction)
                             }
                         }
+                        // A click steps the shape, as W does; the menu keeps its page of the three.
+                        ShapeButton(status.scale) { onMenuAction(MenuAction.Do(PlayerAction.CycleShape)) }
                     }
                     Spacer(Modifier.weight(1f))
                     ControlsPill {
@@ -531,6 +533,34 @@ internal fun BoxScope.PlayerOverlay(
                 }
             }
         }
+    }
+}
+
+/**
+ * The bar's picture shape button: the glyph of the shape in force (the video inside the screen,
+ * cropped, pulled to the edges), its name and key in the tooltip, and a small pop as the shape
+ * changes, by click or by W, so the button answers before the shape's name flashes over the
+ * picture. Reduce motion keeps the plain swap.
+ */
+@Composable
+private fun ShapeButton(scale: VideoScale, onClick: () -> Unit) {
+    val s = LocalStrings.current
+    val pop = remember { Animatable(1f) }
+    var drawn by remember { mutableStateOf<VideoScale?>(null) }
+    LaunchedEffect(scale) {
+        val before = drawn
+        drawn = scale
+        if (before == null || before == scale || Motion.reduced) return@LaunchedEffect
+        pop.snapTo(0.82f)
+        pop.animateTo(1f, tween(220, easing = Motion.Standard))
+    }
+    val icon = when (scale) {
+        VideoScale.Fit -> TmIcons.ShapeFit
+        VideoScale.Crop -> TmIcons.ShapeCrop
+        VideoScale.Stretch -> TmIcons.ShapeStretch
+    }
+    Box(Modifier.graphicsLayer { scaleX = pop.value; scaleY = pop.value }) {
+        OverlayButton(icon, s.playerPictureShapeHint(scale.label), onClick)
     }
 }
 

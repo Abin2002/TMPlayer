@@ -93,6 +93,10 @@ class UndoSeekChip(
     /** Puts the offer up, or changes its time if it already is. */
     fun show(backToMs: Long) {
         label.text = L.playerBackTo(Translator.messages.formatter.clock(backToMs))
+        // A longer time on a chip already up ("1:45" to "1:08:35") is measured again rather than
+        // cut to the width the first one had.
+        label.requestLayout()
+        view.requestLayout()
         if (isShown) return
         view.visibility = View.VISIBLE
         view.animate().cancel()

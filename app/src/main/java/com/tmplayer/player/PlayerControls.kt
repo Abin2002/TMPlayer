@@ -41,9 +41,10 @@ import com.tmplayer.i18n.Translator
  * A phone shows more of the layout than a television does: a top bar with the way back and an
  * overflow menu, a centre cluster carrying the transport (previous episode, play or pause, next
  * episode), and an elapsed and total line over the bar. The bottom row keeps four buttons:
- * subtitles, audio, speed and rotate. The jumps are the double tap and the keys, and lock,
- * picture in picture and picture shape sit in the overflow. A television shows none of the phone
- * pieces and keeps one row: subtitles, audio, speed and More at the end. Play, pause, the jumps
+ * subtitles, audio, speed and rotate, and given the room (held sideways, a tablet) picture shape
+ * after speed and the lock at the end ([fitRow]). The jumps are the double tap and the keys; picture
+ * in picture, and whatever the row has no room for, sit in the overflow. A television shows none
+ * of the phone pieces and keeps one row: subtitles, audio, speed, picture shape and More at the end. Play, pause, the jumps
  * and the episode steps are the remote's keys. What a television keeps of the centre is the play
  * disc as a cue rather than a button, drawn only while the video is paused.
  *
@@ -74,6 +75,10 @@ class PlayerControls(
     private val onEpisodes: () -> Unit = {},
     /** The row's copy button: opens the list of this video's copies. */
     private val onCopies: () -> Unit = {},
+    /** The row's picture shape button: the next of Fit, Crop and Stretch. */
+    private val onCycleShape: () -> Unit = {},
+    /** The phone row's lock, shown while the row has room for it. */
+    private val onLock: () -> Unit = {},
 ) {
 
     private val container: View = root.findViewById(R.id.player_controls)
@@ -82,6 +87,8 @@ class PlayerControls(
     private val timeBar: DefaultTimeBar = root.findViewById(R.id.controls_timebar)
     private val clock: TextView = root.findViewById(R.id.controls_clock)
     private val rotate: ImageButton = root.findViewById(R.id.control_rotate)
+    private val shapeButton: ImageButton = root.findViewById(R.id.control_shape)
+    private val lockButton: ImageButton = root.findViewById(R.id.control_lock)
     private val time: TextView get() = timeText
 
     // The phone's pieces. Present in the layout on every device, shown only on a phone.
@@ -207,6 +214,8 @@ class PlayerControls(
         wire(root.findViewById(R.id.control_audio)) { onPickAudio() }
         wire(root.findViewById(R.id.control_speed)) { onPickSpeed() }
         wire(rotate) { onCycleOrientation() }
+        wire(shapeButton) { onCycleShape() }
+        wire(lockButton) { onLock() }
         wire(episodesButton) { onEpisodes() }
         wire(copyButton) { onCopies() }
         episodesButton.text = L.episodesTitle
@@ -215,6 +224,7 @@ class PlayerControls(
         root.findViewById<View>(R.id.controls_scrim_top).background = ControlsScrim.top()
         root.findViewById<View>(R.id.controls_scrim_bottom).background = ControlsScrim.bottom()
         describeFromCatalog(root)
+        setShape(VideoScale.Fit)
         if (!isTv) setUpPhone(root) else setUpTv(root)
 
         // A press of D-pad left or right on the bar steps the position by this much: coarser than
@@ -431,7 +441,7 @@ class PlayerControls(
 
     /**
      * The phone's layout: the transport moves to the middle, the name to the top, and the bottom row
-     * is left with subtitles, audio, speed and rotate.
+     * is left with subtitles, audio, speed and rotate, plus picture shape and the lock when wide.
      */
     private fun setUpPhone(root: View) {
         listOf(tint, topBar, center, times).forEach { it.visibility = View.VISIBLE }
@@ -451,12 +461,45 @@ class PlayerControls(
         // exist for TalkBack, so the tooltip is the same text; [describe] keeps the two together
         // when a label changes later.
         nameButtons(root)
+
+        // The row's extras come and go with its width: the activity keeps the turn itself
+        // (configChanges), so the row is measured rather than the configuration read once.
+        cluster.addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
+            if (right - left != oldRight - oldLeft) cluster.post { fitRow() }
+        }
+        fitRow()
+    }
+
+    /**
+     * True while the row carries picture shape and the lock. On a television always for picture
+     * shape (the lock stays first in More there, where a held OK undoes it); on a phone only when
+     * the row is at least [WIDE_ROW_DP] across, which a phone held sideways or a tablet is and a
+     * phone held upright is not. The overflow leaves out what the row shows, and offers what it
+     * does not.
+     */
+    val shapeOnRow: Boolean get() = shapeButton.visibility == View.VISIBLE
+    val lockOnRow: Boolean get() = lockButton.visibility == View.VISIBLE
+
+    /**
+     * Shows or hides the phone's two extra buttons by the room the row has. Before the first
+     * layout the width is the screen's, less the row's padding.
+     */
+    private fun fitRow() {
+        if (isTv) return
+        val metrics = cluster.resources.displayMetrics
+        val width = cluster.width.takeIf { it > 0 } ?: metrics.widthPixels
+        val across = (width - cluster.paddingLeft - cluster.paddingRight) / metrics.density
+        val wanted = if (across >= WIDE_ROW_DP) View.VISIBLE else View.GONE
+        if (shapeButton.visibility == wanted && lockButton.visibility == wanted) return
+        shapeButton.visibility = wanted
+        lockButton.visibility = wanted
     }
 
     /**
      * The television's row: no transport, since the remote's own keys play, pause, jump and step
-     * episodes and a button for each was a second way to do what a thumb never needed. More goes at
-     * the end, holding the rarer actions (picture shape, picture in picture, the episode steps), and
+     * episodes and a button for each was a second way to do what a thumb never needed. Picture shape
+     * gets a button, the one setting a sofa changes per video. More goes at the end, holding the
+     * rarer actions (the lock, picture in picture, the sleep timer and the rest), and
      * the time readout becomes something OK can land on and press, which flips the total to the time
      * left the way a tap on the phone's total does.
      *
@@ -475,6 +518,9 @@ class PlayerControls(
         timeBar.nextFocusDownId = R.id.control_subtitles
         val more = root.findViewById<View>(R.id.control_tv_more)
         more.visibility = View.VISIBLE
+        // Between speed and More: a press steps the shape, focus stays put for the next press,
+        // and the glyph and the answer over the picture say which shape it is on.
+        shapeButton.visibility = View.VISIBLE
         wire(more) { onMore(more) }
         timeText.isFocusable = true
         timeText.isClickable = true
@@ -518,6 +564,7 @@ class PlayerControls(
             R.id.control_audio to L.playerAudio,
             R.id.control_speed to L.playerPlaybackSpeed,
             R.id.control_rotate to L.playerScreenOrientation,
+            R.id.control_lock to L.playerLockScreen,
             R.id.control_tv_more to L.commonMore,
             R.id.control_episodes to L.episodesTitle,
             R.id.control_copy to L.playerCopies,
@@ -648,6 +695,32 @@ class PlayerControls(
     private fun caption(view: TextView, text: String?) {
         view.text = text.orEmpty()
         view.visibility = if (text.isNullOrBlank()) View.INVISIBLE else View.VISIBLE
+    }
+
+    /**
+     * The picture shape button carries the shape in force: its glyph (the video inside the
+     * screen, cropped, pulled to the edges) and its name ("Picture shape: Crop"). [animate] is a
+     * press: the glyph gives a small pop as it changes, so the button answers even before the
+     * shape's name shows over the picture. Reduce motion and the system's animations off keep the
+     * plain swap.
+     */
+    fun setShape(scale: VideoScale, animate: Boolean = false) {
+        shapeButton.setImageResource(
+            when (scale) {
+                VideoScale.Fit -> R.drawable.ic_shape_fit
+                VideoScale.Crop -> R.drawable.ic_shape_crop
+                VideoScale.Stretch -> R.drawable.ic_shape_stretch
+            },
+        )
+        describe(shapeButton, L.playerPictureShapeNow(scale.label))
+        if (!animate || !visible || com.tmplayer.ui.theme.Motion.reduced ||
+            !android.animation.ValueAnimator.areAnimatorsEnabled()
+        ) return
+        shapeButton.animate().cancel()
+        shapeButton.scaleX = SHAPE_POP
+        shapeButton.scaleY = SHAPE_POP
+        shapeButton.animate().scaleX(1f).scaleY(1f).setDuration(SHAPE_POP_MS)
+            .setInterpolator(android.view.animation.OvershootInterpolator(2f)).start()
     }
 
     /** The orientation button carries its current state, drawn by the activity that owns it. */
@@ -909,6 +982,17 @@ class PlayerControls(
         /** The scrub thumbnail's width; its height is the 16:9 of that. */
         const val PREVIEW_WIDTH_DP = 240
         const val PREVIEW_CORNER_DP = 10f
+
+        /**
+         * How wide the phone's row must be, in dp inside its padding, to take picture shape and
+         * the lock as well: six round buttons, the copy pill and Episodes. A phone held upright
+         * (360 to 430 wide) stays under it, one held sideways (640 and up) is well over.
+         */
+        const val WIDE_ROW_DP = 540f
+
+        /** Where the picture shape glyph starts its pop from, and how long the pop takes. */
+        const val SHAPE_POP = 0.82f
+        const val SHAPE_POP_MS = 220L
 
         /** About as much of a chapter's name as fits beside the times on a phone held upright. */
         const val CHAPTER_CHARS = 34
