@@ -70,7 +70,7 @@ import kotlinx.coroutines.launch
 
 /**
  * The first run's Appearance step: the theme (System, Light, Dark) with the Pure black switch
- * under it, the interface size (Smaller to Largest, CP59) and, on a phone with Android 12 or later, the wallpaper's colours. Each answer is
+ * under it, the accent colour, the interface size (Smaller to Largest, CP59) and, on a phone with Android 12 or later, the wallpaper's colours. Each answer is
  * written as it is picked, and the whole app is drawn from those settings, so this very screen
  * turns light or dark and grows or shrinks at once: the step is its own preview, with a small
  * mock of Home beside it to show a row of posters in the new look.
@@ -97,6 +97,7 @@ fun AppearanceStep(
     val scale by rememberUiScale(settings)
     val wallpaper by settings.dynamicColour.collectAsState(initial = false)
     val pureBlack by settings.pureBlack.collectAsState(initial = false)
+    val accent by settings.accent.collectAsState(initial = com.tmplayer.data.Accent.Default)
     val primaryFocus = remember { FocusRequester() }
     var focused by remember { mutableStateOf(false) }
 
@@ -128,6 +129,16 @@ fun AppearanceStep(
                         selected = pureBlack,
                         role = Role.Switch,
                     ) { scope.launch { settings.setPureBlack(!pureBlack) } }
+                }
+                // The accent colour; on a phone using the wallpaper's colours the wallpaper wins, so
+                // the swatches are faded there and the line says why.
+                val wallpaperWins = form == DeviceForm.Phone && wallpaperColoursOffered && wallpaper
+                Section(s.settingsAccent, if (wallpaperWins) s.settingsAccentWallpaper else s.settingsAccentDetail) {
+                    com.tmplayer.ui.components.AccentSwatches(
+                        accent,
+                        { picked -> scope.launch { settings.setAccent(picked) } },
+                        enabled = !wallpaperWins,
+                    )
                 }
                 Section(s.interfaceSize, s.interfaceSizeDetail) {
                     Pills(UiScale.entries, scale, { it.label }) { scope.launch { settings.setUiScale(it) } }

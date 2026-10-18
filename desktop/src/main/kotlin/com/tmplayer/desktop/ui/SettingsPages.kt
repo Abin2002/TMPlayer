@@ -66,6 +66,7 @@ internal fun AppearanceRows(state: ShellState) {
     val scope = rememberCoroutineScope()
     val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
     val pureBlack by settings.pureBlack.collectAsState(initial = false)
+    val accent by settings.accent.collectAsState(initial = com.tmplayer.data.Accent.Default)
     val language by settings.language.collectAsState(initial = "")
     val uiScale by rememberUiScale(settings)
     val compactNav by settings.compactNav.collectAsState(initial = false)
@@ -85,6 +86,10 @@ internal fun AppearanceRows(state: ShellState) {
         Toggle(s.settingsPureBlack, s.themeBlackDetail, pureBlack, icon = TmIcons.PureBlack) { on ->
             scope.launch { settings.setPureBlack(on) }
         }
+    }
+    // The accent colour as swatches, each named by its tooltip and to a screen reader.
+    Setting(s.settingsAccent, s.settingsAccentDetail, icon = TmIcons.Accent) {
+        com.tmplayer.ui.components.AccentSwatches(accent, { picked -> scope.launch { settings.setAccent(picked) } }, size = 26.dp)
     }
     Action(s.settingsLanguage, s.languageRowDetail(language), TmIcons.Language) { pickingLanguage = true }
     Setting(s.interfaceSize, s.interfaceSizeDetail, icon = TmIcons.TextSize) {

@@ -125,6 +125,7 @@ object Backups {
      * to another phone keeps the phone's choice.
      */
     val SETTINGS: Map<String, Kind> = mapOf(
+        "accent" to Kind.TEXT,
         "autoplay_next" to Kind.BOOL,
         "background_audio" to Kind.BOOL,
         "chat_filter" to Kind.TEXT,

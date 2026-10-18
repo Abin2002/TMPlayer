@@ -53,6 +53,17 @@
     "title_short": "About",
     "warranty": "TMPlayer comes with no warranty, to the extent the law allows. You may share and change it under the terms of the GPL, which the source code carries in full."
   },
+  "accent": {
+    "amber": "Amber",
+    "emerald": "Emerald",
+    "monochrome": "Monochrome",
+    "orange": "Orange",
+    "pink": "Pink",
+    "red": "Red",
+    "teal": "Teal",
+    "telegram": "Telegram blue",
+    "violet": "Violet"
+  },
   "auth": {
     "unofficial": "TMPlayer is an unofficial app that uses the Telegram API. It is not made by Telegram."
   },
@@ -1918,6 +1929,9 @@
   "settings": {
     "about": "About TMPlayer",
     "about_detail": "Version {version}, licence, notices, contact and support",
+    "accent": "Accent colour",
+    "accent_detail": "The colour of buttons, highlights and progress",
+    "accent_wallpaper": "The wallpaper's colours are in use. Turn them off to pick one.",
     "account": "Account",
     "alert_downloads": "Finished downloads",
     "alert_downloads_detail": "One notification when a video, a whole season or every part of a video is downloaded, or did not finish, with Play or Try again",

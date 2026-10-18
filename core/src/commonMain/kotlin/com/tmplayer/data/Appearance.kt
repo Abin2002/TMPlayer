@@ -122,3 +122,36 @@ enum class UiScale(val factor: Float, private val labelText: () -> String) {
         const val ROOM_HEIGHT = 680
     }
 }
+
+/**
+ * The app's accent colour, under Appearance as a row of swatches: the colour of buttons, the
+ * focus fill, switches, progress and the selected tab. The ground, the surfaces and the text stay
+ * the theme's own. Stored by name, like [ThemeChoice].
+ *
+ * [Telegram] is the default and is exactly the palette the app always had. The rest are tuned for
+ * a video app on a dark and a light ground, and [Monochrome] is the one with no hue at all. On an
+ * Android phone that takes its colours from the wallpaper, the wallpaper wins.
+ *
+ * @property label the colour's name, for a screen reader and a desktop tooltip only: the swatches
+ * show no words
+ */
+enum class Accent(private val labelText: () -> String) {
+    Telegram({ L.accentTelegram }),
+    Red({ L.accentRed }),
+    Orange({ L.accentOrange }),
+    Amber({ L.accentAmber }),
+    Emerald({ L.accentEmerald }),
+    Teal({ L.accentTeal }),
+    Violet({ L.accentViolet }),
+    Pink({ L.accentPink }),
+    Monochrome({ L.accentMonochrome }),
+    ;
+
+    val label: String get() = labelText()
+
+    companion object {
+        val Default = Telegram
+
+        fun from(stored: String?): Accent = entries.firstOrNull { it.name == stored } ?: Default
+    }
+}

@@ -337,6 +337,7 @@ fun SettingsScreen(
     )
     val dynamicColour by settings.dynamicColour.collectAsStateWithLifecycle(initialValue = false)
     val pureBlack by settings.pureBlack.collectAsStateWithLifecycle(initialValue = false)
+    val accent by settings.accent.collectAsStateWithLifecycle(initialValue = com.tmplayer.data.Accent.Default)
     val uiScale by rememberUiScale(settings)
     val lighterPictures by settings.lighterPictures.collectAsStateWithLifecycle(initialValue = false)
     val reduceMotion by settings.reduceMotion.collectAsStateWithLifecycle(initialValue = false)
@@ -693,6 +694,16 @@ fun SettingsScreen(
                             onToggle = { scope.launch { settings.setPureBlack(!pureBlack) } },
                         )
                     }
+                }
+
+                // The accent colour, under the theme it is drawn in. The phone's wallpaper colours win
+                // when they are on, so there the swatches are faded and the line says why.
+                item(key = "accent") {
+                    AccentRow(
+                        selected = accent,
+                        wallpaper = touch && dynamicColour && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
+                        onPick = { scope.launch { settings.setAccent(it) } },
+                    )
                 }
 
                 // The language, under the theme: both are how the app looks before anything it shows.
@@ -2643,6 +2654,56 @@ private fun ThemePicker(current: ThemeChoice, onPick: (ThemeChoice) -> Unit) {
             style = M3Theme.typography.bodyMedium,
             color = M3Theme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp),
+        )
+    }
+}
+
+/**
+ * The accent colour: the row's chip, title and line, and under them the swatches, which are the
+ * whole control (no words, each named for a screen reader). On a television the row itself takes
+ * no focus: Down from Theme lands on the chosen swatch's row, and Left and Right walk the colours.
+ * With the wallpaper's colours in use ([wallpaper]) the swatches are faded and take nothing.
+ */
+@Composable
+private fun AccentRow(selected: com.tmplayer.data.Accent, wallpaper: Boolean, onPick: (com.tmplayer.data.Accent) -> Unit) {
+    val s = LocalStrings.current
+    val touch = isTouch()
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .then(
+                if (touch) {
+                    Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                } else {
+                    Modifier
+                        .clip(RoundedCornerShape(Corner.Large))
+                        .background(Tone.surface)
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                },
+            ),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SettingIconChip(TmIcons.Accent)
+            Spacer(Modifier.size(16.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    s.settingsAccent,
+                    style = if (touch) M3Theme.typography.bodyLarge else MaterialTheme.typography.titleMedium,
+                    color = Tone.text,
+                )
+                Text(
+                    if (wallpaper) s.settingsAccentWallpaper else s.settingsAccentDetail,
+                    style = if (touch) M3Theme.typography.bodyMedium else MaterialTheme.typography.bodyMedium,
+                    color = Tone.muted,
+                )
+            }
+        }
+        com.tmplayer.ui.components.AccentSwatches(
+            selected = selected,
+            onPick = onPick,
+            enabled = !wallpaper,
+            size = if (touch) 30.dp else 34.dp,
+            modifier = Modifier.padding(start = 46.dp, top = 8.dp),
         )
     }
 }

@@ -24,6 +24,7 @@ import androidx.tv.material3.darkColorScheme
 import androidx.tv.material3.lightColorScheme as tvLightColorScheme
 import com.tmplayer.data.FormFactor
 import com.tmplayer.data.SettingsStore
+import com.tmplayer.data.Accent
 import com.tmplayer.data.ThemeChoice
 import com.tmplayer.data.pureBlackGround
 
@@ -173,7 +174,7 @@ private val phoneTypography = Typography(
  * have the blue can say so, and a phone older than Android 12 has nothing to offer either way.
  */
 @Composable
-private fun phoneScheme(dark: Boolean, dynamic: Boolean, black: Boolean): ColorScheme {
+private fun phoneScheme(dark: Boolean, dynamic: Boolean, black: Boolean, accent: Accent): ColorScheme {
     val context = LocalContext.current
     val wallpaper = dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     return when {
@@ -181,7 +182,8 @@ private fun phoneScheme(dark: Boolean, dynamic: Boolean, black: Boolean): ColorS
         wallpaper && dark && black -> dynamicDarkColorScheme(context).pureBlack()
         wallpaper && dark -> dynamicDarkColorScheme(context)
         wallpaper -> dynamicLightColorScheme(context)
-        else -> TmSchemes.of(dark, black)
+        // The wallpaper wins over the accent: it is the viewer's other answer to the same question.
+        else -> TmSchemes.of(dark, black, accent)
     }
 }
 
@@ -209,7 +211,11 @@ fun TMPlayerTheme(content: @Composable () -> Unit) {
     // applies whenever the app is dark, System on a dark phone included.
     val pureBlack by settings.pureBlack.collectAsState(initial = false)
     val black = pureBlackGround(choice, pureBlack, systemDark = systemDark || !touch)
-    val scheme = if (touch) phoneScheme(dark, dynamic, black) else TmSchemes.of(dark, black)
+    val accent by settings.accent.collectAsState(initial = Accent.Default)
+    // A picked accent washes in over a moment rather than snapping (animateAccentRoles).
+    val scheme = animateAccentRoles(
+        if (touch) phoneScheme(dark, dynamic, black, accent) else TmSchemes.of(dark, black, accent),
+    )
 
     // Both themes, always, and the form factor decides only the type scale. Two theme systems are
     // live because the two devices need different controls, and a shared screen reads one theme

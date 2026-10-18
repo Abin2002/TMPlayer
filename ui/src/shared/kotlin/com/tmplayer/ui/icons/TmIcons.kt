@@ -578,6 +578,15 @@ object TmIcons {
     /** Pure black, under the theme: the theme's moon, filled in. Hugeicons Moon02, solid. */
     val PureBlack: ImageVector by lazy { icon("PureBlack", sf("M21.5 14.0784C20.3003 14.7189 18.9301 15.0821 17.4751 15.0821C12.7491 15.0821 8.91792 11.2509 8.91792 6.52485C8.91792 5.06986 9.28105 3.69968 9.92163 2.5C5.66765 3.49698 2.5 7.31513 2.5 11.8731C2.5 17.1899 6.8101 21.5 12.1269 21.5C16.6849 21.5 20.503 18.3324 21.5 14.0784Z")) }
 
+    /** The accent colour: a drop of paint. */
+    val Accent: ImageVector by lazy {
+        icon(
+            "Accent",
+            s("M12 21.5C8.134 21.5 5 18.366 5 14.5C5 10.5 12 2.5 12 2.5C12 2.5 19 10.5 19 14.5C19 18.366 15.866 21.5 12 21.5Z"),
+            s("M15.5 14.5C15.5 16.433 13.933 18 12 18"),
+        )
+    }
+
     /** Wallpaper colours. Hugeicons PaintBoard. */
     val Palette: ImageVector by lazy {
         icon(

@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import com.tmplayer.data.Accent
 import com.tmplayer.data.FormFactor
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ThemeChoice
@@ -35,7 +36,9 @@ import java.time.Duration
 
 /**
  * The Appearance page with the Pure black switch under the theme (2026-10-19), on a phone and on a
- * television: there under Dark, drawn on true black once on, and folded away under Light. Frames
+ * television: there under Dark, drawn on true black once on, and folded away under Light; and the
+ * accent swatches under it, Red and Monochrome picked, faded while the wallpaper's colours are in
+ * use on the phone. Frames
  * go to `build/device-test/review/` and to TMPLAYER_SHOTS=<dir> when that is set.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -68,12 +71,30 @@ class AppearanceRenderTest {
             idle(1_000)
             save("appearance-$form-pure-black.png", activity)
 
+            // The accent swatches under the theme: Red picked, then Monochrome on pure black.
+            assertTrue("the swatches are named for a screen reader", descriptions(activity).containsAll(listOf("Telegram blue", "Monochrome")))
+            runBlocking { settings.setAccent(Accent.Red); settings.setPureBlack(false) }
+            idle(1_000)
+            save("appearance-$form-accent-red.png", activity)
+            runBlocking { settings.setAccent(Accent.Monochrome); settings.setPureBlack(true) }
+            idle(1_000)
+            save("appearance-$form-accent-monochrome-black.png", activity)
+            if (!tv) {
+                // The wallpaper's colours win: the swatches fade and the line says why.
+                runBlocking { settings.setDynamicColour(true) }
+                idle(1_000)
+                assertTrue(texts(activity).contains("The wallpaper's colours are in use. Turn them off to pick one."))
+                save("appearance-$form-accent-wallpaper.png", activity)
+                runBlocking { settings.setDynamicColour(false) }
+                idle(500)
+            }
+
             runBlocking { settings.setThemeChoice(ThemeChoice.Light) }
             idle(1_500)
             assertFalse("the switch is folded away under Light", texts(activity).contains("Pure black"))
             save("appearance-$form-light.png", activity)
         }
-        runBlocking { settings.setThemeChoice(ThemeChoice.System); settings.setPureBlack(false) }
+        runBlocking { settings.setThemeChoice(ThemeChoice.System); settings.setPureBlack(false); settings.setAccent(Accent.Default) }
     }
 
     private fun render(tv: Boolean, check: (ComponentActivity) -> Unit) {
@@ -108,6 +129,19 @@ class AppearanceRenderTest {
 
     /** Every text on the page, from the semantics tree of the activity's composition. */
     private fun texts(activity: ComponentActivity): List<String> = collect(activity) { true }
+
+    /** Every content description on the page. */
+    private fun descriptions(activity: ComponentActivity): List<String> {
+        val view = findCompose(activity.window.decorView) ?: return emptyList()
+        val owner = view.getChildAt(0) as androidx.compose.ui.node.RootForTest
+        val out = mutableListOf<String>()
+        fun walk(node: SemanticsNode) {
+            node.config.getOrNull(SemanticsProperties.ContentDescription)?.let { out += it }
+            node.children.forEach(::walk)
+        }
+        walk(owner.semanticsOwner.unmergedRootSemanticsNode)
+        return out
+    }
 
     private fun collect(activity: ComponentActivity, from: (SemanticsNode) -> Boolean): List<String> {
         val view = findCompose(activity.window.decorView) ?: return emptyList()

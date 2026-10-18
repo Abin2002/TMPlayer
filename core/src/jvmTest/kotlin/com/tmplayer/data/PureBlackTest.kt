@@ -92,4 +92,14 @@ class PureBlackTest {
     fun `the switch is offered under System and Dark, not Light`() {
         assertEquals(listOf(ThemeChoice.System, ThemeChoice.Dark), ThemeChoice.entries.filter { it.offersPureBlack })
     }
+
+    @Test
+    fun `the accent is Telegram blue until one is picked, and outlives a sign out`() = runBlocking {
+        assertEquals(Accent.Telegram, settings.accent.first())
+        assertEquals(Accent.Telegram, Accent.from("Nonsense"))
+        assertEquals(Accent.Monochrome, Accent.entries.last())
+        settings.setAccent(Accent.Red)
+        settings.clearEverything()
+        assertEquals(Accent.Red, settings.accent.first())
+    }
 }

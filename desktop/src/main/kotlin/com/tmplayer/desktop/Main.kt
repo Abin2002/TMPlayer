@@ -394,7 +394,8 @@ fun DesktopTheme(settings: SettingsStore, content: @Composable () -> Unit) {
     // The interface size (CP59) for the whole window, the player's controls included; the video
     // fills whatever space it is given, so it is the same at every size.
     val scale by rememberUiScale(settings)
-    TmMaterialTheme(dark = dark, black = black) { ProvideFocusVisibility { UiScaled(scale, content) } }
+    val accent by settings.accent.collectAsState(initial = com.tmplayer.data.Accent.Default)
+    TmMaterialTheme(dark = dark, black = black, accent = accent) { ProvideFocusVisibility { UiScaled(scale, content) } }
 }
 
 /**
