@@ -221,69 +221,21 @@ class MkvRemuxer(
 
         private fun toVideoTs(ns: Long): Long = Math.floorDiv(ns * VIDEO_TIMESCALE, 1_000_000_000L)
 
-        private fun videoEntry(t: MkvTrack): ByteArray {
-            val private = t.codecPrivate ?: throw IOException("Video track has no configuration")
-            return when (Codecs.fromMatroska(t.codecId)) {
-                Codecs.H264 -> Fmp4.visualEntry("avc1", t.width, t.height, "avcC" to private)
-                Codecs.HEVC -> Fmp4.visualEntry("hev1", t.width, t.height, "hvcC" to private)
-                Codecs.AV1 -> Fmp4.visualEntry("av01", t.width, t.height, "av1C" to private)
-                else -> throw IOException("Cannot rewrap ${t.codecId}")
-            }
-        }
+        private fun videoEntry(t: MkvTrack): ByteArray = Mp4Entries.video(t)
 
         private fun audioEntry(t: MkvTrack, first: ByteArray?): ByteArray? {
-            if (converter != null) {
-                val aac = converter.start(
-                    AudioTrack(t.number, Codecs.fromMatroska(t.codecId), t.language, t.name, t.channels, t.sampleRate, t.codecPrivate, t.isDefault, t.bitDepth, t.codecDelayNs),
-                )
-                audioScale = aac.sampleRate.toLong()
-                audioSamplesPerFrame = { 1024 }
-                return Fmp4.audioEntry("mp4a", aac.channels, aac.sampleRate, Fmp4.esds(0x40, aac.config))
+            val entry = if (converter != null) {
+                Mp4Entries.converted(converter.start(Mp4Entries.audioTrack(t)))
+            } else {
+                Mp4Entries.audio(t, first)
             }
-            val rate = t.sampleRate.takeIf { it > 0 } ?: 48000
-            return when (Codecs.fromMatroska(t.codecId)) {
-                Codecs.AAC -> {
-                    val config = AudioFrames.aacConfig(t.codecPrivate, rate, t.channels)
-                    val core = AudioFrames.aacCoreRate(config) ?: rate
-                    // HE-AAC: the stream's rate is twice the core's, and so is each frame.
-                    val sbr = rate >= core * 2
-                    audioScale = rate.toLong()
-                    audioSamplesPerFrame = { if (sbr) 2048 else 1024 }
-                    Fmp4.audioEntry("mp4a", t.channels, rate, Fmp4.esds(0x40, config))
-                }
-                Codecs.MP3 -> {
-                    audioScale = rate.toLong()
-                    audioSamplesPerFrame = AudioFrames::mp3Samples
-                    Fmp4.audioEntry("mp4a", t.channels, rate, Fmp4.esds(0x6B, null))
-                }
-                Codecs.AC3 -> {
-                    val dac3 = first?.let(AudioFrames::dac3) ?: throw IOException("No AC-3 frame to describe")
-                    audioScale = rate.toLong()
-                    audioSamplesPerFrame = { 1536 }
-                    Fmp4.audioEntry("ac-3", t.channels, rate, Fmp4.box("dac3") { raw(dac3) })
-                }
-                Codecs.EAC3 -> {
-                    val dec3 = first?.let(AudioFrames::dec3) ?: throw IOException("No E-AC-3 frame to describe")
-                    audioScale = rate.toLong()
-                    audioSamplesPerFrame = AudioFrames::eac3Samples
-                    Fmp4.audioEntry("ec-3", t.channels, rate, Fmp4.box("dec3") { raw(dec3) })
-                }
-                Codecs.OPUS -> {
-                    audioScale = 48000
-                    audioSamplesPerFrame = AudioFrames::opusSamples
-                    Fmp4.audioEntry("Opus", t.channels, 48000, Fmp4.box("dOps") { raw(AudioFrames.dOps(t.codecPrivate, t.channels, rate)) })
-                }
-                Codecs.FLAC -> {
-                    val blocks = AudioFrames.dfLa(t.codecPrivate) ?: throw IOException("FLAC track has no STREAMINFO")
-                    audioScale = rate.toLong()
-                    audioSamplesPerFrame = AudioFrames::flacSamples
-                    Fmp4.audioEntry("fLaC", t.channels, rate, Fmp4.fullBox("dfLa", 0, 0) { raw(blocks) })
-                }
-                else -> {
-                    Logger.w(TAG, "No MP4 form for ${t.codecId}; sending the picture alone")
-                    null
-                }
+            if (entry == null) {
+                Logger.w(TAG, "No MP4 form for ${t.codecId}; sending the picture alone")
+                return null
             }
+            audioScale = entry.timescale
+            audioSamplesPerFrame = entry.samplesPerFrame
+            return entry.entry
         }
     }
 

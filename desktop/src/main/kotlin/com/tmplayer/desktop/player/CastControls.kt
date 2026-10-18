@@ -7,17 +7,18 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,17 +31,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tmplayer.cast.CastPhase
 import com.tmplayer.desktop.cast.CastPlaybackEngine
 import com.tmplayer.desktop.cast.DesktopCast
 import com.tmplayer.ui.components.TmDropdownMenu
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
+import com.tmplayer.ui.theme.Tone
 import kotlinx.coroutines.delay
 
 /**
@@ -132,10 +134,12 @@ internal fun CastButton() {
 }
 
 /**
- * What the picture area shows while the video is on a TV: where it is playing and in what state,
- * any word on how it is sent (the sound converted, a soundtrack the TV cannot play, subtitles that
- * stay behind), and, when the connection is lost or the TV refused the video, the way on:
- * Reconnect or Play here.
+ * What the picture area shows while the video is on a TV: one compact card in the middle, the TV's
+ * glyph, "On Living Room TV" and what the TV is doing (which follows the TV's own status, a pause
+ * or a stall on the TV included), any word on how it is sent (the sound converted, a soundtrack
+ * the TV cannot play), and, when the connection is lost, the TV stopped or refused the video, the
+ * way on: Reconnect or Try again, and Play here. The player bar under it drives the TV as it
+ * drives the picture here: play, seek, the soundtrack and subtitle menus, the speed, the volume.
  */
 @Composable
 internal fun BoxScope.CastingPanel(
@@ -146,37 +150,64 @@ internal fun BoxScope.CastingPanel(
     val s = LocalStrings.current
     val state by DesktopCast.state.collectAsState()
     val note by cast.note.collectAsState()
+    val phase by cast.phase.collectAsState()
+    val volume by cast.client.volume.collectAsState()
     val name = cast.client.device.name
     val lost = state is DesktopCast.State.Lost || state is DesktopCast.State.Failed
+    val trouble = lost || status.error != null || phase == CastPhase.Stopped || phase == CastPhase.Failed
     Column(
-        Modifier.align(Alignment.Center).widthIn(max = 520.dp).padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        Modifier
+            .align(Alignment.Center)
+            .widthIn(min = 320.dp, max = 440.dp)
+            .padding(24.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Tone.surface.copy(alpha = 0.92f))
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Icon(TmIcons.Cast, null, tint = if (lost) Color.White.copy(alpha = 0.5f) else CastOn, modifier = Modifier.size(64.dp))
-        Spacer(Modifier.height(4.dp))
-        Text(
-            if (lost) s.castLost(name) else s.castCastingTo(name),
-            color = Color.White,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-        )
-        val line = when {
-            lost -> null
-            status.error != null -> status.error
-            !status.opened -> s.castStarting
-            status.ended -> s.castStateEnded
-            status.buffering -> s.castStateBuffering
-            status.playing -> s.castStatePlaying
-            else -> s.castStatePaused
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(48.dp).clip(CircleShape).background(Tone.surfaceHigh), contentAlignment = Alignment.Center) {
+                Icon(TmIcons.Tv, null, tint = if (trouble) Tone.muted else CastOn, modifier = Modifier.size(26.dp))
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    if (lost) s.castLost(name) else s.castOnDevice(name),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Tone.text,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                val line = when {
+                    lost -> null
+                    status.error != null -> status.error
+                    else -> when (phase) {
+                        CastPhase.Starting -> s.castStarting
+                        CastPhase.Loading, CastPhase.Buffering -> s.castStateBuffering
+                        CastPhase.Playing -> s.castStatePlaying
+                        CastPhase.Paused -> s.castStatePaused
+                        CastPhase.Ended -> s.castStateEnded
+                        CastPhase.Stopped -> s.castStateStopped
+                        CastPhase.Failed -> s.castLoadFailed
+                    }
+                }
+                if (line != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (!trouble && (phase == CastPhase.Starting || phase == CastPhase.Loading || phase == CastPhase.Buffering)) {
+                            CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = Tone.muted)
+                            Spacer(Modifier.width(6.dp))
+                        }
+                        Text(line, style = MaterialTheme.typography.bodyMedium, color = if (status.error != null || phase == CastPhase.Failed) Tone.danger else Tone.muted)
+                    }
+                }
+            }
         }
-        if (line != null) Text(line, color = Color.White.copy(alpha = 0.8f), fontSize = 15.sp, textAlign = TextAlign.Center)
-        note?.takeIf { !lost }?.let { Text(it, color = Color.White.copy(alpha = 0.65f), fontSize = 13.sp, textAlign = TextAlign.Center) }
-        if (lost || status.error != null) {
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        note?.takeIf { !lost }?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = Tone.muted) }
+        if (volume.fixed && !lost) Text(s.castVolumeFixed, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+        if (trouble) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (lost) Button(onClick = { DesktopCast.reconnect() }) { Text(s.castReconnect) }
+                else Button(onClick = { cast.retry() }) { Text(s.commonTryAgain) }
                 TextButton(onClick = onPlayHere) { Text(s.castPlayHere) }
             }
         }

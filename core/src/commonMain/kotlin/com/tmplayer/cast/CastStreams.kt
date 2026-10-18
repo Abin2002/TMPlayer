@@ -5,8 +5,10 @@ import java.io.IOException
 
 /**
  * Puts one video on the [CastServer] the way its [CastRoute] says, for either platform's sender:
- * the file's own bytes with ranges, or the Matroska rewrap made as it is sent, with its sound
- * converted where the route asks for that. Subtitle files go up beside it as WebVTT.
+ * the file's own bytes with ranges, Matroska as HLS (the picture, each soundtrack and each text
+ * subtitle track a rendition), or the one rewrapped stream made as it is sent, with its sound
+ * converted where the route asks for that. Subtitle files go up beside it as WebVTT, and into the
+ * HLS playlists as renditions of their own.
  */
 class CastStreams(
     private val server: CastServer,
@@ -22,12 +24,19 @@ class CastStreams(
         /** The receiver can seek in it itself; false for a rewrap, where a seek is a new stream. */
         val seekable: Boolean,
         val route: CastRoute,
-    )
+        /** An HLS cast's soundtracks and subtitles, in the master's order; empty for anything else. */
+        val renditions: List<HlsRendition> = emptyList(),
+        /** The whole length, as the playlist tells the receiver; 0 when not known here. */
+        val durationMs: Long = 0,
+    ) {
+        val hls: Boolean get() = route is CastRoute.Hls
+    }
 
     private var counter = 0
     private var lastStream: String? = null
     private val remuxers = HashMap<Pair<Int?, Boolean>, MkvRemuxer>()
     private var remuxersFor: CastSource? = null
+    private val files = ArrayList<HlsSubtitleFile>()
 
     /** Publishes [source] by [route] from [startMs] on. [name] gives the receiver an extension to see. */
     fun publish(source: CastSource, probe: MediaProbe, route: CastRoute, startMs: Long, name: String): Published {
@@ -41,6 +50,16 @@ class CastStreams(
                 }
                 val url = server.publish("video.$ext", CastResource.Ranged(source, route.mime))
                 Published(url, route.mime, 0, true, route)
+            }
+            is CastRoute.Hls -> {
+                val hls = MkvHls.prepare(source, probe, route.audio, route.audioTrack, files.toList(), converterFactory)
+                // Made now, off the receiver's clock: the soundtracks' entries need their first frames.
+                val renditions = hls.renditions
+                val folder = "hls$n"
+                lastStream?.let(server::unpublish)
+                lastStream = folder
+                server.publish(folder, CastResource.Tree(hls::resolve))
+                Published(server.urlFor(folder) + "/master.m3u8", MkvHls.CONTENT_TYPE, 0, true, route, renditions, hls.durationMs)
             }
             is CastRoute.Remux, is CastRoute.ConvertAudio -> {
                 val audio = when (route) {
@@ -77,9 +96,19 @@ class CastStreams(
         }.also { Logger.i(TAG, "Published ${route::class.simpleName} for $name at ${it.url}") }
     }
 
-    /** A subtitle file as a WebVTT side track; its URL. */
-    fun subtitle(id: Int, bytes: ByteArray, extension: String): String =
-        server.publish("subs$id.vtt", CastResource.Text(WebVtt.convert(bytes, extension), WebVtt.MIME))
+    /**
+     * A subtitle file as a WebVTT side track; its URL. It is kept as cues too, so the next HLS
+     * publish carries it as a subtitle rendition (side tracks are for the file played as it is).
+     */
+    fun subtitle(id: Int, bytes: ByteArray, extension: String, name: String = "Subtitles", language: String? = null): String {
+        val cues = runCatching { WebVtt.cues(bytes, extension) }.getOrDefault(emptyList())
+        files.removeAll { it.id == id.toLong() }
+        files += HlsSubtitleFile(id.toLong(), name, language, cues)
+        return server.publish("subs$id.vtt", CastResource.Text(WebVtt.convert(bytes, extension), WebVtt.MIME))
+    }
+
+    /** The subtitle files as they stand, for a sender deciding what to ask for. */
+    val subtitleFiles: List<HlsSubtitleFile> get() = files.toList()
 
     private companion object {
         const val TAG = "CastStreams"

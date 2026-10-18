@@ -1,5 +1,7 @@
 package com.tmplayer.desktop.cast
 
+import com.tmplayer.cast.ReceiverMedia
+import com.tmplayer.cast.RemoteTrack
 import com.tmplayer.platform.Logger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -42,8 +44,24 @@ data class RemoteMediaStatus(
     val atNanos: Long = System.nanoTime(),
     /** The contentId the status is about, so a late status of the last video is not taken for this one. */
     val contentId: String? = null,
+    /** The receiver's track list (for HLS, made by the receiver from the playlist). */
+    val tracks: List<RemoteTrack> = emptyList(),
+    /** The receiver's supportedMediaCommands bits. */
+    val supportedCommands: Long = 0,
 ) {
     val playing: Boolean get() = playerState == "PLAYING"
+
+    /** The receiver changes its playback rate (PLAYBACK_RATE, 8192). */
+    val supportsRate: Boolean get() = supportedCommands and 8192L != 0L
+
+    /** As the shared state mapper reads it, on the millisecond monotonic clock. */
+    fun toReceiverMedia(): ReceiverMedia = ReceiverMedia(
+        state = ReceiverMedia.state(playerState),
+        idleReason = ReceiverMedia.idleReason(idleReason),
+        positionMs = currentTimeMs,
+        atMs = atNanos / 1_000_000,
+        rate = rate,
+    )
 
     /** The position now, run forward from the status while it plays. */
     fun positionAt(nowNanos: Long = System.nanoTime()): Long {
@@ -53,8 +71,11 @@ data class RemoteMediaStatus(
     }
 }
 
-/** The receiver's own volume. */
-data class RemoteVolume(val level: Double = 1.0, val muted: Boolean = false)
+/**
+ * The receiver's own volume, as its RECEIVER_STATUS gives it. [fixed]: the device takes no volume
+ * from a sender (controlType "fixed", an Android TV on HDMI-CEC); its own remote sets it.
+ */
+data class RemoteVolume(val level: Double = 1.0, val muted: Boolean = false, val fixed: Boolean = false)
 
 /**
  * One Cast session with one device, spoken over the Cast protocol (CastV2) without Google's SDK,
@@ -145,7 +166,13 @@ class CastClient(val device: CastDevice) {
 
     private fun absorbReceiver(message: JSONObject) {
         val status = message.optJSONObject("status") ?: return
-        status.optJSONObject("volume")?.let { v -> _volume.value = RemoteVolume(v.optDouble("level", 1.0), v.optBoolean("muted", false)) }
+        status.optJSONObject("volume")?.let { v ->
+            _volume.value = RemoteVolume(
+                level = v.optDouble("level", _volume.value.level).takeIf { !it.isNaN() } ?: _volume.value.level,
+                muted = v.optBoolean("muted", _volume.value.muted),
+                fixed = v.optString("controlType") == "fixed",
+            )
+        }
         val apps = status.optJSONArray("applications")
         val app = (0 until (apps?.length() ?: 0)).map { apps!!.getJSONObject(it) }
             .firstOrNull { it.optString("appId") == CastNamespaces.DEFAULT_MEDIA_RECEIVER }
@@ -182,7 +209,7 @@ class CastClient(val device: CastDevice) {
 
     fun setRate(rate: Double) = mediaCommand("SET_PLAYBACK_RATE") { it.put("playbackRate", rate) }
 
-    fun setActiveTracks(ids: List<Int>) = mediaCommand("EDIT_TRACKS_INFO") { it.put("activeTrackIds", JSONArray(ids)) }
+    fun setActiveTracks(ids: List<Long>) = mediaCommand("EDIT_TRACKS_INFO") { it.put("activeTrackIds", JSONArray(ids)) }
 
     fun setVolume(level: Double) {
         _volume.value = _volume.value.copy(level = level.coerceIn(0.0, 1.0))
@@ -305,8 +332,25 @@ class CastClient(val device: CastDevice) {
             activeTrackIds = tracks?.let { a -> (0 until a.length()).map { a.getInt(it) } } ?: before.activeTrackIds,
             atNanos = System.nanoTime(),
             contentId = mediaInfo?.optString("contentId")?.ifBlank { null } ?: before.contentId,
+            tracks = mediaInfo?.optJSONArray("tracks")?.let(::tracksOf) ?: if (mediaInfo == null) before.tracks else emptyList(),
+            supportedCommands = s.optLong("supportedMediaCommands", before.supportedCommands),
         )
-        s.optJSONObject("volume")?.let { v -> _volume.value = RemoteVolume(v.optDouble("level", _volume.value.level), v.optBoolean("muted", _volume.value.muted)) }
+        // The status's own "volume" is the stream's, not the TV's: the TV's comes with RECEIVER_STATUS.
+    }
+
+    private fun tracksOf(a: JSONArray): List<RemoteTrack> = (0 until a.length()).mapNotNull { i ->
+        val t = a.optJSONObject(i) ?: return@mapNotNull null
+        RemoteTrack(
+            id = t.optLong("trackId"),
+            type = when (t.optString("type")) {
+                "AUDIO" -> RemoteTrack.Type.Audio
+                "VIDEO" -> RemoteTrack.Type.Video
+                else -> RemoteTrack.Type.Text
+            },
+            name = t.optString("name").ifBlank { null },
+            language = t.optString("language").ifBlank { null },
+            contentId = t.optString("trackContentId").ifBlank { null },
+        )
     }
 
     private suspend fun heartbeat() {

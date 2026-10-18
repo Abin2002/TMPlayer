@@ -3,11 +3,14 @@ package com.tmplayer.cast
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import androidx.mediarouter.media.MediaRouteSelector
 import androidx.mediarouter.media.MediaRouter
 import com.google.android.gms.cast.CastDevice
 import com.google.android.gms.cast.CastMediaControlIntent
+import com.google.android.gms.cast.HlsSegmentFormat
+import com.google.android.gms.cast.HlsVideoSegmentFormat
 import com.google.android.gms.cast.MediaInfo
 import com.google.android.gms.cast.MediaLoadRequestData
 import com.google.android.gms.cast.MediaMetadata
@@ -110,12 +113,23 @@ private class GoogleCastSupport(context: Context) : CastSupport {
 
     private var client: RemoteMediaClient? = null
 
+    /** When the receiver's last media status arrived, for the position's run on from it. */
+    private var statusAtMs = 0L
+
     private val mediaCallback = object : RemoteMediaClient.Callback() {
-        override fun onStatusUpdated() = publishRemote()
+        override fun onStatusUpdated() {
+            statusAtMs = SystemClock.elapsedRealtime()
+            publishRemote()
+        }
+
         override fun onMetadataUpdated() = publishRemote()
     }
 
-    private val progress = RemoteMediaClient.ProgressListener { _, _ -> publishRemote() }
+    /** The TV's volume as the route has it, while a session is on (no discovery asked). */
+    private val volumeCallback = object : MediaRouter.Callback() {
+        override fun onRouteVolumeChanged(router: MediaRouter, route: MediaRouter.RouteInfo) = publishRemote()
+        override fun onRouteChanged(router: MediaRouter, route: MediaRouter.RouteInfo) = publishRemote()
+    }
 
     private val castListener = object : com.google.android.gms.cast.Cast.Listener() {
         override fun onVolumeChanged() = publishRemote()
@@ -168,10 +182,9 @@ private class GoogleCastSupport(context: Context) : CastSupport {
         connectingId = null
         session.addCastListener(castListener)
         currentSession = session
-        client = session.remoteMediaClient?.also { c ->
-            c.registerCallback(mediaCallback)
-            c.addProgressListener(progress, PROGRESS_MS)
-        }
+        client = session.remoteMediaClient?.also { c -> c.registerCallback(mediaCallback) }
+        statusAtMs = SystemClock.elapsedRealtime()
+        router?.addCallback(selector, volumeCallback, 0)
         _session.value = CastSessionState.Connected(
             name = device?.friendlyName.orEmpty(),
             model = device?.modelName.orEmpty(),
@@ -184,10 +197,8 @@ private class GoogleCastSupport(context: Context) : CastSupport {
     private var currentSession: CastSession? = null
 
     private fun detach() {
-        client?.let { c ->
-            runCatching { c.unregisterCallback(mediaCallback) }
-            runCatching { c.removeProgressListener(progress) }
-        }
+        client?.let { c -> runCatching { c.unregisterCallback(mediaCallback) } }
+        runCatching { router?.removeCallback(volumeCallback) }
         client = null
         currentSession?.let { runCatching { it.removeCastListener(castListener) } }
         currentSession = null
@@ -198,28 +209,74 @@ private class GoogleCastSupport(context: Context) : CastSupport {
         val c = client
         val s = currentSession
         val status: MediaStatus? = c?.mediaStatus
+        val media = status?.let { st ->
+            ReceiverMedia(
+                state = when (st.playerState) {
+                    MediaStatus.PLAYER_STATE_PLAYING -> ReceiverState.Playing
+                    MediaStatus.PLAYER_STATE_PAUSED -> ReceiverState.Paused
+                    MediaStatus.PLAYER_STATE_BUFFERING -> ReceiverState.Buffering
+                    MediaStatus.PLAYER_STATE_LOADING -> ReceiverState.Loading
+                    else -> ReceiverState.Idle
+                },
+                idleReason = when (st.idleReason) {
+                    MediaStatus.IDLE_REASON_FINISHED -> IdleReason.Finished
+                    MediaStatus.IDLE_REASON_CANCELED -> IdleReason.Cancelled
+                    MediaStatus.IDLE_REASON_INTERRUPTED -> IdleReason.Interrupted
+                    MediaStatus.IDLE_REASON_ERROR -> IdleReason.Error
+                    else -> null
+                },
+                positionMs = st.streamPosition,
+                atMs = statusAtMs,
+                rate = st.playbackRate.takeIf { it > 0 } ?: 1.0,
+            )
+        }
+        val (volume, muted, fixed) = volumeNow(s)
         _remote.value = RemoteStatus(
-            playerState = when (status?.playerState) {
-                MediaStatus.PLAYER_STATE_PLAYING -> RemoteStatus.PLAYING
-                MediaStatus.PLAYER_STATE_PAUSED -> RemoteStatus.PAUSED
-                MediaStatus.PLAYER_STATE_BUFFERING -> RemoteStatus.BUFFERING
-                MediaStatus.PLAYER_STATE_LOADING -> RemoteStatus.LOADING
-                else -> RemoteStatus.IDLE
-            },
-            idleReason = when (status?.idleReason) {
-                MediaStatus.IDLE_REASON_FINISHED -> RemoteStatus.IDLE_FINISHED
-                MediaStatus.IDLE_REASON_CANCELED -> RemoteStatus.IDLE_CANCELED
-                MediaStatus.IDLE_REASON_INTERRUPTED -> RemoteStatus.IDLE_INTERRUPTED
-                MediaStatus.IDLE_REASON_ERROR -> RemoteStatus.IDLE_ERROR
-                else -> 0
-            },
-            positionMs = c?.approximateStreamPosition ?: 0L,
-            durationMs = c?.streamDuration ?: 0L,
-            volume = runCatching { s?.volume }.getOrNull() ?: 1.0,
-            muted = runCatching { s?.isMute }.getOrNull() ?: false,
+            media = media,
+            durationMs = c?.streamDuration?.takeIf { it > 0 } ?: 0L,
+            volume = volume,
+            muted = muted,
+            volumeFixed = fixed,
             contentId = c?.mediaInfo?.contentId,
             activeTrackIds = status?.activeTrackIds?.toList().orEmpty(),
+            tracks = c?.mediaInfo?.mediaTracks.orEmpty().map { t ->
+                RemoteTrack(
+                    id = t.id,
+                    type = when (t.type) {
+                        MediaTrack.TYPE_AUDIO -> RemoteTrack.Type.Audio
+                        MediaTrack.TYPE_VIDEO -> RemoteTrack.Type.Video
+                        else -> RemoteTrack.Type.Text
+                    },
+                    name = t.name,
+                    language = t.language,
+                    contentId = t.contentId,
+                )
+            },
+            supportsRate = status?.isMediaCommandSupported(MediaStatus.COMMAND_PLAYBACK_RATE) == true,
         )
+    }
+
+    private var lastVolumeLog = ""
+
+    /**
+     * The TV's volume, mute, and whether a sender may set it. The route MediaRouter keeps for the
+     * session says how the volume is handled (an Android TV on HDMI-CEC keeps it fixed) and where
+     * it stands; the session's own reading stands in where the route has none.
+     */
+    private fun volumeNow(s: CastSession?): Triple<Double, Boolean, Boolean> {
+        val route = router?.selectedRoute?.takeIf { !it.isDefault && it.matchesSelector(selector) }
+        val sessionVolume = runCatching { s?.volume }.getOrNull()
+        val muted = runCatching { s?.isMute }.getOrNull() ?: false
+        val fixed = route?.volumeHandling == MediaRouter.RouteInfo.PLAYBACK_VOLUME_FIXED
+        val routeVolume = route?.takeIf { it.volumeHandling == MediaRouter.RouteInfo.PLAYBACK_VOLUME_VARIABLE && it.volumeMax > 0 }
+            ?.let { it.volume.toDouble() / it.volumeMax }
+        val volume = (routeVolume ?: sessionVolume ?: 1.0).coerceIn(0.0, 1.0)
+        val log = "route=" + route?.volume + "/" + route?.volumeMax + " handling=" + route?.volumeHandling + " session=" + sessionVolume + " muted=" + muted
+        if (log != lastVolumeLog) {
+            lastVolumeLog = log
+            Log.i(TAG, "TV volume: " + log)
+        }
+        return Triple(volume, muted, fixed)
     }
 
     private fun refreshRoutes() {
@@ -286,6 +343,11 @@ private class GoogleCastSupport(context: Context) : CastSupport {
             .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
             .setMetadata(metadata)
             .apply {
+                if (request.hls) {
+                    // fMP4 segments for the sound and the picture alike (CMAF), not MPEG-TS.
+                    setHlsSegmentFormat(HlsSegmentFormat.FMP4)
+                    setHlsVideoSegmentFormat(HlsVideoSegmentFormat.FMP4)
+                }
                 if (request.durationMs > 0) setStreamDuration(request.durationMs)
                 if (tracks.isNotEmpty()) {
                     setMediaTracks(tracks)
@@ -329,17 +391,25 @@ private class GoogleCastSupport(context: Context) : CastSupport {
     }
 
     override fun setVolume(level: Double) {
-        runCatching { currentSession?.volume = level.coerceIn(0.0, 1.0) }
-        publishRemote()
+        val v = level.coerceIn(0.0, 1.0)
+        val route = router?.selectedRoute?.takeIf { !it.isDefault && it.volumeHandling == MediaRouter.RouteInfo.PLAYBACK_VOLUME_VARIABLE && it.volumeMax > 0 }
+        if (route != null) route.requestSetVolume(Math.round(v * route.volumeMax).toInt())
+        else runCatching { currentSession?.volume = v }
+        if (v > 0 && _remote.value.muted) runCatching { currentSession?.isMute = false }
+        // Shown at once; the TV's own word follows.
+        _remote.value = _remote.value.copy(volume = v, muted = if (v > 0) false else _remote.value.muted)
     }
 
     override fun setMuted(muted: Boolean) {
         runCatching { currentSession?.isMute = muted }
-        publishRemote()
+        _remote.value = _remote.value.copy(muted = muted)
     }
 
     override fun setActiveTracks(ids: List<Long>) {
-        client?.setActiveMediaTracks(ids.toLongArray())
+        val c = client ?: return
+        c.setActiveMediaTracks(ids.toLongArray()).setResultCallback { r ->
+            if (!r.status.isSuccess) Log.w(TAG, "Receiver refused tracks " + ids + ": " + r.status)
+        }
     }
 
     override fun setRate(rate: Double) {
@@ -348,6 +418,5 @@ private class GoogleCastSupport(context: Context) : CastSupport {
 
     private companion object {
         const val TAG = "TMPlayerCast"
-        const val PROGRESS_MS = 500L
     }
 }
