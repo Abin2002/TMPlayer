@@ -118,8 +118,8 @@ internal object TvBarSignals {
  * carousel picture melts into the page at its top; once Home's rows scroll up under the bar, the
  * page's ground fills in behind it ([solid]).
  *
- * The page being shown is marked with an underline in the accent whether or not the remote is on
- * the bar; the item the remote is on fills and grows. [overArt] says Home runs up under the bar.
+ * The page being shown is marked by its filled icon (the account's picture by a thin ring in the
+ * accent) whether or not the remote is on the bar; the item the remote is on fills and grows. [overArt] says Home runs up under the bar.
  */
 @Composable
 internal fun TvTopBar(
@@ -251,7 +251,7 @@ private val RING_GAP = 3.dp
 /** The height of a tab's pill and the size of the account's picture, so the bar reads as one line. */
 private val CLUSTER_ITEM = 40.dp
 
-/** One of the three tabs: its icon and name in a pill, underlined while its page is shown. */
+/** One of the tabs: its icon and name in a pill, the icon filled while its page is shown. */
 @Composable
 private fun BarTab(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val interactions = remember { MutableInteractionSource() }
@@ -278,7 +278,6 @@ private fun BarTab(label: String, icon: ImageVector, selected: Boolean, onClick:
         Motion.standard(Motion.Fast),
         label = "barTabInk",
     )
-    val underline by animateDpAsState(if (selected && !focused) 18.dp else 0.dp, Motion.standard(Motion.Fast), label = "barTabLine")
     val pill = CircleShape
     Box(modifier, contentAlignment = Alignment.Center) {
         Row(
@@ -305,16 +304,6 @@ private fun BarTab(label: String, icon: ImageVector, selected: Boolean, onClick:
                 maxLines = 1,
             )
         }
-        // The page shown, marked under its name while the remote is elsewhere.
-        Box(
-            Modifier
-                .align(Alignment.BottomCenter)
-                .offset(y = 6.dp)
-                .width(underline)
-                .height(3.dp)
-                .clip(CircleShape)
-                .background(Tone.accent),
-        )
     }
 }
 
@@ -382,17 +371,6 @@ private fun ProfileButton(
                     .size(10.dp)
                     .clip(CircleShape)
                     .background(badge),
-            )
-        }
-        if (chosen) {
-            Box(
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .offset(y = 6.dp)
-                    .width(if (focused) 0.dp else 14.dp)
-                    .height(3.dp)
-                    .clip(CircleShape)
-                    .background(Tone.accent),
             )
         }
     }

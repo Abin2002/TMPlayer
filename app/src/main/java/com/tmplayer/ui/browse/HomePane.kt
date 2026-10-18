@@ -601,14 +601,8 @@ private fun LazyListScope.entries(
         val focus = if (entry === lead) Modifier.focusRequester(first) else Modifier
         val width = if (poster) posterWidth(touch) else wideWidth(touch)
         val modifier = Modifier.width(width).then(focus)
-        val artHeight = if (poster) width * 1.5f else width * 9f / 16f
         when (entry) {
-            is ShelfEntry.File -> InfoTile(
-                enabled = poster,
-                title = SeriesShelf.tileTitle(entry.item),
-                facts = infoFacts(chatTitle(entry.item.chatId), entry.item),
-                artHeight = artHeight,
-            ) { MediaCard(
+            is ShelfEntry.File -> MediaCard(
                 item = entry.item,
                 watched = watch.point(entry.item),
                 finished = watch.finished(entry.item),
@@ -618,18 +612,9 @@ private fun LazyListScope.entries(
                 dense = touch,
                 poster = poster,
                 modifier = modifier,
-            ) }
+            )
             is ShelfEntry.Show -> {
                 val progress = remember(entry.series, watch) { watch.progress(entry.series) }
-                InfoTile(
-                    enabled = poster,
-                    title = entry.series.title,
-                    facts = listOfNotNull(
-                        listOfNotNull(seriesSummary(entry.series), seriesProgressLine(progress)).joinToString("  ·  ").ifBlank { null },
-                        chatTitle(entry.series.cover.chatId).ifBlank { null },
-                    ).joinToString("\n"),
-                    artHeight = artHeight,
-                ) {
                     SeriesCard(
                         series = entry.series,
                         progress = progress,
@@ -639,7 +624,6 @@ private fun LazyListScope.entries(
                         poster = poster,
                         modifier = modifier,
                     )
-                }
             }
         }
     }
@@ -660,7 +644,7 @@ private fun TileRow(
         // Under the TV top bar the remote's tile stands at one place, the start of the row, and
         // the row slides under it; otherwise the row moves only as far as the margins ask.
         val keep: @Composable (@Composable () -> Unit) -> Unit = if (TV_TOP_BAR) {
-            { body -> AnchoredAtStart(row, start, body) }
+            { body -> AnchoredAtStart(start, body) }
         } else {
             { body -> WithinMargins(start, end, body) }
         }
@@ -893,137 +877,21 @@ private const val RANK_WAIT_MS = 1_200L
 
 
 /**
- * Under the TV top bar, a poster on a Home row grows into an info tile while the remote is on it:
- * the card stays its size and a panel opens beside its picture with the whole name, the running
- * time, quality and size, and the chat, which a poster's two short lines under it leave out. The
- * 16:9 cards (Continue watching, Watch later, New episodes, wide shelves) already carry their name
- * and facts, so they keep the plain focus ring ([enabled] false). Nothing plays: a preview would be
- * a Telegram download. Elsewhere (the phone, the rail) this is the card alone.
- */
-@Composable
-private fun InfoTile(title: String, facts: String, artHeight: Dp, enabled: Boolean = true, card: @Composable () -> Unit) {
-    if (isTouch() || !TV_TOP_BAR || !enabled) {
-        card()
-        return
-    }
-    LocalTileAnchor.current?.manual = true
-    var focused by remember { mutableStateOf(false) }
-    val still = com.tmplayer.ui.theme.rememberReducedMotion() || com.tmplayer.ui.theme.Motion.reduced
-    // Where this tile stands in its row, for the row to bring it to the anchor once the tile the
-    // remote left has folded its panel away (measured then, not before, or the row overshoots).
-    val anchor = LocalTileAnchor.current
-    var x by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(focused) {
-        if (!focused || anchor == null) return@LaunchedEffect
-        withFrameNanos { }
-        withFrameNanos { }
-        anchor.bring(x, still)
-    }
-    val spec = com.tmplayer.ui.theme.Motion.standard<androidx.compose.ui.unit.IntSize>(if (still) 0 else com.tmplayer.ui.theme.Motion.Normal)
-    val fade = com.tmplayer.ui.theme.Motion.standard<Float>(if (still) 0 else com.tmplayer.ui.theme.Motion.Fast)
-    Row(
-        Modifier
-            .onGloballyPositioned { x = it.positionInParent().x }
-            .onFocusChanged { focused = it.hasFocus },
-        verticalAlignment = Alignment.Top,
-    ) {
-        card()
-        androidx.compose.animation.AnimatedVisibility(
-            visible = focused,
-            enter = androidx.compose.animation.expandHorizontally(spec, expandFrom = Alignment.Start) + androidx.compose.animation.fadeIn(fade),
-            exit = androidx.compose.animation.shrinkHorizontally(spec, shrinkTowards = Alignment.Start) + androidx.compose.animation.fadeOut(fade),
-        ) {
-            Column(
-                Modifier
-                    .padding(start = INFO_GAP)
-                    .width(INFO_WIDTH)
-                    .height(artHeight)
-                    .clip(RoundedCornerShape(Corner.Medium))
-                    .background(Tone.surfaceHigh)
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = Tone.text,
-                    maxLines = if (artHeight > 160.dp) 4 else 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (facts.isNotBlank()) {
-                    Text(
-                        facts,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Tone.muted,
-                        maxLines = if (artHeight > 160.dp) 4 else 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-    }
-}
-
-/** The panel beside a focused Home tile under the TV top bar. */
-private val INFO_WIDTH = 236.dp
-
-/** Clear of the card's picture as it grows by [com.tmplayer.ui.theme.Motion.FocusScale]. */
-private val INFO_GAP = 12.dp
-
-/** The info tile's facts: how long, its quality, its size, and on a line of its own its chat. */
-@Composable
-private fun infoFacts(chat: String, item: MediaItem): String {
-    val s = LocalStrings.current
-    return remember(chat, item, s) {
-        // The video's own facts on one line and the chat on the next, so no line ends on a dot.
-        listOfNotNull(
-            listOfNotNull(
-                item.durationSec.takeIf { it > 0 }?.let { s.formatter.duration(it.toLong()) },
-                item.qualityTags.firstOrNull(),
-                item.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
-            ).joinToString("  ·  ").ifBlank { null },
-            chat.ifBlank { null },
-        ).joinToString("\n")
-    }
-}
-
-/**
  * The focused tile's leading edge held at [start] of the row, so the remote stays at one place on
  * the screen and the row slides under it, as a television's home screen does.
  */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun AnchoredAtStart(row: androidx.compose.foundation.lazy.LazyListState, start: Dp, content: @Composable () -> Unit) {
+private fun AnchoredAtStart(start: Dp, content: @Composable () -> Unit) {
     val startPx = with(LocalDensity.current) { start.toPx() }
-    val anchor = remember(row, startPx) { TileAnchor(row, startPx) }
-    // A row of info tiles scrolls nothing on focus alone: the tile asks once the one the remote
-    // left has folded its panel away ([InfoTile]). Any other row brings the tile straight there.
-    val spec = remember(anchor) {
+    val spec = remember(startPx) {
         object : androidx.compose.foundation.gestures.BringIntoViewSpec {
-            override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float =
-                if (anchor.manual) 0f else offset - startPx
+            override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float = offset - startPx
         }
     }
-    CompositionLocalProvider(
-        androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides spec,
-        LocalTileAnchor provides anchor,
-        content = content,
-    )
+    CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides spec, content = content)
 }
 
-/** A Home row under the TV top bar, which slides its focused tile to [startPx]. */
-private class TileAnchor(val row: androidx.compose.foundation.lazy.LazyListState, val startPx: Float) {
-    /** The row holds info tiles, which bring themselves to the anchor. */
-    var manual = false
-
-    suspend fun bring(x: Float, still: Boolean) {
-        val by = x - startPx
-        if (kotlin.math.abs(by) < 1f) return
-        if (still) row.scrollBy(by) else row.animateScrollBy(by, com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Normal))
-    }
-}
-
-private val LocalTileAnchor = androidx.compose.runtime.staticCompositionLocalOf<TileAnchor?> { null }
 
 /** How long Home without a carousel waits for one to turn up before the cold start's loader lifts. */
 private const val NO_CAROUSEL_SETTLE_MS = 1_500L
