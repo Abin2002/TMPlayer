@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "전체 변경 내역",
-    "highlight_boost": "볼륨 부스트, 수면 타이머, “계속 보고 계세요?” 확인",
-    "highlight_delay": "자막과 오디오 지연, 원하는 크기, 상자, 위치로 보는 자막",
-    "highlight_downloads": "시청한 다운로드 자동 삭제와 남은 공간 확인",
-    "highlight_languages": "설정에서 고르는 내 언어로 TMPlayer 사용",
-    "highlight_series": "시리즈 보기: 시즌별로 묶인 에피소드와 시즌마다 탭",
     "subtitle": "이 버전의 주요 내용",
     "title": "{version}의 새로운 기능"
   },

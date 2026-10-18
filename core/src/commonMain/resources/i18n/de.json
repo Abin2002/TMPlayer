@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "Vollständiges Änderungsprotokoll",
-    "highlight_boost": "Lautstärkeverstärkung, ein Einschlaftimer und die Nachfrage „Schaust du noch?“",
-    "highlight_delay": "Verzögerung für Untertitel und Audio sowie Untertitel in der Größe, Box und Position, die du magst",
-    "highlight_downloads": "Einen Download entfernen, sobald er gesehen ist, und sehen, wie viel Platz frei ist",
-    "highlight_languages": "TMPlayer in deiner Sprache, wählbar in den Einstellungen",
-    "highlight_series": "Serienansicht: Folgen nach Staffeln gruppiert, mit einem Tab für jede",
     "subtitle": "Die Highlights dieser Version",
     "title": "Neu in {version}"
   },

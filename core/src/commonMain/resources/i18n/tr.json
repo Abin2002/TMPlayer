@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "Tüm değişiklik günlüğü",
-    "highlight_boost": "Ses artırma, uyku zamanlayıcısı ve \"hâlâ izliyor musun?\" kontrolü",
-    "highlight_delay": "Altyazı ve ses gecikmesi, ayrıca istediğin boyut, kutu ve konumda altyazı",
-    "highlight_downloads": "İzlenen indirmeyi kaldır ve ne kadar boş alan olduğunu gör",
-    "highlight_languages": "TMPlayer senin dilinde, Ayarlar'dan seçilir",
-    "highlight_series": "Dizi görünümü: bölümler sezona göre gruplanır, her biri için sekmelerle",
     "subtitle": "Bu sürümün öne çıkanları",
     "title": "{version} sürümündeki yenilikler"
   },

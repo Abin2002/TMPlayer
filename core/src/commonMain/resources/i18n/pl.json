@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "Pełna lista zmian",
-    "highlight_boost": "Wzmocnienie głośności, wyłącznik czasowy i pytanie „Nadal oglądasz?”",
-    "highlight_delay": "Opóźnienie napisów i dźwięku oraz napisy w wybranym rozmiarze, z ramką i położeniem",
-    "highlight_downloads": "Usuwanie pobranego filmu po obejrzeniu i podgląd wolnego miejsca",
-    "highlight_languages": "TMPlayer w Twoim języku, wybieranym w Ustawieniach",
-    "highlight_series": "Widok serialu: odcinki pogrupowane według sezonów, z kartą dla każdego",
     "subtitle": "Najważniejsze zmiany w tej wersji",
     "title": "Co nowego w {version}"
   },

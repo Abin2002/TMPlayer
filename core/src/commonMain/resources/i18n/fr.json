@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "Journal complet des modifications",
-    "highlight_boost": "Amplification du volume, une minuterie d'arrêt et une vérification « toujours là ? »",
-    "highlight_delay": "Décalage des sous-titres et de l'audio, et sous-titres à la taille, avec la boîte et à la position que vous voulez",
-    "highlight_downloads": "Supprimez un téléchargement une fois vu, et voyez l'espace libre",
-    "highlight_languages": "TMPlayer dans votre langue, à choisir dans les Réglages",
-    "highlight_series": "Vue Séries : épisodes regroupés par saison, avec un onglet pour chacune",
     "subtitle": "Les points forts de cette version",
     "title": "Nouveautés de la {version}"
   },

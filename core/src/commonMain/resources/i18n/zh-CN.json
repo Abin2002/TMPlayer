@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "完整更新日志",
-    "highlight_boost": "音量增强、睡眠定时和“还在看吗？”提示",
-    "highlight_delay": "字幕和音频延迟，以及按你喜欢的大小、背景框和位置显示字幕",
-    "highlight_downloads": "看完后自动移除下载，并查看剩余空间",
-    "highlight_languages": "支持你的语言，在设置中选择",
-    "highlight_series": "剧集视图：按季分组的剧集，每季一个标签页",
     "subtitle": "此版本的亮点",
     "title": "{version} 新功能"
   },

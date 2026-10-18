@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "Registro de cambios completo",
-    "highlight_boost": "Aumento de volumen, temporizador y una pregunta de \"¿sigues viendo?\"",
-    "highlight_delay": "Retraso de subtítulos y audio, y subtítulos con el tamaño, fondo y posición que prefieras",
-    "highlight_downloads": "Elimina una descarga cuando ya la viste y mira cuánto espacio queda libre",
-    "highlight_languages": "TMPlayer en tu idioma, elegido en Configuración",
-    "highlight_series": "Vista de series: episodios agrupados por temporada, con una pestaña para cada una",
     "subtitle": "Lo más destacado de esta versión",
     "title": "Novedades de la {version}"
   },

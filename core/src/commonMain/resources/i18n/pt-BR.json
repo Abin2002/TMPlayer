@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "Histórico de mudanças completo",
-    "highlight_boost": "Reforço de volume, temporizador de sono e uma verificação de \"ainda está assistindo?\"",
-    "highlight_delay": "Atraso de legenda e de áudio, e legendas no tamanho, caixa e posição que você preferir",
-    "highlight_downloads": "Remova um download depois de assistido e veja quanto espaço está livre",
-    "highlight_languages": "O TMPlayer no seu idioma, escolhido em Configurações",
-    "highlight_series": "Visão de séries: episódios agrupados por temporada, com uma aba para cada",
     "subtitle": "Os destaques desta versão",
     "title": "Novidades da versão {version}"
   },

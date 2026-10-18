@@ -2318,11 +2318,11 @@
   },
   "whatsnew": {
     "full_changelog": "Full changelog",
-    "highlight_boost": "Volume boost, a sleep timer and a \"still watching?\" check",
-    "highlight_delay": "Subtitle and audio delay, and subtitles in the size, box and position you like",
-    "highlight_downloads": "Remove a download once it is watched, and see how much space is free",
-    "highlight_languages": "TMPlayer in your language, picked in Settings",
-    "highlight_series": "Series view: episodes grouped by season, with tabs for each one",
+    "highlight_carousel": "Home opens on a carousel of the newest videos and shows in your starred chats",
+    "highlight_copies": "A video posted more than once is one card: pick its copy and quality, and your place follows it",
+    "highlight_player": "Player: chapters, picture shape on the bar, finer speed steps and a way back after a long jump",
+    "highlight_search": "Search across all your chats, with one result per video, filters and sort",
+    "highlight_sort": "Sort each chat, rename a video or fix a wrong match",
     "subtitle": "The highlights of this version",
     "title": "What's new in {version}"
   },

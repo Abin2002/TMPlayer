@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "Toàn bộ nhật ký thay đổi",
-    "highlight_boost": "Tăng âm lượng, hẹn giờ ngủ và nhắc \"bạn vẫn đang xem chứ?\"",
-    "highlight_delay": "Độ trễ phụ đề và âm thanh, cùng phụ đề theo cỡ, khung và vị trí bạn thích",
-    "highlight_downloads": "Xóa video đã tải khi xem xong, và xem còn bao nhiêu dung lượng trống",
-    "highlight_languages": "TMPlayer bằng ngôn ngữ của bạn, chọn trong Cài đặt",
-    "highlight_series": "Chế độ xem phim bộ: các tập nhóm theo mùa, với tab cho từng mùa",
     "subtitle": "Điểm nổi bật của phiên bản này",
     "title": "Có gì mới trong {version}"
   },

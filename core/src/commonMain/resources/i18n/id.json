@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "Catatan perubahan lengkap",
-    "highlight_boost": "Penguat volume, timer tidur, dan pengecekan \"masih menonton?\"",
-    "highlight_delay": "Jeda subtitle dan audio, serta subtitle dengan ukuran, kotak, dan posisi sesukamu",
-    "highlight_downloads": "Hapus unduhan setelah ditonton, dan lihat berapa ruang yang kosong",
-    "highlight_languages": "TMPlayer dalam bahasamu, dipilih di Pengaturan",
-    "highlight_series": "Tampilan serial: episode dikelompokkan per musim, dengan tab untuk tiap musim",
     "subtitle": "Sorotan versi ini",
     "title": "Yang baru di {version}"
   },

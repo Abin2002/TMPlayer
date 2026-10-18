@@ -13,7 +13,7 @@ import com.tmplayer.i18n.L
 object WhatsNew {
 
     /** The release the bundled highlights describe. */
-    const val VERSION = "1.23.0"
+    const val VERSION = "1.27.0"
 
     /** Where "Full changelog" and the Settings "Changelog" row go. */
     const val CHANGELOG = "https://tmplayer.org/changelog/"
@@ -21,11 +21,11 @@ object WhatsNew {
     /** The highlights, in the order the sheet lists them. */
     val highlights: List<String>
         get() = listOf(
-            L.whatsnewHighlightDelay,
-            L.whatsnewHighlightBoost,
-            L.whatsnewHighlightSeries,
-            L.whatsnewHighlightDownloads,
-            L.whatsnewHighlightLanguages,
+            L.whatsnewHighlightSearch,
+            L.whatsnewHighlightCopies,
+            L.whatsnewHighlightCarousel,
+            L.whatsnewHighlightPlayer,
+            L.whatsnewHighlightSort,
         )
 
     /** What a launch does: show the sheet or not, and the version to remember, if any. */

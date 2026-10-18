@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "変更履歴の全文",
-    "highlight_boost": "音量ブースト、スリープタイマー、「まだ見ていますか?」の確認",
-    "highlight_delay": "字幕と音声の遅延調整、好みのサイズ、ボックス、位置の字幕",
-    "highlight_downloads": "視聴後にダウンロードを削除、空き容量の表示",
-    "highlight_languages": "設定で選べる、あなたの言語のTMPlayer",
-    "highlight_series": "シリーズ表示: エピソードをシーズンごとにまとめ、それぞれタブで切り替え",
     "subtitle": "このバージョンの主な変更点",
     "title": "{version}の新機能"
   },

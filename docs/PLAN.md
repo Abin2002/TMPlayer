@@ -23,23 +23,23 @@ removed in the commit that added this file), the listing plan artifact
 
 ## Next release
 
-1.26.0, not before 2026-10-17 (release cadence guard: 1.25.0 shipped 2026-10-10). Notes are a "- " list in
-the annotated tag (`docs/RELEASING.md`); tag a commit CI has passed so the release skips the unit tests. The
-store changelog is `fastlane/metadata/android/en-US/changelogs/12600.txt` (covers CP65 to CP68 too).
+1.27.0, prepared 2026-10-18 at the user's request (1.26.0 shipped 2026-10-14, so this is inside the 7 day
+cadence guard; v1.26.1 was tagged but never released, and its Windows update fix ships here). Notes are a "- "
+list in the annotated tag (`docs/RELEASING.md`); the store changelog is
+`fastlane/metadata/android/en-US/changelogs/12700.txt`. What's new moved to 1.27.0 (`WhatsNew.VERSION` had stayed
+at 1.23.0 through 1.24.0 to 1.26.0): five new `whatsnew.highlight_*` keys in English only, the five old ones
+removed from every catalog, so the sheet reads English in the other 20 languages until they are translated.
 
-Pre-release work done on 2026-10-14, all on main at `7254781` with core, ui, app and desktop tests green,
-every app and site string in all 21 languages, `build-site-i18n.py --check` clean, no dashes:
-- Device pass CP44 (stick, then emulators): rail focus, TV update wording, home screen row kept on toggle,
-  PIN focus, show page focus and seasons, launcher card focus on Play (40fb955), kids lock favourites
-  count, TV hint wording; phone pass: 8 fixes (a81937f to 772fad9), episode names, back band, posters
-  outside English, show page survives rotation (01d574b), Arabic titles on one line, RTL rail chevrons.
-- Desktop: blank window crash on every signed in start fixed (1ac3cc4); AppImage checked.
-- Settings parity audit: backups carry skip silence and rewind on resume; Wi-Fi only ignored on TV.
-- New: CP65 TV home screen rows, CP66 Low storage mode, CP67 setup after sign in, CP68 low-end help.
-- Site: new hero (TV Home, phone show page), all shots retaken, marked TV page cards and tour stop, star
-  count in the header, install steps one path per platform, Windows button leads to the PowerShell line.
+In it: search across all chats (TV page, desktop Ctrl+K), copies of one video folded into one card with a copy
+and quality picker, the floating bar and the Chats page on phone and desktop, the Home carousel on every device,
+player chapters, picture shape on the bar, finer speed, Save a frame, background audio and the desktop player's
+catch up, per chat sort, rename and match fixes, opt-in new video notifications, Send logs, VP8, VP9 and AV1
+through nextlib 0.16.0, macOS sign in without Homebrew, the Windows install folder fix from 1.26.1, and the
+Downloads, History, Settings and setup rework.
 
-Before tagging:
+Before tagging: nextlib (1.11.1-0.16.0) and mediamp (0.5.2) both moved since 1.26.0, so the publish job's
+source link checks in `release.yml` fail until new corresponding source archives are attached and `LINKED`,
+`NEXTLIB_SOURCE`, the notes link, `COVERED`, `TAG` and `MAC_TAG` point at them. The usual checks still apply:
 - Windows MSI check, last, on a CI build of the final main: signed in Home, dark theme, uninstall.
   Steps: `podman start win11`, `gh run download <run> -n tmplayer-desktop-windows`, MSI to
   `/home/dracu/vms/win11/shared/`, jars from a keyed local build into `shared/jars/`, then in the VM

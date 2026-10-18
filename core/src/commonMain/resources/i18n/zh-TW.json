@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "完整變更記錄",
-    "highlight_boost": "音量增強、睡眠定時器，以及「還在看嗎？」確認",
-    "highlight_delay": "字幕和音訊延遲，以及可自訂大小、方塊和位置的字幕",
-    "highlight_downloads": "看完後移除下載，並查看還有多少可用空間",
-    "highlight_languages": "TMPlayer 支援你的語言，可在「設定」中選擇",
-    "highlight_series": "影集檢視：集數依季分組，每一季都有分頁",
     "subtitle": "此版本的重點",
     "title": "{version} 的新功能"
   },

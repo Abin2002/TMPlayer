@@ -2313,11 +2313,6 @@
   },
   "whatsnew": {
     "full_changelog": "Tutte le novità",
-    "highlight_boost": "Amplificazione del volume, un timer di spegnimento e un controllo “stai ancora guardando?”",
-    "highlight_delay": "Ritardo di sottotitoli e audio, e sottotitoli con dimensione, riquadro e posizione che preferisci",
-    "highlight_downloads": "Rimuovi un download dopo averlo visto, e controlla quanto spazio è libero",
-    "highlight_languages": "TMPlayer nella tua lingua, da scegliere in Impostazioni",
-    "highlight_series": "Vista Serie: episodi raggruppati per stagione, con una scheda per ciascuna",
     "subtitle": "Le novità principali di questa versione",
     "title": "Novità della {version}"
   },
