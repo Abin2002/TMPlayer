@@ -243,7 +243,14 @@ internal fun HomePane(
     }
 
     // Asked for as the row would be when it first came on screen, and again after a refresh.
-    if (recent != null) LaunchedEffect(recent.key, recent.loaded) { if (!recent.loaded) onRowShown(recent) }
+    // The carousel is built from the starred chats' newest videos, so while it waits they are asked
+    // for straight away, not only once their rows scroll into view (below the fold on a TV they
+    // never did, and the carousel waited for good).
+    if (recent != null) LaunchedEffect(recent.key, recent.loaded) {
+        if (recent.loaded) return@LaunchedEffect
+        onRowShown(recent)
+        rows.filterIsInstance<HomeRow.Chat>().filterNot { it.loaded }.forEach(onRowShown)
+    }
     val density = LocalDensity.current
 
     // On a phone Home shares a pager with Chats and stays composed beside it: only while most of

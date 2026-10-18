@@ -203,7 +203,12 @@ internal fun HomeRowsView(
     val continueRow = rows.firstOrNull { it is HomeRow.Continue } as HomeRow.Continue?
     // The carousel is filled from Recently added, wherever that row sits on the page, and from
     // Continue watching, whose cards need their videos asked for to have a picture.
-    LaunchedEffect(recentRow?.loaded) { if (recentRow != null && !recentRow.loaded) onRowShown(recentRow) }
+    // The starred chats' newest videos feed it too: asked for while it waits, not only on scroll.
+    LaunchedEffect(recentRow?.loaded) {
+        if (recentRow == null || recentRow.loaded) return@LaunchedEffect
+        onRowShown(recentRow)
+        rows.filterIsInstance<HomeRow.Chat>().filterNot { it.loaded }.forEach(onRowShown)
+    }
     LaunchedEffect(continueRow?.records) { continueRow?.records?.forEach(onArtWanted) }
     val featured = rememberFeatured(recentRow, continueRow, art)
     // Every tile on Home has a picture of its own; "See all" still lists the whole row.
