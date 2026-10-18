@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,7 @@ import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.theme.Tone
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import kotlinx.coroutines.launch
 
 /**
  * A chat's info on the desktop, opened from the Info button beside its name: the large picture,
@@ -64,6 +66,38 @@ internal fun ChatInfoPanel(chat: ChatSummary, onDismiss: () -> Unit) {
             ChatAvatar(chat.miniThumbnail, shown?.bigPhotoFileId?.takeIf { it != 0 } ?: chat.photoFileId, name, 104.dp)
             Text(name, style = MaterialTheme.typography.headlineSmall, color = Tone.text, textAlign = TextAlign.Center)
             shown?.let { facts(it) }?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = Tone.muted) }
+            // A public group or channel not joined yet (CP79): this panel is the preview, Join the confirm.
+            if (shown != null && shown.canJoin) {
+                val scope = androidx.compose.runtime.rememberCoroutineScope()
+                var joining by androidx.compose.runtime.remember(shown.summary.id) { androidx.compose.runtime.mutableStateOf(false) }
+                JoinButton(
+                    label = when {
+                        shown.joinByRequest -> s.linkRequestJoin
+                        shown.summary.kind == ChatKind.Channel -> s.linkJoinChannel
+                        else -> s.linkJoinGroup
+                    },
+                    joining = joining,
+                    onJoin = {
+                        joining = true
+                        scope.launch {
+                            val outcome = runCatching {
+                                val session = Td.awaitConnectedSessionOrNull()
+                                    ?: return@runCatching com.tmplayer.data.JoinOutcome.Refused(com.tmplayer.data.Failures.OFFLINE)
+                                com.tmplayer.data.TelegramLinkActions(session.client).joinPublic(shown.summary.id)
+                            }.getOrElse { com.tmplayer.data.JoinOutcome.Refused(com.tmplayer.data.Failures.humanise(it)) }
+                            joining = false
+                            toast(
+                                when (outcome) {
+                                    is com.tmplayer.data.JoinOutcome.Joined -> L.linkJoined(shown.summary.title)
+                                    com.tmplayer.data.JoinOutcome.RequestSent -> L.linkRequestSent
+                                    is com.tmplayer.data.JoinOutcome.Refused -> outcome.reason
+                                },
+                            )
+                            if (outcome is com.tmplayer.data.JoinOutcome.Joined) load.retry()
+                        }
+                    },
+                )
+            }
             // Could not be loaded: said, with Try again, so a failure does not pass for a wait.
             if (load.failed) {
                 Text(s.chatsInfoFailed, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, textAlign = TextAlign.Center)

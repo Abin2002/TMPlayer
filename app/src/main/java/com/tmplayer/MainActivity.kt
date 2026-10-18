@@ -405,6 +405,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun noteRequestedScreen(intent: Intent?) {
+        // A t.me or tg:// link another app handed over, TMPlayer picked from the chooser (CP79):
+        // the window's link flow opens it once signed in. Taken off the intent, so a rotation
+        // does not open it again.
+        if (intent?.action == Intent.ACTION_VIEW) {
+            intent.data?.toString()?.let(com.tmplayer.data.TelegramLinks::parse)?.let { link ->
+                com.tmplayer.ui.browse.LinkRequests.ask(link)
+                intent.data = null
+                intent.action = Intent.ACTION_MAIN
+            }
+        }
         // A new videos notification: the chat it is about, or the list (0). Taken off the intent,
         // so a rotation does not open it again.
         if (intent?.hasExtra(com.tmplayer.data.BackgroundChecks.EXTRA_OPEN_CHAT) == true) {
@@ -1781,6 +1791,13 @@ private fun Root() {
                 }
             }
         }
+
+        // Telegram links (CP79): a post, an invite or a public chat, from Search, a pinned post or
+        // another app; and videos found off a chat's grid (comments, round videos, CP81).
+        com.tmplayer.ui.browse.TelegramLinkHost(
+            onPlay = { item, title -> play(item, chatTitle = title) },
+            onOpenChat = { chat -> openChat(chat) },
+        )
 
         lowStorageAsk?.let { (ask, refusal) ->
             // An invitation, so focus starts on "Switch and play": it does what the viewer pressed.

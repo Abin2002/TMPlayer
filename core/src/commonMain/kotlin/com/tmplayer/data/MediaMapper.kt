@@ -385,8 +385,52 @@ object MediaMapper {
             )
         }
 
+        // A round video message (CP81): square, named for what it is.
+        is dev.g000sha256.tdl.dto.MessageVideoNote -> roundVideo(message, content.videoNote, null)
+
+        // A link whose preview Telegram filled with a video file of its own (CP81). A preview of
+        // somebody else's site (an embedded player) has no file here, and stays a link.
+        is dev.g000sha256.tdl.dto.MessageText -> linkPreviewVideo(message, content)
+
         else -> null
     }
+
+    private fun roundVideo(message: Message, note: dev.g000sha256.tdl.dto.VideoNote, title: String?): MediaItem? {
+        if (note.video.id == 0) return null
+        return MediaItem(
+            chatId = message.chatId,
+            messageId = message.id,
+            fileId = note.video.id,
+            title = title?.takeIf { it.isNotBlank() } ?: L.mediaRoundVideo,
+            sizeBytes = fileSize(note.video.size, note.video.expectedSize),
+            durationSec = note.duration,
+            mimeType = "video/mp4",
+            thumbnailFileId = note.thumbnail?.file?.id ?: 0,
+            miniThumbnail = note.minithumbnail?.data,
+            date = message.date,
+            onDevice = onDevice(note.video),
+            width = note.length,
+            height = note.length,
+        )
+    }
+
+    /** The video inside [content]'s link preview, where Telegram carries the file. */
+    private fun linkPreviewVideo(message: Message, content: dev.g000sha256.tdl.dto.MessageText): MediaItem? {
+        val preview = content.linkPreview ?: return null
+        return when (val type = preview.type) {
+            is dev.g000sha256.tdl.dto.LinkPreviewTypeVideo -> {
+                val video = type.video
+                if (video.video.id == 0 || fileSize(video.video.size, video.video.expectedSize) <= 0L) return null
+                val named = preview.title.ifBlank { content.text.text }
+                fromVideo(message, video, named)
+            }
+            is dev.g000sha256.tdl.dto.LinkPreviewTypeVideoNote -> roundVideo(message, type.videoNote, preview.title)
+            else -> null
+        }
+    }
+
+    /** Whether [item] is a round video message, which lists draw in a circle. */
+    fun isRound(item: MediaItem): Boolean = item.width > 0 && item.width == item.height && item.fileName.isEmpty() && item.title == L.mediaRoundVideo
 
     /**
      * An album's caption is written under one of its videos, usually the first, and the others
