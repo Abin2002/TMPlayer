@@ -78,7 +78,7 @@ import kotlin.math.tan
  * the colour the window was painted before the first frame (`window_background`), so the system
  * splash hands over to this with no flash. Nothing else on it has a colour but the accent.
  *
- * Phone, television and desktop share it; the sizes follow [deviceForm]. [sweepAt] holds the logo's playhead
+ * Phone, television and desktop share it; the sizes follow [deviceForm]. [sweepAt] places the logo's playhead, for a test
  * at one point of its loop (0 to 1), for drawing frames in a test. [below] is room under the lines
  * for a Retry once the wait has gone on too long.
  */
@@ -92,8 +92,6 @@ fun BrandLoader(
 ) {
     val form = deviceForm()
     val size = LoaderSizes.of(form)
-    val still = rememberLessMotion()
-    val sweep = if (still || sweepAt != null) null else rememberSweep()
 
     // Cycles once through and then stays on the last line. Looping back to the first after
     // suggesting the viewer check their connection would be the app forgetting what it just said.
@@ -113,15 +111,8 @@ fun BrandLoader(
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // The app's mark, its playhead running along the bar while the app gets ready, then
-            // resting a moment: read in the draw pass only, so a frame never recomposes it.
-            LogoMark(
-                size = size.logo,
-                progress = {
-                    val p = sweepAt ?: sweep?.value ?: NO_LIGHT
-                    if (p < 0f) RESTING else p
-                },
-            )
+            // The app's mark, standing still (user, 2026-10-19: the moving playhead went).
+            LogoMark(size = size.logo, progress = { sweepAt?.takeIf { it >= 0f } ?: RESTING })
             Spacer(Modifier.height(size.gap))
             Crossfade(label, animationSpec = tween(LINE_FADE_MS, easing = Motion.Standard), label = "loaderLabel") {
                 Text(
@@ -204,24 +195,6 @@ fun connectingLines(): List<String> = listOf(
 @Composable
 private fun loaderGround(): Color = TmSchemes.of(LocalDarkTheme.current).background
 
-/**
- * One infinite transition for the whole screen: a sweep of [SWEEP_MS] on an ease in and out, then
- * [REST_MS] with the light off the word. The first rest is mostly skipped, so the light arrives
- * soon after the screen does.
- */
-@Composable
-private fun rememberSweep(): State<Float> =
-    rememberInfiniteTransition(label = "brandLight").animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(SWEEP_MS, delayMillis = REST_MS, easing = SweepEasing),
-            repeatMode = RepeatMode.Restart,
-            initialStartOffset = StartOffset(REST_MS - FIRST_REST_MS, StartOffsetType.FastForward),
-        ),
-        label = "sweep",
-    )
-
 /** The loader's figures for each kind of device: the mark large on a television and a desktop. */
 private class LoaderSizes(
     val logo: androidx.compose.ui.unit.Dp,
@@ -242,16 +215,6 @@ private class LoaderSizes(
         }
     }
 }
-
-/** Off the word: the sweep's value under reduced motion. */
-private const val NO_LIGHT = -1f
-
-private const val SWEEP_MS = 2_100
-private const val REST_MS = 900
-private const val FIRST_REST_MS = 450
-
-/** Off its mark gently and into its stop gently, so the light glides rather than slides. */
-private val SweepEasing = CubicBezierEasing(0.45f, 0f, 0.2f, 1f)
 
 private const val LINE_FADE_MS = 500
 private const val LINE_ALPHA = 0.72f

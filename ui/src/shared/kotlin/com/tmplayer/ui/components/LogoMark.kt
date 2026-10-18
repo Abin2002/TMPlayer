@@ -34,10 +34,8 @@ fun LogoMark(size: Dp, modifier: Modifier = Modifier, progress: () -> Float = { 
         val u = this.size.width / VIEWPORT
         fun at(x: Float, y: Float) = Offset(x * u, y * u)
 
-        // Rounded throughout, as launcher icons are now: a squircle-like tile, the screen inset
-        // with its own softer corners, round joins on the triangle and round ends on the bar.
-        drawRoundRect(TILE, at(21.33f, 21.33f), Size(981.33f * u, 981.33f * u), CornerRadius(TILE_RADIUS * u))
-        drawRoundRect(SCREEN, at(96f, 96f), Size(832f * u, 640f * u), CornerRadius(SCREEN_RADIUS * u))
+        drawRoundRect(TILE, at(21.33f, 21.33f), Size(981.33f * u, 981.33f * u), CornerRadius(42.67f * u))
+        drawRect(SCREEN, at(64f, 64f), Size(896f * u, 682.67f * u))
 
         val play = Path().apply {
             moveTo(426.67f * u, 277.33f * u)
@@ -46,7 +44,7 @@ fun LogoMark(size: Dp, modifier: Modifier = Modifier, progress: () -> Float = { 
             close()
         }
         drawPath(play, INK, style = Fill)
-        drawPath(play, INK, style = Stroke(width = 72f * u, join = StrokeJoin.Round))
+        drawPath(play, INK, style = Stroke(width = 42.67f * u, join = StrokeJoin.Round))
 
         val bar = 42.67f * u
         val start = at(BAR_START, BAR_Y)
@@ -62,13 +60,11 @@ fun LogoMark(size: Dp, modifier: Modifier = Modifier, progress: () -> Float = { 
 const val RESTING = (640f - 128f) / (896f - 128f)
 
 private const val VIEWPORT = 1024f
-private const val TILE_RADIUS = 232f
-private const val SCREEN_RADIUS = 150f
 private const val BAR_START = 128f
 private const val BAR_END = 896f
 private const val BAR_Y = 874.67f
 
-private val TILE = Color(0xFF262633)
+private val TILE = Color(0xFF1E1E28)
 private val SCREEN = Color(0xFF0E0E12)
 private val TRACK = Color(0xFF3A3A46)
 private val INK = Color(0xFFEDEDF2)
