@@ -1791,8 +1791,11 @@ private fun Root() {
         }
 
         if (FormFactor.isTv(context)) {
+            val tvPageFocus = remember { androidx.compose.ui.focus.FocusRequester() }
             com.tmplayer.ui.browse.TvBarFrame(
                 shown = tvBarShown,
+                barFocus = tvBarFocus,
+                contentFocus = tvPageFocus,
                 bar = {
                     // A tab picked here lands in the browser with the remote still on the bar.
                     val stayOnBar = { railReturn = com.tmplayer.ui.browse.RailReturn.Settings }
@@ -1811,6 +1814,7 @@ private fun Root() {
                         beforeProfile = stayOnBar,
                         onRefresh = null,
                         currentFocus = tvBarFocus,
+                        contentFocus = tvPageFocus,
                         overArt = false,
                         modifier = Modifier.onFocusChanged { tvBarFocused = it.hasFocus },
                     )

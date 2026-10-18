@@ -867,6 +867,7 @@ internal fun BrowseScreen(
         // The search across every chat: the bar's Search, and the remote's search key.
         var tvSearchOpen by rememberSaveable { mutableStateOf(false) }
         val barFocus = remember { FocusRequester() }
+        val pageFocus = remember { FocusRequester() }
         var barRefocus by remember { mutableIntStateOf(0) }
         LaunchedEffect(barRefocus) {
             if (barRefocus == 0) return@LaunchedEffect
@@ -931,7 +932,7 @@ internal fun BrowseScreen(
                 Modifier
                     .fillMaxSize()
                     .padding(top = if (underBar) 0.dp else TV_BAR_HEIGHT, end = if (homeShown) 0.dp else Tv.SafeH)
-                    .keepsDownFocus(),
+                    .underTvBar(pageFocus, barFocus),
             ) {
                 if (tvSearchOpen) {
                     TvSearchPage(
@@ -983,6 +984,7 @@ internal fun BrowseScreen(
                     else -> onRefresh
                 },
                 currentFocus = barFocus,
+                contentFocus = pageFocus,
                 overArt = homeShown,
                 modifier = Modifier.onFocusChanged { tvBarHasFocus = it.hasFocus },
             )
@@ -3282,16 +3284,6 @@ private val TOUCH_AVATAR = Avatar.List
  * the foot of the rail, and Up from the rail's first heading landed in the search field. At an end
  * the remote now stays put, as it does at the end of any list.
  */
-/**
- * The page under the television's top bar: Up may leave it for the bar, Down never leaves it, and
- * coming back down from the bar lands on the item the remote left.
- */
-private fun Modifier.keepsDownFocus(): Modifier = focusProperties {
-    onExit = {
-        if (requestedFocusDirection == FocusDirection.Down) cancelFocusChange()
-    }
-}.focusRestorer()
-
 private fun Modifier.keepsVerticalFocus(): Modifier = focusProperties {
     onExit = {
         if (requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down) {

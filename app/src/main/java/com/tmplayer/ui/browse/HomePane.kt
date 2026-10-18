@@ -7,6 +7,9 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.foundation.background
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.compose.ui.graphics.graphicsLayer
@@ -650,7 +653,7 @@ private fun TileRow(
         // Under the TV top bar the remote's tile stands at one place, the start of the row, and
         // the row slides under it; otherwise the row moves only as far as the margins ask.
         val keep: @Composable (@Composable () -> Unit) -> Unit = if (TV_TOP_BAR) {
-            { body -> AnchoredAtStart(start, body) }
+            { body -> AnchoredAtStart(row, start, body) }
         } else {
             { body -> WithinMargins(start, end, body) }
         }
@@ -896,9 +899,24 @@ private fun InfoTile(title: String, facts: String, artHeight: Dp, card: @Composa
     }
     var focused by remember { mutableStateOf(false) }
     val still = com.tmplayer.ui.theme.rememberReducedMotion() || com.tmplayer.ui.theme.Motion.reduced
+    // Where this tile stands in its row, for the row to bring it to the anchor once the tile the
+    // remote left has folded its panel away (measured then, not before, or the row overshoots).
+    val anchor = LocalTileAnchor.current
+    var x by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(focused) {
+        if (!focused || anchor == null) return@LaunchedEffect
+        withFrameNanos { }
+        withFrameNanos { }
+        anchor.bring(x, still)
+    }
     val spec = com.tmplayer.ui.theme.Motion.standard<androidx.compose.ui.unit.IntSize>(if (still) 0 else com.tmplayer.ui.theme.Motion.Normal)
     val fade = com.tmplayer.ui.theme.Motion.standard<Float>(if (still) 0 else com.tmplayer.ui.theme.Motion.Fast)
-    Row(Modifier.onFocusChanged { focused = it.hasFocus }, verticalAlignment = Alignment.Top) {
+    Row(
+        Modifier
+            .onGloballyPositioned { x = it.positionInParent().x }
+            .onFocusChanged { focused = it.hasFocus },
+        verticalAlignment = Alignment.Top,
+    ) {
         card()
         androidx.compose.animation.AnimatedVisibility(
             visible = focused,
@@ -963,15 +981,32 @@ private fun infoFacts(chat: String, item: MediaItem, left: Long = 0L): String {
  */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun AnchoredAtStart(start: Dp, content: @Composable () -> Unit) {
+private fun AnchoredAtStart(row: androidx.compose.foundation.lazy.LazyListState, start: Dp, content: @Composable () -> Unit) {
     val startPx = with(LocalDensity.current) { start.toPx() }
-    val spec = remember(startPx) {
+    // Focus alone scrolls nothing: the tile asks once its row has settled ([InfoTile]).
+    val spec = remember {
         object : androidx.compose.foundation.gestures.BringIntoViewSpec {
-            override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float = offset - startPx
+            override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float = 0f
         }
     }
-    CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides spec, content = content)
+    val anchor = remember(row, startPx) { TileAnchor(row, startPx) }
+    CompositionLocalProvider(
+        androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides spec,
+        LocalTileAnchor provides anchor,
+        content = content,
+    )
 }
+
+/** A Home row under the TV top bar, which slides its focused tile to [startPx]. */
+private class TileAnchor(val row: androidx.compose.foundation.lazy.LazyListState, val startPx: Float) {
+    suspend fun bring(x: Float, still: Boolean) {
+        val by = x - startPx
+        if (kotlin.math.abs(by) < 1f) return
+        if (still) row.scrollBy(by) else row.animateScrollBy(by, com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Normal))
+    }
+}
+
+private val LocalTileAnchor = androidx.compose.runtime.staticCompositionLocalOf<TileAnchor?> { null }
 
 /** How long Home without a carousel waits for one to turn up before the cold start's loader lifts. */
 private const val NO_CAROUSEL_SETTLE_MS = 1_500L
