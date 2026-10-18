@@ -757,8 +757,6 @@ fun MediaGridScreen(
                                         )
                                     }
                             }
-                            // The chat's compressed files, which cannot be played, each with why.
-                            archiveItems(list.archives, noVideos = feed.isEmpty() && firstExtra == null, first = if (feed.isEmpty() && firstExtra == null) firstItem else null, onExplain = onOfflineAction)
                         }
     
                         CardLayout.List -> LazyColumn(
@@ -838,7 +836,6 @@ fun MediaGridScreen(
                                 }
                               }
                             }
-                            archiveItems(list.archives, noVideos = feed.isEmpty() && firstExtra == null, first = if (feed.isEmpty() && firstExtra == null) firstItem else null, onExplain = onOfflineAction)
                         }
                     }
                 }

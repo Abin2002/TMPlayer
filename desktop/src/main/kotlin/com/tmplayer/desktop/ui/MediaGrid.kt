@@ -412,7 +412,8 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 },
                 loadingMore = content.loadingMore,
                 footerSlow = { SlowAnswerLine(content.items.size, onRetry = model::retryMore) },
-                footer = if (!content.moreFailed && content.archives.isEmpty()) null else {
+                // A chat lists its videos only: compressed files are not shown (user, 2026-10-19).
+                footer = if (!content.moreFailed) null else {
                     {
                         Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             // The last page failed: said, with Try again, not a listing that stops short.
@@ -423,7 +424,6 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                                     OutlinedButton(onClick = model::retryMore) { Text(s.commonTryAgain) }
                                 }
                             }
-                            ArchiveList(content.archives, noVideos = content.items.isEmpty() && !extras, onExplain = { toast(it) })
                         }
                     }
                 },

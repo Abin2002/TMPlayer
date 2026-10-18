@@ -102,39 +102,13 @@ fun networkLine(network: NetworkFacts, s: Messages): String? {
 }
 
 /**
- * The status line under the loader: a small dot that breathes while something is happening, and
- * what that something is. Under reduced motion the dot holds still and the words still change.
+ * The status line under the loader: what is happening now (the mark above it moves while it does).
  * A live region, so a screen reader hears the step change rather than nothing at all.
  */
 @Composable
 fun LiveStatus(text: String, modifier: Modifier = Modifier) {
-    val still = rememberLessMotion()
-    val pulse = if (still) {
-        null
-    } else {
-        rememberInfiniteTransition(label = "connectPulse").animateFloat(
-            initialValue = 0.35f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(tween(PULSE_MS), RepeatMode.Reverse),
-            label = "dot",
-        )
-    }
-    Row(
-        modifier.semantics { liveRegion = LiveRegionMode.Polite },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier
-                .size(8.dp)
-                // Read in the draw pass only, so a frame of the pulse never recomposes the line.
-                .graphicsLayer { alpha = pulse?.value ?: 1f }
-                .clip(CircleShape)
-                .background(Tone.accent),
-        )
-        Spacer(Modifier.width(10.dp))
-        Crossfade(text, animationSpec = tween(FADE_MS), label = "connectStep") {
-            Text(it, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, textAlign = TextAlign.Center)
-        }
+    Crossfade(text, animationSpec = tween(FADE_MS), label = "connectStep", modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
+        Text(it, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, textAlign = TextAlign.Center)
     }
 }
 

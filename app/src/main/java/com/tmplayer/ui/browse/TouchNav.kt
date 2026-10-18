@@ -667,15 +667,20 @@ private fun FloatingBar(
     } else {
         Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = BAR_MARGIN)
     }
+    // Concentric: the highlight's corners (half its 52 dp height) sit the same distance inside the
+    // bar's as the padding around it, so the two curves run parallel. The bar is a pill of 64 dp
+    // with 6 dp around the highlight; the rail is as wide as the bar is tall plus its margins, so
+    // it takes the bar's 32 dp corners rather than a full semicircle, which no button could follow.
+    val barShape = if (vertical) RAIL_SHAPE else CircleShape
     Box(outer, contentAlignment = Alignment.Center) {
         Box(
             Modifier
                 .then(if (vertical) Modifier.width(RAIL_WIDTH) else Modifier.height(BAR_HEIGHT))
-                .shadow(BAR_SHADOW, CircleShape)
-                .clip(CircleShape)
+                .shadow(BAR_SHADOW, barShape)
+                .clip(barShape)
                 .background(FloatingTone.menu)
-                .border(floatingBorder(), CircleShape)
-                .padding(if (vertical) PaddingValues(vertical = 10.dp) else PaddingValues(horizontal = 6.dp)),
+                .border(floatingBorder(), barShape)
+                .padding(if (vertical) PaddingValues(vertical = RAIL_INSET) else PaddingValues(horizontal = 6.dp)),
             contentAlignment = Alignment.Center,
         ) {
           Box(contentAlignment = if (vertical) Alignment.TopCenter else Alignment.CenterStart) {
@@ -1038,6 +1043,10 @@ internal val RAIL_FROM = 600.dp
 
 /** The rail's width: one button and the bar's inner margin either side. */
 private val RAIL_WIDTH = 76.dp
+
+/** The rail's corners and the room above its first button and under its last, matching the bar's. */
+private val RAIL_SHAPE = RoundedCornerShape(32.dp)
+private val RAIL_INSET = 6.dp
 
 /** Between the rail and the screen's start edge (or the cutout). */
 private val RAIL_MARGIN = 12.dp
