@@ -69,6 +69,15 @@ class HomeRowsTest {
     }
 
     @Test
+    fun `the recent row waits while a starred chat is still loading, and goes once all are in and empty`() {
+        val waiting = HomeRows.build(emptyList(), listOf(chat(1), chat(2)), loaded = mapOf(1L to emptyList()), recent = emptyList(), recentMinStarred = 1)
+        val recent = waiting.filterIsInstance<HomeRow.Recent>().single()
+        assertEquals(false, recent.loaded)
+        val done = HomeRows.build(emptyList(), listOf(chat(1), chat(2)), loaded = mapOf(1L to emptyList(), 2L to emptyList()), recent = emptyList(), recentMinStarred = 1)
+        assertEquals(emptyList<HomeRow.Recent>(), done.filterIsInstance<HomeRow.Recent>())
+    }
+
+    @Test
     fun `starred chats follow the chat list order, not the order they were starred`() {
         val chats = listOf(chat(5), chat(3), chat(8), chat(1))
         val starred = HomeRows.favouriteChats(chats, linkedSetOf(1L, 8L, 5L))

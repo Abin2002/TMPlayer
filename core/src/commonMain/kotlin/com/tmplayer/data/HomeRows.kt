@@ -160,7 +160,14 @@ object HomeRows {
                 val pool = recent.filter { it.chatId in starredIds } + starredIds.flatMap { loaded[it].orEmpty() }
                 // A copy, so the rows below still show these videos in their own chats.
                 val entries = row(pool, HashSet(inContinue), shownCopies, inContinue)
-                if (entries.isNotEmpty()) add(HomeRow.Recent(entries, loaded = true))
+                if (entries.isNotEmpty()) {
+                    add(HomeRow.Recent(entries, loaded = true))
+                } else if (starredIds.any { it !in loaded }) {
+                    // Nothing yet, but a starred chat's own videos are still on their way: the row
+                    // stays as loading, so the carousel holds its place rather than vanishing and
+                    // coming back once they land (seen on a cold start on the TV stick).
+                    add(HomeRow.Recent(emptyList(), loaded = false))
+                }
             }
         }
 
