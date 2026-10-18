@@ -12,10 +12,12 @@ tdl = "15.0.0"
 zxing = "3.5.4"
 # 1.8.0 was the release that began surfacing transient AudioTrack underruns as visible
 # freeze-then-resume buffering; 1.9.1 added the 100 ms grace period that debounces them, which is
-# the fix for the momentary stall Dolby Digital 5.1 tracks showed. 1.10.1 is as far as nextlib's
-# FFmpeg renderers currently go, so that is the ceiling.
-media3 = "1.10.1"
-nextlib = "1.10.1-0.13.0"
+# the fix for the momentary stall Dolby Digital 5.1 tracks showed. nextlib is published as
+# <media3 version>-<nextlib version> and its FFmpeg renderers are built against that exact media3,
+# so the two move together, to a pair that exists on Maven Central. 1.11.1-0.16.0 brings FFmpeg 9
+# and adds VP8, VP9 and AV1 (dav1d) software decoders, which is why its natives are larger.
+media3 = "1.11.1"
+nextlib = "1.11.1-0.16.0"
 leanback = "1.0.0"
 fragment = "1.8.9"
 datastore = "1.2.1"

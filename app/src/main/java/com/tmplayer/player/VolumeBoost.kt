@@ -93,7 +93,7 @@ class VolumeBoostProcessor : BaseAudioProcessor() {
         out.flip()
     }
 
-    override fun onFlush() {
+    override fun onFlush(streamMetadata: AudioProcessor.StreamMetadata) {
         envelope = 0f
     }
 

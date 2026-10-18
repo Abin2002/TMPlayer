@@ -92,7 +92,7 @@ class AudioOffsetProcessor : BaseAudioProcessor() {
         replaceOutputBuffer(remaining).put(inputBuffer).flip()
     }
 
-    override fun onFlush() {
+    override fun onFlush(streamMetadata: AudioProcessor.StreamMetadata) {
         appliedFrames = 0L
     }
 
