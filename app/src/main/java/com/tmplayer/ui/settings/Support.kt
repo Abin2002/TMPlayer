@@ -149,8 +149,8 @@ private fun SupportCode(link: About.Link, onOpen: (() -> Unit)?) {
  * The Buy Me a Coffee window: the ask itself when [asking] (at a good moment, at most every two
  * weeks, see [SupportReminder]), or the same window opened from About to pay from the phone.
  *
- * Buy Me a Coffee comes first and in its own colours: a large code to it on their yellow, and on a
- * phone a big yellow button that opens it in the browser. GitHub Sponsors is the quieter way
+ * Buy Me a Coffee comes first and in its own colours: on a phone a big yellow button that opens it
+ * in the browser, on a television a large code to it on their yellow. GitHub Sponsors is the quieter way
  * under it. A TV has no browser, so the code is the way there, with a small one for GitHub
  * Sponsors beside the words; the remote starts on "Maybe later", so a stray OK costs nothing.
  * "Don't show again" ends the asks and the notification for good. Back is "Maybe later".
@@ -183,10 +183,20 @@ fun CoffeeDialog(
             ) {
                 Text(title, style = MaterialTheme.typography.headlineSmall, color = Tone.text, textAlign = TextAlign.Center)
                 Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, textAlign = TextAlign.Center)
+                // No scan code on a phone: the button opens the page on the screen the code would
+                // be on (user, 2026-10-18). The television, with no browser, keeps its code.
                 CoffeeButton(onClick = { openLink(context, About.COFFEE) }, modifier = Modifier.fillMaxWidth())
-                CoffeeCode(plate = 188.dp)
-                androidx.compose.material3.TextButton(onClick = { openLink(context, About.SPONSORS) }) {
-                    androidx.compose.material3.Text(s.supportSponsorGithub)
+                // The two free or quieter ways side by side: a sponsorship, and a star, which costs
+                // nothing and is worth asking for as much as a coffee (user, 2026-10-18).
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.TextButton(onClick = { openLink(context, About.SPONSORS) }) {
+                        androidx.compose.material3.Text(s.supportSponsorGithub)
+                    }
+                    androidx.compose.material3.TextButton(onClick = { openLink(context, About.SOURCE) }) {
+                        androidx.compose.material3.Icon(TmIcons.StarOutline, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        androidx.compose.material3.Text(s.supportStarGithub)
+                    }
                 }
                 if (asking) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -211,6 +221,7 @@ fun CoffeeDialog(
                     Text(title, style = MaterialTheme.typography.headlineSmall, color = Tone.text)
                     Text(text, style = MaterialTheme.typography.bodyLarge, color = Tone.muted)
                     SponsorsCode()
+                    Text(s.supportStarNote, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
                     // The card floats, so a button at rest takes the step above its fill.
                     CompositionLocalProvider(LocalOnFloating provides true) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

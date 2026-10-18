@@ -2111,7 +2111,9 @@
     "popup_note": "{note} Open the page here, or scan the code with your phone.",
     "qr_for": "QR code for {link}",
     "scan_coffee": "Scan for Buy Me a Coffee",
-    "sponsor_github": "Sponsor on GitHub"
+    "sponsor_github": "Sponsor on GitHub",
+    "star_github": "Star on GitHub",
+    "star_note": "Or star TMPlayer on GitHub: it costs nothing and helps more people find it."
   },
   "theme": {
     "dark": "Dark",

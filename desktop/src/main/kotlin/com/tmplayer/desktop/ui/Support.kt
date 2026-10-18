@@ -1,6 +1,23 @@
 package com.tmplayer.desktop.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -112,9 +129,9 @@ private fun SupportCode(link: About.Link, modifier: Modifier) {
  * The Buy Me a Coffee window on the desktop: the ask itself when [asking] (after real use, at most
  * every two weeks, see [SupportReminder]), or the same window opened from About.
  *
- * Buy Me a Coffee comes first and in its own colours: their yellow button, which opens the page in
- * the browser, and a code on their yellow for paying from the phone. GitHub Sponsors is the
- * quieter link under the button. "Don't show again" ends the asks and the notification for good.
+ * Buy Me a Coffee comes first and in its own colours: a card on their yellow with a code for paying
+ * from the phone, which is also the link that opens the page in the browser. GitHub Sponsors and
+ * a star on GitHub are the quieter links beside it. "Don't show again" ends the asks and the notification for good.
  */
 @Composable
 fun CoffeeDialog(
@@ -134,10 +151,17 @@ fun CoffeeDialog(
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                    CoffeeCode()
+                    // The card is the Buy Me a Coffee link as well as its code, so the window has one
+                    // way to it rather than a card and a button saying the same (user, 2026-10-18).
+                    CoffeeCode(onOpen = { OpenExternal.browse(About.COFFEE) })
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        CoffeeButton(onClick = { OpenExternal.browse(About.COFFEE) }, modifier = Modifier.fillMaxWidth())
                         TextButton(onClick = { OpenExternal.browse(About.SPONSORS) }) { Text(s.supportSponsorGithub) }
+                        // A star costs nothing and is worth asking for too (user, 2026-10-18).
+                        TextButton(onClick = { OpenExternal.browse(About.SOURCE) }) {
+                            Icon(TmIcons.StarOutline, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(s.supportStarGithub)
+                        }
                     }
                 }
             }
@@ -162,30 +186,65 @@ fun CoffeeButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** The code for Buy Me a Coffee on their yellow, with the cup and the address in their ink. */
+/**
+ * The code for Buy Me a Coffee on their yellow, with their cup, their name and the address in
+ * their ink. It is also the link: a click opens the page in the browser, and while the pointer is
+ * over it or the keyboard is on it, an arrow in the top end corner says it leads out of the app and
+ * the card lifts a little.
+ */
 @Composable
-private fun CoffeeCode() {
+private fun CoffeeCode(onOpen: () -> Unit) {
     val s = LocalStrings.current
     val bitmap by produceState<ImageBitmap?>(initialValue = null, key1 = About.COFFEE) {
         value = withContext(Dispatchers.Default) { QrCode.render(About.COFFEE, QR_PIXELS) }
     }
-    Column(
-        Modifier.clip(RoundedCornerShape(Corner.Large)).background(BmcBrand.Yellow).padding(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
+    val focused by interaction.collectIsFocusedAsState()
+    val lit = hovered || focused
+    val lift by animateFloatAsState(if (lit) 1.03f else 1f, label = "coffee-lift")
+    val shape = RoundedCornerShape(Corner.Large)
+    Box(
+        Modifier
+            .graphicsLayer { scaleX = lift; scaleY = lift }
+            .clip(shape)
+            .background(BmcBrand.Yellow)
+            .then(if (focused) Modifier.border(2.dp, BmcBrand.Ink, shape) else Modifier)
+            .hoverable(interaction)
+            .pointerHoverIcon(PointerIcon.Hand)
+            .clickable(interactionSource = interaction, indication = LocalIndication.current, role = Role.Button, onClick = onOpen)
+            .semantics { contentDescription = s.supportBuyCoffee },
     ) {
-        Box(
-            Modifier.size(150.dp).clip(RoundedCornerShape(Corner.Medium)).background(Color.White),
-            contentAlignment = Alignment.Center,
+        Column(
+            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            bitmap?.let { Image(it, contentDescription = s.supportScanCoffee, modifier = Modifier.fillMaxSize().padding(8.dp)) }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                BmcCupMark(height = 18.dp)
+                Text("Buy Me a Coffee", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = BmcBrand.Ink) // i18n-ok: brand name
+            }
+            Box(
+                Modifier.size(150.dp).clip(RoundedCornerShape(Corner.Medium)).background(Color.White),
+                contentAlignment = Alignment.Center,
+            ) {
+                bitmap?.let { Image(it, contentDescription = s.supportScanCoffee, modifier = Modifier.fillMaxSize().padding(8.dp)) }
+            }
+            Text(
+                About.COFFEE.removePrefix("https://"),
+                style = MaterialTheme.typography.labelSmall,
+                color = BmcBrand.Ink,
+                textAlign = TextAlign.Center,
+            )
         }
-        Text(
-            About.COFFEE.removePrefix("https://"),
-            style = MaterialTheme.typography.labelSmall,
-            color = BmcBrand.Ink,
-            textAlign = TextAlign.Center,
-        )
+        AnimatedVisibility(
+            visible = lit,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopEnd).padding(6.dp),
+        ) {
+            Icon(TmIcons.OpenExternal, contentDescription = null, tint = BmcBrand.Ink, modifier = Modifier.size(18.dp))
+        }
     }
 }
 
