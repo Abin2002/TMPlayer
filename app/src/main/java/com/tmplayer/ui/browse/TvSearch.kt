@@ -131,28 +131,14 @@ internal fun TvSearchScreen(
     var focusedGroup by remember { mutableStateOf<ResultGroup?>(null) }
     val grid = rememberLazyGridState()
 
-    Column(Modifier.fillMaxSize().padding(start = 28.dp, top = Tv.SafeV, bottom = Tv.SafeV)) {
-        // The heading every other rail page opens with (TabHeading): its name and a line under
-        // it on the left, the clock and the account on the right. Without it this was the one
-        // page of the rail that started with a control, with no clock, a step higher up.
-        Row(
-            Modifier.fillMaxWidth().padding(end = Tv.FocusClearance, bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // The television's type, as TabHeading sets it, so the two headings match.
-            Column(Modifier.weight(1f)) {
-                androidx.tv.material3.Text(s.commonSearch, style = androidx.tv.material3.MaterialTheme.typography.headlineLarge, color = Tone.text)
-                androidx.tv.material3.Text(
-                    s.searchPageBlurb,
-                    style = androidx.tv.material3.MaterialTheme.typography.bodyMedium,
-                    color = Tone.muted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Spacer(Modifier.width(20.dp))
-            TvStatusCluster(account)
-        }
+    Column(
+        Modifier.fillMaxSize().padding(
+            start = TV_START,
+            // Under the top bar, which names the page and carries the clock, the field leads.
+            top = 4.dp,
+            bottom = Tv.SafeV,
+        ),
+    ) {
         Row(
             Modifier.padding(end = Tv.FocusClearance),
             verticalAlignment = Alignment.CenterVertically,

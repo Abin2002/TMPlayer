@@ -7,6 +7,9 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.foundation.background
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.compose.ui.graphics.graphicsLayer
@@ -92,6 +95,10 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.Text as M3Text
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.drawBehind
 
 /**
  * Home: a row of what the viewer was part way through, a row of what they saved for later, the new episodes of the shows they
@@ -109,6 +116,7 @@ import androidx.compose.material3.Text as M3Text
  * was left on. Home opens on the first tile. A row that leaves videos out offers "See all" on its
  * heading.
  */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 internal fun HomePane(
     rows: List<HomeRow>,
@@ -155,6 +163,10 @@ internal fun HomePane(
      * the rows. Null on a phone, whose heading is the app bar.
      */
     tvHeader: (@Composable (onArt: Boolean) -> Unit)? = null,
+    /** Asked before Home takes the remote for its first row: not while the TV top bar holds it. */
+    mayTakeFocus: () -> Boolean = { true },
+    /** On the TV carousel's Play, for Down from the top bar. */
+    tvPlayFocus: FocusRequester? = null,
 ) {
     val s = LocalStrings.current
     val touch = isTouch()
@@ -192,6 +204,17 @@ internal fun HomePane(
     val listState = rememberLazyListState()
     // Home pressed again on the bar: back to the top, the featured carousel whole.
     ScrollToTopOnReselect(TouchDestination.Home) { animate -> listState.toTop(animate) }
+    // Back from Home's rows to the TV top bar: the same, as Home looks when it opens.
+    if (!touch) {
+        // The bar takes the page's ground behind it once the rows run up under it.
+        LaunchedEffect(listState) {
+            androidx.compose.runtime.snapshotFlow { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0 }
+                .collect { TvBarSignals.homeScrolled.value = it }
+        }
+        androidx.compose.runtime.DisposableEffect(Unit) { onDispose { TvBarSignals.homeScrolled.value = false } }
+        val still = com.tmplayer.ui.theme.rememberReducedMotion() || com.tmplayer.ui.theme.Motion.reduced
+        LaunchedEffect(listState, still) { TvBarSignals.homeToTop.collect { listState.toTop(!still) } }
+    }
     // A show's card on the TV home screen asked for its page: opened once the show is in the rows.
     val showAsk by HomeLaunch.show.collectAsState()
     // Not before this window has focus: the launcher is still on top while the app comes up, and a
@@ -214,7 +237,9 @@ internal fun HomePane(
         scrolled = true
     }
     LaunchedEffect(carousel) {
-        if (touch && carousel && !scrolled) listState.scrollToItem(0)
+        // On a television too: a carousel arriving after the rows otherwise sits above the screen,
+        // out of reach of Up.
+        if (carousel && !scrolled) listState.scrollToItem(0)
     }
 
     // Asked for as the row would be when it first came on screen, and again after a refresh.
@@ -259,7 +284,16 @@ internal fun HomePane(
         val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
         val rowStep = with(density) { TV_DOWN_STEP.toPx() }
         val headerOnArt = !touch && carousel && tvHeader != null
-        CompositionLocalProvider(LocalOnlineArt provides true) {
+        // Under the TV top bar, Home's own list keeps still while the remote stays in its upper part
+        // (the carousel's Play, the first row): the television's default moved every focused item
+        // to a fixed height, which scrolled Home down and back each time Play took the remote.
+        val barPx = with(density) { TV_BAR_HEIGHT.toPx() }
+        val calm = remember(barPx) { calmVertical(barPx) }
+        val platformSpec = androidx.compose.foundation.gestures.LocalBringIntoViewSpec.current
+        CompositionLocalProvider(
+            LocalOnlineArt provides true,
+            androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides if (!touch) calm else platformSpec,
+        ) {
           Column(Modifier.fillMaxSize()) {
             if (!touch && !headerOnArt) tvHeader?.invoke(false)
             LazyColumn(
@@ -307,6 +341,7 @@ internal fun HomePane(
                                 if (series != null) opened.open(series) else onDetails(pick.item, chatTitle(pick.item.chatId))
                             },
                             header = tvHeader?.let { heading -> { heading(true) } },
+                            playFocus = tvPlayFocus,
                         )
                     } else item(key = FEATURED_KEY, contentType = FEATURED_KEY) {
                         FeaturedCarousel(
@@ -502,7 +537,7 @@ internal fun HomePane(
         is HomeRow.Continue, is HomeRow.WatchLater, is HomeRow.NewEpisodes -> true
     }
     LaunchedEffect(firstKey, firstReady) {
-        if (!touch && firstReady) {
+        if (!touch && firstReady && mayTakeFocus()) {
             runCatching { first.requestFocus() }
             // The focused row asks to be brought into view with room round it, which scrolled the
             // carousel above it half away; Home opens at its top, the carousel whole over the row.
@@ -564,7 +599,8 @@ private fun LazyListScope.entries(
 ) {
     items(entries, key = { it.key }, contentType = { if (poster) "poster-${it::class.simpleName}" else it::class }) { entry ->
         val focus = if (entry === lead) Modifier.focusRequester(first) else Modifier
-        val modifier = Modifier.width(if (poster) posterWidth(touch) else wideWidth(touch)).then(focus)
+        val width = if (poster) posterWidth(touch) else wideWidth(touch)
+        val modifier = Modifier.width(width).then(focus)
         when (entry) {
             is ShelfEntry.File -> MediaCard(
                 item = entry.item,
@@ -577,15 +613,18 @@ private fun LazyListScope.entries(
                 poster = poster,
                 modifier = modifier,
             )
-            is ShelfEntry.Show -> SeriesCard(
-                series = entry.series,
-                progress = remember(entry.series, watch) { watch.progress(entry.series) },
-                fresh = remember(entry.series, watch) { watch.newEpisodes(entry.series) > 0 },
-                onClick = { onOpenSeries(entry.series) },
-                dense = touch,
-                poster = poster,
-                modifier = modifier,
-            )
+            is ShelfEntry.Show -> {
+                val progress = remember(entry.series, watch) { watch.progress(entry.series) }
+                    SeriesCard(
+                        series = entry.series,
+                        progress = progress,
+                        fresh = remember(entry.series, watch) { watch.newEpisodes(entry.series) > 0 },
+                        onClick = { onOpenSeries(entry.series) },
+                        dense = touch,
+                        poster = poster,
+                        modifier = modifier,
+                    )
+            }
         }
     }
 }
@@ -602,7 +641,8 @@ private fun TileRow(
         // On a television the tiles fade out over the margins rather than being cut off at the
         // rail, and the tile the remote moves to stays inside them.
         val row = rememberLazyListState()
-        WithinMargins(start, end) {
+        // The remote's tile stands at one place, the start of the row, and the row slides under it.
+        AnchoredAtStart(start) {
             LazyRow(
                 state = row,
                 // Coming back down into a row lands on the tile it was left on, not whichever is nearest.
@@ -648,8 +688,8 @@ private fun CaptionLine(text: String, ink: Color) {
 
 /**
  * A row's name, SemiBold: titleLarge on a phone and on a television. A row that leaves videos out
- * offers the rest: on a phone a quiet 32 dp chip with a chevron at the end of the heading, on a
- * television a pill that takes focus only from the row under it (see [HomePane]).
+ * offers the rest at the end of the heading, as a link with a chevron and no fill ([SeeAllLink]);
+ * on a television it takes focus only from the row under it (see [HomePane]).
  */
 @Composable
 private fun RowHeading(
@@ -695,44 +735,21 @@ private fun RowHeading(
         if (seeAll != null && !touch) {
             // The count beside the words, as the desktop has it, so the row says how much more
             // there is before anyone presses anything.
-            TmSecondaryButton(
+            SeeAllLink(
+                label = "${s.homeSeeAll}  ·  $count",
                 onClick = seeAll,
                 modifier = Modifier
                     .focusProperties { canFocus = armed }
                     .focusRequester(focus)
                     .onFocusChanged { if (!it.hasFocus) onLeft() },
-            ) {
-                Text(s.homeSeeAll)
-                // The label's own colour, softened, so it reads on the focused fill as well as off it.
-                Text("  ·  $count", color = androidx.tv.material3.LocalContentColor.current.copy(alpha = 0.72f))
-                Icon(
-                    TmIcons.ChevronRight,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            )
         } else if (seeAll != null) {
-            // A quiet chip rather than a link in the accent: the accent is for progress, selection
-            // and focus. The touch target is Material's 48 dp round the 32 dp chip.
-            Row(
-                Modifier
-                    .padding(start = 12.dp)
-                    .minimumInteractiveComponentSize()
-                    .height(SEE_ALL_CHIP)
-                    .clip(CircleShape)
-                    .background(Tone.surface)
-                    .clickable(role = Role.Button, onClick = seeAll)
-                    .padding(start = 12.dp, end = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                M3Text(s.homeSeeAll, style = M3MaterialTheme.typography.labelLarge, color = Tone.text)
-                androidx.compose.material3.Icon(
-                    TmIcons.ChevronRight,
-                    contentDescription = null,
-                    tint = Tone.muted,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            // The touch target is Material's 48 dp round the link.
+            SeeAllLink(
+                label = s.homeSeeAll,
+                onClick = seeAll,
+                modifier = Modifier.padding(start = 12.dp).minimumInteractiveComponentSize(),
+            )
         }
     }
 }
@@ -852,5 +869,101 @@ private fun rememberFeatured(recent: HomeRow.Recent?): List<com.tmplayer.data.Fe
 /** How long the carousel waits for its ranked order before showing the picks as they came. */
 private const val RANK_WAIT_MS = 1_200L
 
+
+/**
+ * The focused tile's leading edge held at [start] of the row, so the remote stays at one place on
+ * the screen and the row slides under it, as a television's home screen does.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun AnchoredAtStart(start: Dp, content: @Composable () -> Unit) {
+    val startPx = with(LocalDensity.current) { start.toPx() }
+    val spec = remember(startPx) {
+        object : androidx.compose.foundation.gestures.BringIntoViewSpec {
+            override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float = offset - startPx
+        }
+    }
+    CompositionLocalProvider(androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides spec, content = content)
+}
+
+
 /** How long Home without a carousel waits for one to turn up before the cold start's loader lifts. */
 private const val NO_CAROUSEL_SETTLE_MS = 1_500L
+
+
+/**
+ * "See all" at the end of a Home row's heading: muted words and a chevron with no fill at rest. Under
+ * the remote, or pressed, the words and the chevron turn the accent, grow a little and are
+ * underlined, so the place reads from across the room without a pill round it.
+ */
+@Composable
+private fun SeeAllLink(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val touch = isTouch()
+    val interactions = remember { MutableInteractionSource() }
+    val focused by interactions.collectIsFocusedAsState()
+    val pressed by interactions.collectIsPressedAsState()
+    val lit = focused || pressed
+    val still = com.tmplayer.ui.theme.rememberReducedMotion() || com.tmplayer.ui.theme.Motion.reduced
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        when {
+            still -> 1f
+            pressed -> com.tmplayer.ui.theme.Motion.PressScale
+            focused -> com.tmplayer.ui.theme.Motion.FocusScale
+            else -> 1f
+        },
+        com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+        label = "seeAllScale",
+    )
+    val ink by androidx.compose.animation.animateColorAsState(
+        if (lit) Tone.accent else Tone.muted,
+        com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+        label = "seeAllInk",
+    )
+    val line by androidx.compose.animation.core.animateFloatAsState(
+        if (focused) 1f else 0f,
+        com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+        label = "seeAllLine",
+    )
+    Row(
+        modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clickable(interactionSource = interactions, indication = null, role = Role.Button, onClick = onClick)
+            .padding(vertical = 4.dp)
+            .drawBehind {
+                if (line <= 0f) return@drawBehind
+                val stroke = 2.dp.toPx()
+                drawRect(ink, topLeft = androidx.compose.ui.geometry.Offset(0f, size.height - stroke), size = androidx.compose.ui.geometry.Size(size.width * line, stroke))
+            },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (touch) {
+            M3Text(label, style = M3MaterialTheme.typography.labelLarge, color = ink, maxLines = 1)
+            androidx.compose.material3.Icon(TmIcons.ChevronRight, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
+        } else {
+            Text(label, style = MaterialTheme.typography.titleSmall, color = ink, maxLines = 1)
+            Icon(TmIcons.ChevronRight, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+
+/**
+ * Home's vertical list under the TV top bar: a focused item already standing between the bar's foot
+ * ([barPx]) and three fifths of the way down stays where it is; anything above that band, under
+ * the bar, or below it is brought to three tenths of the way down, as the television does.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+private fun calmVertical(barPx: Float) = object : androidx.compose.foundation.gestures.BringIntoViewSpec {
+    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
+        val lead = containerSize * 0.3f
+        return when {
+            offset < barPx -> offset - lead
+            offset + size > containerSize -> offset - lead
+            offset > containerSize * 0.6f -> offset - lead
+            else -> 0f
+        }
+    }
+}

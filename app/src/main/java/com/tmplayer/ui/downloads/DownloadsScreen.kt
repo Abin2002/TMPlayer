@@ -2176,19 +2176,25 @@ private fun TvDownloads(
             .background(Tone.background)
             // The rows below keep 16dp of their own each side, so the page owes that much less to
             // the overscan margin and the heading, tabs and rows all start on one line.
-            .padding(start = Tv.SafeH - 16.dp, end = Tv.SafeH - 16.dp, top = Tv.SafeV),
+            // The page starts right below the top bar.
+            .padding(start = Tv.SafeH - 16.dp, end = Tv.SafeH - 16.dp, top = 4.dp),
     ) {
+        // Under the top bar, whose Back goes up to the bar, the page keeps a compact one line
+        // title (the bar marks the account's picture, not Downloads) and no back button but the
+        // one that leaves a selection.
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TvPill(
-                label = if (picking) s.downloadsLeaveSelection else s.commonBack,
-                icon = if (picking) TmIcons.Close else TmIcons.ArrowBack,
-                showLabel = false,
-                onClick = if (picking) onLeavePicking else onBack,
-            )
-            Spacer(Modifier.width(16.dp))
+            if (picking) {
+                TvPill(
+                    label = if (picking) s.downloadsLeaveSelection else s.commonBack,
+                    icon = if (picking) TmIcons.Close else TmIcons.ArrowBack,
+                    showLabel = false,
+                    onClick = if (picking) onLeavePicking else onBack,
+                )
+                Spacer(Modifier.width(16.dp))
+            }
             Column(Modifier.weight(1f)) {
                 TvText(
                     when {
@@ -2196,15 +2202,8 @@ private fun TvDownloads(
                         chosenCount == 0 -> s.downloadsSelectVideos
                         else -> s.downloadsSelected(count = chosenCount)
                     },
-                    style = TvTheme.typography.headlineLarge,
+                    style = TvTheme.typography.titleLarge,
                     color = Tone.text,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                TvText(
-                    s.downloadsKeptIn(folder = LegacyDownloads.FOLDER),
-                    style = TvTheme.typography.bodyMedium,
-                    color = Tone.muted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )

@@ -116,8 +116,8 @@ import kotlinx.coroutines.withContext
 /**
  * The featured carousel at the top of Home, the phone's brought to the window: a mix of the newest
  * films, shows and videos in the starred chats and what the viewer is part way through
- * ([rememberFeatured]), one wide page each, with the segmented line over the top that fills over
- * [ADVANCE_MS] and moves on. It takes Home's title's place: the page has no "Home" heading.
+ * ([rememberFeatured]), one wide page each, the name and Play and Details alone, moving on by
+ * itself every [ADVANCE_MS]. It takes Home's title's place: the page has no "Home" heading.
  *
  * A window is not a phone, so the words keep to the start, where they read against the picture's
  * fade, and every way a computer has of moving sideways turns the page, one page a time:
@@ -128,7 +128,6 @@ import kotlinx.coroutines.withContext
  * - a drag with the mouse or a finger, which snaps to the nearer page;
  * - the arrows at the sides, shown while the pointer is over the carousel, while the keyboard is in
  *   it, and for a while after a touch, so a touch screen without hover has them too;
- * - a segment of the line pressed or tapped;
  * - Left and Right once the carousel has the keyboard (Tab reaches it, with a ring round it), with
  *   Enter for the page's details and Space to play it, as on Home's cards.
  *
@@ -272,29 +271,9 @@ internal fun FeaturedCarousel(
                 key = { latest.getOrNull(it)?.key ?: it },
             ) { page ->
                 val pick = latest.getOrNull(page) ?: return@HorizontalPager
-                FeaturedPage(pick, height, side, watch, chatTitle, onPlay, onDetails, current = page == pager.currentPage, segments = count > 1)
+                FeaturedPage(pick, height, side, watch, chatTitle, onPlay, onDetails, current = page == pager.currentPage)
             }
             if (count > 1) {
-                Segments(
-                    count = count,
-                    current = pager.currentPage,
-                    fill = { index ->
-                        when {
-                            index < pager.currentPage -> 1f
-                            index > pager.currentPage -> 0f
-                            !auto -> 1f
-                            else -> progress.value
-                        }
-                    },
-                    label = { index -> s.homeFeaturedPage(index + 1, count) },
-                    onPick = go,
-                    // Under the name and facts, over Play, as on the phone: in the slot each page
-                    // leaves for them, so they stay put while the pages slide under them.
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(start = side, bottom = PAGE_FOOT + com.tmplayer.ui.browse.HERO_PILL_HEIGHT + WORDS_GAP)
-                        .widthIn(max = SEGMENTS_WIDTH),
-                )
                 // Pointer and touch only: the keyboard turns the pages with the arrow keys.
                 val arrows = hovered || focusedWithin || touchShown
                 AnimatedVisibility(arrows, Modifier.align(Alignment.CenterStart).padding(start = 12.dp), enter = fadeIn(), exit = fadeOut()) {
@@ -346,7 +325,7 @@ private fun playTarget(pick: FeaturedPick, watch: SeriesWatch): MediaItem {
     return watch.pick(episode, progress)
 }
 
-/** One page: the picture under its fades, the name, a line of facts, Play and Details. */
+/** One page: the picture under its fades, the name, Play and Details. The facts are only read out. */
 @Composable
 private fun FeaturedPage(
     pick: FeaturedPick,
@@ -357,8 +336,6 @@ private fun FeaturedPage(
     onPlay: (MediaItem) -> Unit,
     onDetails: (FeaturedPick) -> Unit,
     current: Boolean,
-    /** Leave the segments' slot between the facts and Play. */
-    segments: Boolean,
 ) {
     val s = LocalStrings.current
     val item = pick.item
@@ -403,10 +380,7 @@ private fun FeaturedPage(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (facts.isNotBlank()) {
-                Text(facts, style = MaterialTheme.typography.titleSmall, color = Tone.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            if (segments) Spacer(Modifier.height(SEGMENT_TARGET)) else Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(2.dp))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -456,45 +430,6 @@ private fun featuredFacts(pick: FeaturedPick, title: String, chat: String, s: co
         else -> null
     }
     return listOfNotNull(year, which, item.qualityTags.firstOrNull(), chat.ifBlank { null }).joinToString("  ·  ")
-}
-
-/** The line of segments, one per page, the one up filling as its time runs; a press goes to that page. */
-@Composable
-private fun Segments(
-    count: Int,
-    current: Int,
-    fill: (Int) -> Float,
-    label: (Int) -> String,
-    onPick: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    // In the page's own ink: the segments sit low, where the picture has faded into the page,
-    // and white on a light theme's pale foot all but vanished.
-    val track = Tone.text.copy(alpha = 0.22f)
-    val ink = Tone.text
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(SEGMENT_GAP)) {
-        repeat(count) { index ->
-            Box(
-                Modifier
-                    .weight(1f)
-                    .height(SEGMENT_TARGET)
-                    .clickable(interactionSource = null, indication = null, role = Role.Tab) { onPick(index) }
-                    .semantics {
-                        contentDescription = label(index)
-                        selected = index == current
-                        role = Role.Tab
-                    }
-                    .drawBehind {
-                        val line = SEGMENT_HEIGHT.toPx()
-                        val top = (size.height - line) / 2f
-                        val radius = CornerRadius(line / 2f, line / 2f)
-                        drawRoundRect(track, topLeft = Offset(0f, top), size = Size(size.width, line), cornerRadius = radius)
-                        val filled = fill(index).coerceIn(0f, 1f)
-                        if (filled > 0f) drawRoundRect(ink, topLeft = Offset(0f, top), size = Size(size.width * filled, line), cornerRadius = radius)
-                    },
-            )
-        }
-    }
 }
 
 @Composable
@@ -572,16 +507,12 @@ private const val SWIPE_QUIET_MS = 280L
 private val MIN_HEIGHT = 340.dp
 private val TOP_SCRIM = 96.dp
 private val WORDS_WIDTH = 640.dp
-private val SEGMENTS_WIDTH = 420.dp
-private val SEGMENT_HEIGHT = 3.dp
-private val SEGMENT_TARGET = 20.dp
 
 /** Below Play, the foot of a page's words and buttons. */
 private val PAGE_FOOT = 12.dp
 
-/** Between a page's lines: the name, the facts, the segments' slot and Play. */
+/** Between a page's name and Play. */
 private val WORDS_GAP = 8.dp
-private val SEGMENT_GAP = 4.dp
 
 /** How long the carousel waits for its ranked order before showing the picks without it. */
 private const val RANK_WAIT_MS = 1_200L

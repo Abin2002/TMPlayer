@@ -78,6 +78,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -195,7 +196,7 @@ internal fun countLabel(section: BrowseSection, count: Int): String =
 // BrowseTab, BrowseSection, browseSections and filterChats live in :ui (BrowseSections.kt).
 
 @Composable
-fun BrowseScreen(
+internal fun BrowseScreen(
     state: UiState<BrowseData>,
     /**
      * The header, delivered separately from [state] so a cold start can draw the name and face
@@ -222,12 +223,14 @@ fun BrowseScreen(
      */
     onOpenDownloads: () -> Unit = {},
     /**
-     * Back from Settings or Downloads, opened from the rail: the rail item to land on, so the
-     * remote is where it was pressed (television only). Null the rest of the time.
+     * Back from Settings or Downloads, or a tab picked on their bar: the remote is held on the
+     * television's top bar while the page comes up. Null the rest of the time.
      */
     returnToRail: RailReturn? = null,
     /** Told once [returnToRail] has been honoured, so it is not honoured again. */
     onReturnedToRail: () -> Unit = {},
+    /** What the television's top bar shows and does: the phone's bar's own set. Null on a phone. */
+    tvNav: TouchNav? = null,
     /** How many downloads are running, for the badge on that row of the drawer and the rail. */
     downloadCount: Int = 0,
     onToggleFavorite: (ChatSummary) -> Unit = {},
@@ -408,7 +411,12 @@ fun BrowseScreen(
     // While a chip has the remote's focus, a list that changes under it (because OK picked that
     // chip) must not pull focus down to its first row: the viewer is still choosing.
     var chipsFocused by remember { mutableStateOf(false) }
-    val listMayTakeFocus: () -> Boolean = { !chipsFocused }
+    // Nor while the remote is on the television's top bar: picking a page there keeps it there.
+    var tvBarHasFocus by remember { mutableStateOf(false) }
+    // Home's carousel Play: Down from the TV top bar lands there at once, with nothing scrolled,
+    // while the carousel is on screen.
+    val tvPlayFocus = remember { FocusRequester() }
+    val listMayTakeFocus: () -> Boolean = { !chipsFocused && !tvBarHasFocus }
     // The Chats page's chips: the order, Telegram's own filters, then each folder, which is where
     // the folders went when they left the sidebar. A folder chip is a section of its own, so the
     // folder picked is remembered the way the page is.
@@ -518,6 +526,8 @@ fun BrowseScreen(
                                 onOpenSection = { onPickTab(it); query = "" },
                                 onOpenWatchLater = openLater,
                                 onLaterArtWanted = onHomeLaterArtWanted,
+                                mayTakeFocus = listMayTakeFocus,
+                                tvPlayFocus = tvPlayFocus,
                                 onSeeWatchLater = {
                                     pickHistory(HistoryTab.WatchLater)
                                     onPickTab(BrowseSection.of(BrowseTab.History))
@@ -530,11 +540,8 @@ fun BrowseScreen(
                                 },
                                 // The heading stands on the carousel's picture, as the phone's
                                 // status bar does, and scrolls away with it.
-                                tvHeader = if (touch) {
-                                    null
-                                } else {
-                                    { _ -> TabHeading(tab, 0, insets, headerAccount, modifier = Modifier.padding(end = Tv.SafeH)) { RefreshAction(onRefreshHome) } }
-                                },
+                                // Room for the television's top bar, which stands over the carousel's picture.
+                                tvHeader = if (touch) null else { _ -> Spacer(Modifier.fillMaxWidth().height(TV_BAR_HEIGHT)) },
                             )
                         }
                     } else if (tab.listsVideos) {
@@ -543,12 +550,7 @@ fun BrowseScreen(
                         // On a phone the heading, the count and the actions live in the app bar, so
                         // the content area starts with the content.
                         if (!touch) {
-                            val shown = when {
-                                showsContinue -> continuing.size
-                                showsWatchLater -> watchLater.size
-                                else -> watchedHistory.size
-                            }
-                            TabHeading(tab, shown, insets, headerAccount, blurb = historyTab.blurb) {
+                            val historyActions: @Composable () -> Unit = {
                                 LayoutAction(layout, onToggleLayout)
                                 // No Refresh here: History is read off this device and cannot be
                                 // behind, so the button would be one that visibly does nothing.
@@ -567,8 +569,19 @@ fun BrowseScreen(
                                     )
                                 }
                             }
+                            // No heading under the top bar, which already names the page: the chips
+                            // lead, and the page's own buttons close their line.
+                            Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.weight(1f)) { historyChips() }
+                                Row(
+                                    Modifier.padding(start = 12.dp, end = insets.end),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) { historyActions() }
+                            }
+                        } else {
+                            historyChips()
                         }
-                        historyChips()
                         if (showsContinue) {
                             if (continuing.isEmpty()) {
                                 EmptyTab(tab, query = "", history = HistoryTab.Continue, onGoToChats = goToChats)
@@ -627,9 +640,9 @@ fun BrowseScreen(
                         }
                     } else {
                         if (!touch) {
-                            TabHeading(tab, visible.size, insets, headerAccount) {
+                            val chatActions: @Composable () -> Unit = {
+                                // Refresh is in the account's menu on the top bar.
                                 LayoutAction(layout, onToggleLayout)
-                                RefreshAction(onRefresh)
                                 // Stars are added one at a time from a menu, so the only way back
                                 // from a tab full of them is here, beside the tab they fill.
                                 if (tab == BrowseSection.of(BrowseTab.Favorites) && favorites.isNotEmpty()) {
@@ -640,11 +653,9 @@ fun BrowseScreen(
                                     )
                                 }
                             }
-                            SearchRow(
-                                query = query,
-                                insets = insets,
-                                onQuery = { query = it },
-                            )
+                            // The top bar names the page; the search line carries its buttons.
+                            Spacer(Modifier.height(4.dp))
+                            SearchRow(query = query, insets = insets, onQuery = { query = it }, actions = chatActions)
                             Spacer(Modifier.height(if (tab.onChatsPage) 4.dp else 20.dp))
                         }
                         // Up from the top of the list reaches the chips, and Up again the search.
@@ -826,29 +837,58 @@ fun BrowseScreen(
             onResume = openResume,
             onMessage = onMessage,
         )
-    } else {
-        // The search across every chat: the rail's first item, and the remote's search key.
+    } else if (tvNav != null) {
+        // The search across every chat: the bar's Search, and the remote's search key.
         var tvSearchOpen by rememberSaveable { mutableStateOf(false) }
-        // Back from anywhere in a page goes to the rail first, on the page's own item, the way
-        // the system's TV apps answer it; only Back on the rail asks to leave the app. Before,
-        // Back deep in a row went straight to "press Back again to exit".
-        val railSelected = remember { FocusRequester() }
-        var railHasFocus by remember { mutableStateOf(false) }
-        BackHandler(enabled = !railHasFocus && !tvSearchOpen && tab.navSection in sections) {
-            runCatching { railSelected.requestFocus() }
+        val barFocus = remember { FocusRequester() }
+        val pageFocus = remember { FocusRequester() }
+        var barRefocus by remember { mutableIntStateOf(0) }
+        LaunchedEffect(barRefocus) {
+            if (barRefocus == 0) return@LaunchedEffect
+            withFrameNanos { }
+            runCatching { barFocus.requestFocus() }
         }
-        BackHandler(enabled = tvSearchOpen) { tvSearchOpen = false }
-        // "Search all chats" from a chat or the list's filter: the rail's search page, on those words.
+        val homeShown = !tvSearchOpen && tab.isHome
+        // Back anywhere in a page goes up to the bar first, on the page's own item, and Home
+        // goes back to its top as it does; only Back on Home's bar asks to leave the app.
+        BackHandler(enabled = !tvBarHasFocus) {
+            if (homeShown) TvBarSignals.homeToTop.tryEmit(Unit)
+            runCatching { barFocus.requestFocus() }
+        }
+        // Back on the bar of any other page: Home, the remote still on the bar.
+        BackHandler(enabled = tvBarHasFocus && !homeShown) {
+            tvSearchOpen = false
+            onPickTab(BrowseSection.of(BrowseTab.Home))
+            query = ""
+            barRefocus++
+        }
+        // "Search all chats" from a chat or the list's filter: the search page, on those words.
         val asked by SearchRequest.pending.collectAsState()
         LaunchedEffect(asked) {
             val text = SearchRequest.take() ?: return@LaunchedEffect
             search.submit(text)
             tvSearchOpen = true
         }
-        // Whether the viewer has pressed anything since this screen came up: until then the rail
-        // may keep putting the remote back on the item Back returned to (NavRail's returnTo).
+        // Search picked on the bar over Settings or Downloads.
+        val barAsked by TvBarSignals.searchAsked.collectAsState()
+        LaunchedEffect(barAsked) {
+            if (!barAsked) return@LaunchedEffect
+            tvSearchOpen = true
+            TvBarSignals.searchAsked.value = false
+        }
+        // Back from Settings or Downloads, or a tab picked on their bar: the remote stays on the
+        // bar, held there against the page taking focus as it loads, until a key is pressed.
         val pressedSinceArrival = remember { booleanArrayOf(false) }
-        Row(
+        LaunchedEffect(returnToRail) {
+            if (returnToRail == null) return@LaunchedEffect
+            repeat(RETURN_HOLD_FRAMES) {
+                if (pressedSinceArrival[0]) return@repeat
+                withFrameNanos { }
+                if (!pressedSinceArrival[0]) runCatching { barFocus.requestFocus() }
+            }
+            onReturnedToRail()
+        }
+        Box(
             Modifier.fillMaxSize().onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyDown) pressedSinceArrival[0] = true
                 if (event.type == KeyEventType.KeyDown && event.key == Key.Search) {
@@ -859,34 +899,22 @@ fun BrowseScreen(
                 }
             },
         ) {
-            NavRail(
-                searchOpen = tvSearchOpen,
-                onOpenSearch = { tvSearchOpen = true },
-                selected = if (tvSearchOpen) null else tab.navSection,
-                sections = sections,
-                favoriteCount = favorites.size,
-                unreadCount = unreadChats,
-                onSelect = { picked ->
-                    tvSearchOpen = false
-                    onPickTab(picked)
-                    query = ""
-                },
-                onOpenSettings = onOpenSettings,
-                onOpenDownloads = onOpenDownloads,
-                downloadCount = downloadCount,
-                updateVersion = updateVersion,
-                onUpdate = onUpdate,
-                returnTo = returnToRail,
-                onReturned = onReturnedToRail,
-                pressedSinceArrival = { pressedSinceArrival[0] },
-                selectedFocus = railSelected,
-                modifier = Modifier.onFocusChanged { railHasFocus = it.hasFocus },
+            // Home runs up under the bar, its carousel's picture with it; every other page, and
+            // Home while it loads, starts below the bar.
+            val underBar = homeShown && state is UiState.Content
+            val homeScrolled by TvBarSignals.homeScrolled.collectAsState()
+            val barGround by androidx.compose.animation.core.animateFloatAsState(
+                if (underBar && homeScrolled) 1f else 0f,
+                com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+                label = "barGround",
             )
-
-            // Home runs to the screen's edge, its carousel's picture with it, and pads its own rows;
-            // every other page keeps the safe area clear here.
-            val homeShown = !tvSearchOpen && tab.isHome
-            Column(Modifier.fillMaxSize().padding(end = if (homeShown) 0.dp else Tv.SafeH).keepsVerticalFocus()) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .padding(top = if (underBar) 0.dp else TV_BAR_HEIGHT, end = if (homeShown) 0.dp else Tv.SafeH)
+                    // Up from Home's top row to the bar brings Home back to its top, the carousel whole.
+                    .underTvBar(pageFocus, barFocus, onUpToBar = { if (homeShown) TvBarSignals.homeToTop.tryEmit(Unit) }),
+            ) {
                 if (tvSearchOpen) {
                     TvSearchPage(
                         search = search,
@@ -905,6 +933,44 @@ fun BrowseScreen(
                     pane(tab)
                 }
             }
+            TvTopBar(
+                nav = tvNav,
+                current = when {
+                    tab.isHome -> TvBarTab.Home
+                    tab.onChatsPage -> TvBarTab.Chats
+                    else -> null
+                },
+                inProfile = !tab.isHome && !tab.onChatsPage,
+                searchOpen = tvSearchOpen,
+                onHome = {
+                    tvSearchOpen = false
+                    onPickTab(BrowseSection.of(BrowseTab.Home))
+                    query = ""
+                },
+                onChats = {
+                    tvSearchOpen = false
+                    query = ""
+                    tvNav.onChats()
+                },
+                onSettings = onOpenSettings,
+                onSearch = { tvSearchOpen = true },
+                beforeProfile = {
+                    tvSearchOpen = false
+                    query = ""
+                },
+                onRefresh = when {
+                    tvSearchOpen -> null
+                    tab.isHome -> onRefreshHome
+                    tab.listsVideos -> null
+                    else -> onRefresh
+                },
+                currentFocus = barFocus,
+                contentFocus = pageFocus,
+                overArt = homeShown,
+                modifier = Modifier.onFocusChanged { tvBarHasFocus = it.hasFocus },
+                solid = { barGround },
+                onDown = { homeShown && runCatching { tvPlayFocus.requestFocus(FocusDirection.Enter) }.getOrDefault(false) },
+            )
         }
     }
 
@@ -1490,238 +1556,20 @@ private fun ContinueArt(text: VideoCardText, modifier: Modifier = Modifier, badg
 
 
 
-// ---- navigation rail -------------------------------------------------------------------------
+// ---- the television's top bar ----------------------------------------------------------------
 
-@Composable
-private fun NavRail(
-    /** The search page is open: its item is the current one, and no section is. */
-    searchOpen: Boolean,
-    onOpenSearch: () -> Unit,
-    selected: BrowseSection?,
-    sections: List<BrowseSection>,
-    favoriteCount: Int,
-    unreadCount: Int,
-    onSelect: (BrowseSection) -> Unit,
-    onOpenSettings: () -> Unit,
-    /** The Downloads screen: the videos kept on this device and the queue still fetching them. */
-    onOpenDownloads: () -> Unit,
-    /** Downloads in flight, badged on the Downloads item so a fetch is never invisible. */
-    downloadCount: Int,
-    /** The version on GitHub, when it beats the one running. Null the rest of the time. */
-    updateVersion: String? = null,
-    onUpdate: () -> Unit = {},
-    returnTo: RailReturn? = null,
-    onReturned: () -> Unit = {},
-    pressedSinceArrival: () -> Boolean = { false },
-    /** On the item being shown; Left from the content and Back from it land there. */
-    selectedFocus: FocusRequester = remember { FocusRequester() },
-    modifier: Modifier = Modifier,
-) {
-    val s = LocalStrings.current
-    val downloadsFocus = remember { FocusRequester() }
-    val settingsFocus = remember { FocusRequester() }
-    // Back from Settings or Downloads lands on the rail item that opened them, as Back does in the
-    // system's own TV apps. The page under the rail takes focus for itself as it is composed, so
-    // this keeps asking for the item, frame by frame, for about a second and a half or until the
-    // viewer presses a key, whichever is first: a page that loads its rows a moment later takes
-    // focus a moment later, and a single request lost that race.
-    LaunchedEffect(returnTo) {
-        val target = when (returnTo) {
-            RailReturn.Downloads -> downloadsFocus
-            RailReturn.Settings -> settingsFocus
-            null -> return@LaunchedEffect
-        }
-        repeat(RETURN_HOLD_FRAMES) {
-            if (pressedSinceArrival()) return@repeat
-            withFrameNanos { }
-            if (!pressedSinceArrival()) runCatching { target.requestFocus() }
-        }
-        onReturned()
-    }
-    // 180dp of room for the items, or as much more as the longest label needs up to RAIL_WIDE:
-    // "ഡൗൺലോഡുകൾ" and "ക്രമീകരണങ്ങൾ" are single words that cannot wrap, and at 180dp a
-    // Malayalam rail read "ഡൗൺലോ..." and "ക്രമീകരണ...".
-    val labelStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
-    val measurer = rememberTextMeasurer()
-    val labels = buildList {
-        sections.forEach { add(it.label) }
-        add(s.navDownloads)
-        add(s.navSettings)
-        add(s.navUpdate)
-    }
-    val widest = remember(labels, labelStyle) {
-        labels.maxOf { measurer.measure(it, labelStyle, maxLines = 1, softWrap = false).size.width }
-    }
-    // Inset either side, the icon and its gap, a count badge, and the column's end padding.
-    val itemRoom = with(LocalDensity.current) { widest.toDp() } + RAIL_INSET * 2 + 22.dp + 12.dp + 20.dp + 12.dp
-    val railRoom = itemRoom.coerceIn(180.dp, RAIL_WIDE)
-    // Open, with the names, unless Settings asks for icons only. Never folding on its own: a rail
-    // that folded to its icons whenever the remote left it only moved the whole page sideways on
-    // every visit. The setting is a fixed choice, so the page keeps one width while it is used.
-    val context = LocalContext.current
-    // Laid out at its stored width from the first frame, where a default would open the rail wide
-    // and fold it on every launch; it slides only when the setting is changed.
-    val stored by remember(context) { SettingsStore(context).compactNav }.collectAsState(initial = null)
-    val compact = stored == true
-    var known by remember { mutableStateOf(false) }
-    val motion = if (known) tween<Float>(FOCUS_FADE_MS) else snap()
-    val reveal by animateFloatAsState(if (compact) 0f else 1f, motion, label = "railReveal")
-    val width by animateDpAsState(
-        if (compact) RAIL_INSET * 2 + RAIL_MARK else railRoom,
-        if (known) tween(FOCUS_FADE_MS) else snap(),
-        label = "railWidth",
-    )
-    LaunchedEffect(stored) { if (stored != null) known = true }
-    // Left from the content lands on the destination being shown, not on whichever rail item
-    // happens to sit level with the focused tile (a group heading, Downloads), so the rail always
-    // opens where the viewer is.
-    Column(
-        modifier
-            .width(width + Tv.SafeH - RAIL_INSET)
-            .fillMaxHeight()
-            .focusProperties { onEnter = { selectedFocus.requestFocus() } }
-            .keepsVerticalFocus()
-            .background(Tone.surface)
-            // The rail is the leftmost thing on the screen, so it alone decides whether the app
-            // clears the TV's overscan crop. Its children each add [RAIL_INSET] of their own, so
-            // the column only has to make up the difference and nothing starts before Tv.SafeH.
-            .padding(
-                start = Tv.SafeH - RAIL_INSET,
-                end = 12.dp,
-                top = Tv.SafeV,
-                bottom = Tv.SafeV,
-            ),
-    ) {
-        RailBrand(reveal)
-        Spacer(Modifier.height(14.dp))
-
-        // Scrolls, and takes whatever height is left after the bottom cluster: Settings and the
-        // update item. Focus moving down inside a scrolling column brings the focused item into
-        // view, so the rail scrolls as a side effect of pressing down.
-        //
-        // Home, History, Favourites and Chats, the shared list in :ui, with no headings: the
-        // folders are chips on the Chats page and Saved Messages is a chat among the others.
-        // Downloads is pinned at the foot beside Settings.
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            // Search first, where Nuvio and the system's own apps put it on a television.
-            RailItem(
-                reveal = reveal,
-                label = s.commonSearch,
-                icon = TmIcons.Search,
-                badge = null,
-                selected = searchOpen,
-                onClick = onOpenSearch,
-                modifier = if (searchOpen) Modifier.focusRequester(selectedFocus) else Modifier,
-            )
-            navGroups(sections, withDownloads = false).flatMap { it.entries }.forEach { entry ->
-                if (entry is NavEntry.Section) {
-                    RailItem(
-                        reveal = reveal,
-                        label = entry.section.label,
-                        icon = entry.section.icon,
-                        badge = navBadge(entry.section, favoriteCount, unreadCount),
-                        selected = entry.section == selected,
-                        onClick = { onSelect(entry.section) },
-                        modifier = if (entry.section == selected) Modifier.focusRequester(selectedFocus) else Modifier,
-                    )
-                }
-            }
-        }
-        HorizontalDivider(
-            modifier = Modifier.padding(start = RAIL_INSET, end = 4.dp, top = 6.dp, bottom = 6.dp),
-            color = Tone.outline.copy(alpha = 0.5f),
-        )
-        RailItem(
-            reveal = reveal,
-            label = s.navDownloads,
-            icon = TmIcons.Download,
-            // How many videos are coming down right now. A download outlives the screen it was
-            // started from, and a television has no notification shade to say one is still
-            // running, so this mark is the only place that says it at all.
-            badge = downloadCount.takeIf { it > 0 }?.toString(),
-            selected = false,
-            onClick = onOpenDownloads,
-            modifier = Modifier.focusRequester(downloadsFocus),
-        )
-        if (updateVersion != null) {
-            RailItem(
-                reveal = reveal,
-                label = s.navUpdate,
-                icon = TmIcons.Refresh,
-                badge = updateVersion,
-                selected = false,
-                onClick = onUpdate,
-                accent = Caution,
-            )
-        }
-        // The version no longer rides on Settings: it sits beside the name at the top, where a
-        // long one has room and "Settings" keeps its whole word.
-        RailItem(
-            reveal = reveal,
-            label = s.navSettings,
-            icon = TmIcons.Settings,
-            badge = null,
-            selected = false,
-            onClick = onOpenSettings,
-            modifier = Modifier.focusRequester(settingsFocus),
-        )
-    }
-}
-
-/** Where Back from a page opened at the foot of the television's rail puts the remote. */
+/** Back from Settings or Downloads, or a tab picked on their top bar: the remote goes to the browser's bar. */
 enum class RailReturn { Downloads, Settings }
 
-/** How many frames, about a second and a half at 60 Hz, the rail holds focus on that item. */
+/** How many frames, about a second and a half at 60 Hz, the top bar holds focus on its item. */
 private const val RETURN_HOLD_FRAMES = 90
 
 /**
- * The logo, the name and the version, at the top of the rail.
- *
- * Two lines beside the mark rather than one, because the rail can be 180 dp wide and the version has
- * to stay at a readable 14 sp from across the room. Not focusable: it is a label, not a place.
+ * The signed in account's picture, first on the television's top bar: Telegram's picture when
+ * there is one, the initials of the name while it loads or when there is none.
  */
 @Composable
-private fun RailBrand(reveal: Float) {
-    Row(
-        Modifier.padding(start = RAIL_INSET),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // The mark stays on a folded rail, the app's own face at the top of its icons; the name
-        // and the version come and go with the labels.
-        AppMark(RAIL_MARK)
-        if (reveal <= 0f) return@Row
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.alpha(reveal)) {
-            Text(
-                "TMPlayer",
-                style = MaterialTheme.typography.titleMedium,
-                color = Tone.text,
-                maxLines = 1,
-            )
-            Text(
-                "v${Updates.installedVersion}",
-                style = MaterialTheme.typography.labelLarge,
-                color = Tone.muted,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
-/**
- * The signed in account's picture, in the heading's top right corner on a television.
- *
- * A label, not a control: the rail's account row it replaces opened nothing either, and signing
- * out lives in Settings. Telegram's picture when there is one, the initials of the name while it
- * loads or when there is none.
- */
-@Composable
-private fun AccountPicture(account: Account?) {
+internal fun AccountPicture(account: Account?) {
     Box(Modifier.size(Avatar.Compact).clip(CircleShape).background(Tone.surfaceHigh)) {
         if (account != null) {
             MediaPreview(
@@ -1732,127 +1580,6 @@ private fun AccountPicture(account: Account?) {
             )
         }
     }
-}
-
-/**
- * Built from `clickable` rather than a TV Material Card.
- *
- * Those cards enlarge on focus, and anything that fills its width visibly bursts past the screen
- * edge when it grows. A rail item signals focus with colour instead, which cannot overflow.
- */
-@Composable
-private fun RailItem(
-    reveal: Float,
-    label: String,
-    icon: ImageVector,
-    badge: String?,
-    selected: Boolean,
-    onClick: () -> Unit,
-    // Amber for the update item, so it is the one thing on the rail that is not the app's own
-    // blue and reads as "look at this" without a second glance.
-    accent: Color = Tone.accent,
-    modifier: Modifier = Modifier,
-) {
-    val interactions = remember { MutableInteractionSource() }
-    val focused by interactions.collectIsFocusedAsState()
-
-    // The app's own blue fills a focused row with the role Material means for a filled area, which
-    // is a pale blue in daylight rather than the near-black tone 40 that primary has to be. The
-    // amber item carries its own colour and has no such pair, so it fills with what it was given.
-    val own = accent == Tone.accent
-    val fill = if (own) Tone.focusFill else accent
-
-    // Cross-faded rather than switched: an instant colour flip as focus sweeps down the rail
-    // reads as flicker on a large screen.
-    val background by animateColorAsState(
-        targetValue = when {
-            focused -> fill
-            selected -> accent.copy(alpha = 0.16f)
-            else -> Color.Transparent
-        },
-        animationSpec = tween(FOCUS_FADE_MS),
-        label = "railBackground",
-    )
-    val foreground by animateColorAsState(
-        targetValue = when {
-            focused -> if (own) Tone.onFocusFill else Tone.readableOn(accent)
-            selected -> accent
-            else -> if (own) Tone.muted else accent
-        },
-        animationSpec = tween(FOCUS_FADE_MS),
-        label = "railForeground",
-    )
-
-    Box(modifier) {
-    // Icons only: the name, and the count where there is one, beside the item the remote is on.
-    if (reveal <= 0f) RailTip(visible = focused, label = label, badge = badge)
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = RAIL_GAP / 2)
-            .height(RAIL_ROW)
-            .clip(RoundedCornerShape(Corner.Small))
-            .background(background)
-            .focusRing(focused, RoundedCornerShape(Corner.Small))
-            .clickable(interactionSource = interactions, indication = null, onClick = onClick)
-            .padding(horizontal = RAIL_INSET),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box {
-            // The place being shown fills in with a drop, as the phone's bar does.
-            com.tmplayer.ui.components.SelectableIcon(icon, selected = selected, tint = foreground, size = RAIL_ICON)
-            // A folded rail has no room for the count, so a dot on the icon says there is one: a
-            // download running, an update waiting.
-            if (badge != null && reveal < 1f) {
-                Box(
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .offset(x = 3.dp, y = (-3).dp)
-                        .size(8.dp)
-                        .alpha(1f - reveal)
-                        .clip(CircleShape)
-                        .background(accent),
-                )
-            }
-        }
-        if (reveal <= 0f) return@Row
-        Spacer(Modifier.width(12.dp))
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (selected || focused) FontWeight.SemiBold else FontWeight.Normal,
-            color = foreground,
-            maxLines = 1,
-            softWrap = false,
-            // Clipped rather than cut with an ellipsis while the rail is opening, or every label
-            // would flicker through "S..." on its way to "Settings".
-            overflow = if (reveal < 1f) TextOverflow.Clip else TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f).alpha(reveal),
-        )
-        if (badge != null) {
-            // Clamped, because the badge measures before the label: an unusually long badge, such
-            // as a suffixed version name, would shorten "Settings" to "S...".
-            Text(
-                badge,
-                style = MaterialTheme.typography.bodyMedium,
-                color = foreground,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = RAIL_BADGE_MAX).alpha(reveal),
-            )
-        }
-    }
-    }
-}
-
-/**
- * The name of a folded rail's item, in a pill just past the rail's edge, level with the item: the
- * shared [com.tmplayer.ui.components.FocusTip], which never takes focus, so the remote stays on
- * the rail, and fades and slides in from the icon so the eye follows it there.
- */
-@Composable
-private fun RailTip(visible: Boolean, label: String, badge: String?) {
-    com.tmplayer.ui.components.FocusTip(visible, label, badge, side = com.tmplayer.ui.components.TipSide.End)
 }
 
 // ---- content ---------------------------------------------------------------------------------
@@ -1874,26 +1601,6 @@ private fun LayoutAction(layout: CardLayout, onToggle: () -> Unit) {
         icon = if (layout == CardLayout.Grid) TmIcons.List else TmIcons.Grid,
         showLabel = false,
         onClick = onToggle,
-    )
-}
-
-/**
- * Fetches the chat list again.
- *
- * The list is built once when the screen opens, so a chat that moves, is joined, or is renamed
- * while it is up does not appear until something rebuilds it.
- */
-@Composable
-private fun RefreshAction(onRefresh: () -> Unit) {
-    val s = LocalStrings.current
-    HeaderAction(
-        label = s.commonRefresh,
-        // Icon-only, here as everywhere: a heading whose chips are two pictures and one
-        // picture-with-a-word reads as three unrelated controls. The name still reaches a screen
-        // reader through [label].
-        icon = TmIcons.Refresh,
-        showLabel = false,
-        onClick = onRefresh,
     )
 }
 
@@ -1945,127 +1652,14 @@ private fun HeaderAction(
     }
 }
 
-/**
- * The heading over a tab's listing.
- *
- * Deliberately not called `Header`: the media grid one file away has a composable of that name in
- * this same package, and the clash resolves to whichever is private, breaking an unrelated import.
- */
-@Composable
-private fun TabHeading(
-    tab: BrowseSection,
-    count: Int,
-    insets: BrowseInsets,
-    account: Account?,
-    /** History's line follows its tab rather than the section's. */
-    blurb: String = tab.blurb,
-    modifier: Modifier = Modifier,
-    /** Standing on a hero's picture under [com.tmplayer.ui.theme.Scrims.headerTop]: the words in [Tone.onArt]. */
-    onArt: Boolean = false,
-    action: @Composable () -> Unit = {},
-) {
-    // The number always carries its unit, and History counts videos rather than chats.
-    val s = LocalStrings.current
-    val counted = if (tab.listsVideos) s.browseVideosCount(count) else s.browseChatsCount(count)
-    Row(
-        modifier.fillMaxWidth().padding(
-            start = insets.start,
-            end = insets.end,
-            top = insets.top,
-            bottom = 12.dp,
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(
-                tab.heading,
-                style = MaterialTheme.typography.headlineLarge,
-                color = if (onArt) Tone.onArt else Tone.text,
-            )
-            Text(
-                if (count > 0) "$blurb  ·  $counted" else blurb,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (onArt) Tone.onArtMuted else Tone.muted,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Spacer(Modifier.width(12.dp))
-        // A heading can carry several actions, and butted together they read as one wide control
-        // with a seam down it. The gap is what makes them separate buttons.
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            action()
-        }
-        if (!isTouch()) {
-            Spacer(Modifier.width(20.dp))
-            TvStatusCluster(account, onArt)
-        }
-    }
-}
-
-/**
- * The clock, the date and the account's picture, in the top right corner of the television.
- *
- * A phone has a status bar, so an app that drew its own would draw the time twice. A television
- * has none, and this app fills the panel with the system bars hidden, so the clock has to come
- * from here. The picture beside it says whose Telegram this is on a shared screen. It used to be
- * the app's mark, which the top of the rail already shows, and the account sat in the rail under
- * it: the mark twice and the account once, where now each shows once.
- *
- * The tick is aligned to the wall clock rather than run every minute from whenever the screen
- * happened to open, so the minute changes when the minute changes.
- */
-@Composable
-internal fun TvStatusCluster(account: Account?, onArt: Boolean = false) {
-    var now by remember { mutableStateOf(java.util.Date()) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            val date = java.util.Date()
-            now = date
-            delay(MS_PER_MINUTE - (date.time % MS_PER_MINUTE))
-        }
-    }
-    // Read through the configuration so a change of system language recomposes the cluster.
-    val locale = LocalConfiguration.current.locales[0]
-    // The viewer's own choice of 12 or 24 hour, which is a setting on the device and not a taste
-    // this app has any business overriding.
-    // Each in the language's own order (午後3:05, 10月15日(水)), from the fields alone.
-    fun pattern(skeleton: String) = java.text.SimpleDateFormat(android.text.format.DateFormat.getBestDateTimePattern(locale, skeleton), locale)
-    val clock = remember(locale) { pattern("hmma") }
-    val clock24 = remember(locale) { pattern("HHmm") }
-    val day = remember(locale) { pattern("EEEdMMM") }
-    val twentyFour = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
-
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                (if (twentyFour) clock24 else clock).format(now),
-                style = MaterialTheme.typography.titleMedium,
-                color = if (onArt) Tone.onArt else Tone.text,
-                maxLines = 1,
-            )
-            Text(
-                day.format(now),
-                style = MaterialTheme.typography.bodySmall,
-                color = if (onArt) Tone.onArtMuted else Tone.muted,
-                maxLines = 1,
-            )
-        }
-        Spacer(Modifier.width(14.dp))
-        AccountPicture(account)
-    }
-}
-
-private const val MS_PER_MINUTE = 60_000L
 
 @Composable
 private fun SearchRow(
     query: String,
     insets: BrowseInsets,
     onQuery: (String) -> Unit,
+    /** The page's own buttons at the end of the line, where the bar has taken the heading's place. */
+    actions: (@Composable () -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     // On Fire TV the voice button opens the keyboard, which the remote's mic dictates into.
@@ -2100,6 +1694,9 @@ private fun SearchRow(
                 runCatching { searchField.requestFocus() }
                 onQuery("")
             }
+        }
+        if (actions != null) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) { actions() }
         }
     }
 }
@@ -3040,41 +2637,14 @@ private const val FOCUS_FADE_MS = 140
  * when it is actionable, and costs no layout: it takes the place of a label the row already had.
  */
 private val HOLD_HINT: String get() = L.browseHoldHint
-/**
- * One rail row, heading or item, back to back. The old 44 dp item plus a 4 dp gap had the same
- * pitch; this gives the whole of it to the target, the 48 dp floor of the v1 design.
- */
-private val RAIL_ROW = 42.dp
-
-// Outside each row's fill, so the selected row and a focused one beside it read as two rows rather
-// than one block when focus moves off Home onto History. Row and gap add up to the 48 dp pitch the
-// rail always had, so a 1080p screen still fits Watch, an open Telegram group and the foot.
-private val RAIL_GAP = 6.dp
-
-/** The mark beside the name and version at the top of the rail. */
-private val RAIL_MARK = 32.dp
-
-/** Horizontal padding every rail child carries, which is what keeps them out of the overscan. */
-private val RAIL_INSET = 16.dp
-
-/** The most the rail widens for a language whose labels are long single words. */
-private val RAIL_WIDE = 240.dp
-
-/** The size of a rail item's icon. */
-private val RAIL_ICON = 22.dp
-
-/** Enough for a version name, and never enough to eat the item's own label. */
-private val RAIL_BADGE_MAX = 64.dp
 private val RECENT_TILE_WIDTH = 224.dp
 private val RECENT_TILE_HEIGHT = 154.dp
 
 /**
- * Columns in the tile arrangement.
- *
- * Three, not the video grid's four: the rail takes 196 dp off a 960 dp screen before this starts,
- * and a fourth column would leave each tile too narrow for a chat name to survive it.
+ * Columns in the tile arrangement: four, as the video grid has, now the page has the screen's
+ * whole width under the top bar.
  */
-private const val TILE_COLUMNS = 3
+private const val TILE_COLUMNS = 4
 
 /**
  * The narrowest a tile may be before the grid drops a column.
@@ -3101,22 +2671,6 @@ private val TOUCH_AVATAR = Avatar.List
  * nothing to do with taste. A phone crops nothing, so it spends far less of its width on margins.
  */
 /**
- * Up and Down stay inside: only Left and Right cross between the rail and the listing.
- *
- * The two sit side by side, so when Up or Down has nowhere left to go in one of them, the focus
- * search finds the nearest thing in the other. Down from the last Home row landed on Settings at
- * the foot of the rail, and Up from the rail's first heading landed in the search field. At an end
- * the remote now stays put, as it does at the end of any list.
- */
-private fun Modifier.keepsVerticalFocus(): Modifier = focusProperties {
-    onExit = {
-        if (requestedFocusDirection == FocusDirection.Up || requestedFocusDirection == FocusDirection.Down) {
-            cancelFocusChange()
-        }
-    }
-}.focusGroup()
-
-/**
  * Grows a lazy row by [by] on every side without taking any more room, so it may draw that far past
  * the space it was given. Paired with a content padding of the same size.
  */
@@ -3136,7 +2690,8 @@ private class BrowseInsets(val start: Dp, val end: Dp, val top: Dp, val bottom: 
     fun clearing(extra: Dp) = BrowseInsets(start, end, top, bottom + extra)
 }
 
-private val TvInsets = BrowseInsets(start = 28.dp, end = Tv.FocusClearance, top = Tv.SafeV, bottom = Tv.SafeV)
+/** Under the top bar: the page starts at the bar's first item, right under the bar. */
+private val TvInsets = BrowseInsets(start = TV_START, end = Tv.FocusClearance, top = 4.dp, bottom = Tv.SafeV)
 private val TouchInsets = BrowseInsets(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
 
 /** The longest chat list whose rows move to a new order rather than being redrawn in it. */
