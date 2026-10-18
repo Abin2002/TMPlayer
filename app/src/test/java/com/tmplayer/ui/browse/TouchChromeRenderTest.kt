@@ -100,6 +100,21 @@ class TouchChromeRenderTest {
     }
 
     @Test
+    @Config(sdk = [35], qualifiers = "w360dp-h891dp-port-night-xhdpi")
+    fun germanCaptionsFitTheirButtons() {
+        // "Einstellungen" is the longest caption the bar carries; it steps down rather than being cut.
+        com.tmplayer.i18n.Translator.use("de")
+        try {
+            render("chrome-bar-de.png", TouchChrome(), "settings") {
+                TouchPage(TouchPageSpec(current = TouchDestination.Settings))
+                rows()()
+            }
+        } finally {
+            com.tmplayer.i18n.Translator.use(com.tmplayer.i18n.Languages.ENGLISH)
+        }
+    }
+
+    @Test
     @Config(sdk = [35], qualifiers = "w411dp-h891dp-port-notnight-xhdpi")
     fun profilePageRingsThePictureAndCarriesItsPill() {
         val chrome = TouchChrome()

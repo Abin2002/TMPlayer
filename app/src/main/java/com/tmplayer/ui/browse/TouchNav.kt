@@ -800,6 +800,8 @@ private fun BarCaption(text: String, chosen: Boolean) {
     val ink by androidx.compose.animation.animateColorAsState(if (chosen) Tone.accent else Tone.muted, label = "barCaption")
     // A long word steps down to fit the 64 dp button ("Einstellungen" was cut to "Einstellung…").
     // Clip, not Ellipsis, because an ellipsized line never reports an overflow and so never steps.
+    // The side padding keeps it clear of the pill's rounded ends, which the button clips to and
+    // which reach about 7 dp in at the caption's height.
     val style = captionStyle()
     Text(
         text,
@@ -808,7 +810,7 @@ private fun BarCaption(text: String, chosen: Boolean) {
         maxLines = 1,
         overflow = TextOverflow.Clip,
         autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize, stepSize = 0.5.sp),
-        modifier = Modifier.padding(top = 2.dp, start = 2.dp, end = 2.dp),
+        modifier = Modifier.padding(top = 2.dp, start = 7.dp, end = 7.dp),
     )
 }
 
