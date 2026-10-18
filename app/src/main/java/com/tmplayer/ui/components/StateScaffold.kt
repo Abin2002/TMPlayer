@@ -86,6 +86,7 @@ fun <T> StateScaffold(
         is UiState.Error -> BigError(state.message, onRetry)
         is UiState.Empty -> BigEmpty(
             state.message,
+            icon = state.picture,
             actionLabel = state.action?.label,
             onAction = state.action?.let { action -> onAction?.let { { it(action) } } },
         )
@@ -289,7 +290,8 @@ private const val MIN_SWEEP = 12f
  *
  * The one empty state in the app: keep it that way, so an empty search reads the same in a chat as
  * in the list of chats. [icon] is the only thing worth varying, since a search that found nothing
- * is not the same situation as a tab with nothing in it yet.
+ * is not the same situation as a tab with nothing in it yet; it is drawn large on its disc and
+ * draws itself in as the page arrives ([EmptyArt], shared with the desktop).
  */
 @Composable
 fun BigEmpty(
@@ -312,12 +314,7 @@ fun BigEmpty(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = muted.copy(alpha = 0.55f),
-                modifier = Modifier.size(if (touch) 44.dp else 56.dp),
-            )
+            EmptyArt(icon, modifier = Modifier.padding(bottom = 4.dp))
             Text(
                 message,
                 style = if (touch) {
@@ -367,12 +364,7 @@ fun BigError(message: String, onRetry: (() -> Unit)?) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Icon(
-                TmIcons.Warning,
-                contentDescription = null,
-                tint = danger,
-                modifier = Modifier.size(if (touch) 44.dp else 56.dp),
-            )
+            EmptyArt(TmIcons.Warning, tone = danger, modifier = Modifier.padding(bottom = 4.dp))
             Text(
                 s.stateFailed,
                 style = if (touch) {

@@ -252,7 +252,8 @@ private fun NavButton(
 ) {
     BarTooltip(label, shortcut) {
         NavCell(label, chosen, onClick, role = Role.Tab) { tint ->
-            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(22.dp))
+            // Fills in with a drop as the place is chosen, as the phone's bar does.
+            com.tmplayer.ui.components.SelectableIcon(icon, selected = chosen, tint = tint, size = 22.dp)
         }
     }
 }

@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tmplayer.ui.components.EmptyArt
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Corner
@@ -31,7 +32,7 @@ import com.tmplayer.ui.theme.Tone
 
 /**
  * Home with nothing in it yet: one card on [Tone.surface] that says how to get a first video in.
- * An icon chip in the accent, the heading, [body] (where to forward a video), and when there is
+ * The empty pages' picture ([EmptyArt]), the heading, [body] (where to forward a video), and when there is
  * somewhere to send the viewer, a bright pill ([HeroPill]), [button], which takes
  * the remote's focus through [focus]. Under a rule, the line on starring chats, with its own chip.
  *
@@ -59,7 +60,7 @@ fun FirstVideoCard(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(if (touch) 12.dp else 16.dp),
     ) {
-        IconChip(TmIcons.Bookmark, size = if (touch) 56.dp else 64.dp, round = true)
+        EmptyArt(TmIcons.Bookmark, size = if (touch) 72.dp else 88.dp)
         Text(
             title,
             style = (if (touch) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium)

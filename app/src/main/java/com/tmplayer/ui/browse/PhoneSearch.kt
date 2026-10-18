@@ -71,6 +71,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -512,19 +513,24 @@ private fun androidx.compose.foundation.lazy.LazyListScope.results(
         }
         shown.isEmpty() && !state.busy && state.error == null -> item(key = "none") {
             val s = LocalStrings.current
-            // Rises in a beat after the search settles, rather than snapping in over the skeletons.
+            // Rises in a beat after the search settles, rather than snapping in over the skeletons,
+            // under the empty pages' picture ([EmptyArt]) drawing itself in.
             Column(
-                Modifier.fillMaxWidth().riseIn().padding(horizontal = 16.dp, vertical = 24.dp),
+                Modifier.fillMaxWidth().riseIn().padding(horizontal = 16.dp, vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(TmIcons.SearchRemove, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(32.dp))
                 val hidden = state.hiddenBy
+                com.tmplayer.ui.components.EmptyArt(
+                    if (hidden.isNotEmpty()) TmIcons.FilterHorizontal else TmIcons.SearchRemove,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
                 if (hidden.isNotEmpty()) {
-                    hidden.forEach { Text(it.message(state), style = MaterialTheme.typography.bodyLarge, color = Tone.text) }
+                    hidden.forEach { Text(it.message(state), style = MaterialTheme.typography.bodyLarge, color = Tone.text, textAlign = TextAlign.Center) }
                     TmSecondaryButton(onClick = onClearFilters) { Text(s.searchClearFilters) }
                 } else {
-                    Text(s.searchNone(state.query.text), style = MaterialTheme.typography.titleMedium, color = Tone.text)
-                    Text(s.searchNoneDetail, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
+                    Text(s.searchNone(state.query.text), style = MaterialTheme.typography.titleMedium, color = Tone.text, textAlign = TextAlign.Center)
+                    Text(s.searchNoneDetail, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, textAlign = TextAlign.Center)
                     AllChatsSearch.fallbackQuery(state.query.server)?.let { word ->
                         TmSecondaryButton(onClick = { onSearchWord(word) }) { Text(s.searchSearchFor(word)) }
                     }

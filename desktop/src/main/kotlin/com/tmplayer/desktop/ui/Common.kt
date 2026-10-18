@@ -54,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tmplayer.ui.components.EmptyArt
 import com.tmplayer.ui.components.MediaArt
 import com.tmplayer.ui.components.SlowAnswer
 import com.tmplayer.ui.components.StateAction
@@ -108,11 +109,13 @@ fun <T> StateBox(
             if (onRetry != null) SlowAnswerLine(state, onRetry, slowAfterMs)
         }
         is UiState.Empty -> Centred {
+            EmptyArt(state.picture, modifier = Modifier.padding(bottom = 4.dp))
             Text(state.message, color = Tone.muted, textAlign = TextAlign.Center)
             val action = state.action
             if (action != null && onAction != null) OutlinedButton(onClick = { onAction(action) }) { Text(action.label) }
         }
         is UiState.Error -> Centred {
+            EmptyArt(TmIcons.Warning, tone = Tone.danger, modifier = Modifier.padding(bottom = 4.dp))
             Text(state.message, textAlign = TextAlign.Center)
             if (onRetry != null) OutlinedButton(onClick = onRetry) { Text(s.commonTryAgain) }
         }
@@ -158,6 +161,18 @@ fun RecentSearchRow(searches: List<String>, onPick: (String) -> Unit, onClear: (
             )
         }
         TextButton(onClick = onClear) { Text(s.commonClear) }
+    }
+}
+
+/**
+ * A page or a list with nothing in it: the empty pages' picture ([EmptyArt], as the phone and the
+ * television draw it) over one muted line, centred.
+ */
+@Composable
+fun EmptyNote(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Centred {
+        EmptyArt(icon, modifier = Modifier.padding(bottom = 4.dp))
+        Text(text, color = Tone.muted, textAlign = TextAlign.Center)
     }
 }
 

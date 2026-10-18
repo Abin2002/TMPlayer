@@ -15,8 +15,12 @@ Icons marked as mirrored flip in right to left languages.
 
 The free set is stroke only. Where a filled glyph is the state (a favourite that is set) or has
 to hold its weight at size (the player's big centre play and pause, play badges on artwork), the
-set's own outline is filled in (`Star`, `PlaySolid`, `PauseSolid`); everywhere else a selected
-state is carried by colour and background, as the sidebar pill already does.
+set's own outline is filled in (`Star`, `PlaySolid`, `PauseSolid`).
+
+The bars' and rails' selected places fill in too, with a short rising drop (`SelectableIcon`).
+Their filled twins are made by the script from the same paths: the outline's shapes filled, and
+the inner detail (a door, a speech bubble's lines, the gear's hub) cut out of the fill so it
+shows through in the background. They are listed under Selected twins below.
 
 ## Compose: `com.tmplayer.ui.icons.TmIcons`
 
@@ -42,6 +46,7 @@ state is carried by colour and background, as the sidebar pill already does.
 | `Clock` | Clock01 |  | TmIcons.Clock | Recent. |
 | `Download` | Download04 |  | TmIcons.Download | Downloads, what is held on this device. |
 | `Folder` | Folder01 |  | TmIcons.Folder | A Telegram chat folder. |
+| `FolderOpen` | FolderOpen |  |  | A chat folder with nothing in it yet. |
 | `Grid` | GridView |  | TmIcons.Grid | The grid arrangement. |
 | `List` | LeftToRightListBullet | yes | Material List | The list arrangement. |
 | `Sort` | SortingAZ02 |  | TmIcons.Sort | The chat list sorted by name. |
@@ -77,6 +82,8 @@ state is carried by colour and background, as the sidebar pill already does.
 | `Backspace` | Eraser01 | yes | TmIcons.Backspace | Delete the last digit on the PIN pad. |
 | `VisibilityOff` | ViewOffSlash |  | TmIcons.VisibilityOff | Controls out of sight. |
 | `Chats` | Message01 |  | TmIcons.List | The Chats section, every chat. |
+| `ChatsMany` | MessageMultiple01 |  |  | No chats to show. |
+| `ChatsDone` | MessageDone01 |  |  | Nothing unread: up to date. |
 | `Account` | UserCircle |  | Material AccountCircle | An account. |
 | `Person` | User |  | Material Person | A person. |
 | `Group` | UserGroup |  | TmIcons.Group | A group. |
@@ -101,6 +108,8 @@ state is carried by colour and background, as the sidebar pill already does.
 | `Pause` | Pause |  | TmIcons.Pause, PlayerIcons.Pause | Pause. |
 | `PlaySolid` | Play (filled) |  | PlayerIcons.Play | The player's big centre play, and play badges on artwork. |
 | `PauseSolid` | Pause (filled) |  | PlayerIcons.Pause | The player's big centre pause. |
+| `PlayCircle` | PlayCircle |  |  | Continue watching with nothing started yet. |
+| `VideoOff` | VideoOff |  |  | A chat or a topic with no videos to play. |
 | `SkipNext` | Next |  | PlayerIcons.SkipNext | Next episode. |
 | `SkipPrevious` | Previous |  | PlayerIcons.SkipPrevious | Previous episode. |
 | `Repeat` | Repeat |  | TmIcons.Repeat | A-B repeat. |
@@ -115,6 +124,23 @@ state is carried by colour and background, as the sidebar pill already does.
 | `PictureInPicture` | PictureInPictureOn |  | PlayerIcons.PictureInPicture | Picture in picture. |
 | `AspectRatio` | AspectRatio |  | PlayerIcons.AspectRatio | Fit, fill, zoom. |
 | `Trailer` | Clapperboard |  | TrailerIcon | A title's trailer. |
+
+## Selected twins: `TmIcons.selectedOf`
+
+| Outline | Hugeicons | Cut out of the fill |
+| --- | --- | --- |
+| `Home` | Home03 | shape 2 (inside and stroke) |
+| `Chats` | Message01 | shape 1 (stroke) |
+| `Settings` | Settings01 | shape 2 (inside) |
+| `Search` | Search01 | nothing |
+| `StarOutline` | Star | nothing |
+| `Bookmark` | Bookmark02 | nothing |
+| `Folder` | Folder01 | nothing |
+| `Clock` | Clock01 | shape 2 (stroke) |
+| `Play` | Play | nothing |
+| `Person` | User | nothing |
+| `Archive` | Archive03 | shape 3 (stroke) |
+| `Channel` | Megaphone02 | nothing |
 
 ## Android drawables: `app/src/main/res/drawable`
 

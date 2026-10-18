@@ -245,6 +245,12 @@ internal fun TvSearchScreen(
                 }
                 shown.isEmpty() && !state.busy && state.error == null -> Column(Modifier.padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     val hidden = state.hiddenBy
+                    // The empty pages' picture, never focusable: the remote stays on the keyboard
+                    // and the pills below, in the order they always had.
+                    com.tmplayer.ui.components.EmptyArt(
+                        if (hidden.isNotEmpty()) TmIcons.FilterHorizontal else TmIcons.SearchRemove,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
                     if (hidden.isNotEmpty()) {
                         hidden.forEach { Text(it.message(state), style = MaterialTheme.typography.titleMedium, color = Tone.text) }
                         TvPill(s.searchClearFilters, TmIcons.Close) { onFilters(SearchFilters()) }

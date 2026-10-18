@@ -571,7 +571,7 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
         val list = records
         when {
             list == null -> VideoGridSkeleton(state.posterWidth * CONTINUE_WIDTH, posters = false, nameBelow = false)
-            list.isEmpty() -> Centred { Text(s.continueEmpty, color = Tone.muted) }
+            list.isEmpty() -> EmptyNote(HistoryTab.Continue.emptyIcon, s.continueEmpty)
             else -> {
                 val grid = rememberLazyGridState()
                 val records by rememberUpdatedState(list)

@@ -838,9 +838,10 @@ private fun BarButton(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        // The highlight behind is the bar's (see FloatingBar); the icon takes its colour as it lands.
+        // The highlight behind is the bar's (see FloatingBar); the icon takes its colour as it lands
+        // and fills in with a drop (SelectableIcon).
         val tint by androidx.compose.animation.animateColorAsState(if (chosen) Tone.accent else Tone.text, label = "barIcon")
-        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
+        com.tmplayer.ui.components.SelectableIcon(icon, selected = chosen, tint = tint, size = 24.dp)
         BarCaption(label, chosen)
     }
 }

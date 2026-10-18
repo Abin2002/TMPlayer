@@ -31,6 +31,7 @@ import com.tmplayer.data.VideoBatch
 import com.tmplayer.data.TdSession
 import com.tmplayer.ui.components.StateAction
 import com.tmplayer.ui.components.UiState
+import com.tmplayer.ui.icons.TmIcons
 import dev.g000sha256.tdl.TdlResult
 import dev.g000sha256.tdl.dto.ChatListArchive
 import dev.g000sha256.tdl.dto.ChatListMain
@@ -479,8 +480,8 @@ class ChatListViewModel(private val settings: SettingsStore? = null) : ViewModel
         _state.value = when {
             loaded.isNotEmpty() -> UiState.Content(BrowseData(loaded, account))
             // Said plainly, so a child's empty screen is not mistaken for a broken account.
-            allowed != null && everything.isNotEmpty() -> UiState.Empty(L.lockKidsEmpty)
-            else -> UiState.Empty(L.browseNoChats)
+            allowed != null && everything.isNotEmpty() -> UiState.Empty(L.lockKidsEmpty, icon = TmIcons.Lock)
+            else -> UiState.Empty(L.browseNoChats, icon = TmIcons.ChatsMany)
         }
     }
 }
@@ -997,8 +998,8 @@ class MediaListViewModel(
         // reads as the whole group being empty.
         val topic = _topics.value?.nameOf(topicId)
         return when {
-            query.isNotBlank() && topic != null -> UiState.Empty(L.gridTopicNoMatch(topic, query))
-            query.isNotBlank() -> UiState.Empty(L.browseNoMatch(query))
+            query.isNotBlank() && topic != null -> UiState.Empty(L.gridTopicNoMatch(topic, query), icon = TmIcons.SearchRemove)
+            query.isNotBlank() -> UiState.Empty(L.browseNoMatch(query), icon = TmIcons.SearchRemove)
             !reachedEnd && hidden != null -> UiState.Empty("$STILL_MORE_TO_SEARCH\n\n$hidden", StateAction.ShowHidden)
             !reachedEnd -> UiState.Empty(STILL_MORE_TO_SEARCH, StateAction.KeepLooking)
             hidden != null -> UiState.Empty("${noVideosWithin(minSizeBytes, maxSizeBytes)}\n\n$hidden", StateAction.ShowHidden)

@@ -94,6 +94,13 @@ enum class ChatFilter(val icon: ImageVector) {
         Archived -> L.browseFilterArchived
     }
 
+    /** The picture over the list when this filter leaves nothing: a ticked bubble for nothing unread. */
+    val emptyIcon: ImageVector get() = when (this) {
+        All -> TmIcons.ChatsMany
+        Unread -> TmIcons.ChatsDone
+        else -> icon
+    }
+
     companion object {
         /** What [com.tmplayer.data.SettingsStore.chatFilter] holds, read back; All for anything else. */
         fun decode(name: String?): ChatFilter = entries.firstOrNull { it.name == name } ?: All
@@ -131,6 +138,13 @@ enum class HistoryTab(val icon: ImageVector) {
     /** Videos played to the end or marked by hand. */
     Watched(TmIcons.Check),
     ;
+
+    /** The picture over the tab while it is empty, a little fuller than the tab's own glyph. */
+    val emptyIcon: ImageVector get() = when (this) {
+        Continue -> TmIcons.PlayCircle
+        WatchLater -> TmIcons.Clock
+        Watched -> TmIcons.CheckCircle
+    }
 
     val label: String get() = when (this) {
         Continue -> L.browseTabContinue
@@ -377,4 +391,21 @@ fun filterChats(
     // Ranked rather than filtered: a chat whose title is exactly what was typed belongs at the
     // top, and ranking forgives the accent nobody types and the mistyped letter from a remote.
     return Fuzzy.rank(ordered, query) { it.title }
+}
+
+/**
+ * The picture over an empty tab, the same on the phone, the television and the desktop: a search
+ * that found nothing, an open folder, or the section's own glyph.
+ */
+fun emptyTabIcon(
+    tab: BrowseSection,
+    query: String,
+    filter: ChatFilter = ChatFilter.All,
+    history: HistoryTab? = null,
+): ImageVector = when {
+    query.isNotBlank() -> TmIcons.SearchRemove
+    history != null -> history.emptyIcon
+    tab is BrowseSection.Folder -> TmIcons.FolderOpen
+    tab.isChats -> filter.emptyIcon
+    else -> tab.icon
 }

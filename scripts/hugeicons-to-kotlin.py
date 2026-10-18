@@ -82,6 +82,7 @@ ICONS: list[tuple[str, list[Icon]]] = [
         Icon("Clock", "Clock01", "Recent.", "TmIcons.Clock"),
         Icon("Download", "Download04", "Downloads, what is held on this device.", "TmIcons.Download"),
         Icon("Folder", "Folder01", "A Telegram chat folder.", "TmIcons.Folder"),
+        Icon("FolderOpen", "FolderOpen", "A chat folder with nothing in it yet.", ""),
         Icon("Grid", "GridView", "The grid arrangement.", "TmIcons.Grid"),
         Icon("List", "LeftToRightListBullet", "The list arrangement.", "Material List", mirror=True),
         Icon("Sort", "SortingAZ02", "The chat list sorted by name.", "TmIcons.Sort"),
@@ -123,6 +124,8 @@ ICONS: list[tuple[str, list[Icon]]] = [
     ]),
     ("People and chats", [
         Icon("Chats", "Message01", "The Chats section, every chat.", "TmIcons.List"),
+        Icon("ChatsMany", "MessageMultiple01", "No chats to show.", ""),
+        Icon("ChatsDone", "MessageDone01", "Nothing unread: up to date.", ""),
         Icon("Account", "UserCircle", "An account.", "Material AccountCircle"),
         Icon("Person", "User", "A person.", "Material Person"),
         Icon("Group", "UserGroup", "A group.", "TmIcons.Group"),
@@ -151,6 +154,8 @@ ICONS: list[tuple[str, list[Icon]]] = [
         Icon("Pause", "Pause", "Pause.", "TmIcons.Pause, PlayerIcons.Pause"),
         Icon("PlaySolid", "Play", "The player's big centre play, and play badges on artwork.", "PlayerIcons.Play", solid=True),
         Icon("PauseSolid", "Pause", "The player's big centre pause.", "PlayerIcons.Pause", solid=True),
+        Icon("PlayCircle", "PlayCircle", "Continue watching with nothing started yet.", ""),
+        Icon("VideoOff", "VideoOff", "A chat or a topic with no videos to play.", ""),
         Icon("SkipNext", "Next", "Next episode.", "PlayerIcons.SkipNext"),
         Icon("SkipPrevious", "Previous", "Previous episode.", "PlayerIcons.SkipPrevious"),
         Icon("Repeat", "Repeat", "A-B repeat.", "TmIcons.Repeat"),
@@ -166,6 +171,38 @@ ICONS: list[tuple[str, list[Icon]]] = [
         Icon("AspectRatio", "AspectRatio", "Fit, fill, zoom.", "PlayerIcons.AspectRatio"),
         Icon("Trailer", "Clapperboard", "A title's trailer.", "TrailerIcon"),
     ]),
+]
+
+
+@dataclass
+class Twin:
+    outline: str  # the TmIcons property it is the selected state of
+    source: str  # the same Hugeicon the outline is drawn from
+    cut: dict[int, str]  # shape index to how it is knocked out: "s" its stroke, "f" its inside, "sf" both
+    body: list[int] | None = None  # the shapes filled in; every shape not cut when None
+    mirror: bool = False
+    cut_width: float = STROKE  # a cut's stroke, a little wider where it has to clear the body's own
+    close_cut: bool = False  # close an open cut path, so its stroke runs along the closing edge too
+
+
+# The selected states the bars and rails fill in (SelectableIcon). Body shapes are filled and keep
+# their stroke, so the silhouette matches the outline exactly; cut shapes are drawn into a second
+# vector that is knocked out of the fill, so the detail reads in whatever is behind the icon.
+TWINS: list[Twin] = [
+    # The door, open at the foot: closed and cut a little wider, so no sliver of the house's own
+    # bottom stroke is left across the doorway.
+    Twin("Home", "Home03", cut={1: "sf"}, cut_width=2.25, close_cut=True),
+    Twin("Chats", "Message01", cut={0: "s"}),  # the two lines of text
+    Twin("Settings", "Settings01", cut={1: "f"}),  # the hub
+    Twin("Search", "Search01", cut={}),
+    Twin("StarOutline", "Star", cut={}),
+    Twin("Bookmark", "Bookmark02", cut={}),
+    Twin("Folder", "Folder01", cut={}),
+    Twin("Clock", "Clock01", cut={1: "s"}),  # the hands
+    Twin("Play", "Play", cut={}),
+    Twin("Person", "User", cut={}),
+    Twin("Archive", "Archive03", cut={2: "s"}),  # the arrow
+    Twin("Channel", "Megaphone02", cut={}),
 ]
 
 
@@ -221,6 +258,7 @@ class Shape:
     fill: bool
     even_odd: bool
     alpha: float
+    width: float = STROKE
 
 
 def fmt(v: float) -> str:
@@ -295,6 +333,13 @@ def kotlin(package: Path, version: str) -> str:
         "import androidx.compose.ui.unit.dp",
         "",
         "/**",
+        " * A selected glyph made from an outline: [body] is the outline's shapes filled in, and [cut], when",
+        " * there is one, is the inner detail to knock out of it, so a door or a speech bubble's lines show",
+        " * through in whatever is behind the icon. `SelectableIcon` draws the two; see [TmIcons.selectedOf].",
+        " */",
+        "class FilledIcon(val body: ImageVector, val cut: ImageVector?)",
+        "",
+        "/**",
         " * Every icon the app draws in Compose, on phone, TV and desktop: Hugeicons' free Stroke Rounded",
         " * set, 1.5 unit strokes on a 24 unit grid with round caps and joins.",
         " *",
@@ -324,14 +369,48 @@ def kotlin(package: Path, version: str) -> str:
                     out.append("            autoMirror = true,")
                 out.append("        )")
                 out.append("    }")
+    out.append("")
+    out.append("    // Selected twins: the free set has no filled style, so these are its outlines filled in")
+    by_name = {i.name: i for _, icons in ICONS for i in icons}
+    for tw in TWINS:
+        if tw.outline not in by_name:
+            raise SystemExit(f"twin of {tw.outline}, which is not in ICONS")
+        if by_name[tw.outline].source != tw.source:
+            raise SystemExit(f"twin of {tw.outline} is drawn from {tw.source}, the outline from {by_name[tw.outline].source}")
+        shapes = load(package, tw.source)
+        body_ix = tw.body if tw.body is not None else [i for i in range(len(shapes)) if i not in tw.cut]
+        body = [Shape(shapes[i].d, True, True, False, shapes[i].alpha) for i in body_ix]
+        cut = [
+            Shape(shapes[i].d + ("Z" if tw.close_cut else ""), "s" in how, "f" in how, False, shapes[i].alpha, tw.cut_width)
+            for i, how in tw.cut.items()
+        ]
+        mirror = "            autoMirror = true,\n" if tw.mirror or by_name[tw.outline].mirror else ""
+        out.append("")
+        out.append(f"    /** [{tw.outline}], selected: Hugeicons {tw.source} filled in{', its detail cut out' if cut else ''}. */")
+        out.append(f"    val {tw.outline}Selected: FilledIcon by lazy {{")
+        out.append("        FilledIcon(")
+        out.append(f'            body = icon("{tw.outline}Selected", {", ".join(part(s) for s in body)}{", autoMirror = true" if mirror else ""}),')
+        if cut:
+            out.append(f'            cut = icon("{tw.outline}SelectedCut", {", ".join(part(s) for s in cut)}{", autoMirror = true" if mirror else ""}),')
+        else:
+            out.append("            cut = null,")
+        out.append("        )")
+        out.append("    }")
+    out.append("")
+    out.append("    /** The filled twin of [outline], for its selected state, or null where it has none. */")
+    out.append("    fun selectedOf(outline: ImageVector): FilledIcon? = when (outline.name) {")
+    for tw in TWINS:
+        out.append(f'        "{tw.outline}" -> {tw.outline}Selected')
+    out.append("        else -> null")
+    out.append("    }")
     out += [
         "",
         "    /** One shape of a glyph: its SVG path data and whether it is stroked, filled or both. */",
-        "    private class Part(val d: String, val stroke: Boolean, val fill: Boolean, val evenOdd: Boolean, val alpha: Float)",
+        "    private class Part(val d: String, val stroke: Boolean, val fill: Boolean, val evenOdd: Boolean, val alpha: Float, val width: Float)",
         "",
-        "    private fun s(d: String, alpha: Float = 1f) = Part(d, stroke = true, fill = false, evenOdd = false, alpha = alpha)",
-        "    private fun f(d: String, evenOdd: Boolean = false, alpha: Float = 1f) = Part(d, stroke = false, fill = true, evenOdd = evenOdd, alpha = alpha)",
-        "    private fun sf(d: String, alpha: Float = 1f) = Part(d, stroke = true, fill = true, evenOdd = false, alpha = alpha)",
+        f"    private fun s(d: String, alpha: Float = 1f, width: Float = {fmt(STROKE)}f) = Part(d, stroke = true, fill = false, evenOdd = false, alpha = alpha, width = width)",
+        f"    private fun f(d: String, evenOdd: Boolean = false, alpha: Float = 1f) = Part(d, stroke = false, fill = true, evenOdd = evenOdd, alpha = alpha, width = {fmt(STROKE)}f)",
+        f"    private fun sf(d: String, alpha: Float = 1f, width: Float = {fmt(STROKE)}f) = Part(d, stroke = true, fill = true, evenOdd = false, alpha = alpha, width = width)",
         "",
         "    private val Ink = SolidColor(Color.Black)",
         "",
@@ -352,7 +431,7 @@ def kotlin(package: Path, version: str) -> str:
         "                fillAlpha = part.alpha,",
         "                stroke = if (part.stroke) Ink else null,",
         "                strokeAlpha = part.alpha,",
-        f"                strokeLineWidth = {fmt(STROKE)}f,",
+        "                strokeLineWidth = part.width,",
         "                strokeLineCap = StrokeCap.Round,",
         "                strokeLineJoin = StrokeJoin.Round,",
         "            )",
@@ -367,6 +446,8 @@ def kotlin(package: Path, version: str) -> str:
 
 def part(s: Shape) -> str:
     alpha = f", alpha = {fmt(s.alpha)}f" if s.alpha != 1 else ""
+    if s.stroke and s.width != STROKE:
+        alpha += f", width = {fmt(s.width)}f"
     if s.stroke and s.fill:
         return f'sf("{s.d}"{alpha})'
     if s.fill:
@@ -430,8 +511,12 @@ def table(version: str) -> str:
         "",
         "The free set is stroke only. Where a filled glyph is the state (a favourite that is set) or has",
         "to hold its weight at size (the player's big centre play and pause, play badges on artwork), the",
-        "set's own outline is filled in (`Star`, `PlaySolid`, `PauseSolid`); everywhere else a selected",
-        "state is carried by colour and background, as the sidebar pill already does.",
+        "set's own outline is filled in (`Star`, `PlaySolid`, `PauseSolid`).",
+        "",
+        "The bars' and rails' selected places fill in too, with a short rising drop (`SelectableIcon`).",
+        "Their filled twins are made by the script from the same paths: the outline's shapes filled, and",
+        "the inner detail (a door, a speech bubble's lines, the gear's hub) cut out of the fill so it",
+        "shows through in the background. They are listed under Selected twins below.",
         "",
         "## Compose: `com.tmplayer.ui.icons.TmIcons`",
         "",
@@ -442,6 +527,15 @@ def table(version: str) -> str:
         for i in icons:
             src = f"{i.source}{' (filled)' if i.solid else ''}"
             out.append(f"| `{i.name}` | {src} | {'yes' if i.mirror else ''} | {i.replaces} | {i.doc} |")
+    out += [
+        "",
+        "## Selected twins: `TmIcons.selectedOf`",
+        "",
+        "| Outline | Hugeicons | Cut out of the fill |",
+        "| --- | --- | --- |",
+    ]
+    for tw in TWINS:
+        out.append(f"| `{tw.outline}` | {tw.source} | {', '.join(f'shape {i + 1} ({ {"s": "stroke", "f": "inside", "sf": "inside and stroke"}[h]})' for i, h in tw.cut.items()) or 'nothing'} |")
     out += [
         "",
         "## Android drawables: `app/src/main/res/drawable`",

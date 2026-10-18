@@ -1724,7 +1724,8 @@ private fun RailItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box {
-            Icon(icon, contentDescription = null, tint = foreground, modifier = Modifier.size(RAIL_ICON))
+            // The place being shown fills in with a drop, as the phone's bar does.
+            com.tmplayer.ui.components.SelectableIcon(icon, selected = selected, tint = foreground, size = RAIL_ICON)
             // A folded rail has no room for the count, so a dot on the icon says there is one: a
             // download running, an update waiting.
             if (badge != null && reveal < 1f) {
@@ -2212,7 +2213,8 @@ internal fun TouchFilterChip(
         // A pill, like the television's chips and every other chip in the app.
         shape = CircleShape,
         leadingIcon = {
-            com.tmplayer.ui.components.SwapIcon(icon, glyph, size = 18.dp)
+            // The chosen chip's glyph fills in with a drop, as the bar's do.
+            com.tmplayer.ui.components.SelectableIcon(icon, selected = selected, tint = glyph, size = 18.dp)
         },
         colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
             containerColor = container,
@@ -2281,7 +2283,7 @@ private fun TvChip(chip: ChipSpec) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Icon(chip.icon, contentDescription = null, tint = foreground, modifier = Modifier.size(22.dp))
+        com.tmplayer.ui.components.SelectableIcon(chip.icon, selected = chip.selected, tint = foreground, size = 22.dp)
         Text(
             chip.label,
             style = MaterialTheme.typography.bodyLarge,
@@ -2909,13 +2911,9 @@ private fun EmptyTab(tab: BrowseSection, query: String, filter: ChatFilter = Cha
         else -> s.browseEmptyOther
     }
     // A search that came back empty is a different situation from a tab with nothing in it yet, so
-    // the glyph follows whichever one the viewer is looking at.
-    val icon = when {
-        query.isNotBlank() -> TmIcons.Search
-        history != null -> history.icon
-        tab.isChats -> filter.icon
-        else -> tab.icon
-    }
+    // the glyph follows whichever one the viewer is looking at, drawn for the empty page where the
+    // tab's own icon would say less (an open folder, a ticked bubble for nothing unread).
+    val icon = emptyTabIcon(tab, query, filter, history)
     BigEmpty(message, icon = icon)
 }
 

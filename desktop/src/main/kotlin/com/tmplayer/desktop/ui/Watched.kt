@@ -113,9 +113,7 @@ fun WatchedPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
         val list = records
         when {
             list == null -> VideoGridSkeleton(state.posterWidth, posters = false)
-            list.isEmpty() -> Centred {
-                Text(s.watchedEmpty, color = Tone.muted)
-            }
+            list.isEmpty() -> EmptyNote(HistoryTab.Watched.emptyIcon, s.watchedEmpty)
             else -> {
                 val grid = rememberLazyGridState()
                 val current by rememberUpdatedState(list)
@@ -217,7 +215,7 @@ fun WatchLaterPage(state: ShellState, tabs: @Composable () -> Unit = {}) {
         val list = records
         when {
             list == null -> VideoGridSkeleton(state.posterWidth, posters = false)
-            list.isEmpty() -> Centred { Text(s.browseEmptyWatchLater, color = Tone.muted) }
+            list.isEmpty() -> EmptyNote(HistoryTab.WatchLater.emptyIcon, s.browseEmptyWatchLater)
             else -> {
                 val grid = rememberLazyGridState()
                 val current by rememberUpdatedState(list)

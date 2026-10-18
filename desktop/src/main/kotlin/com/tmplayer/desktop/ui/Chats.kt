@@ -189,17 +189,18 @@ fun ChatsPage(
                 filterChats(data.chats, section, favourites, query, filter, sort)
             }
             if (visible.isEmpty()) {
-                Centred {
-                    Text(
-                        when {
-                            query.isNotBlank() -> s.chatsNoMatch(query)
-                            favouritesOnly -> s.chatsFavouritesEmpty
-                            section.isChats && filter != ChatFilter.All -> s.chatsSectionEmpty(filter.label)
-                            else -> s.chatsSectionEmpty(section.label)
-                        },
-                        color = Tone.muted,
-                    )
-                }
+                EmptyNote(
+                    icon = when {
+                        favouritesOnly && query.isBlank() -> TmIcons.StarOutline
+                        else -> com.tmplayer.ui.browse.emptyTabIcon(section, query, filter)
+                    },
+                    text = when {
+                        query.isNotBlank() -> s.chatsNoMatch(query)
+                        favouritesOnly -> s.chatsFavouritesEmpty
+                        section.isChats && filter != ChatFilter.All -> s.chatsSectionEmpty(filter.label)
+                        else -> s.chatsSectionEmpty(section.label)
+                    },
+                )
             } else {
                 LaunchedEffect(Unit) {
                     val back = refocus ?: return@LaunchedEffect
@@ -287,7 +288,8 @@ internal fun ChoiceChips(choices: List<Choice>) {
                     selected = choice.selected,
                     onClick = choice.onClick,
                     label = { Text(choice.label, maxLines = 1) },
-                    leadingIcon = { com.tmplayer.ui.components.SwapIcon(choice.icon, glyph, size = 18.dp) },
+                    // The chosen chip's glyph fills in with a drop, as the bar's do.
+                    leadingIcon = { com.tmplayer.ui.components.SelectableIcon(choice.icon, selected = choice.selected, tint = glyph, size = 18.dp) },
                     colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
                         containerColor = container,
                         selectedContainerColor = container,

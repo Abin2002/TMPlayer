@@ -1,6 +1,8 @@
 package com.tmplayer.ui.components
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.tmplayer.i18n.L
+import com.tmplayer.ui.icons.TmIcons
 
 /** Every screen is exactly one of these: no blank frames, ever. */
 sealed interface UiState<out T> {
@@ -20,8 +22,21 @@ sealed interface UiState<out T> {
      * untrue and alarming; a chat with no videos in it is a normal answer, not a failure.
      *
      * @param action the one thing worth doing about it, drawn as a button under the message.
+     * @param icon the picture over the message ([EmptyArt]), named by whatever knows why the list is
+     *   empty; [picture] picks one from the action when it says nothing.
      */
-    data class Empty(val message: String, val action: StateAction? = null) : UiState<Nothing>
+    data class Empty(
+        val message: String,
+        val action: StateAction? = null,
+        val icon: ImageVector? = null,
+    ) : UiState<Nothing> {
+        /** The picture to draw: the state's own, or the one its action stands for. */
+        val picture: ImageVector get() = icon ?: when (action) {
+            StateAction.ShowHidden -> TmIcons.FilterHorizontal
+            StateAction.KeepLooking -> TmIcons.Search
+            null -> TmIcons.VideoOff
+        }
+    }
 
     data class Content<T>(val value: T) : UiState<T>
 }
