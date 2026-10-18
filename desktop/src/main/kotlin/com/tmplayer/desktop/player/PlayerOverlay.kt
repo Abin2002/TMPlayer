@@ -381,6 +381,8 @@ internal fun BoxScope.PlayerOverlay(
     onMenuAction: (MenuAction) -> Unit,
     /** Opens the episode list; null (a film, or before the chat has answered) leaves the button out. */
     onEpisodes: (() -> Unit)? = null,
+    /** The Cast button and its device popover (CP73); null leaves it out. */
+    castButton: (@Composable () -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     // The right click menu hangs at the cursor whether or not the controls are up.
@@ -523,6 +525,7 @@ internal fun BoxScope.PlayerOverlay(
                     Spacer(Modifier.weight(1f))
                     ControlsPill {
                         VolumeControl(status.volume, status.muted, onVolume, onToggleMute)
+                        castButton?.invoke()
                         OverlayButton(TmIcons.PictureInPicture, s.playerMiniHint(commandKey(s)), onMiniPlayer)
                         OverlayButton(
                             if (fullscreen) TmIcons.FullscreenExit else TmIcons.Fullscreen,

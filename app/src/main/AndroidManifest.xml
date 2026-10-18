@@ -69,6 +69,15 @@
             android:name="io.sentry.auto-init"
             android:value="false" />
 
+        <!--
+          Casting to a Chromecast or Google TV (CP73): where Google's Cast framework reads its
+          options, Google's Default Media Receiver and the media notification. Taken back out of
+          the F-Droid build, which has neither the framework nor the class (src/fdroid).
+        -->
+        <meta-data
+            android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+            android:value="com.tmplayer.cast.CastOptionsProvider" />
+
         <activity
             android:name=".MainActivity"
             android:configChanges="locale|layoutDirection"

@@ -164,6 +164,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     override var player: ExoPlayer? = null
         private set
 
+    /**
+     * Casting to a Chromecast or Google TV (CP73): the Cast button's picker and the screen that
+     * stands in for the picture while the video is on the TV. Null on a television, in the F-Droid
+     * build and without Google Play services.
+     */
+    private var cast: PlayerCast? = null
+
+    /** The TDLib client the stream was opened with, for the cast server's reads. */
+    private var castClient: TdlClient? = null
+
     lateinit var mediaTitle: String
         private set
     lateinit var mediaSubtitle: String
@@ -857,8 +867,97 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             observeConnectivity()
             startResumeHeartbeat()
         }
+        setUpCasting()
         openItem()
     }
+
+    /** The Cast button and the cast screen, where casting exists; see [PlayerCast]. */
+    private fun setUpCasting() {
+        if (FormFactor.isTv(this)) return
+        val support = com.tmplayer.cast.Cast.support(this)
+        if (!support.available) return
+        cast = PlayerCast(this, findViewById(R.id.player_root), support, castHooks)
+        findViewById<View>(R.id.control_cast)?.apply {
+            visibility = View.VISIBLE
+            setOnClickListener { cast?.openPicker() }
+        }
+        subtitleFiles.onCastFile = { file, mime, label -> cast?.addSubtitle(file, mime, label) == true }
+    }
+
+    private val castHooks = object : PlayerCast.Hooks {
+        override fun handOff(): Long? {
+            val exo = player ?: return resumeMs.takeIf { it > 0 }
+            val at = exo.currentPosition
+            exo.playWhenReady = false
+            // Stopped, not paused: a paused player keeps reading ahead, and TDLib keeps fetching
+            // for it, against the TV's reads of the same file.
+            exo.stop()
+            return at
+        }
+
+        override fun takeBack(positionMs: Long) {
+            val exo = player ?: return
+            keepScreenOn(true)
+            attachMediaSession(exo)
+            exo.seekTo(positionMs)
+            exo.prepare()
+            exo.playWhenReady = true
+        }
+
+        override fun source(): Pair<com.tmplayer.cast.CastSource, String>? {
+            val client = castClient ?: return null
+            val joined = joinedSource
+            val uri = joined ?: downloadedFile?.let { android.net.Uri.fromFile(it) } ?: tdFileUri(fileId)
+            val length = when {
+                joined != null -> joined.getQueryParameters("s").sumOf { it.toLongOrNull() ?: 0L }
+                downloadedFile != null -> downloadedFile!!.length()
+                else -> fileSizeBytes
+            }
+            if (length <= 0) return null
+            val factory = DefaultDataSource.Factory(
+                this@PlayerActivity,
+                JoinedDataSource.Factory(
+                    TdDataSource.Factory(client),
+                    DefaultDataSource.Factory(this@PlayerActivity, TdDataSource.Factory(client)),
+                    ::leftPiece,
+                ),
+            )
+            val name = mediaFileName.ifBlank { mediaTitle }.ifBlank { "video" }
+            return DataSourceCastSource(factory, uri, length) to name
+        }
+
+        override fun title(): String = mediaTitle
+        override fun subtitleLine(): String = mediaSubtitle.ifBlank { chatTitle }
+        override fun audioLanguage(): String? = trackPlan.audioLanguage
+
+        override fun subtitleFiles(): List<Triple<File, String, String>> = subtitleFiles.files.mapNotNull { cfg ->
+            val path = cfg.uri.path ?: return@mapNotNull null
+            Triple(File(path), cfg.mimeType ?: androidx.media3.common.MimeTypes.APPLICATION_SUBRIP, cfg.label?.toString() ?: File(path).name)
+        }
+
+        override val episodes: StateFlow<EpisodeSteps> get() = this@PlayerActivity.episodes
+        override fun playEpisode(item: MediaItem) = this@PlayerActivity.playEpisode(item)
+        override fun onEnded() = onVideoEnded()
+
+        override fun onCasting(casting: Boolean) {
+            if (casting) {
+                hideStatus()
+                controls?.hideNow()
+                // The Cast framework's own session is the one the lock screen, the notification
+                // and a headset's buttons reach now; this one would start the stopped player.
+                mediaSession?.release()
+                mediaSession = null
+                // The phone is a remote now: its screen may go off, the TV's controls are on the
+                // lock screen and in the notification.
+                keepScreenOn(false)
+            } else {
+                controls?.show()
+            }
+        }
+
+        override fun close() = finish()
+    }
+
 
     /** The video's own fields, from the intent that opened it or the one [continueUnseen] set. */
     private fun readItem(from: Intent) {
@@ -1048,12 +1147,21 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             subtitleFiles.metadata = sessionMetadata()
             built.setMediaItem(subtitleFiles.item(source))
             if (resumeMs > 0) built.seekTo(resumeMs)
-            built.prepare()
-            built.playWhenReady = true
+            // With a cast up (the next episode, or a video opened while casting) the TV plays it
+            // and this player waits, unprepared, for the cast to end.
+            if (cast?.connected != true) {
+                built.prepare()
+                built.playWhenReady = true
+            }
         }
         player = exo
+        castClient = client
         attachMediaSession(exo)
         attachSurface(exo)
+        cast?.let { c ->
+            c.ready = true
+            if (c.connected && !c.casting) c.begin(resumeMs.takeIf { it > 0 })
+        }
     }
 
     /**
@@ -1486,6 +1594,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * picker: they carry buttons, and a button nobody can press is worse than no gesture at all.
      */
     override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
+        // On the cast screen every touch is the screen's own; the stopped picture has no gestures.
+        if (cast?.casting == true) return super.dispatchTouchEvent(event)
         val surface = touchSurface
         val pickerOpen =
             TrackPickerFragment.isOpen(supportFragmentManager)
@@ -3592,6 +3702,21 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // Locked means locked: Back, the media keys, the D-pad and a keyboard all offer the way
         // out rather than doing what they usually do. See [LockedKeys].
         if (locked) return lockedKey(event)
+        // Casting, the volume keys are the TV's.
+        cast?.takeIf { it.casting }?.let { c ->
+            if (event.keyCode == KeyEvent.KEYCODE_VOLUME_UP || event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                if (event.action == KeyEvent.ACTION_DOWN) c.stepVolume(event.keyCode == KeyEvent.KEYCODE_VOLUME_UP)
+                return true
+            }
+            // A keyboard's or a headset's play and pause, for the TV and never the stopped player.
+            if (event.keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE || event.keyCode == KeyEvent.KEYCODE_MEDIA_PLAY ||
+                event.keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE || event.keyCode == KeyEvent.KEYCODE_HEADSETHOOK
+            ) {
+                if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) c.togglePlay()
+                return true
+            }
+            return super.dispatchKeyEvent(event)
+        }
         // Fire TV's Menu key is the player's options, as Amazon's guidelines have it: on release,
         // so that holding it still reaches the long press below and hands the video over.
         if (event.keyCode == KeyEvent.KEYCODE_MENU && remoteQuirks.menuOpensPlayerMenu &&
@@ -4068,6 +4193,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         if (FormFactor.isTv(this)) return
         if (!packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return
         if (player?.isPlaying != true) return
+        if (cast?.casting == true) return
         if (statusOverlay.visibility == View.VISIBLE) return
         // From Android 12 the system enters on its own, through setAutoEnterEnabled, which is the
         // smooth version of the same transition; asking again here would only race it.
@@ -6144,6 +6270,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 // And with the sound playing on out of sight, which is an hour as easily.
                 val seen = lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
                 if ((seen || inBackgroundAudio) && player?.isPlaying == true) saveResumePosition()
+                // And while it plays on a TV, with the phone in a pocket.
+                else if (cast?.playing == true) saveResumePosition()
             }
         }
     }
@@ -6191,6 +6319,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         saveResumePosition(leaving = !inPictureInPicture)
         // This place out to the other devices, once the saves have settled (ResumeSync).
         com.tmplayer.data.ResumeSync.pushSoon(settings)
+        // On a TV the video carries on with the phone put away; nothing here to pause.
+        if (cast?.casting == true) return
         // In picture in picture the activity is stopped while the video is still on screen and
         // still the point of it; pausing here would stop the very thing the mode exists for.
         // With background audio on, the sound carries on from the notification instead.
@@ -6202,6 +6332,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         loopHandler.removeCallbacks(loopWatch)
         stopArtDrift()
         saveResumePosition(leaving = true)
+        // After the write above, which took the TV's place while the cast was still up.
+        cast?.release()
+        cast = null
         controls?.thumbnails = null
         trickplay?.release()
         trickplay = null
@@ -6288,8 +6421,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private fun saveResumePosition(leaving: Boolean = false) {
         val exo = player ?: return
-        val position = exo.currentPosition
-        val duration = exo.duration
+        // While the video is on a TV, the TV's place is the one to keep.
+        val castAt = cast?.positionMs
+        val position = castAt ?: exo.currentPosition
+        val duration = if (castAt != null) cast?.durationMs ?: exo.duration else exo.duration
         // Watched from 90 %, and the position then forgotten; see [ResumeRules]. Never for a video
         // whose pieces stop at a gap: the end of what is here is not the end of the video.
         val watched = ResumeRules.watched(position, duration) && !piecesIncomplete
