@@ -81,7 +81,13 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.onSizeChanged
+import com.tmplayer.ui.components.FloatingChrome
+import com.tmplayer.ui.theme.FloatingTone
+import com.tmplayer.ui.theme.floatingBorder
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -173,7 +179,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         if (min == null || max == null) {
             Column(Modifier.fillMaxSize()) {
                 Spacer(Modifier.height(ChatTopClearance))
-                VideoGridSkeleton(state.posterWidth, posters = false)
+                VideoGridSkeleton(CHAT_POSTER_WIDTH, posters = false)
             }
             ChatTopChrome(state, chat)
             return@Box
@@ -242,10 +248,15 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 onToggleFavourite = { scope.launch { state.settings.toggleFavorite(chat.id) } },
                 onSort = { sorting = true },
                 sortAnchor = sortAnchor,
-                onRefresh = { model.load() },
             )
         }
         val topicBar by model.topics.collectAsState()
+        // The note on where posters come from floats under Back and the chat's name, with them,
+        // rather than scrolling up under them as the grid's first row; not while searching.
+        val metaNotice = query.isBlank() && ui is UiState.Content && metaNoticeShown(state)
+        var noticeHeight by remember { mutableStateOf(0.dp) }
+        val noticeRoom = if (metaNotice) noticeHeight + NOTICE_GAP else 0.dp
+        val density = androidx.compose.ui.platform.LocalDensity.current
         // With no topics over it, the grid starts at the top of the page and scrolls up under
         // Back and the chat's name, which float over it as on the phone.
         val underChrome = topicBar == null
@@ -255,7 +266,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             com.tmplayer.ui.browse.TopicTabs(bar, model::selectTopic, Modifier.padding(bottom = 12.dp), edge = pageMargin())
         }
         val skeleton: @Composable () -> Unit = {
-            VideoGridSkeleton(if (postersLast) state.posterWidth * POSTER_SHARE else state.posterWidth, posters = postersLast)
+            VideoGridSkeleton(if (postersLast) CHAT_POSTER_WIDTH * POSTER_SHARE else CHAT_POSTER_WIDTH, posters = postersLast)
         }
         StateBox(ui, onRetry = { model.load() }, onAction = model::act, skeleton = skeleton) { content ->
             val back = gridReturn
@@ -325,7 +336,6 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
             val shows = remember(arranged) {
                 arranged.filterIsInstance<com.tmplayer.data.ShelfEntry.Show>().associate { it.series.cover.id to it.series }
             }
-            val metaNotice = grouping && metaNoticeShown(state)
             // An order other than Newest is of the videos loaded so far while older pages remain.
             val sortedLoaded = com.tmplayer.data.VideoSorting.sortsLoadedOnly(shownSort, content.endReached)
             MetaInviteDialog(state)
@@ -343,13 +353,12 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 onNav = { gridNav = it },
                 // Online metadata is on by default, so the first grid says once where posters come
                 // from; not while searching, when the listing is what was searched for.
-                header = if (ad == null && course == null && !metaNotice && !sortedLoaded) null else {
+                header = if (ad == null && course == null && !sortedLoaded) null else {
                     {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             if (sortedLoaded) {
                                 Text(s.gridSortLoadedNote(content.items.size), style = MaterialTheme.typography.bodySmall, color = Tone.muted)
                             }
-                            if (metaNotice) MetaNoticeCard(state)
                             course?.let { CourseHeader(it, topicBar?.let { bar -> bar.nameOf(bar.selected) } ?: chat.title, onPlay = { item -> state.openPlayer(item, startFromBeginning = false) }) }
                             ad?.let { SponsoredCard(it, model) }
                         }
@@ -358,12 +367,23 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 loadingMore = content.loadingMore,
                 rows = state.chatRows,
                 rowsGrid = rowsGrid,
-                topPadding = if (underChrome) ChatTopClearance else 8.dp,
+                topPadding = (if (underChrome) ChatTopClearance else 8.dp) + noticeRoom,
+                posterWidth = CHAT_POSTER_WIDTH,
                 bottomBar = chatBar,
             )
         }
         }
         ChatTopChrome(state, chat)
+        if (metaNotice) {
+            MetaNoticeCard(
+                state,
+                Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 16.dp, end = 16.dp, top = ChatTopClearance - 4.dp)
+                    .widthIn(max = NOTICE_WIDTH)
+                    .onSizeChanged { noticeHeight = with(density) { it.height.toDp() } },
+            )
+        }
         // While there is no grid to carry it (loading, empty, an error), the bar stands on its own.
         if (ui !is UiState.Content) Box(Modifier.align(Alignment.BottomCenter)) { chatBar() }
         VideoSortPopover(
@@ -411,6 +431,8 @@ internal fun VideoGrid(
     rowsGrid: LazyGridState = rememberLazyGridState(),
     /** Room over the first row: more where the page's own buttons float over the grid's top. */
     topPadding: Dp = 8.dp,
+    /** The width a tile asks for; a chat's page draws its posters larger than the other grids. */
+    posterWidth: Dp = state.posterWidth,
     /** The page's own bar at the foot, which a selection's bar takes the place of while it is up. */
     bottomBar: (@Composable () -> Unit)? = null,
 ) {
@@ -437,8 +459,8 @@ internal fun VideoGrid(
         LazyVerticalGrid(
             columns = when {
                 rows -> GridCells.Adaptive(ROW_MIN_WIDTH)
-                posters.isEmpty() -> GridCells.Adaptive(state.posterWidth)
-                else -> GridCells.Adaptive(state.posterWidth * POSTER_SHARE)
+                posters.isEmpty() -> GridCells.Adaptive(posterWidth)
+                else -> GridCells.Adaptive(posterWidth * POSTER_SHARE)
             },
             state = if (rows) rowsGrid else grid,
             // On the page's margin, as the heading and the chips are; a row's own 8 dp inset is
@@ -1325,16 +1347,24 @@ internal fun MetaInviteDialog(state: ShellState) {
  * and says where to turn them back on.
  */
 @Composable
-internal fun MetaNoticeCard(state: ShellState) {
+internal fun MetaNoticeCard(state: ShellState, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     val toast = rememberToast()
     val scope = rememberCoroutineScope()
     fun dismiss() {
         scope.launch { runCatching { state.settings.setOnlineMetaNoticeDismissed() } }
     }
-    Surface(shape = MaterialTheme.shapes.large, color = Tone.surface, modifier = Modifier.fillMaxWidth()) {
+    // The floating chrome's own look (its shadow, fill and edge), as it floats over the posters.
+    val shape = RoundedCornerShape(NOTICE_CORNER)
+    Box(
+        modifier
+            .shadow(FloatingChrome.Shadow, shape)
+            .clip(shape)
+            .background(FloatingTone.menu)
+            .border(floatingBorder(), shape),
+    ) {
         Row(
-            Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            Modifier.padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -1355,6 +1385,17 @@ private val IS_MAC = System.getProperty("os.name").orEmpty().lowercase().contain
 private const val HOVER_INTENT_MS = 300L
 private const val SEARCH_SETTLE_MS = 300L
 private const val LOAD_AHEAD = 8
+
+/**
+ * The width a tile asks for on a chat's page: a step larger than the other grids' default, since
+ * the page is the posters alone, with no size buttons of its own.
+ */
+internal val CHAT_POSTER_WIDTH = POSTER_STEPS[2]
+
+/** The posters note's widest, its gap to the first row and its corners. */
+private val NOTICE_WIDTH = 760.dp
+private val NOTICE_GAP = 12.dp
+private val NOTICE_CORNER = 20.dp
 
 /** A film or show poster's width, as a share of the toolbar's poster size step. */
 private const val POSTER_SHARE = 0.75f

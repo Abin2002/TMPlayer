@@ -164,9 +164,10 @@ fun DesktopShell(
                 } else {
                     SignInScreen(auth)
                 }
-                // At the top centre, as on the phone: clear of the floating bar and a page's own
-                // buttons at the foot, and where the eye already is when the window is read.
-                TopMessageHost(toasts, Modifier.align(Alignment.TopCenter).padding(top = 16.dp, start = 24.dp, end = 24.dp))
+                // At the foot, centred just over the floating bar or a chat's bar, as a desktop
+                // app's messages sit: the top of a window is Back, the chat's name and the window's
+                // own buttons, which a message there covered.
+                TopMessageHost(toasts, Modifier.align(Alignment.BottomCenter).padding(bottom = maxOf(NavBarClearance, ChatBarClearance), start = 24.dp, end = 24.dp))
             }
         }
     }

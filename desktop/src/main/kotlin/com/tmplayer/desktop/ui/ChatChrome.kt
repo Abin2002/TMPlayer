@@ -62,7 +62,7 @@ import com.tmplayer.ui.theme.floatingBorder
 /*
  * A chat's own chrome on the desktop, as on the phone: Back as a round floating button at the top
  * start with the chat's picture and name in a pill beside it, and the chat's actions in a floating
- * bar at the foot (search, the star, sort, rows or tiles, the poster size and refresh). The grid
+ * bar at the foot (search, the star, sort, rows or tiles; F5 refreshes). The grid
  * scrolls under both. The search folds into the bar: opened, the bar becomes the field, with the
  * recent searches as plain words on a panel just over it.
  */
@@ -129,7 +129,6 @@ internal fun ChatBar(
     onToggleFavourite: () -> Unit,
     onSort: () -> Unit,
     sortAnchor: com.tmplayer.ui.components.PopoverAnchor,
-    onRefresh: () -> Unit,
 ) {
     val s = LocalStrings.current
     val command = if (OsInfo.isMac) "⌘" else "Ctrl+"
@@ -212,15 +211,6 @@ internal fun ChatBar(
                     { state.chatRows = !state.chatRows },
                     caption = if (state.chatRows) s.browseAsTiles else s.browseAsRows,
                 )
-                if (!state.chatRows) {
-                    // The desktop's own: a window has room for larger posters, or for more of them.
-                    BarDivider()
-                    BarIcon(TmIcons.Remove, s.browseSmallerPosters, null, { state.stepPoster(-1) }, enabled = state.posterWidth != POSTER_STEPS.first())
-                    BarIcon(TmIcons.Add, s.browseLargerPosters, null, { state.stepPoster(1) }, enabled = state.posterWidth != POSTER_STEPS.last())
-                }
-                BarDivider()
-                // The phone pulls the grid down for this; a window has the button and F5.
-                BarIcon(TmIcons.Refresh, s.commonRefresh, "F5", onRefresh)
             }
         }
     }
@@ -255,11 +245,6 @@ private fun BarIcon(
     modifier: Modifier = Modifier,
 ) {
     BarTooltip(label, shortcut) { FloatingBarIcon(icon, label, onClick, modifier = modifier, enabled = enabled, caption = caption) }
-}
-
-@Composable
-private fun BarDivider() {
-    Box(Modifier.width(1.dp).height(24.dp).background(Tone.outline))
 }
 
 /** The recent searches, plain words with a history mark on one panel, Clear at its end. */

@@ -237,7 +237,7 @@ class PromoShots {
                                         state = shell, searching = false, query = "", onQuery = {}, onOpenSearch = {}, onCloseSearch = {},
                                         onSearchDown = {}, recent = emptyList(), onClearRecent = {},
                                         favourite = cinema.id in library.favourites, onToggleFavourite = {}, onSort = {},
-                                        sortAnchor = anchor, onRefresh = {},
+                                        sortAnchor = anchor,
                                     )
                                 },
                             )

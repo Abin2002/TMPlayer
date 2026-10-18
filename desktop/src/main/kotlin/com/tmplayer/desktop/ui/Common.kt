@@ -13,11 +13,9 @@ import androidx.compose.foundation.shape.CircleShape
 import com.tmplayer.ui.components.TmAlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,6 +29,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -188,34 +193,66 @@ fun SearchField(
         onQuery("")
         focusManager.release()
     }
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQuery,
-        singleLine = true,
-        placeholder = { Text(placeholder) },
-        leadingIcon = { Icon(TmIcons.Search, contentDescription = null) },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQuery("") }) {
-                    Icon(TmIcons.Close, contentDescription = s.browseClearSearch)
-                }
-            }
-        },
-        shape = MaterialTheme.shapes.extraLarge,
-        modifier = modifier
-            .focusRequester(focus)
-            .onFocusChanged { focused = it.isFocused }
-            .onPreviewKeyEvent { event ->
-                // Down from the search field goes to the results, the way a browser's does.
-                if (onDown != null && event.type == KeyEventType.KeyDown && event.key == Key.DirectionDown) {
-                    onDown()
-                    true
-                } else {
-                    false
+    // A pill of one fixed height, the chat bar's search look, rather than Material's 56 dp outlined
+    // field: the clear button's slot is always kept, so typing never changes its size or moves it.
+    val shape = CircleShape
+    Row(
+        modifier
+            .height(SEARCH_HEIGHT)
+            .clip(shape)
+            .background(Tone.surfaceHigh)
+            .border(if (focused) 1.5.dp else 1.dp, if (focused) Tone.accent else Tone.outline.copy(alpha = 0.5f), shape)
+            .padding(start = 12.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(TmIcons.Search, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(18.dp))
+        BasicTextField(
+            value = query,
+            onValueChange = onQuery,
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Tone.text),
+            cursorBrush = SolidColor(Tone.accent),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
+                .focusRequester(focus)
+                .onFocusChanged { focused = it.isFocused }
+                .onPreviewKeyEvent { event ->
+                    // Down from the search field goes to the results, the way a browser's does.
+                    if (onDown != null && event.type == KeyEventType.KeyDown && event.key == Key.DirectionDown) {
+                        onDown()
+                        true
+                    } else {
+                        false
+                    }
+                },
+            decorationBox = { field ->
+                Box(contentAlignment = Alignment.CenterStart) {
+                    if (query.isEmpty()) {
+                        Text(placeholder, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    field()
                 }
             },
-    )
+        )
+        Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+            if (query.isNotEmpty()) {
+                Box(
+                    Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button, onClickLabel = s.browseClearSearch) { onQuery("") },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(TmIcons.Close, contentDescription = s.browseClearSearch, tint = Tone.muted, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+    }
 }
+
+/** The search field's one height, a header button's, so the heading's row keeps its own. */
+private val SEARCH_HEIGHT = 40.dp
 
 private fun FocusManager.release() = clearFocus(force = true)
 

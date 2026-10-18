@@ -704,7 +704,7 @@ class BrowseRenderTest {
                         ChatBar(
                             state = shell, searching = searching, query = "", onQuery = {}, onOpenSearch = {}, onCloseSearch = {},
                             onSearchDown = {}, recent = listOf("harbour lights", "night train 2160p", "lecture 7"), onClearRecent = {},
-                            favourite = true, onToggleFavourite = {}, onSort = {}, sortAnchor = anchor, onRefresh = {},
+                            favourite = true, onToggleFavourite = {}, onSort = {}, sortAnchor = anchor,
                         )
                     }
                     VideoGrid(shell, items, "Film Club", rows = shell.chatRows, topPadding = ChatTopClearance, bottomBar = bar)
