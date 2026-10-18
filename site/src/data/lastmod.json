@@ -109,7 +109,7 @@
   },
   {
     "path": "/android-tv/",
-    "lastmod": "2026-10-18",
+    "lastmod": "2026-10-19",
     "changefreq": "monthly",
     "priority": "0.8",
     "images": [
@@ -123,11 +123,11 @@
       },
       {
         "loc": "https://tmplayer.org/screenshots/tv-rail.webp",
-        "title": "The rail of categories down the left of TMPlayer on Android TV"
+        "title": "The bar of Search, Home, Chats and Settings along the top of TMPlayer on Android TV"
       },
       {
         "loc": "https://tmplayer.org/screenshots/tv-rail-light.webp",
-        "title": "The rail of categories in TMPlayer on a television, in the light theme"
+        "title": "The top bar of TMPlayer on a television, in the light theme"
       },
       {
         "loc": "https://tmplayer.org/screenshots/tv-sign-in.webp",
