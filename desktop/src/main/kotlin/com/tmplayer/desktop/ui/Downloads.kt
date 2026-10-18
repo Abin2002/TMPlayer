@@ -1,6 +1,44 @@
 package com.tmplayer.desktop.ui
 
 import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Surface
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isCtrlPressed
+import androidx.compose.ui.input.pointer.isPrimaryPressed
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.unit.Dp
+import com.tmplayer.data.MediaItem
+import com.tmplayer.ui.components.PosterArt
+import com.tmplayer.ui.components.rememberCover
+import com.tmplayer.ui.theme.Corner
+import com.tmplayer.ui.theme.Focus
+import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,9 +55,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -68,7 +104,8 @@ import java.io.File
  * playing left in the cache, each with a Save to Downloads of its own. Files found in the folder
  * that the index does not name are listed between the last two, to keep or delete.
  *
- * Kept rows can be picked with their boxes for Delete selected; Delete all clears the lot, after a
+ * Kept rows can be picked with the tick on their poster (or a right click) for Delete selected; once
+ * one is picked a click picks rather than plays. Delete all clears the lot, after a
  * question, since a download is the one thing TMPlayer never takes back on its own.
  */
 /** The "Remove after watching" switch's words. */
@@ -162,6 +199,7 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                 fileState = DownloadIndex.state(record),
                 legacy = legacy[record.key],
                 picked = record.key in picked,
+                picking = picked.isNotEmpty(),
                 onPick = { on -> picked = if (on) picked + record.key else picked - record.key },
                 onPlay = {
                     state.noteChatTitle(record.chatId, record.chatTitle)
@@ -189,152 +227,199 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                 onRemove = { confirm = listOf(record) },
             )
         }
-        // Every item's words start [ROW_INSET] into the list, so the list itself starts that much
-        // short of the page margin: the words line up under the heading, and a row's hover fill
-        // reaches out past them as the settings rows' does.
-        val edge = pageMargin() - ROW_INSET
-        Box(Modifier.fillMaxSize()) {
-            LazyColumn(
-                state = list,
-                contentPadding = PaddingValues(start = edge, end = edge, top = 8.dp, bottom = 8.dp + com.tmplayer.ui.components.LocalBottomChrome.current),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxSize().padding(end = 12.dp).homeEndScrolls(list),
-            ) {
-                var at = 0
-                item(key = "storage") {
-                    Column(Modifier.widthIn(max = 960.dp).padding(horizontal = ROW_INSET)) {
-                        StorageCard(figures)
-                    }
-                }
-                item(key = "free-up") {
-                    Action(s.downloadsFreeUpSpace, s.downloadsFreeUpSpaceNote, TmIcons.Delete, modifier = Modifier.widthIn(max = 960.dp)) {
-                        freeingUp = true
-                    }
-                }
-                at += 2
-                // Only while something is on its way, with the one control for all of it.
-                if (queue.isNotEmpty()) {
-                    item(key = "h-active") {
-                        Section(s.downloadsDownloading) {
-                            if (queue.any { it.busy && it.stage != OfflineDownloads.Stage.Moving }) {
-                                TextButton(onClick = { OfflineDownloads.pauseAll(state.downloads) }) { Text(s.downloadsPauseAll) }
-                            } else if (queue.any { !it.busy }) {
-                                TextButton(onClick = { OfflineDownloads.resumeAll(state.downloads) }) { Text(s.downloadsResumeAll) }
-                            }
-                        }
-                    }
-                    items(queue, key = { "a${it.fileId}" }) { row -> ActiveRow(state, row) }
-                    at += 1 + queue.size
-                }
-
-                doneHeadingAt[0] = at
-                item(key = "h-done") { Section(s.downloadsDownloaded) }
-                item(key = "t-remove") {
-                    Setting(REMOVE_AFTER_WATCHING, REMOVE_AFTER_WATCHING_DETAIL) {
-                        Switch(
-                            checked = removeAfterWatching,
-                            // On is asked first, since from then on files go without a press; off
-                            // deletes nothing.
-                            onCheckedChange = { on ->
-                                if (on) {
-                                    confirmRemoveAfterWatching = true
-                                } else {
-                                    scope.launch { state.settings.setRemoveAfterWatching(false) }
-                                }
-                            },
-                        )
-                    }
-                }
-                if (history.isEmpty()) {
-                    item(key = "e-done") { Empty(s.downloadsEmptyDone(downloadsDir.path)) }
-                }
-                shelf.forEach { entry ->
-                    when (entry) {
-                        is com.tmplayer.data.DownloadShelf.Entry.Single -> item(key = "d${entry.key}") { kept(entry.row) }
-                        is com.tmplayer.data.DownloadShelf.Entry.Show -> {
-                            item(key = "s${entry.key}") {
-                                ShowHeading(
-                                    entry.title,
-                                    listOf(
-                                        s.seriesEpisodesCount(entry.episodes.size),
-                                        MediaMapper.formatSize(entry.episodes.sumOf { it.sizeBytes }),
-                                    ).joinToString("  ·  "),
-                                )
-                            }
-                            items(entry.episodes, key = { "d${it.key}" }) { record -> kept(record) }
-                        }
-                    }
-                }
-
-                if (unlisted.isNotEmpty()) {
-                    item(key = "h-unlisted") { Section(s.downloadsUnlisted) }
-                    items(unlisted, key = { "u${it.path}" }) { file ->
-                        UnlistedRow(
-                            file = file,
-                            onKeep = { scope.launch { DownloadIndex.keep(state.settings, file) } },
-                            onDelete = { confirmUnlisted = file },
-                        )
-                    }
-                }
-
-                // Not downloads, so folded away at the foot until somebody opens it.
-                cachedHeadingAt[0] = at + 1 + 1 + (if (history.isEmpty()) 1 else 0) + shelf.sumOf {
-                    when (it) {
-                        is com.tmplayer.data.DownloadShelf.Entry.Single -> 1
-                        is com.tmplayer.data.DownloadShelf.Entry.Show -> 1 + it.episodes.size
-                    }
-                } + (if (unlisted.isNotEmpty()) 1 + unlisted.size else 0)
-                item(key = "h-cached") {
-                    Setting(
-                        if (cached.isEmpty()) s.downloadsCached else s.downloadsTabCachedCount(cached.size),
-                        s.downloadsCachedDetail(
-                            MediaMapper.formatSize(desktop.cacheLimitBytes.takeIf { it > 0 } ?: DesktopSettings.DEFAULT_CACHE_LIMIT_BYTES),
-                        ),
-                        modifier = Modifier.widthIn(max = 960.dp),
-                        icon = TmIcons.Clock,
-                        onClick = { cachedOpen = !cachedOpen },
-                    ) {
-                        Icon(
-                            if (cachedOpen) TmIcons.ChevronUp else TmIcons.ChevronDown,
-                            contentDescription = if (cachedOpen) s.commonHide else s.commonShow,
-                            tint = Tone.muted,
-                        )
-                    }
-                }
-                if (cachedOpen && cached.isEmpty()) {
-                    item(key = "e-cached") { Empty(s.downloadsEmptyCacheLimit) }
-                }
-                if (cachedOpen) items(cached, key = { "c${it.key}" }) { record ->
-                    CachedRow(
-                        record = record,
-                        bytes = cachedBytes[record.key],
-                        queued = active.values.any { it.request.chatId == record.chatId && it.request.messageId == record.messageId },
-                        onPlay = {
-                            state.noteChatTitle(record.chatId, record.chatTitle)
-                            state.openPlayer(record.toMediaItem(), startFromBeginning = false)
-                        },
-                        onSave = {
-                            scope.launch {
-                                // A cached record does not say whether its chat allows keeping a
-                                // copy, so Telegram is asked before the file leaves the cache.
-                                if (!Td.maySave(record.chatId, record.messageId)) {
-                                    toast(ContentProtection.NOT_SAVABLE)
-                                    return@launch
-                                }
-                                val id = runCatching { Td.currentFileId(record.chatId, record.messageId, record.fileId) }
-                                    .getOrDefault(record.fileId)
-                                OfflineDownloads.start(state.downloads, record.toMediaItem().copy(fileId = id), record.chatTitle)
-                                toast(s.downloadsSavingTitle(record.title))
-                            }
-                        },
-                        onDelete = {
-                            confirmCached = record
-                        },
-                    )
+        val storage: @Composable () -> Unit = {
+            StorageCard(figures, inDownloads = true) {
+                OutlinedButton(onClick = { freeingUp = true }) {
+                    Icon(TmIcons.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(s.downloadsFreeUpSpace, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            VerticalScrollbar(rememberScrollbarAdapter(list), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
-            ScrollToTop(list)
+        }
+        // On its card, the phone's switch row, beside the list or under the Downloaded heading.
+        val removeAfter: @Composable () -> Unit = {
+            Surface(shape = RoundedCornerShape(Corner.Large), color = Tone.surface) {
+                Setting(
+                    REMOVE_AFTER_WATCHING,
+                    REMOVE_AFTER_WATCHING_DETAIL,
+                    onClick = {
+                        // On is asked first, since from then on files go without a press; off
+                        // deletes nothing.
+                        if (!removeAfterWatching) {
+                            confirmRemoveAfterWatching = true
+                        } else {
+                            scope.launch { state.settings.setRemoveAfterWatching(false) }
+                        }
+                    },
+                    toggled = removeAfterWatching,
+                ) {
+                    Switch(checked = removeAfterWatching, onCheckedChange = null)
+                }
+            }
+        }
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val margin = pageMargin()
+            // A wide window gives the storage card and the switch a column of their own beside the
+            // list, as Settings does its categories, rather than stretching every row to the edge.
+            val twoPane = maxWidth - margin * 2 >= TWO_PANE_FROM
+            val bottom = com.tmplayer.ui.components.LocalBottomChrome.current
+            Row(Modifier.fillMaxSize().padding(start = margin - ROW_INSET)) {
+                if (twoPane) {
+                    Column(
+                        Modifier
+                            .padding(start = ROW_INSET)
+                            .width(SIDE_WIDTH)
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState())
+                            .padding(top = 8.dp, bottom = 8.dp + bottom),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        storage()
+                        removeAfter()
+                    }
+                    Spacer(Modifier.width(PANE_GAP))
+                }
+                Box(Modifier.weight(1f).fillMaxHeight()) {
+                    // Every item's words start [ROW_INSET] into the list, so the list itself starts
+                    // that much short of the page margin: the words line up under the heading, and
+                    // a row's hover fill reaches out past them as the settings rows' does.
+                    LazyColumn(
+                        state = list,
+                        contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp + bottom),
+                        modifier = Modifier
+                            .padding(end = (margin - ROW_INSET).coerceAtLeast(0.dp))
+                            .widthIn(max = LIST_MAX + ROW_INSET * 2)
+                            .fillMaxHeight()
+                            .homeEndScrolls(list),
+                    ) {
+                        var at = 0
+                        if (!twoPane) {
+                            item(key = "storage") { Box(Modifier.padding(horizontal = ROW_INSET)) { storage() } }
+                            at += 1
+                        }
+                        // Only while something is on its way, with the one control for all of it.
+                        if (queue.isNotEmpty()) {
+                            item(key = "h-active") {
+                                Section(queueHeading(queue), first = twoPane) {
+                                    if (queue.size > 1) {
+                                        if (queue.any { it.busy && it.stage != OfflineDownloads.Stage.Moving }) {
+                                            TextButton(onClick = { OfflineDownloads.pauseAll(state.downloads) }) { Text(s.downloadsPauseAll) }
+                                        } else if (queue.any { !it.busy }) {
+                                            TextButton(onClick = { OfflineDownloads.resumeAll(state.downloads) }) { Text(s.downloadsResumeAll) }
+                                        }
+                                    }
+                                }
+                            }
+                            items(queue, key = { "a${it.fileId}" }) { row -> ActiveRow(state, row) }
+                            at += 1 + queue.size
+                        }
+
+                        doneHeadingAt[0] = at
+                        item(key = "h-done") {
+                            Section(
+                                if (history.isEmpty()) s.downloadsDownloaded else s.downloadsTabDownloadedCount(history.size),
+                                first = twoPane && queue.isEmpty(),
+                            )
+                        }
+                        at += 1
+                        if (!twoPane) {
+                            item(key = "t-remove") { Box(Modifier.padding(horizontal = ROW_INSET, vertical = 4.dp)) { removeAfter() } }
+                            at += 1
+                        }
+                        if (history.isEmpty()) {
+                            item(key = "e-done") { Empty(s.downloadsEmptyDone(downloadsDir.path)) }
+                            at += 1
+                        }
+                        shelf.forEach { entry ->
+                            when (entry) {
+                                is com.tmplayer.data.DownloadShelf.Entry.Single -> {
+                                    item(key = "d${entry.key}") { kept(entry.row) }
+                                    at += 1
+                                }
+                                is com.tmplayer.data.DownloadShelf.Entry.Show -> {
+                                    item(key = "s${entry.key}") {
+                                        ShowHeading(
+                                            entry.title,
+                                            listOf(
+                                                s.seriesEpisodesCount(entry.episodes.size),
+                                                MediaMapper.formatSize(entry.episodes.sumOf { it.sizeBytes }),
+                                            ).joinToString("  ·  "),
+                                        )
+                                    }
+                                    items(entry.episodes, key = { "d${it.key}" }) { record -> kept(record) }
+                                    at += 1 + entry.episodes.size
+                                }
+                            }
+                        }
+
+                        if (unlisted.isNotEmpty()) {
+                            item(key = "h-unlisted") { Section(s.downloadsUnlisted) }
+                            items(unlisted, key = { "u${it.path}" }) { file ->
+                                UnlistedRow(
+                                    file = file,
+                                    onKeep = { scope.launch { DownloadIndex.keep(state.settings, file) } },
+                                    onDelete = { confirmUnlisted = file },
+                                )
+                            }
+                            at += 1 + unlisted.size
+                        }
+
+                        // Not downloads, so folded away at the foot until somebody opens it.
+                        cachedHeadingAt[0] = at
+                        item(key = "h-cached") {
+                            Box(Modifier.padding(top = 12.dp)) {
+                                Setting(
+                                    if (cached.isEmpty()) s.downloadsCached else s.downloadsTabCachedCount(cached.size),
+                                    s.downloadsCachedDetail(
+                                        MediaMapper.formatSize(desktop.cacheLimitBytes.takeIf { it > 0 } ?: DesktopSettings.DEFAULT_CACHE_LIMIT_BYTES),
+                                    ),
+                                    icon = TmIcons.Clock,
+                                    onClick = { cachedOpen = !cachedOpen },
+                                ) {
+                                    Icon(
+                                        if (cachedOpen) TmIcons.ChevronUp else TmIcons.ChevronDown,
+                                        contentDescription = if (cachedOpen) s.commonHide else s.commonShow,
+                                        tint = Tone.muted,
+                                    )
+                                }
+                            }
+                        }
+                        if (cachedOpen && cached.isEmpty()) {
+                            item(key = "e-cached") { Empty(s.downloadsEmptyCacheLimit) }
+                        }
+                        if (cachedOpen) items(cached, key = { "c${it.key}" }) { record ->
+                            CachedRow(
+                                record = record,
+                                bytes = cachedBytes[record.key],
+                                queued = active.values.any { it.request.chatId == record.chatId && it.request.messageId == record.messageId },
+                                onPlay = {
+                                    state.noteChatTitle(record.chatId, record.chatTitle)
+                                    state.openPlayer(record.toMediaItem(), startFromBeginning = false)
+                                },
+                                onSave = {
+                                    scope.launch {
+                                        // A cached record does not say whether its chat allows keeping a
+                                        // copy, so Telegram is asked before the file leaves the cache.
+                                        if (!Td.maySave(record.chatId, record.messageId)) {
+                                            toast(ContentProtection.NOT_SAVABLE)
+                                            return@launch
+                                        }
+                                        val id = runCatching { Td.currentFileId(record.chatId, record.messageId, record.fileId) }
+                                            .getOrDefault(record.fileId)
+                                        OfflineDownloads.start(state.downloads, record.toMediaItem().copy(fileId = id), record.chatTitle)
+                                        toast(s.downloadsSavingTitle(record.title))
+                                    }
+                                },
+                                onDelete = {
+                                    confirmCached = record
+                                },
+                            )
+                        }
+                    }
+                    VerticalScrollbar(rememberScrollbarAdapter(list), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+                    ScrollToTop(list)
+                }
+            }
         }
     }
 
@@ -342,6 +427,11 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
     LaunchedEffect(Unit) {
         if (!state.downloadsOpenRecent) return@LaunchedEffect
         state.downloadsOpenRecent = false
+        // The lists arrive after the first frame, and the heading's place with them: wait for
+        // them, or the page lands where the heading was while the lists were still empty.
+        runCatching { state.settings.downloadHistory.first() }
+        runCatching { state.settings.cachedVideos.first() }
+        androidx.compose.runtime.withFrameNanos { }
         androidx.compose.runtime.withFrameNanos { }
         if (cachedHeadingAt[0] > 0) runCatching { list.scrollToItem(cachedHeadingAt[0]) }
     }
@@ -507,16 +597,32 @@ internal fun DownloadToasts(state: ShellState) {
     }
 }
 
+/** The Downloading heading, the phone's words: what the queue is doing as a whole. */
+private fun queueHeading(queue: List<OfflineDownloads.Progress>): String {
+    val waiting = queue.count { it.stage == OfflineDownloads.Stage.Queued }
+    val running = queue.any { it.stage == OfflineDownloads.Stage.Running }
+    return when {
+        running && waiting > 0 -> L.downloadsHeadingRunningWaiting(waiting)
+        running -> L.downloadsHeadingRunning
+        queue.all { it.stage == OfflineDownloads.Stage.Offline } -> L.downloadsWaitingConnection
+        queue.all { it.stage == OfflineDownloads.Stage.Paused } -> L.downloadsPaused
+        else -> L.downloadsDownloading
+    }
+}
+
 @Composable
-private fun Section(title: String, actions: @Composable () -> Unit = {}) {
+private fun Section(title: String, first: Boolean = false, actions: @Composable () -> Unit = {}) {
     Row(
-        Modifier.fillMaxWidth().widthIn(max = 960.dp).padding(start = ROW_INSET, end = ROW_INSET, top = 16.dp, bottom = 4.dp),
+        // The button's own 12 dp of padding leaves its word on the rows' icons' outer edge.
+        Modifier.fillMaxWidth().heightIn(min = 40.dp).padding(start = ROW_INSET, end = ROW_INSET - 12.dp, top = if (first) 0.dp else 20.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             title,
             style = MaterialTheme.typography.titleSmall,
             color = Tone.muted,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
         actions()
@@ -526,15 +632,138 @@ private fun Section(title: String, actions: @Composable () -> Unit = {}) {
 /** A show's name over its downloaded episodes, with how many there are and what they take. */
 @Composable
 private fun ShowHeading(title: String, detail: String) {
-    Column(Modifier.fillMaxWidth().widthIn(max = 960.dp).padding(start = ROW_INSET, end = ROW_INSET, top = 12.dp)) {
+    Column(Modifier.fillMaxWidth().padding(start = ROW_INSET, end = ROW_INSET, top = 16.dp, bottom = 4.dp)) {
         Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(detail, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
     }
 }
 
+/** An empty section: the phone's download mark and its words, on the card's fill. */
 @Composable
 private fun Empty(text: String) {
-    Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = Modifier.padding(horizontal = ROW_INSET, vertical = 8.dp))
+    Surface(
+        shape = RoundedCornerShape(Corner.Large),
+        color = Tone.surface,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = ROW_INSET, vertical = 4.dp),
+    ) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            com.tmplayer.ui.components.SettingIconChip(TmIcons.Download)
+            Spacer(Modifier.width(16.dp))
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
+        }
+    }
+}
+
+/** One entry of a row's right-click menu. */
+private class RowMenuEntry(val label: String, val icon: ImageVector, val danger: Boolean = false, val action: () -> Unit)
+
+/**
+ * The frame every video on the page is drawn in: no card at rest, the step above the page under
+ * the pointer and the keyboard (the Chats rows' look), a click on it plays when [onClick] is given,
+ * and a right click (or Ctrl+click on a Mac) opens [menu], the row's buttons with their names.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun VideoRow(
+    onClick: (() -> Unit)?,
+    menu: List<RowMenuEntry>,
+    start: Dp = ROW_INSET,
+    content: @Composable RowScope.(lit: Boolean) -> Unit,
+) {
+    val interactions = remember { MutableInteractionSource() }
+    val hovered by interactions.collectIsHoveredAsState()
+    val ring = keyboardFocused(interactions)
+    var open by remember { mutableStateOf(false) }
+    val shape = MaterialTheme.shapes.medium
+    Box {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .background(if (hovered || ring) Tone.surface else Color.Transparent)
+                .then(if (ring) Modifier.border(Focus.Edge, Tone.accent, shape) else Modifier)
+                .hoverable(interactions)
+                .onPointerEvent(PointerEventType.Press) { event ->
+                    val macContext = ON_MAC && event.keyboardModifiers.isCtrlPressed && event.buttons.isPrimaryPressed
+                    if (menu.isNotEmpty() && (event.buttons.isSecondaryPressed || macContext)) open = true
+                }
+                .then(
+                    if (onClick != null) {
+                        Modifier.clickable(interactionSource = interactions, indication = null, role = Role.Button, onClick = onClick)
+                    } else {
+                        Modifier
+                    },
+                )
+                // The icon buttons at the end carry 12 dp of room round their icons.
+                .padding(start = start, end = ROW_INSET - 12.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) { content(hovered || ring) }
+        com.tmplayer.ui.components.TmDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            menu.forEach { entry ->
+                DropdownMenuItem(
+                    text = { Text(entry.label, color = if (entry.danger) Tone.danger else Color.Unspecified) },
+                    leadingIcon = { Icon(entry.icon, contentDescription = null, tint = if (entry.danger) Tone.danger else Tone.muted) },
+                    onClick = {
+                        open = false
+                        entry.action()
+                    },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A video's small 2:3 poster, the one History's and a chat's rows wear (the phone's download cards
+ * too): its picture, or the generated cover with no name on it, since the title is beside it.
+ */
+@Composable
+private fun Thumb(item: MediaItem, pick: Pick? = null) {
+    val cover = rememberCover(item)
+    val shown = remember(cover) { cover.copy(title = "") }
+    val shape = RoundedCornerShape(Corner.Small)
+    Box(
+        Modifier
+            .width(THUMB_WIDTH)
+            .aspectRatio(2f / 3f)
+            .clip(shape)
+            .then(if (pick?.picked == true) Modifier.border(2.dp, Tone.accent, shape) else Modifier),
+    ) {
+        PosterArt(item.miniThumbnail, item.thumbnailFileId, shown, null, Modifier.fillMaxSize(), compactCover = true)
+        if (pick != null && pick.shown) {
+            val s = LocalStrings.current
+            // The tick, on the poster as a photo grid has it: there under the pointer and once
+            // anything is picked, so the column of boxes is not on every row at rest.
+            Box(
+                Modifier
+                    .align(Alignment.TopStart)
+                    .padding(3.dp)
+                    .size(20.dp)
+                    .clip(CircleShape)
+                    .background(if (pick.picked) Tone.accent else Color.Black.copy(alpha = 0.45f))
+                    .border(1.5.dp, if (pick.picked) Tone.accent else Color.White, CircleShape)
+                    .toggleable(value = pick.picked, role = Role.Checkbox, onValueChange = pick.onPick)
+                    .semantics { contentDescription = s.downloadsSelect },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (pick.picked) Icon(TmIcons.Check, contentDescription = null, tint = Tone.onAccent, modifier = Modifier.size(14.dp))
+            }
+        }
+    }
+}
+
+/** A poster's tick: whether the row is picked, whether the tick shows, and what a press on it does. */
+private class Pick(val picked: Boolean, val shown: Boolean, val onPick: (Boolean) -> Unit)
+
+/** A row's words: the title over its details. */
+@Composable
+private fun RowScope.Words(title: String, detail: String, detailColor: Color = Tone.muted, extra: @Composable () -> Unit = {}) {
+    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(title, style = MaterialTheme.typography.titleSmall, color = Tone.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(detail, style = MaterialTheme.typography.bodySmall, color = detailColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        extra()
+    }
 }
 
 @Composable
@@ -554,36 +783,44 @@ private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
             if (row.heldByPlayer) s.downloadsFinishesWhenStopped else s.downloadsMovingIn
         OfflineDownloads.Stage.Failed -> row.failure ?: s.downloadsStopped
     }
+    val failed = row.stage == OfflineDownloads.Stage.Failed
     val fraction = if (row.stage == OfflineDownloads.Stage.Moving) row.moveFraction ?: 0f else row.fraction ?: 0f
-    Row(
-        Modifier.fillMaxWidth().widthIn(max = 960.dp).padding(horizontal = ROW_INSET, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(correctedTitle(row.request.chatId, row.request.messageId, row.title), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth())
-            Text(
-                status,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (row.stage == OfflineDownloads.Stage.Failed) Tone.danger else Tone.muted,
-            )
-        }
+    val pause = { OfflineDownloads.pause(state.downloads, row.fileId) }
+    val resume = { OfflineDownloads.resume(state.downloads, row.fileId) }
+    val cancel = { OfflineDownloads.cancel(state.downloads, row.fileId) }
+    val menu = buildList {
         when {
             row.stage == OfflineDownloads.Stage.Moving -> Unit
-            row.busy -> IconButton(onClick = { OfflineDownloads.pause(state.downloads, row.fileId) }) {
-                Icon(TmIcons.Pause, contentDescription = s.playerPause)
-            }
-            else -> IconButton(onClick = { OfflineDownloads.resume(state.downloads, row.fileId) }) {
-                Icon(
-                    if (row.stage == OfflineDownloads.Stage.Failed) TmIcons.Refresh else TmIcons.Play,
-                    contentDescription = if (row.stage == OfflineDownloads.Stage.Failed) s.commonTryAgain else s.downloadsResume,
+            row.busy -> add(RowMenuEntry(s.playerPause, TmIcons.Pause, action = pause))
+            failed -> add(RowMenuEntry(s.commonTryAgain, TmIcons.Refresh, action = resume))
+            else -> add(RowMenuEntry(s.downloadsResume, TmIcons.Play, action = resume))
+        }
+        add(RowMenuEntry(s.commonCancel, TmIcons.Close, danger = true, action = cancel))
+    }
+    VideoRow(onClick = null, menu = menu) {
+        Thumb(row.request.item().copy(title = correctedTitle(row.request.chatId, row.request.messageId, row.title)))
+        Words(
+            correctedTitle(row.request.chatId, row.request.messageId, row.title),
+            status,
+            detailColor = if (failed) Tone.danger else Tone.muted,
+        ) {
+            if (!failed) {
+                LinearProgressIndicator(
+                    progress = { fraction },
+                    gapSize = 0.dp,
+                    drawStopIndicator = {},
+                    trackColor = Tone.surfaceHigh,
+                    modifier = Modifier.padding(top = 6.dp).fillMaxWidth().height(4.dp).clip(CircleShape),
                 )
             }
         }
-        IconButton(onClick = { OfflineDownloads.cancel(state.downloads, row.fileId) }) {
-            Icon(TmIcons.Close, contentDescription = s.commonCancel)
+        when {
+            row.stage == OfflineDownloads.Stage.Moving -> Unit
+            row.busy -> TipIconButton(TmIcons.Pause, s.playerPause, pause)
+            failed -> TipIconButton(TmIcons.Refresh, s.commonTryAgain, resume)
+            else -> TipIconButton(TmIcons.Play, s.downloadsResume, resume)
         }
+        TipIconButton(TmIcons.Close, s.commonCancel, cancel)
     }
 }
 
@@ -598,6 +835,8 @@ private fun KeptRow(
     fileState: DownloadIndex.FileState,
     legacy: LocalFileAvailability?,
     picked: Boolean,
+    /** Something on the page is picked: a click then picks rather than plays, and every tick shows. */
+    picking: Boolean,
     onPick: (Boolean) -> Unit,
     onPlay: () -> Unit,
     onShowInFolder: () -> Unit,
@@ -611,46 +850,51 @@ private fun KeptRow(
     val partial = fileState == DownloadIndex.FileState.Legacy && legacy == LocalFileAvailability.Partial
     val playable = !missing && !partial
     val detail = buildString {
-        if (record.chatTitle.isNotBlank()) append(record.chatTitle).append("  ·  ")
         append(MediaMapper.formatSize(record.sizeBytes))
+        if (record.durationSec > 0) append("  ·  ").append(MediaMapper.formatDuration(record.durationSec))
+        if (record.chatTitle.isNotBlank()) append("  ·  ").append(record.chatTitle)
         when {
             missing -> append("  ·  ").append(s.downloadsFileMissing)
             partial -> append("  ·  ").append(s.downloadsPartDownloaded)
             fileState == DownloadIndex.FileState.Legacy && legacy == LocalFileAvailability.Complete -> append("  ·  ").append(s.downloadsMovingSoon)
         }
     }
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .widthIn(max = 960.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .then(if (playable) Modifier.clickable(onClick = onPlay) else Modifier)
-            // Less at the start: the tick box carries its own 15 dp of touch room before the box.
-            .padding(start = ROW_INSET - CHECKBOX_ROOM, end = ROW_INSET, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Checkbox(checked = picked, onCheckedChange = onPick)
-        Icon(TmIcons.Play, contentDescription = null, tint = if (playable) Tone.accent else Tone.muted)
-        Column(Modifier.weight(1f)) {
-            Text(correctedTitle(record.chatId, record.messageId, record.title), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(
-                detail,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (missing) Tone.danger else Tone.muted,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+    val present = fileState == DownloadIndex.FileState.Present
+    val menu = buildList {
+        if (!picked) add(RowMenuEntry(s.downloadsSelect, TmIcons.Checklist) { onPick(true) })
+        when {
+            missing -> add(RowMenuEntry(s.commonRemove, TmIcons.Delete, danger = true, action = onRemove))
+            partial -> add(RowMenuEntry(s.downloadsResume, TmIcons.Download, action = onResume))
+            else -> {
+                add(RowMenuEntry(s.navWatch, TmIcons.Play, action = onPlay))
+                if (present) add(RowMenuEntry(s.commonOpenElsewhere, TmIcons.OpenExternal, action = onOpenElsewhere))
+                add(RowMenuEntry(s.downloadsShowInFolder, TmIcons.Folder, action = onShowInFolder))
+                add(RowMenuEntry(s.downloadsDeleteDownload, TmIcons.Delete, danger = true, action = onRemove))
+            }
         }
+    }
+    val click = when {
+        picking -> ({ onPick(!picked) })
+        playable -> onPlay
+        else -> null
+    }
+    VideoRow(onClick = click, menu = menu) { lit ->
+        Thumb(
+            record.toMediaItem().copy(title = correctedTitle(record.chatId, record.messageId, record.title)),
+            Pick(picked, shown = lit || picking, onPick = onPick),
+        )
+        Words(
+            correctedTitle(record.chatId, record.messageId, record.title),
+            detail,
+            detailColor = if (missing) Tone.danger else Tone.muted,
+        )
         when {
             missing -> TextButton(onClick = onRemove) { Text(s.commonRemove) }
             partial -> TextButton(onClick = onResume) { Text(s.downloadsResume) }
             else -> {
-                if (fileState == DownloadIndex.FileState.Present) {
-                    TextButton(onClick = onOpenElsewhere) { Text(s.commonOpenElsewhere) }
-                }
-                IconButton(onClick = onShowInFolder) { Icon(TmIcons.Folder, contentDescription = s.downloadsShowInFolder) }
-                IconButton(onClick = onRemove) { Icon(TmIcons.Delete, contentDescription = s.downloadsDeleteDownload) }
+                if (present) TipIconButton(TmIcons.OpenExternal, s.commonOpenElsewhere, onOpenElsewhere)
+                TipIconButton(TmIcons.Folder, s.downloadsShowInFolder, onShowInFolder)
+                TipIconButton(TmIcons.Delete, s.downloadsDeleteDownload, onRemove)
             }
         }
     }
@@ -659,19 +903,12 @@ private fun KeptRow(
 @Composable
 private fun UnlistedRow(file: File, onKeep: () -> Unit, onDelete: () -> Unit) {
     val s = LocalStrings.current
-    Row(
-        Modifier.fillMaxWidth().widthIn(max = 960.dp).padding(horizontal = ROW_INSET, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(file.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(
-                s.downloadsUnlistedDetail(MediaMapper.formatSize(file.length())),
-                style = MaterialTheme.typography.bodySmall,
-                color = Tone.muted,
-            )
-        }
+    val menu = listOf(
+        RowMenuEntry(s.downloadsKeep, TmIcons.Check, action = onKeep),
+        RowMenuEntry(s.commonDelete, TmIcons.Delete, danger = true, action = onDelete),
+    )
+    VideoRow(onClick = null, menu = menu) {
+        Words(file.name, s.downloadsUnlistedDetail(MediaMapper.formatSize(file.length())))
         TextButton(onClick = onKeep) { Text(s.downloadsKeep) }
         TextButton(onClick = onDelete) { Text(s.commonDelete, color = Tone.danger) }
     }
@@ -687,34 +924,28 @@ private fun CachedRow(
     onDelete: () -> Unit,
 ) {
     val s = LocalStrings.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .widthIn(max = 960.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onPlay)
-            .padding(horizontal = ROW_INSET, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Icon(TmIcons.Play, contentDescription = null, tint = Tone.accent)
-        Column(Modifier.weight(1f)) {
-            Text(correctedTitle(record.chatId, record.messageId, record.title), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            val size = bytes?.takeIf { it > 0 }?.let(MediaMapper::formatSize) ?: MediaMapper.formatSize(record.sizeBytes)
-            Text(
-                listOf(record.chatTitle, size).filter { it.isNotBlank() }.joinToString("  ·  "),
-                style = MaterialTheme.typography.bodySmall,
-                color = Tone.muted,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+    val size = bytes?.takeIf { it > 0 }?.let(MediaMapper::formatSize) ?: MediaMapper.formatSize(record.sizeBytes)
+    val menu = buildList {
+        add(RowMenuEntry(s.navWatch, TmIcons.Play, action = onPlay))
+        if (!queued) add(RowMenuEntry(s.downloadsSave, TmIcons.Download, action = onSave))
+        add(RowMenuEntry(s.downloadsDeleteCached, TmIcons.Delete, danger = true, action = onDelete))
+    }
+    VideoRow(onClick = onPlay, menu = menu) {
+        Thumb(record.toMediaItem().copy(title = correctedTitle(record.chatId, record.messageId, record.title)))
+        Words(
+            correctedTitle(record.chatId, record.messageId, record.title),
+            listOf(size, record.chatTitle).filter { it.isNotBlank() }.joinToString("  ·  "),
+        )
         if (queued) {
-            Text(s.downloadsSaving, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+            Text(s.downloadsSaving, style = MaterialTheme.typography.bodySmall, color = Tone.muted, modifier = Modifier.padding(end = 12.dp))
         } else {
-            TextButton(onClick = onSave) { Text(s.downloadsSave) }
+            TextButton(onClick = onSave) {
+                Icon(TmIcons.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(s.downloadsSave, maxLines = 1)
+            }
         }
-        IconButton(onClick = onDelete) { Icon(TmIcons.Delete, contentDescription = s.downloadsDeleteCached) }
+        TipIconButton(TmIcons.Delete, s.downloadsDeleteCached, onDelete)
     }
 }
 
@@ -724,5 +955,19 @@ private fun CachedRow(
  */
 private val ROW_INSET = SETTING_INSET
 
-/** The touch room a Material tick box keeps on each side of the box it draws. */
-private val CHECKBOX_ROOM = 15.dp
+/** A row's poster: the width of History's and a chat's row posters on the desktop. */
+private val THUMB_WIDTH = 40.dp
+
+/** The widest the list grows: past it a title and its buttons drift too far apart to read as one row. */
+private val LIST_MAX = 920.dp
+
+/** The storage column beside the list on a wide window. */
+private val SIDE_WIDTH = 340.dp
+
+/** The room between the storage column and the list. */
+private val PANE_GAP = 32.dp
+
+/** The content width from which the storage column stands beside the list rather than above it. */
+private val TWO_PANE_FROM = 1180.dp
+
+private val ON_MAC = System.getProperty("os.name").orEmpty().lowercase().contains("mac")

@@ -243,9 +243,18 @@ internal fun StorageGroup(state: ShellState) {
     }
 }
 
-/** The figures in one card: what each kind of file takes, then the drives' free space. */
+/**
+ * The figures in one card: what each kind of file takes, then the drives' free space.
+ *
+ * With [inDownloads] it is the Downloads page's card, the phone's order: what the downloads take
+ * as its heading, the drives under it, and [footer] (Free up space) at its foot.
+ */
 @Composable
-internal fun StorageCard(figures: StorageFigures?) {
+internal fun StorageCard(
+    figures: StorageFigures?,
+    inDownloads: Boolean = false,
+    footer: (@Composable () -> Unit)? = null,
+) {
     val s = LocalStrings.current
     // The phone's Storage card: TMPlayer's share split into its three kinds as one bar, a line
     // naming each, then the free space on each drive involved.
@@ -253,37 +262,80 @@ internal fun StorageCard(figures: StorageFigures?) {
     val cached = Tone.accent.copy(alpha = 0.6f)
     val pictures = Tone.accent.copy(alpha = 0.3f)
     Surface(shape = RoundedCornerShape(Corner.Large), color = Tone.surface, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (figures == null) {
-                Text(s.storageMeasuring, color = Tone.muted)
-                return@Column
-            }
-            figures.drives.firstOrNull()?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = Tone.text) }
-            val total = figures.downloadsBytes + figures.cachedBytes + figures.picturesBytes
-            Row(
-                Modifier.fillMaxWidth().padding(vertical = 6.dp).height(10.dp).clip(CircleShape).background(Tone.surfaceHigh),
-            ) {
-                if (total > 0) {
-                    listOf(figures.downloadsBytes to video, figures.cachedBytes to cached, figures.picturesBytes to pictures)
-                        .filter { it.first > 0 }
-                        .forEach { (bytes, colour) -> Box(Modifier.weight(bytes.toFloat()).fillMaxHeight().background(colour)) }
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.padding(16.dp)) {
+            // The Downloads page's card across a wide column: Free up space beside the heading and
+            // the three kinds on one line, so the card does not push the list off a short window.
+            val across = inDownloads && maxWidth >= ACROSS_FROM
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (figures == null) {
+                    Text(s.storageMeasuring, color = Tone.muted)
+                    footer?.invoke()
+                    return@Column
+                }
+                val heading: @Composable () -> Unit = {
+                    if (inDownloads) {
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                s.downloadsStorageInDownloads(StorageRelocationPlan.size(figures.downloadsBytes)),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Tone.text,
+                            )
+                            figures.drives.forEach { Text(it, style = MaterialTheme.typography.bodyMedium, color = Tone.muted) }
+                        }
+                    } else {
+                        figures.drives.firstOrNull()?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = Tone.text) }
+                    }
+                }
+                if (across && footer != null) {
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) { heading() }
+                        footer()
+                    }
+                } else {
+                    heading()
+                }
+                val total = figures.downloadsBytes + figures.cachedBytes + figures.picturesBytes
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 6.dp).height(10.dp).clip(CircleShape).background(Tone.surfaceHigh),
+                ) {
+                    if (total > 0) {
+                        listOf(figures.downloadsBytes to video, figures.cachedBytes to cached, figures.picturesBytes to pictures)
+                            .filter { it.first > 0 }
+                            .forEach { (bytes, colour) -> Box(Modifier.weight(bytes.toFloat()).fillMaxHeight().background(colour)) }
+                    }
+                }
+                if (across) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+                        Legend(s.settingsStorageDownloads, figures.downloadsBytes, video, inline = true)
+                        Legend(s.settingsStorageCached, figures.cachedBytes, cached, inline = true)
+                        Legend(s.settingsStoragePictures, figures.picturesBytes, pictures, inline = true)
+                    }
+                } else {
+                    Legend(s.settingsStorageDownloads, figures.downloadsBytes, video)
+                    Legend(s.settingsStorageCached, figures.cachedBytes, cached)
+                    Legend(s.settingsStoragePictures, figures.picturesBytes, pictures)
+                }
+                if (!inDownloads) figures.drives.drop(1).forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = Tone.muted) }
+                if (!across && footer != null) {
+                    Spacer(Modifier.height(4.dp))
+                    footer()
                 }
             }
-            Legend(s.settingsStorageDownloads, figures.downloadsBytes, video)
-            Legend(s.settingsStorageCached, figures.cachedBytes, cached)
-            Legend(s.settingsStoragePictures, figures.picturesBytes, pictures)
-            figures.drives.drop(1).forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = Tone.muted) }
         }
     }
 }
 
+/** The card's width from which the Downloads page sets it out across rather than down. */
+private val ACROSS_FROM = 560.dp
+
 /** One kind of file on the card: its colour, its name and what it takes. */
 @Composable
-private fun Legend(label: String, bytes: Long, colour: androidx.compose.ui.graphics.Color) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+private fun Legend(label: String, bytes: Long, colour: androidx.compose.ui.graphics.Color, inline: Boolean = false) {
+    Row(if (inline) Modifier else Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
         Box(Modifier.size(10.dp).clip(CircleShape).background(colour))
         Spacer(Modifier.width(10.dp))
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = Modifier.weight(1f))
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = if (inline) Modifier else Modifier.weight(1f))
+        if (inline) Spacer(Modifier.width(8.dp))
         Text(StorageRelocationPlan.size(bytes), style = MaterialTheme.typography.bodyMedium, color = Tone.text)
     }
 }
