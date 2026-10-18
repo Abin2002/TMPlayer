@@ -297,7 +297,6 @@ fun SettingsScreen(
     val lowStorage by settings.lowStorageMode.collectAsStateWithLifecycle(initialValue = false)
     val autoplayNext by settings.autoplayNext.collectAsStateWithLifecycle(initialValue = true)
     val resumeRewindMs by settings.resumeRewindMs.collectAsStateWithLifecycle(initialValue = ResumeRewind.DEFAULT_MS)
-    val compactNav by settings.compactNav.collectAsState(initial = false)
     val detailFirst by settings.detailFirst.collectAsStateWithLifecycle(initialValue = true)
     val rememberSearches by settings.rememberSearches.collectAsStateWithLifecycle(initialValue = true)
     val resumeSync by settings.resumeSync.collectAsStateWithLifecycle(initialValue = false)
@@ -733,19 +732,6 @@ fun SettingsScreen(
                         canIncrease = uiScale.ordinal < UiScale.entries.lastIndex,
                         onStep = { direction -> scope.launch { settings.setUiScale(uiScale.step(direction)) } },
                     )
-                }
-
-                // The side bar with its icons alone: a television only, the phone's bar is its own.
-                if (!touch) {
-                    item {
-                        ToggleRow(
-                            title = s.settingsCompactNav,
-                            subtitle = if (compactNav) s.settingsCompactNavOn("tv") else s.settingsCompactNavOff("tv"),
-                            icon = TmIcons.Grid,
-                            checked = compactNav,
-                            onToggle = { scope.launch { settings.setCompactNav(!compactNav) } },
-                        )
-                    }
                 }
 
                 // CP68: the two lightening switches the low-end device card recommends, each its own
