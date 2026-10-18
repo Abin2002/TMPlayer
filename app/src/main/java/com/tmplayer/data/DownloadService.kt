@@ -15,7 +15,6 @@ import com.tmplayer.MainActivity
 import com.tmplayer.R
 import com.tmplayer.i18n.L
 import com.tmplayer.i18n.Translator
-import com.tmplayer.platform.TransferNotifier
 import com.tmplayer.player.StreamStats
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -184,7 +183,13 @@ class DownloadService : Service() {
             ACTION_DOWNLOAD -> enqueue(DownloadRequest.from(intent))
             ACTION_CANCEL -> cancel(intent.fileId())
             ACTION_PAUSE -> pause(intent.fileId())
-            ACTION_RESUME -> resume(intent.fileId())
+            ACTION_RESUME -> {
+                // Try again on a finished downloads notification names its files; a row's Resume
+                // and the summary's Resume all name one id or everything.
+                val ids = intent.getIntArrayExtra(EXTRA_FILE_IDS)
+                if (ids != null) ids.forEach(::resume) else resume(intent.fileId())
+                NoticeActions.cancel(this, intent)
+            }
             else -> Unit
         }
         pump()
@@ -463,7 +468,7 @@ class DownloadService : Service() {
                             bytesPerSecond = 0,
                         ),
                     )
-                    notifier().notify(request.fileId.notificationId(), failedNotification(request))
+                    settled(request, ok = false, reason = L.downloadsNotEnoughSpace(short = Translator.messages.formatter.bytes(short)))
                 }
                 persistNow()
             }
@@ -582,7 +587,7 @@ class DownloadService : Service() {
                         ),
                     )
                     if (waitingInstead == null) {
-                        notifier().notify(request.fileId.notificationId(), failedNotification(request))
+                        settled(request, ok = false, reason = error?.let(Failures::humanise))
                     }
                 }
             }
@@ -640,8 +645,8 @@ class DownloadService : Service() {
                 lines.remove(id)
                 runCatching { notifier().cancel(id.notificationId()) }
                 // A new notification, not the progress one updated: it pops even for a viewer
-                // who swiped the progress away, and pressing it opens the Downloads screen.
-                transfers.complete(id.toLong(), request.title, DONE_TEXT, TransferNotifier.OpenTarget.DownloadsScreen)
+                // who swiped the progress away. One per season or cut video, once it is all here.
+                settled(request, ok = true)
             }
             is DownloadFinisher.Outcome.Failed -> {
                 Log.w(TAG, "Could not move ${request.title} into Downloads: ${outcome.reason}")
@@ -650,14 +655,11 @@ class DownloadService : Service() {
                         row.copy(stage = OfflineDownloads.Stage.Failed, failure = outcome.reason, heldByPlayer = false),
                     )
                 }
-                runCatching { notifier().notify(id.notificationId(), failedNotification(request)) }
+                settled(request, ok = false, reason = outcome.reason)
             }
         }
         persistNow()
     }
-
-    /** Completions, through the one Android notifier, which also tells the window for its toast. */
-    private val transfers by lazy { AndroidTransferNotifier(applicationContext) }
 
     /**
      * Asks Telegram for the video's message again, and moves the row onto the id it hands back.
@@ -705,7 +707,29 @@ class DownloadService : Service() {
                 bytesPerSecond = 0,
             ),
         )
-        runCatching { notifier().notify(request.fileId.notificationId(), failedNotification(request)) }
+        settled(request, ok = false, reason = text)
+    }
+
+    /**
+     * One video has finished or failed for good: its progress line goes, and once nothing else of
+     * its season or cut video is on the queue the one notification for all of it goes out
+     * ([DownloadResults], [AppNotices.postDownloadResult]), with Play and Try again. The window's
+     * toast hears of a finished group at the same moment, which is how a TV is told.
+     */
+    private fun settled(request: DownloadRequest, ok: Boolean, reason: String? = null) {
+        runCatching { notifier().cancel(request.fileId.notificationId()) }
+        val outstanding = OfflineDownloads.ordered
+            .filter { it.fileId != request.fileId && it.stage != OfflineDownloads.Stage.Failed }
+            .map { it.request }
+        val result = DownloadResults.record(request, ok, outstanding) ?: return
+        if (result.done.isNotEmpty()) {
+            AndroidTransferNotifier.announce(if (result.total == 1) result.done.first().title else result.group.name)
+        }
+        // The app's scope, not this service's: the service may be stopping as the last one lands.
+        val app = applicationContext
+        com.tmplayer.App.backgroundScope.launch {
+            runCatching { AppNotices.postDownloadResult(app, result, reason.takeIf { result.total == 1 }) }
+        }
     }
 
     /**
@@ -1116,12 +1140,6 @@ class DownloadService : Service() {
         ).build()
     }
 
-    private fun failedNotification(request: DownloadRequest): Notification = builder()
-        .setContentTitle(request.title)
-        .setContentText(FAILED_TEXT)
-        .setAutoCancel(true)
-        .build()
-
     private fun builder(): Notification.Builder =
         Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_download)
@@ -1153,6 +1171,9 @@ class DownloadService : Service() {
         const val ACTION_RESUME = "com.tmplayer.action.RESUME_DOWNLOAD"
 
         const val EXTRA_FILE_ID = "fileId"
+
+        /** Several file ids at once: Try again on a finished downloads notification. */
+        const val EXTRA_FILE_IDS = "fileIds"
         const val EXTRA_TITLE = "title"
         const val EXTRA_SIZE = "size"
         const val EXTRA_CHAT_ID = "chatId"
@@ -1203,8 +1224,5 @@ class DownloadService : Service() {
         private const val DOT = "  ·  "
 
         private val FAILED_TEXT: String get() = L.downloadsFailed
-
-        /** What a finished download's notification says under its title. */
-        private val DONE_TEXT: String get() = L.notifyDownloaded
     }
 }

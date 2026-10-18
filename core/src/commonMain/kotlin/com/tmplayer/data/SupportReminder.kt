@@ -17,9 +17,13 @@ import kotlinx.coroutines.flow.StateFlow
  *   chat list or Downloads after a video was watched to the end, or after a download finished.
  *   Never in the player, during the setup or sign in, while another window is up, or twice in one
  *   run of the app. "Maybe later" and closing it both count as asked.
- * - The notification ("Don't forget to sponsor"), on a phone and the desktop only, at most once
- *   every [NUDGE_GAP_DAYS] days, never within [NUDGE_AFTER_ASK_DAYS] days of the window, and only
- *   while the "Sponsor reminders" switch is on. Pressing it opens the window.
+ * - The notification, on a phone and the desktop only, at most once every [NUDGE_GAP_DAYS] days,
+ *   never within [NUDGE_AFTER_ASK_DAYS] days of the window, and only while the "Sponsor
+ *   reminders" switch is on (off until the viewer turns it on, CP76). Its first rung asks only
+ *   for a star on GitHub ([NudgeRung.Star]), which costs nothing; the ones after it are "Don't
+ *   forget to sponsor" ([NudgeRung.Coffee]). Once Star on GitHub has been pressed, here or on
+ *   the window, no star is asked for again. Its buttons are Buy me a coffee, Star on GitHub (until
+ *   it has been pressed) and Not now; pressing the notification itself opens the window.
  *
  * An install that saw the old three card ladder to its end was told it would not be asked again,
  * and that holds: [Counters.ladderDone] keeps it quiet.
@@ -89,6 +93,10 @@ object SupportReminder {
         val windows: Int = 0,
         /** When the last notification went out, or 0. */
         val nudgedAt: Long = 0L,
+        /** When the notification's star rung went out, or 0. */
+        val starAskedAt: Long = 0L,
+        /** Star on GitHub was pressed: no star is asked for again. */
+        val starred: Boolean = false,
     ) {
         /** The old ladder ran to its end before the window replaced it: "we will not ask again". */
         val ladderDone: Boolean get() = asked >= LADDER_ASKS
@@ -160,12 +168,39 @@ object SupportReminder {
         return true
     }
 
-    /** The notification, if due: recorded as sent at once, so a second check cannot repeat it. */
-    suspend fun claimNudge(store: SettingsStore, now: Long): Boolean {
-        if (!nudgeDue(store.supportCountersNow(), now, store.sponsorRemindersNow())) return false
-        store.recordSupportNudge(now)
-        return true
+    /** Which notification goes out: a star first, on its own, and money only after it. */
+    enum class NudgeRung {
+        /** "Enjoying TMPlayer?": Star on GitHub and Not now. */
+        Star,
+
+        /** "Don't forget to sponsor TMPlayer": Buy me a coffee, Star on GitHub, Not now. */
+        Coffee,
     }
+
+    /**
+     * The rung the notification would take: [NudgeRung.Star] until a star has been asked for once
+     * or given, [NudgeRung.Coffee] after.
+     */
+    fun nudgeRung(counters: Counters): NudgeRung =
+        if (!counters.starred && counters.starAskedAt <= 0L) NudgeRung.Star else NudgeRung.Coffee
+
+    /** Whether a notification of [rung] offers Star on GitHub: never once it has been pressed. */
+    fun offersStar(counters: Counters, rung: NudgeRung): Boolean = rung == NudgeRung.Star || !counters.starred
+
+    /**
+     * The notification, if due, and which rung it is: recorded as sent at once, so a second check
+     * cannot repeat it. Null when none is due.
+     */
+    suspend fun claimNudgeRung(store: SettingsStore, now: Long): NudgeRung? {
+        val counters = store.supportCountersNow()
+        if (!nudgeDue(counters, now, store.sponsorRemindersNow())) return null
+        val rung = nudgeRung(counters)
+        store.recordSupportNudge(now, star = rung == NudgeRung.Star)
+        return rung
+    }
+
+    /** The notification, if due: recorded as sent at once, so a second check cannot repeat it. */
+    suspend fun claimNudge(store: SettingsStore, now: Long): Boolean = claimNudgeRung(store, now) != null
 
     /**
      * A press on the notification: the shell opens the window as soon as it is free to (in the

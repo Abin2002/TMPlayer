@@ -170,5 +170,21 @@
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
+        <!--
+          The support notification's buttons (NoticeActions): Buy me a coffee and Star on GitHub
+          open the page in the browser through an activity with no window, Not now only takes the
+          notification down. Reached by this app's own notifications alone.
+        -->
+        <activity
+            android:name=".data.NoticeLinkActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay" />
+        <receiver
+            android:name=".data.NoticeDismissReceiver"
+            android:exported="false" />
+
 </application>
 </manifest>

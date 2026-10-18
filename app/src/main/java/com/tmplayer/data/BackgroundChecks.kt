@@ -4,14 +4,12 @@ import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.job.JobInfo
 import android.app.job.JobParameters
 import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
@@ -28,17 +26,23 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * The two things a phone checks while TMPlayer is closed, as platform jobs (JobScheduler, which
- * needs no library): new videos in the starred chats ([NewVideoAlerts]), every
- * [NEW_VIDEOS_EVERY_MS] while online with the battery not low, and whether the "Don't forget to
- * sponsor" notification is due ([SupportReminder.nudgeDue]), once a day.
+ * What a phone checks while TMPlayer is closed, as platform jobs (JobScheduler, which needs no
+ * library), each behind the switches it serves ([Notice]):
  *
- * A TV schedules neither: its notifications are mostly out of sight, and Home's rows already show
- * what is new. Neither asks for the notification permission: the new videos switch asks when it
- * is turned on, and the sponsor reminder simply stays quiet without it.
+ * - [JOB_NEW_VIDEOS], every [NEW_VIDEOS_EVERY_MS] while online with the battery not low: the chats.
+ *   New videos in the starred chats ([NewVideoAlerts]), new episodes of shows under way
+ *   ([EpisodeAlerts]) and the missing pieces of cut videos ([PieceAlerts]).
+ * - [JOB_SPONSOR], once a day: the support ask ([SupportReminder.nudgeDue]) and low storage
+ *   ([StorageAlerts]), neither of which needs a connection.
+ * - [JOB_UPDATES], twice a day while online: a new version, said while the app is closed
+ *   ([UpdateAlerts]).
+ *
+ * A TV schedules none: its notifications are mostly out of sight, and Home's rows already show
+ * what is new. None asks for the notification permission: each switch asks when it is turned on,
+ * and a check whose notification would not be seen stays quiet.
  *
  * **TDLib.** The process the job wakes starts TDLib in [App], as the download service's does, and
- * the new videos check waits for a connected session for at most [CONNECT_WAIT_MS]. TDLib is the
+ * the chat checks wait for a connected session for at most [CONNECT_WAIT_MS]. TDLib is the
  * process's one client, shared with any screen that opens, so the check does not close it; it asks
  * for one page per chat, one chat at a time, and the system reclaims the idle process as it does
  * after a download.
@@ -52,8 +56,12 @@ class BackgroundChecks : JobService() {
         running = scope.launch {
             runCatching {
                 when (params.jobId) {
-                    JOB_NEW_VIDEOS -> checkNewVideos(applicationContext)
-                    JOB_SPONSOR -> checkSponsorNudge(applicationContext)
+                    JOB_NEW_VIDEOS -> checkChats(applicationContext)
+                    JOB_SPONSOR -> {
+                        checkSponsorNudge(applicationContext)
+                        checkStorage(applicationContext)
+                    }
+                    JOB_UPDATES -> checkUpdate(applicationContext)
                 }
             }.onFailure { Logger.w(TAG, "background check failed", it) }
             jobFinished(params, false)
@@ -72,6 +80,7 @@ class BackgroundChecks : JobService() {
 
         const val JOB_NEW_VIDEOS = 4301
         const val JOB_SPONSOR = 4302
+        const val JOB_UPDATES = 4303
 
         const val CHANNEL_NEWS = "news"
         const val CHANNEL_NEW_VIDEOS = "new_videos"
@@ -82,6 +91,7 @@ class BackgroundChecks : JobService() {
         /** Every three hours, which the system may stretch to suit the battery. */
         const val NEW_VIDEOS_EVERY_MS = 3L * 60 * 60 * 1000
         private const val SPONSOR_EVERY_MS = 24L * 60 * 60 * 1000
+        private const val UPDATES_EVERY_MS = 12L * 60 * 60 * 1000
         private const val CONNECT_WAIT_MS = 90_000L
 
         /** A launch from the sponsor reminder: the shell opens the Buy Me a Coffee window. */
@@ -91,17 +101,23 @@ class BackgroundChecks : JobService() {
         const val EXTRA_OPEN_CHAT = "com.tmplayer.extra.OPEN_CHAT"
 
         /**
-         * Makes the jobs match the settings: called when the app starts and whenever either switch
-         * changes. Nothing at all on a TV, or in a build without donation links for the reminder.
+         * Makes the jobs match the settings: called when the app starts and whenever a switch
+         * changes. Nothing at all on a TV, and no support job in a build without donation links.
          */
         suspend fun schedule(context: Context) {
             val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
             val tv = FormFactor.isTv(context)
             val settings = SettingsStore(context)
-            val newVideos = !tv && settings.newVideoAlertsNow()
-            val sponsor = !tv && SupportReminder.enabled && settings.sponsorRemindersNow() &&
+            val chats = !tv && (
+                settings.noticeOnNow(Notice.NewVideos) ||
+                    settings.noticeOnNow(Notice.NewEpisodes) ||
+                    settings.noticeOnNow(Notice.MissingPieces)
+                )
+            val sponsor = SupportReminder.enabled && settings.sponsorRemindersNow() &&
                 !settings.supportCountersNow().finished
-            ensure(context, scheduler, JOB_NEW_VIDEOS, newVideos) { component ->
+            val daily = !tv && (sponsor || settings.noticeOnNow(Notice.LowStorage))
+            val updates = !tv && Updates.enabled && settings.noticeOnNow(Notice.UpdateReady)
+            ensure(context, scheduler, JOB_NEW_VIDEOS, chats) { component ->
                 JobInfo.Builder(JOB_NEW_VIDEOS, component)
                     .setPeriodic(NEW_VIDEOS_EVERY_MS)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -109,9 +125,17 @@ class BackgroundChecks : JobService() {
                     .setPersisted(true)
                     .build()
             }
-            ensure(context, scheduler, JOB_SPONSOR, sponsor) { component ->
+            ensure(context, scheduler, JOB_SPONSOR, daily) { component ->
                 JobInfo.Builder(JOB_SPONSOR, component)
                     .setPeriodic(SPONSOR_EVERY_MS)
+                    .setRequiresBatteryNotLow(true)
+                    .setPersisted(true)
+                    .build()
+            }
+            ensure(context, scheduler, JOB_UPDATES, updates) { component ->
+                JobInfo.Builder(JOB_UPDATES, component)
+                    .setPeriodic(UPDATES_EVERY_MS)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .setRequiresBatteryNotLow(true)
                     .setPersisted(true)
                     .build()
@@ -144,32 +168,88 @@ class BackgroundChecks : JobService() {
             return manager(context).areNotificationsEnabled()
         }
 
-        /** One check of the starred chats, and the notification it finds, if any. */
-        suspend fun checkNewVideos(context: Context) {
+        /**
+         * One look at the chats: new videos in the starred ones, new episodes of shows under way,
+         * and the missing pieces of cut videos, each behind its own switch. One connected session
+         * for all three; nothing is posted over the app itself.
+         */
+        suspend fun checkChats(context: Context) {
             val settings = SettingsStore(context)
-            if (!settings.newVideoAlertsNow()) return
+            val newVideos = settings.noticeOnNow(Notice.NewVideos)
+            val episodes = settings.noticeOnNow(Notice.NewEpisodes)
+            val pieces = settings.noticeOnNow(Notice.MissingPieces)
+            if (!newVideos && !episodes && !pieces) return
             Td.start(context)
             val session = withTimeoutOrNull(CONNECT_WAIT_MS) { Td.awaitConnectedSession() } ?: return
-            val alert = NewVideoAlerts.check(session.client, settings, ChatGate.awaitReady()) ?: return
-            // With the app on screen the lists already show what came in.
-            if (App.inFront) return
-            postNewVideos(context, alert)
+            val allowed = ChatGate.awaitReady()
+            if (newVideos) {
+                val alert = NewVideoAlerts.check(session.client, settings, allowed)
+                // With the app on screen the lists already show what came in.
+                if (alert != null && !App.inFront) postNewVideos(context, alert)
+            }
+            if (episodes) {
+                val alert = EpisodeAlerts.check(session.client, settings, WatchedStore(context), allowed)
+                if (alert != null && !App.inFront && AppNotices.allowed(context, Notice.NewEpisodes)) {
+                    AppNotices.postEpisode(context, alert)
+                }
+            }
+            if (pieces) {
+                val alerts = PieceAlerts.check(session.client, settings, allowed, System.currentTimeMillis())
+                if (!App.inFront && AppNotices.allowed(context, Notice.MissingPieces)) {
+                    alerts.forEachIndexed { index, alert -> AppNotices.postPieces(context, alert, index) }
+                }
+            }
         }
 
-        /** The "Don't forget to sponsor" notification, if it is due and would be seen. */
+        /** Low storage, if it has just run low and its switch is on. */
+        suspend fun checkStorage(context: Context) {
+            if (!AppNotices.allowed(context, Notice.LowStorage)) return
+            val words = StorageAlerts.check(SettingsStore(context), DiskSpace.read(context), System.currentTimeMillis()) ?: return
+            AppNotices.postLowStorage(context, words.first, words.second)
+        }
+
+        /** A new version, said once, while the app is closed. */
+        suspend fun checkUpdate(context: Context) {
+            if (App.inFront || !AppNotices.allowed(context, Notice.UpdateReady)) return
+            val release = UpdateAlerts.check(SettingsStore(context)) { App.inFront } ?: return
+            AppNotices.postUpdate(context, release)
+        }
+
+        /**
+         * The support notification, if it is due and would be seen: first a star on its own, then
+         * "Don't forget to sponsor", with Buy me a coffee, Star on GitHub (until pressed) and Not
+         * now. Pressing it opens the window.
+         */
         suspend fun checkSponsorNudge(context: Context) {
             if (FormFactor.isTv(context) || App.inFront || !canNotify(context)) return
-            if (!SupportReminder.claimNudge(SettingsStore(context), System.currentTimeMillis())) return
+            val settings = SettingsStore(context)
+            val rung = SupportReminder.claimNudgeRung(settings, System.currentTimeMillis()) ?: return
+            val counters = settings.supportCountersNow()
             ensureChannels(context)
-            val notification = Notification.Builder(context, CHANNEL_NEWS)
+            val star = rung == SupportReminder.NudgeRung.Star
+            val title = if (star) L.notifyStarTitle else L.notifySponsorTitle
+            val body = if (star) L.notifyStarBody else L.notifySponsorBody
+            val builder = Notification.Builder(context, CHANNEL_NEWS)
                 .setSmallIcon(R.drawable.ic_stat_support)
-                .setContentTitle(L.notifySponsorTitle)
-                .setContentText(L.notifySponsorBody)
-                .setStyle(Notification.BigTextStyle().bigText(L.notifySponsorBody))
-                .setContentIntent(open(context, NOTIFY_SPONSOR) { it.putExtra(MainActivity.EXTRA_OPEN, OPEN_SUPPORT) })
+                .setContentTitle(title)
+                .setContentText(body)
+                .setStyle(Notification.BigTextStyle().bigText(body))
+                .setContentIntent(AppNotices.open(context, NOTIFY_SPONSOR) { it.putExtra(MainActivity.EXTRA_OPEN, OPEN_SUPPORT) })
                 .setAutoCancel(true)
-                .build()
-            runCatching { manager(context).notify(NOTIFY_SPONSOR, notification) }
+            if (!star) {
+                builder.addAction(
+                    AppNotices.action(context, R.drawable.ic_stat_support, L.supportBuyCoffee, NoticeActions.link(context, NoticeActions.LINK_COFFEE, NOTIFY_SPONSOR)),
+                )
+            }
+            if (SupportReminder.offersStar(counters, rung)) {
+                builder.addAction(
+                    AppNotices.action(context, R.drawable.ic_stat_support, L.supportStarGithub, NoticeActions.link(context, NoticeActions.LINK_STAR, NOTIFY_SPONSOR)),
+                )
+            }
+            builder.addAction(
+                AppNotices.action(context, R.drawable.ic_notify_cancel, L.notifyActionNotNow, NoticeActions.dismiss(context, NOTIFY_SPONSOR)),
+            )
+            runCatching { manager(context).notify(NOTIFY_SPONSOR, builder.build()) }
         }
 
         private fun postNewVideos(context: Context, alert: NewVideoAlerts.Alert) {
@@ -186,25 +266,13 @@ class BackgroundChecks : JobService() {
                         .setContentTitle(L.notifyNewVideosPrivate)
                         .build(),
                 )
-                .setContentIntent(open(context, NOTIFY_NEW_VIDEOS) { it.putExtra(EXTRA_OPEN_CHAT, alert.chatId ?: 0L) })
+                .setContentIntent(AppNotices.open(context, NOTIFY_NEW_VIDEOS) { it.putExtra(EXTRA_OPEN_CHAT, alert.chatId ?: 0L) })
                 .setAutoCancel(true)
             alert.body?.let { builder.setContentText(it).setStyle(Notification.BigTextStyle().bigText(it)) }
             runCatching { manager(context).notify(NOTIFY_NEW_VIDEOS, builder.build()) }
         }
 
-        private fun open(context: Context, code: Int, extras: (Intent) -> Unit): PendingIntent {
-            val intent = Intent(context, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                .also(extras)
-            return PendingIntent.getActivity(
-                context,
-                code,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-        }
-
-        /** "TMPlayer news", quiet, and "New videos", which may make a sound. */
+        /** "TMPlayer news", quiet, "New videos", which may make a sound, and the CP76 channels. */
         fun ensureChannels(context: Context) {
             val news = NotificationChannel(CHANNEL_NEWS, L.notifyChannelNews, NotificationManager.IMPORTANCE_LOW).apply {
                 description = L.notifyChannelNewsDescription
@@ -214,6 +282,7 @@ class BackgroundChecks : JobService() {
                 description = L.notifyChannelNewVideosDescription
             }
             manager(context).createNotificationChannels(listOf(news, videos))
+            AppNotices.ensureChannels(context)
         }
 
         private fun manager(context: Context): NotificationManager =

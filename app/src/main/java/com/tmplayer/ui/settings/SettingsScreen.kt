@@ -128,6 +128,7 @@ import com.tmplayer.data.DiskInfo
 import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.LocalDownloads
 import com.tmplayer.data.MeteredPolicy
+import com.tmplayer.data.Notice
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.RestorePlan
 import com.tmplayer.data.ResumeRewind
@@ -194,7 +195,7 @@ import kotlinx.coroutines.withContext
  * other way round, shown only where the Android TV home screen has Play next or channels. [SetupChoices]
  * gathers the setup's answers (SetupChoicesList), each with a way to the page it also lives on.
  */
-enum class SettingsPage { SetupChoices, Appearance, Playback, Subtitles, Gestures, Library, TvHome, Storage, Lock, About }
+enum class SettingsPage { SetupChoices, Appearance, Playback, Subtitles, Gestures, Library, TvHome, Notifications, Storage, Lock, About }
 
 /**
  * Focus for a row in a lazy list, which exists only once the list has been measured: a frame
@@ -351,8 +352,6 @@ fun SettingsScreen(
     var qrLink by remember { mutableStateOf<Pair<String, String>?>(null) }
     var supporting by remember { mutableStateOf(false) }
     val supportCounters by settings.supportCounters.collectAsState(initial = SupportReminder.Counters())
-    val sponsorReminders by settings.sponsorReminders.collectAsStateWithLifecycle(initialValue = true)
-    val newVideoAlerts by settings.newVideoAlerts.collectAsStateWithLifecycle(initialValue = false)
     // The language picker, the "What's new" sheet and "Report a problem", each over the list.
     var pickingLanguage by remember { mutableStateOf(false) }
     var stylingSubtitles by remember { mutableStateOf(false) }
@@ -428,6 +427,7 @@ fun SettingsScreen(
         SettingsPage.Gestures -> s.settingsPageGestures
         SettingsPage.Library -> s.settingsLibrary
         SettingsPage.TvHome -> s.settingsPageTvHome
+        SettingsPage.Notifications -> s.settingsPageNotifications
         SettingsPage.Storage -> s.settingsPageStorage
         SettingsPage.Lock -> s.lockTitle
         SettingsPage.About -> s.settingsPageAbout
@@ -1048,34 +1048,6 @@ fun SettingsScreen(
                     )
                 }
 
-                // A phone's notification for new videos in the starred chats (a TV's Home rows
-                // already show them). Turning it on is where Android 13 asks for the permission.
-                if (touch) {
-                    item {
-                        ToggleRow(
-                            title = s.settingsNewVideos,
-                            subtitle = s.settingsNewVideosDetail,
-                            icon = TmIcons.Bell,
-                            checked = newVideoAlerts,
-                            onToggle = {
-                                val next = !newVideoAlerts
-                                if (next) {
-                                    com.tmplayer.ui.browse.askForNotifications(context)
-                                    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU &&
-                                        !com.tmplayer.data.BackgroundChecks.canNotify(context)
-                                    ) {
-                                        toast(s.notifyBlocked)
-                                    }
-                                }
-                                scope.launch {
-                                    settings.setNewVideoAlerts(next)
-                                    com.tmplayer.data.BackgroundChecks.schedule(context.applicationContext)
-                                }
-                            },
-                        )
-                    }
-                }
-
                 // What opens first, in the same card as which videos show: a heading of its own
                 // stood over a single row.
                 item {
@@ -1225,6 +1197,34 @@ fun SettingsScreen(
                             // Turning it off takes the channels away (TvHomeChannels follows the
                             // setting); turning it on fills them at the next refresh of Home.
                             onToggle = { scope.launch { settings.setTvChannels(!tvChannelsOn) } },
+                        )
+                    }
+                }
+            }
+
+            // Every notification TMPlayer may post, one switch each (CP76). A phone's only: a TV
+            // posts none, its launcher rows do that job. Turning one on is where Android 13 asks
+            // for the permission, never at launch.
+            SettingsPage.Notifications -> {
+                val noticeRows = buildList {
+                    add(Triple(Notice.Downloads, s.settingsAlertDownloads, s.settingsAlertDownloadsDetail))
+                    add(Triple(Notice.NewEpisodes, s.settingsAlertEpisodes, s.settingsAlertEpisodesDetail))
+                    add(Triple(Notice.NewVideos, s.settingsNewVideos, s.settingsNewVideosDetail))
+                    add(Triple(Notice.MissingPieces, s.settingsAlertPieces, s.settingsAlertPiecesDetail))
+                    add(Triple(Notice.LowStorage, s.settingsAlertLowStorage, s.settingsAlertLowStorageDetail))
+                    if (Updates.enabled) add(Triple(Notice.UpdateReady, s.settingsAlertUpdate, s.settingsAlertUpdateDetail))
+                    if (SupportReminder.enabled && !supportCounters.finished) {
+                        add(Triple(Notice.Support, s.settingsSponsorReminders, s.settingsSponsorRemindersDetail))
+                    }
+                }
+                noticeRows.forEachIndexed { index, (notice, title, detail) ->
+                    item(key = "notice-${notice.name}") {
+                        NoticeToggleRow(
+                            notice = notice,
+                            title = title,
+                            subtitle = detail,
+                            modifier = if (index == 0) Modifier.focusRequester(landing) else Modifier,
+                            onBlocked = { toast(s.notifyBlocked) },
                         )
                     }
                 }
@@ -1600,25 +1600,8 @@ fun SettingsScreen(
                             onClick = { supporting = true },
                         )
                     }
-                    // The occasional "Don't forget to sponsor" notification. Not on a TV, which
-                    // never sends it.
-                    if (touch && !supportCounters.finished) {
-                        item {
-                            ToggleRow(
-                                title = s.settingsSponsorReminders,
-                                subtitle = s.settingsSponsorRemindersDetail,
-                                icon = TmIcons.Bell,
-                                checked = sponsorReminders,
-                                onToggle = {
-                                    val next = !sponsorReminders
-                                    scope.launch {
-                                        settings.setSponsorReminders(next)
-                                        com.tmplayer.data.BackgroundChecks.schedule(context.applicationContext)
-                                    }
-                                },
-                            )
-                        }
-                    }
+                    // The occasional support notification's switch lives on the Notifications
+                    // page with the rest (CP76).
                 }
 
                 item {
@@ -1739,6 +1722,18 @@ fun SettingsScreen(
                             icon = TmIcons.Home,
                             modifier = Modifier.focusRequester(categoryFocus.getValue(SettingsPage.TvHome)),
                             onClick = { showPage(SettingsPage.TvHome) },
+                        )
+                    }
+                }
+                // A phone's only: a TV posts no notifications (CP76).
+                if (touch) {
+                    item {
+                        ActionRow(
+                            title = titleOf(SettingsPage.Notifications),
+                            subtitle = s.settingsPageNotificationsSummary,
+                            icon = TmIcons.Bell,
+                            modifier = Modifier.focusRequester(categoryFocus.getValue(SettingsPage.Notifications)),
+                            onClick = { showPage(SettingsPage.Notifications) },
                         )
                     }
                 }
@@ -3182,4 +3177,46 @@ private fun SizeLimitsDialog(
         }
         FocusOnOpen(rangeRow)
     }
+}
+
+/**
+ * One notification's switch (CP76), drawn as every other switch in Settings. Turning it on asks
+ * Android 13 and later for the notification permission there and then (and before that, says so
+ * when the system has notifications off for the app); every change re-plans the background
+ * checks, so a switch turned off stops its job.
+ */
+@Composable
+private fun NoticeToggleRow(
+    notice: Notice,
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+    onBlocked: () -> Unit,
+) {
+    val context = LocalContext.current
+    val settings = remember(context) { SettingsStore(context) }
+    val scope = rememberCoroutineScope()
+    val on by settings.noticeOn(notice).collectAsStateWithLifecycle(initialValue = notice.defaultOn)
+    ToggleRow(
+        title = title,
+        subtitle = subtitle,
+        icon = TmIcons.Bell,
+        checked = on,
+        modifier = modifier,
+        onToggle = {
+            val next = !on
+            if (next) {
+                com.tmplayer.ui.browse.askForNotifications(context)
+                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU &&
+                    !com.tmplayer.data.BackgroundChecks.canNotify(context)
+                ) {
+                    onBlocked()
+                }
+            }
+            scope.launch {
+                settings.setNoticeOn(notice, next)
+                com.tmplayer.data.BackgroundChecks.schedule(context.applicationContext)
+            }
+        },
+    )
 }

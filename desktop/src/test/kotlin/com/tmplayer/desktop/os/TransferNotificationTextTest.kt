@@ -122,6 +122,14 @@ class TransferNotificationTextTest {
     }
 
     @Test
+    fun noticeButtonsAreToastActionsWithTheirOwnLinks() {
+        val xml = WindowsToast.doneXml("Enjoying TMPlayer?", "", "tmplayer:press/1", listOf("Star on GitHub" to "tmplayer:press/2", "Not now" to "tmplayer:press/3"))
+        assertTrue(xml, xml.contains("<actions><action content=\"Star on GitHub\" activationType=\"protocol\" arguments=\"tmplayer:press/2\"/>"))
+        assertTrue(xml, xml.endsWith("</visual><actions><action content=\"Star on GitHub\" activationType=\"protocol\" arguments=\"tmplayer:press/2\"/><action content=\"Not now\" activationType=\"protocol\" arguments=\"tmplayer:press/3\"/></actions></toast>"))
+        assertFalse(WindowsToast.doneXml("x", "", null).contains("<actions>"))
+    }
+
+    @Test
     fun progressLinesAreOneLineWithInvariantNumbers() {
         val show = WindowsToast.showProgress("t1", WindowsToast.progressXml("Film's cut"), "Downloading", 0.5, "")
         val update = WindowsToast.updateProgress("t1", 3, null, "1 GB")

@@ -132,6 +132,9 @@ private val SUPPORT_RECENT = stringPreferencesKey("support_recent")
 private val SUPPORT_ASKED_AT = longPreferencesKey("support_asked_at")
 private val SUPPORT_WINDOWS = longPreferencesKey("support_windows")
 private val SUPPORT_NUDGED_AT = longPreferencesKey("support_nudged_at")
+// The notification's star rung (CP76): when it asked for a star, and whether Star was pressed.
+private val SUPPORT_STAR_ASKED_AT = longPreferencesKey("support_star_asked_at")
+private val SUPPORT_STARRED = booleanPreferencesKey("support_starred")
 // "New videos in starred chats" (phone and desktop): the switch, whether the offer after a star
 // was made, and the newest video message each starred chat had at the last check. The account's,
 // so signing out clears them with everything else.
@@ -142,8 +145,21 @@ private val NEW_VIDEO_SEEN = stringPreferencesKey("new_video_seen")
 private val SPONSOR_REMINDERS = booleanPreferencesKey("sponsor_reminders")
 private val SUPPORT_KEYS = listOf(
     SUPPORT_FIRST_SEEN, SUPPORT_SNOOZED_UNTIL, SUPPORT_WATCHES, SUPPORT_WATCH_MS, SUPPORT_ASKED,
-    SUPPORT_ASKED_AT, SUPPORT_WINDOWS, SUPPORT_NUDGED_AT,
+    SUPPORT_ASKED_AT, SUPPORT_WINDOWS, SUPPORT_NUDGED_AT, SUPPORT_STAR_ASKED_AT,
 )
+
+// The notifications that help (CP76), one switch each beside the two above, and what each one
+// remembers so it never says the same thing twice. The account's, so signing out clears them.
+private val NOTIFY_DOWNLOADS = booleanPreferencesKey("notify_downloads")
+private val NOTIFY_EPISODES = booleanPreferencesKey("notify_episodes")
+private val NOTIFY_LOW_STORAGE = booleanPreferencesKey("notify_low_storage")
+private val NOTIFY_PIECES = booleanPreferencesKey("notify_pieces")
+private val NOTIFY_UPDATE = booleanPreferencesKey("notify_update")
+private val EPISODE_SEEN = stringPreferencesKey("episode_alert_seen")
+private val EPISODE_TOLD = stringPreferencesKey("episode_alert_told")
+private val LOW_STORAGE_ALERT = stringPreferencesKey("low_storage_alert")
+private val PIECE_GAPS = stringPreferencesKey("piece_gaps")
+private val UPDATE_ALERTED = stringPreferencesKey("update_alerted_version")
 
 /**
  * The one video the watch cache is holding: which message it came from, and what it is called.
@@ -337,6 +353,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             val support = SUPPORT_KEYS.mapNotNull { key -> prefs[key]?.let { Pair(key, it) } }
             val supportNever = prefs[SUPPORT_NEVER]
             val supporter = prefs[SUPPORT_SUPPORTER]
+            val starred = prefs[SUPPORT_STARRED]
             val reminders = prefs[SPONSOR_REMINDERS]
             val recent = prefs[SUPPORT_RECENT]
             val kept = if (keepDownloads) {
@@ -356,6 +373,7 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             for ((key, value) in support) prefs[key] = value
             supportNever?.let { prefs[SUPPORT_NEVER] = it }
             supporter?.let { prefs[SUPPORT_SUPPORTER] = it }
+            starred?.let { prefs[SUPPORT_STARRED] = it }
             reminders?.let { prefs[SPONSOR_REMINDERS] = it }
             recent?.let { prefs[SUPPORT_RECENT] = it }
             if (keepDownloads) {
@@ -865,6 +883,8 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         askedAt = prefs[SUPPORT_ASKED_AT] ?: 0L,
         windows = (prefs[SUPPORT_WINDOWS] ?: 0L).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt(),
         nudgedAt = prefs[SUPPORT_NUDGED_AT] ?: 0L,
+        starAskedAt = prefs[SUPPORT_STAR_ASKED_AT] ?: 0L,
+        starred = prefs[SUPPORT_STARRED] ?: false,
     )
 
     /**
@@ -906,9 +926,20 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         }
     }
 
-    /** The "Don't forget to sponsor" notification went out at [now]. */
-    suspend fun recordSupportNudge(now: Long) {
-        prefs.edit { it[SUPPORT_NUDGED_AT] = now }
+    /**
+     * The notification went out at [now]: the "Don't forget to sponsor" one, or with [star] the
+     * rung before it that asks only for a star.
+     */
+    suspend fun recordSupportNudge(now: Long, star: Boolean = false) {
+        prefs.edit {
+            it[SUPPORT_NUDGED_AT] = now
+            if (star) it[SUPPORT_STAR_ASKED_AT] = now
+        }
+    }
+
+    /** Star on GitHub was pressed, on the notification or the window: no star is asked for again. */
+    suspend fun markSupportStarred() {
+        prefs.edit { it[SUPPORT_STARRED] = true }
     }
 
     /** The old "I already support", or the last card's "Done": no more asks, and About says thank you. */
@@ -921,10 +952,13 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         prefs.edit { it[SUPPORT_NEVER] = true }
     }
 
-    /** "Sponsor reminders": the occasional notification. On until the viewer turns it off. */
-    val sponsorReminders: Flow<Boolean> = read { it[SPONSOR_REMINDERS] ?: true }
+    /**
+     * "Sponsor reminders": the occasional notification. Off until the viewer turns it on, as
+     * every notification but the finished downloads is (CP76).
+     */
+    val sponsorReminders: Flow<Boolean> = read { it[SPONSOR_REMINDERS] ?: Notice.Support.defaultOn }
 
-    suspend fun sponsorRemindersNow(): Boolean = prefs.data.first()[SPONSOR_REMINDERS] ?: true
+    suspend fun sponsorRemindersNow(): Boolean = prefs.data.first()[SPONSOR_REMINDERS] ?: Notice.Support.defaultOn
 
     suspend fun setSponsorReminders(value: Boolean) {
         prefs.edit { it[SPONSOR_REMINDERS] = value }
@@ -958,6 +992,70 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     suspend fun setNewVideoSeen(seen: Map<Long, Long>) {
         prefs.edit { it[NEW_VIDEO_SEEN] = NewVideoAlerts.encode(seen) }
+    }
+
+    // ---- the notifications that help (CP76) -------------------------------------------------
+
+    private fun noticeKey(notice: Notice): Preferences.Key<Boolean> = when (notice) {
+        Notice.Downloads -> NOTIFY_DOWNLOADS
+        Notice.NewEpisodes -> NOTIFY_EPISODES
+        Notice.NewVideos -> NEW_VIDEO_ALERTS
+        Notice.LowStorage -> NOTIFY_LOW_STORAGE
+        Notice.MissingPieces -> NOTIFY_PIECES
+        Notice.UpdateReady -> NOTIFY_UPDATE
+        Notice.Support -> SPONSOR_REMINDERS
+    }
+
+    /** Whether [notice] may be posted: its own switch, at [Notice.defaultOn] until it is touched. */
+    fun noticeOn(notice: Notice): Flow<Boolean> = read { it[noticeKey(notice)] ?: notice.defaultOn }
+
+    suspend fun noticeOnNow(notice: Notice): Boolean = prefs.data.first()[noticeKey(notice)] ?: notice.defaultOn
+
+    /**
+     * Turns [notice] on or off. Turning one on that watches the chats starts from what they hold
+     * now, so what was posted before is never news.
+     */
+    suspend fun setNoticeOn(notice: Notice, value: Boolean) {
+        if (notice == Notice.NewVideos) return setNewVideoAlerts(value)
+        prefs.edit {
+            it[noticeKey(notice)] = value
+            if (value && notice == Notice.NewEpisodes) it.remove(EPISODE_SEEN)
+        }
+    }
+
+    /** The newest video message id of each chat the episode check read last time. */
+    suspend fun episodeSeenNow(): Map<Long, Long> = NewVideoAlerts.decode(prefs.data.first()[EPISODE_SEEN])
+
+    suspend fun setEpisodeSeen(seen: Map<Long, Long>) {
+        prefs.edit { it[EPISODE_SEEN] = NewVideoAlerts.encode(seen) }
+    }
+
+    /** The episodes already announced ([EpisodeAlerts.toldKey]), newest first. */
+    suspend fun episodeToldNow(): List<String> =
+        prefs.data.first()[EPISODE_TOLD].orEmpty().split(';').filter { it.isNotBlank() }
+
+    suspend fun setEpisodeTold(told: List<String>) {
+        prefs.edit { it[EPISODE_TOLD] = told.joinToString(";") }
+    }
+
+    suspend fun lowStorageAlertNow(): StorageAlerts.State = StorageAlerts.State.decode(prefs.data.first()[LOW_STORAGE_ALERT])
+
+    suspend fun setLowStorageAlert(state: StorageAlerts.State) {
+        prefs.edit { it[LOW_STORAGE_ALERT] = state.encode() }
+    }
+
+    /** The cut videos the player found a piece missing from, for [PieceAlerts]. */
+    suspend fun pieceGapsNow(): List<PieceAlerts.Gap> = PieceAlerts.decode(prefs.data.first()[PIECE_GAPS])
+
+    suspend fun setPieceGaps(gaps: List<PieceAlerts.Gap>) {
+        prefs.edit { it[PIECE_GAPS] = PieceAlerts.encode(gaps) }
+    }
+
+    /** The version the "update ready" notification last went out for, or blank. */
+    suspend fun updateAlertedNow(): String = prefs.data.first()[UPDATE_ALERTED].orEmpty()
+
+    suspend fun setUpdateAlerted(version: String) {
+        prefs.edit { it[UPDATE_ALERTED] = version }
     }
 
     // ---- updates ----------------------------------------------------------------------------
