@@ -727,17 +727,23 @@ class ChatRepository(private val td: TdlClient) {
         var username: String? = null
         var about: String? = null
         var members: Int? = null
+        var canJoin = false
+        var joinByRequest = false
         when (val type = chat.type) {
             is ChatTypePrivate -> {
                 username = td.getUser(type.userId).valueOrNull?.usernames?.activeUsernames?.firstOrNull()
                 about = td.getUserFullInfo(type.userId).valueOrNull?.bio?.text
             }
             is ChatTypeSupergroup -> {
-                username = td.getSupergroup(type.supergroupId).valueOrNull?.usernames?.activeUsernames?.firstOrNull()
+                val group = td.getSupergroup(type.supergroupId).valueOrNull
+                username = group?.usernames?.activeUsernames?.firstOrNull()
                 val full = td.getSupergroupFullInfo(type.supergroupId).valueOrNull
                 about = full?.description
                 members = full?.memberCount?.takeIf { it > 0 }
-                    ?: td.getSupergroup(type.supergroupId).valueOrNull?.memberCount?.takeIf { it > 0 }
+                    ?: group?.memberCount?.takeIf { it > 0 }
+                // Seen through its @username or a link, not joined: the sheet offers to join it.
+                canJoin = !username.isNullOrBlank() && group?.status is dev.g000sha256.tdl.dto.ChatMemberStatusLeft
+                joinByRequest = group?.joinByRequest == true
             }
             is ChatTypeBasicGroup -> {
                 about = td.getBasicGroupFullInfo(type.basicGroupId).valueOrNull?.description
@@ -751,7 +757,15 @@ class ChatRepository(private val td: TdlClient) {
             username = username?.takeIf { it.isNotBlank() && summary.kind != ChatKind.Saved },
             about = about?.trim()?.takeIf { it.isNotEmpty() },
             memberCount = members,
+            canJoin = canJoin,
+            joinByRequest = joinByRequest,
         )
+    }
+
+    /** One chat as the list draws it, read from TDLib (from memory for a chat it has seen). */
+    suspend fun summary(chatId: Long): ChatSummary? = withContext(Dispatchers.IO) {
+        val chat = td.getChat(chatId).valueOrNull ?: return@withContext null
+        summarise(chat, Td.myId())
     }
 
     /**

@@ -3,6 +3,7 @@ package com.tmplayer.ui.browse
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import com.tmplayer.data.ChatRepository
 import com.tmplayer.data.ChatSummary
 import com.tmplayer.data.Td
@@ -33,3 +34,35 @@ fun withUsernameChat(local: List<ChatSummary>, found: ChatSummary?): List<ChatSu
 
 /** How long the typing rests before a username is asked for, so each letter is not a server call. */
 private const val USERNAME_PAUSE_MS = 450L
+
+/**
+ * What Search offers for a link or a username typed or pasted into it (CP79): "Open this post"
+ * for a post link, "Preview and join" for an invite, and "Join" for a public group or channel
+ * found by its @username that the account is not in. Pressed, it goes to [LinkRequests].
+ */
+data class LinkOffer(val label: String, val detail: String, val link: com.tmplayer.data.TgLink)
+
+@Composable
+fun rememberLinkOffer(query: String, found: ChatSummary?): LinkOffer? {
+    val link = remember(query) { com.tmplayer.data.TelegramLinks.parse(query) }
+    val joinable by produceState(initialValue = false, found?.id) {
+        value = false
+        val chat = found ?: return@produceState
+        if (chat.kind != com.tmplayer.data.ChatKind.Channel && chat.kind != com.tmplayer.data.ChatKind.Group) return@produceState
+        val session = Td.awaitConnectedSessionOrNull() ?: return@produceState
+        value = runCatching { ChatRepository(session.client).chatInfo(chat.id)?.canJoin == true }.getOrDefault(false)
+    }
+    val strings = com.tmplayer.ui.i18n.LocalStrings.current
+    return when (link) {
+        is com.tmplayer.data.TgLink.Post -> LinkOffer(strings.linkOpenPost, strings.linkOpenPostDetail, link)
+        is com.tmplayer.data.TgLink.Invite -> LinkOffer(strings.linkPreviewJoin, strings.linkPreviewJoinDetail, link)
+        else -> {
+            val name = Usernames.clean(query)
+            if (found != null && joinable && name != null) {
+                LinkOffer(strings.linkJoinNamed(found.title), strings.linkJoinDetail, com.tmplayer.data.TgLink.Public(name))
+            } else {
+                null
+            }
+        }
+    }
+}

@@ -57,6 +57,18 @@ enum class DetailAction {
 
     /** The title the viewer wants to see, which grouping reads too. */
     Rename,
+
+    /** "Videos in the comments": the videos posted under a channel post (CP81). */
+    CommentVideos,
+
+    /** Forwards the post to the account's Saved Messages, nothing downloaded (CP82). */
+    ForwardToSaved,
+
+    /** Forwards the post to a chat picked from a list (CP82). */
+    ForwardToChat,
+
+    /** Copies the finished download out: the phone's gallery, or a folder on the desktop (CP82). */
+    ExportCopy,
 }
 
 /** Everything [DetailActions.of] needs to know about the video and where the panel was opened. */
@@ -93,6 +105,15 @@ data class DetailContext(
     val matched: Boolean = false,
     /** The viewer turned the provider's match down already. */
     val wrongMatch: Boolean = false,
+    /** How many comments the post has (a channel post with a discussion group), 0 for none. */
+    val comments: Int = 0,
+    /**
+     * The platform can forward from here (signed in, with a chat list to pick from). Offered even
+     * for a chat that restricts saving, whose rows then say why they cannot be used.
+     */
+    val canForward: Boolean = false,
+    /** The platform can copy a finished download out (the phone's gallery, a desktop folder). */
+    val canExport: Boolean = false,
 )
 
 object DetailActions {
@@ -129,6 +150,13 @@ object DetailActions {
             add(DetailAction.Share)
             add(DetailAction.OpenElsewhere)
         }
+        // Keeping it without a download: the post forwarded, which copies nothing to the device.
+        if (context.canForward) {
+            add(DetailAction.ForwardToSaved)
+            add(DetailAction.ForwardToChat)
+        }
+        if (context.canExport && KeepVideo.mayExport(context.canBeSaved, context.inDownloads)) add(DetailAction.ExportCopy)
+        if (context.comments > 0) add(DetailAction.CommentVideos)
         if (context.outsideChat) add(DetailAction.OpenChat)
         // Last, being repairs rather than things to do with the video. Each one has its undo.
         if (context.canCorrect) {
@@ -154,5 +182,6 @@ object DetailActions {
         DetailAction.Share,
         DetailAction.OpenElsewhere,
         DetailAction.CopyLink,
+        DetailAction.ExportCopy,
     )
 }
