@@ -96,6 +96,24 @@ data class MediaItem(
      * for any other file. Like [versions], arranging's answer and not part of equality beyond its size.
      */
     val pieces: List<MediaItem> = emptyList(),
+    /**
+     * Telegram's own lighter copies of this upload, made on its servers for a big video
+     * (`MessageVideo.alternativeVideos`), best first, each lighter than the upload. Empty for a file
+     * sent as a document and for a video Telegram made none of. See [TelegramQualities].
+     */
+    val qualities: List<TelegramQuality> = emptyList(),
+    /**
+     * The height of the Telegram copy this item plays in place of the upload ([TelegramQualities.withQuality]),
+     * or 0 for the upload itself. The message, its place and its Watched mark stay the same.
+     */
+    val playingQuality: Int = 0,
+    /** The upload's file id and size, kept while [playingQuality] stands in for it; 0 otherwise. */
+    val uploadFileId: Int = 0,
+    val uploadSizeBytes: Long = 0,
+    /** Where the poster asked the video to start, in seconds (`MessageVideo.startTimestamp`), or 0. */
+    val startSec: Int = 0,
+    /** Telegram's seek thumbnails for the video, a sprite and its map, or null. See [StoryboardMaps]. */
+    val storyboard: StoryboardFiles? = null,
 ) {
     /**
      * Which byte piece of a cut video this file is, read off its name ([SplitPieces.pieceOf]), or
@@ -218,6 +236,10 @@ data class MediaItem(
             topicId == other.topicId &&
             extra == other.extra &&
             albumId == other.albumId &&
+            playingQuality == other.playingQuality &&
+            startSec == other.startSec &&
+            qualities == other.qualities &&
+            storyboard == other.storyboard &&
             parts.size == other.parts.size &&
             pieces.size == other.pieces.size &&
             pieces.indices.all { pieces[it].id == other.pieces[it].id } &&
@@ -247,6 +269,9 @@ data class MediaItem(
         result = 31 * result + height
         result = 31 * result + topicId
         result = 31 * result + (extra?.hashCode() ?: 0)
+        result = 31 * result + playingQuality
+        result = 31 * result + startSec
+        result = 31 * result + qualities.size
         result = 31 * result + parts.size
         result = 31 * result + pieces.size
         result = 31 * result + (miniThumbnail?.contentHashCode() ?: 0)
@@ -297,13 +322,51 @@ object MediaMapper {
         else -> false
     }
 
-    private fun fromVideo(message: Message, video: dev.g000sha256.tdl.dto.Video, caption: String?) = MediaItem(
+    private fun fromVideo(
+        message: Message,
+        video: dev.g000sha256.tdl.dto.Video,
+        caption: String?,
+        post: MessageVideo? = null,
+    ): MediaItem {
+        val size = fileSize(video.video.size, video.video.expectedSize)
+        // The uploader's own cover, where they chose one, is the card's picture in place of the
+        // frame Telegram took (CP80).
+        val cover = post?.cover?.let(::coverSize)
+        val base = fromVideoFile(message, video, caption, size)
+        if (post == null) return base
+        return base.copy(
+            thumbnailFileId = cover?.photo?.id ?: base.thumbnailFileId,
+            miniThumbnail = post.cover?.minithumbnail?.data ?: base.miniThumbnail,
+            qualities = TelegramQualities.fromTdlib(post.alternativeVideos.orEmpty().toList(), video.height, size),
+            startSec = post.startTimestamp.coerceAtLeast(0),
+            storyboard = storyboardOf(post.storyboards.orEmpty().toList()),
+        )
+    }
+
+    /** The size of a cover photo to draw on a card: the largest no wider than a television's card. */
+    internal fun coverSize(photo: dev.g000sha256.tdl.dto.Photo): dev.g000sha256.tdl.dto.PhotoSize? {
+        val sizes = photo.sizes.orEmpty().filter { it.photo.id != 0 }
+        return sizes.filter { it.width <= COVER_MAX_WIDTH }.maxByOrNull { it.width } ?: sizes.minByOrNull { it.width }
+    }
+
+    private const val COVER_MAX_WIDTH = 800
+
+    /** The storyboard whose tiles come closest to a scrub preview's width without passing it. */
+    private fun storyboardOf(boards: List<dev.g000sha256.tdl.dto.VideoStoryboard>): StoryboardFiles? {
+        val usable = boards.filter { it.storyboardFile.id != 0 && it.mapFile.id != 0 && it.width > 0 && it.height > 0 }
+        val board = usable.filter { it.width <= StoryboardMaps.PREFERRED_TILE_WIDTH }.maxByOrNull { it.width }
+            ?: usable.minByOrNull { it.width }
+            ?: return null
+        return StoryboardFiles(board.storyboardFile.id, board.mapFile.id, board.width, board.height)
+    }
+
+    private fun fromVideoFile(message: Message, video: dev.g000sha256.tdl.dto.Video, caption: String?, size: Long) = MediaItem(
         chatId = message.chatId,
         messageId = message.id,
         fileId = video.video.id,
         title = displayTitle(video.fileName, caption, L.mediaUntitledVideo),
         fileName = video.fileName,
-        sizeBytes = fileSize(video.video.size, video.video.expectedSize),
+        sizeBytes = size,
         durationSec = video.duration,
         mimeType = video.mimeType.orEmpty(),
         thumbnailFileId = video.thumbnail?.file?.id ?: 0,
@@ -334,7 +397,7 @@ object MediaMapper {
     }
 
     private fun video(message: Message): MediaItem? = when (val content = message.content) {
-        is MessageVideo -> fromVideo(message, content.video, content.caption?.text)
+        is MessageVideo -> fromVideo(message, content.video, content.caption?.text, content)
         // A post sold for Stars, or one the viewer has bought: the video is there once unlocked.
         // Still locked it is a preview with no file, and nothing to play. A post of several takes
         // the first: a tile is one message, and the rest are a tap away in Telegram.

@@ -1142,8 +1142,19 @@ private fun Root() {
     ) {
         // The loader after the system splash, over everything while Telegram is being reached,
         // then fading out over the sign in pane or the home screen, whichever is drawn under it.
+        // Once Telegram is reached, the loader waits on for Home's first whole screen (rows and the
+        // carousel's first picture), at most HOLD_MAX_MS, so Home appears finished.
+        var homeHoldOver by remember { mutableStateOf(false) }
+        val reached = auth is AuthState.Ready
+        LaunchedEffect(reached) {
+            if (!reached) return@LaunchedEffect
+            kotlinx.coroutines.delay(com.tmplayer.ui.browse.HomeFirstPaint.HOLD_MAX_MS)
+            homeHoldOver = true
+        }
+        val holdForHome = reached && !setupPending && !homeHoldOver && !com.tmplayer.ui.browse.HomeFirstPaint.ready
         com.tmplayer.ui.components.BrandLoaderHandOff(
-            label = com.tmplayer.ui.auth.loaderLabel(auth, LocalStrings.current),
+            label = com.tmplayer.ui.auth.loaderLabel(auth, LocalStrings.current)
+                ?: if (holdForHome) LocalStrings.current.loginGettingReady else null,
             modifier = Modifier.zIndex(1f),
             // The second line is the live step, drawn by ConnectingHelp under it.
             lines = emptyList(),

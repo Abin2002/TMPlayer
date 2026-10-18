@@ -204,7 +204,8 @@ class TelegramPlayerMedia(
         }
         ensureRoom()
         val session = Td.awaitAuthorizedSession()
-        val fileId = Td.currentFileId(item.chatId, item.messageId, item.fileId)
+        // A Telegram copy (CP80) is asked for by its height, so a stale id finds the same copy.
+        val fileId = Td.currentFileId(item.chatId, item.messageId, item.fileId, item.playingQuality)
         playingId = fileId
         watchDownload(fileId)
         val streamsLow = startLowStorageIfOn(fileId)
@@ -521,6 +522,12 @@ class TelegramPlayerMedia(
             return if (row.stage == OfflineDownloads.Stage.Moving) L.downloadsSavesWhenStopped else L.downloadsAlreadyDownloading
         }
         // A joined video keeps every piece; any other file under the id this session plays it as.
+        // A Telegram copy playing (CP80) downloads the upload, which is what a download keeps.
+        if (item.playingQuality != 0) {
+            val upload = com.tmplayer.data.TelegramQualities.upload(item)
+            OfflineDownloads.start(runner, upload, chatTitle)
+            return L.downloadsDownloadingTitle(item.title)
+        }
         OfflineDownloads.start(runner, joinedItem ?: item.copy(fileId = playingId), chatTitle)
         return if (_downloaded.value == 1f) L.downloadsSavingWhenStopped else L.downloadsDownloadingTitle(item.title)
     }

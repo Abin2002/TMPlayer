@@ -44,6 +44,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.zIndex
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import com.tmplayer.ui.components.EDGE_SHARE
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -114,11 +121,15 @@ internal fun TvFeaturedCarousel(
     Box(modifier.fillMaxWidth()) {
         // The heading's height and the picture's own make the carousel's size; everything else is
         // laid over that, so the picture runs up behind the heading.
-        val headerHeight = with(LocalDensity.current) { headerPx.toDp() }
-        Spacer(Modifier.fillMaxWidth().height(headerHeight + height))
+        // The heading and the picture's height in one column: the carousel has its whole size in
+        // its first frame (a measured spacer was a frame late, and Home jumped), and the heading is
+        // drawn over the picture by its zIndex.
+        Column(Modifier.fillMaxWidth().zIndex(1f)) {
+            if (header != null) Box(Modifier.fillMaxWidth().onSizeChanged { headerPx = it.height }) { header() }
+            Spacer(Modifier.fillMaxWidth().height(height))
+        }
         if (picks.isNullOrEmpty()) {
             TvFeaturedSkeleton(start, Modifier.matchParentSize())
-            if (header != null) Box(Modifier.fillMaxWidth().onSizeChanged { headerPx = it.height }) { header() }
             return@Box
         }
         val s = LocalStrings.current
@@ -152,9 +163,6 @@ internal fun TvFeaturedCarousel(
             // The heading's words over any picture: a fade from the top, deeper than the heading,
             // under the page's own words.
             TvFeaturedArt(shown, chatTitle, start = start, segments = count > 1, headerFade = if (header != null) headerPx.toFloat() else 0f)
-        }
-        if (header != null) {
-            Box(Modifier.fillMaxWidth().onSizeChanged { headerPx = it.height }) { header() }
         }
 
         // What Play starts, worked out as the phone's page does.
@@ -254,7 +262,12 @@ private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String, start
         // The picture at the end, melting into the page at its start and foot, so the words at the
         // start and the heading above stand on the page itself; the clock and the account at the
         // heading's end stand on a glow of the page's colour.
-        EdgeBackdrop(source, Modifier.fillMaxSize(), cornerShade = with(LocalDensity.current) { (headerFade * HEADER_FADE_REACH).toDp() })
+        EdgeBackdrop(
+            source,
+            Modifier.fillMaxSize(),
+            cornerShade = with(LocalDensity.current) { (headerFade * HEADER_FADE_REACH).toDp() },
+            onPictured = HomeFirstPaint::markReady,
+        )
         Column(
             Modifier
                 .align(Alignment.BottomStart)
@@ -313,7 +326,26 @@ private fun TvDetailsPill(label: String, onClick: () -> Unit, modifier: Modifier
 private fun TvFeaturedSkeleton(start: Dp, modifier: Modifier = Modifier) {
     val shimmer = rememberShimmer()
     Box(modifier) {
-        SkeletonBox(shimmer, Modifier.fillMaxSize(), RectangleShape)
+        SkeletonBox(
+            shimmer,
+            Modifier
+                .align(Alignment.TopEnd)
+                .fillMaxWidth(EDGE_SHARE)
+                .fillMaxHeight()
+                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                .drawWithContent {
+                    drawContent()
+                    // Clear at the start, where the words go, solid towards the end edge.
+                    val across = if (layoutDirection == LayoutDirection.Rtl) {
+                        Brush.horizontalGradient(0f to Color.Black, 0.55f to Color.Black, 1f to Color.Transparent)
+                    } else {
+                        Brush.horizontalGradient(0f to Color.Transparent, 0.45f to Color.Black, 1f to Color.Black)
+                    }
+                    drawRect(across, blendMode = BlendMode.DstIn)
+                    drawRect(Brush.verticalGradient(0f to Color.Black, 0.6f to Color.Black, 1f to Color.Transparent), blendMode = BlendMode.DstIn)
+                },
+            RectangleShape,
+        )
         Column(
             Modifier.align(Alignment.BottomStart).padding(start = start, bottom = PAGE_PAD),
             verticalArrangement = Arrangement.spacedBy(10.dp),

@@ -1,5 +1,6 @@
 package com.tmplayer.ui.onboarding
 
+import com.tmplayer.ui.components.pressScale
 import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.LocalIndication
@@ -217,6 +218,8 @@ internal fun QuietButton(label: String, icon: Boolean = false, modifier: Modifie
     val touch = deviceForm() == DeviceForm.Phone
     Row(
         modifier
+            // Sinks a little under a finger or a click, and comes back up on release.
+            .pressScale(interactions, com.tmplayer.ui.components.Micro.PillPressScale)
             .height(QUIET_HEIGHT)
             .clip(CircleShape)
             .background(if (shown) Tone.focusFill else Color.Transparent)

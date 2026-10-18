@@ -1,5 +1,6 @@
 package com.tmplayer.ui.onboarding
 
+import com.tmplayer.ui.components.pressScale
 import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.LocalIndication
@@ -462,6 +463,8 @@ internal fun SetupButton(
     val touch = deviceForm() == DeviceForm.Phone
     Row(
         modifier
+            // Sinks a little under a finger or a click, and comes back up on release.
+            .pressScale(interactions, com.tmplayer.ui.components.Micro.PillPressScale)
             .clip(CircleShape)
             .background(
                 when {

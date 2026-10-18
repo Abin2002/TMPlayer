@@ -148,6 +148,21 @@ object Td {
     private val _network = MutableStateFlow(NetworkFacts())
     val network: StateFlow<NetworkFacts> = _network.asStateFlow()
 
+    /** Whether the signed in account has Telegram Premium (the `is_premium` option). */
+    private val _premium = MutableStateFlow(false)
+    val premium: StateFlow<Boolean> = _premium.asStateFlow()
+
+    /**
+     * When Telegram last said it is capping this account's download speed
+     * (`updateSpeedLimitNotification`), or 0. See [speedLimitedNow].
+     */
+    @Volatile
+    private var speedLimitedAt = 0L
+
+    /** Whether a slow download now is Telegram's cap for an account without Premium ([SpeedLimit]). */
+    fun speedLimitedNow(nowMs: Long = System.currentTimeMillis()): Boolean =
+        SpeedLimit.limited(_premium.value, speedLimitedAt, nowMs)
+
     /** Whether TDLib is set to go through one of its stored proxies. See [proxies]. */
     private val _proxyOn = MutableStateFlow(false)
     val proxyOn: StateFlow<Boolean> = _proxyOn.asStateFlow()
@@ -389,6 +404,19 @@ object Td {
                     }
                 }
             }
+            val options = launch {
+                td.optionUpdates.collect { update ->
+                    if (update.name == "is_premium") _premium.value = (update.value as? OptionValueBoolean)?.value == true
+                }
+            }
+            val speedLimit = launch {
+                td.speedLimitNotificationUpdates.collect { update ->
+                    if (!update.isUpload) {
+                        speedLimitedAt = System.currentTimeMillis()
+                        Logger.i(TAG, "download speed limited by Telegram")
+                    }
+                }
+            }
             val connection = launch {
                 td.connectionStateUpdates.collect { update ->
                     // "Updating" means the socket is up and TDLib is pulling in what it missed.
@@ -419,6 +447,10 @@ object Td {
             deleted.cancel()
             synchronized(watched) { watched.clear() }
             connection.cancel()
+            options.cancel()
+            speedLimit.cancel()
+            _premium.value = false
+            speedLimitedAt = 0L
             folders.cancel()
             _folders.value = emptyList()
             _mainListPosition.value = 0
@@ -967,9 +999,10 @@ object Td {
      * and costs one call to find out. Falls back to the stored id when the message cannot be
      * reached, which leaves the caller no worse off than before.
      */
-    suspend fun currentFileId(chatId: Long, messageId: Long, storedFileId: Int): Int {
+    suspend fun currentFileId(chatId: Long, messageId: Long, storedFileId: Int, quality: Int = 0): Int {
         if (localDownloadedBytes(storedFileId) > 0) return storedFileId
-        return refreshMedia(chatId, messageId)?.fileId ?: storedFileId
+        // A Telegram copy (CP80) asked for by its height: that copy's file in the message as it is now.
+        return refreshMedia(chatId, messageId)?.let { TelegramQualities.fileFor(it, quality) } ?: storedFileId
     }
 
     /**

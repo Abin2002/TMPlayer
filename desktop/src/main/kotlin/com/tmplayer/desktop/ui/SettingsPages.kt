@@ -476,6 +476,8 @@ internal fun LockRows(state: ShellState, onPin: (DesktopPinFlow) -> Unit, onKids
         color = Tone.muted,
         modifier = Modifier.padding(horizontal = SETTING_INSET),
     )
+    // Where the account is signed in, and ending a session (CP83): behind this page's PIN.
+    Action(s.settingsDevices, s.settingsDevicesDetail, TmIcons.Phone) { com.tmplayer.ui.settings.DevicesScreenState.open = true }
 }
 
 /**

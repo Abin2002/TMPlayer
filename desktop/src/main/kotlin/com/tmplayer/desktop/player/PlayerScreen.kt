@@ -1,5 +1,8 @@
 package com.tmplayer.desktop.player
 
+import com.tmplayer.data.PostStart
+import com.tmplayer.data.QualityWish
+import com.tmplayer.data.TelegramQualities
 import androidx.compose.ui.input.key.Key
 import com.tmplayer.i18n.L
 import com.tmplayer.i18n.Translator
@@ -276,6 +279,30 @@ fun PlayerScreen(
         val here = current.item
         runCatching { settings.notePlayedQuality(copies.firstOrNull { it.id == here.id } ?: here) }
     }
+    // The message as Telegram has it now (CP80): its lighter copies, start time and storyboard.
+    // The grid's item already carries them; one rebuilt from a record is read again.
+    var post by remember(current.item.chatId, current.item.messageId) { mutableStateOf<MediaItem?>(null) }
+    // The media handed on to a Telegram copy before it ever opened, whose leaving saves nothing.
+    val neverOpened = remember { arrayOfNulls<PlayerMedia>(1) }
+    LaunchedEffect(current.item.chatId, current.item.messageId) {
+        val here = current.item
+        if (!hasMessage(here) || !current.fromTelegram) return@LaunchedEffect
+        if (here.qualities.isNotEmpty() || here.storyboard != null) {
+            post = here
+            return@LaunchedEffect
+        }
+        post = runCatching {
+            com.tmplayer.data.Td.awaitAuthorizedSession()
+            com.tmplayer.data.Td.refreshMedia(here.chatId, here.messageId)
+        }.getOrNull()
+    }
+    val qualities = if (current.isDownload || current.item.isJoined) emptyList() else (post?.qualities ?: current.item.qualities)
+    // Telegram's storyboard (CP80): the timebar's hover pictures, where scrub pictures are on.
+    val scrubPictures by remember(settings) { settings.trickplay }.collectAsState(initial = true)
+    val boardFiles = (post ?: current.item).storyboard
+    val storyboard = remember(boardFiles, scrubPictures) {
+        boardFiles?.takeIf { scrubPictures }?.let { files -> DesktopStoryboard(files) { engine.state.value.durationMs.takeIf { it > 0 } ?: current.item.durationSec * 1000L } }
+    }
     var resumedFrom by remember { mutableStateOf<Long?>(null) }
     var autoplayNext by remember { mutableStateOf(true) }
     var nextUpDismissed by remember { mutableStateOf(false) }
@@ -408,6 +435,32 @@ fun PlayerScreen(
 
     LaunchedEffect(current, attempt) {
         phase = Phase.Loading(if (item.chatId != 0L) s.playerConnectingTelegram else s.playerOpeningVideo)
+        // Telegram's own lighter copy (CP80), chosen before anything is opened: the one asked for
+        // on the detail page or the copies menu, else one the line measured on this run carries
+        // when it is too slow for the upload. Never for a download or an upload already here.
+        if (attempt == 0 && reopenAt == null && current.fromTelegram && hasMessage(item) && item.playingQuality == 0 && !item.isJoined) {
+            val wish = QualityWish.take(item.chatId, item.messageId)
+            if (wish != 0) {
+                val fresh = kotlinx.coroutines.withTimeoutOrNull(POST_READ_MS) {
+                    post ?: runCatching { com.tmplayer.data.Td.awaitAuthorizedSession(); com.tmplayer.data.Td.refreshMedia(item.chatId, item.messageId) }.getOrNull()?.also { post = it }
+                }
+                val choice = when {
+                    fresh == null || fresh.qualities.isEmpty() -> null
+                    wish != null -> fresh.qualities.firstOrNull { it.height == wish }?.let { TelegramQualities.Choice(it, TelegramQualities.Why.SlowLine) to false }
+                    com.tmplayer.desktop.DownloadIndex.fileFor(settings, item.chatId, item.messageId) != null -> null
+                    runCatching { com.tmplayer.data.Td.localDownloadedBytes(item.fileId) }.getOrDefault(0L) > 0 -> null
+                    else -> TelegramQualities.choose(fresh.copy(fileId = item.fileId, sizeBytes = item.sizeBytes.takeIf { it > 0 } ?: fresh.sizeBytes), saveData = false, lineBytesPerSec = com.tmplayer.player.LineSpeed.recent())?.let { it to true }
+                }
+                if (choice != null && fresh != null) {
+                    val (picked, automatic) = choice
+                    val upload = item.copy(qualities = fresh.qualities, storyboard = fresh.storyboard, startSec = fresh.startSec)
+                    if (automatic) showFlash(Flash.Kind.Text, s.playerLighterPickedSlow(TelegramQualities.label(picked.quality.height)))
+                    neverOpened[0] = current
+                    current = current.episode(TelegramQualities.withQuality(upload, picked.quality))
+                    return@LaunchedEffect
+                }
+            }
+        }
         nextUpDismissed = false
         nextUpShown = false
         resumedFrom = null
@@ -436,7 +489,10 @@ fun PlayerScreen(
             // Resume across devices, when on: the other devices' places in first, briefly.
             com.tmplayer.data.ResumeSync.pullFor(settings)
             // Whichever copy of the video was played last: a switch of quality carries on.
-            settings.resumeStartFor(item)
+            settings.resumeStartFor(TelegramQualities.upload(item))
+                // Never watched here: the moment the poster chose to start at (CP80), if any.
+                .takeIf { it > 0 }
+                ?: PostStart.startMs(linkSec = 0, savedMs = 0, postSec = (post ?: item).startSec, durationSec = item.durationSec)
         }.getOrDefault(0L)
         val reopening = reopenAt != null
         reopenAt = null
@@ -578,11 +634,13 @@ fun PlayerScreen(
         val key = SettingsStore.progressKey(it.chatId, it.messageId)
         if (watched && leaving && watchedHere.add(key)) recordWatched(m, duration, manual = false)
         val forget = watched || key in markedHere
+        // The upload's file and size, whichever of Telegram's copies plays (CP80).
+        val upload = TelegramQualities.upload(it)
         val description = ResumeRecord.encode(
-            fileId = it.fileId,
+            fileId = upload.fileId,
             title = it.title,
             chatTitle = m.chatTitle,
-            sizeBytes = it.sizeBytes,
+            sizeBytes = upload.sizeBytes,
             durationSec = it.durationSec.takeIf { d -> d > 0 } ?: (duration / 1000).toInt(),
             updatedAt = System.currentTimeMillis(),
             state = resumeState(engine.tracks.value, s.speed),
@@ -606,7 +664,9 @@ fun PlayerScreen(
     DisposableEffect(current) {
         val leaving = current
         onDispose {
-            saveResume(leaving, engine.state.value, leaving = true)
+            // One handed straight on to a copy of Telegram's before it opened never played, and
+            // the engine's place is still the video before it.
+            if (leaving !== neverOpened[0]) saveResume(leaving, engine.state.value, leaving = true)
             leaving.release()
         }
     }
@@ -644,6 +704,35 @@ fun PlayerScreen(
         playerScope.launch { runCatching { settings.setCopyPick(copy) } }
         CopyHandoff.offer(copies)
         switchTo(copy)
+    }
+
+    /**
+     * Plays Telegram's copy of [height] (0 for the upload) in place of what plays, from the same
+     * moment (CP80). The same message, so the place, the Watched mark and the bookmarks stay.
+     */
+    fun switchQuality(height: Int) {
+        val here = current.item
+        if (height == here.playingQuality) return
+        val source = post ?: here
+        val upload = TelegramQualities.upload(here).copy(qualities = source.qualities, storyboard = source.storyboard, startSec = source.startSec)
+        val next = if (height == 0) upload else upload.qualities.firstOrNull { it.height == height }?.let { TelegramQualities.withQuality(upload, it) } ?: return
+        val at = engine.state.value.positionMs
+        if (at > 0) BookmarkJump.request(here.chatId, here.messageId, at)
+        // Chosen by the viewer: the player does not pick another by itself for this video.
+        QualityWish.request(here.chatId, here.messageId, height)
+        showFlash(Flash.Kind.Text, s.playerQualitySwitched(if (height == 0) s.detailUploadQuality else s.detailTelegramQuality(TelegramQualities.label(height))))
+        switchTo(next)
+    }
+
+    /** "Play Telegram's 480p" on the sheet that says nothing is arriving: the next copy down. */
+    val lighter: com.tmplayer.data.TelegramQuality? = run {
+        val here = current.item
+        val source = post ?: here
+        if (qualities.isEmpty()) null else TelegramQualities.lighter(here.copy(qualities = source.qualities))
+    }
+
+    val lighterAction: Pair<String, () -> Unit>? = lighter?.let { q ->
+        s.playerLighter(TelegramQualities.label(q.height)) to { switchQuality(q.height) }
     }
 
     /** [switchTo] for an episode nobody asked for, counted towards "Still watching?". */
@@ -1449,7 +1538,10 @@ fun PlayerScreen(
             ).joinToString("  ·  ")
             castTitle[0] = com.tmplayer.desktop.cast.CastTitle(title, subtitle)
 
-            CompositionLocalProvider(LocalPlayerCopies provides PlayerCopies(copies, current.item.id)) { PlayerOverlay(
+            CompositionLocalProvider(
+                LocalPlayerCopies provides PlayerCopies(copies, current.item.id, qualities, current.item.playingQuality),
+                LocalStoryboard provides storyboard,
+            ) { PlayerOverlay(
                 visible = showControls,
                 status = status,
                 title = title,
@@ -1521,6 +1613,7 @@ fun PlayerScreen(
                         }
                         MenuAction.CopyLink -> copyLink()
                         is MenuAction.SwitchCopy -> switchCopy(action.copy)
+                        is MenuAction.SwitchQuality -> switchQuality(action.height)
                         MenuAction.Download -> showFlash(Flash.Kind.Text, current.download())
                         MenuAction.OpenElsewhere -> openElsewhere()
                         MenuAction.Details -> showDetails = true
@@ -1686,6 +1779,7 @@ fun PlayerScreen(
                 } else {
                     null
                 },
+                lighter = lighterAction,
             )
 
             // A stall while playing that runs on says why, with the opening's three ways on.
@@ -1708,6 +1802,7 @@ fun PlayerScreen(
                     null
                 },
                 onBack = onBack,
+                lighter = lighterAction,
             )
 
             StatusSheet(
@@ -1913,6 +2008,9 @@ private val OUTSIDE_PLAYBACK = setOf(
 internal fun PlayerTheme(content: @Composable () -> Unit) = TmMaterialTheme(dark = true, content = content)
 
 private const val RESUME_TICK_MS = 10_000L
+
+/** How long the opening waits for the message to be read again before it picks a copy (CP80). */
+private const val POST_READ_MS = 2_500L
 private const val NEXT_UP_LEAD_MS = 30_000L
 
 /** How long the card counts down from the start of timed credits before the next episode. */
