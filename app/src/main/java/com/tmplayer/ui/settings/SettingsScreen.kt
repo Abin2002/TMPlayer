@@ -1,5 +1,6 @@
 package com.tmplayer.ui.settings
 
+import com.tmplayer.ui.components.keepTopInSight
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -295,6 +296,7 @@ fun SettingsScreen(
     val lowStorage by settings.lowStorageMode.collectAsStateWithLifecycle(initialValue = false)
     val autoplayNext by settings.autoplayNext.collectAsStateWithLifecycle(initialValue = true)
     val resumeRewindMs by settings.resumeRewindMs.collectAsStateWithLifecycle(initialValue = ResumeRewind.DEFAULT_MS)
+    val compactNav by settings.compactNav.collectAsState(initial = false)
     val detailFirst by settings.detailFirst.collectAsStateWithLifecycle(initialValue = true)
     val rememberSearches by settings.rememberSearches.collectAsStateWithLifecycle(initialValue = true)
     val wifiOnly by settings.wifiOnlyDownloads.collectAsStateWithLifecycle(initialValue = false)
@@ -535,12 +537,15 @@ fun SettingsScreen(
     val insets = WindowInsets.safeDrawing.asPaddingValues()
 
     val list: @Composable () -> Unit = {
+    // The category list keeps one state for as long as Settings is open, so coming back from
+    // a page finds it scrolled where it was left. Each page starts at its own top.
+    val shownState = if (page == null) listState else pageState
     LazyColumn(
-        // The category list keeps one state for as long as Settings is open, so coming back from
-        // a page finds it scrolled where it was left. Each page starts at its own top.
-        state = if (page == null) listState else pageState,
+        state = shownState,
         modifier = Modifier
             .fillMaxSize()
+            // The heading at the top takes no focus: back on the first row, it comes back whole.
+            .keepTopInSight(shownState, enabled = !touch)
             .then(
                 if (touch) {
                     Modifier.windowInsetsPadding(
@@ -693,6 +698,19 @@ fun SettingsScreen(
                         canIncrease = uiScale.ordinal < UiScale.entries.lastIndex,
                         onStep = { direction -> scope.launch { settings.setUiScale(uiScale.step(direction)) } },
                     )
+                }
+
+                // The side bar with its icons alone: a television only, the phone's bar is its own.
+                if (!touch) {
+                    item {
+                        ToggleRow(
+                            title = s.settingsCompactNav,
+                            subtitle = if (compactNav) s.settingsCompactNavOn("tv") else s.settingsCompactNavOff("tv"),
+                            icon = TmIcons.Grid,
+                            checked = compactNav,
+                            onToggle = { scope.launch { settings.setCompactNav(!compactNav) } },
+                        )
+                    }
                 }
 
                 // CP68: the two lightening switches the low-end device card recommends, each its own

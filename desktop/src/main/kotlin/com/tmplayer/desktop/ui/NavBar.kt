@@ -1,5 +1,7 @@
 package com.tmplayer.desktop.ui
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.SideEffect
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -182,10 +184,20 @@ private fun NavBar(
     val current = navPlaceOf(state)
     val reduced = rememberReducedMotion() || Motion.reduced
     val inFlight = rememberDownloadsInFlight()
+    // Settings' "Icons only in the menu": the names go, and each place is a round icon button,
+    // its name in the tooltip.
+    // Drawn once the choice is read, so a compact bar never opens wide and shrinks.
+    val compact = state.settings.compactNav.collectAsState(initial = null).value ?: return
+    val cell = if (compact) NavCellSize(COMPACT_ITEM, COMPACT_ITEM) else NavCellSize(NAV_ITEM, NAV_ITEM_HEIGHT)
+    // The highlight slides between places, but jumps with the cells when the setting changes them.
+    var lastCell by remember { mutableStateOf(cell) }
+    val resized = lastCell != cell
+    SideEffect { lastCell = cell }
+    CompositionLocalProvider(LocalNavCell provides cell) {
     Box(modifier.padding(bottom = NAV_MARGIN)) {
         Row(
             Modifier
-                .height(NAV_HEIGHT)
+                .height(cell.height + NAV_PADDING * 2)
                 .shadow(NAV_SHADOW, CircleShape)
                 .clip(CircleShape)
                 .background(FloatingTone.menu)
@@ -198,8 +210,8 @@ private fun NavBar(
                 // button to the next, so the bar shows where the page went.
                 val index = current?.ordinal
                 val x by animateDpAsState(
-                    targetValue = (NAV_ITEM + NAV_GAP) * (index ?: 0),
-                    animationSpec = if (reduced) snap() else spring(dampingRatio = 0.8f, stiffness = 500f),
+                    targetValue = (cell.width + NAV_GAP) * (index ?: 0),
+                    animationSpec = if (reduced || resized) snap() else spring(dampingRatio = 0.8f, stiffness = 500f),
                     label = "navHighlight",
                 )
                 val shown by animateFloatAsState(
@@ -210,9 +222,9 @@ private fun NavBar(
                 Box(
                     Modifier
                         .offset(x = x)
-                        .size(NAV_ITEM, NAV_ITEM_HEIGHT)
+                        .size(cell.width, cell.height)
                         .graphicsLayer { alpha = shown }
-                        .clip(RoundedCornerShape(NAV_ITEM_HEIGHT / 2))
+                        .clip(RoundedCornerShape(cell.height / 2))
                         .background(Tone.accent.copy(alpha = 0.16f)),
                 )
                 // A gap between the places, so the chosen one's highlight and the hover on the one
@@ -237,7 +249,15 @@ private fun NavBar(
             }
         }
     }
+    }
 }
+
+/** A place's cell on the bar, which the compact bar makes a round icon button. */
+private data class NavCellSize(val width: Dp, val height: Dp) {
+    val compact: Boolean get() = width == height
+}
+
+private val LocalNavCell = androidx.compose.runtime.staticCompositionLocalOf { NavCellSize(NAV_ITEM, NAV_ITEM_HEIGHT) }
 
 /**
  * One place on the bar: its icon over a short name in 10 sp, a tooltip naming its key, and the
@@ -272,16 +292,17 @@ private fun NavCell(
 ) {
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusVisibleAsState()
+    val cell = LocalNavCell.current
     // The icon and its name take the accent as the highlight lands under them; the cell sinks a
     // little under the press, as the phone's buttons do.
     val tint by animateColorAsState(if (chosen) Tone.accent else Tone.text, Motion.standard(Motion.Fast), label = "navIcon")
     val ink by animateColorAsState(if (chosen) Tone.accent else Tone.muted, Motion.standard(Motion.Fast), label = "navLabel")
     Column(
         modifier
-            .size(NAV_ITEM, NAV_ITEM_HEIGHT)
+            .size(cell.width, cell.height)
             .pressScale(interactions)
-            .clip(RoundedCornerShape(NAV_ITEM_HEIGHT / 2))
-            .then(if (focused) Modifier.border(2.dp, Tone.accent, RoundedCornerShape(NAV_ITEM_HEIGHT / 2)) else Modifier)
+            .clip(RoundedCornerShape(cell.height / 2))
+            .then(if (focused) Modifier.border(2.dp, Tone.accent, RoundedCornerShape(cell.height / 2)) else Modifier)
             .clickable(interactionSource = interactions, indication = androidx.compose.foundation.LocalIndication.current, role = role, onClick = onClick)
             .semantics {
                 contentDescription = description
@@ -293,6 +314,7 @@ private fun NavCell(
     ) {
         // One height for every glyph, the ringed picture included, so the names sit on one line.
         Box(Modifier.size(GLYPH_SLOT), contentAlignment = Alignment.Center) { glyph(tint) }
+        if (cell.compact) return@Column
         Spacer(Modifier.height(2.dp))
         Text(
             label,
@@ -570,6 +592,9 @@ private val NAV_GAP = 6.dp
 /** The same gap between the buttons of a chat's bar, which stands in this bar's place. */
 internal val BarGap: Dp get() = NAV_GAP
 private val NAV_ITEM_HEIGHT = 50.dp
+
+/** A place's cell on the compact bar: round, the glyph alone. */
+private val COMPACT_ITEM = 44.dp
 private val NAV_PADDING = 6.dp
 private val NAV_HEIGHT = NAV_ITEM_HEIGHT + NAV_PADDING * 2
 private val NAV_MARGIN = 16.dp

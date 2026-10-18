@@ -42,7 +42,8 @@ object TvChannels {
         val name: String,
         val caption: String,
     ) {
-        val key: String get() = "t$thumbnailFileId|${if (posterWanted) "p" else "-"}|$name|$caption"
+        // "w": cards since the wide picture came first, so the rows written before are redrawn once.
+        val key: String get() = "t$thumbnailFileId|${if (posterWanted) "p" else "-"}|w|$name|$caption"
     }
 
     /** What a card does when it is picked. */

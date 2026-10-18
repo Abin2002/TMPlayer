@@ -1,5 +1,6 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.components.keepTopInSight
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -265,6 +266,7 @@ internal fun TvSearchScreen(
                 else -> LazyVerticalGrid(
                     columns = GridCells.Fixed(COLUMNS),
                     state = grid,
+                    modifier = Modifier.keepTopInSight(grid),
                     contentPadding = PaddingValues(end = Tv.SafeH, top = Tv.FocusClearance, bottom = Tv.FocusClearance),
                     horizontalArrangement = Arrangement.spacedBy(20.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),

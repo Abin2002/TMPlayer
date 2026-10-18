@@ -132,6 +132,7 @@ object Backups {
         "chat_sort" to Kind.TEXT,
         "controls_timeout_ms" to Kind.LONG,
         "detail_first" to Kind.BOOL,
+        "compact_nav" to Kind.BOOL,
         "double_tap_ms" to Kind.LONG,
         "download_before_playing" to Kind.BOOL,
         "downmix_stereo" to Kind.BOOL,

@@ -1,5 +1,7 @@
 package com.tmplayer.ui.browse
 
+import androidx.compose.animation.core.snap
+import com.tmplayer.ui.components.keepTopInSight
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -47,6 +49,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.drawWithContent
@@ -472,7 +475,6 @@ fun BrowseScreen(
             val headerAccount = data.account ?: account
             Column(Modifier.fillMaxSize()) {
                     if (tab.isHome) {
-                        if (!touch) TabHeading(tab, 0, insets, headerAccount) { RefreshAction(onRefreshHome) }
                         val titles = remember(data.chats) { data.chats.associate { it.id to it.title } }
                         Box(Modifier.fillMaxSize()) {
                             HomePane(
@@ -481,7 +483,8 @@ fun BrowseScreen(
                                 art = homeArt,
                                 chatTitle = { titles[it].orEmpty() },
                                 start = insets.start,
-                                end = insets.end,
+                                // The safe area the page leaves to Home on a television (see the pane's column).
+                                end = insets.end + if (touch) 0.dp else Tv.SafeH,
                                 bottom = insets.bottom,
                                 onRowShown = onHomeRowShown,
                                 onArtWanted = onHomeArtWanted,
@@ -509,6 +512,13 @@ fun BrowseScreen(
                                     panelScope.launch {
                                         queueSeason(panelContext, SettingsStore(panelContext), request) { titles[it.chatId].orEmpty() }?.let(onMessage)
                                     }
+                                },
+                                // The heading stands on the carousel's picture, as the phone's
+                                // status bar does, and scrolls away with it.
+                                tvHeader = if (touch) {
+                                    null
+                                } else {
+                                    { onArt -> TabHeading(tab, 0, insets, headerAccount, modifier = Modifier.padding(end = Tv.SafeH), onArt = onArt) { RefreshAction(onRefreshHome) } }
                                 },
                             )
                         }
@@ -851,7 +861,10 @@ fun BrowseScreen(
                 modifier = Modifier.onFocusChanged { railHasFocus = it.hasFocus },
             )
 
-            Column(Modifier.fillMaxSize().padding(end = Tv.SafeH).keepsVerticalFocus()) {
+            // Home runs to the screen's edge, its carousel's picture with it, and pads its own rows;
+            // every other page keeps the safe area clear here.
+            val homeShown = !tvSearchOpen && tab.isHome
+            Column(Modifier.fillMaxSize().padding(end = if (homeShown) 0.dp else Tv.SafeH).keepsVerticalFocus()) {
                 if (tvSearchOpen) {
                     TvSearchPage(
                         search = search,
@@ -1255,6 +1268,7 @@ private fun <T : Any> ContinueSection(
             // kind of list, and a card around each row here made it the one list that was boxed.
             CardLayout.List -> LazyColumn(
                 state = listState,
+                modifier = Modifier.keepTopInSight(listState, enabled = !isTouch()),
                 verticalArrangement = Arrangement.spacedBy(if (isTouch()) 2.dp else 4.dp),
                 contentPadding = padding,
             ) {
@@ -1280,6 +1294,7 @@ private fun <T : Any> ContinueSection(
             CardLayout.Grid -> LazyVerticalGrid(
                 columns = tiles,
                 state = gridState,
+                modifier = Modifier.keepTopInSight(gridState, enabled = !isTouch()),
                 contentPadding = padding,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -1497,10 +1512,23 @@ private fun NavRail(
     // Inset either side, the icon and its gap, a count badge, and the column's end padding.
     val itemRoom = with(LocalDensity.current) { widest.toDp() } + RAIL_INSET * 2 + 22.dp + 12.dp + 20.dp + 12.dp
     val railRoom = itemRoom.coerceIn(180.dp, RAIL_WIDE)
-    // Always open: a television has the width for the labels, and a rail that folded to its icons
-    // whenever the remote left it only moved the whole page sideways on every visit.
-    val width = railRoom
-    val reveal = 1f
+    // Open, with the names, unless Settings asks for icons only. Never folding on its own: a rail
+    // that folded to its icons whenever the remote left it only moved the whole page sideways on
+    // every visit. The setting is a fixed choice, so the page keeps one width while it is used.
+    val context = LocalContext.current
+    // Laid out at its stored width from the first frame, where a default would open the rail wide
+    // and fold it on every launch; it slides only when the setting is changed.
+    val stored by remember(context) { SettingsStore(context).compactNav }.collectAsState(initial = null)
+    val compact = stored == true
+    var known by remember { mutableStateOf(false) }
+    val motion = if (known) tween<Float>(FOCUS_FADE_MS) else snap()
+    val reveal by animateFloatAsState(if (compact) 0f else 1f, motion, label = "railReveal")
+    val width by animateDpAsState(
+        if (compact) RAIL_INSET * 2 + RAIL_MARK else railRoom,
+        if (known) tween(FOCUS_FADE_MS) else snap(),
+        label = "railWidth",
+    )
+    LaunchedEffect(stored) { if (stored != null) known = true }
     // Left from the content lands on the destination being shown, not on whichever rail item
     // happens to sit level with the focused tile (a group heading, Downloads), so the rail always
     // opens where the viewer is.
@@ -1622,6 +1650,7 @@ private fun RailBrand(reveal: Float) {
         // The mark stays on a folded rail, the app's own face at the top of its icons; the name
         // and the version come and go with the labels.
         AppMark(RAIL_MARK)
+        if (reveal <= 0f) return@Row
         Spacer(Modifier.width(12.dp))
         Column(Modifier.alpha(reveal)) {
             Text(
@@ -2386,7 +2415,7 @@ private fun ChatSection(
     Box(Modifier.fillMaxSize()) {
         when (layout) {
             CardLayout.List -> LazyColumn(
-                Modifier.fillMaxSize(),
+                Modifier.fillMaxSize().keepTopInSight(listState, enabled = !isTouch()),
                 state = listState,
                 // Rows carry their own side padding on a phone so the ripple reaches both edges, and
                 // they sit against each other with no gap: the list is one surface, not a stack of
@@ -2464,7 +2493,7 @@ private fun ChatSection(
             CardLayout.Grid -> LazyVerticalGrid(
                 columns = tiles,
                 state = gridState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().keepTopInSight(gridState, enabled = !isTouch()),
                 // The end inset keeps a focused tile in the last column from having its border
                 // clipped by the panel edge.
                 contentPadding = PaddingValues(

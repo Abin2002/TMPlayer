@@ -67,6 +67,7 @@ internal fun AppearanceRows(state: ShellState) {
     val theme by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
     val language by settings.language.collectAsState(initial = "")
     val uiScale by rememberUiScale(settings)
+    val compactNav by settings.compactNav.collectAsState(initial = false)
     val desktop by state.extras.prefs.state.collectAsState()
     var pickingLanguage by remember { mutableStateOf(false) }
 
@@ -81,6 +82,12 @@ internal fun AppearanceRows(state: ShellState) {
     Setting(s.interfaceSize, s.interfaceSizeDetail, icon = TmIcons.TextSize) {
         Segments(UiScale.entries, uiScale, { it.label }) { scope.launch { settings.setUiScale(it) } }
     }
+    Toggle(
+        s.settingsCompactNav,
+        if (compactNav) s.settingsCompactNavOn("desktop") else s.settingsCompactNavOff("desktop"),
+        compactNav,
+        icon = TmIcons.Grid,
+    ) { on -> scope.launch { settings.setCompactNav(on) } }
     // Only where TMPlayer would draw window buttons of its own: Windows, and a tiling window
     // manager. Read at launch, so the change waits for a restart.
     if (remember { com.tmplayer.desktop.os.WindowChromeMode.current(systemTitleBar = false).inApp }) {

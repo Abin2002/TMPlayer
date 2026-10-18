@@ -34,6 +34,7 @@ private val OPEN_LAST_CHAT = booleanPreferencesKey("open_last_chat")
 private val DOWNLOAD_FIRST = booleanPreferencesKey("download_before_playing")
 private val AUTOPLAY_NEXT = booleanPreferencesKey("autoplay_next")
 private val DETAIL_FIRST = booleanPreferencesKey("detail_first")
+private val COMPACT_NAV = booleanPreferencesKey("compact_nav")
 private val DOWNMIX_STEREO = booleanPreferencesKey("downmix_stereo")
 private val VOLUME_BOOST = booleanPreferencesKey("volume_boost")
 private val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
@@ -415,6 +416,16 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     suspend fun setDetailFirst(value: Boolean) {
         prefs.edit { it[DETAIL_FIRST] = value }
+    }
+
+    /**
+     * Whether the television's side bar and the desktop's floating bar show their icons alone,
+     * without the names. Off by default; a phone's bar is not affected.
+     */
+    val compactNav: Flow<Boolean> = read { it[COMPACT_NAV] ?: false }
+
+    suspend fun setCompactNav(value: Boolean) {
+        prefs.edit { it[COMPACT_NAV] = value }
     }
 
     /** The chat opened most recently, or zero when there has not been one yet. */

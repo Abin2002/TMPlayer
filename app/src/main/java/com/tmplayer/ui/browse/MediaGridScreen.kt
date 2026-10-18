@@ -1,5 +1,6 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.components.keepTopInSight
 import android.Manifest
 import android.app.Activity
 import android.content.Context
@@ -69,7 +70,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text as M3Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import com.tmplayer.ui.components.TouchPullRefresh
 import com.tmplayer.ui.components.secondaryPress
 import androidx.compose.runtime.Composable
@@ -95,7 +95,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.findRootCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -657,7 +656,7 @@ fun MediaGridScreen(
                         CardLayout.Grid -> LazyVerticalGrid(
                             columns = GridCells.Fixed(columns),
                             state = gridState,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize().keepTopInSight(gridState, enabled = !touch),
                             contentPadding = padding,
                             horizontalArrangement = Arrangement.spacedBy(gap),
                             verticalArrangement = Arrangement.spacedBy(gap),
@@ -725,7 +724,7 @@ fun MediaGridScreen(
     
                         CardLayout.List -> LazyColumn(
                             state = listState,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize().keepTopInSight(listState, enabled = !touch),
                             contentPadding = padding,
                             verticalArrangement = Arrangement.spacedBy(if (touch) 2.dp else 4.dp),
                         ) {
@@ -1129,9 +1128,6 @@ internal fun TouchMediaScaffold(
     val field = remember { FocusRequester() }
     // The star ticks under the finger as it fills or empties ("Vibrate on tap").
     val tick = com.tmplayer.ui.components.rememberToggleTick()
-    // The title is a lot of a phone screen to spend while scrolling, so it leaves on the way down
-    // and comes back on the first flick up. The buttons at the foot stay.
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     // On a Fire tablet the keyboard is where dictation lives, so the mic button opens it instead.
     val startVoice = rememberVoiceSearch(
@@ -1167,8 +1163,9 @@ internal fun TouchMediaScaffold(
     val caption: (String) -> String? = { if (compact) null else it }
 
     Box(Modifier.fillMaxSize()) {
+        // No scroll behaviour here: the title is a floating pill, not a TopAppBar, and a behaviour
+        // with no bar to set its limit took every scroll for itself, so the grid never moved.
         Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             // The grid runs to the foot of the window, under the bar that floats over it, and from
             // under the floating Back and title at the top, which it starts clear of.
             contentWindowInsets = WindowInsets.statusBars,
@@ -1288,7 +1285,6 @@ internal fun TouchMediaScaffold(
         if (!searching) return@LaunchedEffect
         // The field is the bar at the foot, so it is on screen whatever the grid has done; the
         // keyboard comes up with it and the field rides up on top of the keyboard.
-        scrollBehavior.state.heightOffset = 0f
         withFrameNanos { }
         runCatching { field.requestFocus() }
     }

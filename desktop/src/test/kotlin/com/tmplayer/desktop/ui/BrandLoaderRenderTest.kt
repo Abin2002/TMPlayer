@@ -63,7 +63,13 @@ class BrandLoaderRenderTest {
         assertTrue(!moving[0].contentEquals(moving[1]))
         Motion.reduced = true
         try {
-            val still = scene(1366, 768, dark = true, lines = oneLine) { frames(it, listOf(700L, 1_400L)) }
+            // Two frames well apart in real time too, after one that lets anything still loading
+            // (a font on a slow runner) arrive: only motion could tell them apart.
+            val still = scene(1366, 768, dark = true, lines = oneLine) { scene ->
+                frames(scene, listOf(700L))
+                Thread.sleep(1_500)
+                listOf(1_400L, 2_100L).map { scene.render(it * 1_000_000L).encodeToData(EncodedImageFormat.PNG)!!.bytes }
+            }
             assertTrue(still[0].contentEquals(still[1]))
         } finally {
             Motion.reduced = false

@@ -1,5 +1,9 @@
 package com.tmplayer.ui.browse
 
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -77,10 +81,11 @@ import com.tmplayer.ui.theme.focusRing
 import com.tmplayer.ui.theme.rememberReducedMotion
 
 /**
- * The television's featured carousel at the top of Home, under its heading: the same newest five
- * different films, shows and videos in the starred chats as the phone's ([FeaturedCarousel],
- * [com.tmplayer.data.HomeFeatured]), one wide picture at a time with its name, its facts, Play and
- * Details at the start, and the line of segments over its top.
+ * The television's featured carousel at the top of Home: the same newest five different films,
+ * shows and videos in the starred chats as the phone's ([FeaturedCarousel],
+ * [com.tmplayer.data.HomeFeatured]), one picture at a time across the whole width of the page and
+ * up behind its [header], with its name, its facts, the line of segments and Play and Details at
+ * the start, the phone's order.
  *
  * Made for a remote and a 1 GB stick rather than a finger:
  * - One page is composed at a time, cross-faded to the next: no pager, so only one picture is
@@ -105,17 +110,20 @@ internal fun TvFeaturedCarousel(
     onPlay: (MediaItem, String) -> Unit,
     onDetails: (FeaturedPick) -> Unit,
     modifier: Modifier = Modifier,
+    /** The page's heading, standing on the picture's top; null leaves it to the page. */
+    header: (@Composable () -> Unit)? = null,
 ) {
-    val shape = RoundedCornerShape(Corner.Large)
-    Box(
-        modifier
-            .fillMaxWidth()
-            .height(height)
-            .padding(start = start, end = end)
-            .clip(shape),
-    ) {
+    var headerPx by remember { mutableIntStateOf(0) }
+    // Home gives the carousel the whole width to the screen's edge, as a backdrop should have;
+    // the heading on it keeps the safe area at its end, as the rows below do.
+    Box(modifier.fillMaxWidth()) {
+        // The heading's height and the picture's own make the carousel's size; everything else is
+        // laid over that, so the picture runs up behind the heading.
+        val headerHeight = with(LocalDensity.current) { headerPx.toDp() }
+        Spacer(Modifier.fillMaxWidth().height(headerHeight + height))
         if (picks.isNullOrEmpty()) {
-            TvFeaturedSkeleton()
+            TvFeaturedSkeleton(start, Modifier.matchParentSize())
+            if (header != null) Box(Modifier.fillMaxWidth().onSizeChanged { headerPx = it.height }) { header() }
             return@Box
         }
         val s = LocalStrings.current
@@ -145,8 +153,13 @@ internal fun TvFeaturedCarousel(
             go(index + 1)
         }
 
-        Crossfade(targetState = pick, animationSpec = Motion.standard(), label = "tvFeatured") { shown ->
-            TvFeaturedArt(shown, chatTitle)
+        Crossfade(targetState = pick, animationSpec = Motion.standard(), label = "tvFeatured", modifier = Modifier.matchParentSize()) { shown ->
+            // The heading's words over any picture: a fade from the top, deeper than the heading,
+            // under the page's own words.
+            TvFeaturedArt(shown, chatTitle, start = start, segments = count > 1, headerFade = if (header != null) headerPx * HEADER_FADE_REACH else 0f)
+        }
+        if (header != null) {
+            Box(Modifier.fillMaxWidth().onSizeChanged { headerPx = it.height }) { header() }
         }
 
         // What Play starts, worked out as the phone's page does.
@@ -165,11 +178,33 @@ internal fun TvFeaturedCarousel(
         val back = if (rtl) Key.DirectionRight else Key.DirectionLeft
         val forward = if (rtl) Key.DirectionLeft else Key.DirectionRight
 
-        Row(
+        Column(
             Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = PAGE_PAD, bottom = PAGE_PAD)
-                .onFocusChanged { focusedIn = it.hasFocus },
+                .fillMaxWidth()
+                .padding(start = start, bottom = PAGE_PAD),
+            verticalArrangement = Arrangement.spacedBy(SEGMENTS_GAP),
+        ) {
+        if (count > 1) {
+            Segments(
+                count = count,
+                current = index,
+                fill = { at ->
+                    when {
+                        at < index -> 1f
+                        at > index -> 0f
+                        !auto -> 1f
+                        else -> progress.value
+                    }
+                },
+                label = { at -> s.homeFeaturedPage(at + 1, count) },
+                onPick = { at -> go(at) },
+                modifier = Modifier.fillMaxWidth(SEGMENTS_SHARE),
+                focusable = false,
+            )
+        }
+        Row(
+            Modifier.onFocusChanged { focusedIn = it.hasFocus },
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -199,34 +234,13 @@ internal fun TvFeaturedCarousel(
                 },
             )
         }
-
-        if (count > 1) {
-            Segments(
-                count = count,
-                current = index,
-                fill = { at ->
-                    when {
-                        at < index -> 1f
-                        at > index -> 0f
-                        !auto -> 1f
-                        else -> progress.value
-                    }
-                },
-                label = { at -> s.homeFeaturedPage(at + 1, count) },
-                onPick = { at -> go(at) },
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = PAGE_PAD, top = 6.dp)
-                    .fillMaxWidth(SEGMENTS_SHARE),
-                focusable = false,
-            )
         }
     }
 }
 
 /** A page's picture, the fades that let its words read, and the name and facts at its start. */
 @Composable
-private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String) {
+private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String, start: Dp, segments: Boolean, headerFade: Float) {
     val s = LocalStrings.current
     val item = pick.item
     val series = pick.series
@@ -245,12 +259,17 @@ private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String) {
     ) {
         ArtBackdrop(source, Modifier.fillMaxSize(), fieldOnly = rememberLowMemory())
         Box(Modifier.fillMaxSize().background(Scrims.startLong()))
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.35f), Color.Transparent), endY = 120f)))
+        if (headerFade > 0f) Box(Modifier.fillMaxSize().drawBehind { drawRect(Scrims.headerTop(headerFade)) })
+        // The foot fades into the page, so the first row below reads as the same ground.
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.6f to Color.Transparent, 1f to Tone.background)))
         Column(
             Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth(TEXT_SHARE)
-                .padding(start = PAGE_PAD, bottom = PAGE_PAD + HERO_PILL_HEIGHT + 14.dp),
+                .padding(
+                    start = start,
+                    bottom = PAGE_PAD + HERO_PILL_HEIGHT + 14.dp + if (segments) SEGMENTS_ROOM else 0.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
@@ -298,12 +317,12 @@ private fun TvDetailsPill(label: String, onClick: () -> Unit, modifier: Modifier
 
 /** The carousel's frame while the starred chats are still being asked: the same size, shimmering. */
 @Composable
-private fun TvFeaturedSkeleton() {
+private fun TvFeaturedSkeleton(start: Dp, modifier: Modifier = Modifier) {
     val shimmer = rememberShimmer()
-    Box(Modifier.fillMaxSize()) {
+    Box(modifier) {
         SkeletonBox(shimmer, Modifier.fillMaxSize(), RectangleShape)
         Column(
-            Modifier.align(Alignment.BottomStart).padding(PAGE_PAD),
+            Modifier.align(Alignment.BottomStart).padding(start = start, bottom = PAGE_PAD),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             SkeletonBox(shimmer, Modifier.width(280.dp).height(28.dp), RoundedCornerShape(8.dp))
@@ -313,8 +332,8 @@ private fun TvFeaturedSkeleton() {
     }
 }
 
-/** How tall the carousel is on a television: room under the heading for the first row's titles. */
-internal val TV_FEATURED_HEIGHT = 208.dp
+/** How tall the carousel is on a television under its heading: room below for the first row's titles. */
+internal val TV_FEATURED_HEIGHT = 224.dp
 
 /** How long a page is up before the carousel moves on. */
 private const val ADVANCE_MS = 7_000
@@ -327,3 +346,11 @@ private const val TEXT_SHARE = 0.6f
 
 /** The share of the width the segments span, over the start, clear of the picture's subject. */
 private const val SEGMENTS_SHARE = 0.4f
+
+/** Between the segments and Play, and what the name and facts climb by to make room for them. */
+private val SEGMENTS_GAP = 4.dp
+private val SEGMENTS_ROOM = 28.dp
+
+/** How far below the heading its fade reaches, as a share of the heading's height. */
+private const val HEADER_FADE_REACH = 1.8f
+

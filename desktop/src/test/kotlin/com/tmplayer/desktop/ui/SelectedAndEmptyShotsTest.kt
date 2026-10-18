@@ -143,6 +143,30 @@ class SelectedAndEmptyShotsTest {
         }
     }
 
+    /** Settings' "Icons only in the menu": the bar's places as round icon buttons, Settings chosen. */
+    @Test
+    fun compactBar() {
+        kotlinx.coroutines.runBlocking { settings.setCompactNav(true) }
+        try {
+            for (dark in listOf(true, false)) {
+                val theme = if (dark) "dark" else "light"
+                shell.go(Destination.Settings)
+                ImageComposeScene(900, 200, Density(1.5f)) {
+                    TmMaterialTheme(dark = dark) {
+                        Surface(Modifier.fillMaxSize(), color = Tone.background) {
+                            NavFrame(shell, null, null) { Box(Modifier.fillMaxSize()) }
+                        }
+                    }
+                }.use { scene ->
+                    scene.render(0)
+                    save("compact-bar-$theme.png", scene.render(1_500_000_000).png())
+                }
+            }
+        } finally {
+            kotlinx.coroutines.runBlocking { settings.setCompactNav(false) }
+        }
+    }
+
     /** The empty pages: half way through arriving, and at rest. */
     @Test
     fun emptyStatesDrawTheirPicture() {

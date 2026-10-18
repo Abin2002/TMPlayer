@@ -1,5 +1,6 @@
 package com.tmplayer.ui.downloads
 
+import com.tmplayer.ui.components.keepTopInSight
 import androidx.compose.foundation.BorderStroke
 import com.tmplayer.ui.theme.Danger
 import androidx.tv.material3.Text as TvText
@@ -2001,7 +2002,7 @@ private fun TvDownloads(
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().keepTopInSight(listState),
                 contentPadding = PaddingValues(bottom = Tv.SafeV),
                 content = body,
             )

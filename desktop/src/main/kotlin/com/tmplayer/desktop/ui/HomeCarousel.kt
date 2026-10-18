@@ -1,5 +1,6 @@
 package com.tmplayer.desktop.ui
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -274,7 +275,7 @@ internal fun FeaturedCarousel(
                 key = { latest.getOrNull(it)?.key ?: it },
             ) { page ->
                 val pick = latest.getOrNull(page) ?: return@HorizontalPager
-                FeaturedPage(pick, height, side, watch, chatTitle, onPlay, onDetails, current = page == pager.currentPage)
+                FeaturedPage(pick, height, side, watch, chatTitle, onPlay, onDetails, current = page == pager.currentPage, segments = count > 1)
             }
             if (count > 1) {
                 Segments(
@@ -290,9 +291,11 @@ internal fun FeaturedCarousel(
                     },
                     label = { index -> s.homeFeaturedPage(index + 1, count) },
                     onPick = go,
+                    // Under the name and facts, over Play, as on the phone: in the slot each page
+                    // leaves for them, so they stay put while the pages slide under them.
                     modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(top = 18.dp, start = side)
+                        .align(Alignment.BottomStart)
+                        .padding(start = side, bottom = PAGE_FOOT + com.tmplayer.ui.browse.HERO_PILL_HEIGHT + WORDS_GAP)
                         .widthIn(max = SEGMENTS_WIDTH),
                 )
                 // Pointer and touch only: the keyboard turns the pages with the arrow keys.
@@ -357,6 +360,8 @@ private fun FeaturedPage(
     onPlay: (MediaItem) -> Unit,
     onDetails: (FeaturedPick) -> Unit,
     current: Boolean,
+    /** Leave the segments' slot between the facts and Play. */
+    segments: Boolean,
 ) {
     val s = LocalStrings.current
     val item = pick.item
@@ -383,10 +388,10 @@ private fun FeaturedPage(
             .semantics { contentDescription = listOf(title, facts).filter { it.isNotBlank() }.joinToString(". ") },
     ) {
         ArtBackdrop(source, Modifier.fillMaxSize())
-        // Dark at the top under the segments, a fade from the start edge under the words, and
-        // the foot fading into the page.
+        // Dark at the top under the window's buttons, a fade from the start edge under the words,
+        // and the foot fading into the page.
         Box(Modifier.fillMaxSize().background(Scrims.startLong(0.6f)))
-        // Over the start fade too, so the white segments read in the light theme.
+        // Over the start fade too, so the window's buttons read in the light theme.
         Box(
             Modifier
                 .fillMaxWidth()
@@ -399,9 +404,9 @@ private fun FeaturedPage(
                 .align(Alignment.BottomStart)
                 // Only the page up takes the keyboard: Tab never lands on a button off screen.
                 .focusProperties { canFocus = current }
-                .padding(start = side, end = side, bottom = 12.dp)
+                .padding(start = side, end = side, bottom = PAGE_FOOT)
                 .widthIn(max = WORDS_WIDTH),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(WORDS_GAP),
         ) {
             Text(
                 title,
@@ -413,8 +418,8 @@ private fun FeaturedPage(
             if (facts.isNotBlank()) {
                 Text(facts, style = MaterialTheme.typography.titleSmall, color = Tone.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
+            if (segments) Spacer(Modifier.height(SEGMENT_TARGET)) else Spacer(Modifier.height(2.dp))
             Row(
-                Modifier.padding(top = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -473,8 +478,10 @@ private fun Segments(
     onPick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val track = Tone.onArt.copy(alpha = 0.35f)
-    val ink = Tone.onArt
+    // In the page's own ink: the segments sit low, where the picture has faded into the page,
+    // and white on a light theme's pale foot all but vanished.
+    val track = Tone.text.copy(alpha = 0.22f)
+    val ink = Tone.text
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(SEGMENT_GAP)) {
         repeat(count) { index ->
             Box(
@@ -574,4 +581,10 @@ private val WORDS_WIDTH = 640.dp
 private val SEGMENTS_WIDTH = 420.dp
 private val SEGMENT_HEIGHT = 3.dp
 private val SEGMENT_TARGET = 20.dp
+
+/** Below Play, the foot of a page's words and buttons. */
+private val PAGE_FOOT = 12.dp
+
+/** Between a page's lines: the name, the facts, the segments' slot and Play. */
+private val WORDS_GAP = 8.dp
 private val SEGMENT_GAP = 4.dp

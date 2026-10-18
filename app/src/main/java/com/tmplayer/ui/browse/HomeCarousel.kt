@@ -376,8 +376,10 @@ internal fun Segments(
     /** False on a television, where the remote reaches the pages by Left and Right instead. */
     focusable: Boolean = true,
 ) {
-    val track = Tone.onArt.copy(alpha = 0.35f)
-    val ink = Tone.onArt
+    // In the page's own ink: the segments sit low, where the picture has faded into the page,
+    // and white on a light theme's pale foot all but vanished.
+    val track = Tone.text.copy(alpha = 0.22f)
+    val ink = Tone.text
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(SEGMENT_GAP)) {
         repeat(count) { index ->
             Box(

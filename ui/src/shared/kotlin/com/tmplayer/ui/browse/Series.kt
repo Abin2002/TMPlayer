@@ -1,5 +1,6 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.components.keepTopInSight
 import com.tmplayer.ui.theme.collectIsFocusVisibleAsState
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import com.tmplayer.ui.theme.trackedFor
@@ -852,7 +853,7 @@ fun SeriesPanel(
 
         HeroStaysWhole(list) { LazyColumn(
             state = list,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().keepTopInSight(list, enabled = tv),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(if (tv) 8.dp else 6.dp),
         ) {

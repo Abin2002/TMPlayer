@@ -40,9 +40,10 @@ import java.security.MessageDigest
  * while it runs (a post in a starred chat, a video saved for later), and after playback, which
  * changes Continue watching and with it Recently added.
  *
- * **Pictures.** A card's picture must be a URI the launcher's process can read. A film's or a
- * show's poster from the online lookups when they are on, else the video's own thumbnail from
- * Telegram; either is copied into [TvArtProvider]'s directory and handed out from there. A card
+ * **Pictures.** A card's picture must be a URI the launcher's process can read. With the online
+ * lookups on, the film's or show's wide picture (its backdrop, an episode's still) in the
+ * launcher's own 16:9 shape, else its upright poster, else the video's own thumbnail from
+ * Telegram; each is copied into [TvArtProvider]'s directory and handed out from there. A card
  * whose picture could not be had yet wears the app's mark, as "Play next" does, and is tried again
  * on the next refresh.
  */
@@ -313,8 +314,13 @@ object TvChannelsPublisher {
 
     /** The copy's name in [TvArtProvider.dir] and its aspect ratio, or null without a picture. */
     private suspend fun resolveArt(context: Context, art: TvChannels.Art): Pair<String, Int>? {
-        if (art.posterWanted) {
-            poster(context, art)?.let { return it to TvContract.PreviewPrograms.ASPECT_RATIO_2_3 }
+        // The wide picture first, a better card than a frame from the file: the row on the
+        // launcher is a row of landscape cards, and a poster stands in only where none is known.
+        found(art)?.let { info ->
+            info.wideUrl?.let { url -> fetched(context, url, "w")?.let { return it to TvContract.PreviewPrograms.ASPECT_RATIO_16_9 } }
+            if (art.posterWanted) {
+                info.posterUrl?.let { url -> fetched(context, url, "p")?.let { return it to TvContract.PreviewPrograms.ASPECT_RATIO_2_3 } }
+            }
         }
         fixtureArt?.invoke(art)?.let { file ->
             return copyIn(context, file, "f_${sha1(art.key)}.jpg")?.let { it to TvContract.PreviewPrograms.ASPECT_RATIO_16_9 }
@@ -324,15 +330,19 @@ object TvChannelsPublisher {
         return copyIn(context, File(path), name)?.let { it to TvContract.PreviewPrograms.ASPECT_RATIO_16_9 }
     }
 
-    /** The film's or show's poster, when the viewer turned the lookups on and one is known. */
-    private suspend fun poster(context: Context, art: TvChannels.Art): String? {
+    /** What the online lookups know of the film or show, when the viewer turned them on. */
+    private suspend fun found(art: TvChannels.Art): com.tmplayer.online.MetaInfo? {
         val online = OnlineMetadata.current ?: return null
         if (!OnlineMetadata.enabled) return null
         val query = MetaQuery.of(art.name, art.caption.ifBlank { null })?.showOnly() ?: return null
-        val info = (runCatching { online.lookup(query) }.getOrNull() as? MetaResult.Found)?.info ?: return null
-        val url = info.posterUrl ?: return null
+        return (runCatching { online.lookup(query) }.getOrNull() as? MetaResult.Found)?.info
+    }
+
+    /** One of its pictures, fetched and copied in under [prefix]: "w" wide, "p" poster. */
+    private suspend fun fetched(context: Context, url: String, prefix: String): String? {
+        val online = OnlineMetadata.current ?: return null
         val file = runCatching { online.image(url) }.getOrNull() ?: return null
-        return copyIn(context, file, "p_${sha1(url)}.jpg")
+        return copyIn(context, file, "${prefix}_${sha1(url)}.jpg")
     }
 
     private fun copyIn(context: Context, source: File, name: String): String? = runCatching {

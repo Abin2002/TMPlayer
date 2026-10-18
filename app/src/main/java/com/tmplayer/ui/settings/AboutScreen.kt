@@ -1,5 +1,6 @@
 package com.tmplayer.ui.settings
 
+import com.tmplayer.ui.components.keepTopInSight
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.focusable
@@ -310,6 +311,7 @@ private fun NoticesScreen(onBack: () -> Unit) {
             state = state,
             modifier = Modifier
                 .fillMaxSize()
+                .keepTopInSight(state, enabled = !touch)
                 .then(
                     if (touch) {
                         Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))

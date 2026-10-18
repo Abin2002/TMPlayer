@@ -1,5 +1,6 @@
 package com.tmplayer.ui.browse
 
+import com.tmplayer.ui.components.keepTopInSight
 import kotlinx.coroutines.flow.first
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -148,6 +149,12 @@ internal fun HomePane(
     onPlayNow: (MediaItem, String) -> Unit = onPlay,
     /** A video's page, whatever "Open a video's page first" says: the carousel's Details on a television. */
     onDetails: (MediaItem, String) -> Unit = onHoldMedia,
+    /**
+     * The television's page heading. With the carousel up it stands on the carousel's picture
+     * (true: the words in the colours for art) and scrolls away with it; otherwise it sits over
+     * the rows. Null on a phone, whose heading is the app bar.
+     */
+    tvHeader: (@Composable (onArt: Boolean) -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     val touch = isTouch()
@@ -155,7 +162,10 @@ internal fun HomePane(
     val under = if (touch) LocalUnderStatusBar.current else 0.dp
     if (rows.isEmpty()) {
         // Nothing played and nothing starred: a first run, so say how to get a first video in.
-        Box(Modifier.fillMaxSize().padding(top = under)) { FirstVideoEmpty(onOpenSection) }
+        Column(Modifier.fillMaxSize().padding(top = under)) {
+            tvHeader?.invoke(false)
+            Box(Modifier.fillMaxSize()) { FirstVideoEmpty(onOpenSection) }
+        }
         return
     }
     // Recently added in starred chats is the featured carousel at the top rather than a row, on a
@@ -238,10 +248,14 @@ internal fun HomePane(
         // Tiles here may wear the show's or the film's picture (see LocalOnlineArt); a chat's grid keeps frames.
         val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
         val rowStep = with(density) { TV_DOWN_STEP.toPx() }
+        val headerOnArt = !touch && carousel && tvHeader != null
         CompositionLocalProvider(LocalOnlineArt provides true) {
+          Column(Modifier.fillMaxSize()) {
+            if (!touch && !headerOnArt) tvHeader?.invoke(false)
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize().then(
+                // The heading on the carousel's picture comes back whole with the carousel's buttons.
+                modifier = Modifier.fillMaxSize().keepTopInSight(listState, enabled = !touch).then(
                     if (touch) {
                         Modifier
                     } else {
@@ -262,7 +276,7 @@ internal fun HomePane(
                     },
                 ),
                 contentPadding = PaddingValues(
-                    top = if (!touch) Tv.FocusClearance else if (carousel) 0.dp else under + 4.dp,
+                    top = if (headerOnArt) 0.dp else if (!touch) Tv.FocusClearance else if (carousel) 0.dp else under + 4.dp,
                     bottom = bottom,
                 ),
                 verticalArrangement = Arrangement.spacedBy(if (touch) ROW_GAP_TOUCH else ROW_GAP_TV),
@@ -282,6 +296,7 @@ internal fun HomePane(
                                 val series = pick.series
                                 if (series != null) opened.open(series) else onDetails(pick.item, chatTitle(pick.item.chatId))
                             },
+                            header = tvHeader?.let { heading -> { heading(true) } },
                         )
                     } else item(key = FEATURED_KEY, contentType = FEATURED_KEY) {
                         FeaturedCarousel(
@@ -448,6 +463,7 @@ internal fun HomePane(
                     }
                 }
             }
+          }
         }
         if (touch && under > 0.dp) {
             val ground by androidx.compose.animation.core.animateFloatAsState(
