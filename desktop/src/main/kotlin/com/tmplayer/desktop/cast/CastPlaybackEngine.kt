@@ -267,7 +267,7 @@ class CastPlaybackEngine(
             r is CastRoute.Hls -> if (r.audio.isEmpty() && p.audio.isNotEmpty()) L.castSilent else null
             audioCodec != null && CastFormats.audioSupport(audioCodec, ReceiverCaps.forModel(client.device.model)) == com.tmplayer.cast.Support.No -> L.castSilent
             r is CastRoute.Remux && r.audioTrack == null && p.audio.isNotEmpty() -> L.castSilent
-            p.text.any { it.isText } && subs.isEmpty() -> L.castSubtitlesInside
+            com.tmplayer.cast.CAST_SUBTITLES && p.text.any { it.isText } && subs.isEmpty() -> L.castSubtitlesInside
             else -> null
         }
     }
@@ -501,6 +501,8 @@ class CastPlaybackEngine(
     }
 
     override fun addSubtitle(path: String): Boolean {
+        // Casting goes without subtitles for now (CAST_SUBTITLES): the TV's stream is left alone.
+        if (!com.tmplayer.cast.CAST_SUBTITLES) return false
         val st = streams ?: return false
         val file = File(path)
         val bytes = runCatching { file.readBytes() }.getOrNull() ?: return false

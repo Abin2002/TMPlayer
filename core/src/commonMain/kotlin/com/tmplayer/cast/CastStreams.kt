@@ -52,7 +52,7 @@ class CastStreams(
                 Published(url, route.mime, 0, true, route)
             }
             is CastRoute.Hls -> {
-                val hls = MkvHls.prepare(source, probe, route.audio, route.audioTrack, files.toList(), converterFactory)
+                val hls = MkvHls.prepare(source, probe, route.audio, route.audioTrack, files.toList(), converterFactory, subtitles = CAST_SUBTITLES)
                 // Made now, off the receiver's clock: the soundtracks' entries need their first frames.
                 val renditions = hls.renditions
                 val folder = "hls$n"
