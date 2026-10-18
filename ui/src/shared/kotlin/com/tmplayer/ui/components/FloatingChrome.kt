@@ -92,7 +92,8 @@ fun usesFloatingChrome(): Boolean = deviceForm() == DeviceForm.Phone
 
 /**
  * A round floating button: the page's Back, or Close while a selection is on. Over the content, so
- * it is always there to press however far the page has scrolled.
+ * it is always there to press however far the page has scrolled. Its [label] is its tooltip
+ * ([IconTip], under it, since it stands at the top), with [shortcut] beside it on the desktop.
  */
 @Composable
 fun FloatingRoundButton(
@@ -100,21 +101,24 @@ fun FloatingRoundButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    shortcut: String? = null,
 ) {
     val interactions = remember { MutableInteractionSource() }
-    Box(
-        modifier
-            .pressScale(interactions)
-            .size(FloatingChrome.Button)
-            .shadow(FloatingChrome.Shadow, CircleShape)
-            .clip(CircleShape)
-            .background(FloatingTone.menu)
-            .border(floatingBorder(), CircleShape)
-            .clickable(interactionSource = interactions, indication = ripple(), role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = label },
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(icon, contentDescription = null, tint = Tone.text, modifier = Modifier.size(22.dp))
+    IconTip(label, modifier, shortcut = shortcut, side = TipSide.Below) {
+        Box(
+            Modifier
+                .pressScale(interactions)
+                .size(FloatingChrome.Button)
+                .shadow(FloatingChrome.Shadow, CircleShape)
+                .clip(CircleShape)
+                .background(FloatingTone.menu)
+                .border(floatingBorder(), CircleShape)
+                .clickable(interactionSource = interactions, indication = ripple(), role = Role.Button, onClick = onClick)
+                .semantics { contentDescription = label },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = Tone.text, modifier = Modifier.size(22.dp))
+        }
     }
 }
 
@@ -222,9 +226,35 @@ fun FloatingBarIcon(
     caption: String? = null,
     /** Draws the glyph in place of [icon], for one that animates on its own (the star). */
     glyph: (@Composable () -> Unit)? = null,
+    /** The desktop's key for it, shown in its tooltip. */
+    shortcut: String? = null,
 ) {
     val interactions = remember { MutableInteractionSource() }
     val ink = if (enabled) tint else tint.copy(alpha = 0.38f)
+    // A glyph alone is named in a tooltip ([IconTip]); one with its caption already says what it
+    // is, and has a tooltip only for the desktop's key.
+    if (caption != null && shortcut == null) {
+        BarIconBody(icon, label, onClick, modifier, ink, checked, enabled, caption, glyph, interactions)
+    } else {
+        IconTip(label, modifier, shortcut = shortcut) {
+            BarIconBody(icon, label, onClick, Modifier, ink, checked, enabled, caption, glyph, interactions)
+        }
+    }
+}
+
+@Composable
+private fun BarIconBody(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier,
+    ink: Color,
+    checked: Boolean?,
+    enabled: Boolean,
+    caption: String?,
+    glyph: (@Composable () -> Unit)?,
+    interactions: MutableInteractionSource,
+) {
     Box(
         modifier
             .then(if (caption == null) Modifier.size(48.dp) else Modifier.height(52.dp).widthIn(min = 52.dp))

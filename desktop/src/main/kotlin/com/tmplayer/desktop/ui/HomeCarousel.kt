@@ -427,18 +427,20 @@ private fun ArrowButton(icon: ImageVector, label: String, onClick: () -> Unit) {
 @Composable
 private fun RoundButton(icon: ImageVector, label: String, size: Dp, onClick: () -> Unit) {
     val press = remember { MutableInteractionSource() }
-    Box(
-        Modifier
-            .size(size)
-            .pressScale(press)
-            .clip(CircleShape)
-            .background(FloatingTone.menu.copy(alpha = 0.85f))
-            .border(floatingBorder(), CircleShape)
-            .clickable(interactionSource = press, indication = androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = label },
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(icon, contentDescription = null, tint = Tone.text, modifier = Modifier.size(22.dp))
+    BarTooltip(label, null) {
+        Box(
+            Modifier
+                .size(size)
+                .pressScale(press)
+                .clip(CircleShape)
+                .background(FloatingTone.menu.copy(alpha = 0.85f))
+                .border(floatingBorder(), CircleShape)
+                .clickable(interactionSource = press, indication = androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClick = onClick)
+                .semantics { contentDescription = label },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = Tone.text, modifier = Modifier.size(22.dp))
+        }
     }
 }
 

@@ -143,8 +143,10 @@ class PlayerEpisodes(
 
     @Composable
     private fun CloseButton() {
-        IconButton(onClick = ::close) {
-            Icon(TmIcons.Close, contentDescription = LocalStrings.current.commonClose, tint = Tone.text)
+        com.tmplayer.ui.components.IconTip(LocalStrings.current.commonClose, side = com.tmplayer.ui.components.TipSide.Below) {
+            IconButton(onClick = ::close) {
+                Icon(TmIcons.Close, contentDescription = LocalStrings.current.commonClose, tint = Tone.text)
+            }
         }
     }
 

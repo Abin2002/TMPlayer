@@ -86,9 +86,7 @@ internal fun BoxScope.ChatTopChrome(state: ShellState, chat: ChatSummary) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        BarTooltip(s.gridBackToChats, "Esc") {
-            FloatingRoundButton(TmIcons.ArrowBack, s.gridBackToChats, onClick = { state.closeChat() })
-        }
+        FloatingRoundButton(TmIcons.ArrowBack, s.gridBackToChats, onClick = { state.closeChat() }, shortcut = "Esc")
         Row(
             Modifier
                 .height(FloatingChrome.Button)
@@ -113,9 +111,7 @@ internal fun BoxScope.ChatTopChrome(state: ShellState, chat: ChatSummary) {
         }
         // The chat's info: its picture, username, description and link (user, 2026-10-18).
         var info by remember { mutableStateOf(false) }
-        BarTooltip(s.chatsInfoAbout, null) {
-            FloatingRoundButton(TmIcons.Info, s.chatsInfoAbout, onClick = { info = true })
-        }
+        FloatingRoundButton(TmIcons.Info, s.chatsInfoAbout, onClick = { info = true })
         if (info) ChatInfoPanel(chat, onDismiss = { info = false })
     }
 }
@@ -254,7 +250,12 @@ private fun BarIcon(
     caption: String? = null,
     modifier: Modifier = Modifier,
 ) {
-    BarTooltip(label, shortcut) { FloatingBarIcon(icon, label, onClick, modifier = modifier, enabled = enabled, caption = caption) }
+    // A glyph alone carries its own tooltip; one with its caption has the bar's here, as before.
+    if (caption != null && shortcut == null) {
+        BarTooltip(label, null) { FloatingBarIcon(icon, label, onClick, modifier = modifier, enabled = enabled, caption = caption) }
+    } else {
+        FloatingBarIcon(icon, label, onClick, modifier = modifier, enabled = enabled, caption = caption, shortcut = shortcut)
+    }
 }
 
 /** The recent searches, plain words with a history mark on one panel, Clear at its end. */

@@ -12,8 +12,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.TooltipArea
-import androidx.compose.foundation.TooltipPlacement
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -79,7 +77,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tmplayer.data.Account
@@ -377,33 +374,15 @@ private fun ProfileButton(
 
 /**
  * The bar's tooltip: the button's name and, beside it, the key that does the same. Above the
- * button, or with [below] under it, for a button near the top of the window.
+ * button, or with [below] under it, for a button near the top of the window. It is the shared
+ * [com.tmplayer.ui.components.IconTip], which fades in (at once under reduced motion).
  */
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 internal fun BarTooltip(label: String, shortcut: String?, below: Boolean = false, content: @Composable () -> Unit) {
-    TooltipArea(
-        tooltip = {
-            Row(
-                Modifier
-                    .shadow(4.dp, RoundedCornerShape(8.dp))
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(FloatingTone.dialog)
-                    .border(floatingBorder(), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(label, style = MaterialTheme.typography.labelMedium, color = Tone.text)
-                if (shortcut != null) Text(shortcut, style = MaterialTheme.typography.labelMedium, color = Tone.muted)
-            }
-        },
-        delayMillis = 500,
-        tooltipPlacement = if (below) {
-            TooltipPlacement.ComponentRect(anchor = Alignment.BottomCenter, alignment = Alignment.BottomCenter, offset = DpOffset(0.dp, 4.dp))
-        } else {
-            TooltipPlacement.ComponentRect(anchor = Alignment.TopCenter, alignment = Alignment.TopCenter, offset = DpOffset(0.dp, (-8).dp))
-        },
+    com.tmplayer.ui.components.IconTip(
+        label,
+        shortcut = shortcut,
+        side = if (below) com.tmplayer.ui.components.TipSide.Below else com.tmplayer.ui.components.TipSide.Above,
         content = content,
     )
 }

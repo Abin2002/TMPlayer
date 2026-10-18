@@ -363,23 +363,27 @@ private fun PersonEnlarged(person: MetaPerson, onClose: () -> Unit) {
             }
             val interactions = remember { MutableInteractionSource() }
             val focused by interactions.collectIsFocusVisibleAsState()
-            Box(
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(if (tv) 32.dp else 16.dp)
-                    .size(if (tv) 48.dp else 40.dp)
-                    .clip(CircleShape)
-                    .background(if (focused) Tone.focusFill else Color.White.copy(alpha = 0.15f))
-                    .focusRequester(close)
-                    .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClose),
-                contentAlignment = Alignment.Center,
+            com.tmplayer.ui.components.IconTip(
+                LocalStrings.current.commonClose,
+                Modifier.align(Alignment.TopEnd).padding(if (tv) 32.dp else 16.dp),
+                side = com.tmplayer.ui.components.TipSide.Below,
             ) {
-                Icon(
-                    TmIcons.Close,
-                    contentDescription = LocalStrings.current.commonClose,
-                    tint = if (focused) Tone.onFocusFill else Color.White,
-                    modifier = Modifier.size(24.dp),
-                )
+                Box(
+                    Modifier
+                        .size(if (tv) 48.dp else 40.dp)
+                        .clip(CircleShape)
+                        .background(if (focused) Tone.focusFill else Color.White.copy(alpha = 0.15f))
+                        .focusRequester(close)
+                        .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClose),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        TmIcons.Close,
+                        contentDescription = LocalStrings.current.commonClose,
+                        tint = if (focused) Tone.onFocusFill else Color.White,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
             }
         }
         if (tv) LaunchedEffect(Unit) { runCatching { close.requestFocus() } }

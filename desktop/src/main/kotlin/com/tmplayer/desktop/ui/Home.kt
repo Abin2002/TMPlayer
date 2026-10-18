@@ -325,7 +325,9 @@ private fun RowPage(
             title,
             row.countLabel(s),
             leading = {
-                IconButton(onClick = onBack) { Icon(TmIcons.ArrowBack, contentDescription = s.commonBack) }
+                BarTooltip(s.commonBack, null, below = true) {
+                    IconButton(onClick = onBack) { Icon(TmIcons.ArrowBack, contentDescription = s.commonBack) }
+                }
             },
             actions = {
                 if (more != null) {
@@ -645,19 +647,21 @@ private fun Strip(side: Dp, content: LazyListScope.() -> Unit) {
 private fun StripArrow(icon: ImageVector, label: String, modifier: Modifier, alpha: Float, onClick: () -> Unit) {
     val interactions = remember { MutableInteractionSource() }
     val hovered by interactions.collectIsHoveredAsState()
-    Box(
-        modifier
-            .size(STRIP_ARROW)
-            .graphicsLayer { this.alpha = alpha }
-            .focusProperties { canFocus = false }
-            .clip(CircleShape)
-            .background(if (hovered) Tone.surfaceHigh else Tone.surfaceHigh.copy(alpha = 0.88f))
-            .border(1.dp, Tone.outline, CircleShape)
-            .hoverable(interactions)
-            .clickable(interactionSource = interactions, indication = null, role = Role.Button, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(icon, contentDescription = label, tint = Tone.text, modifier = Modifier.size(26.dp))
+    com.tmplayer.ui.components.IconTip(label, modifier) {
+        Box(
+            Modifier
+                .size(STRIP_ARROW)
+                .graphicsLayer { this.alpha = alpha }
+                .focusProperties { canFocus = false }
+                .clip(CircleShape)
+                .background(if (hovered) Tone.surfaceHigh else Tone.surfaceHigh.copy(alpha = 0.88f))
+                .border(1.dp, Tone.outline, CircleShape)
+                .hoverable(interactions)
+                .clickable(interactionSource = interactions, indication = null, role = Role.Button, onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = label, tint = Tone.text, modifier = Modifier.size(26.dp))
+        }
     }
 }
 

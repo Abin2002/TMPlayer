@@ -179,8 +179,10 @@ private fun FullScreenChoiceSheet(
                 Text(title, style = MaterialTheme.typography.headlineSmall, color = Tone.text)
                 if (note != null) Text(note, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
             }
-            IconButton(onClick = onClose) {
-                M3Icon(TmIcons.Close, contentDescription = close, tint = Tone.text)
+            com.tmplayer.ui.components.IconTip(close, side = com.tmplayer.ui.components.TipSide.Below) {
+                IconButton(onClick = onClose) {
+                    M3Icon(TmIcons.Close, contentDescription = close, tint = Tone.text)
+                }
             }
         }
         HorizontalDivider(color = Tone.outline)

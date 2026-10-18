@@ -137,6 +137,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import com.tmplayer.ui.components.tipFadeIn
 
 /** What a menu entry asks for, beyond the plain [PlayerAction]s. */
 /**
@@ -596,7 +597,7 @@ internal fun Episodes.labelFor(item: MediaItem): String = when (item.id) {
 private fun Tip(text: String, content: @Composable () -> Unit) {
     TooltipArea(
         tooltip = {
-            Surface(shape = RoundedCornerShape(6.dp), color = Color(0xE6202022)) {
+            Surface(modifier = Modifier.tipFadeIn(), shape = RoundedCornerShape(6.dp), color = Color(0xE6202022)) {
                 Text(text, color = Color.White, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
             }
         },
@@ -1441,31 +1442,33 @@ private fun commandKey(s: Strings): String = if (OsInfo.isMac) s.keysCmd else s.
 private fun PlayPauseButton(status: PlaybackStatus, onTogglePlay: () -> Unit) {
     val s = LocalStrings.current
     val reduced = com.tmplayer.ui.theme.rememberReducedMotion()
-    Box(
-        Modifier.size(72.dp).clip(CircleShape).background(PlayerTonalButton).clickable(onClick = onTogglePlay)
-            .testTag("play-pause")
-            .semantics {
-                stateDescription = if (status.playing) s.playerPlaying else s.playerPaused
-                liveRegion = LiveRegionMode.Polite
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        if (status.buffering) {
-            CircularProgressIndicator(Modifier.size(40.dp), color = Color.White, strokeWidth = 3.dp)
-        } else {
-            androidx.compose.animation.AnimatedContent(
-                targetState = status.playing,
-                transitionSpec = {
-                    if (reduced) {
-                        androidx.compose.animation.EnterTransition.None togetherWith androidx.compose.animation.ExitTransition.None
-                    } else {
-                        (scaleIn(tween(180), initialScale = 0.6f) + fadeIn(tween(180))) togetherWith
-                            (scaleOut(tween(140), targetScale = 0.6f) + fadeOut(tween(140)))
-                    }
+    Tip("${if (status.playing) s.playerPause else s.playerPlay} (${s.keysSpaceK})") {
+        Box(
+            Modifier.size(72.dp).clip(CircleShape).background(PlayerTonalButton).clickable(onClick = onTogglePlay)
+                .testTag("play-pause")
+                .semantics {
+                    stateDescription = if (status.playing) s.playerPlaying else s.playerPaused
+                    liveRegion = LiveRegionMode.Polite
                 },
-                label = "play-pause",
-            ) { playing ->
-                Icon(if (playing) TmIcons.PauseSolid else TmIcons.PlaySolid, if (playing) s.playerPause else s.playerPlay, tint = Color.White, modifier = Modifier.size(40.dp))
+            contentAlignment = Alignment.Center,
+        ) {
+            if (status.buffering) {
+                CircularProgressIndicator(Modifier.size(40.dp), color = Color.White, strokeWidth = 3.dp)
+            } else {
+                androidx.compose.animation.AnimatedContent(
+                    targetState = status.playing,
+                    transitionSpec = {
+                        if (reduced) {
+                            androidx.compose.animation.EnterTransition.None togetherWith androidx.compose.animation.ExitTransition.None
+                        } else {
+                            (scaleIn(tween(180), initialScale = 0.6f) + fadeIn(tween(180))) togetherWith
+                                (scaleOut(tween(140), targetScale = 0.6f) + fadeOut(tween(140)))
+                        }
+                    },
+                    label = "play-pause",
+                ) { playing ->
+                    Icon(if (playing) TmIcons.PauseSolid else TmIcons.PlaySolid, if (playing) s.playerPause else s.playerPlay, tint = Color.White, modifier = Modifier.size(40.dp))
+                }
             }
         }
     }

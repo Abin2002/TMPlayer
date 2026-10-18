@@ -209,6 +209,34 @@ class PlayerControls(
         }
     }
 
+    /**
+     * The television's tooltip: the name of the icon button the remote is on, in the player's chip
+     * over the button, as the rail's folded icons say theirs (a remote has no long press to ask
+     * with, and a phone's buttons have their long press tooltips from [nameButtons]). It sits in
+     * the controls' own frame, so it fades with them. Declared before [init], which wires it.
+     */
+    private val focusTip: TextView? = if (!isTv) null else TextView(root.context).apply {
+        val density = resources.displayMetrics.density
+        background = ContextCompat.getDrawable(context, R.drawable.bg_player_chip)
+        setPadding((16 * density).toInt(), (8 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+        setTextColor(Color.WHITE)
+        textSize = 15f
+        maxLines = 1
+        visibility = View.GONE
+        // The button's own description already reaches TalkBack.
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        (container as android.view.ViewGroup).addView(
+            this,
+            android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+    }
+
+    /** The button [focusTip] is naming, or null while it is down. */
+    private var tipFor: View? = null
+
     init {
         wire(root.findViewById(R.id.control_subtitles)) { onPickSubtitles() }
         wire(root.findViewById(R.id.control_audio)) { onPickAudio() }
@@ -428,6 +456,68 @@ class PlayerControls(
         scrubHint.translationY = bar[1] - origin[1] - above - scrubHint.height - 12 * density
     }
 
+    /**
+     * Gives [buttons] the television's [focusTip]: their name over them while the remote is on
+     * them, as well as the row's extra time that [wire] gives on focus.
+     */
+    private fun tipOnFocus(vararg buttons: View) {
+        for (button in buttons) {
+            button.onFocusChangeListener = View.OnFocusChangeListener { view, focused ->
+                if (focused) {
+                    poke()
+                    showTip(view)
+                } else if (tipFor === view) {
+                    hideTip()
+                }
+            }
+        }
+    }
+
+    private fun showTip(anchor: View) {
+        val tip = focusTip ?: return
+        val name = anchor.contentDescription?.toString().orEmpty()
+        if (name.isEmpty()) return hideTip()
+        tipFor = anchor
+        tip.text = name
+        tip.animate().cancel()
+        val wasShown = tip.visibility == View.VISIBLE
+        tip.visibility = View.VISIBLE
+        placeTip(anchor)
+        // Its width is known after the next layout, for the centring.
+        tip.post { if (tipFor === anchor) placeTip(anchor) }
+        if (!hintMoves()) {
+            tip.alpha = 1f
+            return
+        }
+        if (!wasShown) tip.alpha = 0f
+        tip.animate().alpha(1f).setDuration(HINT_FADE_MS).start()
+    }
+
+    private fun hideTip() {
+        val tip = focusTip ?: return
+        tipFor = null
+        tip.animate().cancel()
+        if (tip.visibility != View.VISIBLE) return
+        if (!hintMoves()) {
+            tip.visibility = View.GONE
+            return
+        }
+        tip.animate().alpha(0f).setDuration(HINT_FADE_MS).withEndAction { if (tipFor == null) tip.visibility = View.GONE }.start()
+    }
+
+    /** Centred over [anchor], kept inside the frame. */
+    private fun placeTip(anchor: View) {
+        val tip = focusTip ?: return
+        val at = IntArray(2)
+        val origin = IntArray(2)
+        anchor.getLocationInWindow(at)
+        container.getLocationInWindow(origin)
+        val gap = 10 * container.resources.displayMetrics.density
+        val maxX = (container.width - tip.width).toFloat().coerceAtLeast(0f)
+        tip.translationX = (at[0] - origin[0] + (anchor.width - tip.width) / 2f).coerceIn(0f, maxX)
+        tip.translationY = (at[1] - origin[1] - tip.height - gap).coerceAtLeast(0f)
+    }
+
     /** A press does its thing and buys the row more time on screen; so does focus landing. */
     private fun wire(button: View, action: () -> Unit) {
         button.setOnClickListener {
@@ -532,6 +622,16 @@ class PlayerControls(
             showRemaining = !showRemaining
             onRemainingToggled(showRemaining)
         }
+        // The icon buttons say their name over them while the remote is on them. The readout and
+        // Episodes are words already.
+        tipOnFocus(
+            root.findViewById(R.id.control_subtitles),
+            root.findViewById(R.id.control_audio),
+            root.findViewById(R.id.control_speed),
+            shapeButton,
+            more,
+            centerPlay,
+        )
     }
 
     private fun nameButtons(view: View) {
@@ -576,6 +676,8 @@ class PlayerControls(
         if (view == null || view.contentDescription == text) return
         view.contentDescription = text
         if (!isTv) view.tooltipText = text
+        // Play turning into Pause under the remote: the tip says the new name.
+        if (tipFor === view) focusTip?.text = text
     }
 
     /** Mid-play buffering: the phone swaps the play glyph for a spinner in the same disc. */

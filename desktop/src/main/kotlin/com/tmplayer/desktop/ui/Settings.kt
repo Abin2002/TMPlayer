@@ -319,11 +319,13 @@ fun SettingsPage(
                                 title = titleOf(open),
                                 leading = {
                                     val interactions = remember { MutableInteractionSource() }
-                                    IconButton(
-                                        onClick = closePage,
-                                        interactionSource = interactions,
-                                        modifier = Modifier.focusRequester(backFocus).keyboardRing(interactions, CircleShape),
-                                    ) { Icon(TmIcons.ArrowBack, contentDescription = s().aboutBackToSettings) }
+                                    BarTooltip(s().aboutBackToSettings, "Esc", below = true) {
+                                        IconButton(
+                                            onClick = closePage,
+                                            interactionSource = interactions,
+                                            modifier = Modifier.focusRequester(backFocus).keyboardRing(interactions, CircleShape),
+                                        ) { Icon(TmIcons.ArrowBack, contentDescription = s().aboutBackToSettings) }
+                                    }
                                 },
                             )
                             Column(Modifier.widthIn(max = PAGE_MAX).padding(horizontal = pageMargin())) { pages.Content(open) }

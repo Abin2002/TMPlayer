@@ -309,16 +309,18 @@ private fun MicOrb(onClick: () -> Unit, modifier: Modifier = Modifier) {
     // The focus fill every other control on a television takes, not the accent: in daylight the
     // accent is a dark blue that made this the one control lit differently from the rest.
     val fill by animateColorAsState(if (focused) Tone.focusFill else Tone.surfaceHigh, Motion.standard(Motion.Fast), label = "micOrb")
-    Box(
-        modifier
-            .size(64.dp)
-            .clip(CircleShape)
-            .background(fill)
-            .focusRing(focused, CircleShape)
-            .clickable(interactionSource = interactions, indication = null, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice, tint = if (focused) Tone.onFocusFill else Tone.text, modifier = Modifier.size(30.dp))
+    com.tmplayer.ui.components.IconTip(s.browseSearchByVoice, modifier, side = com.tmplayer.ui.components.TipSide.Below) {
+        Box(
+            Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(fill)
+                .focusRing(focused, CircleShape)
+                .clickable(interactionSource = interactions, indication = null, onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice, tint = if (focused) Tone.onFocusFill else Tone.text, modifier = Modifier.size(30.dp))
+        }
     }
 }
 

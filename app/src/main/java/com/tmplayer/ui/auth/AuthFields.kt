@@ -132,12 +132,14 @@ fun PaneField(
  */
 @Composable
 fun BackArrow(onBack: () -> Unit, description: String = LocalStrings.current.commonBack) {
-    IconButton(onClick = onBack, modifier = Modifier.size(BACK_TARGET)) {
-        Icon(
-            TmIcons.ArrowBack,
-            contentDescription = description,
-            tint = Tone.text,
-        )
+    com.tmplayer.ui.components.IconTip(description, side = com.tmplayer.ui.components.TipSide.Below) {
+        IconButton(onClick = onBack, modifier = Modifier.size(BACK_TARGET)) {
+            Icon(
+                TmIcons.ArrowBack,
+                contentDescription = description,
+                tint = Tone.text,
+            )
+        }
     }
 }
 

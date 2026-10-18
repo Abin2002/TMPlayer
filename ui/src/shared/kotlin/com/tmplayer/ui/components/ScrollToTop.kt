@@ -186,31 +186,33 @@ private fun BoxScope.ScrollToTop(
             scaleOut(Motion.standard(Motion.Fast), targetScale = 0.8f) +
             slideOutVertically(Motion.standard(Motion.Fast)) { it / 2 },
     ) {
-        Box(
-            Modifier
-                .padding(4.dp)
-                .shadow(6.dp, CircleShape)
-                .clip(CircleShape)
-                .background(FloatingTone.menu)
-                .border(floatingBorder(), CircleShape)
-                .clickable(role = Role.Button) {
-                    shown = false
-                    returning = true
-                    scope.launch {
-                        try {
-                            val near = screenful() * 2
-                            if (position().first > near) jump(near)
-                            glide(0)
-                        } finally {
-                            returning = false
+        IconTip(s.commonBackToTop) {
+            Box(
+                Modifier
+                    .padding(4.dp)
+                    .shadow(6.dp, CircleShape)
+                    .clip(CircleShape)
+                    .background(FloatingTone.menu)
+                    .border(floatingBorder(), CircleShape)
+                    .clickable(role = Role.Button) {
+                        shown = false
+                        returning = true
+                        scope.launch {
+                            try {
+                                val near = screenful() * 2
+                                if (position().first > near) jump(near)
+                                glide(0)
+                            } finally {
+                                returning = false
+                            }
                         }
                     }
-                }
-                .semantics { contentDescription = s.commonBackToTop }
-                .size(SIZE),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(TmIcons.ChevronUp, contentDescription = null, tint = Tone.text, modifier = Modifier.size(24.dp))
+                    .semantics { contentDescription = s.commonBackToTop }
+                    .size(SIZE),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(TmIcons.ChevronUp, contentDescription = null, tint = Tone.text, modifier = Modifier.size(24.dp))
+            }
         }
     }
 }

@@ -55,11 +55,13 @@ fun AboutPage(version: String, supporter: Boolean = false, onBack: () -> Unit) {
             PageHeader(
                 title = if (reading) s.aboutNoticesTitle else s.aboutTitleShort,
                 leading = {
-                    IconButton(onClick = { if (reading) reading = false else onBack() }) {
-                        Icon(
-                            TmIcons.ArrowBack,
-                            contentDescription = if (reading) s.aboutBackToAbout else s.aboutBackToSettings,
-                        )
+                    BarTooltip(if (reading) s.aboutBackToAbout else s.aboutBackToSettings, null, below = true) {
+                        IconButton(onClick = { if (reading) reading = false else onBack() }) {
+                            Icon(
+                                TmIcons.ArrowBack,
+                                contentDescription = if (reading) s.aboutBackToAbout else s.aboutBackToSettings,
+                            )
+                        }
                     }
                 },
             )

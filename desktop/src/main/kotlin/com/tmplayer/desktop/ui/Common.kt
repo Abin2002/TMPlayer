@@ -254,14 +254,16 @@ fun SearchField(
         )
         Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
             if (query.isNotEmpty()) {
-                Box(
-                    Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .clickable(role = Role.Button, onClickLabel = s.browseClearSearch) { onQuery("") },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(TmIcons.Close, contentDescription = s.browseClearSearch, tint = Tone.muted, modifier = Modifier.size(16.dp))
+                BarTooltip(s.browseClearSearch, null, below = true) {
+                    Box(
+                        Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .clickable(role = Role.Button, onClickLabel = s.browseClearSearch) { onQuery("") },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(TmIcons.Close, contentDescription = s.browseClearSearch, tint = Tone.muted, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
         }

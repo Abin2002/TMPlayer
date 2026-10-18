@@ -375,12 +375,14 @@ internal fun BoxScope.SearchPalette(
                         },
                     )
                     if (text.text.isNotEmpty()) {
-                        IconButton(onClick = {
-                            state.paletteQuery = TextFieldValue("")
-                            search.type("")
-                            runCatching { field.requestFocus() }
-                        }) {
-                            Icon(TmIcons.Close, contentDescription = s.browseClearSearch)
+                        BarTooltip(s.browseClearSearch, null, below = true) {
+                            IconButton(onClick = {
+                                state.paletteQuery = TextFieldValue("")
+                                search.type("")
+                                runCatching { field.requestFocus() }
+                            }) {
+                                Icon(TmIcons.Close, contentDescription = s.browseClearSearch)
+                            }
                         }
                     }
                 }
@@ -522,8 +524,10 @@ private fun PaletteLine(
         }
         is PaletteRow.Recent -> SimpleLine(TmIcons.History, row.query, selected, pickable) {
             if (onRemove != null) {
-                IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
-                    Icon(TmIcons.Close, contentDescription = s.searchRemoveRecent(row.query), modifier = Modifier.size(16.dp))
+                BarTooltip(s.searchRemoveRecent(row.query), null) {
+                    IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+                        Icon(TmIcons.Close, contentDescription = s.searchRemoveRecent(row.query), modifier = Modifier.size(16.dp))
+                    }
                 }
             }
         }

@@ -57,6 +57,7 @@ import java.awt.Frame
 import java.awt.MouseInfo
 import java.awt.Toolkit
 import kotlin.math.abs
+import com.tmplayer.ui.components.tipFadeIn
 
 /**
  * The window's own buttons, for a window whose title bar the app draws (see [WindowChromeMode]).
@@ -172,7 +173,7 @@ private fun WindowButton(icon: ImageVector, label: String, onArt: Boolean, dange
     }
     TooltipArea(
         tooltip = {
-            Surface(shape = RoundedCornerShape(6.dp), color = Color(0xE6202022)) {
+            Surface(modifier = Modifier.tipFadeIn(), shape = RoundedCornerShape(6.dp), color = Color(0xE6202022)) {
                 Text(label, color = Color.White, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
             }
         },

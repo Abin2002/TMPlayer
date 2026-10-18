@@ -755,42 +755,45 @@ private fun ProfileButton(account: Account?, inProfile: Boolean, badged: Boolean
     val s = LocalStrings.current
     val reduced = rememberReducedMotion() || Motion.reduced
     val profilePress = remember { MutableInteractionSource() }
-    Column(
-        Modifier
-            .size(BUTTON_WIDTH, BUTTON_HEIGHT)
-            .pressScale(profilePress)
-            .clip(HIGHLIGHT_SHAPE)
-            .clickable(interactionSource = profilePress, indication = ripple(), role = Role.Button, onClick = onProfile)
-            .semantics {
-                contentDescription = s.navProfile
-                selected = inProfile
-            },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-      Box(contentAlignment = Alignment.Center) {
-        // A ring round the picture while one of its pages is open: the lists behind it are
-        // somewhere the bar can say the viewer is, without lighting a button they are not on.
-        val ring by androidx.compose.animation.animateColorAsState(
-            if (inProfile) Tone.accent else Color.Transparent,
-            animationSpec = Motion.standard(if (reduced) 0 else Motion.Fast),
-            label = "profileRing",
-        )
-        Box(Modifier.size(PICTURE + 6.dp).border(1.5.dp, ring, CircleShape))
-        ProfilePicture(account, PICTURE)
-        if (badged) {
-            // News behind the picture: a download running, or an update to install.
-            Box(
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(x = 2.dp, y = (-2).dp)
-                    .size(9.dp)
-                    .clip(CircleShape)
-                    .background(Tone.caution)
-                    .border(1.5.dp, FloatingTone.menu, CircleShape),
+    // The one button on the bar with no caption under it: its name is in a tooltip.
+    com.tmplayer.ui.components.IconTip(s.navProfile) {
+        Column(
+            Modifier
+                .size(BUTTON_WIDTH, BUTTON_HEIGHT)
+                .pressScale(profilePress)
+                .clip(HIGHLIGHT_SHAPE)
+                .clickable(interactionSource = profilePress, indication = ripple(), role = Role.Button, onClick = onProfile)
+                .semantics {
+                    contentDescription = s.navProfile
+                    selected = inProfile
+                },
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+          Box(contentAlignment = Alignment.Center) {
+            // A ring round the picture while one of its pages is open: the lists behind it are
+            // somewhere the bar can say the viewer is, without lighting a button they are not on.
+            val ring by androidx.compose.animation.animateColorAsState(
+                if (inProfile) Tone.accent else Color.Transparent,
+                animationSpec = Motion.standard(if (reduced) 0 else Motion.Fast),
+                label = "profileRing",
             )
+            Box(Modifier.size(PICTURE + 6.dp).border(1.5.dp, ring, CircleShape))
+            ProfilePicture(account, PICTURE)
+            if (badged) {
+                // News behind the picture: a download running, or an update to install.
+                Box(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 2.dp, y = (-2).dp)
+                        .size(9.dp)
+                        .clip(CircleShape)
+                        .background(Tone.caution)
+                        .border(1.5.dp, FloatingTone.menu, CircleShape),
+                )
+            }
+          }
         }
-      }
     }
 }
 

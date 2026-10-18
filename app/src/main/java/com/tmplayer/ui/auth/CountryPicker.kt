@@ -75,11 +75,13 @@ fun CountryPicker(
             TopAppBar(
                 title = { Text(s.loginChooseCountry) },
                 navigationIcon = {
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            TmIcons.ArrowBack,
-                            contentDescription = s.loginCloseCountryList,
-                        )
+                    com.tmplayer.ui.components.IconTip(s.loginCloseCountryList, side = com.tmplayer.ui.components.TipSide.Below) {
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                TmIcons.ArrowBack,
+                                contentDescription = s.loginCloseCountryList,
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Tone.background),
@@ -97,8 +99,10 @@ fun CountryPicker(
                     // Two hundred rows filtered to none is a dead end, and clearing a field by
                     // holding backspace is a chore nobody should be set on a sign-in screen.
                     if (query.isNotEmpty()) {
-                        IconButton(onClick = { query = "" }) {
-                            Icon(TmIcons.Close, contentDescription = s.loginClearSearch)
+                        com.tmplayer.ui.components.IconTip(s.loginClearSearch) {
+                            IconButton(onClick = { query = "" }) {
+                                Icon(TmIcons.Close, contentDescription = s.loginClearSearch)
+                            }
                         }
                     }
                 },

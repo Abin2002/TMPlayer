@@ -418,13 +418,15 @@ private fun FineSpeedStepper(current: Float, onFine: (Float) -> Unit) {
 @Composable
 private fun FineButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
     val interactions = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    androidx.compose.material3.FilledTonalIconButton(
-        onClick = onClick,
-        enabled = enabled,
-        interactionSource = interactions,
-        modifier = Modifier.size(56.dp).pressScale(interactions),
-    ) {
-        androidx.compose.material3.Icon(icon, contentDescription = label)
+    com.tmplayer.ui.components.IconTip(label) {
+        androidx.compose.material3.FilledTonalIconButton(
+            onClick = onClick,
+            enabled = enabled,
+            interactionSource = interactions,
+            modifier = Modifier.size(56.dp).pressScale(interactions),
+        ) {
+            androidx.compose.material3.Icon(icon, contentDescription = label)
+        }
     }
 }
 

@@ -384,12 +384,14 @@ internal fun Stepper(
 @Composable
 private fun RingIconButton(icon: ImageVector, description: String, enabled: Boolean, onClick: () -> Unit) {
     val interactions = remember { MutableInteractionSource() }
-    IconButton(
-        onClick = onClick,
-        enabled = enabled,
-        interactionSource = interactions,
-        modifier = Modifier.keyboardRing(interactions, CircleShape),
-    ) { Icon(icon, contentDescription = description) }
+    BarTooltip(description, null) {
+        IconButton(
+            onClick = onClick,
+            enabled = enabled,
+            interactionSource = interactions,
+            modifier = Modifier.keyboardRing(interactions, CircleShape),
+        ) { Icon(icon, contentDescription = description) }
+    }
 }
 
 /** A button inside a row that has more than one thing to press (the storage folder's Change and Reset). */

@@ -327,17 +327,19 @@ private fun FeaturedControls(
             stretch = true,
             modifier = Modifier.weight(1f, fill = false),
         )
-        Box(
-            Modifier
-                .size(HERO_PILL_HEIGHT)
-                .clip(CircleShape)
-                .background(Tone.surfaceHigh.copy(alpha = 0.72f))
-                .border(1.dp, Tone.outline, CircleShape)
-                .clickable(role = Role.Button) { onDetails(pick) }
-                .semantics { contentDescription = s.detailOpenDetails },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(TmIcons.Info, contentDescription = null, tint = Tone.text, modifier = Modifier.size(24.dp))
+        com.tmplayer.ui.components.IconTip(s.detailOpenDetails) {
+            Box(
+                Modifier
+                    .size(HERO_PILL_HEIGHT)
+                    .clip(CircleShape)
+                    .background(Tone.surfaceHigh.copy(alpha = 0.72f))
+                    .border(1.dp, Tone.outline, CircleShape)
+                    .clickable(role = Role.Button) { onDetails(pick) }
+                    .semantics { contentDescription = s.detailOpenDetails },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(TmIcons.Info, contentDescription = null, tint = Tone.text, modifier = Modifier.size(24.dp))
+            }
         }
     }
 }

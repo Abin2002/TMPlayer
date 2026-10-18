@@ -358,8 +358,10 @@ private fun NoticesScreen(onBack: () -> Unit) {
                 TopAppBar(
                     title = { M3Text(s.aboutNotices) },
                     navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            M3Icon(TmIcons.ArrowBack, contentDescription = s.aboutBackToAbout)
+                        com.tmplayer.ui.components.IconTip(s.aboutBackToAbout, side = com.tmplayer.ui.components.TipSide.Below) {
+                            IconButton(onClick = onBack) {
+                                M3Icon(TmIcons.ArrowBack, contentDescription = s.aboutBackToAbout)
+                            }
                         }
                     },
                 )

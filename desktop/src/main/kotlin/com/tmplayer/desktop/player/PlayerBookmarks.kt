@@ -116,11 +116,15 @@ internal fun BookmarkLine(mark: Bookmark, onJump: () -> Unit, onEdit: () -> Unit
                 }
             }
         }
-        IconButton(onClick = onEdit) {
-            Icon(TmIcons.Edit, contentDescription = if (mark.note.isBlank()) s.playerBookmarkAddNote else s.playerBookmarkEditNote, modifier = Modifier.size(18.dp))
+        com.tmplayer.ui.components.IconTip(if (mark.note.isBlank()) s.playerBookmarkAddNote else s.playerBookmarkEditNote) {
+            IconButton(onClick = onEdit) {
+                Icon(TmIcons.Edit, contentDescription = if (mark.note.isBlank()) s.playerBookmarkAddNote else s.playerBookmarkEditNote, modifier = Modifier.size(18.dp))
+            }
         }
-        IconButton(onClick = onDelete) {
-            Icon(TmIcons.Close, contentDescription = s.playerBookmarkDelete, modifier = Modifier.size(18.dp))
+        com.tmplayer.ui.components.IconTip(s.playerBookmarkDelete) {
+            IconButton(onClick = onDelete) {
+                Icon(TmIcons.Close, contentDescription = s.playerBookmarkDelete, modifier = Modifier.size(18.dp))
+            }
         }
     }
 }

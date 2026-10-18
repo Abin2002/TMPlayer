@@ -398,6 +398,32 @@ private fun PadKey(
         !enabled -> Tone.muted
         else -> Tone.text
     }
+    // A key drawn as a glyph (the backspace) has its name in a tooltip; a digit or a word says
+    // what it is already.
+    if (icon != null) {
+        com.tmplayer.ui.components.IconTip(label, modifier) {
+            PadKeyBody(size, label, Modifier, icon, small, enabled, tv, interactions, focused, shape, ink, onClick)
+        }
+    } else {
+        PadKeyBody(size, label, modifier, icon, small, enabled, tv, interactions, focused, shape, ink, onClick)
+    }
+}
+
+@Composable
+private fun PadKeyBody(
+    size: Dp,
+    label: String,
+    modifier: Modifier,
+    icon: ImageVector?,
+    small: Boolean,
+    enabled: Boolean,
+    tv: Boolean,
+    interactions: MutableInteractionSource,
+    focused: Boolean,
+    shape: androidx.compose.ui.graphics.Shape,
+    ink: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit,
+) {
     Box(
         modifier
             .size(size)

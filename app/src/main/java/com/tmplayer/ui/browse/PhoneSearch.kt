@@ -248,18 +248,20 @@ internal fun PhoneSearchScreen(
                 )
                 // Where the bar's magnifier was: the way back out.
                 val closePress = remember { MutableInteractionSource() }
-                Box(
-                    Modifier
-                        .size(BAR_HEIGHT)
-                        .pressScale(closePress)
-                        .shadow(BAR_SHADOW, CircleShape)
-                        .clip(CircleShape)
-                        .background(FloatingTone.menu)
-                        .border(floatingBorder(), CircleShape)
-                        .clickable(interactionSource = closePress, indication = ripple(), role = Role.Button, onClick = onClose),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(TmIcons.Close, contentDescription = s.searchClose, tint = Tone.text, modifier = Modifier.size(22.dp))
+                com.tmplayer.ui.components.IconTip(s.searchClose) {
+                    Box(
+                        Modifier
+                            .size(BAR_HEIGHT)
+                            .pressScale(closePress)
+                            .shadow(BAR_SHADOW, CircleShape)
+                            .clip(CircleShape)
+                            .background(FloatingTone.menu)
+                            .border(floatingBorder(), CircleShape)
+                            .clickable(interactionSource = closePress, indication = ripple(), role = Role.Button, onClick = onClose),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(TmIcons.Close, contentDescription = s.searchClose, tint = Tone.text, modifier = Modifier.size(22.dp))
+                    }
                 }
             }
         }
@@ -354,11 +356,15 @@ private fun SearchField(
             label = "searchFieldEnd",
         ) { shown ->
             when (shown) {
-                FieldEnd.Clear -> IconButton(onClick = { onText(TextFieldValue("")) }) {
-                    Icon(TmIcons.Close, contentDescription = s.browseClearSearch, tint = Tone.muted)
+                FieldEnd.Clear -> com.tmplayer.ui.components.IconTip(s.browseClearSearch) {
+                    IconButton(onClick = { onText(TextFieldValue("")) }) {
+                        Icon(TmIcons.Close, contentDescription = s.browseClearSearch, tint = Tone.muted)
+                    }
                 }
-                FieldEnd.Voice -> IconButton(onClick = { onVoice?.invoke() }) {
-                    Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice, tint = Tone.muted)
+                FieldEnd.Voice -> com.tmplayer.ui.components.IconTip(s.browseSearchByVoice) {
+                    IconButton(onClick = { onVoice?.invoke() }) {
+                        Icon(TmIcons.Mic, contentDescription = s.browseSearchByVoice, tint = Tone.muted)
+                    }
                 }
                 FieldEnd.None -> Unit
             }
@@ -433,11 +439,15 @@ private fun androidx.compose.foundation.lazy.LazyListScope.emptySearch(
                 Icon(TmIcons.History, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(16.dp))
                 Text(entry, style = MaterialTheme.typography.bodyLarge, color = Tone.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                IconButton(onClick = { onFill(entry) }) {
-                    Icon(TmIcons.ArrowUpLeft, contentDescription = s.searchFillIn(entry), tint = Tone.muted, modifier = Modifier.size(20.dp))
+                com.tmplayer.ui.components.IconTip(s.searchFillIn(entry)) {
+                    IconButton(onClick = { onFill(entry) }) {
+                        Icon(TmIcons.ArrowUpLeft, contentDescription = s.searchFillIn(entry), tint = Tone.muted, modifier = Modifier.size(20.dp))
+                    }
                 }
-                IconButton(onClick = { onRemove(entry) }) {
-                    Icon(TmIcons.Close, contentDescription = s.searchRemoveRecent(entry), tint = Tone.muted, modifier = Modifier.size(18.dp))
+                com.tmplayer.ui.components.IconTip(s.searchRemoveRecent(entry)) {
+                    IconButton(onClick = { onRemove(entry) }) {
+                        Icon(TmIcons.Close, contentDescription = s.searchRemoveRecent(entry), tint = Tone.muted, modifier = Modifier.size(18.dp))
+                    }
                 }
             }
         }

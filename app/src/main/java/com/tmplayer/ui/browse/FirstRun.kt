@@ -130,8 +130,10 @@ internal fun FirstVideoTip(nothingPlayed: Boolean, start: Dp, end: Dp) {
             modifier = Modifier.weight(1f),
         )
         if (touch) {
-            IconButton(onClick = { scope.launch { runCatching { settings.setFirstVideoTipDismissed() } } }) {
-                Icon(TmIcons.Close, contentDescription = s.commonDismiss, tint = Tone.muted)
+            com.tmplayer.ui.components.IconTip(s.commonDismiss) {
+                IconButton(onClick = { scope.launch { runCatching { settings.setFirstVideoTipDismissed() } } }) {
+                    Icon(TmIcons.Close, contentDescription = s.commonDismiss, tint = Tone.muted)
+                }
             }
         }
     }
