@@ -177,7 +177,13 @@ internal fun HomePane(
     val carousel = recent != null && featured?.isEmpty() != true
     // With no carousel the rows are the whole first screen; with one, its first picture tells
     // HomeFirstPaint (through the carousel), so the loader lifts over a finished Home.
-    LaunchedEffect(carousel) { if (!carousel) HomeFirstPaint.markReady() }
+    // Not at once: the starred chats' row can arrive a moment after the rest, bringing the carousel
+    // (and its picture) with it, and the loader lifting before that let Home jump down.
+    LaunchedEffect(carousel) {
+        if (carousel) return@LaunchedEffect
+        kotlinx.coroutines.delay(NO_CAROUSEL_SETTLE_MS)
+        HomeFirstPaint.markReady()
+    }
     val listed = if (recent != null) rows.filterNot { it === recent } else rows
     val first = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
@@ -845,3 +851,6 @@ private fun rememberFeatured(recent: HomeRow.Recent?): List<com.tmplayer.data.Fe
 
 /** How long the carousel waits for its ranked order before showing the picks as they came. */
 private const val RANK_WAIT_MS = 1_200L
+
+/** How long Home without a carousel waits for one to turn up before the cold start's loader lifts. */
+private const val NO_CAROUSEL_SETTLE_MS = 1_500L
