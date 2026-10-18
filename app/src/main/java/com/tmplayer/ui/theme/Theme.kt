@@ -24,7 +24,9 @@ import androidx.tv.material3.darkColorScheme
 import androidx.tv.material3.lightColorScheme as tvLightColorScheme
 import com.tmplayer.data.FormFactor
 import com.tmplayer.data.SettingsStore
+import com.tmplayer.data.Accent
 import com.tmplayer.data.ThemeChoice
+import com.tmplayer.data.pureBlackGround
 
 /*
  * The Android entry point to the theme. The palette, the shapes, the touch type scale and [Tone]
@@ -172,7 +174,7 @@ private val phoneTypography = Typography(
  * have the blue can say so, and a phone older than Android 12 has nothing to offer either way.
  */
 @Composable
-private fun phoneScheme(dark: Boolean, dynamic: Boolean, black: Boolean): ColorScheme {
+private fun phoneScheme(dark: Boolean, dynamic: Boolean, black: Boolean, accent: Accent): ColorScheme {
     val context = LocalContext.current
     val wallpaper = dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     return when {
@@ -180,7 +182,8 @@ private fun phoneScheme(dark: Boolean, dynamic: Boolean, black: Boolean): ColorS
         wallpaper && dark && black -> dynamicDarkColorScheme(context).pureBlack()
         wallpaper && dark -> dynamicDarkColorScheme(context)
         wallpaper -> dynamicLightColorScheme(context)
-        else -> TmSchemes.of(dark, black)
+        // The wallpaper wins over the accent: it is the viewer's other answer to the same question.
+        else -> TmSchemes.of(dark, black, accent)
     }
 }
 
@@ -201,17 +204,18 @@ fun TMPlayerTheme(content: @Composable () -> Unit) {
 
     // A television has no system light mode to follow, so "System" there means dark. Light and
     // Dark are the viewer's own answer, on either device: a television in a bright room is real.
-    val dark = when {
-        choice == ThemeChoice.Light -> false
-        choice.alwaysDark -> true
-        !touch -> true
-        else -> systemDark
-    }
+    val dark = choice.isDark(systemDark = systemDark || !touch)
 
     // One scheme for both devices. The television has no wallpaper to take colours from, but
-    // everything else about it is the phone's palette.
-    val black = choice == ThemeChoice.Black
-    val scheme = if (touch) phoneScheme(dark, dynamic, black) else TmSchemes.of(dark, black)
+    // everything else about it is the phone's palette. Pure black is a switch under the theme and
+    // applies whenever the app is dark, System on a dark phone included.
+    val pureBlack by settings.pureBlack.collectAsState(initial = false)
+    val black = pureBlackGround(choice, pureBlack, systemDark = systemDark || !touch)
+    val accent by settings.accent.collectAsState(initial = Accent.Default)
+    // A picked accent washes in over a moment rather than snapping (animateAccentRoles).
+    val scheme = animateAccentRoles(
+        if (touch) phoneScheme(dark, dynamic, black, accent) else TmSchemes.of(dark, black, accent),
+    )
 
     // Both themes, always, and the form factor decides only the type scale. Two theme systems are
     // live because the two devices need different controls, and a shared screen reads one theme
@@ -239,6 +243,7 @@ fun TMPlayerTheme(content: @Composable () -> Unit) {
                 // inherits Compose's fallback, so a light theme would draw dark theme grey.
                 LocalContentColor provides scheme.onSurface,
                 LocalDarkTheme provides dark,
+                LocalPureBlack provides black,
             ) {
                 UiScaled(scale) { ProvideStrings(content) }
             }

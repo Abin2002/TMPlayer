@@ -1,6 +1,8 @@
 package com.tmplayer.ui.theme
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.border
+import com.tmplayer.data.Accent
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
@@ -17,6 +19,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -106,6 +109,12 @@ object Corner {
  * needs it and half of them are shared with the television.
  */
 val LocalDarkTheme = staticCompositionLocalOf { true }
+
+/**
+ * True when the dark theme is drawn on true black (the Pure black switch, with the app dark), for
+ * the few things that paint the ground themselves rather than read the scheme, such as the loader.
+ */
+val LocalPureBlack = staticCompositionLocalOf { false }
 
 /**
  * A ring around whatever the remote is on, for the theme where the fill alone is not enough.
@@ -214,16 +223,207 @@ object TmSchemes {
     )
 
     /**
-     * Black, for an OLED screen ([com.tmplayer.data.ThemeChoice.Black]): [Dark] with the ground
-     * at true black. See [pureBlack].
+     * Black, for an OLED screen (the Pure black switch, [com.tmplayer.data.pureBlackGround]):
+     * [Dark] with the ground at true black. See [pureBlack].
      */
     val Black: ColorScheme = Dark.pureBlack()
 
-    fun of(dark: Boolean, black: Boolean = false): ColorScheme = when {
-        dark && black -> Black
-        dark -> Dark
-        else -> Light
+    /** The scheme for this mode in [accent]: the theme's ground and text, the accent's roles. */
+    fun of(dark: Boolean, black: Boolean = false, accent: Accent = Accent.Default): ColorScheme {
+        val base = when {
+            dark && black -> Black
+            dark -> Dark
+            else -> Light
+        }
+        return base.withAccent(accent, dark)
     }
+}
+
+/**
+ * The accent roles of one [Accent] in one mode: the primary, secondary and tertiary families.
+ * Everything else in a scheme (the ground, the surface steps, the text, the outline, the error) is
+ * the theme's and stays as it is, so an accent never changes how readable a page is.
+ */
+class AccentRoles(
+    val primary: Color,
+    val onPrimary: Color,
+    val primaryContainer: Color,
+    val onPrimaryContainer: Color,
+    val inversePrimary: Color,
+    val secondary: Color,
+    val onSecondary: Color,
+    val secondaryContainer: Color,
+    val onSecondaryContainer: Color,
+    val tertiary: Color,
+    val onTertiary: Color,
+    val tertiaryContainer: Color,
+    val onTertiaryContainer: Color,
+)
+
+/** This scheme with [accent]'s roles for the mode; [Accent.Telegram] leaves it exactly as it is. */
+fun ColorScheme.withAccent(accent: Accent, dark: Boolean): ColorScheme {
+    val r = TmAccents.roles(accent, dark) ?: return this
+    return copy(
+        primary = r.primary, onPrimary = r.onPrimary,
+        primaryContainer = r.primaryContainer, onPrimaryContainer = r.onPrimaryContainer,
+        inversePrimary = r.inversePrimary,
+        secondary = r.secondary, onSecondary = r.onSecondary,
+        secondaryContainer = r.secondaryContainer, onSecondaryContainer = r.onSecondaryContainer,
+        tertiary = r.tertiary, onTertiary = r.onTertiary,
+        tertiaryContainer = r.tertiaryContainer, onTertiaryContainer = r.onTertiaryContainer,
+    )
+}
+
+/**
+ * The accents other than Telegram blue, whose roles are [TmSchemes.Dark] and [TmSchemes.Light]
+ * themselves.
+ *
+ * Built as Material 3 tonal palettes are, from a seed's hue with CIELAB lightness as the tone: in
+ * the dark the primary at tone 80 with tone 20 on it and a tone 30 container under tone 90 text,
+ * in daylight the primary at 40 with white on it and a tone 90 container under tone 10 text; the
+ * secondary is the seed's hue with little chroma, the tertiary 60 degrees round from it. Two are
+ * set by hand: Red keeps a Netflix-like red as its dark primary with white on it (4.8:1), and
+ * Monochrome is greys alone, near white on the dark ground and near black in daylight.
+ *
+ * Every pair a word is written on passes WCAG AA (4.5:1) and every primary stands out from the
+ * ground and the raised surfaces by 3:1, in light, dark and pure black; AccentContrastTest checks
+ * them all.
+ */
+object TmAccents {
+
+    fun roles(accent: Accent, dark: Boolean): AccentRoles? = when (accent) {
+        Accent.Telegram -> null
+        else -> (if (dark) darkRoles else lightRoles).getValue(accent)
+    }
+
+    /** The colour a swatch shows for [accent] in this mode: its primary. */
+    fun swatch(accent: Accent, dark: Boolean): Color =
+        roles(accent, dark)?.primary ?: (if (dark) TmSchemes.Dark else TmSchemes.Light).primary
+
+    private fun c(argb: Long) = Color(argb)
+
+    @Suppress("LongParameterList")
+    private fun roles(
+        p: Long, onP: Long, pc: Long, onPc: Long, inv: Long,
+        s: Long, onS: Long, sc: Long, onSc: Long,
+        t: Long, onT: Long, tc: Long, onTc: Long,
+    ) = AccentRoles(c(p), c(onP), c(pc), c(onPc), c(inv), c(s), c(onS), c(sc), c(onSc), c(t), c(onT), c(tc), c(onTc))
+
+    private val darkRoles: Map<Accent, AccentRoles> = mapOf(
+        Accent.Red to roles(
+            0xFFE50914, 0xFFFFFFFF, 0xFF8C1D18, 0xFFFFDAD5, 0xFFC0141C,
+            0xFFE1BFB7, 0xFF432A24, 0xFF5C403A, 0xFFFEDBD3,
+            0xFFD2C79A, 0xFF36310B, 0xFF4E4721, 0xFFEEE3B5,
+        ),
+        Accent.Orange to roles(
+            0xFFFFB68D, 0xFF532200, 0xFF783100, 0xFFFFDBC9, 0xFF994710,
+            0xFFDEC1B1, 0xFF412C20, 0xFF594235, 0xFFFBDDCD,
+            0xFFC3CB9E, 0xFF2C340F, 0xFF424A24, 0xFFDFE7B9,
+        ),
+        Accent.Amber to roles(
+            0xFFF0BF5E, 0xFF402D00, 0xFF5C4300, 0xFFFFDEA8, 0xFF7A5900,
+            0xFFD4C4AD, 0xFF3A2F1C, 0xFF514531, 0xFFF1E0C8,
+            0xFFACD0AB, 0xFF17371A, 0xFF2E4E2F, 0xFFC7ECC6,
+        ),
+        Accent.Emerald to roles(
+            0xFF65DCA8, 0xFF003824, 0xFF005236, 0xFF82F9C3, 0xFF006C49,
+            0xFFAFCDBE, 0xFF1C3529, 0xFF324C3F, 0xFFCBEAD9,
+            0xFF89D1E3, 0xFF003640, 0xFF004E5B, 0xFFA7EDFF,
+        ),
+        Accent.Teal to roles(
+            0xFF59DBC8, 0xFF003731, 0xFF005048, 0xFF78F7E4, 0xFF006B5F,
+            0xFFA8CEC7, 0xFF133631, 0xFF2B4D47, 0xFFC4EAE3,
+            0xFF94CEED, 0xFF003547, 0xFF004D66, 0xFFC0E8FF,
+        ),
+        Accent.Violet to roles(
+            0xFFD6BAFF, 0xFF351D78, 0xFF513492, 0xFFEBDCFF, 0xFF6C4BAD,
+            0xFFCDC2DB, 0xFF352D41, 0xFF4C4358, 0xFFE9DEF8,
+            0xFFF4B6C2, 0xFF51212D, 0xFF6A3743, 0xFFFFD9E0,
+        ),
+        Accent.Pink to roles(
+            0xFFFFB0CF, 0xFF640039, 0xFF8D0053, 0xFFFFD8E6, 0xFFAC276B,
+            0xFFDFBECA, 0xFF432933, 0xFF5B3F4A, 0xFFFCDAE6,
+            0xFFEDBCA3, 0xFF4A2715, 0xFF643D29, 0xFFFFDBCA,
+        ),
+        Accent.Monochrome to roles(
+            0xFFE4E4E4, 0xFF1A1A1A, 0xFF474747, 0xFFF0F0F0, 0xFF3A3A3A,
+            0xFFC6C6C6, 0xFF2F2F2F, 0xFF3D3D3D, 0xFFE2E2E2,
+            0xFFBDBDBD, 0xFF292929, 0xFF404040, 0xFFE6E6E6,
+        ),
+    )
+
+    private val lightRoles: Map<Accent, AccentRoles> = mapOf(
+        Accent.Red to roles(
+            0xFFC0141C, 0xFFFFFFFF, 0xFFFFDAD5, 0xFF410003, 0xFFFFB4AB,
+            0xFF755751, 0xFFFFFFFF, 0xFFFEDBD3, 0xFF2D150F,
+            0xFF675F37, 0xFFFFFFFF, 0xFFEEE3B5, 0xFF211C00,
+        ),
+        Accent.Orange to roles(
+            0xFF994710, 0xFFFFFFFF, 0xFFFFDBC9, 0xFF2E1500, 0xFFFFB68D,
+            0xFF72594C, 0xFFFFFFFF, 0xFFFBDDCD, 0xFF2A1709,
+            0xFF5A623A, 0xFFFFFFFF, 0xFFDFE7B9, 0xFF1A1E00,
+        ),
+        Accent.Amber to roles(
+            0xFF7A5900, 0xFFFFFFFF, 0xFFFFDEA8, 0xFF251A00, 0xFFF0BF5E,
+            0xFF6A5D48, 0xFFFFFFFF, 0xFFF1E0C8, 0xFF241A03,
+            0xFF456646, 0xFFFFFFFF, 0xFFC7ECC6, 0xFF022100,
+        ),
+        Accent.Emerald to roles(
+            0xFF006C49, 0xFFFFFFFF, 0xFF82F9C3, 0xFF002114, 0xFF65DCA8,
+            0xFF496457, 0xFFFFFFFF, 0xFFCBEAD9, 0xFF062015,
+            0xFF106777, 0xFFFFFFFF, 0xFFA7EDFF, 0xFF001F26,
+        ),
+        Accent.Teal to roles(
+            0xFF006B5F, 0xFFFFFFFF, 0xFF78F7E4, 0xFF00201C, 0xFF59DBC8,
+            0xFF42655F, 0xFFFFFFFF, 0xFFC4EAE3, 0xFF00201C,
+            0xFF236580, 0xFFFFFFFF, 0xFFC0E8FF, 0xFF001F2B,
+        ),
+        Accent.Violet to roles(
+            0xFF6C4BAD, 0xFFFFFFFF, 0xFFEBDCFF, 0xFF17065F, 0xFFD6BAFF,
+            0xFF645A70, 0xFFFFFFFF, 0xFFE9DEF8, 0xFF1F182B,
+            0xFF844F5A, 0xFFFFFFFF, 0xFFFFD9E0, 0xFF380A18,
+        ),
+        Accent.Pink to roles(
+            0xFFAC276B, 0xFFFFFFFF, 0xFFFFD8E6, 0xFF3E0021, 0xFFFFB0CF,
+            0xFF735661, 0xFFFFFFFF, 0xFFFCDAE6, 0xFF2C141E,
+            0xFF7E5540, 0xFFFFFFFF, 0xFFFFDBCA, 0xFF2F1500,
+        ),
+        Accent.Monochrome to roles(
+            0xFF1F1F1F, 0xFFFFFFFF, 0xFFDADADA, 0xFF141414, 0xFFE4E4E4,
+            0xFF5C5C5C, 0xFFFFFFFF, 0xFFE2E2E2, 0xFF1B1B1B,
+            0xFF535353, 0xFFFFFFFF, 0xFFDCDCDC, 0xFF191919,
+        ),
+    )
+}
+
+/** WCAG's contrast ratio between two opaque colours, from 1 (the same) to 21 (black on white). */
+fun contrastRatio(a: Color, b: Color): Float {
+    val x = a.luminance()
+    val y = b.luminance()
+    return (maxOf(x, y) + 0.05f) / (minOf(x, y) + 0.05f)
+}
+
+/**
+ * [target] with its accent roles eased in over a moment, so picking a swatch washes the new
+ * colour across the screen rather than snapping; the ground and the text change at once.
+ */
+@Composable
+fun animateAccentRoles(target: ColorScheme): ColorScheme {
+    val spec = Motion.standard<Color>()
+    val primary by animateColorAsState(target.primary, spec, label = "primary")
+    val onPrimary by animateColorAsState(target.onPrimary, spec, label = "onPrimary")
+    val primaryContainer by animateColorAsState(target.primaryContainer, spec, label = "primaryContainer")
+    val onPrimaryContainer by animateColorAsState(target.onPrimaryContainer, spec, label = "onPrimaryContainer")
+    val secondaryContainer by animateColorAsState(target.secondaryContainer, spec, label = "secondaryContainer")
+    val onSecondaryContainer by animateColorAsState(target.onSecondaryContainer, spec, label = "onSecondaryContainer")
+    return target.copy(
+        primary = primary,
+        onPrimary = onPrimary,
+        primaryContainer = primaryContainer,
+        onPrimaryContainer = onPrimaryContainer,
+        secondaryContainer = secondaryContainer,
+        onSecondaryContainer = onSecondaryContainer,
+    )
 }
 
 /**
@@ -293,13 +493,16 @@ fun TmMaterialTheme(
     dark: Boolean,
     /** Dark on a true black ground ([TmSchemes.Black]); only with [dark]. */
     black: Boolean = false,
-    scheme: ColorScheme = TmSchemes.of(dark, black),
+    /** The accent colour, Telegram blue unless the viewer picked another. */
+    accent: Accent = Accent.Default,
+    scheme: ColorScheme = animateAccentRoles(TmSchemes.of(dark, black, accent)),
     content: @Composable () -> Unit,
 ) {
     MaterialTheme(colorScheme = scheme, shapes = TmShapes, typography = TmTouchTypography) {
         CompositionLocalProvider(
             LocalContentColor provides scheme.onSurface,
             LocalDarkTheme provides dark,
+            LocalPureBlack provides (dark && black),
         ) {
             ProvideFallbackFonts { ProvideStrings(content) }
         }

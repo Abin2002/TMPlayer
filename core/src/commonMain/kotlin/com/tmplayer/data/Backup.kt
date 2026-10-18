@@ -125,6 +125,7 @@ object Backups {
      * to another phone keeps the phone's choice.
      */
     val SETTINGS: Map<String, Kind> = mapOf(
+        "accent" to Kind.TEXT,
         "autoplay_next" to Kind.BOOL,
         "background_audio" to Kind.BOOL,
         "chat_filter" to Kind.TEXT,
@@ -160,6 +161,7 @@ object Backups {
         "preferred_subtitle_language" to Kind.TEXT,
         "player_haptics" to Kind.BOOL,
         "player_tap_plays_pauses" to Kind.BOOL,
+        "pure_black" to Kind.BOOL,
         "quality_habit" to Kind.TEXT,
         "reduce_motion" to Kind.BOOL,
         "remember_searches" to Kind.BOOL,

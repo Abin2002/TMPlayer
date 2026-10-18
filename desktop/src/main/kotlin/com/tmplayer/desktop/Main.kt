@@ -387,15 +387,15 @@ private const val MIN_HEIGHT = 600
 fun DesktopTheme(settings: SettingsStore, content: @Composable () -> Unit) {
     val choice by settings.themeChoice.collectAsState(initial = ThemeChoice.Default)
     val systemDark by com.tmplayer.desktop.os.SystemAppearance.dark.collectAsState()
-    val dark = when (choice) {
-        ThemeChoice.Light -> false
-        ThemeChoice.Dark, ThemeChoice.Black -> true
-        ThemeChoice.System -> systemDark
-    }
+    val dark = choice.isDark(systemDark)
+    // The Pure black switch, wherever the window is dark, System on a dark desktop included.
+    val pureBlack by settings.pureBlack.collectAsState(initial = false)
+    val black = com.tmplayer.data.pureBlackGround(choice, pureBlack, systemDark)
     // The interface size (CP59) for the whole window, the player's controls included; the video
     // fills whatever space it is given, so it is the same at every size.
     val scale by rememberUiScale(settings)
-    TmMaterialTheme(dark = dark, black = choice == ThemeChoice.Black) { ProvideFocusVisibility { UiScaled(scale, content) } }
+    val accent by settings.accent.collectAsState(initial = com.tmplayer.data.Accent.Default)
+    TmMaterialTheme(dark = dark, black = black, accent = accent) { ProvideFocusVisibility { UiScaled(scale, content) } }
 }
 
 /**

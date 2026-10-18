@@ -180,10 +180,16 @@ class PromoCaptureActivity : ComponentActivity() {
             val choice = when (wanted.lowercase()) {
                 "light" -> ThemeChoice.Light
                 "dark" -> ThemeChoice.Dark
-                "black" -> ThemeChoice.Black
+                "black" -> ThemeChoice.Dark
                 else -> ThemeChoice.System
             }
-            runBlocking { SettingsStore(applicationContext).setThemeChoice(choice) }
+            runBlocking {
+                SettingsStore(applicationContext).run {
+                    setThemeChoice(choice)
+                    // "black" is Dark with the Pure black switch on; every other value turns it off.
+                    setPureBlack(wanted.lowercase() == "black")
+                }
+            }
         }
 
         // `--es lang en-XA` (or any shipped tag) pins the UI language for the shot, the same way

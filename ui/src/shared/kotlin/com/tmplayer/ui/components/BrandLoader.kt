@@ -59,6 +59,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import com.tmplayer.data.DeviceForm
 import com.tmplayer.i18n.L
 import com.tmplayer.ui.theme.LocalDarkTheme
+import com.tmplayer.ui.theme.LocalPureBlack
 import com.tmplayer.ui.theme.Motion
 import com.tmplayer.ui.theme.TmSchemes
 import com.tmplayer.ui.theme.Tone
@@ -193,7 +194,7 @@ fun connectingLines(): List<String> = listOf(
 
 /** The loader's ground: the window's own colour for this theme, whatever the wallpaper says. */
 @Composable
-private fun loaderGround(): Color = TmSchemes.of(LocalDarkTheme.current).background
+private fun loaderGround(): Color = TmSchemes.of(LocalDarkTheme.current, LocalPureBlack.current).background
 
 /** The loader's figures for each kind of device: the mark large on a television and a desktop. */
 private class LoaderSizes(

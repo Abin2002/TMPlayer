@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.use
+import com.tmplayer.data.Accent
 import com.tmplayer.data.AuthState
 import com.tmplayer.data.ChatKind
 import com.tmplayer.data.ChatSummary
@@ -46,6 +47,7 @@ import org.jetbrains.skia.Rect
 import org.jetbrains.skia.Surface as SkSurface
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Files
 
@@ -99,7 +101,7 @@ class ThemeAuditRenderTest {
         for (dark in listOf(true, false)) {
             val theme = if (dark) "dark" else "light"
             fun shot(name: String, sidebar: Boolean = true, page: @Composable () -> Unit) =
-                save("desktop-$name-$theme.png", render(dark, sidebar, page))
+                save("desktop-$name-$theme.png", render(dark, sidebar, page = page))
 
             shot("chats") { ChatsList() }
             shot("grid") { Grid() }
@@ -186,6 +188,33 @@ class ThemeAuditRenderTest {
         }
     }
 
+    /**
+     * The accent colours (2026-10-19) on the screens that carry them most: Settings' Appearance
+     * page (the swatches, a switch, the segments, the selected page in the list), a chat's grid
+     * and the chat list in the side bar, in light, dark and pure black, Monochrome in all three.
+     * Written as `desktop-accent-<accent>-<theme>-<screen>.png`.
+     */
+    @Test
+    fun accentScreens() {
+        val cases = listOf(
+            Triple(Accent.Red, true, false), Triple(Accent.Red, false, false),
+            Triple(Accent.Emerald, false, false), Triple(Accent.Violet, true, false),
+            Triple(Accent.Amber, false, false), Triple(Accent.Pink, true, true),
+            Triple(Accent.Monochrome, true, false), Triple(Accent.Monochrome, false, false),
+            Triple(Accent.Monochrome, true, true),
+        )
+        for ((accent, dark, black) in cases) {
+            runBlocking { settings.setAccent(accent); settings.setPureBlack(black) }
+            val theme = if (black) "black" else if (dark) "dark" else "light"
+            val name = "desktop-accent-${accent.name.lowercase()}-$theme"
+            save("$name-appearance.png", render(dark, sidebar = false, black = black, accent = accent) {
+                SettingsPage(shell, "2.0.0", initialCategory = SettingsCategory.Appearance)
+            })
+            save("$name-grid.png", render(dark, sidebar = true, black = black, accent = accent) { Grid() })
+        }
+        runBlocking { settings.setAccent(Accent.Default); settings.setPureBlack(false) }
+    }
+
     @Composable
     private fun ChatsList() {
         Column(Modifier.fillMaxSize()) {
@@ -209,9 +238,15 @@ class ThemeAuditRenderTest {
         }
     }
 
-    private fun render(dark: Boolean, sidebar: Boolean, page: @Composable () -> Unit): ByteArray =
+    private fun render(
+        dark: Boolean,
+        sidebar: Boolean,
+        black: Boolean = false,
+        accent: Accent = Accent.Default,
+        page: @Composable () -> Unit,
+    ): ByteArray =
         ImageComposeScene(WIDTH, HEIGHT, Density(1f)) {
-            TmMaterialTheme(dark = dark) {
+            TmMaterialTheme(dark = dark, black = black, accent = accent) {
                 Surface(Modifier.fillMaxSize(), color = Tone.background) {
                     if (sidebar) {
                         NavFrame(shell, null, null) { page() }

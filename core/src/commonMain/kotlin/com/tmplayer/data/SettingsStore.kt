@@ -95,6 +95,13 @@ private val MEDIA_LAYOUT = stringPreferencesKey("media_layout")
 private val CHAT_SNAPSHOT = stringPreferencesKey("chat_snapshot")
 private val ACCOUNT_SNAPSHOT = stringPreferencesKey("account_snapshot")
 private val THEME_CHOICE = stringPreferencesKey("theme_choice")
+
+/** The Pure black switch under the theme: dark on true black, whenever the app is dark. */
+private val PURE_BLACK = booleanPreferencesKey("pure_black")
+
+/** The accent colour, an [Accent] by name. About the device's look, so it outlives a sign out. */
+private val ACCENT = stringPreferencesKey("accent")
+
 private val LANGUAGE = stringPreferencesKey("language")
 
 /** The language the "Now in ..." card last announced. See [com.tmplayer.i18n.LanguageNotice]. */
@@ -347,6 +354,8 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
     suspend fun clearEverything(keepDownloads: Boolean = false) {
         prefs.edit { prefs ->
             val theme = prefs[THEME_CHOICE]
+            val pureBlack = prefs[PURE_BLACK]
+            val accent = prefs[ACCENT]
             val dynamic = prefs[DYNAMIC_COLOUR]
             val uiScale = prefs[UI_SCALE]
             // How light the device needs the app to be is the device's, not the account's, and so
@@ -371,6 +380,8 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
             }
             prefs.clear()
             theme?.let { prefs[THEME_CHOICE] = it }
+            pureBlack?.let { prefs[PURE_BLACK] = it }
+            accent?.let { prefs[ACCENT] = it }
             dynamic?.let { prefs[DYNAMIC_COLOUR] = it }
             uiScale?.let { prefs[UI_SCALE] = it }
             for ((key, value) in device) prefs[key] = value
@@ -1821,7 +1832,43 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
         read { ThemeChoice.from(it[THEME_CHOICE]) }
 
     suspend fun setThemeChoice(value: ThemeChoice) {
-        prefs.edit { it[THEME_CHOICE] = value.name }
+        prefs.edit {
+            settleLegacyBlack(it)
+            it[THEME_CHOICE] = value.name
+        }
+    }
+
+    /**
+     * The Pure black switch: dark on true black, for an OLED panel, wherever the app is dark (Dark,
+     * or System on a dark device; see [pureBlackGround]). Off by default.
+     *
+     * Black was a fourth theme until 2026-10-19, stored as [ThemeChoice.LEGACY_BLACK]. That name
+     * still reads as Dark with this switch on, whether it was kept on the device or arrives in an
+     * old backup, and the first write to either setting rewrites it as the two settings it now is.
+     */
+    val pureBlack: Flow<Boolean> =
+        read { it[THEME_CHOICE] == ThemeChoice.LEGACY_BLACK || it[PURE_BLACK] == true }
+
+    suspend fun setPureBlack(value: Boolean) {
+        prefs.edit {
+            settleLegacyBlack(it)
+            it[PURE_BLACK] = value
+        }
+    }
+
+    /** The accent colour; see [Accent]. Telegram blue until one is picked. */
+    val accent: Flow<Accent> = read { Accent.from(it[ACCENT]) }
+
+    suspend fun setAccent(value: Accent) {
+        prefs.edit { it[ACCENT] = value.name }
+    }
+
+    /** A stored Black, rewritten as Dark with the Pure black switch on. */
+    private fun settleLegacyBlack(prefs: MutablePreferences) {
+        if (prefs[THEME_CHOICE] == ThemeChoice.LEGACY_BLACK) {
+            prefs[THEME_CHOICE] = ThemeChoice.Dark.name
+            prefs[PURE_BLACK] = true
+        }
     }
 
     /**

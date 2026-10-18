@@ -413,8 +413,18 @@ class SetupRenderTest {
             }
         }
         onNode(hasText("System") and hasClickAction()).assertIsSelected()
+        // Pure black, the switch under the theme: offered under System and Dark, folded away
+        // under Light.
+        onNode(hasText("Pure black") and hasClickAction()).performClick()
+        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.pureBlack.first() } }
         onNode(hasText("Light") and hasClickAction()).performClick()
         waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.themeChoice.first() } == ThemeChoice.Light }
+        waitForIdle()
+        onNode(hasText("Pure black")).assertDoesNotExist()
+        onNode(hasText("Dark") and hasClickAction()).performClick()
+        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.themeChoice.first() } == ThemeChoice.Dark }
+        waitForIdle()
+        onNode(hasText("Pure black") and hasClickAction()).assertIsSelected()
         onNode(hasText("Largest") and hasClickAction()).performClick()
         waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.uiScale.first() } == UiScale.Largest }
         onNode(hasText("Next") and hasClickAction()).performClick()
