@@ -226,7 +226,9 @@ class TelegramPlayerMedia(
             // for the rest of the film unbounded.
             onClose = {
                 stopDownload(fileId)
-                if (lowStorageFileId == fileId) LowStorageStreams.revoke(fileId)
+                // Only this open's own decision: a later open of the same file has its own, which
+                // this late close must not take, or that stream fetches the whole video.
+                if (lowStorageFileId == fileId) lowStorageHold?.let { LowStorageStreams.revoke(fileId, it) }
             },
         )
     }
@@ -234,6 +236,10 @@ class TelegramPlayerMedia(
     /** The file [LowStorageStreams] was told about, taken back at [release]. */
     @Volatile
     private var lowStorageFileId = 0
+
+    /** What [LowStorageStreams.allow] gave this open, so its close takes back that and nothing newer. */
+    @Volatile
+    private var lowStorageHold: Any? = null
 
     /**
      * Lets this video stream through a rolling window when Low storage mode is on. Only a video
@@ -249,7 +255,7 @@ class TelegramPlayerMedia(
         if (runCatching { settings.isKeptDownload(item.chatId, item.messageId) }.getOrDefault(true)) return false
         if (OfflineDownloads.isDownloading(fileId)) return false
         val window = LowStorageWindow.windowBytes(DesktopPaths.disk().freeBytes, CacheShelf.HEADROOM_BYTES)
-        LowStorageStreams.allow(fileId, window)
+        lowStorageHold = LowStorageStreams.allow(fileId, window)
         lowStorageFileId = fileId
         return true
     }

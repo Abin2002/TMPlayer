@@ -184,4 +184,31 @@ class SaveDataStreamsTest {
         SaveDataStreams.revoke(fileId)
         assertNull(SaveDataStreams.plan(fileId, 0, film))
     }
+
+    // ---- a player takes back only its own decision ----------------------------------------------
+
+    @Test
+    fun `an old player of the same file leaving does not unbound the new one in low storage mode`() {
+        val old = LowStorageStreams.allow(fileId, 40 * mb)
+        // The same video opened again before the first player has gone: it decides afresh.
+        LowStorageStreams.revoke(fileId)
+        val new = LowStorageStreams.allow(fileId, 40 * mb)
+        LowStorageStreams.revoke(fileId, old)
+        assertTrue(LowStorageStreams.isRolling(fileId))
+        val request = LowStorageStreams.plan(fileId, 0, film)
+        assertEquals("still bounded to the window, never the whole video", 40 * mb, request?.limit)
+        LowStorageStreams.revoke(fileId, new)
+        assertFalse(LowStorageStreams.isRolling(fileId))
+        assertNull(LowStorageStreams.plan(fileId, 0, film))
+    }
+
+    @Test
+    fun `an old player of the same file leaving does not unbound the new one on mobile data`() {
+        val old = SaveDataStreams.allow(fileId) { metered }
+        val new = SaveDataStreams.allow(fileId) { metered }
+        SaveDataStreams.revoke(fileId, old)
+        assertEquals(w, SaveDataStreams.plan(fileId, 0, film))
+        SaveDataStreams.revoke(fileId, new)
+        assertNull(SaveDataStreams.plan(fileId, 0, film))
+    }
 }

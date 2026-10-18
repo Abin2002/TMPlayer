@@ -120,16 +120,24 @@ object SaveDataStreams {
 
     private val files = HashMap<Int, State>()
 
-    /** Lets [fileId] stream bounded while [metered] says the connection is metered. */
+    /**
+     * Lets [fileId] stream bounded while [metered] says the connection is metered.
+     *
+     * @return this player's hold on the decision, for [revoke] on the way out.
+     */
     @Synchronized
-    fun allow(fileId: Int, metered: () -> Boolean) {
-        files[fileId] = State(metered)
-    }
+    fun allow(fileId: Int, metered: () -> Boolean): Any = State(metered).also { files[fileId] = it }
 
     /** Back to streaming the whole file, as without the setting. */
     @Synchronized
     fun revoke(fileId: Int) {
         files.remove(fileId)
+    }
+
+    /** Takes back only what [allow] returned [hold] for, as [LowStorageStreams.revoke] does. */
+    @Synchronized
+    fun revoke(fileId: Int, hold: Any) {
+        if (files[fileId] === hold) files.remove(fileId)
     }
 
     /** Whether [fileId] streams with the setting, as of now. */

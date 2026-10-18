@@ -905,6 +905,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 downloadedFraction = 1f
                 if (fileSizeBytes <= 0) fileSizeBytes = downloaded.length()
             } else {
+                // An id carried in from a stored row, a channel or a notification may name another
+                // file in this TDLib session ([Td.fileIdFits]), and a resume point past that file's
+                // end would read as the end of the video: the message gives the current one. Asked
+                // before anything is decided about the file: the room check, the watch cache and
+                // Low storage mode all go by this id, and a mode granted to the old id left the
+                // stream of the new one unbounded, the whole video fetched onto the disk.
+                if (hasMessage() && !runCatching { Td.fileIdFits(fileId, fileSizeBytes) }.getOrDefault(true)) {
+                    runCatching { Td.refreshMedia(chatId, messageId) }.getOrNull()?.let { fresh ->
+                        fileId = fresh.fileId
+                        fileSizeBytes = fresh.sizeBytes
+                    }
+                }
                 val availability = Td.localFileAvailability(fileId)
                 if (
                     availability != LocalFileAvailability.Complete &&
@@ -918,8 +930,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 if (!makeRoomForThisVideo(availability)) return@launch
                 holdFile(fileId)
                 claimTheWatchCache()
-                val streamsLow = startLowStorageIfOn(availability)
-                if (!streamsLow) startSavingDataIfOn(availability)
+                val streamsLow = boundTheStream(availability)
                 // Fetching the whole film first is exactly what Low storage mode is there to avoid.
                 val downloadFirst = !streamsLow && runCatching { settings.downloadBeforePlayingNow() }
                     .getOrDefault(false)
@@ -958,18 +969,6 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 syncDelays = runCatching { settings.syncDelays(chatId, messageId) }.getOrDefault(SyncDelays())
             }
             subtitleDelayUs = syncDelays.subtitleMs * 1000
-            // An id carried in from a stored row, a channel or a notification may name another
-            // file in this TDLib session ([Td.fileIdFits]), and a resume point past that file's
-            // end would read as the end of the video: the message gives the current one.
-            if (downloadedFile == null && hasMessage() &&
-                !runCatching { Td.fileIdFits(fileId, fileSizeBytes) }.getOrDefault(true)
-            ) {
-                runCatching { Td.refreshMedia(chatId, messageId) }.getOrNull()?.let { fresh ->
-                    fileId = fresh.fileId
-                    holdFile(fileId)
-                    fileSizeBytes = fresh.sizeBytes
-                }
-            }
             if (!session.isCurrent()) return@launch
             startPlayback(session.client)
         }
@@ -2195,10 +2194,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         releasePlayerAndSurface()
         // Its stream, now that the player and its reads are gone (see [onDestroy]).
         stopDownload()
-        if (lowStorageFileId != 0) LowStorageStreams.revoke(lowStorageFileId)
-        if (saveDataFileId != 0) SaveDataStreams.revoke(saveDataFileId)
-        lowStorageFileId = 0
-        saveDataFileId = 0
+        letGoOfStreamBounds()
         trimCache()
         val outside = intent.getBooleanExtra(EXTRA_OUTSIDE_APP_TASK, false)
         intent = intent(this, next, chatTitle).putExtra(EXTRA_OUTSIDE_APP_TASK, outside)
@@ -2597,6 +2593,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             fileId = fresh.fileId
             holdFile(fileId)
             fileSizeBytes = fresh.sizeBytes
+            // Low storage mode and "Save mobile data" were granted to the old id, which nothing
+            // reads any more: decided again for the new one, or its stream would ask TDLib for the
+            // whole video.
+            runCatching { boundTheStream(Td.localFileAvailability(fileId)) }
             // The old id is baked into the media source, so the player goes rather than re-prepares.
             releasePlayerAndSurface()
             retryPlayback()
@@ -2845,13 +2845,46 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         if (OfflineDownloads.isDownloading(fileId)) return false
         val free = runCatching { DiskSpace.read(applicationContext).freeBytes }.getOrDefault(0L)
         val window = LowStorageWindow.windowBytes(free, CacheShelf.HEADROOM_BYTES)
-        LowStorageStreams.allow(fileId, window)
+        lowStorageHold = LowStorageStreams.allow(fileId, window)
         lowStorageFileId = fileId
         return true
     }
 
     /** The file [LowStorageStreams] was told about, taken back when the player goes. */
     private var lowStorageFileId = 0
+
+    /** What [LowStorageStreams.allow] gave this player, so its exit takes back its own decision only. */
+    private var lowStorageHold: Any? = null
+
+    /**
+     * Decides Low storage mode, or else "Save mobile data", for the file the player is about to
+     * stream, letting go first of whatever this player was granted for another id.
+     *
+     * @return whether Low storage mode applies.
+     */
+    private suspend fun boundTheStream(availability: LocalFileAvailability): Boolean {
+        letGoOfStreamBounds()
+        val streamsLow = startLowStorageIfOn(availability)
+        if (!streamsLow) startSavingDataIfOn(availability)
+        return streamsLow
+    }
+
+    /**
+     * Takes back what this player was granted by [LowStorageStreams] and [SaveDataStreams], and
+     * only that: another player of the same file, opened before this one went, keeps its own.
+     *
+     * @return whether there was anything to take back.
+     */
+    private fun letGoOfStreamBounds(): Boolean {
+        val had = lowStorageFileId != 0 || saveDataFileId != 0
+        lowStorageHold?.let { LowStorageStreams.revoke(lowStorageFileId, it) }
+        saveDataHold?.let { SaveDataStreams.revoke(saveDataFileId, it) }
+        lowStorageFileId = 0
+        saveDataFileId = 0
+        lowStorageHold = null
+        saveDataHold = null
+        return had
+    }
 
     /**
      * Lets this video stream with "Save mobile data" ([SaveDataStreams]) when the setting is on:
@@ -2869,12 +2902,15 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         if (!MeteredPolicy.saveMobileDataInForce(stored, FormFactor.isTv(this))) return
         if (runCatching { settings.isKeptDownload(chatId, messageId) }.getOrDefault(true)) return
         if (OfflineDownloads.isDownloading(fileId)) return
-        SaveDataStreams.allow(fileId) { NetworkMonitor.metered.value }
+        saveDataHold = SaveDataStreams.allow(fileId) { NetworkMonitor.metered.value }
         saveDataFileId = fileId
     }
 
     /** The file [SaveDataStreams] was told about, taken back when the player goes. */
     private var saveDataFileId = 0
+
+    /** What [SaveDataStreams.allow] gave this player, as [lowStorageHold]. */
+    private var saveDataHold: Any? = null
 
     /** This video, as the cache and the shelf want to see it. */
     private fun mediaItemForCache(): MediaItem = MediaItem(
@@ -5591,15 +5627,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // Only once the player, and the reads it had waiting, are gone: a read that asked TDLib
         // again after [stopDownload] would otherwise have asked for the rest of the film unbounded.
         // That late request is stopped here too.
-        if (lowStorageFileId != 0) {
-            LowStorageStreams.revoke(lowStorageFileId)
-            stopDownload()
-        }
         // The same for "Save mobile data": a late read must not ask for the rest of the film.
-        if (saveDataFileId != 0) {
-            SaveDataStreams.revoke(saveDataFileId)
-            stopDownload()
-        }
+        if (letGoOfStreamBounds()) stopDownload()
         super.onDestroy()
     }
 

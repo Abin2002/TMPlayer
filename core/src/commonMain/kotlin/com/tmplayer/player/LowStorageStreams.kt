@@ -20,16 +20,28 @@ object LowStorageStreams {
 
     private val files = HashMap<Int, State>()
 
-    /** Lets [fileId] stream through a window of [windowBytes]. */
+    /**
+     * Lets [fileId] stream through a window of [windowBytes].
+     *
+     * @return this player's hold on the decision, for [revoke] on the way out.
+     */
     @Synchronized
-    fun allow(fileId: Int, windowBytes: Long) {
-        files[fileId] = State(windowBytes, emptyList())
-    }
+    fun allow(fileId: Int, windowBytes: Long): Any = State(windowBytes, emptyList()).also { files[fileId] = it }
 
     /** Back to streaming the whole file, as without the mode. */
     @Synchronized
     fun revoke(fileId: Int) {
         files.remove(fileId)
+    }
+
+    /**
+     * Takes back what [allow] returned [hold] for, and only that: a player of the same file opened
+     * since then (the same video again, a copy that is the same file) has made its own decision,
+     * and the old player's late exit must not leave the new one streaming the whole file.
+     */
+    @Synchronized
+    fun revoke(fileId: Int, hold: Any) {
+        if (files[fileId] === hold) files.remove(fileId)
     }
 
     @Synchronized
