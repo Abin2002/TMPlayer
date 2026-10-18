@@ -104,11 +104,13 @@ class MkvHls internal constructor(
     private val defaultAudio: Int?,
     private val files: List<HlsSubtitleFile>,
     private val converterFactory: (() -> AudioConverter)?,
+    subtitles: Boolean = true,
 ) {
 
     private val video: MkvTrack = header.tracks.first { it.type == 1 && Codecs.fromMatroska(it.codecId) in CastFormats.MP4_VIDEO }
     private val audioTracks: List<MkvTrack> = audio.mapNotNull { a -> header.tracks.firstOrNull { it.number == a.number && it.type == 2 } }
-    private val textTracks: List<MkvTrack> = header.tracks.filter { it.type == 17 && Codecs.fromMatroska(it.codecId) in Codecs.TEXT_SUBTITLES }
+    private val textTracks: List<MkvTrack> =
+        if (subtitles) header.tracks.filter { it.type == 17 && Codecs.fromMatroska(it.codecId) in Codecs.TEXT_SUBTITLES } else emptyList()
 
     val durationMs: Long get() = segments.lastOrNull()?.endNs?.div(1_000_000) ?: 0L
 
@@ -580,6 +582,8 @@ class MkvHls internal constructor(
             files: List<HlsSubtitleFile> = emptyList(),
             converterFactory: (() -> AudioConverter)? = null,
             targetNs: Long = HlsSegments.TARGET_NS,
+            /** The file's own text tracks and [files] as subtitle renditions; false casts without them. */
+            subtitles: Boolean = true,
         ): MkvHls {
             val header = probe.matroska ?: CastCursor(source).use { Matroska.header(it) }
             val video = header.tracks.firstOrNull { it.type == 1 && Codecs.fromMatroska(it.codecId) in CastFormats.MP4_VIDEO }
@@ -591,7 +595,7 @@ class MkvHls internal constructor(
             val segments = HlsSegments.cut(usable, header.durationNs, header.firstCluster, targetNs)
             if (segments.isEmpty()) throw IOException("No segments")
             Logger.i(TAG, "HLS: ${segments.size} segments from ${cues.size} cues, ${audio.size} soundtracks, ${files.size} subtitle files")
-            return MkvHls(source, header, usable, segments, audio, defaultAudio, files, converterFactory)
+            return MkvHls(source, header, usable, segments, audio, defaultAudio, if (subtitles) files else emptyList(), converterFactory, subtitles)
         }
     }
 }
