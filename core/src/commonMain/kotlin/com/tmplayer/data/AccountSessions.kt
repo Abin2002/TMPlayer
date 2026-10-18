@@ -71,7 +71,7 @@ object AccountSessions {
     fun of(session: dev.g000sha256.tdl.dto.Session): AccountSession = AccountSession(
         id = session.id,
         current = session.isCurrent,
-        kind = kindOf(session.deviceType),
+        kind = if (looksLikeComputer(session)) AccountSession.Kind.Computer else kindOf(session.deviceType),
         device = session.deviceModel.orEmpty().trim(),
         platform = session.platform.orEmpty().trim(),
         systemVersion = session.systemVersion.orEmpty().trim(),
@@ -85,6 +85,15 @@ object AccountSessions {
         passwordPending = session.isPasswordPending,
         unconfirmed = session.isUnconfirmed,
     )
+
+    /**
+     * TMPlayer's desktop app signs in with "Desktop" and its system (Linux, Windows, macOS), which
+     * Telegram can type as a phone: such a session is a computer.
+     */
+    private fun looksLikeComputer(session: dev.g000sha256.tdl.dto.Session): Boolean {
+        val text = listOf(session.deviceModel, session.platform, session.systemVersion).joinToString(" ").lowercase()
+        return "desktop" in text || "windows" in text || "macos" in text || "mac os" in text
+    }
 
     /** This device first, then the others by when they were last used, newest first. */
     fun arrange(sessions: List<AccountSession>): List<AccountSession> =

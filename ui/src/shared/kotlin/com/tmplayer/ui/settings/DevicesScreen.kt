@@ -219,7 +219,6 @@ private fun SessionCard(session: AccountSession, s: Messages, nowSec: Long, acti
         val extra = listOfNotNull(
             session.ip.takeIf { it.isNotBlank() }?.let { s.sessionsAddress(it) },
             session.loginDate.takeIf { it > 0 }?.let { s.sessionsSignedIn(s.formatter.date(it * 1000L)) },
-            s.sessionsUnofficial.takeIf { !session.official && !session.current },
         ).joinToString("  ·  ")
         if (extra.isNotEmpty()) Text(extra, style = MaterialTheme.typography.labelSmall, color = Tone.muted.copy(alpha = 0.85f))
         if (session.unconfirmed) Text(s.sessionsUnconfirmed, style = MaterialTheme.typography.labelMedium, color = Tone.danger)
