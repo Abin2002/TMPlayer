@@ -80,8 +80,10 @@ fun CastPageButton(modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     val session by support.session.collectAsState()
     var open by remember { mutableStateOf(false) }
-    val label = (session as? CastSessionState.Connected)?.let { s.castCastingTo(it.name) } ?: s.castButton
-    PageDiscButton(TmIcons.Cast, label, { open = true }, modifier)
+    val connected = session as? CastSessionState.Connected
+    val label = connected?.let { s.castCastingTo(it.name) } ?: s.castButton
+    // Filled in the hero colour while a TV is connected; the same size as the page's Back.
+    PageDiscButton(TmIcons.Cast, label, { open = true }, modifier, active = connected != null, prominent = true)
     if (open) CastPickerSheet(support, onDismiss = { open = false })
 }
 

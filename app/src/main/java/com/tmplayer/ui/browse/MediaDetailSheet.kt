@@ -440,19 +440,9 @@ private fun DetailScreen(
                 onOpenBookmark = onOpenBookmark,
                 onPickCopy = onPickCopy,
                 copyStarted = copyStarted,
-            )
-        }
-        // Cast (CP73), opposite the round Back: picked here, Play then goes straight to the TV.
-        if (touch) {
-            com.tmplayer.cast.CastPageButton(
-                Modifier
-                    .align(androidx.compose.ui.Alignment.TopEnd)
-                    .windowInsetsPadding(
-                        androidx.compose.foundation.layout.WindowInsets.safeDrawing.only(
-                            androidx.compose.foundation.layout.WindowInsetsSides.Top + androidx.compose.foundation.layout.WindowInsetsSides.Horizontal,
-                        ),
-                    )
-                    .padding(end = com.tmplayer.ui.components.FloatingChrome.Inset, top = 10.dp),
+                // Cast (CP73) at the top end, opposite the round Back on a phone and before Close
+                // on a tablet: picked here, Play then goes straight to the TV.
+                topEndAction = if (touch) ({ com.tmplayer.cast.CastPageButton() }) else null,
             )
         }
         // Over the page, which is a window of its own above the app's.

@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.border
@@ -62,6 +63,15 @@ import com.tmplayer.ui.theme.floatingBorder
 object FloatingChrome {
     /** The round Back button. */
     val Button = 44.dp
+    val ButtonIcon = 22.dp
+
+    /**
+     * The detail page's pair over its picture, Back at the top start and Cast at the top end: a
+     * full 48 dp touch target each, the circle and the icon a size up from [Button] so they read
+     * over a busy backdrop, and the same as each other (user, 2026-10-19).
+     */
+    val PageButton = 48.dp
+    val PageButtonIcon = 24.dp
 
     /** The sticky bar, and the same in a phone held sideways, where height is what is short. */
     val Bar = 56.dp
@@ -102,22 +112,36 @@ fun FloatingRoundButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     shortcut: String? = null,
+    size: Dp = FloatingChrome.Button,
+    iconSize: Dp = FloatingChrome.ButtonIcon,
+    /** On: drawn filled in the hero colour (Cast while a TV is connected), and said so to TalkBack. */
+    active: Boolean = false,
 ) {
     val interactions = remember { MutableInteractionSource() }
-    IconTip(label, modifier, shortcut = shortcut, side = TipSide.Below) {
-        Box(
-            Modifier
-                .pressScale(interactions)
-                .size(FloatingChrome.Button)
-                .shadow(FloatingChrome.Shadow, CircleShape)
-                .clip(CircleShape)
-                .background(FloatingTone.menu)
-                .border(floatingBorder(), CircleShape)
-                .clickable(interactionSource = interactions, indication = ripple(), role = Role.Button, onClick = onClick)
-                .semantics { contentDescription = label },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(icon, contentDescription = null, tint = Tone.text, modifier = Modifier.size(22.dp))
+    val fill by androidx.compose.animation.animateColorAsState(if (active) Tone.hero else FloatingTone.menu, label = "roundFill")
+    val tint by androidx.compose.animation.animateColorAsState(if (active) Tone.onHero else Tone.text, label = "roundTint")
+    // The modifier goes on a Box of its own: a tooltip box puts what it is given on the anchor
+    // inside it, so an align() handed to it lined the anchor up within itself and the button
+    // stayed at the top start (the detail page's Cast sat over Back that way).
+    Box(modifier) {
+        IconTip(label, shortcut = shortcut, side = TipSide.Below) {
+            Box(
+                Modifier
+                    .pressScale(interactions)
+                    .size(size)
+                    .shadow(FloatingChrome.Shadow, CircleShape)
+                    .clip(CircleShape)
+                    .background(fill)
+                    .border(floatingBorder(), CircleShape)
+                    .clickable(interactionSource = interactions, indication = ripple(), role = Role.Button, onClick = onClick)
+                    .semantics {
+                        contentDescription = label
+                        if (active) selected = true
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(iconSize))
+            }
         }
     }
 }
@@ -129,6 +153,8 @@ fun FloatingBackButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    size: Dp = FloatingChrome.Button,
+    iconSize: Dp = FloatingChrome.ButtonIcon,
 ) {
     FloatingRoundButton(
         icon = icon,
@@ -137,6 +163,35 @@ fun FloatingBackButton(
         modifier = modifier
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
             .padding(start = FloatingChrome.Inset, top = 10.dp),
+        size = size,
+        iconSize = iconSize,
+    )
+}
+
+/**
+ * [FloatingRoundButton] at the top end of the screen, the mirror of [FloatingBackButton]: a page's
+ * one action over its picture (the detail page's Cast), clear of the status bar and a cutout.
+ */
+@Composable
+fun FloatingEndButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    size: Dp = FloatingChrome.Button,
+    iconSize: Dp = FloatingChrome.ButtonIcon,
+    active: Boolean = false,
+) {
+    FloatingRoundButton(
+        icon = icon,
+        label = label,
+        onClick = onClick,
+        modifier = modifier
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+            .padding(end = FloatingChrome.Inset, top = 10.dp),
+        size = size,
+        iconSize = iconSize,
+        active = active,
     )
 }
 

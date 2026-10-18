@@ -97,6 +97,19 @@ class TitlePagesRenderTest {
                     MediaDetailScreen(bunnyFolded, "Film Club", null, false, rows(resume = false), onClose = {}, onOpenItem = {})
                 })
             }
+            // The top end action (Cast, CP73) in one row with Close, on and off, upright and sideways.
+            for ((active, label) in listOf(false to "off", true to "on")) {
+                save("detail-cast-$label-tall.png", render(412, 900, true) {
+                    MediaDetailScreen(bunny, "Film Club", null, false, rows(resume = false), onClose = {}, topEndAction = {
+                        com.tmplayer.ui.browse.PageDiscButton(TmIcons.Cast, "Cast to a TV", {}, active = active, prominent = true)
+                    })
+                })
+                save("detail-cast-$label-wide.png", render(960, 540, false) {
+                    MediaDetailScreen(bunny, "Film Club", null, false, rows(resume = false), onClose = {}, topEndAction = {
+                        com.tmplayer.ui.browse.PageDiscButton(TmIcons.Cast, "Cast to a TV", {}, active = active, prominent = true)
+                    })
+                })
+            }
             save("detail-episode-tall.png", render(412, 1400, true) {
                 MediaDetailScreen(episodes[4], "Weekend series", null, true, rows(resume = false), onClose = {})
             })
