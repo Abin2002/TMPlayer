@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tmplayer.data.DiskInfo
 import com.tmplayer.data.MediaMapper
+import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.StorageRelocationPlan
 import com.tmplayer.data.Td
 import com.tmplayer.desktop.DesktopPaths
@@ -60,10 +61,28 @@ internal data class StorageFigures(
     val downloadCount: Int,
     val cachedBytes: Long,
     val cachedCount: Int,
+    /** TDLib's thumbnails and previews with the online posters: what Clear pictures and posters frees. */
     val picturesBytes: Long,
     /** One line per drive involved: "120 GB free of 500 GB on /home". */
     val drives: List<String>,
-)
+    /** What the downloads that have not finished hold, and how many there are. */
+    val unfinishedBytes: Long = 0,
+    val unfinishedCount: Int = 0,
+    /** The drive the Downloads folder is on, which the storage ring is a picture of. */
+    val diskTotalBytes: Long = 0,
+    val diskFreeBytes: Long = 0,
+) {
+    /** The storage ring's figures. The desktop has no unmatched files of its own to list. */
+    fun chart(): com.tmplayer.data.StorageChart.Figures = com.tmplayer.data.StorageChart.Figures(
+        downloads = downloadsBytes,
+        unfinished = unfinishedBytes,
+        recent = cachedBytes,
+        unmatched = 0,
+        pictures = picturesBytes,
+        deviceTotal = diskTotalBytes,
+        deviceFree = diskFreeBytes,
+    )
+}
 
 /**
  * The Storage group of Settings (B6, D1): the card, where the files live and the button that moves
@@ -152,9 +171,10 @@ internal fun StorageGroup(state: ShellState) {
     state.extras.watchCache?.let {
         Action(s.storageClearCache, s.storageClearCacheDetail, TmIcons.Delete, end = RowEnd.None) { dialog = StorageDialog.ClearCache }
     }
-    Action(s.storageClearPictures, s.storageClearPicturesDetail, TmIcons.Image, end = RowEnd.None) {
+    Action(s.downloadsFreePictures, s.storageClearPicturesDetail, TmIcons.Image, end = RowEnd.None) {
         scope.launch {
             runCatching { Td.clearPicturesAndPreviews() }
+            runCatching { withContext(Dispatchers.IO) { com.tmplayer.online.OnlineMetadata.current?.purgeImages() } }
             refresh++
             toast(s.storagePicturesCleared)
         }
@@ -244,79 +264,38 @@ internal fun StorageGroup(state: ShellState) {
 }
 
 /**
- * The figures in one card: what each kind of file takes, then the drives' free space.
+ * The figures in one card: the storage ring with its legend (the phone's and the television's,
+ * user 2026-10-18), then the drives' free space.
  *
- * With [inDownloads] it is the Downloads page's card, the phone's order: what the downloads take
- * as its heading, the drives under it, and [footer] (Free up space) at its foot.
+ * With [inDownloads] it is the Downloads page's card, with [footer] (Free up space) at its foot
+ * and [actions] on the legend's rows. A wide card sets the ring beside its legend.
  */
 @Composable
 internal fun StorageCard(
     figures: StorageFigures?,
     inDownloads: Boolean = false,
+    actions: Map<com.tmplayer.data.StorageChart.Part, () -> Unit> = emptyMap(),
     footer: (@Composable () -> Unit)? = null,
 ) {
     val s = LocalStrings.current
-    // The phone's Storage card: TMPlayer's share split into its three kinds as one bar, a line
-    // naming each, then the free space on each drive involved.
-    val video = Tone.accent
-    val cached = Tone.accent.copy(alpha = 0.6f)
-    val pictures = Tone.accent.copy(alpha = 0.3f)
     Surface(shape = RoundedCornerShape(Corner.Large), color = Tone.surface, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         androidx.compose.foundation.layout.BoxWithConstraints(Modifier.padding(16.dp)) {
-            // The Downloads page's card across a wide column: Free up space beside the heading and
-            // the three kinds on one line, so the card does not push the list off a short window.
-            val across = inDownloads && maxWidth >= ACROSS_FROM
+            val wide = maxWidth >= ACROSS_FROM
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (figures == null) {
                     Text(s.storageMeasuring, color = Tone.muted)
                     footer?.invoke()
                     return@Column
                 }
-                val heading: @Composable () -> Unit = {
-                    if (inDownloads) {
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(
-                                s.downloadsStorageInDownloads(StorageRelocationPlan.size(figures.downloadsBytes)),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Tone.text,
-                            )
-                            figures.drives.forEach { Text(it, style = MaterialTheme.typography.bodyMedium, color = Tone.muted) }
-                        }
-                    } else {
-                        figures.drives.firstOrNull()?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = Tone.text) }
-                    }
-                }
-                if (across && footer != null) {
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) { heading() }
-                        footer()
-                    }
-                } else {
-                    heading()
-                }
-                val total = figures.downloadsBytes + figures.cachedBytes + figures.picturesBytes
-                Row(
-                    Modifier.fillMaxWidth().padding(vertical = 6.dp).height(10.dp).clip(CircleShape).background(Tone.surfaceHigh),
-                ) {
-                    if (total > 0) {
-                        listOf(figures.downloadsBytes to video, figures.cachedBytes to cached, figures.picturesBytes to pictures)
-                            .filter { it.first > 0 }
-                            .forEach { (bytes, colour) -> Box(Modifier.weight(bytes.toFloat()).fillMaxHeight().background(colour)) }
-                    }
-                }
-                if (across) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(28.dp)) {
-                        Legend(s.settingsStorageDownloads, figures.downloadsBytes, video, inline = true)
-                        Legend(s.settingsStorageCached, figures.cachedBytes, cached, inline = true)
-                        Legend(s.settingsStoragePictures, figures.picturesBytes, pictures, inline = true)
-                    }
-                } else {
-                    Legend(s.settingsStorageDownloads, figures.downloadsBytes, video)
-                    Legend(s.settingsStorageCached, figures.cachedBytes, cached)
-                    Legend(s.settingsStoragePictures, figures.picturesBytes, pictures)
-                }
-                if (!inDownloads) figures.drives.drop(1).forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = Tone.muted) }
-                if (!across && footer != null) {
+                com.tmplayer.ui.components.StorageDonutPanel(
+                    figures = figures.chart(),
+                    wide = wide,
+                    actions = actions,
+                    ringSize = if (wide) 168.dp else 184.dp,
+                )
+                Spacer(Modifier.height(4.dp))
+                figures.drives.forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = Tone.muted) }
+                if (footer != null) {
                     Spacer(Modifier.height(4.dp))
                     footer()
                 }
@@ -325,20 +304,8 @@ internal fun StorageCard(
     }
 }
 
-/** The card's width from which the Downloads page sets it out across rather than down. */
-private val ACROSS_FROM = 560.dp
-
-/** One kind of file on the card: its colour, its name and what it takes. */
-@Composable
-private fun Legend(label: String, bytes: Long, colour: androidx.compose.ui.graphics.Color, inline: Boolean = false) {
-    Row(if (inline) Modifier else Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Box(Modifier.size(10.dp).clip(CircleShape).background(colour))
-        Spacer(Modifier.width(10.dp))
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = if (inline) Modifier else Modifier.weight(1f))
-        if (inline) Spacer(Modifier.width(8.dp))
-        Text(StorageRelocationPlan.size(bytes), style = MaterialTheme.typography.bodyMedium, color = Tone.text)
-    }
-}
+/** The card's width from which the ring and its legend sit side by side. */
+private val ACROSS_FROM = 520.dp
 
 /** The dialogs the Storage group can raise. */
 internal sealed interface StorageDialog {
@@ -436,13 +403,22 @@ private fun inspect(root: File): StorageRelocationPlan.Candidate {
 internal suspend fun measureStorage(state: ShellState): StorageFigures = withContext(Dispatchers.IO) {
     val settings = state.settings
     val records = runCatching { settings.downloadsNow() }.getOrDefault(emptyList())
-    val downloads = DownloadIndex.bytesOnDisk(records)
+    // The files in the folder the index does not name are listed on the page beside the
+    // downloads, so they are counted with them rather than left in nobody's part.
+    val downloads = DownloadIndex.bytesOnDisk(records) + DownloadIndex.unlisted.value.sumOf { it.length() }
+    // The downloads that have not finished: their part files are TDLib's until they land.
+    val unfinished = OfflineDownloads.active.value.values
+        .filter { it.stage != OfflineDownloads.Stage.Moving && it.downloadedBytes > 0 }
+    val unfinishedIds = unfinished.map { it.fileId }.toSet()
     val cached = runCatching { settings.cachedVideosNow() }.getOrDefault(emptyList())
     val cachedBytes = cached.sumOf { r ->
         val id = runCatching { Td.currentFileId(r.chatId, r.messageId, r.fileId) }.getOrDefault(r.fileId)
-        runCatching { Td.localDownloadedBytes(id) }.getOrDefault(0L)
+        if (id in unfinishedIds) 0L else runCatching { Td.localDownloadedBytes(id) }.getOrDefault(0L)
     }
+    val unfinishedBytes = unfinished.sumOf { it.downloadedBytes }
+    val posters = runCatching { com.tmplayer.online.OnlineMetadata.current?.imageBytes() ?: 0L }.getOrDefault(0L)
     val tdTotal = runCatching { Td.storageUsedBytes() }.getOrDefault(0L)
+    val home = DiskInfo.of(DesktopPaths.downloadsDir.let { dir -> generateSequence(dir) { it.parentFile }.firstOrNull { it.exists() } ?: dir })
     val dirs = listOf(DesktopPaths.downloadsDir, DesktopPaths.layout().cacheDir)
     val drives = dirs.map { volumeOf(it) }.distinct().map { (label, dir) ->
         val disk = DiskInfo.of(dir)
@@ -453,8 +429,12 @@ internal suspend fun measureStorage(state: ShellState): StorageFigures = withCon
         downloadCount = records.size,
         cachedBytes = cachedBytes,
         cachedCount = cached.size,
-        picturesBytes = (tdTotal - cachedBytes).coerceAtLeast(0),
+        picturesBytes = (tdTotal - cachedBytes - unfinishedBytes).coerceAtLeast(0) + posters,
         drives = drives,
+        unfinishedBytes = unfinishedBytes,
+        unfinishedCount = unfinished.size,
+        diskTotalBytes = home.totalBytes,
+        diskFreeBytes = home.freeBytes,
     )
 }
 

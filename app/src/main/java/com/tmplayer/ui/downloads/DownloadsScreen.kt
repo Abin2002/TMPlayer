@@ -68,6 +68,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -116,7 +117,10 @@ import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.data.ResumeRecord
 import com.tmplayer.data.SettingsStore
 import com.tmplayer.data.ShareMedia
+import com.tmplayer.data.FreeUpSpace
+import com.tmplayer.data.StorageChart
 import com.tmplayer.data.StorageSplit
+import com.tmplayer.ui.components.StorageDonutPanel
 import com.tmplayer.data.Td
 import com.tmplayer.data.cancel
 import com.tmplayer.data.pause
@@ -203,6 +207,11 @@ fun DownloadsScreen(
     onBack: () -> Unit,
     /** Opens on the cached videos rather than the downloads, for Settings' Cached videos row. */
     openOnCached: Boolean = false,
+    /**
+     * Opens with Free up space already up, for "Not enough space": a video was refused for room,
+     * so the device counts as short and Low storage mode is offered while it is off.
+     */
+    openFreeUp: Boolean = false,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -273,6 +282,16 @@ fun DownloadsScreen(
     var freeingUp by remember { mutableStateOf(false) }
     var confirmingClearCached by remember { mutableStateOf(false) }
     var confirmingClearPictures by remember { mutableStateOf(false) }
+    var confirmingDeleteUnfinished by remember { mutableStateOf(false) }
+    // Initially on, so the line that offers it does not flash in before the setting is read.
+    val lowStorageOn by settings.lowStorageMode.collectAsStateWithLifecycle(initialValue = true)
+    // Free up space opened by "Not enough space" opens once, when the figures are in.
+    var freeUpOpened by rememberSaveable { mutableStateOf(false) }
+    // The downloads that stopped part way or are still arriving, with what each holds here. What
+    // "Delete unfinished downloads" removes, and what the chart's Unfinished part measures.
+    val unfinished = remember(active) {
+        active.filter { it.stage != OfflineDownloads.Stage.Moving && it.downloadedBytes > 0 }
+    }
     val listState = rememberLazyListState()
     // Where the Recently played heading sits in the list, written as the list is laid out, so
     // the page can scroll to it when it opens on that section.
@@ -419,6 +438,11 @@ fun DownloadsScreen(
     // separate effects would interleave three passes of the audit above, each writing `rows` when
     // it finished, so the slowest could land last and put stale figures back on screen.
     LaunchedEffect(history, cached.map { it.fileId }, active.size) { refresh(history) }
+    LaunchedEffect(counted) {
+        if (!counted || !openFreeUp || freeUpOpened) return@LaunchedEffect
+        freeUpOpened = true
+        freeingUp = true
+    }
     fun share(ticked: List<DownloadRow>) {
         scope.launch {
             // The records never knew whether their chat restricts saving content, and a channel can
@@ -501,23 +525,66 @@ fun DownloadsScreen(
         }
     }
 
-    /** Free up space: every recently played video, through the cache's own rules. */
+    /**
+     * Free up space: every recently played video, through the cache's own rules, and the
+     * unmatched files listed beside them. The cache's own sweep spares a file it cannot place and
+     * one written in the last minutes; the ones listed here were measured and shown, so they go.
+     */
     fun clearCached() {
         scope.launch {
             val freed = split.cachedBytes
-            runCatching { com.tmplayer.data.WatchCache.clearAll(context) }
+            val strays = split.strays
+            withContext(Dispatchers.IO) {
+                runCatching { com.tmplayer.data.WatchCache.clearAll(context) }
+                strays.forEach { runCatching { com.tmplayer.data.WatchCache.forget(context, it) } }
+            }
             refresh(history)
             toast(L.settingsFreed(size = Translator.messages.formatter.bytes(freed)))
         }
     }
 
-    /** Free up space: thumbnails and previews, which come back as the viewer browses. */
+    /** Free up space: thumbnails, previews and the online posters, which come back as the viewer browses. */
     fun clearPictures() {
         scope.launch {
-            val freed = split.otherBytes
-            runCatching { Td.clearPicturesAndPreviews() }
+            val freed = split.pictureBytes
+            withContext(Dispatchers.IO) {
+                runCatching { Td.clearPicturesAndPreviews() }
+                runCatching { com.tmplayer.online.OnlineMetadata.current?.purgeImages() }
+            }
             refresh(history)
             toast(L.settingsFreed(size = Translator.messages.formatter.bytes(freed)))
+        }
+    }
+
+    /**
+     * Stops a download and deletes what it had fetched. Cancelling alone leaves the part file on
+     * the disk with nothing naming it, which is space the viewer can no longer find. A file that
+     * is also the recently played video is left to that, since the same bytes are its.
+     */
+    suspend fun dropUnfinished(fileId: Int) {
+        OfflineDownloads.cancel(context, fileId)
+        withContext(Dispatchers.IO) {
+            runCatching { Td.cancelDownload(fileId) }
+            if (cachedRows.none { it.fileId == fileId }) runCatching { Td.deleteFile(fileId) }
+        }
+    }
+
+    /** Free up space: every unfinished download, stopped and its bytes deleted. */
+    fun deleteUnfinished() {
+        scope.launch {
+            val these = unfinished.toList()
+            val freed = these.sumOf { it.downloadedBytes }
+            these.forEach { dropUnfinished(it.fileId) }
+            refresh(history)
+            toast(L.settingsFreed(size = Translator.messages.formatter.bytes(freed)))
+        }
+    }
+
+    /** Free up space: Low storage mode on, which deletes nothing. */
+    fun turnOnLowStorage() {
+        scope.launch {
+            runCatching { settings.setLowStorageMode(true) }
+            toast(L.downloadsFreeLowStorageDone(mode = L.settingsLowStorage))
         }
     }
 
@@ -568,6 +635,49 @@ fun DownloadsScreen(
             },
         )
     }
+    // What a press on each part of the storage chart's legend does: the part's own way to free it,
+    // or the list it is on. The device's other apps and its free space are not TMPlayer's to act on.
+    val chartActions: Map<StorageChart.Part, () -> Unit> = buildMap {
+        if (rows.isNotEmpty()) {
+            put(StorageChart.Part.Downloads) {
+                tab = COMPLETED
+                picking = true
+            }
+        }
+        if (unfinished.isNotEmpty()) put(StorageChart.Part.Unfinished) { confirmingDeleteUnfinished = true }
+        if (split.cachedBytes > 0) put(StorageChart.Part.Recent) { confirmingClearCached = true }
+        if (split.strays.isNotEmpty()) {
+            put(StorageChart.Part.Unmatched) {
+                tab = CACHED
+                if (onePage) {
+                    cachedOpen = true
+                    scope.launch {
+                        withFrameNanos { }
+                        if (cachedHeadingAt[0] > 0) runCatching { listState.animateScrollToItem(cachedHeadingAt[0]) }
+                    }
+                }
+            }
+        }
+        if (split.pictureBytes > 0) put(StorageChart.Part.Pictures) { confirmingClearPictures = true }
+    }
+    val storageCard: @Composable () -> Unit = {
+        StorageSummary(
+            figures = split.chart(disk),
+            measured = counted && disk.totalBytes > 0,
+            actions = chartActions,
+            onFreeUp = { freeingUp = true },
+        )
+    }
+    // An unmatched file, measured and named by what the disk knows of it, with Delete.
+    val strayCard: @Composable (com.tmplayer.data.WatchCacheRules.Stray) -> Unit = { stray ->
+        StrayCard(stray) {
+            scope.launch {
+                val gone = withContext(Dispatchers.IO) { com.tmplayer.data.WatchCache.forget(context, stray) }
+                if (gone) toast(L.settingsFreed(size = Translator.messages.formatter.bytes(stray.bytes)))
+                refresh(history)
+            }
+        }
+    }
     // What each of the television's tabs lists.
     val tabBody: LazyListScope.() -> Unit = body@{
         if (tab == ONGOING) {
@@ -603,7 +713,7 @@ fun DownloadsScreen(
                         place = queuePlaces[progress.fileId] ?: -1,
                         onPause = { OfflineDownloads.pause(context, progress.fileId) },
                         onResume = { OfflineDownloads.resume(context, progress.fileId) },
-                        onCancel = { OfflineDownloads.cancel(context, progress.fileId) },
+                        onCancel = { scope.launch { dropUnfinished(progress.fileId) } },
                     )
                 }
             } else {
@@ -624,7 +734,7 @@ fun DownloadsScreen(
         if (tab == CACHED) {
             item {
                 Text(
-                    L.downloadsCachedNote,
+                    L.downloadsCachedTabNote,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = TEXT_EDGE, end = TEXT_EDGE, top = 16.dp, bottom = 4.dp),
@@ -642,7 +752,20 @@ fun DownloadsScreen(
                     onHold = null,
                 )
             }
-            if (counted && cachedRows.isEmpty()) {
+            // The videos on the disk no record names: counted in the storage figures, so they are
+            // listed too, each with a way to remove it (user, 2026-10-18).
+            if (split.strays.isNotEmpty()) {
+                item(key = "unmatched-note") {
+                    Text(
+                        L.downloadsUnmatchedNote,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = TEXT_EDGE, end = TEXT_EDGE, top = 20.dp, bottom = 4.dp),
+                    )
+                }
+                items(split.strays, key = { "stray_" + it.path }) { stray -> strayCard(stray) }
+            }
+            if (counted && cachedRows.isEmpty() && split.strays.isEmpty()) {
                 item {
                     Box(emptyStateHeight(0.6f)) {
                         BigEmpty(
@@ -655,14 +778,7 @@ fun DownloadsScreen(
             return@body
         }
 
-        item {
-            StorageSummary(
-                split = split,
-                freeBytes = disk.freeBytes,
-                totalBytes = disk.totalBytes,
-                onFreeUp = { freeingUp = true },
-            )
-        }
+        item { storageCard() }
         item {
             RemoveAfterWatchingRow(removeAfterWatching) { on ->
                 // Turning it on is asked first: from then on files go without a press.
@@ -684,7 +800,7 @@ fun DownloadsScreen(
                         ShowHeading(
                             title = entry.title,
                             detail = listOf(
-                                L.seriesEpisodesCount(count = entry.episodes.size),
+                                if (entry.pieces) L.gridPartsCount(entry.episodes.size) else L.seriesEpisodesCount(count = entry.episodes.size),
                                 Translator.messages.formatter.bytes(entry.episodes.sumOf { it.bytes }),
                             ).joinToString(DOT),
                         )
@@ -706,14 +822,7 @@ fun DownloadsScreen(
     }
     val pageBody: LazyListScope.() -> Unit = {
         var at = 0
-        item(key = "storage") {
-            StorageSummary(
-                split = split,
-                freeBytes = disk.freeBytes,
-                totalBytes = disk.totalBytes,
-                onFreeUp = { freeingUp = true },
-            )
-        }
+        item(key = "storage") { storageCard() }
         at++
         // Only while something is on its way: a Downloading heading over nothing is a section to
         // read past on every visit.
@@ -737,7 +846,7 @@ fun DownloadsScreen(
                     place = queuePlaces[progress.fileId] ?: -1,
                     onPause = { OfflineDownloads.pause(context, progress.fileId) },
                     onResume = { OfflineDownloads.resume(context, progress.fileId) },
-                    onCancel = { OfflineDownloads.cancel(context, progress.fileId) },
+                    onCancel = { scope.launch { dropUnfinished(progress.fileId) } },
                 )
             }
             at += 1 + active.size
@@ -766,7 +875,7 @@ fun DownloadsScreen(
                         ShowHeading(
                             title = entry.title,
                             detail = listOf(
-                                L.seriesEpisodesCount(count = entry.episodes.size),
+                                if (entry.pieces) L.gridPartsCount(entry.episodes.size) else L.seriesEpisodesCount(count = entry.episodes.size),
                                 Translator.messages.formatter.bytes(entry.episodes.sumOf { it.bytes }),
                             ).joinToString(DOT),
                         )
@@ -786,9 +895,10 @@ fun DownloadsScreen(
         }
         cachedHeadingAt[0] = at
         item(key = "h-cached") {
+            val held = cachedRows.size + split.strays.size
             CollapsibleHeading(
-                title = if (cachedRows.isEmpty()) L.downloadsCached else L.downloadsTabCachedCount(count = cachedRows.size),
-                detail = cachedRows.sumOf { it.bytes }.takeIf { it > 0 }?.let { Translator.messages.formatter.bytes(it) },
+                title = if (held == 0) L.downloadsCached else L.downloadsTabCachedCount(count = held),
+                detail = (cachedRows.sumOf { it.bytes } + split.strayBytes).takeIf { it > 0 }?.let { Translator.messages.formatter.bytes(it) },
                 open = cachedOpen,
                 onToggle = { cachedOpen = !cachedOpen },
             )
@@ -796,7 +906,7 @@ fun DownloadsScreen(
         if (cachedOpen) {
             item(key = "n-cached") {
                 Text(
-                    if (counted && cachedRows.isEmpty()) L.downloadsEmptyCached else L.downloadsCachedNote,
+                    if (counted && cachedRows.isEmpty() && split.strays.isEmpty()) L.downloadsEmptyCached else L.downloadsCachedTabNote,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = TEXT_EDGE, end = TEXT_EDGE, bottom = 4.dp),
@@ -813,6 +923,17 @@ fun DownloadsScreen(
                     onToggle = {},
                     onHold = null,
                 )
+            }
+            if (split.strays.isNotEmpty()) {
+                item(key = "unmatched-note") {
+                    Text(
+                        L.downloadsUnmatchedNote,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = TEXT_EDGE, end = TEXT_EDGE, top = 16.dp, bottom = 4.dp),
+                    )
+                }
+                items(split.strays, key = { "stray_" + it.path }) { stray -> strayCard(stray) }
             }
         }
     }
@@ -1006,7 +1127,16 @@ fun DownloadsScreen(
     // Free up space, on the page rather than in Settings: what can go, how much each frees, and a
     // way into the selection for the downloads themselves. Every line still asks before it clears.
     if (freeingUp) {
-        val bytes = Translator.messages.formatter
+        val lines = com.tmplayer.data.FreeUpSpace.lines(
+            lowStorageOn = lowStorageOn,
+            short = com.tmplayer.data.FreeUpSpace.isShort(disk.freeBytes, disk.totalBytes, askedForRoom = openFreeUp),
+            recentBytes = split.cachedBytes,
+            recentCount = split.cachedCount,
+            unfinishedBytes = unfinished.sumOf { it.downloadedBytes },
+            unfinishedCount = unfinished.size,
+            picturesBytes = split.pictureBytes,
+            downloadCount = rows.size,
+        )
         com.tmplayer.ui.components.ChoiceSheet(
             title = L.downloadsFreeUpSpace,
             note = L.downloadsFreeUpSpaceNote,
@@ -1016,39 +1146,38 @@ fun DownloadsScreen(
         ) {
             val first = remember { FocusRequester() }
             ChoiceList {
-                com.tmplayer.ui.components.ChoiceLine(
-                    L.settingsClearCache,
-                    detail = if (split.cachedBytes > 0) L.downloadsFrees(size = bytes.bytes(split.cachedBytes)) else L.downloadsNothingToFree,
-                    icon = TmIcons.Clock,
-                    enabled = split.cachedBytes > 0,
-                    modifier = Modifier.focusRequester(first),
-                ) {
+                FreeUpLines(lines, first) { kind ->
                     freeingUp = false
-                    confirmingClearCached = true
-                }
-                com.tmplayer.ui.components.ChoiceLine(
-                    L.settingsClearPictures,
-                    detail = if (split.otherBytes > 0) L.downloadsFrees(size = bytes.bytes(split.otherBytes)) else L.downloadsNothingToFree,
-                    icon = TmIcons.Image,
-                    enabled = split.otherBytes > 0,
-                ) {
-                    freeingUp = false
-                    confirmingClearPictures = true
-                }
-                com.tmplayer.ui.components.ChoiceLine(
-                    L.downloadsChooseToDelete,
-                    detail = if (rows.isNotEmpty()) L.downloadsChooseToDeleteDetail else L.downloadsNothingToFree,
-                    icon = TmIcons.Delete,
-                    enabled = rows.isNotEmpty(),
-                ) {
-                    freeingUp = false
-                    // The television's selection lives on its Downloaded tab.
-                    tab = COMPLETED
-                    picking = true
+                    when (kind) {
+                        com.tmplayer.data.FreeUpSpace.Kind.LowStorage -> turnOnLowStorage()
+                        com.tmplayer.data.FreeUpSpace.Kind.Recent -> confirmingClearCached = true
+                        com.tmplayer.data.FreeUpSpace.Kind.Unfinished -> confirmingDeleteUnfinished = true
+                        com.tmplayer.data.FreeUpSpace.Kind.Pictures -> confirmingClearPictures = true
+                        com.tmplayer.data.FreeUpSpace.Kind.ChooseDownloads -> {
+                            // The television's selection lives on its Downloaded tab.
+                            tab = COMPLETED
+                            picking = true
+                        }
+                    }
                 }
             }
             com.tmplayer.ui.components.FocusOnOpen(first)
         }
+    }
+
+    if (confirmingDeleteUnfinished) {
+        val freed = unfinished.sumOf { it.downloadedBytes }
+        TvConfirm(
+            title = L.downloadsFreeUnfinishedTitle(count = unfinished.size),
+            message = L.downloadsFreeUnfinishedMessage(count = unfinished.size, size = Translator.messages.formatter.bytes(freed)),
+            detail = L.mainNoRoomDetail,
+            confirmLabel = L.commonDelete,
+            onConfirm = {
+                confirmingDeleteUnfinished = false
+                deleteUnfinished()
+            },
+            onDismiss = { confirmingDeleteUnfinished = false },
+        )
     }
 
     if (confirmingClearCached) {
@@ -1067,8 +1196,8 @@ fun DownloadsScreen(
 
     if (confirmingClearPictures) {
         TvConfirm(
-            title = L.settingsClearPicturesTitle,
-            message = L.settingsClearPicturesMessage(size = Translator.messages.formatter.bytes(split.otherBytes)),
+            title = L.downloadsFreePicturesTitle,
+            message = L.downloadsFreePicturesMessage(size = Translator.messages.formatter.bytes(split.pictureBytes)),
             detail = L.settingsClearPicturesUntouched,
             confirmLabel = L.settingsClearPicturesConfirm,
             onConfirm = {
@@ -1268,60 +1397,122 @@ private fun QueueHeading(title: String, bulk: String?, onBulk: () -> Unit) {
 }
 
 /**
- * What the downloads on this device cost, against what the device has.
+ * What this device holds, as the storage ring with its legend, and Free up space under it.
  *
- * Downloads only: a panel totalling all three kinds of space above a list showing one of them
- * would have to be explained. The cache and the previews are named in the last line, which points
- * at Settings, where the full breakdown and the buttons that clear each part live.
+ * The whole device rather than the downloads alone: a friend saw 2.5 GB used with nothing on the
+ * Cached tab, and a panel that names only part of the space is how that happens. Every part of
+ * TMPlayer's own share is named and measured, and each that can be freed is a press away
+ * ([actions]). A phone has the ring over its legend; a television and a wide screen put them side
+ * by side, so the card does not push the list off a 540 dp screen.
  */
 @Composable
-private fun StorageSummary(
-    split: StorageSplit,
-    freeBytes: Long,
-    totalBytes: Long,
+internal fun StorageSummary(
+    figures: StorageChart.Figures,
+    measured: Boolean,
+    actions: Map<StorageChart.Part, () -> Unit>,
     onFreeUp: () -> Unit,
+    selected: StorageChart.Part? = null,
 ) {
     val s = LocalStrings.current
-    val usedFraction = if (totalBytes > 0) {
-        ((totalBytes - freeBytes).toFloat() / totalBytes).coerceIn(0f, 1f)
-    } else {
-        0f
-    }
+    val tv = !isTouch()
     Card(
         Modifier.fillMaxWidth().padding(CARD_EDGE),
-        shape = MaterialTheme.shapes.large,
+        shape = if (tv) RoundedCornerShape(Corner.Large) else MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = Tone.surface),
     ) {
-        Column(Modifier.padding(CARD_PAD)) {
-            Text(
-                s.downloadsStorageInDownloads(size = s.formatter.bytes(split.downloadBytes)),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                s.downloadsStorageFree(free = s.formatter.bytes(freeBytes), total = s.formatter.bytes(totalBytes)),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            // Named, not hidden: somebody comparing this against Android's own figure for the app
-            // needs to know where the rest of it went. Free up space, under the bar, clears it.
-            if (split.cachedBytes > 0 || split.otherBytes > 0) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    s.downloadsStorageAlso(cached = s.formatter.bytes(split.cachedBytes), other = s.formatter.bytes(split.otherBytes)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        BoxWithConstraints(Modifier.padding(CARD_PAD)) {
+            val wide = tv || maxWidth >= 560.dp
+            Column {
+                StorageDonutPanel(
+                    figures = figures,
+                    wide = wide,
+                    measured = measured,
+                    actions = actions,
+                    ringSize = when {
+                        tv -> 184.dp
+                        wide -> 168.dp
+                        else -> 196.dp
+                    },
+                    large = tv,
+                    selected = selected,
                 )
+                CardActions {
+                    SecondaryAction(s.downloadsFreeUpSpace, TmIcons.Delete, onFreeUp)
+                }
             }
-            LinearProgressIndicator(
-                progress = { usedFraction },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
-                    .clip(RoundedCornerShape(Corner.Small)),
-            )
-            CardActions {
-                SecondaryAction(s.downloadsFreeUpSpace, TmIcons.Delete, onFreeUp)
+        }
+    }
+}
+
+/**
+ * The lines of Free up space, each saying what it removes and what that frees ([FreeUpSpace]
+ * picks them). Focus lands on the first that can be pressed.
+ */
+@Composable
+internal fun FreeUpLines(lines: List<FreeUpSpace.Line>, first: FocusRequester, onPick: (FreeUpSpace.Kind) -> Unit) {
+    val s = LocalStrings.current
+    val f = s.formatter
+    val focusAt = lines.indexOfFirst { it.enabled }
+    lines.forEachIndexed { index, line ->
+        val title: String
+        val detail: String
+        val icon: ImageVector
+        when (line.kind) {
+            FreeUpSpace.Kind.LowStorage -> {
+                title = s.downloadsFreeLowStorage(mode = s.settingsLowStorage)
+                detail = s.downloadsFreeLowStorageDetail(size = f.bytes(com.tmplayer.player.LowStorageWindow.WINDOW_BYTES))
+                icon = TmIcons.Archive
             }
+            FreeUpSpace.Kind.Recent -> {
+                title = s.downloadsFreeRecent
+                detail = if (line.enabled) s.downloadsFreeRecentDetail(size = f.bytes(line.bytes)) else s.downloadsNothingToFree
+                icon = TmIcons.Clock
+            }
+            FreeUpSpace.Kind.Unfinished -> {
+                title = s.downloadsFreeUnfinished
+                detail = s.downloadsFreeUnfinishedDetail(count = line.count, size = f.bytes(line.bytes))
+                icon = TmIcons.Download
+            }
+            FreeUpSpace.Kind.Pictures -> {
+                title = s.downloadsFreePictures
+                detail = if (line.enabled) s.downloadsFreePicturesDetail(size = f.bytes(line.bytes)) else s.downloadsNothingToFree
+                icon = TmIcons.Image
+            }
+            FreeUpSpace.Kind.ChooseDownloads -> {
+                title = s.downloadsChooseToDelete
+                detail = if (line.enabled) s.downloadsChooseToDeleteDetail else s.downloadsNothingToFree
+                icon = TmIcons.Checklist
+            }
+        }
+        com.tmplayer.ui.components.ChoiceLine(
+            title,
+            detail = detail,
+            icon = icon,
+            enabled = line.enabled,
+            modifier = if (index == focusAt) Modifier.focusRequester(first) else Modifier,
+        ) { onPick(line.kind) }
+    }
+}
+
+/**
+ * A video file on the disk that no record names any more, on its own card like every other row
+ * here, with the one thing to do about it.
+ */
+@Composable
+private fun StrayCard(stray: com.tmplayer.data.WatchCacheRules.Stray, onDelete: () -> Unit) {
+    val s = LocalStrings.current
+    RowCard {
+        Text(stray.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            listOf(s.formatter.bytes(stray.bytes), stray.fileName).joinToString(DOT),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        CardActions {
+            SecondaryAction(s.commonDelete, TmIcons.Delete, onDelete, danger = true)
         }
     }
 }
@@ -1577,7 +1768,8 @@ private fun DownloadCard(
         // A part-loaded file still occupies its bytes, and that is the row a viewer looking for
         // space is most likely to want gone.
         // A cached video was never asked for as a download, so it is cached, not downloaded.
-        if (row.partial) (if (row.cached) s.downloadsPartCached else s.downloadsPartDownloaded) else null,
+        // A download that stopped part way says so, and what it holds here (user, 2026-10-18).
+        if (row.partial) (if (row.cached) s.downloadsPartCached else s.downloadsUnfinishedOnDevice(size = s.formatter.bytes(row.bytes))) else null,
         if (row.missing) s.downloadsFileMissing else null,
     ).joinToString(DOT)
 
@@ -1708,6 +1900,10 @@ private fun ActiveDownloadCard(
         ).joinToString(DOT)
     }
 
+    // Stopped, waiting or failed with part of the file here: said plainly, with what it holds,
+    // since that is space a viewer looking for room can get back (user, 2026-10-18).
+    val held = stage != OfflineDownloads.Stage.Running && stage != OfflineDownloads.Stage.Moving &&
+        progress.downloadedBytes > 0
     RowCard(accent = if (failed) MaterialTheme.colorScheme.error.copy(alpha = 0.5f) else null) {
         Text(
             progress.title,
@@ -1715,6 +1911,16 @@ private fun ActiveDownloadCard(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
+        if (held) {
+            Spacer(Modifier.height(2.dp))
+            Text(
+                s.downloadsUnfinishedOnDevice(size = s.formatter.bytes(progress.downloadedBytes)),
+                style = MaterialTheme.typography.bodySmall,
+                color = Tone.caution,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         Spacer(Modifier.height(4.dp))
         Text(
             line,

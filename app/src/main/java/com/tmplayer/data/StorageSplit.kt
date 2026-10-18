@@ -26,7 +26,38 @@ data class StorageSplit(
     val otherBytes: Long,
     /** What TDLib says the whole of it comes to, which is the figure the device agrees with. */
     val totalBytes: Long,
+    /**
+     * The video files on the disk that no record names, counted in [cachedBytes]: listed on their
+     * own in the Cached tab, so space the device reports is never space nothing on screen owns.
+     */
+    val strays: List<WatchCacheRules.Stray> = emptyList(),
+    /**
+     * What the downloads that have not finished hold, paused, failed or still arriving: kept out
+     * of [otherBytes], where it once sat as "pictures" nobody could find (user, 2026-10-18).
+     */
+    val unfinishedBytes: Long = 0,
+    /** How many of those there are. */
+    val unfinishedCount: Int = 0,
+    /** The online posters and backdrops, beside TDLib's own pictures. Counted in [totalBytes]. */
+    val posterBytes: Long = 0,
 ) {
+    /** The unmatched files' share of [cachedBytes]. */
+    val strayBytes: Long get() = strays.sumOf { it.bytes }
+
+    /** Every picture: TDLib's thumbnails and previews with the online posters. */
+    val pictureBytes: Long get() = otherBytes + posterBytes
+
+    /** The chart's figures, against a disk of [disk]. */
+    fun chart(disk: DiskInfo): StorageChart.Figures = StorageChart.Figures(
+        downloads = downloadBytes,
+        unfinished = unfinishedBytes,
+        recent = (cachedBytes - strayBytes).coerceAtLeast(0),
+        unmatched = strayBytes,
+        pictures = pictureBytes,
+        deviceTotal = disk.totalBytes,
+        deviceFree = disk.freeBytes,
+    )
+
     companion object {
         val EMPTY = StorageSplit(0, 0, 0, 0, 0)
 
@@ -51,6 +82,11 @@ data class StorageSplit(
 
             // A video can be both, if it was watched and then downloaded. It belongs to the viewer
             // then, and counting it in both halves would have the figures overrun the total.
+            // The downloads that have not finished. Moving ones are whole and about to be in the
+            // folder, so they are left to the next measurement.
+            val unfinished = OfflineDownloads.active.value.values
+                .filter { it.stage != OfflineDownloads.Stage.Moving && it.downloadedBytes > 0 }
+            val unfinishedIds = unfinished.map { it.fileId }.toSet()
             val cachedRecords = runCatching { settings.cachedVideosNow() }.getOrDefault(emptyList())
                 .filter { it.fileId !in keptIds && (it.chatId to it.messageId) !in keptMessages }
                 .distinctBy { it.fileId }
@@ -74,8 +110,10 @@ data class StorageSplit(
             val downloads = legacyDownloads + indexedBytes
             var cached = 0L
             var count = 0
-            for (held in cachedBytesEach.awaitAll()) {
+            for ((index, held) in cachedBytesEach.awaitAll().withIndex()) {
                 if (held <= 0) continue
+                // A recently played video being saved to Downloads is counted there, once.
+                if (cachedNow[index].second in unfinishedIds) continue
                 cached += held
                 count++
             }
@@ -94,17 +132,21 @@ data class StorageSplit(
                 .map { id -> async { runCatching { Td.localPathAnyway(id) }.getOrNull() } }
                 .awaitAll()
                 .filterNotNull()
-            // Only when every known file answered with a path. An id TDLib will not resolve looks
-            // exactly like a video nobody owns, so a partial answer would file the viewer's own
-            // download under "cached" and offer to clear it.
-            val strays = if (accounted.size != knownIds.size) {
-                emptyList()
-            } else {
-                runCatching { WatchCache.strays(context, accounted.toSet()) }
-                    .getOrDefault(emptyList())
-            }
+            // An id TDLib will not resolve looks exactly like a video nobody owns. Skipping the
+            // walk whenever one failed hid every stray, which is how a 2.5 GB video stayed on a
+            // phone with nothing on the Cached tab. So the walk always runs, and while some known
+            // file did not answer, a file the size of one of those videos is taken to be it and
+            // left out, so the viewer's own download is never offered for clearing.
+            val unanswered = if (accounted.size == knownIds.size) emptySet() else
+                (cachedRecords + kept).map { it.sizeBytes }.filter { it > 0 }.toSet()
+            val strays = runCatching { WatchCache.strays(context, accounted.toSet()) }
+                .getOrDefault(emptyList())
+                .filterNot { stray -> unanswered.any { size -> sameSize(stray.bytes, size) } }
             cached += strays.sumOf { it.bytes }
             count += strays.size
+
+            val unfinishedBytes = unfinished.sumOf { it.downloadedBytes }
+            val posters = runCatching { com.tmplayer.online.OnlineMetadata.current?.imageBytes() ?: 0L }.getOrDefault(0L)
 
             StorageSplit(
                 downloadBytes = downloads,
@@ -112,9 +154,16 @@ data class StorageSplit(
                 cachedCount = count,
                 // The remainder, floored: TDLib's total and a walk of the disk are taken a moment
                 // apart, and a negative band is worse than a missing one.
-                otherBytes = (total - legacyDownloads - cached).coerceAtLeast(0L),
-                totalBytes = maxOf(total, legacyDownloads + cached) + indexedBytes,
+                otherBytes = (total - legacyDownloads - cached - unfinishedBytes).coerceAtLeast(0L),
+                totalBytes = maxOf(total, legacyDownloads + cached + unfinishedBytes) + indexedBytes + posters,
+                strays = strays,
+                unfinishedBytes = unfinishedBytes,
+                unfinishedCount = unfinished.size,
+                posterBytes = posters,
             )
         }
+
+        /** Within half a megabyte: a whole file on the disk against the size Telegram gives for it. */
+        private fun sameSize(onDisk: Long, told: Long): Boolean = kotlin.math.abs(onDisk - told) <= 512 * 1024
     }
 }

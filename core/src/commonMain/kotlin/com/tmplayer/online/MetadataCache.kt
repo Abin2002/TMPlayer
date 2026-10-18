@@ -20,6 +20,8 @@ class MetadataCache(
     private val foundTtlMs: Long = FOUND_TTL_MS,
     private val missTtlMs: Long = MISS_TTL_MS,
     private val imageTtlMs: Long = MAX_TTL_MS,
+    /** The most the pictures may take on the disk; the ones fetched longest ago go first past it. */
+    private val imageCapBytes: Long = IMAGE_CAP_BYTES,
 ) {
     init {
         require(foundTtlMs in 1..MAX_TTL_MS && missTtlMs in 1..MAX_TTL_MS && imageTtlMs in 1..MAX_TTL_MS) {
@@ -165,7 +167,25 @@ class MetadataCache(
         val file = File(images, name(url))
         write(file, bytes)
         file.setLastModified(now())
+        trimImages(keep = file)
         return file
+    }
+
+    /**
+     * The pictures back under [imageCapBytes], oldest fetched first. Without a cap a library of
+     * a few hundred titles in the wide and original sizes a television asks for came to gigabytes
+     * that no storage figure in the app accounted for (user, 2026-10-18).
+     */
+    private fun trimImages(keep: File) {
+        val all = images.listFiles()?.filter { it.isFile } ?: return
+        var total = all.sumOf { it.length() }
+        if (total <= imageCapBytes) return
+        for (f in all.sortedBy { it.lastModified() }) {
+            if (total <= imageCapBytes) break
+            if (f == keep) continue
+            val size = f.length()
+            if (f.delete()) total -= size
+        }
     }
 
     /** Every entry past its TTL, deleted. Run once at start, off the main thread. */
@@ -185,11 +205,25 @@ class MetadataCache(
             if (json == null || now() - json.optLong("saved") > SEASON_TTL_MS) f.delete()
         }
         images.listFiles()?.forEach { f -> if (now() - f.lastModified() > imageTtlMs) f.delete() }
+        images.listFiles()?.maxByOrNull { it.lastModified() }?.let { trimImages(keep = it) }
     }
 
     /** What the cache holds on the disk, in bytes. */
     @Synchronized
     fun bytes(): Long = dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+
+    /** What the pictures alone take on the disk, in bytes: the posters and backdrops. */
+    @Synchronized
+    fun imageBytes(): Long = images.listFiles()?.filter { it.isFile }?.sumOf { it.length() } ?: 0L
+
+    /**
+     * The pictures only. The answers stay, so every title keeps its match and its overview and a
+     * poster is fetched again only when it is next shown (Free up space, user 2026-10-18).
+     */
+    @Synchronized
+    fun purgeImages() {
+        images.deleteRecursively()
+    }
 
     /** Everything, answers and pictures. */
     @Synchronized
@@ -219,5 +253,8 @@ class MetadataCache(
         const val MISS_TTL_MS = 7 * DAY_MS
         const val SKIP_FOUND_TTL_MS = 30 * DAY_MS
         const val SKIP_MISS_TTL_MS = 3 * DAY_MS
+
+        /** [imageCapBytes] unless told otherwise: posters and backdrops for some hundreds of titles. */
+        const val IMAGE_CAP_BYTES = 150L * 1024 * 1024
     }
 }

@@ -671,6 +671,14 @@ class OnlineMetadata(
 
     fun cacheBytes(): Long = cache.bytes()
 
+    /** What the poster and backdrop pictures take, which Free up space counts with the thumbnails. */
+    fun imageBytes(): Long = cache.imageBytes()
+
+    /** The pictures, and nothing the titles were matched with. */
+    fun purgeImages() {
+        cache.purgeImages()
+    }
+
     /** Every answer and picture, from the disk and from memory. */
     fun purge() {
         cache.purge()

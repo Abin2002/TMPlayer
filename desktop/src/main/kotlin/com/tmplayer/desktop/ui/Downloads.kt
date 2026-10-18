@@ -162,6 +162,11 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
     LaunchedEffect(refresh, history.size, cached.size) { figures = runCatching { measureStorage(state) }.getOrNull() }
     var freeingUp by remember { mutableStateOf(false) }
     var confirmClearCache by remember { mutableStateOf(false) }
+    var confirmPictures by remember { mutableStateOf(false) }
+    var confirmUnfinished by remember { mutableStateOf(false) }
+    val lowStorageOn by state.settings.lowStorageMode.collectAsState(initial = true)
+    // The downloads that stopped part way or are still arriving, with what each holds here.
+    val unfinished = queue.filter { it.stage != OfflineDownloads.Stage.Moving && it.downloadedBytes > 0 }
     // Recently played is folded away at the foot of the page until it is opened.
     var cachedOpen by remember { mutableStateOf(state.downloadsOpenRecent) }
     // Where the Recently played heading sits, for Settings' Recently played row to land on.
@@ -224,8 +229,21 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                 onRemove = { confirm = listOf(record) },
             )
         }
+        // A press on a part of the ring's legend: that part's own way to free it, or its list.
+        val chartActions: Map<com.tmplayer.data.StorageChart.Part, () -> Unit> = buildMap {
+            if (history.isNotEmpty()) {
+                put(com.tmplayer.data.StorageChart.Part.Downloads) {
+                    scope.launch { runCatching { list.animateScrollToItem(doneHeadingAt[0]) } }
+                }
+            }
+            if (unfinished.isNotEmpty()) put(com.tmplayer.data.StorageChart.Part.Unfinished) { confirmUnfinished = true }
+            if ((figures?.cachedBytes ?: 0) > 0 && state.extras.watchCache != null) {
+                put(com.tmplayer.data.StorageChart.Part.Recent) { confirmClearCache = true }
+            }
+            if ((figures?.picturesBytes ?: 0) > 0) put(com.tmplayer.data.StorageChart.Part.Pictures) { confirmPictures = true }
+        }
         val storage: @Composable () -> Unit = {
-            StorageCard(figures, inDownloads = true) {
+            StorageCard(figures, inDownloads = true, actions = chartActions) {
                 OutlinedButton(onClick = { freeingUp = true }) {
                     Icon(TmIcons.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -345,7 +363,7 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                                         ShowHeading(
                                             entry.title,
                                             listOf(
-                                                s.seriesEpisodesCount(entry.episodes.size),
+                                                if (entry.pieces) s.gridPartsCount(entry.episodes.size) else s.seriesEpisodesCount(entry.episodes.size),
                                                 MediaMapper.formatSize(entry.episodes.sumOf { it.sizeBytes }),
                                             ).joinToString("  ·  "),
                                         )
@@ -442,52 +460,120 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
 
     if (freeingUp) {
         val f = figures
+        val lines = com.tmplayer.data.FreeUpSpace.lines(
+            lowStorageOn = lowStorageOn,
+            short = com.tmplayer.data.FreeUpSpace.isShort(f?.diskFreeBytes ?: -1, f?.diskTotalBytes ?: 0, askedForRoom = false),
+            recentBytes = if (state.extras.watchCache != null) f?.cachedBytes ?: 0 else 0,
+            recentCount = f?.cachedCount ?: 0,
+            unfinishedBytes = unfinished.sumOf { it.downloadedBytes },
+            unfinishedCount = unfinished.size,
+            picturesBytes = f?.picturesBytes ?: 0,
+            downloadCount = history.size,
+        )
         com.tmplayer.ui.components.TmAlertDialog(
             onDismissRequest = { freeingUp = false },
             title = { Text(s.downloadsFreeUpSpace) },
             text = {
                 Column {
                     Text(s.downloadsFreeUpSpaceNote, color = Tone.muted, style = MaterialTheme.typography.bodyMedium)
-                    state.extras.watchCache?.let {
-                        Action(
-                            s.storageClearCache,
-                            if ((f?.cachedBytes ?: 0) > 0) s.downloadsFrees(MediaMapper.formatSize(f!!.cachedBytes)) else s.downloadsNothingToFree,
-                            TmIcons.Clock,
-                            end = RowEnd.None,
-                            enabled = (f?.cachedBytes ?: 0) > 0,
-                        ) {
-                            freeingUp = false
-                            confirmClearCache = true
+                    for (line in lines) {
+                        val size = MediaMapper.formatSize(line.bytes)
+                        when (line.kind) {
+                            com.tmplayer.data.FreeUpSpace.Kind.LowStorage -> Action(
+                                s.downloadsFreeLowStorage(s.settingsLowStorage),
+                                s.downloadsFreeLowStorageDetail(MediaMapper.formatSize(com.tmplayer.player.LowStorageWindow.WINDOW_BYTES)),
+                                TmIcons.Archive,
+                                end = RowEnd.None,
+                            ) {
+                                freeingUp = false
+                                scope.launch {
+                                    runCatching { state.settings.setLowStorageMode(true) }
+                                    toast(s.downloadsFreeLowStorageDone(s.settingsLowStorage))
+                                }
+                            }
+                            com.tmplayer.data.FreeUpSpace.Kind.Recent -> Action(
+                                s.downloadsFreeRecent,
+                                if (line.enabled) s.downloadsFreeRecentDetail(size) else s.downloadsNothingToFree,
+                                TmIcons.Clock,
+                                end = RowEnd.None,
+                                enabled = line.enabled,
+                            ) {
+                                freeingUp = false
+                                confirmClearCache = true
+                            }
+                            com.tmplayer.data.FreeUpSpace.Kind.Unfinished -> Action(
+                                s.downloadsFreeUnfinished,
+                                s.downloadsFreeUnfinishedDetail(line.count, size),
+                                TmIcons.Download,
+                                end = RowEnd.None,
+                            ) {
+                                freeingUp = false
+                                confirmUnfinished = true
+                            }
+                            com.tmplayer.data.FreeUpSpace.Kind.Pictures -> Action(
+                                s.downloadsFreePictures,
+                                if (line.enabled) s.downloadsFreePicturesDetail(size) else s.downloadsNothingToFree,
+                                TmIcons.Image,
+                                end = RowEnd.None,
+                                enabled = line.enabled,
+                            ) {
+                                freeingUp = false
+                                confirmPictures = true
+                            }
+                            com.tmplayer.data.FreeUpSpace.Kind.ChooseDownloads -> Action(
+                                s.downloadsChooseToDelete,
+                                if (line.enabled) s.downloadsChooseToDeleteDetail else s.downloadsNothingToFree,
+                                TmIcons.Checklist,
+                                end = RowEnd.None,
+                                enabled = line.enabled,
+                            ) {
+                                freeingUp = false
+                                // The tick boxes are on every row already: take the viewer to them.
+                                scope.launch { runCatching { list.animateScrollToItem(doneHeadingAt[0]) } }
+                            }
                         }
-                    }
-                    Action(
-                        s.storageClearPictures,
-                        if ((f?.picturesBytes ?: 0) > 0) s.downloadsFrees(MediaMapper.formatSize(f!!.picturesBytes)) else s.downloadsNothingToFree,
-                        TmIcons.Image,
-                        end = RowEnd.None,
-                        enabled = (f?.picturesBytes ?: 0) > 0,
-                    ) {
-                        freeingUp = false
-                        scope.launch {
-                            runCatching { Td.clearPicturesAndPreviews() }
-                            refresh++
-                            toast(s.storagePicturesCleared)
-                        }
-                    }
-                    Action(
-                        s.downloadsChooseToDelete,
-                        if (history.isNotEmpty()) s.downloadsChooseToDeleteDetail else s.downloadsNothingToFree,
-                        TmIcons.Delete,
-                        end = RowEnd.None,
-                        enabled = history.isNotEmpty(),
-                    ) {
-                        freeingUp = false
-                        // The tick boxes are on every row already: take the viewer to them.
-                        scope.launch { runCatching { list.animateScrollToItem(doneHeadingAt[0]) } }
                     }
                 }
             },
             confirmButton = { TextButton(onClick = { freeingUp = false }) { Text(s.commonClose) } },
+        )
+    }
+
+    if (confirmPictures) {
+        ConfirmDialog(
+            title = s.downloadsFreePicturesTitle,
+            message = s.downloadsFreePicturesMessage(MediaMapper.formatSize(figures?.picturesBytes ?: 0)),
+            detail = s.settingsClearPicturesUntouched,
+            confirmLabel = s.commonClear,
+            onDismiss = { confirmPictures = false },
+            onConfirm = {
+                confirmPictures = false
+                scope.launch {
+                    runCatching { Td.clearPicturesAndPreviews() }
+                    runCatching { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { com.tmplayer.online.OnlineMetadata.current?.purgeImages() } }
+                    refresh++
+                    toast(s.storagePicturesCleared)
+                }
+            },
+        )
+    }
+
+    if (confirmUnfinished) {
+        val freed = unfinished.sumOf { it.downloadedBytes }
+        ConfirmDialog(
+            title = s.downloadsFreeUnfinishedTitle(unfinished.size),
+            message = s.downloadsFreeUnfinishedMessage(unfinished.size, MediaMapper.formatSize(freed)),
+            confirmLabel = s.commonDelete,
+            onDismiss = { confirmUnfinished = false },
+            onConfirm = {
+                confirmUnfinished = false
+                val these = unfinished.map { it.fileId }
+                scope.launch {
+                    these.forEach { dropUnfinished(state, it) }
+                    refresh++
+                    toast(s.storageFreed(MediaMapper.formatSize(freed)))
+                }
+            },
         )
     }
 
@@ -579,6 +665,22 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
 }
 
 private val ResumeRecord.key: String get() = "$chatId:$messageId"
+
+/** A waiting or stopped download's line, with what it holds here when it holds anything. */
+private fun unfinishedAlso(line: String, row: OfflineDownloads.Progress): String =
+    if (row.downloadedBytes > 0) line + "  ·  " + L.downloadsUnfinishedOnDevice(MediaMapper.formatSize(row.downloadedBytes)) else line
+
+/**
+ * Stops a download and deletes the part it had fetched, unless the same file is the recently
+ * played video, whose bytes those are too.
+ */
+private suspend fun dropUnfinished(state: ShellState, fileId: Int) {
+    OfflineDownloads.cancel(state.downloads, fileId)
+    runCatching { Td.cancelDownload(fileId) }
+    val cachedIds = runCatching { state.settings.cachedVideosNow() }.getOrDefault(emptyList())
+        .map { runCatching { Td.currentFileId(it.chatId, it.messageId, it.fileId) }.getOrDefault(it.fileId) }
+    if (fileId !in cachedIds) runCatching { Td.deleteFile(fileId) }
+}
 
 /** How many downloads are coming down or moving, for the badge on the side bar and the rail. */
 @Composable
@@ -779,10 +881,10 @@ private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
             if (row.bytesPerSecond > 0) append("  ·  ").append(StreamStats.formatSpeed(row.bytesPerSecond))
             row.remainingSeconds?.let { append("  ·  ").append(StreamStats.formatEta(it)) }
         }
-        OfflineDownloads.Stage.Queued -> s.downloadsQueued
-        OfflineDownloads.Stage.Paused -> s.downloadsPausedAt(StreamStats.formatBytes(row.downloadedBytes))
-        OfflineDownloads.Stage.Offline -> s.downloadsWaitingConnection
-        OfflineDownloads.Stage.NoWifi -> s.downloadsWaitingWifi
+        OfflineDownloads.Stage.Queued -> unfinishedAlso(s.downloadsQueued, row)
+        OfflineDownloads.Stage.Paused -> unfinishedAlso(s.downloadsPaused, row)
+        OfflineDownloads.Stage.Offline -> unfinishedAlso(s.downloadsWaitingConnection, row)
+        OfflineDownloads.Stage.NoWifi -> unfinishedAlso(s.downloadsWaitingWifi, row)
         OfflineDownloads.Stage.Moving ->
             if (row.heldByPlayer) s.downloadsFinishesWhenStopped else s.downloadsMovingIn
         OfflineDownloads.Stage.Failed -> row.failure ?: s.downloadsStopped
@@ -791,7 +893,9 @@ private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
     val fraction = if (row.stage == OfflineDownloads.Stage.Moving) row.moveFraction ?: 0f else row.fraction ?: 0f
     val pause = { OfflineDownloads.pause(state.downloads, row.fileId) }
     val resume = { OfflineDownloads.resume(state.downloads, row.fileId) }
-    val cancel = { OfflineDownloads.cancel(state.downloads, row.fileId) }
+    val scope = rememberCoroutineScope()
+    // Cancel deletes what it had fetched too: a part file left behind is space nothing names.
+    val cancel: () -> Unit = { scope.launch { dropUnfinished(state, row.fileId) } }
     val menu = buildList {
         when {
             row.stage == OfflineDownloads.Stage.Moving -> Unit
