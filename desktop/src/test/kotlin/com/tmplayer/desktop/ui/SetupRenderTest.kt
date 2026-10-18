@@ -318,7 +318,9 @@ class SetupRenderTest {
         onNode(hasText("Save mobile data") and hasClickAction()).assertIsSelected()
         onNode(hasText("Done") and hasClickAction()).performClick()
         waitForIdle()
-        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.saveMobileData.first() && settings.wifiOnlyDownloads.first() } }
+        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.saveMobileData.first() } }
+        // Wi-Fi only is not part of the answer: it would stop streaming on mobile data altogether.
+        assertFalse(runBlocking { settings.wifiOnlyDownloads.first() })
     }
 
     /** CP69: every tour page light and dark, in Arabic and the pseudo-locale, and narrow. */
@@ -380,13 +382,13 @@ class SetupRenderTest {
         onNode(hasText("Theme and size")).assertExists()
         onNode(hasText("Next") and hasClickAction()).performClick()
         waitForIdle()
-        onNode(hasText("Keep what plays") and hasClickAction()).assertExists()
+        onNode(hasText("Keep whole videos") and hasClickAction()).assertExists()
         onNode(hasText("Next") and hasClickAction()).performClick()
         waitForIdle()
         onNode(hasText("Quick tour")).assertExists()
         onNode(hasText("Back") and hasClickAction()).performClick()
         waitForIdle()
-        onNode(hasText("Keep what plays") and hasClickAction()).assertExists()
+        onNode(hasText("Keep whole videos") and hasClickAction()).assertExists()
         onNode(hasText("Back") and hasClickAction()).performClick()
         waitForIdle()
         onNode(hasText("Theme and size")).assertExists()

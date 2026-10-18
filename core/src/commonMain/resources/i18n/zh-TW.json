@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, other {# 個下載正在等待 Wi-Fi}}",
     "paused": "{count, plural, other {# 個下載已暫停}}",
     "saving": "{count, plural, other {正在將 # 部影片儲存到「下載」}}",
-    "start_on_wifi": "它們會在 Wi-Fi 上開始。可在「設定」中變更。",
+    "start_on_wifi": "「只用 Wi-Fi」已開啟，所以它們會在 Wi-Fi 上開始。可在「設定」中變更。",
     "starting": "{count, plural, other {正在啟動 # 個下載}}",
     "waiting": "{count, plural, other {# 個等待中}}",
     "waiting_to_start": "等待開始"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "音量增強已開啟",
     "volume_boost_on_detail": "開啟：提升輕聲對白，壓低大聲場景",
     "watch_again": "重新觀看",
-    "wifi_only": "這部影片尚未下載，而 TMPlayer 設為只使用 Wi-Fi。請連上 Wi-Fi，或到「設定」中關閉此選項。"
+    "wifi_only": "這部影片尚未下載，而「只用 Wi-Fi」已開啟，所以不會在行動數據上播放。請連上 Wi-Fi，或到「設定」中關閉「只用 Wi-Fi」。"
   },
   "search": {
     "and_more": "{count, plural, other {等另外 # 個}}",
@@ -1673,7 +1673,7 @@
     "lists": "清單",
     "low_storage": "低儲存空間模式",
     "low_storage_detail": "串流播放影片，裝置上只保留其中一小部分",
-    "low_storage_off": "關閉：串流過的影片會留在裝置上，直到播放下一部",
+    "low_storage_off": "關閉：你播放的影片會完整留在「最近播放」中，所以倒轉是即時的",
     "low_storage_on": "開啟：只保留影片的一小段。往回快轉會重新下載，偶爾會短暫停頓",
     "nothing_cached": "這台裝置上沒有最近播放的影片",
     "nothing_to_clear": "目前沒有可清除的內容",
@@ -1700,6 +1700,8 @@
     "page_storage": "儲存空間與下載",
     "page_storage_summary": "最近播放的影片、圖片和預覽，以及可用空間",
     "page_subtitles_summary_online": "{style}，以及線上字幕",
+    "page_tv_home": "電視主畫面",
+    "page_tv_home_summary": "「接著播放」，以及星號聊天裡新內容的列",
     "playback": "播放",
     "privacy": "隱私權",
     "privacy_computer": "哪些資料留在這台電腦上，以及 TMPlayer 會連線的服務",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "滑鼠滾輪快轉",
     "wheel_seeks_off": "滾輪調整音量；Shift 加滾輪可跳轉 10 秒",
     "wheel_seeks_on": "滾輪可跳轉 10 秒；Shift 加滾輪調整音量",
-    "wifi_only": "只在 Wi-Fi 下下載",
+    "wifi_only": "只用 Wi-Fi",
     "wifi_only_off": "關閉：大型影片在行動數據上開始前會警告你一次",
-    "wifi_only_on": "尚未下載的影片不會在行動數據上開啟"
+    "wifi_only_on": "尚未下載的影片不會在行動數據上播放，下載也會等到連上 Wi-Fi"
   },
   "setup": {
     "appearance_body": "選擇主題和介面大小。畫面會隨你的選擇即時改變，你可以直接看到效果。",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "不限制",
     "mobile_no_limits_detail": "不論哪種連線，影片都會抓取到結尾，下載也會立即開始",
     "mobile_save": "節省行動數據",
-    "mobile_save_detail": "使用行動數據時，影片只提前抓取幾分鐘，下載會等到連上 Wi-Fi",
+    "mobile_save_detail": "使用行動數據時，影片只會預先取得幾分鐘，提早停止也不會浪費流量",
     "mobile_title": "行動數據",
     "next": "下一步",
     "performance_body": "在較慢的裝置上，更輕的圖片和更少的動態效果能讓應用程式保持流暢。差異會出現在首頁和拖曳進度時。",
@@ -1881,8 +1883,8 @@
     "storage_body": "大型影片會佔用很多空間。低儲存空間模式會以串流播放，而不把整個檔案保存在這部裝置上。",
     "storage_low": "低儲存空間模式",
     "storage_low_detail": "只保留目前位置附近的部分。倒轉時會重新下載。",
-    "storage_normal": "保留已播放的部分",
-    "storage_normal_detail": "影片邊播邊保留，所以倒轉是即時的",
+    "storage_normal": "保留完整影片",
+    "storage_normal_detail": "你播放的影片會完整留在「最近播放」中，所以倒轉是即時的",
     "storage_title": "儲存空間"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "你的 Telegram 帳號使用的號碼，並加上國碼。",
     "phone_label": "電話號碼",
     "phone_title": "你的電話號碼",
-    "qr_body": "在手機上開啟 Telegram，前往「設定」，選「裝置」，再選「連結桌面裝置」，然後對準這個 QR 碼。",
     "qr_label": "Telegram 登入 QR 碼",
     "qr_title": "登入 Telegram",
     "resend": "改用其他方式傳送",
@@ -2230,7 +2231,7 @@
     "up_to_date": "TMPlayer 已是最新版本",
     "update_now": "立即更新",
     "verifying": "正在檢查下載內容",
-    "waits_for_wifi": "「設定」中已開啟只用 Wi-Fi，所以更新會等到有 Wi-Fi 再進行。",
+    "waits_for_wifi": "「設定」中已開啟「只用 Wi-Fi」，所以更新會等到有 Wi-Fi 再進行。",
     "you_have": "你使用的是 {version}。"
   },
   "watched": {

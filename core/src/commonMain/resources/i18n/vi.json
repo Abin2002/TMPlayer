@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, other {# video tải xuống đang chờ Wi-Fi}}",
     "paused": "{count, plural, other {# video tải xuống đã tạm dừng}}",
     "saving": "{count, plural, other {Đang lưu # video vào Tải xuống}}",
-    "start_on_wifi": "Chúng bắt đầu khi có Wi-Fi. Đổi trong Cài đặt.",
+    "start_on_wifi": "Chỉ Wi-Fi đang bật, nên chúng bắt đầu khi có Wi-Fi. Đổi trong Cài đặt.",
     "starting": "{count, plural, other {Đang bắt đầu # lượt tải xuống}}",
     "waiting": "{count, plural, other {# đang chờ}}",
     "waiting_to_start": "Đang chờ bắt đầu"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "Bật tăng âm lượng",
     "volume_boost_on_detail": "Bật: lời thoại nhỏ được nâng lên, cảnh ồn được giữ lại",
     "watch_again": "Xem lại",
-    "wifi_only": "Video này chưa được tải, và TMPlayer đang đặt chỉ dùng Wi-Fi. Hãy kết nối Wi-Fi, hoặc tắt tùy chọn đó trong Cài đặt."
+    "wifi_only": "Video này chưa được tải, và Chỉ Wi-Fi đang bật, nên video không phát trên dữ liệu di động. Hãy kết nối Wi-Fi, hoặc tắt Chỉ Wi-Fi trong Cài đặt."
   },
   "search": {
     "and_more": "{count, plural, other {và # mục khác}}",
@@ -1673,7 +1673,7 @@
     "lists": "Danh sách",
     "low_storage": "Chế độ ít dung lượng",
     "low_storage_detail": "Phát trực tiếp video mà chỉ giữ một phần nhỏ trên thiết bị",
-    "low_storage_off": "Tắt: video phát trực tiếp được giữ trên thiết bị cho đến video tiếp theo",
+    "low_storage_off": "Tắt: video bạn phát được giữ trọn trong Đã phát gần đây, nên tua lại diễn ra ngay",
     "low_storage_on": "Bật: chỉ giữ một đoạn nhỏ của video. Tua lùi sẽ tải lại đoạn đó, thỉnh thoảng dừng một chút",
     "nothing_cached": "Không có video đã phát gần đây nào trên thiết bị này",
     "nothing_to_clear": "Hiện không có gì để xóa",
@@ -1700,6 +1700,8 @@
     "page_storage": "Lưu trữ và tải xuống",
     "page_storage_summary": "Video đã phát gần đây, ảnh và bản xem trước, và dung lượng trống",
     "page_subtitles_summary_online": "{style}, và phụ đề trực tuyến",
+    "page_tv_home": "Màn hình chính của TV",
+    "page_tv_home_summary": "Phát tiếp, và các hàng nội dung mới trong cuộc trò chuyện gắn sao",
     "playback": "Phát",
     "privacy": "Quyền riêng tư",
     "privacy_computer": "Những gì ở lại trên máy tính này và các dịch vụ TMPlayer kết nối tới",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "Con lăn chuột để tua",
     "wheel_seeks_off": "Con lăn chỉnh âm lượng; Shift và con lăn để nhảy 10 giây",
     "wheel_seeks_on": "Con lăn nhảy 10 giây; Shift và con lăn để chỉnh âm lượng",
-    "wifi_only": "Chỉ tải xuống qua Wi-Fi",
+    "wifi_only": "Chỉ Wi-Fi",
     "wifi_only_off": "Tắt: video lớn sẽ cảnh báo bạn một lần trước khi bắt đầu trên dữ liệu di động",
-    "wifi_only_on": "Video bạn chưa tải sẽ không mở được trên dữ liệu di động"
+    "wifi_only_on": "Video bạn chưa tải sẽ không phát được trên dữ liệu di động, còn tải xuống sẽ chờ có Wi-Fi"
   },
   "setup": {
     "appearance_body": "Chọn chủ đề và kích thước hiển thị. Màn hình thay đổi ngay khi bạn chọn, nên bạn thấy được kết quả.",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "Không giới hạn",
     "mobile_no_limits_detail": "Video được tải đến hết và tải xuống bắt đầu ngay, trên mọi kết nối",
     "mobile_save": "Tiết kiệm dữ liệu di động",
-    "mobile_save_detail": "Khi dùng dữ liệu di động, video chỉ được tải trước vài phút, còn tải xuống chờ có Wi-Fi",
+    "mobile_save_detail": "Khi dùng dữ liệu di động, video chỉ được tải trước vài phút, nên dừng sớm cũng không phí gì",
     "mobile_title": "Dữ liệu di động",
     "next": "Tiếp",
     "performance_body": "Trên thiết bị chậm hơn, hình ảnh nhẹ hơn và ít chuyển động giúp ứng dụng nhanh. Sự khác biệt thấy rõ ở Trang chủ và khi tua.",
@@ -1881,8 +1883,8 @@
     "storage_body": "Video lớn chiếm nhiều chỗ. Chế độ ít dung lượng phát trực tuyến mà không giữ toàn bộ tệp trên thiết bị này.",
     "storage_low": "Chế độ ít dung lượng",
     "storage_low_detail": "Chỉ giữ đoạn quanh vị trí bạn đang xem. Tua lại sẽ tải đoạn đó lần nữa.",
-    "storage_normal": "Giữ phần đã phát",
-    "storage_normal_detail": "Video được giữ khi đang phát, nên tua lại diễn ra ngay",
+    "storage_normal": "Giữ trọn video",
+    "storage_normal_detail": "Video bạn phát được giữ trọn trong Đã phát gần đây, nên tua lại diễn ra ngay",
     "storage_title": "Lưu trữ"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "Số điện thoại tài khoản Telegram của bạn dùng, kèm mã quốc gia.",
     "phone_label": "Số điện thoại",
     "phone_title": "Số điện thoại của bạn",
-    "qr_body": "Trên điện thoại, hãy mở Telegram, vào Cài đặt, rồi Thiết bị, rồi Liên kết thiết bị máy tính, và hướng vào mã này.",
     "qr_label": "Mã QR đăng nhập Telegram",
     "qr_title": "Đăng nhập Telegram",
     "resend": "Gửi bằng cách khác",
@@ -2230,7 +2231,7 @@
     "up_to_date": "TMPlayer đã được cập nhật",
     "update_now": "Cập nhật ngay",
     "verifying": "Đang kiểm tra bản tải",
-    "waits_for_wifi": "Cài đặt đang bật chỉ dùng Wi-Fi, nên bản cập nhật sẽ chờ Wi-Fi.",
+    "waits_for_wifi": "Cài đặt đang bật Chỉ Wi-Fi, nên bản cập nhật sẽ chờ Wi-Fi.",
     "you_have": "Bạn đang dùng {version}."
   },
   "watched": {

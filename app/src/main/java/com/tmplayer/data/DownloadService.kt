@@ -132,7 +132,7 @@ class DownloadService : Service() {
      * Holds the queue when the connection cannot carry it, and puts it back when it can.
      *
      * Two things stop a download the viewer has not stopped: no signal, and mobile data while
-     * "Only download over Wi-Fi" is on. Neither is a failure, so neither is written down as one.
+     * "Wi-Fi only" is on. Neither is a failure, so neither is written down as one.
      * TDLib keeps the partial file, so what resumes is the rest of the video and not the whole of
      * it again.
      */

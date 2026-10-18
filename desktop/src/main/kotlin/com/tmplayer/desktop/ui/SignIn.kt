@@ -4,14 +4,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -75,7 +78,9 @@ fun SignInScreen(auth: AuthState) {
     Box(Modifier.fillMaxSize().windowDrag(), contentAlignment = Alignment.Center) {
         Column(
             Modifier
-                .widthIn(max = 460.dp)
+                // The QR pane sets its code beside the steps when there is room, so it takes a
+                // wider column than the forms do.
+                .widthIn(max = if (auth is AuthState.Qr) QR_WIDE_COLUMN else 460.dp)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(32.dp),
@@ -138,28 +143,93 @@ private fun QrPane(link: String) {
     val bitmap by produceState<ImageBitmap?>(initialValue = null, key1 = link) {
         value = withContext(Dispatchers.Default) { QrCode.render(link, QR_PIXELS) }
     }
-    Heading(
-        s.signinQrTitle,
-        s.signinQrBody,
-    )
     // Black on a white plate whatever the theme: contrast is what makes a code scannable.
-    Box(
-        Modifier
-            .size(280.dp)
-            .clip(RoundedCornerShape(Corner.ExtraLarge))
-            .background(Color.White)
-            .padding(16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        val rendered = bitmap
-        if (rendered == null) {
-            CircularProgressIndicator()
-        } else {
-            Image(rendered, contentDescription = s.signinQrLabel, modifier = Modifier.fillMaxSize())
+    val plate: @Composable () -> Unit = {
+        Box(
+            Modifier
+                .size(QR_PLATE)
+                .clip(RoundedCornerShape(Corner.ExtraLarge))
+                .background(Color.White)
+                .padding(16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            val rendered = bitmap
+            if (rendered == null) {
+                CircularProgressIndicator()
+            } else {
+                Image(rendered, contentDescription = s.signinQrLabel, modifier = Modifier.fillMaxSize())
+            }
         }
     }
-    TextButton(onClick = { scope.launch { Td.chooseSignInMethod(SignInMethod.Phone) } }) {
-        Text(s.signinUsePhone)
+    // The same three numbered steps and the note the phone and the TV show, rather than one long
+    // sentence: each step is one thing to do on the phone in the other hand.
+    val steps: @Composable () -> Unit = {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            QrStep(1, s.loginQrStepOpen)
+            QrStep(2, s.loginQrStepDevices)
+            QrStep(3, s.loginQrStepLink)
+        }
+    }
+    val note: @Composable () -> Unit = {
+        Text(s.loginQrNote, style = MaterialTheme.typography.bodySmall, color = Tone.muted)
+    }
+    val usePhone: @Composable () -> Unit = {
+        TextButton(onClick = { scope.launch { Td.chooseSignInMethod(SignInMethod.Phone) } }) {
+            Text(s.signinUsePhone)
+        }
+    }
+
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        // Side by side when the window is wide enough, which keeps the whole pane on a 960 by 600
+        // window without scrolling; stacked, as before, in a narrower one.
+        if (maxWidth >= QR_SIDE_BY_SIDE) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(32.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                plate()
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(s.signinQrTitle, style = MaterialTheme.typography.headlineSmall)
+                    steps()
+                    note()
+                    Box(Modifier.offset(x = (-12).dp)) { usePhone() }
+                }
+            }
+        } else {
+            Column(
+                Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Text(s.signinQrTitle, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+                steps()
+                plate()
+                note()
+                usePhone()
+            }
+        }
+    }
+}
+
+/** One numbered step beside the QR code, its number in a quiet disc as on the phone. */
+@Composable
+private fun QrStep(number: Int, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(
+            Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "$number",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+        }
+        Text(text, style = MaterialTheme.typography.bodyLarge)
     }
 }
 
@@ -310,3 +380,10 @@ private fun FailedPane(message: String) {
 }
 
 private const val QR_PIXELS = 560
+private val QR_PLATE = 280.dp
+
+/** The QR pane's column: the plate, a gap and the steps beside it, with room for the longer languages. */
+private val QR_WIDE_COLUMN = 820.dp
+
+/** From this width inside the column the steps stand beside the code rather than over it. */
+private val QR_SIDE_BY_SIDE = 640.dp

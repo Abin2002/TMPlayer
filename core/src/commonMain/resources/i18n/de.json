@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, one {Warte auf WLAN} other {# Downloads warten auf WLAN}}",
     "paused": "{count, plural, one {Download pausiert} other {# Downloads pausiert}}",
     "saving": "{count, plural, one {Wird in den Downloads gespeichert} other {# Videos werden in den Downloads gespeichert}}",
-    "start_on_wifi": "Sie starten im WLAN. Ändere das in den Einstellungen.",
+    "start_on_wifi": "„Nur WLAN“ ist an, daher starten sie im WLAN. Ändere das in den Einstellungen.",
     "starting": "{count, plural, one {Download wird gestartet} other {# Downloads werden gestartet}}",
     "waiting": "{count, plural, one {# wartet} other {# warten}}",
     "waiting_to_start": "Wartet auf den Start"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "Lautstärkeverstärkung an",
     "volume_boost_on_detail": "An: leise Sprache wird angehoben, laute Szenen werden gedämpft",
     "watch_again": "Erneut ansehen",
-    "wifi_only": "Dieses Video ist noch nicht heruntergeladen, und TMPlayer ist auf nur WLAN eingestellt. Verbinde dich mit WLAN oder schalte das in den Einstellungen aus."
+    "wifi_only": "Dieses Video ist noch nicht heruntergeladen, und „Nur WLAN“ ist an, daher läuft es nicht über mobile Daten. Verbinde dich mit WLAN oder schalte „Nur WLAN“ in den Einstellungen aus."
   },
   "search": {
     "and_more": "{count, plural, one {und # weiterer} other {und # weitere}}",
@@ -1673,7 +1673,7 @@
     "lists": "Listen",
     "low_storage": "Speichersparmodus",
     "low_storage_detail": "Ein Video streamen und nur einen kleinen Teil davon auf dem Gerät behalten",
-    "low_storage_off": "Aus: Ein gestreamtes Video bleibt bis zum nächsten auf dem Gerät",
+    "low_storage_off": "Aus: Videos, die du abspielst, bleiben ganz unter „Zuletzt abgespielt“, Zurückspringen geht sofort",
     "low_storage_on": "An: Behält nur einen kleinen Ausschnitt des Videos. Beim Zurückspulen wird erneut heruntergeladen, ab und zu mit einer kurzen Pause",
     "nothing_cached": "Auf diesem Gerät gibt es keine zuletzt abgespielten Videos",
     "nothing_to_clear": "Derzeit gibt es nichts zu leeren",
@@ -1700,6 +1700,8 @@
     "page_storage": "Speicher und Downloads",
     "page_storage_summary": "Zuletzt abgespielte Videos, Bilder und Vorschauen und freier Platz",
     "page_subtitles_summary_online": "{style} und Online-Untertitel",
+    "page_tv_home": "TV-Startbildschirm",
+    "page_tv_home_summary": "„Als Nächstes“ und Reihen mit Neuem aus deinen Chats mit Stern",
     "playback": "Wiedergabe",
     "privacy": "Datenschutz",
     "privacy_computer": "Was auf diesem Computer bleibt und welche Dienste TMPlayer kontaktiert",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "Mausrad spult",
     "wheel_seeks_off": "Das Rad ändert die Lautstärke. Shift und Rad springen 10 s",
     "wheel_seeks_on": "Das Rad springt 10 s. Shift und Rad ändern die Lautstärke",
-    "wifi_only": "Nur über WLAN herunterladen",
+    "wifi_only": "Nur WLAN",
     "wifi_only_off": "Aus: Bei einem großen Video wirst du einmal gewarnt, bevor es über mobile Daten startet",
-    "wifi_only_on": "Nicht heruntergeladene Videos öffnen sich nicht über mobile Daten"
+    "wifi_only_on": "Nicht heruntergeladene Videos laufen nicht über mobile Daten, und Downloads warten auf WLAN"
   },
   "setup": {
     "appearance_body": "Wähle ein Design und wie groß alles dargestellt wird. Der Bildschirm ändert sich bei deiner Auswahl, so siehst du gleich das Ergebnis.",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "Ohne Grenzen",
     "mobile_no_limits_detail": "Videos werden bis zum Ende geladen und Downloads starten sofort, bei jeder Verbindung",
     "mobile_save": "Mobile Daten sparen",
-    "mobile_save_detail": "Über mobile Daten wird ein Video nur ein paar Minuten im Voraus geladen, und Downloads warten auf WLAN",
+    "mobile_save_detail": "Über mobile Daten wird ein Video nur wenige Minuten im Voraus geladen, ein frühes Aufhören verschwendet also nichts",
     "mobile_title": "Mobile Daten",
     "next": "Weiter",
     "performance_body": "Auf einem langsameren Gerät halten leichtere Bilder und weniger Bewegung die App flott. Den Unterschied merkst du auf Start und beim Spulen.",
@@ -1881,8 +1883,8 @@
     "storage_body": "Große Videos brauchen viel Platz. Der Speichersparmodus streamt sie, ohne die ganze Datei auf diesem Gerät zu behalten.",
     "storage_low": "Speichersparmodus",
     "storage_low_detail": "Behält nur den Teil um die aktuelle Stelle. Beim Zurückspringen wird er neu geladen.",
-    "storage_normal": "Behalten, was läuft",
-    "storage_normal_detail": "Videos werden beim Abspielen behalten, Zurückspringen geht sofort",
+    "storage_normal": "Ganze Videos behalten",
+    "storage_normal_detail": "Videos, die du abspielst, bleiben ganz unter „Zuletzt abgespielt“, Zurückspringen geht sofort",
     "storage_title": "Speicher"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "Die Nummer, die dein Telegram-Konto nutzt, mit Landesvorwahl.",
     "phone_label": "Telefonnummer",
     "phone_title": "Deine Telefonnummer",
-    "qr_body": "Öffne auf deinem Handy Telegram, gehe zu Einstellungen, dann Geräte, dann Desktop-Gerät verbinden, und richte es auf diesen Code.",
     "qr_label": "QR-Code für die Telegram-Anmeldung",
     "qr_title": "Bei Telegram anmelden",
     "resend": "Auf anderem Weg senden",

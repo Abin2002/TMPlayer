@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, other {#件のダウンロードがWi-Fi待ち}}",
     "paused": "{count, plural, other {#件のダウンロードを一時停止中}}",
     "saving": "{count, plural, other {動画#本をダウンロードに保存中}}",
-    "start_on_wifi": "Wi-Fiに繋がると開始します。設定で変更できます。",
+    "start_on_wifi": "Wi-Fiのみがオンのため、Wi-Fiに繋がると開始します。設定で変更できます。",
     "starting": "{count, plural, other {#件のダウンロードを開始中}}",
     "waiting": "{count, plural, other {#件待機中}}",
     "waiting_to_start": "開始待ち"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "音量ブーストオン",
     "volume_boost_on_detail": "オン: 小さい声を持ち上げ、大きな場面を抑えます",
     "watch_again": "もう一度見る",
-    "wifi_only": "この動画はまだダウンロードされておらず、TMPlayerはWi-Fiのみに設定されています。Wi-Fiに接続するか、設定でその設定をオフにしてください。"
+    "wifi_only": "この動画はまだダウンロードされておらず、Wi-Fiのみがオンのため、モバイルデータでは再生されません。Wi-Fiに接続するか、設定でWi-Fiのみをオフにしてください。"
   },
   "search": {
     "and_more": "{count, plural, other {ほか#件}}",
@@ -1673,7 +1673,7 @@
     "lists": "リスト",
     "low_storage": "省ストレージモード",
     "low_storage_detail": "端末には動画のごく一部だけを残してストリーミングします",
-    "low_storage_off": "オフ: ストリーミングした動画は、次の動画まで端末に残ります",
+    "low_storage_off": "オフ: 再生した動画は最近再生にまるごと残るので、巻き戻しがすぐにできます",
     "low_storage_on": "オン: 動画のごく一部だけを保持します。前に戻るシークでは再びダウンロードするため、ときどき少し止まります",
     "nothing_cached": "この端末に最近再生した動画はありません",
     "nothing_to_clear": "現在消去するものはありません",
@@ -1700,6 +1700,8 @@
     "page_storage": "ストレージとダウンロード",
     "page_storage_summary": "最近再生した動画、画像とプレビュー、空き容量",
     "page_subtitles_summary_online": "{style}、オンライン字幕",
+    "page_tv_home": "テレビのホーム画面",
+    "page_tv_home_summary": "次に再生と、スター付きチャットの新着の行",
     "playback": "再生",
     "privacy": "プライバシー",
     "privacy_computer": "このパソコンに残るデータと、TMPlayerが接続するサービス",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "マウスホイールでシーク",
     "wheel_seeks_off": "ホイールで音量を変更し、Shiftとホイールで10秒スキップします",
     "wheel_seeks_on": "ホイールで10秒スキップし、Shiftとホイールで音量を変更します",
-    "wifi_only": "Wi-Fiでのみダウンロード",
+    "wifi_only": "Wi-Fiのみ",
     "wifi_only_off": "オフ: 大きな動画は、モバイルデータで開始する前に1度警告します",
-    "wifi_only_on": "ダウンロードしていない動画は、モバイルデータでは開きません"
+    "wifi_only_on": "ダウンロードしていない動画はモバイルデータでは再生されず、ダウンロードはWi-Fiを待ちます"
   },
   "setup": {
     "appearance_body": "テーマと表示の大きさを選んでください。選ぶとすぐ画面が変わるので、結果を確かめられます。",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "制限なし",
     "mobile_no_limits_detail": "どの接続でも、動画は最後まで読み込み、ダウンロードもすぐに始まります",
     "mobile_save": "モバイルデータを節約",
-    "mobile_save_detail": "モバイルデータでは動画を数分先まで読み込み、ダウンロードはWi-Fiを待ちます",
+    "mobile_save_detail": "モバイルデータでは動画を数分先までしか取得しないため、途中でやめても無駄になりません",
     "mobile_title": "モバイルデータ",
     "next": "次へ",
     "performance_body": "遅めの端末では、画像を軽くして動きを減らすとアプリが軽快に動きます。違いはホームとシーク中にわかります。",
@@ -1881,8 +1883,8 @@
     "storage_body": "大きな動画は容量を多く使います。省ストレージモードでは、ファイル全体をこの端末に残さずにストリーミング再生します。",
     "storage_low": "省ストレージモード",
     "storage_low_detail": "今見ている前後だけを残します。巻き戻すとその部分を再ダウンロードします。",
-    "storage_normal": "再生した分を残す",
-    "storage_normal_detail": "再生した部分を残すので、巻き戻しがすぐにできます",
+    "storage_normal": "動画をまるごと残す",
+    "storage_normal_detail": "再生した動画は最近再生にまるごと残るので、巻き戻しがすぐにできます",
     "storage_title": "ストレージ"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "Telegramアカウントで使っている電話番号を、国番号付きで入力してください。",
     "phone_label": "電話番号",
     "phone_title": "電話番号",
-    "qr_body": "スマートフォンでTelegramを開き、設定、デバイス、デスクトップデバイスをリンクの順に進んで、このコードにカメラを向けてください。",
     "qr_label": "TelegramログインのQRコード",
     "qr_title": "Telegramにログイン",
     "resend": "別の方法で送る",

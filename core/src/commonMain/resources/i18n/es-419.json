@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, one {Esperando Wi-Fi} many {# descargas esperando Wi-Fi} other {# descargas esperando Wi-Fi}}",
     "paused": "{count, plural, one {Descarga en pausa} many {# descargas en pausa} other {# descargas en pausa}}",
     "saving": "{count, plural, one {Guardando en Descargas} many {Guardando # videos en Descargas} other {Guardando # videos en Descargas}}",
-    "start_on_wifi": "Empiezan con Wi-Fi. Cámbialo en Configuración.",
+    "start_on_wifi": "Solo Wi-Fi está activado, así que empiezan con Wi-Fi. Cámbialo en Configuración.",
     "starting": "{count, plural, one {Iniciando una descarga} many {Iniciando # descargas} other {Iniciando # descargas}}",
     "waiting": "{count, plural, one {# en espera} many {# en espera} other {# en espera}}",
     "waiting_to_start": "Esperando para empezar"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "Aumento de volumen activado",
     "volume_boost_on_detail": "Activado: sube las voces bajas y contiene las escenas fuertes",
     "watch_again": "Ver de nuevo",
-    "wifi_only": "Este video aún no está descargado y TMPlayer está configurado para usar solo Wi-Fi. Conéctate a Wi-Fi o desactiva esa opción en Configuración."
+    "wifi_only": "Este video aún no está descargado y Solo Wi-Fi está activado, así que no se reproduce con datos móviles. Conéctate a Wi-Fi o desactiva Solo Wi-Fi en Configuración."
   },
   "search": {
     "and_more": "{count, plural, one {y # más} many {y # más} other {y # más}}",
@@ -1673,7 +1673,7 @@
     "lists": "Listas",
     "low_storage": "Modo de poco almacenamiento",
     "low_storage_detail": "Transmite un video y guarda solo una pequeña parte en el dispositivo",
-    "low_storage_off": "Desactivado: un video transmitido se queda en el dispositivo hasta el siguiente",
+    "low_storage_off": "Desactivado: los videos que reproduces quedan completos en Reproducidos recientemente, así retroceder es inmediato",
     "low_storage_on": "Activado: guarda solo una pequeña parte del video. Al retroceder se vuelve a descargar, con alguna pausa breve de vez en cuando",
     "nothing_cached": "No hay videos reproducidos recientemente en este dispositivo",
     "nothing_to_clear": "No hay nada que borrar ahora",
@@ -1700,6 +1700,8 @@
     "page_storage": "Almacenamiento y descargas",
     "page_storage_summary": "Videos reproducidos recientemente, imágenes y vistas previas, y espacio libre",
     "page_subtitles_summary_online": "{style}, y subtítulos en línea",
+    "page_tv_home": "Pantalla de inicio de la TV",
+    "page_tv_home_summary": "Reproducir a continuación y filas con lo nuevo de tus chats destacados",
     "playback": "Reproducción",
     "privacy": "Privacidad",
     "privacy_computer": "Qué se queda en esta computadora y qué servicios contacta TMPlayer",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "La rueda del mouse avanza o retrocede",
     "wheel_seeks_off": "La rueda cambia el volumen; Shift y la rueda saltan 10 s",
     "wheel_seeks_on": "La rueda salta 10 s; Shift y la rueda cambian el volumen",
-    "wifi_only": "Descargar solo con Wi-Fi",
+    "wifi_only": "Solo Wi-Fi",
     "wifi_only_off": "Desactivado: un video grande te avisa una vez antes de empezar con datos móviles",
-    "wifi_only_on": "Los videos que no descargaste no se abren con datos móviles"
+    "wifi_only_on": "Los videos que no descargaste no se reproducen con datos móviles, y las descargas esperan al Wi-Fi"
   },
   "setup": {
     "appearance_body": "Elige un tema y el tamaño con que se muestra todo. La pantalla cambia mientras eliges, así ves el resultado.",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "Sin límites",
     "mobile_no_limits_detail": "Los videos se cargan hasta el final y las descargas empiezan de inmediato, con cualquier conexión",
     "mobile_save": "Ahorrar datos móviles",
-    "mobile_save_detail": "Con datos móviles, un video se carga unos minutos por adelantado y las descargas esperan al Wi-Fi",
+    "mobile_save_detail": "Con datos móviles, el video se descarga solo unos minutos por adelantado, así que dejar de verlo antes no desperdicia nada",
     "mobile_title": "Datos móviles",
     "next": "Siguiente",
     "performance_body": "En un dispositivo más lento, imágenes más livianas y menos movimiento mantienen la app rápida. La diferencia se nota en Inicio y al buscar.",
@@ -1881,8 +1883,8 @@
     "storage_body": "Los videos grandes ocupan mucho espacio. El modo de poco almacenamiento los reproduce en streaming sin guardar el archivo completo en este dispositivo.",
     "storage_low": "Modo de poco almacenamiento",
     "storage_low_detail": "Guarda solo la parte cercana a donde estás. Al retroceder, esa parte se descarga de nuevo.",
-    "storage_normal": "Guardar lo que se reproduce",
-    "storage_normal_detail": "Los videos se guardan mientras se reproducen, así retroceder es inmediato",
+    "storage_normal": "Guardar videos completos",
+    "storage_normal_detail": "Los videos que reproduces quedan completos en Reproducidos recientemente, así retroceder es inmediato",
     "storage_title": "Almacenamiento"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "El número que usa tu cuenta de Telegram, con su código de país.",
     "phone_label": "Número de teléfono",
     "phone_title": "Tu número de teléfono",
-    "qr_body": "En tu teléfono, abre Telegram, ve a Ajustes, luego Dispositivos, luego Vincular dispositivo de escritorio, y apunta a este código.",
     "qr_label": "Código QR para iniciar sesión en Telegram",
     "qr_title": "Inicia sesión en Telegram",
     "resend": "Enviarlo de otra forma",

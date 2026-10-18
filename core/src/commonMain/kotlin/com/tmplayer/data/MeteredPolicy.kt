@@ -23,7 +23,7 @@ enum class MeteredDecision {
 object MeteredPolicy {
 
     /**
-     * Whether Settings offers "Only download over Wi-Fi" here. Not on a television: a TV is wired
+     * Whether Settings offers "Wi-Fi only" here. Not on a television: a TV is wired
      * or on Wi-Fi, never on a data allowance paid for by the gigabyte, so there it would ask the
      * viewer to rule out something that cannot happen.
      */

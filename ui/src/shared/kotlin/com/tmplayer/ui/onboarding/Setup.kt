@@ -213,10 +213,10 @@ suspend fun SetupChoice.applyTo(
             settings.setReduceMotion(true)
             settings.setTrickplay(false)
         }
-        SetupChoice.SaveData -> {
-            settings.setSaveMobileData(true)
-            settings.setWifiOnlyDownloads(true)
-        }
+        // Save mobile data alone, the row its Also in link opens. Wi-Fi only stays as it was: it
+        // also stops a video that is not downloaded from playing on mobile data at all, which is
+        // more than an answer about saving data should switch on.
+        SetupChoice.SaveData -> settings.setSaveMobileData(true)
         SetupChoice.NoLimits -> {
             settings.setSaveMobileData(false)
             settings.setWifiOnlyDownloads(false)

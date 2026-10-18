@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, one {In attesa del Wi-Fi} many {# di download in attesa del Wi-Fi} other {# download in attesa del Wi-Fi}}",
     "paused": "{count, plural, one {Download in pausa} many {# di download in pausa} other {# download in pausa}}",
     "saving": "{count, plural, one {Salvataggio in Download} many {Salvataggio di # di video in Download} other {Salvataggio di # video in Download}}",
-    "start_on_wifi": "Partono con il Wi-Fi. Cambia in Impostazioni.",
+    "start_on_wifi": "Solo Wi-Fi è attivo, quindi partono con il Wi-Fi. Cambia in Impostazioni.",
     "starting": "{count, plural, one {Avvio di un download} many {Avvio di # di download} other {Avvio di # download}}",
     "waiting": "{count, plural, one {# in attesa} many {# in attesa} other {# in attesa}}",
     "waiting_to_start": "In attesa di iniziare"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "Amplificazione del volume attivata",
     "volume_boost_on_detail": "Attiva: i dialoghi bassi vengono alzati, le scene forti trattenute",
     "watch_again": "Guarda di nuovo",
-    "wifi_only": "Questo video non è ancora scaricato e TMPlayer è impostato per usare solo il Wi-Fi. Connettiti al Wi-Fi, o disattiva l'opzione in Impostazioni."
+    "wifi_only": "Questo video non è ancora scaricato e Solo Wi-Fi è attivo, quindi non si riproduce con i dati mobili. Connettiti al Wi-Fi, o disattiva Solo Wi-Fi in Impostazioni."
   },
   "search": {
     "and_more": "{count, plural, one {e # altra} many {e altre #} other {e altre #}}",
@@ -1673,7 +1673,7 @@
     "lists": "Elenchi",
     "low_storage": "Modalità poco spazio",
     "low_storage_detail": "Riproduci un video in streaming tenendone sul dispositivo solo una piccola parte",
-    "low_storage_off": "No: un video in streaming resta sul dispositivo fino al successivo",
+    "low_storage_off": "No: i video che riproduci restano interi in Riprodotti di recente, quindi tornare indietro è immediato",
     "low_storage_on": "Attiva: tiene solo una piccola finestra del video. Tornando indietro lo riscarica, con una breve pausa ogni tanto",
     "nothing_cached": "Non ci sono video riprodotti di recente su questo dispositivo",
     "nothing_to_clear": "Al momento non c'è nulla da cancellare",
@@ -1700,6 +1700,8 @@
     "page_storage": "Archiviazione e download",
     "page_storage_summary": "Video riprodotti di recente, immagini e anteprime, e spazio libero",
     "page_subtitles_summary_online": "{style}, e sottotitoli online",
+    "page_tv_home": "Schermata Home della TV",
+    "page_tv_home_summary": "Riproduci dopo, e file con le novità delle chat con la stella",
     "playback": "Riproduzione",
     "privacy": "Privacy",
     "privacy_computer": "Cosa resta su questo computer e quali servizi contatta TMPlayer",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "La rotella del mouse scorre",
     "wheel_seeks_off": "La rotella cambia il volume; Shift e rotella saltano di 10 s",
     "wheel_seeks_on": "La rotella salta di 10 s; Shift e rotella cambiano il volume",
-    "wifi_only": "Scarica solo con il Wi-Fi",
+    "wifi_only": "Solo Wi-Fi",
     "wifi_only_off": "No: un video grande ti avvisa una volta prima di partire con i dati mobili",
-    "wifi_only_on": "I video che non hai scaricato non si aprono con i dati mobili"
+    "wifi_only_on": "I video che non hai scaricato non si riproducono con i dati mobili, e i download aspettano il Wi-Fi"
   },
   "setup": {
     "appearance_body": "Scegli un tema e quanto grandi appaiono le cose. Lo schermo cambia mentre scegli, così vedi subito il risultato.",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "Nessun limite",
     "mobile_no_limits_detail": "I video vengono caricati fino alla fine e i download partono subito, con qualsiasi connessione",
     "mobile_save": "Risparmia dati mobili",
-    "mobile_save_detail": "Con i dati mobili, un video viene caricato pochi minuti in anticipo e i download aspettano il Wi-Fi",
+    "mobile_save_detail": "Con i dati mobili un video viene scaricato solo pochi minuti in anticipo, così smettere prima non spreca nulla",
     "mobile_title": "Dati mobili",
     "next": "Avanti",
     "performance_body": "Su un dispositivo più lento, immagini più leggere e meno animazioni mantengono l'app veloce. La differenza si vede in Home e durante lo scorrimento.",
@@ -1881,8 +1883,8 @@
     "storage_body": "I video grandi occupano molto spazio. La modalità poco spazio li riproduce in streaming senza tenere il file intero su questo dispositivo.",
     "storage_low": "Modalità poco spazio",
     "storage_low_detail": "Tiene solo la parte intorno a dove sei. Tornando indietro la riscarica.",
-    "storage_normal": "Tieni ciò che riproduci",
-    "storage_normal_detail": "I video vengono tenuti mentre li guardi, quindi tornare indietro è immediato",
+    "storage_normal": "Tieni i video interi",
+    "storage_normal_detail": "I video che riproduci restano interi in Riprodotti di recente, quindi tornare indietro è immediato",
     "storage_title": "Spazio"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "Il numero usato dal tuo account Telegram, con il prefisso internazionale.",
     "phone_label": "Numero di telefono",
     "phone_title": "Il tuo numero di telefono",
-    "qr_body": "Sul telefono apri Telegram, vai su Impostazioni, poi Dispositivi, poi Collega dispositivo desktop, e inquadra questo codice.",
     "qr_label": "Codice QR di accesso a Telegram",
     "qr_title": "Accedi a Telegram",
     "resend": "Invialo in un altro modo",
@@ -2230,7 +2231,7 @@
     "up_to_date": "TMPlayer è aggiornata",
     "update_now": "Aggiorna ora",
     "verifying": "Verifica del download",
-    "waits_for_wifi": "In Impostazioni è attivo solo Wi-Fi, quindi l'aggiornamento aspetta il Wi-Fi.",
+    "waits_for_wifi": "In Impostazioni è attivo Solo Wi-Fi, quindi l'aggiornamento aspetta il Wi-Fi.",
     "you_have": "Hai la {version}."
   },
   "watched": {

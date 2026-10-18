@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, one {En attente du Wi-Fi} many {# de téléchargements en attente du Wi-Fi} other {# téléchargements en attente du Wi-Fi}}",
     "paused": "{count, plural, one {Téléchargement en pause} many {# de téléchargements en pause} other {# téléchargements en pause}}",
     "saving": "{count, plural, one {Enregistrement dans Téléchargements} many {Enregistrement de # de vidéos dans Téléchargements} other {Enregistrement de # vidéos dans Téléchargements}}",
-    "start_on_wifi": "Ils démarrent avec le Wi-Fi. Modifiable dans les Réglages.",
+    "start_on_wifi": "Wi-Fi uniquement est activé, ils démarrent donc avec le Wi-Fi. Modifiable dans les Réglages.",
     "starting": "{count, plural, one {Démarrage d'un téléchargement} many {Démarrage de # de téléchargements} other {Démarrage de # téléchargements}}",
     "waiting": "{count, plural, one {# en attente} many {# en attente} other {# en attente}}",
     "waiting_to_start": "En attente de démarrage"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "Amplification du volume activée",
     "volume_boost_on_detail": "Activée : les voix faibles sont relevées, les scènes fortes contenues",
     "watch_again": "Revoir",
-    "wifi_only": "Cette vidéo n'est pas encore téléchargée, et TMPlayer est réglé pour n'utiliser que le Wi-Fi. Connectez-vous au Wi-Fi, ou désactivez cette option dans les Réglages."
+    "wifi_only": "Cette vidéo n'est pas encore téléchargée, et Wi-Fi uniquement est activé, elle ne se lit donc pas en données mobiles. Connectez-vous au Wi-Fi, ou désactivez Wi-Fi uniquement dans les Réglages."
   },
   "search": {
     "and_more": "{count, plural, one {et # autre} many {et # d'autres} other {et # autres}}",
@@ -1673,7 +1673,7 @@
     "lists": "Listes",
     "low_storage": "Mode stockage limité",
     "low_storage_detail": "Lire une vidéo en streaming en ne gardant qu'une petite partie sur l'appareil",
-    "low_storage_off": "Désactivé : une vidéo lue en streaming reste sur l'appareil jusqu'à la suivante",
+    "low_storage_off": "Désactivé : les vidéos que vous lisez restent entières dans Lues récemment, revenir en arrière est immédiat",
     "low_storage_on": "Activé : ne garde qu'une petite fenêtre de la vidéo. Revenir en arrière la télécharge à nouveau, avec une courte pause de temps en temps",
     "nothing_cached": "Aucune vidéo lue récemment sur cet appareil",
     "nothing_to_clear": "Rien à effacer pour le moment",
@@ -1700,6 +1700,8 @@
     "page_storage": "Stockage et téléchargements",
     "page_storage_summary": "Vidéos lues récemment, images et aperçus, et espace libre",
     "page_subtitles_summary_online": "{style}, et sous-titres en ligne",
+    "page_tv_home": "Écran d'accueil de la TV",
+    "page_tv_home_summary": "Lire ensuite, et des rangées avec les nouveautés de vos discussions favorites",
     "playback": "Lecture",
     "privacy": "Confidentialité",
     "privacy_computer": "Ce qui reste sur cet ordinateur et les services que TMPlayer contacte",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "La molette de la souris avance et recule",
     "wheel_seeks_off": "La molette règle le volume ; Shift et la molette sautent de 10 s",
     "wheel_seeks_on": "La molette saute de 10 s ; Shift et la molette règlent le volume",
-    "wifi_only": "Télécharger uniquement en Wi-Fi",
+    "wifi_only": "Wi-Fi uniquement",
     "wifi_only_off": "Désactivé : une grosse vidéo vous prévient une fois avant de démarrer en données mobiles",
-    "wifi_only_on": "Les vidéos non téléchargées ne s'ouvriront pas en données mobiles"
+    "wifi_only_on": "Les vidéos non téléchargées ne se lisent pas en données mobiles, et les téléchargements attendent le Wi-Fi"
   },
   "setup": {
     "appearance_body": "Choisissez un thème et la taille de l'affichage. L'écran change au fil de vos choix, pour que vous voyiez le résultat.",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "Sans limite",
     "mobile_no_limits_detail": "Les vidéos sont chargées jusqu'à la fin et les téléchargements démarrent tout de suite, quelle que soit la connexion",
     "mobile_save": "Économiser les données mobiles",
-    "mobile_save_detail": "Avec les données mobiles, une vidéo est chargée quelques minutes à l'avance, et les téléchargements attendent le Wi-Fi",
+    "mobile_save_detail": "En données mobiles, une vidéo n'est récupérée que quelques minutes à l'avance, donc arrêter tôt ne gaspille rien",
     "mobile_title": "Données mobiles",
     "next": "Suivant",
     "performance_body": "Sur un appareil plus lent, des images plus légères et moins d'animations gardent l'application rapide. La différence se voit sur l'Accueil et pendant le défilement.",
@@ -1881,8 +1883,8 @@
     "storage_body": "Les grosses vidéos prennent beaucoup de place. Le mode stockage limité les lit en streaming sans garder le fichier entier sur cet appareil.",
     "storage_low": "Mode stockage limité",
     "storage_low_detail": "Ne garde que la partie autour de votre position. Revenir en arrière la retélécharge.",
-    "storage_normal": "Garder ce qui est lu",
-    "storage_normal_detail": "Les vidéos sont gardées pendant la lecture, revenir en arrière est immédiat",
+    "storage_normal": "Garder les vidéos entières",
+    "storage_normal_detail": "Les vidéos que vous lisez restent entières dans Lues récemment, revenir en arrière est immédiat",
     "storage_title": "Stockage"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "Le numéro utilisé par votre compte Telegram, avec son indicatif de pays.",
     "phone_label": "Numéro de téléphone",
     "phone_title": "Votre numéro de téléphone",
-    "qr_body": "Sur votre téléphone, ouvrez Telegram, allez dans Paramètres, puis Appareils, puis Connecter un appareil de bureau, et pointez-le vers ce code.",
     "qr_label": "QR code de connexion Telegram",
     "qr_title": "Connexion à Telegram",
     "resend": "L'envoyer autrement",

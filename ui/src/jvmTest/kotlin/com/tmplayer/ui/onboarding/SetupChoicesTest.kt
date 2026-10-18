@@ -68,6 +68,10 @@ class SetupChoicesTest {
         assertFalse(settings.trickplay.first())
         SetupChoice.SaveData.applyTo(settings, posters = null)
         assertTrue(settings.saveMobileData.first())
+        // Wi-Fi only is left as it was: it would stop streaming on mobile data altogether.
+        assertFalse(settings.wifiOnlyDownloads.first())
+        settings.setWifiOnlyDownloads(true)
+        SetupChoice.SaveData.applyTo(settings, posters = null)
         assertTrue(settings.wifiOnlyDownloads.first())
         SetupChoice.NoLimits.applyTo(settings, posters = null)
         assertFalse(settings.saveMobileData.first())

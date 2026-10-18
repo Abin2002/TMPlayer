@@ -189,10 +189,11 @@ import kotlinx.coroutines.withContext
 /**
  * The pages Settings is split into, each opened from a row of the category list. Named in code
  * rather than by index, so a caller can open one directly and get back to it after About or the
- * cached videos. [Gestures] is a phone's alone; a television never shows its row. [SetupChoices]
+ * cached videos. [Gestures] is a phone's alone; a television never shows its row. [TvHome] is the
+ * other way round, shown only where the Android TV home screen has Play next or channels. [SetupChoices]
  * gathers the setup's answers (SetupChoicesList), each with a way to the page it also lives on.
  */
-enum class SettingsPage { SetupChoices, Appearance, Playback, Subtitles, Gestures, Library, Storage, Lock, About }
+enum class SettingsPage { SetupChoices, Appearance, Playback, Subtitles, Gestures, Library, TvHome, Storage, Lock, About }
 
 /**
  * Focus for a row in a lazy list, which exists only once the list has been measured: a frame
@@ -421,6 +422,7 @@ fun SettingsScreen(
         SettingsPage.Subtitles -> s.settingsSubtitles
         SettingsPage.Gestures -> s.settingsPageGestures
         SettingsPage.Library -> s.settingsLibrary
+        SettingsPage.TvHome -> s.settingsPageTvHome
         SettingsPage.Storage -> s.settingsPageStorage
         SettingsPage.Lock -> s.lockTitle
         SettingsPage.About -> s.settingsPageAbout
@@ -831,43 +833,6 @@ fun SettingsScreen(
                         },
                     )
                 }
-                // The Android TV home screen's "Play next" row. Only where there is one: a phone, a Fire TV
-                // and a Fire tablet have none, and a switch for it there would do nothing.
-                if (watchNextSupported) {
-                    item {
-                        ToggleRow(
-                            title = s.settingsWatchNext,
-                            subtitle = if (watchNextOn) s.settingsWatchNextOn else s.settingsWatchNextOff,
-                            icon = TmIcons.Home,
-                            checked = watchNextOn,
-                            onToggle = {
-                                val turningOff = watchNextOn
-                                scope.launch {
-                                    settings.setWatchNext(!turningOff)
-                                    // Off means off: what was already put on the home screen comes back out.
-                                    if (turningOff) {
-                                        withContext(Dispatchers.IO) { runCatching { WatchNextPublisher.clearAll(context) } }
-                                    }
-                                }
-                            },
-                        )
-                    }
-                }
-                // TMPlayer's own rows of cards on the TV home screen. Only where the launcher has
-                // channels, which rules out phones and Fire TV.
-                if (tvChannelsSupported) {
-                    item {
-                        ToggleRow(
-                            title = s.settingsTvChannels,
-                            subtitle = if (tvChannelsOn) s.settingsTvChannelsOn else s.settingsTvChannelsOff,
-                            icon = TmIcons.Home,
-                            checked = tvChannelsOn,
-                            // Turning it off takes the channels away (TvHomeChannels follows the
-                            // setting); turning it on fills them at the next refresh of Home.
-                            onToggle = { scope.launch { settings.setTvChannels(!tvChannelsOn) } },
-                        )
-                    }
-                }
                 // The one player timing that means the same with a remote as with a thumb.
                 item {
                     val choices = TouchPrefs.TIMEOUT_CHOICES_MS
@@ -1155,6 +1120,51 @@ fun SettingsScreen(
                     onEditKey = { editingTmdbKey = true },
                     toggleModifier = Modifier.jumpTarget(jumps.getValue(SetupStep.Posters)),
                 )
+            }
+
+            // What TMPlayer puts on the Android TV home screen, a page of its own rather than two rows
+            // in Playback: neither changes how a video plays. Its category row shows only where the
+            // launcher has one of the two (see the list below).
+            SettingsPage.TvHome -> {
+                // The Android TV home screen's "Play next" row. Only where there is one: a phone, a Fire TV
+                // and a Fire tablet have none, and a switch for it there would do nothing.
+                if (watchNextSupported) {
+                    item {
+                        ToggleRow(
+                            title = s.settingsWatchNext,
+                            modifier = Modifier.focusRequester(landing),
+                            subtitle = if (watchNextOn) s.settingsWatchNextOn else s.settingsWatchNextOff,
+                            icon = TmIcons.Home,
+                            checked = watchNextOn,
+                            onToggle = {
+                                val turningOff = watchNextOn
+                                scope.launch {
+                                    settings.setWatchNext(!turningOff)
+                                    // Off means off: what was already put on the home screen comes back out.
+                                    if (turningOff) {
+                                        withContext(Dispatchers.IO) { runCatching { WatchNextPublisher.clearAll(context) } }
+                                    }
+                                }
+                            },
+                        )
+                    }
+                }
+                // TMPlayer's own rows of cards on the TV home screen. Only where the launcher has
+                // channels, which rules out phones and Fire TV.
+                if (tvChannelsSupported) {
+                    item {
+                        ToggleRow(
+                            title = s.settingsTvChannels,
+                            modifier = if (watchNextSupported) Modifier else Modifier.focusRequester(landing),
+                            subtitle = if (tvChannelsOn) s.settingsTvChannelsOn else s.settingsTvChannelsOff,
+                            icon = TmIcons.Home,
+                            checked = tvChannelsOn,
+                            // Turning it off takes the channels away (TvHomeChannels follows the
+                            // setting); turning it on fills them at the next refresh of Home.
+                            onToggle = { scope.launch { settings.setTvChannels(!tvChannelsOn) } },
+                        )
+                    }
+                }
             }
 
             SettingsPage.Storage -> {
@@ -1629,6 +1639,19 @@ fun SettingsScreen(
                         modifier = Modifier.focusRequester(categoryFocus.getValue(SettingsPage.Library)),
                         onClick = { showPage(SettingsPage.Library) },
                     )
+                }
+                // Android TV and Google TV only: a phone, a Fire TV and a Fire tablet have neither a
+                // Play next row nor channels, and a page of switches that do nothing there is noise.
+                if (watchNextSupported || tvChannelsSupported) {
+                    item {
+                        ActionRow(
+                            title = titleOf(SettingsPage.TvHome),
+                            subtitle = s.settingsPageTvHomeSummary,
+                            icon = TmIcons.Home,
+                            modifier = Modifier.focusRequester(categoryFocus.getValue(SettingsPage.TvHome)),
+                            onClick = { showPage(SettingsPage.TvHome) },
+                        )
+                    }
                 }
                 item {
                     ActionRow(

@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, one {Oczekiwanie na Wi-Fi} few {# pobrania czekają na Wi-Fi} many {# pobrań czeka na Wi-Fi} other {# pobrania czeka na Wi-Fi}}",
     "paused": "{count, plural, one {Pobieranie wstrzymane} few {# pobrania wstrzymane} many {# pobrań wstrzymanych} other {# pobrania wstrzymanego}}",
     "saving": "{count, plural, one {Zapisywanie w Pobranych} few {Zapisywanie # filmów w Pobranych} many {Zapisywanie # filmów w Pobranych} other {Zapisywanie # filmu w Pobranych}}",
-    "start_on_wifi": "Rozpoczną się po połączeniu z Wi-Fi. Zmienisz to w Ustawieniach.",
+    "start_on_wifi": "Opcja Tylko Wi-Fi jest włączona, więc rozpoczną się po połączeniu z Wi-Fi. Zmienisz to w Ustawieniach.",
     "starting": "{count, plural, one {Rozpoczynanie pobierania} few {Rozpoczynanie # pobrań} many {Rozpoczynanie # pobrań} other {Rozpoczynanie # pobrania}}",
     "waiting": "{count, plural, one {Oczekuje: #} few {Oczekuje: #} many {Oczekuje: #} other {Oczekuje: #}}",
     "waiting_to_start": "Oczekiwanie na start"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "Wzmocnienie głośności włączone",
     "volume_boost_on_detail": "Włączone: ciche dialogi są podbite, głośne sceny przytłumione",
     "watch_again": "Obejrzyj ponownie",
-    "wifi_only": "Ten film nie jest jeszcze pobrany, a TMPlayer jest ustawiony na korzystanie tylko z Wi-Fi. Połącz się z Wi-Fi lub wyłącz to w Ustawieniach."
+    "wifi_only": "Ten film nie jest jeszcze pobrany, a opcja Tylko Wi-Fi jest włączona, więc nie odtworzy się na danych komórkowych. Połącz się z Wi-Fi lub wyłącz Tylko Wi-Fi w Ustawieniach."
   },
   "search": {
     "and_more": "{count, plural, one {i # więcej} few {i # więcej} many {i # więcej} other {i # więcej}}",
@@ -1673,7 +1673,7 @@
     "lists": "Listy",
     "low_storage": "Tryb oszczędzania miejsca",
     "low_storage_detail": "Strumieniuj film, trzymając na urządzeniu tylko jego małą część",
-    "low_storage_off": "Wyłączone: strumieniowany film zostaje na urządzeniu do następnego",
+    "low_storage_off": "Wyłączone: odtwarzane filmy zostają w całości w Ostatnio odtwarzanych, więc cofanie działa od razu",
     "low_storage_on": "Włączone: trzyma tylko mały fragment filmu. Przewinięcie wstecz pobiera go ponownie, czasem z krótką przerwą",
     "nothing_cached": "Na tym urządzeniu nie ma ostatnio odtwarzanych nagrań",
     "nothing_to_clear": "Nie ma teraz czego czyścić",
@@ -1700,6 +1700,8 @@
     "page_storage": "Pamięć i pobrane",
     "page_storage_summary": "Ostatnio odtwarzane nagrania, obrazki i podglądy oraz wolne miejsce",
     "page_subtitles_summary_online": "{style} i napisy online",
+    "page_tv_home": "Ekran główny telewizora",
+    "page_tv_home_summary": "Odtwarzaj dalej i rzędy z nowościami z czatów z gwiazdką",
     "playback": "Odtwarzanie",
     "privacy": "Prywatność",
     "privacy_computer": "Co zostaje na tym komputerze i z jakimi usługami łączy się TMPlayer",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "Kółko myszy przewija",
     "wheel_seeks_off": "Kółko zmienia głośność; Shift i kółko przewijają o 10 s",
     "wheel_seeks_on": "Kółko przewija o 10 s; Shift i kółko zmieniają głośność",
-    "wifi_only": "Pobieraj tylko przez Wi-Fi",
+    "wifi_only": "Tylko Wi-Fi",
     "wifi_only_off": "Wyłączone: duży film ostrzeże Cię raz, zanim zacznie się na danych komórkowych",
-    "wifi_only_on": "Filmy, których nie pobrano, nie otworzą się na danych komórkowych"
+    "wifi_only_on": "Filmy, których nie pobrano, nie odtworzą się na danych komórkowych, a pobieranie czeka na Wi-Fi"
   },
   "setup": {
     "appearance_body": "Wybierz motyw i wielkość elementów. Ekran zmienia się razem z wyborem, więc od razu widać efekt.",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "Bez limitów",
     "mobile_no_limits_detail": "Filmy są pobierane do końca, a pobieranie rusza od razu, przy każdym połączeniu",
     "mobile_save": "Oszczędzaj dane komórkowe",
-    "mobile_save_detail": "Na danych komórkowych film jest pobierany kilka minut do przodu, a pobieranie czeka na Wi-Fi",
+    "mobile_save_detail": "Na danych komórkowych film jest pobierany tylko kilka minut naprzód, więc wcześniejsze przerwanie niczego nie marnuje",
     "mobile_title": "Dane komórkowe",
     "next": "Dalej",
     "performance_body": "Na wolniejszym urządzeniu lżejsze obrazy i mniej animacji utrzymują szybkość aplikacji. Różnicę widać na ekranie Start i podczas przewijania.",
@@ -1881,8 +1883,8 @@
     "storage_body": "Duże filmy zajmują dużo miejsca. Tryb oszczędzania miejsca odtwarza je strumieniowo, bez trzymania całego pliku na tym urządzeniu.",
     "storage_low": "Tryb oszczędzania miejsca",
     "storage_low_detail": "Zachowuje tylko fragment wokół bieżącego miejsca. Cofnięcie pobiera go ponownie.",
-    "storage_normal": "Zachowuj to, co grane",
-    "storage_normal_detail": "Filmy są zachowywane podczas odtwarzania, więc cofanie działa od razu",
+    "storage_normal": "Zachowuj całe filmy",
+    "storage_normal_detail": "Odtwarzane filmy zostają w całości w Ostatnio odtwarzanych, więc cofanie działa od razu",
     "storage_title": "Pamięć"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "Numer, którego używa Twoje konto Telegram, z numerem kierunkowym kraju.",
     "phone_label": "Numer telefonu",
     "phone_title": "Twój numer telefonu",
-    "qr_body": "Na telefonie otwórz Telegram, przejdź do Ustawień, potem do Urządzeń, następnie Połącz urządzenie stacjonarne i skieruj aparat na ten kod.",
     "qr_label": "Kod QR do logowania w Telegramie",
     "qr_title": "Zaloguj się do Telegrama",
     "resend": "Wyślij w inny sposób",
@@ -2230,7 +2231,7 @@
     "up_to_date": "TMPlayer jest aktualny",
     "update_now": "Aktualizuj teraz",
     "verifying": "Sprawdzanie pobranego pliku",
-    "waits_for_wifi": "W Ustawieniach włączono tylko Wi-Fi, więc aktualizacja czeka na Wi-Fi.",
+    "waits_for_wifi": "W Ustawieniach włączono opcję Tylko Wi-Fi, więc aktualizacja czeka na Wi-Fi.",
     "you_have": "Masz {version}."
   },
   "watched": {

@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, one {Wi-Fi bekleniyor} other {# indirme Wi-Fi bekliyor}}",
     "paused": "{count, plural, one {İndirme duraklatıldı} other {# indirme duraklatıldı}}",
     "saving": "{count, plural, one {İndirilenler'e kaydediliyor} other {# video İndirilenler'e kaydediliyor}}",
-    "start_on_wifi": "Wi-Fi'da başlarlar. Bunu Ayarlar'dan değiştirebilirsin.",
+    "start_on_wifi": "Yalnızca Wi-Fi açık, bu yüzden Wi-Fi'da başlarlar. Bunu Ayarlar'dan değiştirebilirsin.",
     "starting": "{count, plural, one {İndirme başlatılıyor} other {# indirme başlatılıyor}}",
     "waiting": "{count, plural, one {# bekliyor} other {# bekliyor}}",
     "waiting_to_start": "Başlamayı bekliyor"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "Ses artırma açık",
     "volume_boost_on_detail": "Açık: kısık konuşmalar yükselir, gürültülü sahneler bastırılır",
     "watch_again": "Tekrar izle",
-    "wifi_only": "Bu video henüz indirilmedi ve TMPlayer yalnızca Wi-Fi kullanacak şekilde ayarlı. Wi-Fi'a bağlan ya da Ayarlar'dan bunu kapat."
+    "wifi_only": "Bu video henüz indirilmedi ve Yalnızca Wi-Fi açık, bu yüzden mobil veride oynatılmaz. Wi-Fi'a bağlan ya da Ayarlar'dan Yalnızca Wi-Fi'ı kapat."
   },
   "search": {
     "and_more": "{count, plural, one {ve # tane daha} other {ve # tane daha}}",
@@ -1673,7 +1673,7 @@
     "lists": "Listeler",
     "low_storage": "Düşük depolama modu",
     "low_storage_detail": "Videoyu akıt, cihazda yalnızca küçük bir kısmını tut",
-    "low_storage_off": "Kapalı: akıtılan bir video bir sonrakine kadar cihazda kalır",
+    "low_storage_off": "Kapalı: oynattığın videolar Son oynatılanlar'da tam olarak kalır, geri sarmak anında olur",
     "low_storage_on": "Açık: videonun yalnızca küçük bir bölümünü tutar. Geri atlamak o kısmı yeniden indirir, arada bir kısa bir duraklamayla",
     "nothing_cached": "Bu cihazda son oynatılan video yok",
     "nothing_to_clear": "Şu anda temizlenecek bir şey yok",
@@ -1700,6 +1700,8 @@
     "page_storage": "Depolama ve indirmeler",
     "page_storage_summary": "Son oynatılan videolar, resimler ve önizlemeler, boş alan",
     "page_subtitles_summary_online": "{style} ve çevrimiçi altyazılar",
+    "page_tv_home": "TV ana ekranı",
+    "page_tv_home_summary": "Sıradaki ve yıldızlı sohbetlerindeki yeniliklerin satırları",
     "playback": "Oynatma",
     "privacy": "Gizlilik",
     "privacy_computer": "Bu bilgisayarda neyin kaldığı ve TMPlayer'ın hangi servislerle iletişim kurduğu",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "Fare tekerleği atlatır",
     "wheel_seeks_off": "Tekerlek sesi değiştirir; Shift ve tekerlek 10 sn atlar",
     "wheel_seeks_on": "Tekerlek 10 sn atlar; Shift ve tekerlek sesi değiştirir",
-    "wifi_only": "Yalnızca Wi-Fi ile indir",
+    "wifi_only": "Yalnızca Wi-Fi",
     "wifi_only_off": "Kapalı: büyük bir video mobil veride başlamadan önce bir kez uyarır",
-    "wifi_only_on": "İndirmediğin videolar mobil veride açılmaz"
+    "wifi_only_on": "İndirmediğin videolar mobil veride oynatılmaz, indirmeler de Wi-Fi'ı bekler"
   },
   "setup": {
     "appearance_body": "Bir tema ve öğelerin ne kadar büyük çizileceğini seç. Sen seçtikçe ekran değişir, böylece sonucu görebilirsin.",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "Sınır yok",
     "mobile_no_limits_detail": "Her bağlantıda videolar sonuna kadar getirilir ve indirmeler hemen başlar",
     "mobile_save": "Mobil veriden tasarruf et",
-    "mobile_save_detail": "Mobil veride video birkaç dakika ileriye kadar getirilir, indirmeler Wi-Fi'ı bekler",
+    "mobile_save_detail": "Mobil veride video yalnızca birkaç dakika ileriye kadar alınır, böylece erken durdurmak hiçbir şeyi boşa harcamaz",
     "mobile_title": "Mobil veri",
     "next": "İleri",
     "performance_body": "Daha yavaş bir cihazda daha hafif görseller ve daha az hareket uygulamayı hızlı tutar. Fark Ana sayfada ve sararken görünür.",
@@ -1881,8 +1883,8 @@
     "storage_body": "Büyük videolar çok yer kaplar. Düşük depolama modu, dosyanın tamamını bu cihazda tutmadan onları akışla oynatır.",
     "storage_low": "Düşük depolama modu",
     "storage_low_detail": "Yalnızca bulunduğunuz yerin çevresini saklar. Geri sarınca o kısım yeniden indirilir.",
-    "storage_normal": "Oynatılanı sakla",
-    "storage_normal_detail": "Videolar oynatılırken saklanır, geri sarmak anında olur",
+    "storage_normal": "Videoların tamamını sakla",
+    "storage_normal_detail": "Oynattığın videolar Son oynatılanlar'da tam olarak kalır, geri sarmak anında olur",
     "storage_title": "Depolama"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "Telegram hesabının kullandığı numara, ülke koduyla birlikte.",
     "phone_label": "Telefon numarası",
     "phone_title": "Telefon numaran",
-    "qr_body": "Telefonunda Telegram'ı aç, Ayarlar'a, sonra Cihazlar'a, sonra Masaüstü Cihazı Bağla'ya git ve bu koda tut.",
     "qr_label": "Telegram giriş QR kodu",
     "qr_title": "Telegram'da oturum aç",
     "resend": "Başka bir yolla gönder",
@@ -2230,7 +2231,7 @@
     "up_to_date": "TMPlayer güncel",
     "update_now": "Şimdi güncelle",
     "verifying": "İndirme denetleniyor",
-    "waits_for_wifi": "Ayarlar'da yalnızca Wi-Fi açık, bu yüzden güncelleme Wi-Fi'ı bekler.",
+    "waits_for_wifi": "Ayarlar'da Yalnızca Wi-Fi açık, bu yüzden güncelleme Wi-Fi'ı bekler.",
     "you_have": "{version} sürümündesin."
   },
   "watched": {

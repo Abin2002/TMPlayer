@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, other {# unduhan menunggu Wi-Fi}}",
     "paused": "{count, plural, other {# unduhan dijeda}}",
     "saving": "{count, plural, other {Menyimpan # video ke Unduhan}}",
-    "start_on_wifi": "Dimulai lewat Wi-Fi. Ubah di Pengaturan.",
+    "start_on_wifi": "Hanya Wi-Fi aktif, jadi unduhan dimulai lewat Wi-Fi. Ubah di Pengaturan.",
     "starting": "{count, plural, other {Memulai # unduhan}}",
     "waiting": "{count, plural, other {# menunggu}}",
     "waiting_to_start": "Menunggu dimulai"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "Penguat volume aktif",
     "volume_boost_on_detail": "Aktif: suara pelan diangkat, adegan keras ditahan",
     "watch_again": "Tonton lagi",
-    "wifi_only": "Video ini belum diunduh, dan TMPlayer diatur hanya memakai Wi-Fi. Sambungkan ke Wi-Fi, atau matikan itu di Pengaturan."
+    "wifi_only": "Video ini belum diunduh, dan Hanya Wi-Fi aktif, jadi video ini tidak diputar lewat data seluler. Sambungkan ke Wi-Fi, atau matikan Hanya Wi-Fi di Pengaturan."
   },
   "search": {
     "and_more": "{count, plural, other {dan # lainnya}}",
@@ -1673,7 +1673,7 @@
     "lists": "Daftar",
     "low_storage": "Mode penyimpanan rendah",
     "low_storage_detail": "Streaming video sambil menyimpan sebagian kecilnya saja di perangkat",
-    "low_storage_off": "Mati: video yang di-streaming tetap di perangkat sampai video berikutnya",
+    "low_storage_off": "Mati: video yang kamu putar tetap utuh di Baru diputar, jadi mundur langsung jalan",
     "low_storage_on": "Aktif: hanya menyimpan sebagian kecil video. Menggeser mundur akan mengunduhnya lagi, sesekali dengan jeda singkat",
     "nothing_cached": "Tidak ada video yang baru diputar di perangkat ini",
     "nothing_to_clear": "Saat ini tidak ada yang bisa dihapus",
@@ -1700,6 +1700,8 @@
     "page_storage": "Penyimpanan dan unduhan",
     "page_storage_summary": "Video yang baru diputar, gambar dan pratinjau, dan ruang kosong",
     "page_subtitles_summary_online": "{style}, dan subtitle online",
+    "page_tv_home": "Layar utama TV",
+    "page_tv_home_summary": "Putar berikutnya, dan baris berisi yang baru di chat berbintang",
     "playback": "Pemutaran",
     "privacy": "Privasi",
     "privacy_computer": "Apa yang tersimpan di komputer ini dan layanan apa saja yang dihubungi TMPlayer",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "Roda mouse menggeser",
     "wheel_seeks_off": "Roda mengubah volume; Shift dan roda melompat 10 dtk",
     "wheel_seeks_on": "Roda melompat 10 dtk; Shift dan roda mengubah volume",
-    "wifi_only": "Unduh hanya lewat Wi-Fi",
+    "wifi_only": "Hanya Wi-Fi",
     "wifi_only_off": "Mati: video besar memberi peringatan sekali sebelum dimulai lewat data seluler",
-    "wifi_only_on": "Video yang belum kamu unduh tidak akan terbuka lewat data seluler"
+    "wifi_only_on": "Video yang belum kamu unduh tidak akan diputar lewat data seluler, dan unduhan menunggu Wi-Fi"
   },
   "setup": {
     "appearance_body": "Pilih tema dan seberapa besar tampilannya. Layar langsung berubah saat kamu memilih, jadi kamu bisa melihat hasilnya.",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "Tanpa batas",
     "mobile_no_limits_detail": "Video diambil sampai habis dan unduhan langsung dimulai, di koneksi apa pun",
     "mobile_save": "Hemat data seluler",
-    "mobile_save_detail": "Di data seluler, video diambil beberapa menit ke depan saja, dan unduhan menunggu Wi-Fi",
+    "mobile_save_detail": "Lewat data seluler, video hanya diambil beberapa menit ke depan, jadi berhenti lebih awal tidak membuang apa pun",
     "mobile_title": "Data seluler",
     "next": "Lanjut",
     "performance_body": "Di perangkat yang lebih lambat, gambar lebih ringan dan gerakan lebih sedikit membuat aplikasi tetap cepat. Bedanya terasa di Beranda dan saat menggeser.",
@@ -1881,8 +1883,8 @@
     "storage_body": "Video besar memakan banyak ruang. Mode penyimpanan rendah memutarnya secara streaming tanpa menyimpan seluruh file di perangkat ini.",
     "storage_low": "Mode penyimpanan rendah",
     "storage_low_detail": "Hanya menyimpan bagian di sekitar posisi Anda. Mundur akan mengunduhnya lagi.",
-    "storage_normal": "Simpan yang diputar",
-    "storage_normal_detail": "Video disimpan saat diputar, jadi mundur langsung jalan",
+    "storage_normal": "Simpan video utuh",
+    "storage_normal_detail": "Video yang kamu putar tetap utuh di Baru diputar, jadi mundur langsung jalan",
     "storage_title": "Penyimpanan"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "Nomor yang dipakai akun Telegram-mu, beserta kode negaranya.",
     "phone_label": "Nomor telepon",
     "phone_title": "Nomor teleponmu",
-    "qr_body": "Di ponselmu, buka Telegram, masuk ke Pengaturan, lalu Perangkat, lalu Tautkan Perangkat Desktop, dan arahkan ke kode ini.",
     "qr_label": "Kode QR masuk Telegram",
     "qr_title": "Masuk ke Telegram",
     "resend": "Kirim lewat cara lain",

@@ -552,8 +552,8 @@ private fun StorageArt(choice: SetupChoice, modifier: Modifier) {
 /**
  * The mobile data step's picture, drawn like the storage step's. Over a video's length, the part
  * fetched while it plays on mobile data: a short stretch ahead of the playhead when saving data,
- * or everything to the end without limits. Under it, a download: waiting for Wi-Fi (an empty bar
- * behind the Wi-Fi sign), or under way.
+ * or everything to the end without limits. Downloads are not in it: neither answer holds them back
+ * (that is Wi-Fi only, in Settings), so a second bar would draw a difference there is not.
  */
 @Composable
 private fun MobileDataArt(choice: SetupChoice, modifier: Modifier) {
@@ -579,22 +579,6 @@ private fun MobileDataArt(choice: SetupChoice, modifier: Modifier) {
                 val head = Offset(size.width * 0.40f, size.height / 2)
                 drawCircle(ground, radius = size.height * 0.42f, center = head)
                 drawCircle(accent, radius = size.height * 0.30f, center = head)
-            }
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                if (save) TmIcons.Wifi else TmIcons.Download,
-                contentDescription = null,
-                tint = text,
-                modifier = Modifier.size(22.dp),
-            )
-            Spacer(Modifier.width(8.dp))
-            Canvas(Modifier.weight(1f).height(26.dp).mirrored()) {
-                val h = size.height * 0.42f
-                val y = (size.height - h) / 2
-                val r = CornerRadius(h / 2, h / 2)
-                drawRoundRect(track, Offset(0f, y), Size(size.width, h), r)
-                if (!save) drawRoundRect(Caution, Offset(0f, y), Size(size.width * 0.7f, h), r)
             }
         }
     }

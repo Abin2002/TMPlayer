@@ -1099,7 +1099,7 @@
     "held_for_wifi": "{count, plural, one {Waiting for Wi-Fi} other {# downloads waiting for Wi-Fi}}",
     "paused": "{count, plural, one {Download paused} other {# downloads paused}}",
     "saving": "{count, plural, one {Saving to Downloads} other {Saving # videos to Downloads}}",
-    "start_on_wifi": "They start on Wi-Fi. Change this in Settings.",
+    "start_on_wifi": "Wi-Fi only is on, so they start on Wi-Fi. Change this in Settings.",
     "starting": "{count, plural, one {Starting a download} other {Starting # downloads}}",
     "waiting": "{count, plural, one {# waiting} other {# waiting}}",
     "waiting_to_start": "Waiting to start"
@@ -1478,7 +1478,7 @@
     "volume_boost_on": "Volume boost on",
     "volume_boost_on_detail": "On: quiet speech lifted, loud scenes held back",
     "watch_again": "Watch again",
-    "wifi_only": "This video isn't downloaded yet, and TMPlayer is set to use Wi-Fi only. Connect to Wi-Fi, or turn that off in Settings."
+    "wifi_only": "This video isn't downloaded yet, and Wi-Fi only is on, so it won't play on mobile data. Connect to Wi-Fi, or turn Wi-Fi only off in Settings."
   },
   "search": {
     "and_more": "{count, plural, one {and # more} other {and # more}}",
@@ -1673,7 +1673,7 @@
     "lists": "Lists",
     "low_storage": "Low storage mode",
     "low_storage_detail": "Stream a video while keeping only a small part of it on the device",
-    "low_storage_off": "Off: a streamed video stays on the device until the next one",
+    "low_storage_off": "Off: videos you play stay whole in Recently played, so going back is instant",
     "low_storage_on": "On: keeps only a small window of the video. Seeking back downloads it again, with a short pause now and then",
     "nothing_cached": "There are no recently played videos on this device",
     "nothing_to_clear": "There is nothing to clear right now",
@@ -1700,6 +1700,8 @@
     "page_storage": "Storage and downloads",
     "page_storage_summary": "Recently played videos, pictures and previews, and free space",
     "page_subtitles_summary_online": "{style}, and online subtitles",
+    "page_tv_home": "TV home screen",
+    "page_tv_home_summary": "Play next, and rows of what is new in your starred chats",
     "playback": "Playback",
     "privacy": "Privacy",
     "privacy_computer": "What stays on this computer and which services TMPlayer contacts",
@@ -1826,9 +1828,9 @@
     "wheel_seeks": "Mouse wheel seeks",
     "wheel_seeks_off": "The wheel changes the volume; Shift and the wheel skip 10 s",
     "wheel_seeks_on": "The wheel skips 10 s; Shift and the wheel change the volume",
-    "wifi_only": "Only download over Wi-Fi",
+    "wifi_only": "Wi-Fi only",
     "wifi_only_off": "Off: a large video warns you once before it starts on mobile data",
-    "wifi_only_on": "Videos you haven't downloaded won't open on mobile data"
+    "wifi_only_on": "Videos you haven't downloaded won't play on mobile data, and downloads wait for Wi-Fi"
   },
   "setup": {
     "appearance_body": "Pick a theme and how large things are drawn. The screen changes as you choose, so you can see the result.",
@@ -1858,7 +1860,7 @@
     "mobile_no_limits": "No limits",
     "mobile_no_limits_detail": "Videos are fetched to the end and downloads start at once, on any connection",
     "mobile_save": "Save mobile data",
-    "mobile_save_detail": "On mobile data, a video is fetched a few minutes ahead, and downloads wait for Wi-Fi",
+    "mobile_save_detail": "On mobile data, a video is fetched only a few minutes ahead, so stopping early wastes nothing",
     "mobile_title": "Mobile data",
     "next": "Next",
     "performance_body": "On a slower device, lighter pictures and less motion keep the app quick. The difference shows on Home and while seeking.",
@@ -1881,8 +1883,8 @@
     "storage_body": "Big videos take a lot of room. Low storage mode streams them without keeping the whole file on this device.",
     "storage_low": "Low storage mode",
     "storage_low_detail": "Keeps only the part around where you are. Going back downloads it again.",
-    "storage_normal": "Keep what plays",
-    "storage_normal_detail": "Videos are kept as they play, so going back is instant",
+    "storage_normal": "Keep whole videos",
+    "storage_normal_detail": "Videos you play stay whole in Recently played, so going back is instant",
     "storage_title": "Storage"
   },
   "share": {
@@ -1910,7 +1912,6 @@
     "phone_body": "The number your Telegram account uses, with its country code.",
     "phone_label": "Phone number",
     "phone_title": "Your phone number",
-    "qr_body": "On your phone, open Telegram, go to Settings, then Devices, then Link Desktop Device, and point it at this code.",
     "qr_label": "Telegram login QR code",
     "qr_title": "Sign in to Telegram",
     "resend": "Send it another way",
