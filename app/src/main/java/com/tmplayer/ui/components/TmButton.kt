@@ -182,7 +182,7 @@ private fun TvFace(loading: Boolean, busyLabel: String?, content: @Composable Ro
     ButtonFace(
         loading = loading,
         busy = {
-            Spinner(TvContentColor.current)
+            BusySpinner(loading, TvContentColor.current)
             if (busyLabel != null) TvText(busyLabel)
         },
         content = content,
@@ -202,11 +202,27 @@ private fun TouchFace(
         ButtonFace(
             loading = loading,
             busy = {
-                Spinner(TouchContentColor.current)
+                BusySpinner(loading, TouchContentColor.current)
                 if (busyLabel != null) TouchText(busyLabel)
             },
             content = content,
         )
+    }
+}
+
+/**
+ * The busy face's spinner, composed only while [loading]. At rest its room is held by a blank of
+ * the same size, so the button keeps the width of its wider face, but nothing animates: an
+ * indeterminate indicator left composed under an invisible face asks for a frame every vsync,
+ * which on a screen full of buttons is a redraw that never stops (and a 1 GB stick's battery and
+ * smoothness spent on nothing).
+ */
+@Composable
+private fun BusySpinner(loading: Boolean, color: Color) {
+    if (loading) {
+        Spinner(color)
+    } else {
+        Spacer(Modifier.size(SPINNER + 8.dp, SPINNER))
     }
 }
 
