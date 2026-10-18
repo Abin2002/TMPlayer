@@ -80,9 +80,16 @@ fun main(args: Array<String>) {
     // TDLib's macOS build needs OpenSSL 3, which the app carries (see MacOpenSsl). A failure here
     // shows as TDLib's own load error at sign in, which names the library.
     runCatching { MacOpenSsl.preload() }
-    // A second launch hands its arguments (later, tg: links) to the first and leaves.
+    // A second launch hands its arguments (a pressed Windows toast's tmplayer: link, later tg:
+    // links) to the first and leaves.
     var raise: () -> Unit = {}
-    if (!SingleInstance.acquire(args.toList()) { java.awt.EventQueue.invokeLater { raise() } }) return
+    val handedOver: (List<String>) -> Unit = { forwarded ->
+        java.awt.EventQueue.invokeLater {
+            raise()
+            com.tmplayer.desktop.os.ToastPresses.handle(forwarded)
+        }
+    }
+    if (!SingleInstance.acquire(args.toList(), handedOver)) return
     // Only the first instance, so a second launch never rotates the log of the one running.
     DesktopLog.install(java.io.File(DesktopPaths.dataDir, "logs"))
     // Until the window is up, an error ends the launch out loud instead of leaving a process with
@@ -230,6 +237,7 @@ fun main(args: Array<String>) {
                 }
                 DesktopServices.selfUpdate.quit = quit
                 shell.quit = quit
+                shell.minimize = if (undecorated) ({ windowState.isMinimized = true }) else null
                 // Transfers show outside the window too, once there is a window for the taskbar bar.
                 LaunchedEffect(Unit) {
                     DesktopStorage.closePlayer = { shell.closePlayer() }

@@ -37,6 +37,7 @@ import java.util.concurrent.Executors
  */
 internal class WindowsNotifications(
     private val window: () -> Window?,
+    private val onOpenDownloads: () -> Unit = {},
 ) : TransferNotifier, DockProgress, DesktopNotices {
 
     private val worker: ExecutorService = Executors.newSingleThreadExecutor { r ->
@@ -48,6 +49,10 @@ internal class WindowsNotifications(
     private var input: Writer? = null
     private var toastsOff = false
     private val sequence = mutableMapOf<Long, Long>()
+
+    // Whether `tmplayer:` links reach this app, so a toast can carry a press (see [ToastPresses]).
+    @Volatile
+    private var pressable = false
 
     @Volatile
     private var lastTaskbar: Int? = null
@@ -100,7 +105,9 @@ internal class WindowsNotifications(
 
     override fun complete(id: Long, title: String, body: String, open: OpenTarget?) = post {
         forget(id)
-        run(WindowsToast.showDone(WindowsToast.doneXml(title, body, WindowsToast.launchUri(open))))
+        val launch = WindowsToast.launchUri(open)
+            ?: if (open == OpenTarget.DownloadsScreen && pressable) ToastPresses.register(onOpenDownloads) else null
+        run(WindowsToast.showDone(WindowsToast.doneXml(title, body, launch)))
     }
 
     override fun fail(id: Long, title: String, reason: String, retryable: Boolean) = post {
@@ -110,9 +117,15 @@ internal class WindowsNotifications(
 
     override fun cancel(id: Long) = post { forget(id) }
 
-    /** A toast that informs: a press cannot reach back into the app without an activator of its own. */
+    /**
+     * A one-off notice. Its press reaches the app through a `tmplayer:` link ([ToastPresses]); where
+     * the link could not be registered the toast only informs.
+     */
     override fun notice(title: String, body: String?, onPress: (() -> Unit)?) = post {
-        run(WindowsToast.showDone(WindowsToast.doneXml(title, body.orEmpty(), null)))
+        if (toastsOff) return@post
+        if (input == null) start()
+        val launch = if (onPress != null && pressable) ToastPresses.register(onPress) else null
+        run(WindowsToast.showDone(WindowsToast.doneXml(title, body.orEmpty(), launch)))
     }
 
     private fun forget(id: Long) {
@@ -164,6 +177,7 @@ internal class WindowsNotifications(
 
     private fun start(): Writer? {
         registerAppId()
+        pressable = registerScheme()
         return runCatching {
             val p = ProcessBuilder("powershell.exe", "-NoProfile", "-NonInteractive", "-NoLogo", "-Command", "-")
                 .redirectErrorStream(true)
@@ -193,6 +207,23 @@ internal class WindowsNotifications(
             iconPath()?.let { Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, key, "IconUri", it) }
         }.onFailure { Logger.w(TAG, "could not register the app id: ${it.message}") }
     }
+
+    /**
+     * `HKCU\Software\Classes\tmplayer`, a link scheme that starts this copy of TMPlayer.exe with
+     * the link, so a toast's press reaches the running app ([ToastPresses]). Only for the app's own
+     * launcher: a development run under java.exe registers nothing and its toasts only inform.
+     */
+    private fun registerScheme(): Boolean = runCatching {
+        val exe = ProcessHandle.current().info().command().orElse(null)?.let(::File)
+            ?.takeIf { it.name.equals("TMPlayer.exe", ignoreCase = true) && it.isFile } ?: return false
+        val key = "Software\\Classes\\${ToastPresses.SCHEME}"
+        val command = "$key\\shell\\open\\command"
+        Advapi32Util.registryCreateKey(WinReg.HKEY_CURRENT_USER, command)
+        Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, key, "", "URL:TMPlayer")
+        Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, key, "URL Protocol", "")
+        Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, command, "", "\"${exe.absolutePath}\" \"%1\"")
+        true
+    }.onFailure { Logger.w(TAG, "could not register the tmplayer: links: ${it.message}") }.getOrDefault(false)
 
     /** The icon jpackage puts beside `TMPlayer.exe`, where this is an installed copy. */
     private fun iconPath(): String? {
@@ -248,8 +279,8 @@ internal object WindowsToast {
 
     /**
      * Where pressing a completion goes. A file or folder opens through its `file:` URI, which
-     * Explorer handles with no activator of this app's own; the Downloads page cannot be reached
-     * that way, so that toast only informs.
+     * Explorer handles with no activator of this app's own. The Downloads page is reached through
+     * a `tmplayer:` link instead ([ToastPresses]), added by the notifier where it is registered.
      */
     fun launchUri(open: OpenTarget?): String? = when (open) {
         is OpenTarget.File -> File(open.path).parentFile?.toURI()?.toString()

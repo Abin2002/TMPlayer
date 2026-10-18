@@ -26,6 +26,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import com.tmplayer.desktop.os.OsInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -68,14 +69,16 @@ object GridNav {
     }
 
     /** The [NavKey] for a key press, or null for keys the grid leaves alone. */
-    fun keyFor(key: Key, ctrl: Boolean, shift: Boolean, alt: Boolean, meta: Boolean): NavKey? {
+    fun keyFor(key: Key, ctrl: Boolean, shift: Boolean, alt: Boolean, meta: Boolean, mac: Boolean = OsInfo.isMac): NavKey? {
         if (alt || shift) return null
         val command = ctrl || meta
+        // A Mac keyboard has no Home or End: Cmd+Up and Cmd+Down go to the top and the bottom.
+        val macEnds = mac && meta && !ctrl
         return when (key) {
             Key.DirectionLeft -> if (command) null else NavKey.Left
             Key.DirectionRight -> if (command) null else NavKey.Right
-            Key.DirectionUp -> if (command) null else NavKey.Up
-            Key.DirectionDown -> if (command) null else NavKey.Down
+            Key.DirectionUp -> if (macEnds) NavKey.First else if (command) null else NavKey.Up
+            Key.DirectionDown -> if (macEnds) NavKey.Last else if (command) null else NavKey.Down
             Key.MoveHome -> if (command) NavKey.First else NavKey.RowStart
             Key.MoveEnd -> if (command) NavKey.Last else NavKey.RowEnd
             Key.PageUp -> if (command) null else NavKey.PageUp

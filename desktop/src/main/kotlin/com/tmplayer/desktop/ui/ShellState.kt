@@ -341,6 +341,9 @@ class ShellState(
      */
     var quit: (() -> Unit)? = null
 
+    /** Minimises the window, set by the window where there is somewhere to minimise to (Cmd+M on a Mac). */
+    var minimize: (() -> Unit)? = null
+
     /**
      * Shortcuts that work wherever focus is, even inside a text field: Ctrl+F (Cmd+F) to search
      * the page, Ctrl+K (Cmd+K) to open or close the search across every chat, Ctrl+, (Cmd+,) for
@@ -354,6 +357,16 @@ class ShellState(
         return when {
             command && event.key == Key.Q && quit != null -> {
                 quit?.invoke()
+                true
+            }
+            // A Mac's own window keys: Cmd+W closes the window, which is the app's only one, and
+            // Cmd+M minimises it. Elsewhere the window manager has its own (Alt+F4, Super+H).
+            OsInfo.isMac && command && event.key == Key.W && quit != null -> {
+                quit?.invoke()
+                true
+            }
+            OsInfo.isMac && command && event.key == Key.M && minimize != null -> {
+                minimize?.invoke()
                 true
             }
             command && event.key == Key.K -> {

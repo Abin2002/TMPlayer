@@ -65,6 +65,10 @@ class GridNavTest {
         assertEquals(NavKey.First, GridNav.keyFor(Key.MoveHome, ctrl = true, shift = false, alt = false, meta = false))
         assertEquals(NavKey.Last, GridNav.keyFor(Key.MoveEnd, ctrl = false, shift = false, alt = false, meta = true))
         assertEquals(NavKey.PageDown, GridNav.keyFor(Key.PageDown, ctrl = false, shift = false, alt = false, meta = false))
+        // Cmd+Up and Cmd+Down are a Mac's Home and End; elsewhere Super+Up belongs to the window manager.
+        assertEquals(NavKey.First, GridNav.keyFor(Key.DirectionUp, ctrl = false, shift = false, alt = false, meta = true, mac = true))
+        assertEquals(NavKey.Last, GridNav.keyFor(Key.DirectionDown, ctrl = false, shift = false, alt = false, meta = true, mac = true))
+        assertNull(GridNav.keyFor(Key.DirectionUp, ctrl = false, shift = false, alt = false, meta = true, mac = false))
         // Alt+Left is back, Shift+arrows are left to text selection.
         assertNull(GridNav.keyFor(Key.DirectionLeft, ctrl = false, shift = false, alt = true, meta = false))
         assertNull(GridNav.keyFor(Key.DirectionDown, ctrl = false, shift = true, alt = false, meta = false))

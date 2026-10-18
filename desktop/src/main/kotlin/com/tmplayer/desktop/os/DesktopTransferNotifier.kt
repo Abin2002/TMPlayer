@@ -22,13 +22,14 @@ object DesktopTransferNotifier {
     /**
      * @param window the main window, whose taskbar button carries the Windows progress bar; null
      *   while there is none.
-     * @param onOpenDownloads what pressing "Show Downloads" on a Linux notification does: raise the
-     *   window and go to the Downloads page. Called on a D-Bus thread.
+     * @param onOpenDownloads what pressing "Show Downloads" on a Linux notification, or a finished
+     *   transfer's toast on Windows, does: raise the window and go to the Downloads page. Called on
+     *   a D-Bus thread, or on the AWT thread for a toast.
      */
     fun create(window: () -> java.awt.Window?, onOpenDownloads: () -> Unit): CoalescingTransferNotifier {
         val platform: TransferNotifier = when {
             OsInfo.isLinux -> LinuxNotifications(onOpenDownloads)
-            OsInfo.isWindows -> WindowsNotifications(window)
+            OsInfo.isWindows -> WindowsNotifications(window, onOpenDownloads)
             else -> NoTransferNotifier
         }
         notices = platform as? DesktopNotices
