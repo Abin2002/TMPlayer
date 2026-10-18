@@ -38,6 +38,9 @@ private val COMPACT_NAV = booleanPreferencesKey("compact_nav")
 private val DOWNMIX_STEREO = booleanPreferencesKey("downmix_stereo")
 private val VOLUME_BOOST = booleanPreferencesKey("volume_boost")
 private val NIGHT_MODE = booleanPreferencesKey("night_mode")
+private val RESUME_SYNC = booleanPreferencesKey("resume_sync")
+private val RESUME_SYNC_MESSAGE = longPreferencesKey("resume_sync_message")
+private val RESUME_SYNC_KEYS = stringPreferencesKey("resume_sync_keys")
 private val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
 private val BACKGROUND_AUDIO = booleanPreferencesKey("background_audio")
 // Not "resume_...": that prefix is a resume point's, and the sweeps over resume points (the
@@ -637,6 +640,80 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /** Read before the player is built, like [volumeBoostNow]. */
     suspend fun nightModeNow(): Boolean = prefs.data.first()[NIGHT_MODE] ?: false
+
+    /**
+     * Resume across devices ([ResumeSync]): Continue watching kept in a message in the viewer's
+     * own Saved Messages, edited in place, so another device signed in to the same account picks
+     * up where this one stopped. Off until turned on in Settings.
+     */
+    val resumeSync: Flow<Boolean> = read { it[RESUME_SYNC] ?: false }
+
+    suspend fun setResumeSync(value: Boolean) {
+        prefs.edit {
+            it[RESUME_SYNC] = value
+            // Off forgets which message it was and what it last said, so turning it on again
+            // starts by reading the message afresh.
+            if (!value) {
+                it.remove(RESUME_SYNC_MESSAGE)
+                it.remove(RESUME_SYNC_KEYS)
+            }
+        }
+    }
+
+    suspend fun resumeSyncNow(): Boolean = prefs.data.first()[RESUME_SYNC] ?: false
+
+    /** The Saved Messages message the places are kept in, once found or sent; 0 before. */
+    suspend fun resumeSyncMessageNow(): Long = prefs.data.first()[RESUME_SYNC_MESSAGE] ?: 0L
+
+    suspend fun setResumeSyncMessage(id: Long) {
+        prefs.edit { it[RESUME_SYNC_MESSAGE] = id }
+    }
+
+    /** The videos ("chat_message") this device last wrote to the message, for telling what it removed since. */
+    suspend fun resumeSyncKeysNow(): Set<String> =
+        prefs.data.first()[RESUME_SYNC_KEYS].orEmpty().split(',').filter { it.isNotBlank() }.toSet()
+
+    suspend fun setResumeSyncKeys(keys: Set<String>) {
+        prefs.edit { it[RESUME_SYNC_KEYS] = keys.joinToString(",") }
+    }
+
+    /**
+     * A place another device saved ([ResumeSync]), written as this device's own would be, when it
+     * is newer than whatever this device has for the same video. [fileId] is this device's id for
+     * the file, read from the message here: TDLib's file ids differ from one device to the next.
+     */
+    suspend fun importResume(entry: ResumeSyncDoc.Entry, fileId: Int): Boolean {
+        var wrote = false
+        prefs.edit { prefs ->
+            val local = ResumeRecord.updatedAtOf(prefs[metaKey(entry.chatId, entry.messageId)]) ?: Long.MIN_VALUE
+            if (local >= entry.updatedAt && prefs[resumeKey(entry.chatId, entry.messageId)] != null) return@edit
+            prefs[resumeKey(entry.chatId, entry.messageId)] = entry.positionMs
+            if (entry.durationMs > 0) prefs[durationKey(entry.chatId, entry.messageId)] = entry.durationMs
+            prefs[metaKey(entry.chatId, entry.messageId)] = ResumeRecord.encode(
+                fileId = fileId,
+                title = entry.title,
+                chatTitle = entry.chatTitle,
+                sizeBytes = entry.sizeBytes,
+                durationSec = entry.durationSec,
+                updatedAt = entry.updatedAt,
+                fileName = entry.fileName,
+            )
+            evictOldestHistory(prefs)
+            wrote = true
+        }
+        return wrote
+    }
+
+    /** A place another device removed after this one last saved it ([ResumeSync]): gone here too. */
+    suspend fun dropSyncedResume(tomb: ResumeSyncDoc.Tomb) {
+        prefs.edit { prefs ->
+            val local = ResumeRecord.updatedAtOf(prefs[metaKey(tomb.chatId, tomb.messageId)]) ?: return@edit
+            if (local >= tomb.at) return@edit
+            prefs.remove(resumeKey(tomb.chatId, tomb.messageId))
+            prefs.remove(durationKey(tomb.chatId, tomb.messageId))
+            prefs.remove(metaKey(tomb.chatId, tomb.messageId))
+        }
+    }
 
     /**
      * Skip silence, from the speed picker: the quiet stretches of a lecture or a talk played

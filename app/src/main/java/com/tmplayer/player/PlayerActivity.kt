@@ -912,6 +912,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // [startPlayback] applies the same position as well; whichever arrives second sets it again.
         // A few seconds before the saved point, as Settings has it ([ResumeRewind]).
         itemScope.launch {
+            // Resume across devices, when on: the other devices' places in first, a couple of
+            // seconds at most, so a video half watched on the phone opens there on the TV.
+            com.tmplayer.data.ResumeSync.pullFor(settings)
             // A bookmark chosen on the detail page opens the video at its moment, once.
             resumeMs = BookmarkJump.take(chatId, messageId)
                 // Whichever copy of the video was played last: a switch of quality, or the 720p
@@ -6123,6 +6126,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         openingWatch?.cancel()
         rebufferWatch?.cancel()
         saveResumePosition(leaving = !inPictureInPicture)
+        // This place out to the other devices, once the saves have settled (ResumeSync).
+        com.tmplayer.data.ResumeSync.pushSoon(settings)
         // In picture in picture the activity is stopped while the video is still on screen and
         // still the point of it; pausing here would stop the very thing the mode exists for.
         // With background audio on, the sound carries on from the notification instead.

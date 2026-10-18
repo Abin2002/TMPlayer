@@ -413,6 +413,8 @@ fun PlayerScreen(
             runCatching { settings.clearResumePosition(item.chatId, item.messageId, item) }
             0L
         } else runCatching {
+            // Resume across devices, when on: the other devices' places in first, briefly.
+            com.tmplayer.data.ResumeSync.pullFor(settings)
             // Whichever copy of the video was played last: a switch of quality carries on.
             settings.resumeStartFor(item)
         }.getOrDefault(0L)
@@ -541,6 +543,9 @@ fun PlayerScreen(
                 if (forget) settings.clearResumePosition(it.chatId, it.messageId, it)
                 else settings.saveResumePosition(it.chatId, it.messageId, position, duration, description)
             }
+            // Out to the other devices once the saves stop (a pause, the player closed): the
+            // push waits for them to settle, so the heartbeat never edits the message (ResumeSync).
+            com.tmplayer.data.ResumeSync.pushSoon(settings)
         }
     }
 

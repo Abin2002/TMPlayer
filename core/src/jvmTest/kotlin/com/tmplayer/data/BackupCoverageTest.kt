@@ -41,6 +41,9 @@ class BackupCoverageTest {
         // Which video each starred chat had at the last new videos check, and whether the offer
         // after a star was made: this account on this device, started afresh on another.
         "new_video_seen", "new_video_offered",
+        // Resume across devices: which Saved Messages message, and what this device last wrote to
+        // it. Found again by its tag on a restored device.
+        "resume_sync_message", "resume_sync_keys",
         // Records of files on this device's disk, and what Telegram said about them.
         "cached_video", "cached_video_ids", "wc_", "dl_", "duration_", "meta_",
     )

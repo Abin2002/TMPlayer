@@ -159,6 +159,7 @@ object Backups {
         "reduce_motion" to Kind.BOOL,
         "remember_searches" to Kind.BOOL,
         "remove_after_watching" to Kind.BOOL,
+        "resume_sync" to Kind.BOOL,
         "rewind_on_resume_ms" to Kind.LONG,
         "save_mobile_data" to Kind.BOOL,
         "screen_orientation" to Kind.TEXT,
