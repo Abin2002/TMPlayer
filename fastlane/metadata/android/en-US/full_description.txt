@@ -1,11 +1,25 @@
-TMPlayer plays the videos in your own Telegram chats and channels on an Android TV, a phone, or a Windows, macOS or Linux computer. It starts within seconds while the file is still downloading, and seeking re-aims the download instead of waiting for it.
+TMPlayer is a player for the videos already in your own Telegram chats and channels. Sign in once and watch them on an Android TV or Google TV, a Fire TV stick, an Android phone or tablet, or a Windows, macOS or Linux computer. It is free, open source and unofficial.
 
-Sign in by scanning a QR code with your phone, pick a chat, and only its playable videos appear. No messages, no server, no account except yours.
+A video starts within seconds while it is still arriving, so a large file never has to download first, and seeking jumps straight to the part you asked for.
 
-Features:
-- Starts within seconds, even for large files.
-- Talks to Telegram directly through TDLib, Telegram's own library. No analytics and no server run by the developer.
-- Runs on Android TV, Android phones, Windows, Linux and, as a preview, Macs with Apple Silicon.
-- Open source under the GPL-3.0.
+On a TV:
+- Sign in by scanning a QR code with the phone you already use for Telegram.
+- Everything works with the remote: rows for Continue watching and your starred chats, search across all your chats, and a player that keeps the picture clear.
+- Runs on Android TV and Google TV boxes, Chromecast with Google TV, NVIDIA Shield, Mi Box, projectors and Fire TV.
 
-TMPlayer is an unofficial client. It is not affiliated with, endorsed by, or connected to Telegram FZ-LLC.
+On a phone:
+- Stream Telegram videos without downloading them first, or download a whole season for the train.
+- Picture in picture, background audio, gestures for seeking, volume and brightness, and a screen lock for small hands.
+- Low storage mode keeps only the part of a video you are watching, for phones that are always full.
+
+Everywhere:
+- MKV, MP4, HEVC, AV1 and more, with subtitles from the file, from a file of your own or found online, and every audio track the file carries.
+- Resume where you stopped, series pages that put episodes in order, skip intro and next episode, and course progress for numbered lessons.
+- Night mode for sound keeps dialogue clear and loud scenes quiet; volume boost for quiet files.
+- Videos posted in pieces play as one video; archives that cannot be played are listed with the reason.
+- Light, Dark and true Black themes, and 21 languages.
+- No ads of its own, no analytics, no server run by the developer. TMPlayer talks to Telegram directly through TDLib, Telegram's own library, and your data stays on your devices.
+
+TMPlayer only plays what is already in your chats. Use it with videos you are allowed to watch.
+
+TMPlayer is an unofficial client. It is not affiliated with, endorsed by, or connected to Telegram FZ-LLC. Source code: github.com/dracu-lah/TMPlayer, under the GPL-3.0.

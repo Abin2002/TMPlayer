@@ -1,6 +1,6 @@
 {
   "home": {
-    "tmplayer_free_unofficial_telegram_video": "TMPlayer: unofficial Telegram media player for TV and PC",
+    "tmplayer_free_unofficial_telegram_video": "TMPlayer: unofficial Telegram media player for TV, phone and PC",
     "free_and_open_source_for": "Free and open source, for Android, Windows, Mac and Linux",
     "your_telegram_videos": "Your {svg1} Telegram videos, {em1}",
     "your_telegram_videos__em1": "on the TV",
@@ -205,7 +205,7 @@
     "telegram_makes_no_app_732d": "Telegram makes no app for televisions. Its Android phone app can be installed on an Android TV by hand, but it is laid out for touch and hard to use with a remote. TMPlayer is made for the TV: on an Android TV, Google TV or Fire TV it signs in to your own Telegram account with a QR code and plays the videos in your chats, without the messages. Samsung TVs on Tizen, LG TVs on webOS, Roku and Apple TV cannot install it, because they do not run Android; plug an Android TV stick or a Fire TV Stick into the TV's HDMI port instead."
   },
   "features": {
-    "tmplayer_features_stream_telegram_videos": "TMPlayer features: stream Telegram videos on TV and PC",
+    "tmplayer_features_stream_telegram_videos": "TMPlayer features: stream Telegram videos on TV, phone and PC",
     "features": "{a1}{span1}Features",
     "features__a1": "Home",
     "what_a_telegram_video_player": "What a Telegram video player {em1}",
@@ -656,6 +656,38 @@
     "next_episode_shot_alt": "The player on a television with a card in the corner: next, S01E05, starting in 12 seconds, with a Play now button.",
     "the_tmplayer_chat_list_on": "The TMPlayer chat list on Android TV, with a navigation rail down the left.",
     "videos_from_a_telegram_chat": "Videos from a Telegram chat shown on Android TV as a grid of tiles carrying running times and file sizes."
+  },
+  "android": {
+    "title": "TMPlayer: Telegram video player for Android phones",
+    "description": "A free, unofficial Telegram video player for Android phones: stream Telegram videos without downloading them first, with MKV and subtitles, picture in picture and background audio.",
+    "heading": "A Telegram video player {em1}",
+    "heading__em1": "for Android phones",
+    "lede": "TMPlayer plays the videos already in your own Telegram chats on an Android phone or tablet, the moment you press play, while they are still arriving. Free, open source and unofficial.",
+    "download": "Download for Android",
+    "what_it_does": "What it does on a phone",
+    "what_it_does_sub": "The same account and the same APK as on a television; only the screen changes, built for one hand.",
+    "stream_title": "Stream without downloading first",
+    "stream_body": "A video starts within seconds and seeking jumps straight to the part you asked for, however large the file.",
+    "formats_title": "MKV and subtitles",
+    "formats_body": "MKV, MP4, HEVC, AV1 and more, with every audio track and subtitles from the file, from a file of your own or found online.",
+    "pip_title": "Picture in picture",
+    "pip_body": "Keep watching in a small window over your other apps, and lock the screen against stray touches.",
+    "audio_title": "Background audio and night mode",
+    "audio_body": "Lectures and talks keep playing with the screen off, and night mode keeps dialogue clear while the loud scenes stay quiet.",
+    "storage_title": "Made for a full phone",
+    "storage_body": "Download a whole season for the train, or turn on Low storage mode and keep only the part of a video you are watching.",
+    "resume_title": "Resume, series and search",
+    "resume_body": "Pick up where you stopped, see a show's episodes in order with skip intro, and search across all your chats at once.",
+    "screens": "On the phone",
+    "screens_sub": "The app on a phone, filled with demo content.",
+    "show_caption": "{b1}A show's page with its artwork and overview, and a button that resumes the episode you were on.",
+    "show_caption__b1": "Every show on a page of its own",
+    "yes_phones": "Android phones and tablets on Android 8.0 or above.",
+    "yes_tv": "The same APK runs on a television too: see {a1}.",
+    "yes_tv__a1": "TMPlayer on Android TV",
+    "no_play_store": "Not on Google Play: the APK comes from GitHub, and the app tells you when a new version is out.",
+    "star_lede": "An app that started on the television and grew a phone screen. If it plays your Telegram videos well, a star tells the next person it is worth a try.",
+    "made_for_phones": "Made for phones"
   },
   "fire_tv": {
     "tmplayer_a_telegram_video_player": "TMPlayer: a Telegram video player for Fire TV",
