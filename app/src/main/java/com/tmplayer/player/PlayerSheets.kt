@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.animation.togetherWith
+import com.tmplayer.ui.components.pressScale
+import com.tmplayer.ui.icons.TmIcons
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -73,6 +77,7 @@ class PlayerSheets(
             val onPick: (Float) -> Unit,
             val skipSilence: Boolean,
             val onSkipSilence: (Boolean) -> Unit,
+            val onFine: (Float) -> Unit,
         ) : Sheet
         class Shape(val current: VideoScale, val onPick: (VideoScale) -> Unit) : Sheet
         class Sleep(val running: String?, val chosen: Int?, val onPick: (Int?) -> Unit) : Sheet
@@ -107,14 +112,18 @@ class PlayerSheets(
         root.addView(view, ViewGroup.LayoutParams(0, 0))
     }
 
-    /** The speeds, and the skip silence switch under them; the switch flips without closing the sheet. */
+    /**
+     * The speeds, the fine control and the skip silence switch under them. A preset closes the
+     * sheet; a fine step ([onFine]) and the switch act at once and leave it open.
+     */
     fun showSpeed(
         current: Float,
         onPick: (Float) -> Unit,
         skipSilence: Boolean = false,
         onSkipSilence: (Boolean) -> Unit = {},
+        onFine: (Float) -> Unit = onPick,
     ) {
-        sheet.value = Sheet.Speed(current, onPick, skipSilence, onSkipSilence)
+        sheet.value = Sheet.Speed(current, onPick, skipSilence, onSkipSilence, onFine)
     }
 
     fun showShape(current: VideoScale, onPick: (VideoScale) -> Unit) {
@@ -165,8 +174,13 @@ class PlayerSheets(
             null -> Unit
             is Sheet.Speed -> {
                 var skipping by remember(shown) { mutableStateOf(shown.skipSilence) }
+                var speed by remember(shown) { mutableStateOf(shown.current) }
                 SpeedSheet(
-                    current = shown.current,
+                    current = speed,
+                    onFine = { next ->
+                        speed = next
+                        shown.onFine(next)
+                    },
                     onPick = { close(); shown.onPick(it) },
                     onDismiss = ::close,
                     onClose = ::close,
@@ -267,10 +281,17 @@ class PlayerSheets(
 
 /**
  * The playback speeds, one ticked: the one playing. Back is [onDismiss] (a page of the More menu
- * steps back with it), Close is [onClose]. The remote starts on the speed in force.
+ * steps back with it), Close is [onClose]. The remote starts on the speed in force, or on Faster
+ * when the speed in force is a fine one.
  *
  * Full screen on a phone they are a grid of tiles instead of a list, all seven in one row on a
  * landscape phone and four to a row upright, so every speed is one tap with nothing to scroll.
+ *
+ * Under the presets, the fine control: [PlaybackSpeed.FINE_STEP] at a time from
+ * [PlaybackSpeed.MIN] to [PlaybackSpeed.MAX], as the desktop's ] and [ keys step. A phone has
+ * minus and plus either side of the figure; a television has Slower and Faster lines under it,
+ * which OK presses as often as it likes. Each step plays at once through [onFine] and leaves the
+ * sheet open; the figure rolls up or down with the step, and only fades with less motion asked for.
  *
  * Skip silence sits under the speeds, a switch rather than a speed: [skipSilence] is whether it
  * is on, and choosing the line flips it through [onSkipSilence] with the sheet left open.
@@ -283,31 +304,157 @@ internal fun SpeedSheet(
     onClose: () -> Unit,
     skipSilence: Boolean = false,
     onSkipSilence: (Boolean) -> Unit = {},
+    onFine: (Float) -> Unit = onPick,
 ) {
     val s = LocalStrings.current
     val touch = isTouch()
     val focus = remember { FocusRequester() }
-    val focusOn = PlaybackSpeed.CHOICES.firstOrNull { it == current } ?: PlaybackSpeed.CHOICES.first()
+    val preset = PlaybackSpeed.CHOICES.firstOrNull { kotlin.math.abs(it - current) < 0.001f }
     ChoiceSheet(title = s.playerPlaybackSpeed, onDismiss = onDismiss, onClose = onClose, ignoreRelease = !touch, fullScreen = true) {
         if (LocalChoiceFullScreen.current) {
             SpeedTiles(current, onPick)
+            FineSpeedStepper(current, onFine)
             SkipSilenceLine(skipSilence, onSkipSilence)
             return@ChoiceSheet
         }
         ChoiceList {
             PlaybackSpeed.CHOICES.forEach { choice ->
-                val selected = choice == current
+                val selected = choice == preset
                 ChoiceLine(
                     title = PlaybackSpeed.label(choice),
                     detail = if (selected) s.playerSpeedCurrent else null,
                     selected = selected,
-                    modifier = if (choice == focusOn) Modifier.focusRequester(focus) else Modifier,
+                    modifier = if (choice == preset) Modifier.focusRequester(focus) else Modifier,
                 ) { onPick(choice) }
+            }
+            if (touch) {
+                FineSpeedStepper(current, onFine)
+            } else {
+                FineSpeedLines(current, onFine, if (preset == null) focus else null)
             }
             SkipSilenceLine(skipSilence, onSkipSilence)
         }
         FocusOnOpen(focus)
     }
+}
+
+/** "0.05x a press, from 0.25x to 4x": what the fine control does, under its heading. */
+@Composable
+private fun fineDetail(): String {
+    val s = LocalStrings.current
+    return s.playerSpeedFineDetail(
+        step = PlaybackSpeed.label(PlaybackSpeed.FINE_STEP),
+        min = PlaybackSpeed.label(PlaybackSpeed.MIN),
+        max = PlaybackSpeed.label(PlaybackSpeed.MAX),
+    )
+}
+
+/**
+ * The speed in force, large, rolling up when it rose and down when it fell. Only a fade with
+ * less motion asked for.
+ */
+@Composable
+private fun SpeedFigure(speed: Float, modifier: Modifier = Modifier) {
+    val still = com.tmplayer.ui.components.rememberLessMotion()
+    androidx.compose.animation.AnimatedContent(
+        targetState = speed,
+        modifier = modifier,
+        transitionSpec = {
+            val up = targetState > initialState
+            val fadeIn = androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(com.tmplayer.ui.theme.Motion.Fast))
+            val fadeOut = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(com.tmplayer.ui.theme.Motion.Fast))
+            if (still) {
+                fadeIn togetherWith fadeOut
+            } else {
+                val spec = androidx.compose.animation.core.tween<androidx.compose.ui.unit.IntOffset>(com.tmplayer.ui.theme.Motion.Fast)
+                (androidx.compose.animation.slideInVertically(spec) { h -> if (up) h / 2 else -h / 2 } + fadeIn) togetherWith
+                    (androidx.compose.animation.slideOutVertically(spec) { h -> if (up) -h / 2 else h / 2 } + fadeOut)
+            }
+        },
+        contentAlignment = Alignment.Center,
+        label = "fineSpeed",
+    ) { shown ->
+        Text(PlaybackSpeed.label(shown), style = MaterialTheme.typography.headlineSmall, color = Tone.text, maxLines = 1)
+    }
+}
+
+/**
+ * The phone's fine control: minus, the figure, plus, under a heading that says the step. Each
+ * button sinks under the finger ([pressScale]) and ticks the hand, and greys out at its end of
+ * the range.
+ */
+@Composable
+private fun FineSpeedStepper(current: Float, onFine: (Float) -> Unit) {
+    val s = LocalStrings.current
+    val tick = com.tmplayer.ui.components.rememberStepTick()
+    Column(Modifier.fillMaxWidth()) {
+        com.tmplayer.ui.components.ChoiceSection(s.playerSpeedFine)
+        Text(
+            fineDetail(),
+            style = MaterialTheme.typography.bodySmall,
+            color = Tone.muted,
+            modifier = Modifier.padding(horizontal = 24.dp),
+        )
+        Row(
+            Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            FineButton(TmIcons.Remove, s.playerSpeedSlower, enabled = PlaybackSpeed.canStep(current, up = false)) {
+                tick()
+                onFine(PlaybackSpeed.fine(current, up = false))
+            }
+            androidx.compose.foundation.layout.Box(Modifier.width(128.dp), contentAlignment = Alignment.Center) {
+                SpeedFigure(current)
+            }
+            FineButton(TmIcons.Add, s.playerSpeedFaster, enabled = PlaybackSpeed.canStep(current, up = true)) {
+                tick()
+                onFine(PlaybackSpeed.fine(current, up = true))
+            }
+        }
+    }
+}
+
+@Composable
+private fun FineButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
+    val interactions = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    androidx.compose.material3.FilledTonalIconButton(
+        onClick = onClick,
+        enabled = enabled,
+        interactionSource = interactions,
+        modifier = Modifier.size(56.dp).pressScale(interactions),
+    ) {
+        androidx.compose.material3.Icon(icon, contentDescription = label)
+    }
+}
+
+/**
+ * The television's fine control: the figure under the heading, then Slower and Faster as lines
+ * the remote stands on and presses as often as it likes. [focus], when given, is hung on Faster:
+ * the speed in force is a fine one, so no preset line is there to start on.
+ */
+@Composable
+private fun ColumnScope.FineSpeedLines(current: Float, onFine: (Float) -> Unit, focus: FocusRequester?) {
+    val s = LocalStrings.current
+    com.tmplayer.ui.components.ChoiceSection(s.playerSpeedFine)
+    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(fineDetail(), style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = Modifier.weight(1f))
+        SpeedFigure(current)
+    }
+    val now = s.playerSpeedFineNow(PlaybackSpeed.label(current))
+    ChoiceLine(
+        title = s.playerSpeedSlower,
+        detail = now,
+        icon = TmIcons.Remove,
+        enabled = PlaybackSpeed.canStep(current, up = false),
+    ) { onFine(PlaybackSpeed.fine(current, up = false)) }
+    ChoiceLine(
+        title = s.playerSpeedFaster,
+        detail = now,
+        icon = TmIcons.Add,
+        enabled = PlaybackSpeed.canStep(current, up = true),
+        modifier = if (focus != null) Modifier.focusRequester(focus) else Modifier,
+    ) { onFine(PlaybackSpeed.fine(current, up = true)) }
 }
 
 /**
@@ -338,7 +485,7 @@ private fun ColumnScope.SpeedTiles(current: Float, onPick: (Float) -> Unit) {
             PlaybackSpeed.CHOICES.chunked(perRow).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(TILE_GAP)) {
                     row.forEach { choice ->
-                        val selected = choice == current
+                        val selected = kotlin.math.abs(choice - current) < 0.001f
                         val shape = RoundedCornerShape(Corner.Large)
                         Column(
                             Modifier

@@ -30,6 +30,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!--
+      "Keep playing audio with the screen off or in another app", off until the viewer turns it
+      on: the sound of the video left playing, from a media notification (PlaybackService).
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!--
       The Android TV home screen's "Play next" row, written only when the viewer turns it on in
       Settings (WatchNextPublisher). The TV provider refuses the write without this; it grants
       nothing else, and a phone has no such provider to write to.
@@ -102,8 +107,8 @@
             android:theme="@style/Theme.TMPlayer.Player" />
 
         <!--
-          Media3's session service is not used: the session lives in the player activity, which is
-          the only thing that can play anything. The receiver is what the platform routes headset
+          The session lives in the player activity, which is the only thing that can play anything;
+          PlaybackService only holds it while background audio keeps the sound going unseen. The receiver is what the platform routes headset
           and Bluetooth transport buttons through.
         -->
         <receiver
@@ -143,6 +148,16 @@
             android:name=".data.DownloadService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!--
+          Background audio on a phone: holds the player activity's own media session while the
+          player is out of sight. No MediaSessionService intent filter, so neither another app nor
+          the media button receiver can start it with no video behind it.
+        -->
+        <service
+            android:name=".player.PlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
 </application>
 </manifest>

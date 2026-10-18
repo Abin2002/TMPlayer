@@ -84,13 +84,9 @@ object SpeedMemory {
     private fun usable(value: Float?): Float? =
         value?.takeIf { !it.isNaN() && it > 0f }
             ?.let { (it * 100).roundToInt() / 100f }
-            ?.coerceIn(MIN, MAX)
+            ?.coerceIn(PlaybackSpeed.MIN, PlaybackSpeed.MAX)
 
     private const val SERIES = "series:"
     private const val COURSE = "course:"
     private const val CHAT = "chat:"
-
-    /** The range the desktop's fine steps reach; the phone and the television stay on the presets. */
-    private const val MIN = 0.25f
-    private const val MAX = 4f
 }

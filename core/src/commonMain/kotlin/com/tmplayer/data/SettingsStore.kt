@@ -37,6 +37,7 @@ private val DETAIL_FIRST = booleanPreferencesKey("detail_first")
 private val DOWNMIX_STEREO = booleanPreferencesKey("downmix_stereo")
 private val VOLUME_BOOST = booleanPreferencesKey("volume_boost")
 private val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
+private val BACKGROUND_AUDIO = booleanPreferencesKey("background_audio")
 // Not "resume_...": that prefix is a resume point's, and the sweeps over resume points (the
 // broken-history prune at launch, Clear history) would take this setting with them.
 private val RESUME_REWIND = longPreferencesKey("rewind_on_resume_ms")
@@ -628,6 +629,19 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /**
      * Where a video with a saved position opens: that position, a few seconds earlier as the
+    /**
+     * The phone keeps the sound of a video playing with the screen off or in another app, from a
+     * media notification with play, pause and seeking. Off until turned on: leaving the player
+     * pauses it, as it always has. Picture in picture still comes first where it can. Phone only.
+     */
+    val backgroundAudio: Flow<Boolean> = read { it[BACKGROUND_AUDIO] ?: false }
+
+    suspend fun setBackgroundAudio(value: Boolean) {
+        prefs.edit { it[BACKGROUND_AUDIO] = value }
+    }
+
+    suspend fun backgroundAudioNow(): Boolean = prefs.data.first()[BACKGROUND_AUDIO] ?: false
+
      * viewer has set ([ResumeRewind]), or zero for one without. Continue watching and the history
      * keep the saved position itself; only the player starts from this.
      */

@@ -89,7 +89,7 @@ keeps it up to date.
 | **OK** | Play / pause in one press; a pause brings the controls up with a play sign in the middle. **Up / Down** show the controls without pausing |
 | **⏯** (if your remote has it) | Play / pause; paused, the controls stay up with a play sign in the middle |
 | **Left / Right** (on the seek bar) | Travel: 30 seconds a press, presses pile up and land as one seek a moment after the last |
-| **Down** (controls up) | The button row: subtitles, audio, speed, and More at the end. More holds the previous and next episode, the previous and next chapter of a video that has chapters, picture shape, picture in picture, start over, volume boost, sleep timer and the rest |
+| **Down** (controls up) | The button row: subtitles, audio, speed (the presets, then Slower and Faster lines for 0.05x steps), and More at the end. More holds the previous and next episode, the previous and next chapter of a video that has chapters, picture shape, picture in picture, start over, volume boost, sleep timer and the rest |
 | **0 - 9** (if your remote has them) | Jump to that tenth of the video; 5 is halfway |
 | **Up** (after a long jump) | Back to where you were before it, while the "Back to" sign is up in the corner |
 | **⏪ / ⏩** (if your remote has them) | Jump back 5 / forward 10 seconds |
@@ -106,17 +106,23 @@ keeps it up to date.
 | **Double tap left / right** | Jump back / forward 10 seconds; keep tapping to add 10 more each time |
 | **Double tap the middle** | Play / pause |
 | **Hold** | Play at 2x for as long as your finger stays down |
-| **Drag sideways** | Travel through the video; it jumps when you let go |
+| **Drag sideways** | Travel through the video; it jumps when you let go. Take your finger up or down while dragging to travel at half, then a quarter of the speed. The same works on the seek bar |
 | **Drag up / down, left side** | Brightness |
 | **Drag up / down, right side** | Volume |
 | **Pinch** | Fit, fill or stretch the picture |
 | **Tap the total time** | Show the time remaining instead |
 | **Hold a button** | Show its name |
 | **Start over** | Appears for a few seconds when a video opens where you left off |
-| **⋮ menu** | Lock the screen, picture in picture, picture shape, volume boost, sleep timer, open in another app, subtitle file, copy link, save to Downloads, mark watched, details |
+| **Speed button** | The preset speeds, and a fine control under them: 0.05x a press, from 0.25x to 4x |
+| **⋮ menu** | Lock the screen, picture in picture, picture shape, volume boost, sleep timer, the previous and next chapter of a video that has chapters, save a frame (into Pictures/TMPlayer, with Share; not for chats that restrict saving, needs Android 10), open in another app, subtitle file, copy link, save to Downloads, mark watched, details |
 
 The jump length, the hold speed, how long the controls stay up, each drag and the vibration are
-all in Settings, Player.
+all in Settings, Player. Settings, Playback can keep the sound playing with the screen off or in
+another app, with play, pause and seeking in the notification; it is off until you turn it on,
+and picture in picture still comes first where it can.
+
+Chapters are read from MKV files and from MP4 files whose index is at the start (most files made
+for streaming); an MP4 with its index at the end shows them when played from Downloads.
 
 ## Storage
 

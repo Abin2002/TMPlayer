@@ -167,8 +167,8 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
      * undo something the player did on its own, such as resuming where the viewer left off, with
      * "Start over" one tap away instead of a menu line.
      */
-    fun offer(text: String, action: String, holdMs: Long = OFFER_MS, onAction: () -> Unit) =
-        offer.show(text, action, holdMs, onAction)
+    fun offer(text: String, action: String, holdMs: Long = OFFER_MS, tick: Boolean = false, onAction: () -> Unit) =
+        offer.show(text, action, holdMs, tick, onAction)
 
     // ---- double tap --------------------------------------------------------------------------
 
@@ -224,7 +224,7 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
 
     // ---- sideways scrub ----------------------------------------------------------------------
 
-    fun scrub(deltaMs: Long, targetMs: Long, durationMs: Long) = scrub.show(deltaMs, targetMs, durationMs)
+    fun scrub(deltaMs: Long, targetMs: Long, durationMs: Long, rate: Float = 1f) = scrub.show(deltaMs, targetMs, durationMs, rate)
 
     fun scrubEnded() = scrub.hideSoon()
 
@@ -468,6 +468,13 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
                 ContextCompat.getColor(context, R.color.accent),
             )
         }
+        /** How to scrub finer, or the slower rate the finger is at ([FineScrub]). */
+        private val rateLine = TextView(context).apply {
+            setTextColor(0xB3FFFFFF.toInt())
+            textSize = 12f
+            gravity = Gravity.CENTER
+        }
+        private var shownRate = 1f
         private val hide = Runnable {
             animate().alpha(0f).setDuration(FADE_MS).withEndAction { visibility = GONE }.start()
         }
@@ -480,9 +487,23 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
             addView(delta)
             addView(target)
             addView(bar, LayoutParams(dp(180f), dp(8f)).apply { topMargin = dp(10f) })
+            addView(rateLine, LayoutParams(wrap, wrap).apply { topMargin = dp(8f) })
         }
 
-        fun show(deltaMs: Long, targetMs: Long, durationMs: Long) {
+        fun show(deltaMs: Long, targetMs: Long, durationMs: Long, rate: Float) {
+            val slowed = FineScrub.hint(rate)
+            rateLine.text = slowed ?: L.playerScrubFiner
+            rateLine.setTextColor(if (slowed != null) ContextCompat.getColor(context, R.color.accent) else 0xB3FFFFFF.toInt())
+            if (rate != shownRate) {
+                shownRate = rate
+                // A small pop as the rate changes, so the slowing is felt in the eye as well.
+                if (!com.tmplayer.ui.theme.Motion.reduced && android.animation.ValueAnimator.areAnimatorsEnabled()) {
+                    rateLine.scaleX = 1.15f
+                    rateLine.scaleY = 1.15f
+                    rateLine.animate().scaleX(1f).scaleY(1f).setDuration(FADE_MS / 2).start()
+                }
+                haptic(confirm = false)
+            }
             val sign = if (deltaMs >= 0) "+" else "-"
             delta.text = sign + Translator.messages.formatter.clock(kotlin.math.abs(deltaMs))
             target.text = "${Translator.messages.formatter.clock(targetMs)} / ${Translator.messages.formatter.clock(durationMs)}"
@@ -494,6 +515,7 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
         }
 
         fun hideSoon() {
+            shownRate = 1f
             removeCallbacks(hide)
             postDelayed(hide, SCRUB_LINGER_MS)
         }
@@ -501,6 +523,12 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
 
     /** The text and its one button, in the same chip as the other pills. */
     private inner class OfferPill(context: Context) : LinearLayout(context) {
+        /** A tick before the text, for an offer that answers something done ("Frame saved"). */
+        private val tickView = android.widget.ImageView(context).apply {
+            setImageResource(R.drawable.ic_tick)
+            visibility = GONE
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
         private val label = TextView(context).apply {
             setTextColor(ContextCompat.getColor(context, R.color.text_primary))
             textSize = 15f
@@ -523,6 +551,7 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
             gravity = Gravity.CENTER_VERTICAL
             background = ContextCompat.getDrawable(context, R.drawable.bg_player_chip)
             setPadding(dp(20f), dp(2f), dp(12f), dp(2f))
+            addView(tickView, LayoutParams(dp(22f), dp(22f)).apply { marginEnd = dp(10f) })
             addView(label, LayoutParams(wrap, wrap).apply { marginEnd = dp(8f) })
             addView(button, LayoutParams(wrap, wrap))
             layoutParams = FrameLayout.LayoutParams(wrap, wrap, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL)
@@ -531,8 +560,21 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
             isClickable = true
         }
 
-        fun show(text: String, action: String, holdMs: Long, onAction: () -> Unit) {
+        fun show(text: String, action: String, holdMs: Long, tick: Boolean, onAction: () -> Unit) {
             label.text = text
+            tickView.visibility = if (tick) VISIBLE else GONE
+            tickView.animate().cancel()
+            // The tick pops in on a small overshoot; with less motion asked for it is just there.
+            val moving = !com.tmplayer.ui.theme.Motion.reduced && android.animation.ValueAnimator.areAnimatorsEnabled()
+            if (tick && moving) {
+                tickView.scaleX = 0.4f
+                tickView.scaleY = 0.4f
+                tickView.animate().scaleX(1f).scaleY(1f).setDuration(TICK_MS)
+                    .setInterpolator(android.view.animation.OvershootInterpolator(2.5f)).start()
+            } else {
+                tickView.scaleX = 1f
+                tickView.scaleY = 1f
+            }
             // A few lines of hint must wrap beside the button rather than push it off a narrow screen.
             label.maxWidth = (resources.displayMetrics.widthPixels - dp(OFFER_SIDE_ROOM_DP)).coerceAtLeast(dp(160f))
             button.text = action
@@ -558,6 +600,7 @@ class PlayerFeedback(private val root: FrameLayout, insertBelow: View?) {
         const val FADE_MS = 300L
         const val NOTE_MS = 900L
         const val OFFER_MS = 7_000L
+        const val TICK_MS = 260L
         const val OFFER_BOTTOM_DP = 148f
 
         /** What the offer leaves of the screen's width for its text: the button, the padding and a margin. */

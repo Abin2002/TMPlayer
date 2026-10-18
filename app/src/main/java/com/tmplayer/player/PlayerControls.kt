@@ -222,6 +222,9 @@ class PlayerControls(
         // and fixed rather than Media3's twentieth-of-a-film so a press means the same thing on a
         // short clip as on a long film.
         timeBar.setKeyTimeIncrement(Skip.BAR_MS)
+        // A finger away from the bar scrubs finer; the line over it says how. Phone only: a remote
+        // steps the bar with its keys, which never reach the fine scrub.
+        if (!isTv) (timeBar as? FineTimeBar)?.onRate = ::showScrubRate
         // The chapter cuts: see [renderMarks].
         timeBar.setPlayedAdMarkerColor(CHAPTER_CUT)
         // A chapter's name rides after the time: one line, cut short rather than wrapping the row.
@@ -340,6 +343,79 @@ class PlayerControls(
         val maxX = (parent.width - width).toFloat().coerceAtLeast(0f)
         previewCard.translationX = (centre - width / 2f).coerceIn(0f, maxX)
         previewCard.translationY = bar[1] - origin[1] - height - gap
+    }
+
+    // ---- fine scrubbing ----------------------------------------------------------------------
+
+    /**
+     * The line over the bar while a finger drags it: how to scrub finer, then which slower rate
+     * the finger is at ([FineScrub]). Above the scrub frame when there is one. Fades in and out,
+     * and changes its words with a small pop; with less motion asked for it only appears.
+     */
+    private val scrubHint = android.widget.TextView(root.context).apply {
+        val density = resources.displayMetrics.density
+        background = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_player_chip)
+        setPadding((14 * density).toInt(), (6 * density).toInt(), (14 * density).toInt(), (6 * density).toInt())
+        setTextColor(Color.WHITE)
+        textSize = 13f
+        maxLines = 1
+        visibility = View.GONE
+        accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        (root as android.view.ViewGroup).addView(
+            this,
+            android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+    }
+
+    private fun hintMoves(): Boolean =
+        !com.tmplayer.ui.theme.Motion.reduced && android.animation.ValueAnimator.areAnimatorsEnabled()
+
+    /** [rate] the finger is scrubbing at, or null once it lifts. */
+    fun showScrubRate(rate: Float?) {
+        val hint = scrubHint
+        hint.animate().cancel()
+        if (rate == null) {
+            if (hint.visibility != View.VISIBLE) return
+            if (!hintMoves()) {
+                hint.visibility = View.GONE
+                return
+            }
+            hint.animate().alpha(0f).setDuration(HINT_FADE_MS).withEndAction { hint.visibility = View.GONE }.start()
+            return
+        }
+        val slowed = FineScrub.hint(rate)
+        hint.text = slowed ?: L.playerScrubFiner
+        hint.setTextColor(if (slowed != null) accent else Color.WHITE)
+        val wasShown = hint.visibility == View.VISIBLE
+        hint.visibility = View.VISIBLE
+        placeScrubHint()
+        if (!hintMoves()) {
+            hint.alpha = 1f
+            hint.scaleX = 1f
+            hint.scaleY = 1f
+            return
+        }
+        if (!wasShown) hint.alpha = 0f
+        hint.scaleX = if (wasShown) 0.9f else 1f
+        hint.scaleY = hint.scaleX
+        hint.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(HINT_FADE_MS).start()
+        // Its width is known after the next layout, for the centring.
+        hint.post { placeScrubHint() }
+    }
+
+    private fun placeScrubHint() {
+        val parent = scrubHint.parent as? View ?: return
+        val bar = IntArray(2)
+        val origin = IntArray(2)
+        timeBar.getLocationInWindow(bar)
+        parent.getLocationInWindow(origin)
+        val density = parent.resources.displayMetrics.density
+        val above = if (previewCard.visibility == View.VISIBLE) previewCard.layoutParams.height + 12 * density else 0f
+        scrubHint.translationX = ((parent.width - scrubHint.width) / 2f).coerceAtLeast(0f)
+        scrubHint.translationY = bar[1] - origin[1] - above - scrubHint.height - 12 * density
     }
 
     /** A press does its thing and buys the row more time on screen; so does focus landing. */
@@ -824,6 +900,8 @@ class PlayerControls(
 
         /** How long after a resume the player's own answers to it still count as the resume. */
         const val RESUME_ECHO_MS = 500L
+
+        private const val HINT_FADE_MS = 160L
 
         /** Twice a second: faster than the eye needs on a scrub bar this size. */
         const val TICK_MS = 500L

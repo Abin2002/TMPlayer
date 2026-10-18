@@ -452,6 +452,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var videoWidth = 0
     private var videoHeight = 0
 
+    /** Settings, Playback: keep the sound going when the player is left ([PlaybackService]). */
+    private var backgroundAudioOn = false
+
+    /** True while the session is in [PlaybackService]'s hands: the player left, the sound playing on. */
+    private var inBackgroundAudio = false
+
+    /**
+     * When picture in picture last ended. Closing the corner window stops the activity a moment
+     * later, and that is the viewer saying stop, not "keep the sound going".
+     */
+    private var pictureInPictureEndedAt = 0L
+
     /** True while the activity is a thumbnail in the corner of somebody else's screen. */
     private var inPictureInPicture = false
 
@@ -638,17 +650,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         statusReload?.text = L.commonReload
         statusOpenWith?.text = L.playerOpenInAnotherApp
         statusBack?.text = L.playerGoBack
-        statusLogs = androidx.compose.ui.platform.ComposeView(this).apply {
-            setContent {
-                com.tmplayer.ui.theme.TMPlayerTheme {
-                    com.tmplayer.ui.settings.SendLogsButton(androidx.compose.ui.Modifier.padding(top = 10.dp))
-                }
-            }
-            visibility = View.GONE
-        }.also { logs ->
-            val column = statusOpenWith?.parent as? android.view.ViewGroup
-            column?.addView(logs, column.indexOfChild(statusOpenWith) + 1, android.view.ViewGroup.LayoutParams(-2, -2))
-        }
+        statusLogs = PlayerErrorSheet.addSendLogs(statusOpenWith)
         statusName = findViewById(R.id.status_name)
         loaderHost = PlayerLoaderHost(
             root = findViewById(R.id.player_root),
@@ -749,6 +751,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             }
             lifecycleScope.launch {
                 runCatching { bookmarkStore.bookmarks(chatId, messageId).collect { bookmarkList.value = it } }
+            }
+        }
+        // Followed rather than read once, so turning it on in Settings with a video open applies
+        // the next time the player is left. A phone's setting: a television never plays on unseen.
+        if (!FormFactor.isTv(this)) {
+            lifecycleScope.launch {
+                runCatching { settings.backgroundAudio.collect { backgroundAudioOn = it } }
             }
         }
         // On a television too: the controls timeout and the remaining time readout apply there.
@@ -947,7 +956,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 onSkip = ::skipBy,
                 onSeekStep = { zone, total, x, y -> feedback?.seekStep(zone, total, x, y) },
                 onLevel = { left, fraction, brightness -> feedback?.level(left, fraction, brightness) },
-                onScrub = { delta, target, length -> feedback?.scrub(delta, target, length) },
+                onScrub = { delta, target, length, rate -> feedback?.scrub(delta, target, length, rate) },
                 onScrubEnd = { feedback?.scrubEnded() },
                 onPinch = ::pinchScale,
                 positionMs = { player?.currentPosition ?: 0L },
@@ -1887,6 +1896,44 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         override fun seekToPreviousMediaItem() {
             if (!stepEpisode(forward = false)) super.seekToPreviousMediaItem()
         }
+
+        /**
+         * The paused media notification swiped away, which Media3 sends as a stop: with the
+         * player out of sight that is the end of it, so the activity goes, and its onDestroy
+         * releases the player and cancels the stream as on any other way out.
+         */
+        override fun stop() {
+            super.stop()
+            if (inBackgroundAudio) endBackgroundAudio(finish = true)
+        }
+    }
+
+    /**
+     * Whether leaving now keeps the sound going ([PlaybackService]): the setting is on, this is a
+     * phone, something is playing (or about to), and no sheet is up. Picture in picture comes
+     * first: while it is up the activity is never stopped, and closing its window means stop.
+     */
+    private fun keepsPlayingUnseen(): Boolean =
+        backgroundAudioOn && !FormFactor.isTv(this) && !isFinishing && !inPictureInPicture &&
+            mediaSession != null && player?.playWhenReady == true &&
+            statusOverlay.visibility != View.VISIBLE &&
+            SystemClock.elapsedRealtime() - pictureInPictureEndedAt > PIP_CLOSE_GRACE_MS
+
+    private fun startBackgroundAudio() {
+        val session = mediaSession ?: return
+        inBackgroundAudio = true
+        PlaybackService.start(this, session) { endBackgroundAudio(finish = true) }
+    }
+
+    /** Takes the session back from the service; [finish] when playback is over with the player unseen. */
+    private fun endBackgroundAudio(finish: Boolean = false) {
+        if (!inBackgroundAudio) return
+        inBackgroundAudio = false
+        PlaybackService.stop(this)
+        if (finish && !isFinishing) {
+            player?.pause()
+            finish()
+        }
     }
 
     /**
@@ -2216,6 +2263,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * released, so nothing is ever holding a released one.
      */
     private fun releasePlayerAndSurface() {
+        endBackgroundAudio()
         mediaSession?.release()
         mediaSession = null
         touchSurface?.player = null
@@ -3291,6 +3339,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         inPictureInPicture = isInPictureInPictureMode
+        if (!isInPictureInPictureMode) pictureInPictureEndedAt = SystemClock.elapsedRealtime()
         // At thumbnail size there is room for the picture and nothing else. The system draws its
         // own play and pause over the window, fed by the media session.
         if (isInPictureInPictureMode) {
@@ -3341,6 +3390,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             paused = isPaused(),
             bookmarks = hasMessage(),
             chapters = chapters.isNotEmpty(),
+            // Only once the chat is known to allow saving: a protected chat's frames stay in it.
+            saveFrame = savable == true,
         )
         // Speed and the sleep timer open the pickers' sheet rather than a submenu, so a choice
         // of one of several looks the same here as the subtitle and audio pickers.
@@ -3371,6 +3422,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 PhoneMenuEntry.PreviousChapter -> stepChapter(forward = false)
                 PhoneMenuEntry.NextFrame -> frameStep(forward = true)
                 PhoneMenuEntry.PreviousFrame -> frameStep(forward = false)
+                PhoneMenuEntry.SaveFrame -> saveFrame()
                 PhoneMenuEntry.OpenInAnotherApp -> openInAnotherApp()
                 PhoneMenuEntry.LoadSubtitleFile -> subtitleFiles.pick()
                 PhoneMenuEntry.SaveToDownloads -> saveToDownloads()
@@ -3452,6 +3504,46 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         exo.setSeekParameters(SeekParameters.EXACT)
         exo.seekTo(FrameStep.target(exo.currentPosition, exo.duration.coerceAtLeast(0L), fps, forward))
     }
+    /**
+     * The overflow's "Save a frame": the picture on screen into Pictures/TMPlayer ([FrameSaver]),
+     * answered with a ticked line and Share. Before Android 10, which would need a storage
+     * permission this app does not ask for, it says so instead.
+     */
+    private fun saveFrame() {
+        if (savable != true) return
+        if (!FrameSaver.supported) {
+            showGestureFeedback(L.playerFrameNeedsAndroid10)
+            return
+        }
+        val surface = touchSurface?.videoSurfaceView as? android.view.SurfaceView
+        if (surface == null || !firstFrameReady || videoWidth <= 0 || videoHeight <= 0) {
+            showGestureFeedback(L.playerFrameNotYet)
+            return
+        }
+        val at = player?.currentPosition ?: 0L
+        val title = mediaFileName.ifBlank { mediaTitle }
+        lifecycleScope.launch {
+            // An anamorphic video's pixels are not square: the picture is saved at the shape it shows.
+            val ratio = player?.videoSize?.pixelWidthHeightRatio?.takeIf { it > 0f } ?: 1f
+            val frame = FrameSaver.capture(surface, (videoWidth * ratio).toInt(), videoHeight)
+            val saved = frame?.let { FrameSaver.save(this@PlayerActivity, it, title, at) }
+            frame?.recycle()
+            if (saved == null) {
+                showGestureFeedback(L.playerFrameNotSaved)
+                return@launch
+            }
+            feedback?.offer(L.playerFrameSaved, L.commonShare, tick = true) { shareFrame(saved) }
+        }
+    }
+
+    private fun shareFrame(uri: android.net.Uri) {
+        val send = Intent(Intent.ACTION_SEND)
+            .setType("image/png")
+            .putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        runCatching { startActivity(Intent.createChooser(send, null)) }
+    }
+
     /** Runs [seek] as one the viewer did not ask for: no "Back to" offer comes of it. */
     private inline fun quietly(seek: () -> Unit) {
         quietSeek = true
@@ -3528,20 +3620,17 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     }
 
     /**
-     * Reads the chapter marks of a Matroska file ([MkvChapters]) from the parts of it already on
-     * the disk: a download straight from its file, a stream through TDLib's own reads, which never
-     * move the download window (a part not there yet is simply not read). Asked once the picture
-     * is up, when Media3 has read the head of the file; a file whose chapters sit further in, past
-     * its attached fonts, is asked again a few times as the download reaches them.
+     * Reads the chapter marks of a Matroska file ([MkvChapters]) or an MP4 ([Mp4Chapters]), told
+     * apart by their first bytes ([FileChapters]), from the parts already on the disk: a download
+     * straight from its file, a stream through TDLib's own reads, which never move the download
+     * window (a part not there yet is simply not read). Asked once the picture is up, when Media3
+     * has read the head of the file; a file whose chapters sit further in (an MKV's past its
+     * attached fonts, an MP4's moov at the end) is asked again a few times as the download
+     * reaches them, then left without.
      */
     private fun readChapters() {
         if (chaptersAsked) return
         chaptersAsked = true
-        val item = currentItem()
-        val name = item.fileName.ifBlank { item.title }.lowercase()
-        val matroska = "matroska" in item.mimeType || "webm" in item.mimeType ||
-            name.endsWith(".mkv") || name.endsWith(".webm")
-        if (!matroska) return
         val language = Translator.messages.tag
         lifecycleScope.launch {
             repeat(CHAPTER_TRIES) { attempt ->
@@ -3550,10 +3639,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 val found = withContext(Dispatchers.IO) {
                     runCatching {
                         if (local != null) {
-                            MkvChapters.read(language) { offset, length -> readLocal(local, offset, length) }
+                            FileChapters.read(language) { offset, length -> readLocal(local, offset, length) }
                         } else {
                             val client = Td.awaitAuthorizedSession().client
-                            MkvChapters.read(language) { offset, length -> readDownloaded(client, offset, length) }
+                            FileChapters.read(language) { offset, length -> readDownloaded(client, offset, length) }
                         }
                     }.onFailure { Log.w("TMPlayer", "Chapters not read", it) }.getOrDefault(emptyList())
                 }
@@ -4993,6 +5082,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     override fun onStart() {
         super.onStart()
+        // Back in front: the session comes home from the notification, the sound never stopped.
+        endBackgroundAudio()
         if (com.tmplayer.data.AppLockSession.unlocked.value) return
         lifecycleScope.launch {
             val askOnOpen = runCatching { settings.appLock.first().onOpen }.getOrDefault(false)
@@ -5008,7 +5099,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         saveResumePosition(leaving = !inPictureInPicture)
         // In picture in picture the activity is stopped while the video is still on screen and
         // still the point of it; pausing here would stop the very thing the mode exists for.
-        if (!inPictureInPicture) player?.pause()
+        // With background audio on, the sound carries on from the notification instead.
+        if (inPictureInPicture) return
+        if (keepsPlayingUnseen()) startBackgroundAudio() else player?.pause()
     }
 
     override fun onDestroy() {
@@ -5021,6 +5114,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         holdFile(0)
         stopDownload()
         trimCache()
+        // The notification goes before the session it shows.
+        endBackgroundAudio()
         // Released before the player it wraps, or it is left holding a released instance.
         mediaSession?.release()
         mediaSession = null
@@ -5306,6 +5401,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         /** How often a running A-B repeat looks at the position: the loop overruns its end by at most this. */
         private const val LOOP_TICK_MS = 100L
+
+        /** How soon after picture in picture ends a stop counts as its window being closed. */
+        private const val PIP_CLOSE_GRACE_MS = 1_500L
 
         /** Chapters past the head of a stream are looked for this many times, this far apart. */
         private const val CHAPTER_TRIES = 4

@@ -307,6 +307,7 @@ fun SettingsScreen(
     val tvChannelsSupported = remember { TvChannelsPublisher.supported(context) }
     val touchPrefs by settings.touchPrefs.collectAsStateWithLifecycle(initialValue = TouchPrefs())
     val downmixChoice by settings.downmixChoice.collectAsStateWithLifecycle(initialValue = null)
+    val backgroundAudio by settings.backgroundAudio.collectAsStateWithLifecycle(initialValue = false)
     val subtitleStyle by settings.subtitleStyle.collectAsStateWithLifecycle(initialValue = SubtitleStyle())
     val trackPrefs by settings.trackPreferences.collectAsStateWithLifecycle(initialValue = TrackPreferences())
     val history by settings.continueWatching.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -807,6 +808,20 @@ fun SettingsScreen(
                 }
                 // The soundtrack a video opens in when neither the file nor its series has one saved.
                 item {
+                // The phone only: a television has no screen to turn off and nothing else to switch to.
+                // Off by default, so leaving the player pauses it as it always has; read as the
+                // player is left, so it applies to the video playing now.
+                if (touch) {
+                    item {
+                        ToggleRow(
+                            title = s.settingsBackgroundAudio,
+                            subtitle = if (backgroundAudio) s.settingsBackgroundAudioOn else s.settingsBackgroundAudioOff,
+                            icon = TmIcons.Audio,
+                            checked = backgroundAudio,
+                            onToggle = { scope.launch { settings.setBackgroundAudio(!backgroundAudio) } },
+                        )
+                    }
+                }
                     ActionRow(
                         title = s.settingsAudioLanguage,
                         subtitle = trackPrefs.audioSummary,

@@ -40,7 +40,8 @@ class PlayerGestures(
     /** A vertical drag's level, 0 to 1, on the left (brightness) or the right (volume). */
     private val onLevel: (left: Boolean, fraction: Float, brightness: Boolean) -> Unit = { _, _, _ -> },
     /** A sideways drag in progress: how far it has moved, where it would land, and the length. */
-    private val onScrub: (deltaMs: Long, targetMs: Long, durationMs: Long) -> Unit = { _, _, _ -> },
+    /** Where a sideways drag would land, and the [FineScrub] rate the finger is at. */
+    private val onScrub: (deltaMs: Long, targetMs: Long, durationMs: Long, rate: Float) -> Unit = { _, _, _, _ -> },
     private val onScrubEnd: () -> Unit = {},
     private val onPinch: (expanding: Boolean) -> Unit = {},
     /** Where the video is now and how long it is, for the drag that scrubs. */
@@ -85,6 +86,13 @@ class PlayerGestures(
     /** Where a scrubbing drag started, and where it has reached. Milliseconds. */
     private var dragFromMs = 0L
     private var seekTarget = -1L
+
+    /**
+     * The scrub's travel, slowed while the finger is taken up or down away from where the drag
+     * started: YouTube's fine scrubbing, a half and then a quarter ([FineScrub]).
+     */
+    private var fine: FineScrub.Tracker? = null
+    private val density = context.resources.displayMetrics.density
 
     /** True between a long press and the finger lifting: the hold-to-speed-up gesture. */
     private var holding = false
@@ -170,7 +178,9 @@ class PlayerGestures(
                 // Measured from where the finger went down rather than summed step by step, so a
                 // drag that wanders and comes back lands where it started.
                 if (dragKind == DRAG_SEEK) {
-                    applySeek(event.x - from.x)
+                    val tracker = fine ?: FineScrub.Tracker(from.x).also { fine = it }
+                    tracker.move(event.x, (event.y - from.y) / density)
+                    applySeek(tracker, from.x)
                     return true
                 }
                 val travel = (from.y - event.y) / (viewHeight * DRAG_RANGE)
@@ -256,6 +266,7 @@ class PlayerGestures(
                 onHold(false)
             }
             seekTarget = -1L
+            fine = null
             dragKind = DRAG_NONE
             scaling = false
         }
@@ -275,6 +286,7 @@ class PlayerGestures(
             onHold(false)
         }
         seekTarget = -1L
+        fine = null
         dragKind = DRAG_NONE
         scaling = false
         onChrome = false
@@ -310,6 +322,7 @@ class PlayerGestures(
             dragKind = DRAG_SEEK
             dragFromMs = positionMs()
             seekTarget = dragFromMs
+            fine = FineScrub.Tracker(start.x)
             return true
         }
         // A band down the middle belongs to neither, which stops a drag started in the centre of
@@ -337,13 +350,16 @@ class PlayerGestures(
      * network video fetching a new window for each one: a stutter, and a pile of cancelled
      * requests for a position the viewer was only passing through.
      */
-    private fun applySeek(travelPx: Float) {
+    private fun applySeek(tracker: FineScrub.Tracker, startX: Float) {
         val length = durationMs()
         if (viewWidth <= 0 || length <= 0) return
-        val delta = (travelPx / viewWidth * SEEK_RANGE_MS).toLong()
+        // Held to the video's two ends, so travel past one is not banked and owed back later.
+        val pxPerMs = viewWidth / SEEK_RANGE_MS
+        tracker.clamp(startX - dragFromMs * pxPerMs, startX + (length - dragFromMs) * pxPerMs)
+        val delta = ((tracker.x - startX) / pxPerMs).toLong()
         val target = (dragFromMs + delta).coerceIn(0L, length)
         seekTarget = target
-        onScrub(target - dragFromMs, target, length)
+        onScrub(target - dragFromMs, target, length, tracker.rate)
     }
 
     private fun currentBrightness(): Float {

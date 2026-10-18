@@ -149,6 +149,7 @@ class PlayerMenuTest {
                 PhoneMenuEntry.PreviousChapter,
                 PhoneMenuEntry.NextFrame,
                 PhoneMenuEntry.PreviousFrame,
+                PhoneMenuEntry.SaveFrame,
                 PhoneMenuEntry.AddBookmark,
                 PhoneMenuEntry.Bookmarks,
                 PhoneMenuEntry.OpenInAnotherApp,
@@ -165,9 +166,17 @@ class PlayerMenuTest {
                 paused = true,
                 bookmarks = true,
                 chapters = true,
+                saveFrame = true,
             ),
         )
-        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true, paused = true, bookmarks = true, chapters = true).toSet())
+        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true, paused = true, bookmarks = true, chapters = true, saveFrame = true).toSet())
+    }
+
+    @Test
+    fun `save a frame is left off a video from a chat that restricts saving`() {
+        assertFalse(PhoneMenuEntry.SaveFrame in PlayerMenu.phoneEntries(true, false, true, true))
+        assertTrue(PhoneMenuEntry.SaveFrame in PlayerMenu.phoneEntries(true, true, true, true, saveFrame = true))
+        assertEquals("Save a frame", PhoneMenuEntry.SaveFrame.label())
     }
 
     @Test

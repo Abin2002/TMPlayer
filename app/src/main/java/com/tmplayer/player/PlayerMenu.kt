@@ -68,6 +68,11 @@ enum class PhoneMenuEntry {
     /** Only while paused: a step on a playing video would be lost in the next frame anyway. */
     NextFrame,
     PreviousFrame,
+    /**
+     * The picture on screen as a PNG in Pictures/TMPlayer, with Share on the answer. Never for a
+     * chat that restricts saving, and never on a television, which has nowhere to look at it.
+     */
+    SaveFrame,
     /** Asks for an optional note, then saves the moment the note was asked at. */
     AddBookmark,
     Bookmarks,
@@ -99,6 +104,7 @@ fun PhoneMenuEntry.label(
     PhoneMenuEntry.PreviousChapter -> L.playerChapterPrevious
     PhoneMenuEntry.NextFrame -> L.playerFrameNext
     PhoneMenuEntry.PreviousFrame -> L.playerFramePrevious
+    PhoneMenuEntry.SaveFrame -> L.playerSaveFrame
     PhoneMenuEntry.OpenInAnotherApp -> L.playerOpenInAnotherApp
     PhoneMenuEntry.LoadSubtitleFile -> L.playerLoadSubtitleFile
     PhoneMenuEntry.SaveToDownloads -> L.playerSaveToDownloads
@@ -183,7 +189,8 @@ object PlayerMenu {
      * it; [openInAnotherApp] false for a chat that restricts saving; [markWatched]
      * needs a message to point at, and so does [bookmarks]; [saveToDownloads] only while the video
      * can still become one; [paused] adds the frame steps. Lines rather than buttons, so the row
-     * CP37 cleared stays clear. [chapters] adds the chapter steps.
+     * CP37 cleared stays clear. [chapters] adds the chapter steps. [saveFrame] is false for a
+     * chat that restricts saving (or while that is still being asked), whose frames stay in it.
      */
     fun phoneEntries(
         pictureInPicture: Boolean,
@@ -193,6 +200,7 @@ object PlayerMenu {
         paused: Boolean = false,
         bookmarks: Boolean = false,
         chapters: Boolean = false,
+        saveFrame: Boolean = false,
     ): List<PhoneMenuEntry> = buildList {
         add(PhoneMenuEntry.LockScreen)
         if (pictureInPicture) add(PhoneMenuEntry.PictureInPicture)
@@ -207,6 +215,7 @@ object PlayerMenu {
             add(PhoneMenuEntry.NextFrame)
             add(PhoneMenuEntry.PreviousFrame)
         }
+        if (saveFrame) add(PhoneMenuEntry.SaveFrame)
         if (bookmarks) {
             add(PhoneMenuEntry.AddBookmark)
             add(PhoneMenuEntry.Bookmarks)

@@ -19,7 +19,8 @@
   rewriting: it already draws the buffered run ahead of the played one, takes a drag on a phone,
   and steps under D-pad left and right when focused, folding a burst of presses into a single
   committed seek. Only its colours are this app's: the played run and the thumb in the accent,
-  the rest in translucent white.
+  the rest in translucent white. FineTimeBar adds the phone's fine scrubbing to it: a finger taken
+  away from the bar travels at half and then a quarter of the speed (FineScrub).
 
   One thing floats outside the bottom cluster on a television: the wall clock in the top left
   corner. It is gone by default and only the television shows it.
@@ -347,7 +348,7 @@
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <androidx.media3.ui.DefaultTimeBar
+        <com.tmplayer.player.FineTimeBar
             android:id="@+id/controls_timebar"
             android:layoutDirection="ltr"
             android:layout_width="match_parent"
