@@ -189,7 +189,7 @@ fun ChatsPage(
                 },
             )
         }
-        StateBox(ui, onRetry = { model.load() }, skeleton = { ChatListSkeleton() }) { data ->
+        StateBox(ui, onRetry = { model.load() }, onAction = { model.load() }, skeleton = { ChatListSkeleton() }) { data ->
             LaunchedEffect(data.chats) { state.noteChatTitles(data.chats) }
             val filter = state.chatFilter
             val sort = state.chatSort
@@ -207,6 +207,23 @@ fun ChatsPage(
                         favouritesOnly -> s.chatsFavouritesEmpty
                         section.isChats && filter != ChatFilter.All -> s.chatsSectionEmpty(filter.label)
                         else -> s.chatsSectionEmpty(section.label)
+                    },
+                    // No chat by that name in the list: the same words across every chat, which
+                    // also asks Telegram for a chat with that @username.
+                    actionLabel = when {
+                        query.isNotBlank() -> s.searchAllChats
+                        // An empty filter or folder of the chats: back to all of them.
+                        section.isChats && filter != ChatFilter.All -> s.browseGoToChats
+                        favouritesOnly -> s.browseGoToChats
+                        else -> null
+                    },
+                    onAction = {
+                        if (query.isNotBlank()) {
+                            state.searchEverywhere(query)
+                        } else {
+                            state.chatFilter = ChatFilter.All
+                            state.showChats(BrowseSection.of(BrowseTab.Chats))
+                        }
                     },
                 )
             } else {

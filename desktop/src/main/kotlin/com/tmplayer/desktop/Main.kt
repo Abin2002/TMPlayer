@@ -324,6 +324,10 @@ fun main(args: Array<String>) {
                                     onToggleAlwaysOnTop = { window.isAlwaysOnTop = !window.isAlwaysOnTop },
                                     onQuit = quit,
                                     onRaise = raise,
+                                    onFreeUpSpace = {
+                                        shell.fullscreen = false
+                                        shell.freeUpSpace()
+                                    },
                                 )
                             }
                             // Nothing on screen with a page header (sign in, the PIN pad): the
@@ -385,13 +389,13 @@ fun DesktopTheme(settings: SettingsStore, content: @Composable () -> Unit) {
     val systemDark by com.tmplayer.desktop.os.SystemAppearance.dark.collectAsState()
     val dark = when (choice) {
         ThemeChoice.Light -> false
-        ThemeChoice.Dark -> true
+        ThemeChoice.Dark, ThemeChoice.Black -> true
         ThemeChoice.System -> systemDark
     }
     // The interface size (CP59) for the whole window, the player's controls included; the video
     // fills whatever space it is given, so it is the same at every size.
     val scale by rememberUiScale(settings)
-    TmMaterialTheme(dark = dark) { ProvideFocusVisibility { UiScaled(scale, content) } }
+    TmMaterialTheme(dark = dark, black = choice == ThemeChoice.Black) { ProvideFocusVisibility { UiScaled(scale, content) } }
 }
 
 /**

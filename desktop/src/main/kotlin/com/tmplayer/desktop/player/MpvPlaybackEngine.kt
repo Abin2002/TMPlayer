@@ -235,6 +235,7 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
             volume = prefs.volume,
             muted = prefs.muted,
             volumeBoost = prefs.volumeBoost,
+            nightMode = prefs.nightMode,
             subtitleStyle = prefs.subtitleStyle,
             subtitleDelayMs = prefs.delays.subtitleMs,
             audioDelayMs = prefs.delays.audioMs,
@@ -261,6 +262,8 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
             h.setPropertyString("hwdec", prefs.hwdec)
         }
         applyVolumeBoost(prefs.volumeBoost, prefs.volume)
+        // Before the file loads, so the decoder and the downmix start with it.
+        applyNightOptions(prefs.nightMode)
         applyScale(prefs.scale)
         applySubtitleStyle(prefs.subtitleStyle)
         // Set before the file loads, so the first line is already in step; mpv keeps both across files.
@@ -278,6 +281,7 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
             prefs.resume?.let { restoreTracks(h, it) }
             // The leveller goes in once there is sound to put it on; see [addLeveller].
             if (prefs.volumeBoost) addLeveller()
+            if (prefs.nightMode) addCompressor()
             tracksDirty = true
             _state.update { it.copy(opened = true, error = null, buffering = false) }
         } catch (e: CancellationException) {
@@ -444,6 +448,47 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
         _state.update { it.copy(volumeBoost = on) }
     }
 
+    /**
+     * Night mode, as far as the bundled FFmpeg allows. mediamp builds it with `--disable-everything`
+     * and only a handful of filters (aresample, anull and the like), so there is no `acompressor`
+     * or `dynaudnorm` to squeeze the range the way the Android processor does. What is done:
+     *
+     * - A compressor is still asked for through `af`, which fails cleanly on this build and works
+     *   the day the FFmpeg carries one ([addCompressor]).
+     * - Dolby Digital and Dolby Digital Plus tracks carry their own dynamic range data, which mpv
+     *   ignores by default (`ad-lavc-ac3drc` 0): turned to full, the track's own night mode.
+     * - A surround track folded to two speakers keeps its centre channel, where the dialogue is,
+     *   3 dB up, and the surrounds and the low effects channel down (swresample's mix levels).
+     *
+     * The decoder reads its option when it starts, so the track is selected again to take it,
+     * which costs a moment of silence on the switch and none on an open.
+     */
+    override fun setNightMode(on: Boolean) {
+        applyNightOptions(on)
+        _state.update { it.copy(nightMode = on) }
+        if (!_state.value.opened) return
+        if (on) addCompressor() else runCatching { handle.command("af", "remove", NIGHT_LABEL) }
+        val h = handle
+        val aid = runCatching { h.getPropertyString("aid") }.getOrNull()
+        if (!aid.isNullOrBlank() && aid != "no") {
+            runCatching {
+                h.setPropertyString("aid", "no")
+                h.setPropertyString("aid", aid)
+            }
+        }
+    }
+
+    private fun applyNightOptions(on: Boolean) {
+        val h = handle
+        runCatching { h.setPropertyString("ad-lavc-ac3drc", if (on) NIGHT_AC3_DRC else "0") }
+        runCatching { h.setPropertyString("audio-swresample-o", if (on) NIGHT_DOWNMIX else "") }
+    }
+
+    private fun addCompressor() {
+        val added = runCatching { handle.command("af", "add", "$NIGHT_LABEL:$NIGHT_COMPRESSOR") }.getOrDefault(false)
+        if (!added) Logger.i(TAG, "No acompressor in this FFmpeg; Night mode is Dolby range control and the dialogue lift")
+    }
+
     private fun volumeScale(): Double = if (boost) BOOSTED_VOLUME_MAX / 100.0 else 1.0
 
     /** The volume the viewer set, 0 to 100, as mpv's own figure under the boost as it stands. */
@@ -494,6 +539,10 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
      */
     private fun applySubtitleStyle(style: SubtitleStyle) {
         val h = handle
+        // Lines inside the picture, never down in a wide video's black bars: where the phone and
+        // the television put them, so a letterboxed video has its subtitles at the same height
+        // on every device (PlayerActivity.subtitleBottomFraction).
+        runCatching { h.setPropertyString("sub-use-margins", "no") }
         runCatching { h.setPropertyString("sub-font-size", style.size.mpvFontSize.toString()) }
         runCatching { h.setPropertyString("sub-pos", style.position.mpvSubPos.toString()) }
         if (!style.box) {
@@ -591,6 +640,13 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
                     else -> L.playerDetailsBoostGain
                 },
             )
+            add(
+                L.playerDetailsNightMode to when {
+                    !_state.value.nightMode -> L.commonOff
+                    h.string("af").orEmpty().contains("acompressor") -> L.playerDetailsNightCompressed
+                    else -> L.playerDetailsNightDolby
+                },
+            )
             // Read back from mpv rather than from the state, so the panel shows what is in force.
             h.double("sub-delay")?.let { add(L.playerDetailsSubtitleDelay to SyncDelays.label((it * 1000).roundToLong())) }
             h.double("audio-delay")?.let { add(L.playerDetailsAudioDelay to SyncDelays.label((it * 1000).roundToLong())) }
@@ -627,6 +683,16 @@ class MpvPlaybackEngine(hwdec: String = OpenPrefs.HWDEC_AUTO) : PlaybackEngine {
         /** Volume boost's leveller, through libavfilter at FFmpeg's own settings, and its label. */
         const val LEVELLER = "lavfi=[dynaudnorm]"
         const val LEVELLER_LABEL = "@boost"
+
+        /** The Android processor's Night mode figures: -15 dBFS, 6 to 1, 6 dB of make up. */
+        const val NIGHT_COMPRESSOR = "lavfi=[acompressor=threshold=0.18:ratio=6:attack=5:release=250:makeup=2]"
+        const val NIGHT_LABEL = "@night"
+
+        /** A Dolby track's own range control at full. */
+        const val NIGHT_AC3_DRC = "1"
+
+        /** The centre 3 dB up, the surrounds 6 dB down and no low effects, when folding to stereo. */
+        const val NIGHT_DOWNMIX = "clev=1.414,slev=0.5,lfe_mix_level=0"
     }
 }
 

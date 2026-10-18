@@ -490,7 +490,9 @@ class ChatListViewModel(private val settings: SettingsStore? = null) : ViewModel
             loaded.isNotEmpty() -> UiState.Content(BrowseData(loaded, account))
             // Said plainly, so a child's empty screen is not mistaken for a broken account.
             allowed != null && everything.isNotEmpty() -> UiState.Empty(L.lockKidsEmpty, icon = TmIcons.Lock)
-            else -> UiState.Empty(L.browseNoChats, icon = TmIcons.ChatsMany)
+            // A first sign in on a large account can meet this while Telegram is still sending
+            // the list, so the way on is to ask again, not to go and do something in Telegram.
+            else -> UiState.Empty(L.browseNoChats, StateAction.Refresh, icon = TmIcons.ChatsMany)
         }
     }
 }
@@ -540,6 +542,14 @@ data class MediaListState(
     val sponsored: SponsoredBatch? = null,
     val loadingMore: Boolean = false,
     val endReached: Boolean = false,
+    /**
+     * The chat's compressed files met so far ([com.tmplayer.data.Archives]), newest first: drawn
+     * at the listing's foot as files that cannot be played, each with its reason. A chat with
+     * these and no videos is a listing of them alone, not "No playable videos".
+     */
+    val archives: List<com.tmplayer.data.ArchiveFile> = emptyList(),
+    /** The last page asked for failed: the foot says so with Try again ([MediaListViewModel.retryMore]). */
+    val moreFailed: Boolean = false,
 )
 
 /**
@@ -596,6 +606,17 @@ class MediaListViewModel(
     /** Videos [keep] has turned away since the listing last started over. */
     private var hiddenBySize = 0
 
+    private val _audioCount = MutableStateFlow(0)
+
+    /**
+     * How many audio files and voice messages the chat holds ([com.tmplayer.data.ChatAudio]), for
+     * the entry to its audio list over the listing; 0 until counted and for a chat with none.
+     */
+    val audioCount: StateFlow<Int> = _audioCount.asStateFlow()
+
+    /** The archives the pages read so far have met, since the listing last started over. */
+    private var archives = emptyList<com.tmplayer.data.ArchiveFile>()
+
     /**
      * What Telegram is actually being asked for, which is not always [query].
      *
@@ -629,6 +650,24 @@ class MediaListViewModel(
         }
         loadTopics()
         followChanges()
+        countAudio()
+    }
+
+    /**
+     * Counts the chat's audio once, beside the first page. A chat with audio and no videos is a
+     * listing of the audio entry alone, never "No playable videos" over a chat of lectures.
+     */
+    private fun countAudio() {
+        viewModelScope.launch {
+            val session = Td.awaitAuthorizedSession()
+            val count = runCatching { com.tmplayer.data.ChatAudio.count(session.client, chatId) }.getOrDefault(0)
+            if (!session.isCurrent() || count <= 0) return@launch
+            _audioCount.value = count
+            val shown = _state.value
+            if (shown is UiState.Empty && query.isBlank() && pageJob?.isActive != true) {
+                _state.value = UiState.Content(MediaListState(sponsored = sponsored, endReached = true, archives = archives))
+            }
+        }
     }
 
     /**
@@ -754,7 +793,13 @@ class MediaListViewModel(
     fun act(action: StateAction) = when (action) {
         StateAction.ShowHidden -> showHidden()
         StateAction.KeepLooking -> keepLooking()
+        StateAction.Refresh -> load()
+        // Leaves the chat for the search across all of them: the screen does that, with [query].
+        StateAction.SearchAllChats -> SearchRequest.ask(query)
     }
+
+    /** What the viewer searched this chat for, for a screen offering the same words everywhere. */
+    val searchText: String get() = query
 
     /**
      * Carries on walking back through the chat from where the last walk gave up, rather than
@@ -790,6 +835,7 @@ class MediaListViewModel(
         val previousCursors = cursors
         cursors = MediaCursors()
         hiddenBySize = 0
+        archives = emptyList()
         val searching = query.isNotBlank()
         if (previous == null) {
             _state.value = UiState.Loading(if (searching) L.browseSearching else L.browseFindingVideos)
@@ -805,6 +851,7 @@ class MediaListViewModel(
                     if (!session.isCurrent()) return@onSuccess
                     val page = rawPage.copy(items = marked(keep(rawPage.items)))
                     cursors = page.cursors
+                    archives = com.tmplayer.data.Archives.merge(archives, page.archives)
                     // A first page can come back empty while older pages still hold videos: a chat
                     // whose newest forty files are all outside the size limits, most often.
                     //
@@ -821,14 +868,15 @@ class MediaListViewModel(
                         return@onSuccess
                     }
                     if (page.items.isNotEmpty()) recordSearch(query)
-                    _state.value = if (page.items.isEmpty() && sponsored == null) {
-                        emptyState()
+                    _state.value = if (page.items.isEmpty() && sponsored == null && archives.isEmpty()) {
+                        nothingFound()
                     } else {
                         UiState.Content(
                             MediaListState(
                                 items = page.items,
                                 sponsored = sponsored,
                                 endReached = page.endReached,
+                                archives = archives,
                             ),
                         )
                     }
@@ -998,6 +1046,14 @@ class MediaListViewModel(
      * honest answer is "nothing yet" with a way to keep going, unless the size limits are what
      * emptied it, in which case showing what they hid is the better button.
      */
+    /** [emptyState], or the audio entry alone where the chat has audio and no videos. */
+    private fun nothingFound(reachedEnd: Boolean = true): UiState<MediaListState> =
+        if (_audioCount.value > 0 && query.isBlank() && reachedEnd) {
+            UiState.Content(MediaListState(sponsored = sponsored, endReached = true, archives = archives))
+        } else {
+            emptyState(reachedEnd)
+        }
+
     private fun emptyState(reachedEnd: Boolean = true): UiState.Empty {
         // Say which knob is hiding things, rather than claiming the chat is empty when it is the
         // filter doing the work, and offer to lift it on the spot rather than send the viewer to
@@ -1007,8 +1063,9 @@ class MediaListViewModel(
         // reads as the whole group being empty.
         val topic = _topics.value?.nameOf(topicId)
         return when {
-            query.isNotBlank() && topic != null -> UiState.Empty(L.gridTopicNoMatch(topic, query), icon = TmIcons.SearchRemove)
-            query.isNotBlank() -> UiState.Empty(L.browseNoMatch(query), icon = TmIcons.SearchRemove)
+            // The next step is the same words across every chat, where the video may well be.
+            query.isNotBlank() && topic != null -> UiState.Empty(L.gridTopicNoMatch(topic, query), StateAction.SearchAllChats, icon = TmIcons.SearchRemove)
+            query.isNotBlank() -> UiState.Empty(L.browseNoMatch(query), StateAction.SearchAllChats, icon = TmIcons.SearchRemove)
             !reachedEnd && hidden != null -> UiState.Empty("$STILL_MORE_TO_SEARCH\n\n$hidden", StateAction.ShowHidden)
             !reachedEnd -> UiState.Empty(STILL_MORE_TO_SEARCH, StateAction.KeepLooking)
             hidden != null -> UiState.Empty("${noVideosWithin(minSizeBytes, maxSizeBytes)}\n\n$hidden", StateAction.ShowHidden)
@@ -1059,12 +1116,24 @@ class MediaListViewModel(
         if (current.value.loadingMore || current.value.endReached) return
         if (pageJob?.isActive == true) return
 
-        _state.value = UiState.Content(current.value.copy(loadingMore = true))
+        _state.value = UiState.Content(current.value.copy(loadingMore = true, moreFailed = false))
         pageJob = viewModelScope.launch {
             val session = Td.awaitAuthorizedSession()
             val repository = ChatRepository(session.client)
             pageMore(session, repository, current.value.items, endReached = false)
         }
+    }
+
+    /**
+     * Try again on a page that failed, or that has been loading for too long: the stuck request
+     * is dropped and the same page asked for afresh, from the cursors it would have used.
+     */
+    fun retryMore() {
+        val current = _state.value as? UiState.Content ?: return
+        if (current.value.endReached) return
+        pageJob?.cancel()
+        _state.value = UiState.Content(current.value.copy(loadingMore = false, moreFailed = false))
+        loadMore()
     }
 
     /**
@@ -1098,6 +1167,7 @@ class MediaListViewModel(
                 .onSuccess { rawPage ->
                     val page = rawPage.copy(items = marked(keep(rawPage.items)))
                     cursors = page.cursors
+                    archives = com.tmplayer.data.Archives.merge(archives, page.archives)
                     items = (items + page.items).distinctBy { it.messageId }
                     reachedEnd = page.endReached
                 }
@@ -1112,14 +1182,17 @@ class MediaListViewModel(
         // An empty listing has to say something, whether the chat ran out or the walk gave up
         // after MAX_EMPTY_PAGES. A Content with no items is a blank screen, and a blank screen
         // asks the viewer to guess which of the two happened.
-        _state.value = if (items.isEmpty() && sponsored == null) {
-            emptyState(reachedEnd)
+        _state.value = if (items.isEmpty() && sponsored == null && archives.isEmpty()) {
+            nothingFound(reachedEnd)
         } else {
             UiState.Content(
                 MediaListState(
                     items = items,
                     sponsored = sponsored,
+                    archives = archives,
                     loadingMore = false,
+                    // Nothing new and the page failed: said, with Try again, not dropped.
+                    moreFailed = failed && items.size == startingFrom.size,
                     // A page that failed is not the end of the chat, only the end of this attempt.
                     // Leaving the listing open means scrolling on retries it, rather than a single
                     // dropped connection cutting the chat short for as long as it stays open.

@@ -245,6 +245,8 @@ internal fun LibraryRows(state: ShellState, version: String, chatList: List<com.
     val openLast by settings.openLastChat.collectAsState(initial = false)
     val lastChatId by settings.lastChatId.collectAsState(initial = 0L)
     val rememberSearches by settings.rememberSearches.collectAsState(initial = true)
+    val resumeSync by settings.resumeSync.collectAsState(initial = false)
+    val newVideoAlerts by settings.newVideoAlerts.collectAsState(initial = false)
     val history by settings.continueWatching.collectAsState(initial = emptyList())
     // Only those the kids lock shows, as the Favourites section counts them.
     val storedFavourites by settings.favorites.collectAsState(initial = emptySet())
@@ -321,6 +323,21 @@ internal fun LibraryRows(state: ShellState, version: String, chatList: List<com.
         rememberSearches,
         icon = TmIcons.Search,
     ) { on -> scope.launch { settings.setRememberSearches(on) } }
+    // Resume across devices: opt in, the row saying what it writes and where (ResumeSync).
+    Toggle(
+        s.settingsResumeSync,
+        if (resumeSync) s.settingsResumeSyncOn else s.settingsResumeSyncOff,
+        resumeSync,
+        icon = TmIcons.History,
+    ) { on ->
+        scope.launch {
+            settings.setResumeSync(on)
+            if (on) {
+                toast(s.settingsResumeSyncStarted)
+                com.tmplayer.data.ResumeSync.syncSoon(settings, afterMs = 0)
+            }
+        }
+    }
     if (favourites.isNotEmpty()) Action(s.settingsClearFavourites, s.settingsClearFavouritesDetail(favourites.size), TmIcons.Close, end = RowEnd.None) {
         confirm = Confirm(
             title = s.settingsFavouritesClearTitle,

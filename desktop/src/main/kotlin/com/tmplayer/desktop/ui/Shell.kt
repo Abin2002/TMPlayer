@@ -365,6 +365,8 @@ private fun Browse(state: ShellState, player: PlayerContent) {
             searchModel.alsoKnown = (resumed + downloaded).map { it.toMediaItem() }
         }
         LaunchedEffect(telegramConnected) { if (telegramConnected) searchModel.reconnected() }
+        // Resume across devices, when turned on (ResumeSync): in and out once Telegram is reachable.
+        LaunchedEffect(telegramConnected) { if (telegramConnected) com.tmplayer.data.ResumeSync.syncSoon(state.settings) }
         var searchSeries by remember { mutableStateOf<com.tmplayer.data.Series?>(null) }
         searchSeries?.let { shown ->
             Box(Modifier.fillMaxSize().background(Tone.background)) {

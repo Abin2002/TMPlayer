@@ -164,9 +164,49 @@ internal fun BoxScope.LoaderSheet(
     }
 }
 
+/**
+ * A stall once the video is playing: the spinner over the picture, and, once nothing has arrived
+ * for [OpeningStall.STALL_MS], the same panel as the opening's, worded for a video that stopped
+ * arriving. Bytes again (the buffer or the file growing) take it away.
+ */
+@Composable
+internal fun BoxScope.PlaybackStall(
+    buffering: Boolean,
+    bufferedMs: Long,
+    downloaded: Float?,
+    onRetry: () -> Unit,
+    onDownloadFirst: (() -> Unit)?,
+    onBack: () -> Unit,
+) {
+    val fraction by rememberUpdatedState(downloaded)
+    val buffered by rememberUpdatedState(bufferedMs)
+    var stalled by remember { mutableStateOf(false) }
+    var tries by remember { mutableStateOf(0) }
+    LaunchedEffect(buffering, tries) {
+        stalled = false
+        if (!buffering) return@LaunchedEffect
+        var lastAt = System.currentTimeMillis()
+        var lastFraction = fraction
+        var lastBuffered = buffered
+        while (true) {
+            val now = System.currentTimeMillis()
+            if (fraction != lastFraction || buffered > lastBuffered) {
+                lastAt = now
+                lastFraction = fraction
+                lastBuffered = buffered
+            }
+            stalled = OpeningStall.stalled(opening = true, local = (fraction ?: 0f) >= 1f, lastProgressAtMs = lastAt, nowMs = now)
+            delay(TICK_MS)
+        }
+    }
+    if (buffering && stalled) {
+        StalledPanel(onRetry = { tries++; onRetry() }, onDownloadFirst = onDownloadFirst, onBack = onBack, midPlay = true)
+    }
+}
+
 /** Over the loader once nothing has arrived for a while: why, and the three ways on. */
 @Composable
-private fun BoxScope.StalledPanel(onRetry: () -> Unit, onDownloadFirst: (() -> Unit)?, onBack: () -> Unit) {
+private fun BoxScope.StalledPanel(onRetry: () -> Unit, onDownloadFirst: (() -> Unit)?, onBack: () -> Unit, midPlay: Boolean = false) {
     val s = LocalStrings.current
     val link by Td.link.collectAsState()
     val focus = remember { FocusRequester() }
@@ -176,11 +216,11 @@ private fun BoxScope.StalledPanel(onRetry: () -> Unit, onDownloadFirst: (() -> U
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(s.playerStalledTitle, style = MaterialTheme.typography.headlineSmall, color = Color.White, textAlign = TextAlign.Center)
+            Text(if (midPlay) s.playerStalledMidTitle else s.playerStalledTitle, style = MaterialTheme.typography.headlineSmall, color = Color.White, textAlign = TextAlign.Center)
             Text(
                 when (OpeningStall.reason(link)) {
                     OpeningStall.Reason.NoLine -> s.playerStalledNoLine
-                    OpeningStall.Reason.Slow -> s.playerStalledSlow
+                    OpeningStall.Reason.Slow -> if (midPlay) s.playerStalledMidSlow else s.playerStalledSlow
                 },
                 color = Color.White.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center,

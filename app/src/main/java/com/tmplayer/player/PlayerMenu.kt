@@ -19,8 +19,10 @@ enum class PlayerMenuEntry {
     LockScreen,
     PlaybackDetails,
     StartOver,
-    /** Night mode: quiet dialogue lifted, loud scenes held back. On or off, and the menu closes. */
+    /** Louder: quiet dialogue lifted, the peaks kept from clipping. On or off, and the menu closes. */
     VolumeBoost,
+    /** Night mode: the range squeezed, so loud scenes are quieter and dialogue clearer. */
+    NightMode,
     /** A page of lengths, and the time left on one that is running. */
     SleepTimer,
     /** A-B repeat: set the start, then the end, then stop; the line says which comes next. */
@@ -64,6 +66,7 @@ enum class PhoneMenuEntry {
      */
     PictureShape,
     VolumeBoost,
+    NightMode,
     SleepTimer,
     /** A-B repeat, as on the television: one line that says what the next press does. */
     AbLoop,
@@ -105,6 +108,7 @@ fun PhoneMenuEntry.label(
     PhoneMenuEntry.PictureInPicture -> L.playerPictureInPicture
     PhoneMenuEntry.PictureShape -> shape?.let { L.commonWithDetail(L.playerPictureShape, it.label) } ?: L.playerPictureShape
     PhoneMenuEntry.VolumeBoost -> L.playerVolumeBoost
+    PhoneMenuEntry.NightMode -> L.playerNightMode
     PhoneMenuEntry.SleepTimer -> sleepDetail?.let { L.playerSleepTimerNow(it) } ?: L.playerSleepTimer
     PhoneMenuEntry.AbLoop -> PlayerMenu.loopLabel(loop)
     PhoneMenuEntry.NextChapter -> L.playerChapterNext
@@ -169,6 +173,7 @@ object PlayerMenu {
         add(PlayerMenuEntry.PlaybackDetails)
         add(PlayerMenuEntry.StartOver)
         add(PlayerMenuEntry.VolumeBoost)
+        add(PlayerMenuEntry.NightMode)
         add(PlayerMenuEntry.SleepTimer)
         add(PlayerMenuEntry.AbLoop)
         if (chapters) {
@@ -215,6 +220,7 @@ object PlayerMenu {
         if (pictureInPicture) add(PhoneMenuEntry.PictureInPicture)
         if (pictureShape) add(PhoneMenuEntry.PictureShape)
         add(PhoneMenuEntry.VolumeBoost)
+        add(PhoneMenuEntry.NightMode)
         add(PhoneMenuEntry.SleepTimer)
         add(PhoneMenuEntry.AbLoop)
         if (chapters) {

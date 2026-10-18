@@ -1,1 +1,1 @@
-An open source, unofficial Telegram video player for Android TV and desktop.
+Play the videos in your Telegram chats on Android TV, phone and PC. Unofficial.

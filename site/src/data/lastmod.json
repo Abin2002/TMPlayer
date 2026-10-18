@@ -1,7 +1,7 @@
 [
   {
     "path": "/",
-    "lastmod": "2026-10-18",
+    "lastmod": "2026-10-19",
     "changefreq": "weekly",
     "priority": "1.0",
     "images": [
@@ -33,7 +33,7 @@
   },
   {
     "path": "/features/",
-    "lastmod": "2026-10-18",
+    "lastmod": "2026-10-19",
     "changefreq": "monthly",
     "priority": "0.9",
     "images": [
@@ -97,7 +97,7 @@
   },
   {
     "path": "/download/",
-    "lastmod": "2026-10-18",
+    "lastmod": "2026-10-19",
     "changefreq": "weekly",
     "priority": "0.9"
   },
@@ -148,6 +148,38 @@
       {
         "loc": "https://tmplayer.org/screenshots/tv-next-episode.webp",
         "title": "The next episode countdown in the TMPlayer player on Android TV"
+      }
+    ]
+  },
+  {
+    "path": "/android/",
+    "lastmod": "2026-10-19",
+    "changefreq": "monthly",
+    "priority": "0.8",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-chats.webp",
+        "title": "TMPlayer on an Android phone, listing demo chats"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-chats-light.webp",
+        "title": "TMPlayer's chat list on a phone, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-grid.webp",
+        "title": "Demo videos from a Telegram chat on a phone, each poster with its year, size and resolution"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-grid-light.webp",
+        "title": "Videos from a chat on a phone, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show.webp",
+        "title": "A show's page in TMPlayer on a phone, with its artwork, overview and resume button"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show-light.webp",
+        "title": "A show's page in TMPlayer on a phone, in the light theme"
       }
     ]
   },

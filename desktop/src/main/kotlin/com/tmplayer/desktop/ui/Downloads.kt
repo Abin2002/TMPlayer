@@ -160,7 +160,11 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
     var figures by remember { mutableStateOf<StorageFigures?>(null) }
     var refresh by remember { mutableStateOf(0) }
     LaunchedEffect(refresh, history.size, cached.size) { figures = runCatching { measureStorage(state) }.getOrNull() }
-    var freeingUp by remember { mutableStateOf(false) }
+    // Up at once when the player sent the viewer here for room ("Not enough space").
+    var freeingUp by remember { mutableStateOf(state.downloadsFreeUp) }
+    // Asked for room: the device counts as short, so Low storage mode is offered while it is off.
+    val askedForRoom = remember { state.downloadsFreeUp }
+    LaunchedEffect(Unit) { state.downloadsFreeUp = false }
     var confirmClearCache by remember { mutableStateOf(false) }
     var confirmPictures by remember { mutableStateOf(false) }
     var confirmUnfinished by remember { mutableStateOf(false) }
@@ -325,7 +329,7 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                                     }
                                 }
                             }
-                            items(queue, key = { "a${it.fileId}" }) { row -> ActiveRow(state, row) }
+                            items(queue, key = { "a${it.fileId}" }) { row -> ActiveRow(state, row, onFreeUp = { freeingUp = true }) }
                             at += 1 + queue.size
                         }
 
@@ -349,7 +353,11 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
                             at += 1
                         }
                         if (history.isEmpty()) {
-                            item(key = "e-done") { Empty(s.downloadsEmptyDone(downloadsDir.path)) }
+                            item(key = "e-done") {
+                                Empty(s.downloadsEmptyDone(downloadsDir.path), s.browseGoToChats) {
+                                    state.showChats(com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats))
+                                }
+                            }
                             at += 1
                         }
                         shelf.forEach { entry ->
@@ -469,7 +477,7 @@ fun DownloadsPage(state: ShellState, downloadsDir: File = DesktopPaths.downloads
         val f = figures
         val lines = com.tmplayer.data.FreeUpSpace.lines(
             lowStorageOn = lowStorageOn,
-            short = com.tmplayer.data.FreeUpSpace.isShort(f?.diskFreeBytes ?: -1, f?.diskTotalBytes ?: 0, askedForRoom = false),
+            short = com.tmplayer.data.FreeUpSpace.isShort(f?.diskFreeBytes ?: -1, f?.diskTotalBytes ?: 0, askedForRoom = askedForRoom),
             recentBytes = if (state.extras.watchCache != null) f?.cachedBytes ?: 0 else 0,
             recentCount = f?.cachedCount ?: 0,
             unfinishedBytes = unfinished.sumOf { it.downloadedBytes },
@@ -753,7 +761,7 @@ private fun ShowHeading(title: String, detail: String) {
 
 /** An empty section: the phone's download mark and its words, on the card's fill. */
 @Composable
-private fun Empty(text: String) {
+private fun Empty(text: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
     Surface(
         shape = RoundedCornerShape(Corner.Large),
         color = Tone.surface,
@@ -762,7 +770,12 @@ private fun Empty(text: String) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             com.tmplayer.ui.components.SettingIconChip(TmIcons.Download)
             Spacer(Modifier.width(16.dp))
-            Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted)
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, modifier = Modifier.weight(1f))
+            // The way on from an empty list: the chats, where every video has its Download.
+            if (actionLabel != null && onAction != null) {
+                Spacer(Modifier.width(16.dp))
+                androidx.compose.material3.OutlinedButton(onClick = onAction) { Text(actionLabel) }
+            }
         }
     }
 }
@@ -880,7 +893,7 @@ private fun RowScope.Words(title: String, detail: String, detailColor: Color = T
 }
 
 @Composable
-private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
+private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress, onFreeUp: (() -> Unit)? = null) {
     val s = LocalStrings.current
     val status = when (row.stage) {
         OfflineDownloads.Stage.Running -> buildString {
@@ -903,11 +916,18 @@ private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
     val scope = rememberCoroutineScope()
     // Cancel deletes what it had fetched too: a part file left behind is space nothing names.
     val cancel: () -> Unit = { scope.launch { dropUnfinished(state, row.fileId) } }
+    // Refused for room: Free up space first, since Try again finds the same full drive. Refused
+    // because the chat forbids keeping a copy: no Try again at all, as on the phone.
+    val noSpace = failed && onFreeUp != null && com.tmplayer.data.isNoSpaceFailure(row.failure)
+    val savable = row.failure != com.tmplayer.data.ContentProtection.NOT_SAVABLE
     val menu = buildList {
         when {
             row.stage == OfflineDownloads.Stage.Moving -> Unit
             row.busy -> add(RowMenuEntry(s.playerPause, TmIcons.Pause, action = pause))
-            failed -> add(RowMenuEntry(s.commonTryAgain, TmIcons.Refresh, action = resume))
+            failed -> {
+                if (noSpace) add(RowMenuEntry(s.downloadsFreeUpSpace, TmIcons.Delete, action = onFreeUp!!))
+                if (savable) add(RowMenuEntry(s.commonTryAgain, TmIcons.Refresh, action = resume))
+            }
             else -> add(RowMenuEntry(s.downloadsResume, TmIcons.Play, action = resume))
         }
         add(RowMenuEntry(s.commonCancel, TmIcons.Close, danger = true, action = cancel))
@@ -932,10 +952,13 @@ private fun ActiveRow(state: ShellState, row: OfflineDownloads.Progress) {
         when {
             row.stage == OfflineDownloads.Stage.Moving -> Unit
             row.busy -> TipIconButton(TmIcons.Pause, s.playerPause, pause)
-            failed -> TipIconButton(TmIcons.Refresh, s.commonTryAgain, resume)
+            failed -> {
+                if (noSpace) TipIconButton(TmIcons.Delete, s.downloadsFreeUpSpace, onFreeUp!!)
+                if (savable) TipIconButton(TmIcons.Refresh, s.commonTryAgain, resume)
+            }
             else -> TipIconButton(TmIcons.Play, s.downloadsResume, resume)
         }
-        TipIconButton(TmIcons.Close, s.commonCancel, cancel)
+        TipIconButton(TmIcons.Close, if (failed) s.commonDismiss else s.commonCancel, cancel)
     }
 }
 

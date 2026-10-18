@@ -71,6 +71,7 @@ import com.tmplayer.ui.theme.Tv
 import com.tmplayer.ui.theme.focusRing
 import com.tmplayer.ui.theme.rememberReducedMotion
 import kotlinx.coroutines.launch
+import com.tmplayer.ui.components.SlowAnswerNotice
 
 /**
  * The television's search across every chat (CP73), the page the rail's Search opens and the
@@ -231,7 +232,7 @@ internal fun TvSearchScreen(
         searchStatus(state)?.let { status ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(status, style = MaterialTheme.typography.bodyLarge, color = Tone.muted)
-                if (state.error != null) TvPill(s.commonRetry, TmIcons.Refresh, onClick = onRetry)
+                if (state.error != null || state.offline) TvPill(s.commonRetry, TmIcons.Refresh, onClick = onRetry)
             }
         }
 
@@ -245,6 +246,9 @@ internal fun TvSearchScreen(
                     horizontalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
                     items(COLUMNS) { SearchResultSkeleton(posterWidth = 140.dp) }
+                    item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                        SlowAnswerNotice(key = state.query, onRetry = onRetry, modifier = Modifier.padding(top = 24.dp))
+                    }
                 }
                 shown.isEmpty() && !state.busy && state.error == null -> Column(Modifier.padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     val hidden = state.hiddenBy

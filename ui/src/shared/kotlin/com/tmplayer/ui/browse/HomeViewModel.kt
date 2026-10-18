@@ -221,6 +221,10 @@ class HomeViewModel(
                 _newEpisodes.value = withContext(work) { inputs.newEpisodes() }
             }
         }
+        // The line to Telegram back: the rows it cost are fetched again.
+        viewModelScope.launch {
+            Td.connected.collect { connected -> if (connected) retryFailed() }
+        }
         // A post in a starred chat refreshes its row, and the recent row that draws from those
         // chats, in place: the old tiles stay up until the new ones arrive.
         viewModelScope.launch {
@@ -245,6 +249,19 @@ class HomeViewModel(
         }
     }
 
+    /** Asks again for every row whose last fetch failed: see [failedChats]. */
+    fun retryFailed() {
+        val chats = synchronized(failedChats) { failedChats.toList().also { failedChats.clear() } }
+        chats.forEach { chatId ->
+            asked -= "chat:$chatId"
+            request(chatId)
+        }
+        if (recentFailed && _recent.value != null) {
+            asked -= "recent"
+            requestRecent()
+        }
+    }
+
     override fun onCleared() {
         following.values.forEach { runCatching { it.close() } }
         following.clear()
@@ -259,13 +276,26 @@ class HomeViewModel(
         }
     }
 
+    /**
+     * The rows whose last fetch failed or ran past [ROW_TIMEOUT_MS], asked for again once Telegram
+     * is reachable ([retryFailed]): a row lost to a dropped line comes back with the line, rather
+     * than staying gone, or a skeleton waiting for good, until the next launch.
+     */
+    private val failedChats = java.util.Collections.synchronizedSet(mutableSetOf<Long>())
+    @Volatile private var recentFailed = false
+
     /** Fetches a starred chat's row, once (again after a post in it). */
     fun request(chatId: Long) = once("chat:$chatId") {
         follow(chatId)
-        val (items, ended) = runCatching { source.chatMediaPage(chatId) }.getOrElse { failure ->
+        val (items, ended) = runCatching {
+            kotlinx.coroutines.withTimeoutOrNull(ROW_TIMEOUT_MS) { source.chatMediaPage(chatId) }
+                ?: throw java.io.IOException("Home row timed out")
+        }.getOrElse { failure ->
             if (failure is CancellationException) throw failure
+            failedChats += chatId
             emptyList<MediaItem>() to true
         }
+        if (items.isNotEmpty()) failedChats -= chatId
         val kept = withinLimits(items)
         _partial.update { if (ended) it - chatId else it + chatId }
         _loaded.update { it + (chatId to kept) }
@@ -273,8 +303,13 @@ class HomeViewModel(
 
     /** Fetches the newest videos across every chat, once, for "Recently added in starred chats" (see [HomeRows]). */
     fun requestRecent() = once("recent") {
-        val items = runCatching { source.recentMedia() }.getOrElse { failure ->
+        recentFailed = false
+        val items = runCatching {
+            kotlinx.coroutines.withTimeoutOrNull(ROW_TIMEOUT_MS) { source.recentMedia() }
+                ?: throw java.io.IOException("Recent row timed out")
+        }.getOrElse { failure ->
             if (failure is CancellationException) throw failure
+            recentFailed = true
             emptyList()
         }
         _recent.value = withinLimits(items)
@@ -405,6 +440,12 @@ class HomeViewModel(
     companion object {
         /** Rows fetched at once: enough to fill a screen quickly, few enough to stay polite to Telegram. */
         const val PARALLEL = 3
+
+        /**
+         * Past this a row's fetch counts as failed: its skeleton goes, and it is asked for again
+         * when the line comes back ([retryFailed]). Twice the slow notice's wait.
+         */
+        const val ROW_TIMEOUT_MS = 30_000L
 
         /**
          * Starred chats held open for their posts at once. An open channel is one TDLib keeps in

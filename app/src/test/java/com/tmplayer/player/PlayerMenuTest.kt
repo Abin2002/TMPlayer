@@ -16,6 +16,7 @@ class PlayerMenuTest {
                 PlayerMenuEntry.PlaybackDetails,
                 PlayerMenuEntry.StartOver,
                 PlayerMenuEntry.VolumeBoost,
+                PlayerMenuEntry.NightMode,
                 PlayerMenuEntry.SleepTimer,
                 PlayerMenuEntry.AbLoop,
                 PlayerMenuEntry.AddBookmark,
@@ -142,6 +143,7 @@ class PlayerMenuTest {
                 PhoneMenuEntry.LockScreen,
                 PhoneMenuEntry.PictureInPicture,
                 PhoneMenuEntry.VolumeBoost,
+                PhoneMenuEntry.NightMode,
                 PhoneMenuEntry.SleepTimer,
                 PhoneMenuEntry.AbLoop,
                 PhoneMenuEntry.NextChapter,
@@ -205,6 +207,7 @@ class PlayerMenuTest {
             listOf(
                 PhoneMenuEntry.LockScreen,
                 PhoneMenuEntry.VolumeBoost,
+                PhoneMenuEntry.NightMode,
                 PhoneMenuEntry.SleepTimer,
                 PhoneMenuEntry.AbLoop,
                 PhoneMenuEntry.LoadSubtitleFile,

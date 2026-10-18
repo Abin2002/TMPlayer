@@ -300,6 +300,7 @@ fun SettingsScreen(
     val compactNav by settings.compactNav.collectAsState(initial = false)
     val detailFirst by settings.detailFirst.collectAsStateWithLifecycle(initialValue = true)
     val rememberSearches by settings.rememberSearches.collectAsStateWithLifecycle(initialValue = true)
+    val resumeSync by settings.resumeSync.collectAsStateWithLifecycle(initialValue = false)
     val wifiOnly by settings.wifiOnlyDownloads.collectAsStateWithLifecycle(initialValue = false)
     val saveMobileData by settings.saveMobileData.collectAsStateWithLifecycle(initialValue = false)
     val trickplayOn by settings.trickplay.collectAsStateWithLifecycle(initialValue = true)
@@ -1095,6 +1096,26 @@ fun SettingsScreen(
                         icon = TmIcons.Search,
                         checked = rememberSearches,
                         onToggle = { scope.launch { settings.setRememberSearches(!rememberSearches) } },
+                    )
+                }
+                // Resume across devices: opt in, explained in full on the row itself, since it
+                // writes a message to the viewer's own Saved Messages.
+                item {
+                    ToggleRow(
+                        title = s.settingsResumeSync,
+                        subtitle = if (resumeSync) s.settingsResumeSyncOn else s.settingsResumeSyncOff,
+                        icon = TmIcons.History,
+                        checked = resumeSync,
+                        onToggle = {
+                            scope.launch {
+                                val on = !resumeSync
+                                settings.setResumeSync(on)
+                                if (on) {
+                                    toast(s.settingsResumeSyncStarted)
+                                    com.tmplayer.data.ResumeSync.syncSoon(settings, afterMs = 0)
+                                }
+                            }
+                        },
                     )
                 }
                 if (favorites.isNotEmpty()) {
@@ -1948,10 +1969,11 @@ fun SettingsScreen(
                 scope.launch {
                     busy = s.settingsClearing
                     val freed = split.cachedBytes
-                    runCatching { WatchCache.clearAll(context) }
+                    val ok = runCatching { WatchCache.clearAll(context) }.isSuccess
                     refresh()
                     busy = null
-                    toast(s.settingsFreed(s.formatter.bytes(freed)))
+                    // Only what was freed is claimed; a failure says so, and the row is still there.
+                    toast(if (ok) s.settingsFreed(s.formatter.bytes(freed)) else s.settingsClearFailed)
                 }
             },
             onDismiss = { prompt = null },
@@ -1969,11 +1991,11 @@ fun SettingsScreen(
                     val freed = split.pictureBytes
                     // Pictures only. Nothing here may touch the download index or the videos on
                     // disk: this row is named for thumbnails.
-                    runCatching { Td.clearPicturesAndPreviews() }
+                    val ok = runCatching { Td.clearPicturesAndPreviews() }.isSuccess
                     runCatching { withContext(Dispatchers.IO) { com.tmplayer.online.OnlineMetadata.current?.purgeImages() } }
                     refresh()
                     busy = null
-                    toast(s.settingsFreed(s.formatter.bytes(freed)))
+                    toast(if (ok) s.settingsFreed(s.formatter.bytes(freed)) else s.settingsClearFailed)
                 }
             },
             onDismiss = { prompt = null },
@@ -1991,12 +2013,12 @@ fun SettingsScreen(
                     val freed = split.cachedBytes + split.pictureBytes
                     // The videos first, through the one thing that knows which of them are the
                     // viewer's downloads, and then the pictures, which cannot be anybody's.
-                    runCatching { WatchCache.clearAll(context) }
-                    runCatching { Td.clearPicturesAndPreviews() }
+                    val videos = runCatching { WatchCache.clearAll(context) }.isSuccess
+                    val pictures = runCatching { Td.clearPicturesAndPreviews() }.isSuccess
                     runCatching { withContext(Dispatchers.IO) { com.tmplayer.online.OnlineMetadata.current?.purgeImages() } }
                     refresh()
                     busy = null
-                    toast(s.settingsFreed(s.formatter.bytes(freed)))
+                    toast(if (videos && pictures) s.settingsFreed(s.formatter.bytes(freed)) else s.settingsClearFailed)
                 }
             },
             onDismiss = { prompt = null },

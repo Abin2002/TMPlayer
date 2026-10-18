@@ -174,6 +174,8 @@ import com.tmplayer.ui.components.FocusOnOpen
 import com.tmplayer.ui.components.MediaGridSkeleton
 import com.tmplayer.ui.components.MediaPreview
 import com.tmplayer.ui.components.Spinner
+import com.tmplayer.ui.components.SlowAnswerNotice
+import com.tmplayer.ui.components.TmButton
 import com.tmplayer.ui.components.StateScaffold
 import com.tmplayer.ui.components.TvConfirm
 import com.tmplayer.ui.components.TvSearchField
@@ -474,6 +476,9 @@ fun MediaGridScreen(
     // A refresh that keeps its content stays a Content state throughout, so the pull gesture waits
     // on a new state instance instead. The timeout stops the spinner turning for ever when a
     // request against a dead connection never emits at all.
+    // The chat's audio: how much there is, and whether its list is open.
+    val audioCount by viewModel.audioCount.collectAsState()
+    var audioOpen by remember(chatId) { mutableStateOf(false) }
     var refreshing by remember(chatId) { mutableStateOf(false) }
     LaunchedEffect(refreshing) {
         if (!refreshing) return@LaunchedEffect
@@ -492,7 +497,11 @@ fun MediaGridScreen(
             state,
             onRetry = viewModel::load,
             loading = { MediaGridSkeleton(layout = layout) },
-            onAction = viewModel::act,
+            onAction = { action ->
+                viewModel.act(action)
+                // The search across every chat lives with the chat list: back there, where it opens.
+                if (action == com.tmplayer.ui.components.StateAction.SearchAllChats) onBack()
+            },
         ) { list ->
             // On a phone the column count follows the width, which follows the orientation.
             // Everything that counts in columns, the paging lead included, reads it from here so
@@ -667,6 +676,12 @@ fun MediaGridScreen(
                             if (course != null || loadedOnly) {
                                 item(key = "course", span = { GridItemSpan(maxLineSpan) }) { courseHeader() }
                             }
+                            // The chat's audio, as a list to play from, over its videos.
+                            if (audioCount > 0 && query.isBlank()) {
+                                item(key = "audio", span = { GridItemSpan(maxLineSpan) }) {
+                                    AudioEntry(audioCount, noVideos = feed.isEmpty(), onOpen = { audioOpen = true }, modifier = if (feed.isEmpty()) Modifier.focusRequester(firstItem) else Modifier)
+                                }
+                            }
                             shelfGrid(
                                 feed = feed,
                                 posterKeys = posterKeys,
@@ -720,6 +735,8 @@ fun MediaGridScreen(
                                         )
                                     }
                             }
+                            // The chat's compressed files, which cannot be played, each with why.
+                            archiveItems(list.archives, noVideos = feed.isEmpty() && audioCount == 0, first = if (feed.isEmpty() && audioCount == 0) firstItem else null, onExplain = onOfflineAction)
                         }
     
                         CardLayout.List -> LazyColumn(
@@ -730,6 +747,11 @@ fun MediaGridScreen(
                         ) {
                             if (metaNotice) item(key = "meta-notice") { metaNoticeCard() }
                             if (course != null || loadedOnly) item(key = "course") { courseHeader() }
+                            if (audioCount > 0 && query.isBlank()) {
+                                item(key = "audio") {
+                                    AudioEntry(audioCount, noVideos = feed.isEmpty(), onOpen = { audioOpen = true }, modifier = if (feed.isEmpty()) Modifier.focusRequester(firstItem) else Modifier)
+                                }
+                            }
                             items(
                                 items = feed,
                                 key = {
@@ -783,6 +805,7 @@ fun MediaGridScreen(
                                 }
                               }
                             }
+                            archiveItems(list.archives, noVideos = feed.isEmpty() && audioCount == 0, first = if (feed.isEmpty() && audioCount == 0) firstItem else null, onExplain = onOfflineAction)
                         }
                     }
                 }
@@ -891,6 +914,33 @@ fun MediaGridScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Tone.muted,
                             )
+                            // A page that will not come says so, with a way to ask again.
+                            SlowAnswerNotice(key = list.items.size, onRetry = viewModel::retryMore)
+                        }
+                    }
+                }
+                // The last page failed: said where the chip was, with Try again, rather than the
+                // listing quietly stopping short.
+                if (list.moreFailed && !list.loadingMore) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Tone.surfaceHigh,
+                        contentColor = Tone.text,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(
+                                bottom = (if (touch) navigationBarPadding() else Tv.SafeV) +
+                                    (if (standingOn != null) 46.dp else 0.dp) +
+                                    connectionOffset,
+                            ),
+                    ) {
+                        Row(
+                            Modifier.padding(start = 16.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Text(s.gridMoreFailed, style = MaterialTheme.typography.bodyMedium)
+                            TmButton(onClick = viewModel::retryMore) { Text(s.commonTryAgain) }
                         }
                     }
                 }
@@ -910,7 +960,7 @@ fun MediaGridScreen(
             // on a remote: on a phone this would highlight a card nobody pointed at.
             // The rows or tiles button pressed in the heading keeps the remote, though: the list
             // under it changes, and the button is where the viewer is looking to press it again.
-            LaunchedEffect(list.items.firstOrNull()?.id, layout, touch) {
+            LaunchedEffect(list.items.firstOrNull()?.id, layout, touch, audioCount > 0) {
                 val switchedHere = laidOut[0] != layout && headerHasFocus
                 laidOut[0] = layout
                 if (!touch && !switchedHere) runCatching { firstItem.requestFocus() }
@@ -946,6 +996,10 @@ fun MediaGridScreen(
     // Null while every ticked video comes from a chat that restricts saving content.
     val downloadSelected = { downloadThese(selected.values.toList()) }
         .takeIf { selected.isEmpty() || selected.values.any { it.canBeSaved } }
+
+    if (audioOpen) {
+        AudioSheet(chatId, chatTitle, onPlay = onPlay, onDismiss = { audioOpen = false })
+    }
 
     var chatInfoOpen by remember { mutableStateOf(false) }
     if (chatInfoOpen) {

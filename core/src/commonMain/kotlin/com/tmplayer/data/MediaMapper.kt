@@ -559,9 +559,9 @@ object MediaMapper {
     private const val CAPTION_MAX = 600
 
     /** TDLib reports 0 for a file it has never touched, but usually knows the expected size. */
-    private fun fileSize(size: Long, expectedSize: Long) = if (size > 0) size else expectedSize
+    internal fun fileSize(size: Long, expectedSize: Long) = if (size > 0) size else expectedSize
 
-    private fun onDevice(file: dev.g000sha256.tdl.dto.File): Boolean {
+    internal fun onDevice(file: dev.g000sha256.tdl.dto.File): Boolean {
         val diskFile = file.local.path.takeIf { it.isNotBlank() }?.let(::File)
         return LocalFilePolicy.evaluate(
             downloadCompleted = file.local.isDownloadingCompleted,

@@ -100,6 +100,14 @@ import org.openani.mediamp.mpv.compose.MpvMediampPlayerSurface
 import java.awt.Point
 import java.awt.Toolkit
 import java.awt.image.BufferedImage
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 
 /** Outlives the screen, so the resume write on the way out survives the Back that caused it. */
 private val playerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -108,7 +116,8 @@ private val playerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 internal sealed interface Phase {
     data class Loading(val message: String) : Phase
     data object Playing : Phase
-    data class Failed(val message: String) : Phase
+    /** [noRoom]: refused for space on the drive, which Free up space answers better than Try again. */
+    data class Failed(val message: String, val noRoom: Boolean = false) : Phase
     data class Countdown(val next: MediaItem, val seconds: Int) : Phase
     data object Finished : Phase
 
@@ -225,6 +234,8 @@ fun PlayerScreen(
     onLockedChanged: (Boolean) -> Unit = {},
     /** Start locked, with the Unlock button up: the render test's. */
     lockedAtStart: Boolean = false,
+    /** "Not enough space": close the player for Downloads with Free up space up. Null hides it. */
+    onFreeUpSpace: (() -> Unit)? = null,
 ) {
     val s = LocalStrings.current
     val engine = remember { engineFactory() }
@@ -410,6 +421,8 @@ fun PlayerScreen(
             runCatching { settings.clearResumePosition(item.chatId, item.messageId, item) }
             0L
         } else runCatching {
+            // Resume across devices, when on: the other devices' places in first, briefly.
+            com.tmplayer.data.ResumeSync.pullFor(settings)
             // Whichever copy of the video was played last: a switch of quality carries on.
             settings.resumeStartFor(item)
         }.getOrDefault(0L)
@@ -447,6 +460,7 @@ fun PlayerScreen(
             volume = prefs.now.volume,
             muted = prefs.now.muted,
             volumeBoost = runCatching { settings.volumeBoostNow() }.getOrDefault(false),
+            nightMode = runCatching { settings.nightModeNow() }.getOrDefault(false),
             hwdec = OpenPrefs.hwdecFor(prefs.now.softwareDecoding),
             subtitleStyle = runCatching { settings.subtitleStyleNow() }.getOrDefault(SubtitleStyle()),
             delays = delays,
@@ -461,7 +475,7 @@ fun PlayerScreen(
             throw e
         } catch (e: Exception) {
             Logger.w("PlayerScreen", "Could not open ${item.title}", e)
-            phase = Phase.Failed(e.message ?: s.playerOpenFailed)
+            phase = Phase.Failed(e.message ?: s.playerOpenFailed, noRoom = e is com.tmplayer.desktop.NotEnoughRoom)
             return@LaunchedEffect
         } finally {
             preparing.cancel()
@@ -537,6 +551,9 @@ fun PlayerScreen(
                 if (forget) settings.clearResumePosition(it.chatId, it.messageId, it)
                 else settings.saveResumePosition(it.chatId, it.messageId, position, duration, description)
             }
+            // Out to the other devices once the saves stop (a pause, the player closed): the
+            // push waits for them to settle, so the heartbeat never edits the message (ResumeSync).
+            com.tmplayer.data.ResumeSync.pushSoon(settings)
         }
     }
 
@@ -738,6 +755,14 @@ fun PlayerScreen(
         engine.setVolumeBoost(on)
         showFlash(Flash.Kind.Text, if (on) L.playerVolumeBoostOn else L.playerVolumeBoostOff)
         playerScope.launch { runCatching { settings.setVolumeBoost(on) } }
+    }
+
+    /** The menu's Night mode: switched on the sound already playing, and kept for every video. */
+    fun toggleNightMode() {
+        val on = !status.nightMode
+        engine.setNightMode(on)
+        showFlash(Flash.Kind.Text, if (on) L.playerNightModeOn else L.playerNightModeOff)
+        playerScope.launch { runCatching { settings.setNightMode(on) } }
     }
 
     val left = status.durationMs - status.positionMs
@@ -1433,6 +1458,7 @@ fun PlayerScreen(
                             showFlash(Flash.Kind.Text, if (on) s.playerDownmixOn else s.playerDownmixOff)
                         }
                         MenuAction.ToggleVolumeBoost -> toggleVolumeBoost()
+                        MenuAction.ToggleNightMode -> toggleNightMode()
                         is MenuAction.Sleep -> setSleepTimer(action.minutes)
                         is MenuAction.SubtitleDelay -> stepSubtitleDelay(action.direction)
                         is MenuAction.AudioDelay -> stepAudioDelay(action.direction)
@@ -1474,6 +1500,20 @@ fun PlayerScreen(
                     null
                 },
             ) }
+
+            // Sound alone: its name and chat where the picture would be, unless the file carries
+            // a cover, which mpv draws as the picture.
+            if (com.tmplayer.data.ChatAudio.isAudio(current.item) && phase == Phase.Playing && status.videoWidth == 0) {
+                Column(
+                    Modifier.align(Alignment.Center).padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    androidx.compose.material3.Icon(com.tmplayer.ui.icons.TmIcons.Audio, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(72.dp))
+                    Text(current.item.title, color = Color.White, fontSize = 22.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    if (current.chatTitle.isNotBlank()) Text(current.chatTitle, color = Color.White.copy(alpha = 0.72f), fontSize = 15.sp)
+                }
+            }
 
             FeedbackLayer(
                 flash = flash,
@@ -1597,6 +1637,28 @@ fun PlayerScreen(
                 },
             )
 
+            // A stall while playing that runs on says why, with the opening's three ways on.
+            PlaybackStall(
+                buffering = phase == Phase.Playing && status.buffering && !status.seekPending,
+                bufferedMs = status.bufferedMs,
+                downloaded = downloaded,
+                onRetry = {
+                    // The connections reopened and the stream asked for again from where it stands.
+                    scope.launch { runCatching { com.tmplayer.data.Td.retryConnecting() } }
+                    engine.seekTo(status.positionMs)
+                    refocus()
+                },
+                onDownloadFirst = if (savable && !current.isDownload) {
+                    {
+                        current.download()
+                        onBack()
+                    }
+                } else {
+                    null
+                },
+                onBack = onBack,
+            )
+
             StatusSheet(
                 phase = phase,
                 title = title,
@@ -1606,6 +1668,7 @@ fun PlayerScreen(
                     refocus()
                 },
                 onBack = onBack,
+                onFreeUpSpace = onFreeUpSpace,
                 onWatchAgain = {
                     if (engine.state.value.opened) {
                         phase = Phase.Playing

@@ -116,7 +116,7 @@ const hasMac = Boolean((latest.assets as Record<string, unknown>)['macos-arm64-d
               <Fragment slot="note">{t('download.one_file_for_every_phone')}</Fragment>
               <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_universal_apk')}</p>
             </AbiRow>
-            <a slot="foot" href={l('/install/#android')}>{t('download.how_to_install_on_a')}</a>
+            <Fragment slot="foot"><a href={l('/install/#android')}>{t('download.how_to_install_on_a')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/android/')}>{t('android.made_for_phones')}</a></Fragment>
             <Fragment slot="after">
             <p class="platform-badges"><a class="store-badge" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener"><Shot src="/badges/obtainium.png" width="161" height="48" alt={t('download.add_to_obtainium')} /></a></p>
             <p class="platform-note"><T k="download.kao_note"><a href="https://keepandroidopen.org/" target="_blank" rel="noopener" slot="a1">{t('download.kao_note__a1')}</a></T></p>

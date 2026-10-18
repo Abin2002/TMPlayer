@@ -176,6 +176,11 @@ data class MediaPage(
     val endReached: Boolean,
     /** Self-destructing videos this page left out. */
     val hiddenSelfDestructing: Int = 0,
+    /**
+     * The compressed files this page met among the chat's documents ([Archives]), which no player
+     * opens: listed apart, so a chat of ZIPs does not read as an empty one.
+     */
+    val archives: List<ArchiveFile> = emptyList(),
 )
 
 /**
@@ -439,7 +444,7 @@ class ChatRepository(private val td: TdlClient) {
             val hidden = listOfNotNull(videoResult, documentResult, animationResult).sumOf { it.selfDestructing }
             // "More like this" offers only titles the viewer has; this is how it knows them.
             com.tmplayer.online.KnownMedia.note(items)
-            MediaPage(items, next, next.allDone, hidden)
+            MediaPage(items, next, next.allDone, hidden, documentResult?.archives.orEmpty())
         }
         }
 
@@ -773,6 +778,7 @@ class ChatRepository(private val td: TdlClient) {
         val next: Long,
         val done: Boolean,
         val selfDestructing: Int,
+        val archives: List<ArchiveFile> = emptyList(),
     )
 
     private suspend fun search(
@@ -800,7 +806,15 @@ class ChatRepository(private val td: TdlClient) {
         val screened = MediaMapper.screen(found.messages.toList(), chatProtected)
         // nextFromMessageId is 0 once the chat has no older matches left.
         val done = found.messages.isEmpty() || found.nextFromMessageId == 0L
-        return SearchResult(screened.items, found.nextFromMessageId, done, screened.selfDestructing)
+        // A document search also meets the chat's archives, which are kept for the listing's foot.
+        // Self-destructing ones stay out, as their videos do.
+        val archives = if (filter is SearchMessagesFilterDocument) {
+            found.messages.filter { !MediaMapper.selfDestructs(it) && it.schedulingState == null && it.sendingState == null }
+                .mapNotNull(Archives::of)
+        } else {
+            emptyList()
+        }
+        return SearchResult(screened.items, found.nextFromMessageId, done, screened.selfDestructing, archives)
     }
 
     companion object {

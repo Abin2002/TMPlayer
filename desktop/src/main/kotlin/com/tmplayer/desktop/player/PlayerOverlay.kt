@@ -158,6 +158,7 @@ internal sealed interface MenuAction {
     data class Shape(val scale: VideoScale) : MenuAction
     data object ToggleDownmix : MenuAction
     data object ToggleVolumeBoost : MenuAction
+    data object ToggleNightMode : MenuAction
 
     /** Minutes from now, [SleepTimer.END_OF_VIDEO], or null to turn the timer off. */
     data class Sleep(val minutes: Int?) : MenuAction
@@ -873,6 +874,7 @@ internal fun PlayerMenu(
             MenuPage.Options -> {
                 Entry(s.playerDownmix, checked = status.downmix) { pick(MenuAction.ToggleDownmix) }
                 Entry(s.playerVolumeBoost, checked = status.volumeBoost) { pick(MenuAction.ToggleVolumeBoost) }
+                Entry(s.playerNightMode, checked = status.nightMode) { pick(MenuAction.ToggleNightMode) }
                 Entry(s.playerSleepTimer, trailing = sleepTimer ?: s.commonOff) { page(MenuPage.Sleep) }
                 val repeat = when {
                     loop == null -> s.playerLoopSetStart
@@ -1310,6 +1312,8 @@ internal fun BoxScope.StatusSheet(
     onPlayNext: (MediaItem) -> Unit,
     onCancelNext: () -> Unit,
     onKeepWatching: () -> Unit = {},
+    /** For a video refused for room ([Phase.Failed.noRoom]): Downloads, with Free up space up. */
+    onFreeUpSpace: (() -> Unit)? = null,
     /** What to call the episode a countdown or "Still watching?" offers: see [labelFor]. */
     nextLabel: (MediaItem) -> String = { Episodes().labelFor(it) },
 ) {
@@ -1327,8 +1331,19 @@ internal fun BoxScope.StatusSheet(
                     Text(phase.message, color = Color.White, fontSize = 15.sp, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(12.dp))
                     Row {
-                        TextButton(onClick = onRetry) { Text(s.commonTryAgain) }
+                        // Short of room, trying again finds the same drive: the first button is
+                        // the one that makes room, focused so Enter takes it.
+                        if (phase.noRoom && onFreeUpSpace != null) {
+                            val free = remember { FocusRequester() }
+                            Button(onClick = onFreeUpSpace, modifier = Modifier.focusRequester(free)) { Text(s.downloadsFreeUpSpace) }
+                            Spacer(Modifier.width(8.dp))
+                            LaunchedEffect(phase) { runCatching { free.requestFocus() } }
+                        }
+                        // Otherwise Try again takes the keyboard, so Enter answers the sheet.
+                        val retry = remember { FocusRequester() }
+                        TextButton(onClick = onRetry, modifier = Modifier.focusRequester(retry)) { Text(s.commonTryAgain) }
                         TextButton(onClick = onBack) { Text(s.commonBack) }
+                        if (!(phase.noRoom && onFreeUpSpace != null)) LaunchedEffect(phase) { runCatching { retry.requestFocus() } }
                     }
                     // The logs to send with a report of it: saved and shown, or straight to GitHub.
                     Spacer(Modifier.height(8.dp))
@@ -1339,16 +1354,21 @@ internal fun BoxScope.StatusSheet(
                     Text(s.playerStartingIn(phase.seconds), color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
                     Spacer(Modifier.height(12.dp))
                     Row {
-                        TextButton(onClick = { onPlayNext(phase.next) }) { Text(s.playerPlayNow) }
+                        val now = remember { FocusRequester() }
+                        TextButton(onClick = { onPlayNext(phase.next) }, modifier = Modifier.focusRequester(now)) { Text(s.playerPlayNow) }
                         TextButton(onClick = onCancelNext) { Text(s.commonCancel) }
+                        // Keyed on the episode, not the second, so the count does not steal focus each tick.
+                        LaunchedEffect(phase.next) { runCatching { now.requestFocus() } }
                     }
                 }
                 Phase.Finished -> {
                     Text(s.playerTheEnd, color = Color.White, fontSize = 15.sp)
                     Spacer(Modifier.height(12.dp))
                     Row {
-                        TextButton(onClick = onWatchAgain) { Text(s.playerWatchAgain) }
+                        val again = remember { FocusRequester() }
+                        TextButton(onClick = onWatchAgain, modifier = Modifier.focusRequester(again)) { Text(s.playerWatchAgain) }
                         TextButton(onClick = onBack) { Text(s.commonBack) }
+                        LaunchedEffect(Unit) { runCatching { again.requestFocus() } }
                     }
                 }
                 is Phase.StillWatching -> {

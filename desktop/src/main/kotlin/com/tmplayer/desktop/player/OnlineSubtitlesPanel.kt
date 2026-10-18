@@ -97,6 +97,17 @@ internal fun BoxScope.OnlineSubtitlesPanel(
                     Spacer(Modifier.width(10.dp))
                     Text(s.onlineSearching, color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
                 }
+                // A search that runs long says so, with Try again, rather than spinning in silence.
+                var slow by remember(attempt) { mutableStateOf(false) }
+                LaunchedEffect(attempt) {
+                    kotlinx.coroutines.delay(com.tmplayer.ui.components.SlowAnswer.AFTER_MS)
+                    slow = true
+                }
+                if (slow) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(com.tmplayer.ui.components.SlowAnswer.MESSAGE, color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
+                    TextButton(onClick = { attempt++ }) { Text(s.commonTryAgain) }
+                }
                 return@Column
             }
             val reason = notice ?: shown.notice

@@ -157,6 +157,10 @@ import com.tmplayer.ui.theme.Motion
 import com.tmplayer.ui.theme.Scrims
 import com.tmplayer.ui.theme.rememberReducedMotion
 import com.tmplayer.ui.components.PosterArt
+import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 
 /**
  * One chat's videos as a grid of posters: the shared [MediaListViewModel] (paging, search, size
@@ -166,6 +170,9 @@ import com.tmplayer.ui.components.PosterArt
 @Composable
 fun MediaGridPage(state: ShellState, chat: ChatSummary) {
     val s = LocalStrings.current
+    val toast = rememberToast()
+    var audioOpen by remember(chat.id) { mutableStateOf(false) }
+    if (audioOpen) AudioListSheet(state, chat) { audioOpen = false }
     val minSize by state.settings.minSizeBytes.collectAsState(initial = null)
     val maxSize by state.settings.maxSizeBytes.collectAsState(initial = null)
     val min = minSize
@@ -187,6 +194,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         val model = rememberViewModel(Triple(chat.id, min, max)) { MediaListViewModel(chat.id, min, max, onSearched = { state.settings.addRecentSearch(it) }, downloadedIds = { DownloadIndex.presentIds(state.settings) }, topicMemory = state.settings.topicMemory()) }
         val ui by model.state.collectAsState()
         var query by remember(chat.id) { mutableStateOf("") }
+        val audioCount by model.audioCount.collectAsState()
         var openSeries by remember(chat.id) { mutableStateOf<com.tmplayer.data.Series?>(null) }
         // Where the grid stood when a show was opened over it: the grid is gone while the show is
         // up, so closing the show would otherwise land back at the top of the chat.
@@ -268,7 +276,15 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         val skeleton: @Composable () -> Unit = {
             VideoGridSkeleton(if (postersLast) CHAT_POSTER_WIDTH * POSTER_SHARE else CHAT_POSTER_WIDTH, posters = postersLast)
         }
-        StateBox(ui, onRetry = { model.load() }, onAction = model::act, skeleton = skeleton) { content ->
+        StateBox(
+            ui,
+            onRetry = { model.load() },
+            onAction = { action ->
+                // The same words across every chat: the palette opens on them over this chat.
+                if (action == com.tmplayer.ui.components.StateAction.SearchAllChats) state.searchEverywhere(model.searchText) else model.act(action)
+            },
+            skeleton = skeleton,
+        ) { content ->
             val back = gridReturn
             val grid = rememberLazyGridState(back?.first ?: 0, back?.second ?: 0)
             LaunchedEffect(grid) { gridReturn = null }
@@ -353,9 +369,11 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 onNav = { gridNav = it },
                 // Online metadata is on by default, so the first grid says once where posters come
                 // from; not while searching, when the listing is what was searched for.
-                header = if (ad == null && course == null && !sortedLoaded) null else {
+                header = if (ad == null && course == null && !sortedLoaded && (audioCount == 0 || query.isNotBlank())) null else {
                     {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            // The chat's audio, as a list to play from, over its posters.
+                            if (audioCount > 0 && query.isBlank()) AudioEntryRow(audioCount, noVideos = content.items.isEmpty()) { audioOpen = true }
                             if (sortedLoaded) {
                                 Text(s.gridSortLoadedNote(content.items.size), style = MaterialTheme.typography.bodySmall, color = Tone.muted)
                             }
@@ -365,6 +383,22 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                     }
                 },
                 loadingMore = content.loadingMore,
+                footerSlow = { SlowAnswerLine(content.items.size, onRetry = model::retryMore) },
+                footer = if (!content.moreFailed && content.archives.isEmpty()) null else {
+                    {
+                        Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // The last page failed: said, with Try again, not a listing that stops short.
+                            if (content.moreFailed) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                    Text(s.gridMoreFailed, color = Tone.muted)
+                                    Spacer(Modifier.width(12.dp))
+                                    OutlinedButton(onClick = model::retryMore) { Text(s.commonTryAgain) }
+                                }
+                            }
+                            ArchiveList(content.archives, noVideos = content.items.isEmpty() && audioCount == 0, onExplain = { toast(it) })
+                        }
+                    }
+                },
                 rows = state.chatRows,
                 rowsGrid = rowsGrid,
                 topPadding = (if (underChrome) ChatTopClearance else 8.dp) + noticeRoom,
@@ -435,6 +469,10 @@ internal fun VideoGrid(
     posterWidth: Dp = state.posterWidth,
     /** The page's own bar at the foot, which a selection's bar takes the place of while it is up. */
     bottomBar: (@Composable () -> Unit)? = null,
+    /** Full width under the last cell: a failed page's Try again, the chat's archives. */
+    footer: (@Composable () -> Unit)? = null,
+    /** Under the next page's spinner once it runs long: [SlowAnswerLine] with its Try again. */
+    footerSlow: (@Composable () -> Unit)? = null,
 ) {
     val watch = if (series.isEmpty()) null else rememberSeriesWatch(state)
     // Every file on its own, episodes included: a chat lists what was posted, one by one.
@@ -491,10 +529,14 @@ internal fun VideoGrid(
             }
             if (loadingMore) {
                 item(key = "more", span = { GridItemSpan(maxLineSpan) }) {
-                    Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(Modifier.size(28.dp))
+                        footerSlow?.invoke()
                     }
                 }
+            }
+            if (footer != null) {
+                item(key = "footer", span = { GridItemSpan(maxLineSpan) }) { footer() }
             }
         }
         }
@@ -571,7 +613,7 @@ fun ContinuePage(state: ShellState, tabs: @Composable () -> Unit = {}) {
         val list = records
         when {
             list == null -> VideoGridSkeleton(state.posterWidth * CONTINUE_WIDTH, posters = false, nameBelow = false)
-            list.isEmpty() -> EmptyNote(HistoryTab.Continue.emptyIcon, s.continueEmpty)
+            list.isEmpty() -> EmptyNote(HistoryTab.Continue.emptyIcon, s.continueEmpty, s.browseGoToChats) { state.showChats(com.tmplayer.ui.browse.BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Chats)) }
             else -> {
                 val grid = rememberLazyGridState()
                 val records by rememberUpdatedState(list)
@@ -1022,7 +1064,22 @@ internal fun Poster(
             when {
                 selected -> TileBadge(s.browseBadgeSelected, corner, icon = TmIcons.CheckCircle)
                 record != null -> TileBadge(s.downloadsDownloaded, corner, icon = TmIcons.CheckCircle)
-                download != null && download.busy -> TileBadge(s.downloadsDownloading, corner, icon = TmIcons.Download)
+                // Every stage the queue can be in, as the phone's tiles say it: a failed download
+                // shows on its tile in red rather than looking like nothing was asked for.
+                download != null -> TileBadge(
+                    when (download.stage) {
+                        OfflineDownloads.Stage.Running -> download.fraction?.let { s.formatter.percent(it.toDouble()) } ?: s.gridStageDownloading
+                        OfflineDownloads.Stage.Queued -> s.gridStageQueued
+                        OfflineDownloads.Stage.Paused -> s.gridStagePaused
+                        OfflineDownloads.Stage.Offline -> s.gridStageWaiting
+                        OfflineDownloads.Stage.NoWifi -> s.gridStageNoWifi
+                        OfflineDownloads.Stage.Moving -> s.gridStageMoving
+                        OfflineDownloads.Stage.Failed -> s.gridStageFailed
+                    },
+                    corner,
+                    icon = TmIcons.Download,
+                    fill = if (download.stage == OfflineDownloads.Stage.Failed) Tone.danger.copy(alpha = 0.92f) else com.tmplayer.ui.components.TileBadgeFill,
+                )
                 item.onDevice -> TileBadge(s.browseBadgeCached, corner, icon = TmIcons.Download)
                 finished -> WatchedBadge(corner)
             }
@@ -1032,7 +1089,7 @@ internal fun Poster(
             if (!showing) when {
                 badge != null -> Box(Modifier.align(Alignment.TopEnd).padding(TileBadgeInset)) { badge() }
                 // Only on its own: two chips across a narrow poster would meet in the middle.
-                poster && quality != null && !selected && record == null && download?.busy != true && !item.onDevice && !finished -> TileBadge(quality, Modifier.align(Alignment.TopEnd).padding(TileBadgeInset))
+                poster && quality != null && !selected && record == null && download == null && !item.onDevice && !finished -> TileBadge(quality, Modifier.align(Alignment.TopEnd).padding(TileBadgeInset))
             }
             if (showing) {
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.25f)))
@@ -1422,3 +1479,119 @@ private val SPONSORED_ART = 112.dp
 
 /** A value worked out off the main thread, so "not answered yet" and "answered null" differ. */
 private class Computed<T>(val value: T)
+
+
+/**
+ * A chat's compressed files under its videos ([com.tmplayer.data.Archives]): what TMPlayer met
+ * among the chat's documents and cannot play, each with why, so a chat of ZIPs does not read as
+ * an empty one. A click says the reason again as a message.
+ */
+@Composable
+internal fun ArchiveList(archives: List<com.tmplayer.data.ArchiveFile>, noVideos: Boolean, onExplain: (String) -> Unit) {
+    if (archives.isEmpty()) return
+    val s = LocalStrings.current
+    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (noVideos) Text(s.browseNoPlayableVideos, style = MaterialTheme.typography.titleMedium)
+        Text(s.gridArchivesHeading(archives.size), color = Tone.muted, style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(4.dp))
+        archives.forEach { file ->
+            val size = file.sizeBytes.takeIf { it > 0 }?.let { s.messages.formatter.bytes(it) }
+            androidx.compose.material3.Surface(
+                onClick = { onExplain(file.reason) },
+                shape = MaterialTheme.shapes.medium,
+                color = Tone.surface,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(TmIcons.Archive, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(16.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(file.fileName.ifBlank { file.kind.label }, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        Text(file.reason, color = Tone.muted, style = MaterialTheme.typography.bodySmall)
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Text(listOfNotNull(file.kind.label, size).joinToString(" · "), color = Tone.muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+}
+
+/** The way into a chat's audio over its posters ([com.tmplayer.data.ChatAudio]); a click opens the list. */
+@Composable
+internal fun AudioEntryRow(count: Int, noVideos: Boolean, onOpen: () -> Unit) {
+    val s = LocalStrings.current
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (noVideos) Text(s.browseNoPlayableVideos, style = MaterialTheme.typography.titleMedium)
+        androidx.compose.material3.Surface(onClick = onOpen, shape = MaterialTheme.shapes.medium, color = Tone.surface, modifier = Modifier.fillMaxWidth()) {
+            Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(TmIcons.Audio, contentDescription = null, tint = Tone.accent, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(16.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(s.gridAudioTitle, style = MaterialTheme.typography.titleSmall)
+                    Text(s.gridAudioCount(count), color = Tone.muted, style = MaterialTheme.typography.bodySmall)
+                }
+                Icon(TmIcons.ChevronRight, contentDescription = null, tint = Tone.muted)
+            }
+        }
+    }
+}
+
+/**
+ * A chat's audio as a list on the desktop: Play all from the oldest, or one file, each going on to
+ * the next one posted after it ([com.tmplayer.data.PlayQueue]); a failed or slow page says so with
+ * Try again.
+ */
+@Composable
+internal fun AudioListSheet(state: ShellState, chat: ChatSummary, onDismiss: () -> Unit) {
+    val s = LocalStrings.current
+    val scope = rememberCoroutineScope()
+    val list = remember(chat.id) { com.tmplayer.ui.browse.ChatAudioList(chat.id, scope) }
+    val shown by list.state.collectAsState()
+    fun play(item: com.tmplayer.data.MediaItem) {
+        onDismiss()
+        state.noteChatTitle(chat.id, chat.title)
+        state.openPlayer(item, startFromBeginning = false)
+    }
+    DesktopSheet(onDismiss) {
+        Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(s.gridAudioTitle, style = MaterialTheme.typography.headlineSmall)
+            Text(chat.title, color = Tone.muted)
+            Spacer(Modifier.height(8.dp))
+            if (shown.items.isNotEmpty()) {
+                Button(onClick = { scope.launch { list.playAll()?.let(::play) } }) {
+                    Icon(TmIcons.Play, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(s.gridAudioPlayAll)
+                }
+            }
+            Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState())) {
+                shown.items.forEach { item ->
+                    val detail = listOfNotNull(
+                        s.messages.formatter.duration(item.durationSec.toLong()).takeIf { item.durationSec > 0 },
+                        s.messages.formatter.size(item.sizeBytes).takeIf { item.sizeBytes > 0 },
+                    ).joinToString(" · ")
+                    androidx.compose.material3.Surface(onClick = { play(list.queueFrom(item)) }, shape = MaterialTheme.shapes.small, color = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.fillMaxWidth()) {
+                        Row(Modifier.padding(horizontal = 8.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(TmIcons.Audio, contentDescription = null, tint = Tone.muted, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(item.title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                if (detail.isNotBlank()) Text(detail, color = Tone.muted, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
+                when {
+                    shown.loading -> CircularProgressIndicator(Modifier.padding(16.dp).size(24.dp))
+                    shown.failure != null -> Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(shown.failure.orEmpty(), color = Tone.muted, modifier = Modifier.weight(1f))
+                        OutlinedButton(onClick = list::loadMore) { Text(s.commonTryAgain) }
+                    }
+                    !shown.done -> TextButton(onClick = list::loadMore) { Text(s.gridAudioMore) }
+                    shown.items.isEmpty() -> Text(s.gridAudioNone, color = Tone.muted)
+                }
+            }
+        }
+    }
+}

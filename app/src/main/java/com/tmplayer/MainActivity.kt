@@ -472,6 +472,9 @@ private fun Root() {
     val networkStatus by NetworkMonitor.status.collectAsStateWithLifecycle()
     val telegramConnected by Td.connected.collectAsStateWithLifecycle()
     val settings = remember { SettingsStore(context) }
+    // Resume across devices, when turned on: the other devices' places in, this one's out, once
+    // Telegram is reachable (ResumeSync).
+    LaunchedEffect(telegramConnected) { if (telegramConnected) com.tmplayer.data.ResumeSync.syncSoon(settings) }
     val watchedStore = remember { WatchedStore(context) }
 
     // The status and gesture bars draw their icons over the app's own background, and
@@ -1675,6 +1678,11 @@ private fun Root() {
                         onBack = leaveDownloads,
                         openOnCached = downloadsOnCached,
                         openFreeUp = downloadsFreeUp > 0,
+                        // An empty Downloads page: to the chats, where Download is.
+                        onBrowse = {
+                            pickedTabKey = BrowseSection.encode(BrowseSection.of(BrowseTab.Chats))
+                            screen = Screen.Chats
+                        },
                     )
                 }
             }

@@ -81,9 +81,9 @@ class UndoSeekChip(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 Gravity.START or Gravity.BOTTOM,
             ).apply {
-                leftMargin = NextUpCard.MARGIN_PX
-                marginStart = NextUpCard.MARGIN_PX
-                bottomMargin = NextUpCard.BOTTOM_PX
+                leftMargin = NextUpCard.marginPx(root)
+                marginStart = NextUpCard.marginPx(root)
+                bottomMargin = NextUpCard.bottomPx(root)
             },
         )
     }

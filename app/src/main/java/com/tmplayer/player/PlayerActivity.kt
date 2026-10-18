@@ -176,6 +176,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var mediaFileName = ""
     private var mediaCaption = ""
 
+    /** The file's type, for telling sound alone (a chat's audio, [ChatAudio]) from a video. */
+    private var mediaMime = ""
+    private val isAudio: Boolean get() = mediaMime.startsWith("audio/", ignoreCase = true)
+
+    /** What stands in for the picture while sound alone plays: its name and where it is from. */
+    private var audioCard: View? = null
+
     /** The forum topic the post is in, or 0, for the speed remembered per topic. */
     private var mediaTopicId = 0
 
@@ -321,6 +328,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** Volume boost as the viewer left it, read before the player is built. */
     private var volumeBoostOn = false
+
+    /** Night mode for sound, as the viewer left it, read before the player is built. */
+    private var nightModeOn = false
 
     /**
      * Skip silence, switched under the speeds and kept as a setting. Media3 drops the quiet stretches
@@ -609,6 +619,14 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var lastBufferedMs = -1L
     private var slowStartUp = false
 
+    /**
+     * The same watch for a stall once playback has begun ([watchRebuffering]): a spinner over the
+     * picture that runs past [OpeningStall.STALL_MS] with no new byte turns into the same sheet,
+     * worded for a video that stopped arriving rather than one that never started.
+     */
+    private var rebufferWatch: Job? = null
+    private var stalledMidPlay = false
+
     /** Automatic recoveries since playback was last healthy, and the one currently pending. */
     private var recoveryAttempts = 0
     private var recoveryJob: Job? = null
@@ -745,6 +763,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 bookmarkCount = { bookmarkList.value.size },
                 openInAnotherApp = { savable == true },
                 volumeBoost = { volumeBoostOn },
+                nightMode = { nightModeOn },
                 sleepTimer = ::sleepTimerDetail,
                 onSleepTimer = ::setSleepTimer,
                 sleepChoice = ::sleepChoice,
@@ -850,6 +869,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         mediaSubtitle = from.getStringExtra(EXTRA_SUBTITLE).orEmpty()
         mediaFileName = from.getStringExtra(EXTRA_FILE_NAME).orEmpty()
         mediaCaption = from.getStringExtra(EXTRA_CAPTION).orEmpty()
+        mediaMime = from.getStringExtra(EXTRA_MIME).orEmpty()
         mediaTopicId = from.getIntExtra(EXTRA_TOPIC_ID, 0)
         chatTitle = from.getStringExtra(EXTRA_CHAT_TITLE).orEmpty()
         fileSizeBytes = from.getLongExtra(EXTRA_SIZE, 0)
@@ -900,6 +920,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // [startPlayback] applies the same position as well; whichever arrives second sets it again.
         // A few seconds before the saved point, as Settings has it ([ResumeRewind]).
         itemScope.launch {
+            // Resume across devices, when on: the other devices' places in first, a couple of
+            // seconds at most, so a video half watched on the phone opens there on the TV.
+            com.tmplayer.data.ResumeSync.pullFor(settings)
             // A bookmark chosen on the detail page opens the video at its moment, once.
             resumeMs = BookmarkJump.take(chatId, messageId)
                 // Whichever copy of the video was played last: a switch of quality, or the 720p
@@ -993,6 +1016,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 (trackPlan.subtitles is SubtitlePlan.On || trackPlan.subtitles is SubtitlePlan.IfForeignAudio)
             downmixChoice = runCatching { settings.downmixChoiceNow() }.getOrNull()
             volumeBoostOn = runCatching { settings.volumeBoostNow() }.getOrDefault(false)
+            nightModeOn = runCatching { settings.nightModeNow() }.getOrDefault(false)
             skipSilence = runCatching { settings.skipSilenceNow() }.getOrDefault(false)
             subtitleStyle = runCatching { settings.subtitleStyleNow() }.getOrDefault(SubtitleStyle())
             applySubtitleStyle()
@@ -1130,12 +1154,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             topBar.updatePadding(left = barLeft + safe.left, right = barRight + safe.right, top = safe.top)
             corner?.updatePadding(right = safe.right, top = safe.top + underTheBar)
             nextUpCard?.view?.updateLayoutParams<FrameLayout.LayoutParams> {
-                rightMargin = safe.right + NextUpCard.MARGIN_PX
-                bottomMargin = safe.bottom + NextUpCard.BOTTOM_PX
+                rightMargin = safe.right + NextUpCard.marginPx(root)
+                bottomMargin = safe.bottom + NextUpCard.bottomPx(root)
             }
             skipPill?.view?.updateLayoutParams<FrameLayout.LayoutParams> {
-                rightMargin = safe.right + NextUpCard.MARGIN_PX
-                bottomMargin = safe.bottom + NextUpCard.BOTTOM_PX
+                rightMargin = safe.right + NextUpCard.marginPx(root)
+                bottomMargin = safe.bottom + NextUpCard.bottomPx(root)
+            }
+            // "Back to" on the start side keeps clear of a cutout or the bar in landscape too.
+            undoChip?.view?.updateLayoutParams<FrameLayout.LayoutParams> {
+                leftMargin = safe.left + NextUpCard.marginPx(root)
+                marginStart = safe.left + NextUpCard.marginPx(root)
+                bottomMargin = safe.bottom + NextUpCard.bottomPx(root)
             }
             insets
         }
@@ -1431,7 +1461,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         title = mediaTitle,
         sizeBytes = fileSizeBytes,
         durationSec = durationSec,
-        mimeType = "",
+        mimeType = mediaMime,
         thumbnailFileId = 0,
         miniThumbnail = null,
         date = 0,
@@ -1780,6 +1810,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 // After the fold, so the compressor hears the two channels that will be played.
                 val boost = VolumeBoostProcessor().also {
                     it.enabled = volumeBoostOn
+                    it.night = nightModeOn
                     volumeBoost = it
                 }
                 val processors = if (folds.isEmpty()) {
@@ -2125,7 +2156,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * first: while it is up the activity is never stopped, and closing its window means stop.
      */
     private fun keepsPlayingUnseen(): Boolean =
-        backgroundAudioOn && !FormFactor.isTv(this) && !isFinishing && !inPictureInPicture &&
+        // Sound alone plays on with the screen off whatever the setting: that is what it is for.
+        (backgroundAudioOn || isAudio) && !FormFactor.isTv(this) && !isFinishing && !inPictureInPicture &&
             mediaSession != null && player?.playWhenReady == true &&
             // The sheet is up for a failure, a question or "Still watching?", none of which
             // plays on; the countdown to the next episode is the one sheet that does.
@@ -2397,6 +2429,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     offerStartOver()
                     controls?.setBuffering(false)
                     hideStatus()
+                    showAudioCard()
                     // Once, as the picture first lands: the viewer sees the name of what they
                     // opened and where the controls live, and the row folds away on its own.
                     if (!controlsShownOnStart) {
@@ -2795,6 +2828,11 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private fun findEpisodes() {
         val here = currentItem()
+        // Started from a chat's audio: the list is the order, the next file plays when one ends.
+        com.tmplayer.data.PlayQueue.stepsFor(here)?.let { steps ->
+            _episodes.value = steps
+            return
+        }
         val show = EpisodeNeighbours.showOf(here) ?: return
         _episodes.value = EpisodeSteps(current = EpisodeNeighbours.tagOf(here))
 
@@ -3532,6 +3570,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     override fun attachOnlineSubtitle(file: File, label: String) = subtitleFiles.attachFile(file, label)
 
+    override val pickSubtitleFile: (() -> Unit)?
+        get() = if (FormFactor.isTv(this)) null else ({ subtitleFiles.pick() })
+
     fun showTrackPicker(trackType: Int) {
         TrackPickerFragment.show(supportFragmentManager, R.id.overlay_container, trackType)
     }
@@ -4156,6 +4197,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             val item = items.add(if (lock) LOCK_GROUP else 0, entry.ordinal, order, label)
             if (lock) item.setIcon(R.drawable.ic_lock)
             if (entry == PhoneMenuEntry.VolumeBoost) item.setCheckable(true).setChecked(volumeBoostOn)
+            if (entry == PhoneMenuEntry.NightMode) item.setCheckable(true).setChecked(nightModeOn)
         }
         androidx.core.view.MenuCompat.setGroupDividerEnabled(items, true)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) menu.setForceShowIcon(true)
@@ -4165,6 +4207,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 PhoneMenuEntry.PictureInPicture -> enterPictureInPictureNow()
                 PhoneMenuEntry.PictureShape -> showSheet { it.showShape(videoScale, ::applyScale) }
                 PhoneMenuEntry.VolumeBoost -> toggleVolumeBoost()
+                PhoneMenuEntry.NightMode -> toggleNightMode()
                 PhoneMenuEntry.SleepTimer -> showSheet { it.showSleep(sleepTimerDetail(), sleepChoice(), ::setSleepTimer) }
                 PhoneMenuEntry.AbLoop -> pressLoop()
                 PhoneMenuEntry.NextChapter -> stepChapter(forward = true)
@@ -4200,6 +4243,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             PlayerMenuEntry.SaveToDownloads -> saveToDownloads()
             PlayerMenuEntry.MarkWatched -> toggleWatched()
             PlayerMenuEntry.VolumeBoost -> toggleVolumeBoost()
+            PlayerMenuEntry.NightMode -> toggleNightMode()
             PlayerMenuEntry.AbLoop -> pressLoop()
             PlayerMenuEntry.NextChapter -> stepChapter(forward = true)
             PlayerMenuEntry.PreviousChapter -> stepChapter(forward = false)
@@ -4464,6 +4508,18 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         volumeBoost?.enabled = on
         showGestureFeedback(if (on) L.playerVolumeBoostOn else L.playerVolumeBoostOff)
         lifecycleScope.launch { runCatching { settings.setVolumeBoost(on) } }
+    }
+
+    /**
+     * The menu's Night mode: the range squeezed on the sound already playing (the processor ramps,
+     * so it does not click), and kept for every video. See [VolumeBoostProcessor].
+     */
+    private fun toggleNightMode() {
+        val on = !nightModeOn
+        nightModeOn = on
+        volumeBoost?.night = on
+        showGestureFeedback(if (on) L.playerNightModeOn else L.playerNightModeOff)
+        lifecycleScope.launch { runCatching { settings.setNightMode(on) } }
     }
 
     /** What the menu says about a running sleep timer, or null when there is none. */
@@ -5580,6 +5636,49 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         }
     }
 
+    /**
+     * Sound alone has no picture, so the black where it would be carries the file's name and its
+     * chat instead, centred, under the controls. Built once and kept; gone for a video.
+     */
+    private fun showAudioCard() {
+        if (!isAudio) {
+            audioCard?.visibility = View.GONE
+            return
+        }
+        val root = findViewById<FrameLayout>(R.id.player_root)
+        val card = audioCard ?: android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+            val density = resources.displayMetrics.density
+            setPadding((32 * density).toInt(), 0, (32 * density).toInt(), 0)
+            addView(android.widget.ImageView(context).apply {
+                setImageResource(R.drawable.ic_audio_language)
+                setColorFilter(android.graphics.Color.WHITE)
+                alpha = 0.7f
+                layoutParams = android.widget.LinearLayout.LayoutParams((72 * density).toInt(), (72 * density).toInt())
+            })
+            addView(android.widget.TextView(context).apply {
+                tag = "title"
+                setTextColor(android.graphics.Color.WHITE)
+                textSize = 22f
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, (16 * density).toInt(), 0, 0)
+            })
+            addView(android.widget.TextView(context).apply {
+                tag = "detail"
+                setTextColor(android.graphics.Color.argb(184, 255, 255, 255))
+                textSize = 15f
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, (6 * density).toInt(), 0, 0)
+            })
+            root.addView(this, 1, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+            audioCard = this
+        }
+        card.findViewWithTag<android.widget.TextView>("title")?.text = mediaTitle
+        card.findViewWithTag<android.widget.TextView>("detail")?.text = chatTitle
+        card.visibility = View.VISIBLE
+    }
+
     /** A stall after playback has begun: a small chip, so the video stays on screen. */
     private fun showRebuffering() {
         // The sheet saying nothing is arriving stays until bytes do, or the viewer answers it.
@@ -5600,6 +5699,37 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             rebufferText.text = if (offline) L.playerOfflineWaiting else L.commonLoading
         }
         updateDownloadChip()
+        watchRebuffering()
+    }
+
+    /** See [rebufferWatch]. Ends with the stall, or once the sheet is up. */
+    private fun watchRebuffering() {
+        if (rebufferWatch?.isActive == true) return
+        lastProgressAtMs = SystemClock.elapsedRealtime()
+        lastBufferedMs = -1L
+        rebufferWatch = lifecycleScope.launch {
+            while (true) {
+                delay(OPENING_WATCH_TICK_MS)
+                val exo = player ?: return@launch
+                if (openingFilm || exo.playbackState != Player.STATE_BUFFERING) return@launch
+                val buffered = exo.bufferedPosition
+                if (buffered > lastBufferedMs) {
+                    if (lastBufferedMs >= 0) noteOpeningProgress()
+                    lastBufferedMs = buffered
+                }
+                val local = downloadComplete || downloadedFile != null || (joinedSource != null && joinedAllLocal)
+                // Offline has its own words on the chip, and carries on by itself once back.
+                if (networkOffline) {
+                    lastProgressAtMs = SystemClock.elapsedRealtime()
+                    continue
+                }
+                if (OpeningStall.stalled(opening = true, local = local, lastProgressAtMs, SystemClock.elapsedRealtime())) {
+                    stalledMidPlay = true
+                    showSlowStart()
+                    return@launch
+                }
+            }
+        }
     }
 
     /**
@@ -5901,7 +6031,16 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** A byte arrived: the count starts again, and a sheet that said nothing was arriving goes. */
     private fun noteOpeningProgress() {
         lastProgressAtMs = SystemClock.elapsedRealtime()
-        if (slowStartUp) showStatus(L.playerStarting)
+        if (slowStartUp && stalledMidPlay) {
+            // Bytes again in the middle of a video: back to the small spinner, not "Starting".
+            stalledMidPlay = false
+            slowStartUp = false
+            statusOverlay.visibility = View.GONE
+            hideFailureActions()
+            showRebuffering()
+        } else if (slowStartUp) {
+            showStatus(L.playerStarting)
+        }
     }
 
     /**
@@ -5926,10 +6065,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             text = mediaTitle
             visibility = if (mediaTitle.isBlank()) View.GONE else View.VISIBLE
         }
-        statusTitle.text = L.playerStalledTitle
+        statusTitle.text = if (stalledMidPlay) L.playerStalledMidTitle else L.playerStalledTitle
         statusText.text = when (OpeningStall.reason(Td.link.value)) {
             OpeningStall.Reason.NoLine -> L.playerStalledNoLine
-            OpeningStall.Reason.Slow -> L.playerStalledSlow
+            OpeningStall.Reason.Slow -> if (stalledMidPlay) L.playerStalledMidSlow else L.playerStalledSlow
         }
         val canDownload = canSaveToDownloads()
         statusDetail.visibility = if (canDownload) View.VISIBLE else View.GONE
@@ -5956,6 +6095,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private fun tryOpeningAgain() {
         slowStartUp = false
+        stalledMidPlay = false
         recoveryAttempts = 0
         App.backgroundScope.launch { runCatching { Td.retryConnecting() } }
         showStatus(L.playerTryingAgain)
@@ -5979,6 +6119,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     private fun hideStatus() {
         slowStartUp = false
+        stalledMidPlay = false
         failedRetryable = false
         openingFilm = false
         statusOverlay.visibility = View.GONE
@@ -6046,7 +6187,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         super.onStop()
         // Counted again from the start when the viewer is back ([onStart]).
         openingWatch?.cancel()
+        rebufferWatch?.cancel()
         saveResumePosition(leaving = !inPictureInPicture)
+        // This place out to the other devices, once the saves have settled (ResumeSync).
+        com.tmplayer.data.ResumeSync.pushSoon(settings)
         // In picture in picture the activity is stopped while the video is still on screen and
         // still the point of it; pausing here would stop the very thing the mode exists for.
         // With background audio on, the sound carries on from the notification instead.
@@ -6283,6 +6427,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         private const val EXTRA_THUMBNAIL_ID = "thumbnail_id"
         private const val EXTRA_MINI_THUMBNAIL = "mini_thumbnail"
         private const val EXTRA_CAN_BE_SAVED = "can_be_saved"
+        private const val EXTRA_MIME = "mime_type"
         private const val EXTRA_OUTSIDE_APP_TASK = "outside_app_task"
         /** How long the note about a missing piece stays up as the video starts. */
         private const val PIECES_NOTICE_MS = 6_000L
@@ -6519,6 +6664,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 putExtra(EXTRA_THUMBNAIL_ID, item.thumbnailFileId)
                 putExtra(EXTRA_MINI_THUMBNAIL, item.miniThumbnail)
                 putExtra(EXTRA_CAN_BE_SAVED, item.canBeSaved)
+                putExtra(EXTRA_MIME, item.mimeType)
                 // The pieces of a video cut into several files, so the player need not look for them.
                 if (item.isJoined) {
                     putExtra(EXTRA_PIECE_MESSAGES, item.pieces.map { it.messageId }.toLongArray())

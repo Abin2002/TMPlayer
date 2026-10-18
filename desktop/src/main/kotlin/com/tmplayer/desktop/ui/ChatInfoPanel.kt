@@ -47,10 +47,8 @@ import java.awt.datatransfer.StringSelection
 internal fun ChatInfoPanel(chat: ChatSummary, onDismiss: () -> Unit) {
     val s = LocalStrings.current
     val toast = rememberToast()
-    val info by produceState<ChatInfo?>(initialValue = null, chat.id) {
-        val session = Td.awaitConnectedSessionOrNull() ?: return@produceState
-        value = runCatching { ChatRepository(session.client).chatInfo(chat.id) }.getOrNull()
-    }
+    val load = com.tmplayer.ui.browse.rememberChatInfo(chat.id)
+    val info = load.info
     fun copy(text: String, said: String) {
         runCatching { Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(text), null) }
         toast(said)
@@ -66,6 +64,11 @@ internal fun ChatInfoPanel(chat: ChatSummary, onDismiss: () -> Unit) {
             ChatAvatar(chat.miniThumbnail, shown?.bigPhotoFileId?.takeIf { it != 0 } ?: chat.photoFileId, name, 104.dp)
             Text(name, style = MaterialTheme.typography.headlineSmall, color = Tone.text, textAlign = TextAlign.Center)
             shown?.let { facts(it) }?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = Tone.muted) }
+            // Could not be loaded: said, with Try again, so a failure does not pass for a wait.
+            if (load.failed) {
+                Text(s.chatsInfoFailed, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, textAlign = TextAlign.Center)
+                OutlinedButton(onClick = load.retry) { Text(s.commonTryAgain) }
+            }
             shown?.username?.let { username ->
                 Text(
                     "@$username",

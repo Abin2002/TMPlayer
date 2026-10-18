@@ -44,6 +44,8 @@ fun PlayerHost(
     onToggleAlwaysOnTop: () -> Unit,
     onQuit: () -> Unit,
     onRaise: () -> Unit,
+    /** The player's "Not enough space": closed, and Downloads open on Free up space. */
+    onFreeUpSpace: (() -> Unit)? = null,
 ) {
     var engine by remember { mutableStateOf<PlaybackEngine?>(null) }
     var playing by remember { mutableStateOf<MediaItem>(request.item) }
@@ -116,6 +118,7 @@ fun PlayerHost(
         onEngine = { engine = it },
         onLockedChanged = locked::set,
         downloads = DesktopServices.downloads,
+        onFreeUpSpace = onFreeUpSpace,
     )
 
     LaunchedEffect(engine, playing) {
