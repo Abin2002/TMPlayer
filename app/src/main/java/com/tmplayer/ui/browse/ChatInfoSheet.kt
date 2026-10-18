@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +48,7 @@ import com.tmplayer.ui.components.showMessage
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
+import kotlinx.coroutines.launch
 
 /**
  * A chat's info: its large picture, its name, what kind of chat it is and how many members or
@@ -81,6 +83,7 @@ fun ChatInfoSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ChatInfoBody(info, title, photoFileId, miniThumbnail, touch = true)
+                JoinChatButton(info, load)
                 ChatInfoFailed(load)
             }
         }
@@ -91,9 +94,54 @@ fun ChatInfoSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ChatInfoBody(info, title, photoFileId, miniThumbnail, touch = false)
+                JoinChatButton(info, load)
                 ChatInfoFailed(load)
             }
         }
+    }
+}
+
+/**
+ * Join, for a public group or channel seen through its @username and not yet joined (CP79). The
+ * press is the confirm: the sheet above it is the preview. It turns into a spinner while Telegram
+ * answers, and the sheet reloads once joined, so the button goes.
+ */
+@Composable
+private fun JoinChatButton(info: ChatInfo?, load: ChatInfoLoad) {
+    if (info == null || !info.canJoin) return
+    val s = LocalStrings.current
+    val context = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    var joining by androidx.compose.runtime.remember(info.summary.id) { androidx.compose.runtime.mutableStateOf(false) }
+    val label = when {
+        info.joinByRequest -> s.linkRequestJoin
+        info.summary.kind == ChatKind.Channel -> s.linkJoinChannel
+        else -> s.linkJoinGroup
+    }
+    com.tmplayer.ui.components.TmButton(
+        onClick = {
+            if (joining) return@TmButton
+            joining = true
+            scope.launch {
+                val outcome = runCatching {
+                    val session = Td.awaitConnectedSessionOrNull() ?: return@runCatching com.tmplayer.data.JoinOutcome.Refused(com.tmplayer.data.Failures.OFFLINE)
+                    com.tmplayer.data.TelegramLinkActions(session.client).joinPublic(info.summary.id)
+                }.getOrElse { com.tmplayer.data.JoinOutcome.Refused(com.tmplayer.data.Failures.humanise(it)) }
+                joining = false
+                showMessage(context, when (outcome) {
+                    is com.tmplayer.data.JoinOutcome.Joined -> L.linkJoined(info.summary.title)
+                    com.tmplayer.data.JoinOutcome.RequestSent -> L.linkRequestSent
+                    is com.tmplayer.data.JoinOutcome.Refused -> outcome.reason
+                })
+                if (outcome is com.tmplayer.data.JoinOutcome.Joined) load.retry()
+            }
+        },
+        loading = joining,
+        busyLabel = s.linkJoining,
+    ) {
+        Icon(TmIcons.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(label)
     }
 }
 

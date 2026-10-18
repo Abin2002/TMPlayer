@@ -179,6 +179,8 @@ internal fun PhoneSearchScreen(
     val chatMatches = remember(chats, query, favourites, byUsername) {
         withUsernameChat(GlobalSearch.localChats(chats, query, favourites), byUsername)
     }
+    // A pasted post or invite link, or a public chat to join (CP79).
+    val offer = rememberLinkOffer(query, byUsername)
     val recentChats = remember(chats, favourites) { GlobalSearch.recentChats(chats, favourites) }
     val briefs = remember(state.chats, chats) { state.chats + chats.associate { it.id to ChatBrief.of(it) } }
     val titleOf: (Long) -> String = { id -> briefs[id]?.title.orEmpty() }
@@ -214,6 +216,15 @@ internal fun PhoneSearchScreen(
                         onResume = onResume,
                     )
                 } else {
+                    offer?.let { found ->
+                        item(key = "link-offer") {
+                            com.tmplayer.ui.components.ChoiceLine(found.label, detail = found.detail, icon = TmIcons.Send) {
+                                keyboard?.hide()
+                                onClose()
+                                LinkRequests.ask(found.link)
+                            }
+                        }
+                    }
                     results(
                         state = state,
                         chatMatches = chatMatches,
