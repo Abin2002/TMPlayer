@@ -131,9 +131,9 @@ fun EdgeBackdrop(
                     scale(scaleX = CORNER_STRETCH, scaleY = 1f, pivot = corner) {
                         drawCircle(
                             Brush.radialGradient(
-                                0f to ground.copy(alpha = 0.86f),
-                                0.45f to ground.copy(alpha = 0.62f),
-                                0.75f to ground.copy(alpha = 0.22f),
+                                0f to ground.copy(alpha = 0.9f),
+                                0.5f to ground.copy(alpha = 0.78f),
+                                0.8f to ground.copy(alpha = 0.32f),
                                 1f to Color.Transparent,
                                 center = corner,
                                 radius = cornerShade.toPx(),
@@ -177,8 +177,12 @@ private const val START_FADE = 0.38f
 /** The share of the picture's height that fades into the page at its foot. */
 private const val FOOT_FADE = 0.36f
 
-/** How much wider than tall the [cornerShade] glow reaches, to cover a clock beside an avatar. */
-private const val CORNER_STRETCH = 1.6f
+/**
+ * How much wider than tall the [cornerShade] glow reaches: the whole cluster of a television's
+ * header (refresh, clock and avatar) stands in it, so the clock reads over a bright picture in
+ * the light theme too.
+ */
+private const val CORNER_STRETCH = 2.6f
 
 /** How many times its own width a thumbnail may be drawn here, at most, before it reads as a blur. */
 private const val EDGE_SMALL_SCALE = 2f
