@@ -176,6 +176,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private var mediaFileName = ""
     private var mediaCaption = ""
 
+    /** The file's type, for telling sound alone (a chat's audio, [ChatAudio]) from a video. */
+    private var mediaMime = ""
+    private val isAudio: Boolean get() = mediaMime.startsWith("audio/", ignoreCase = true)
+
+    /** What stands in for the picture while sound alone plays: its name and where it is from. */
+    private var audioCard: View? = null
+
     /** The forum topic the post is in, or 0, for the speed remembered per topic. */
     private var mediaTopicId = 0
 
@@ -862,6 +869,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         mediaSubtitle = from.getStringExtra(EXTRA_SUBTITLE).orEmpty()
         mediaFileName = from.getStringExtra(EXTRA_FILE_NAME).orEmpty()
         mediaCaption = from.getStringExtra(EXTRA_CAPTION).orEmpty()
+        mediaMime = from.getStringExtra(EXTRA_MIME).orEmpty()
         mediaTopicId = from.getIntExtra(EXTRA_TOPIC_ID, 0)
         chatTitle = from.getStringExtra(EXTRA_CHAT_TITLE).orEmpty()
         fileSizeBytes = from.getLongExtra(EXTRA_SIZE, 0)
@@ -1453,7 +1461,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         title = mediaTitle,
         sizeBytes = fileSizeBytes,
         durationSec = durationSec,
-        mimeType = "",
+        mimeType = mediaMime,
         thumbnailFileId = 0,
         miniThumbnail = null,
         date = 0,
@@ -2148,7 +2156,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * first: while it is up the activity is never stopped, and closing its window means stop.
      */
     private fun keepsPlayingUnseen(): Boolean =
-        backgroundAudioOn && !FormFactor.isTv(this) && !isFinishing && !inPictureInPicture &&
+        // Sound alone plays on with the screen off whatever the setting: that is what it is for.
+        (backgroundAudioOn || isAudio) && !FormFactor.isTv(this) && !isFinishing && !inPictureInPicture &&
             mediaSession != null && player?.playWhenReady == true &&
             // The sheet is up for a failure, a question or "Still watching?", none of which
             // plays on; the countdown to the next episode is the one sheet that does.
@@ -2420,6 +2429,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     offerStartOver()
                     controls?.setBuffering(false)
                     hideStatus()
+                    showAudioCard()
                     // Once, as the picture first lands: the viewer sees the name of what they
                     // opened and where the controls live, and the row folds away on its own.
                     if (!controlsShownOnStart) {
@@ -2818,6 +2828,11 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private fun findEpisodes() {
         val here = currentItem()
+        // Started from a chat's audio: the list is the order, the next file plays when one ends.
+        com.tmplayer.data.PlayQueue.stepsFor(here)?.let { steps ->
+            _episodes.value = steps
+            return
+        }
         val show = EpisodeNeighbours.showOf(here) ?: return
         _episodes.value = EpisodeSteps(current = EpisodeNeighbours.tagOf(here))
 
@@ -5616,6 +5631,49 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         }
     }
 
+    /**
+     * Sound alone has no picture, so the black where it would be carries the file's name and its
+     * chat instead, centred, under the controls. Built once and kept; gone for a video.
+     */
+    private fun showAudioCard() {
+        if (!isAudio) {
+            audioCard?.visibility = View.GONE
+            return
+        }
+        val root = findViewById<FrameLayout>(R.id.player_root)
+        val card = audioCard ?: android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+            val density = resources.displayMetrics.density
+            setPadding((32 * density).toInt(), 0, (32 * density).toInt(), 0)
+            addView(android.widget.ImageView(context).apply {
+                setImageResource(R.drawable.ic_audio_language)
+                setColorFilter(android.graphics.Color.WHITE)
+                alpha = 0.7f
+                layoutParams = android.widget.LinearLayout.LayoutParams((72 * density).toInt(), (72 * density).toInt())
+            })
+            addView(android.widget.TextView(context).apply {
+                tag = "title"
+                setTextColor(android.graphics.Color.WHITE)
+                textSize = 22f
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, (16 * density).toInt(), 0, 0)
+            })
+            addView(android.widget.TextView(context).apply {
+                tag = "detail"
+                setTextColor(android.graphics.Color.argb(184, 255, 255, 255))
+                textSize = 15f
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, (6 * density).toInt(), 0, 0)
+            })
+            root.addView(this, 1, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+            audioCard = this
+        }
+        card.findViewWithTag<android.widget.TextView>("title")?.text = mediaTitle
+        card.findViewWithTag<android.widget.TextView>("detail")?.text = chatTitle
+        card.visibility = View.VISIBLE
+    }
+
     /** A stall after playback has begun: a small chip, so the video stays on screen. */
     private fun showRebuffering() {
         // The sheet saying nothing is arriving stays until bytes do, or the viewer answers it.
@@ -6364,6 +6422,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         private const val EXTRA_THUMBNAIL_ID = "thumbnail_id"
         private const val EXTRA_MINI_THUMBNAIL = "mini_thumbnail"
         private const val EXTRA_CAN_BE_SAVED = "can_be_saved"
+        private const val EXTRA_MIME = "mime_type"
         private const val EXTRA_OUTSIDE_APP_TASK = "outside_app_task"
         /** How long the note about a missing piece stays up as the video starts. */
         private const val PIECES_NOTICE_MS = 6_000L
@@ -6600,6 +6659,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 putExtra(EXTRA_THUMBNAIL_ID, item.thumbnailFileId)
                 putExtra(EXTRA_MINI_THUMBNAIL, item.miniThumbnail)
                 putExtra(EXTRA_CAN_BE_SAVED, item.canBeSaved)
+                putExtra(EXTRA_MIME, item.mimeType)
                 // The pieces of a video cut into several files, so the player need not look for them.
                 if (item.isJoined) {
                     putExtra(EXTRA_PIECE_MESSAGES, item.pieces.map { it.messageId }.toLongArray())

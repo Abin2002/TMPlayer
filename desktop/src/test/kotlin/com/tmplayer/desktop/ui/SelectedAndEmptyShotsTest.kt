@@ -177,12 +177,25 @@ class SelectedAndEmptyShotsTest {
             "error" to { StateBox(UiState.Error("Telegram did not answer."), onRetry = {}) {} },
             "watched" to { EmptyNote(HistoryTab.Watched.emptyIcon, "Nothing watched yet. Videos you finish, or mark as watched, appear here.") },
             "unread" to { EmptyNote(com.tmplayer.ui.browse.ChatFilter.Unread.emptyIcon, "Nothing unread. You're up to date.") },
+            // The ways on: the same words across every chat, and back to the chats.
+            "no-match-search-all" to { StateBox(UiState.Empty("Nothing in this chat matches “lecture”.", StateAction.SearchAllChats, icon = TmIcons.SearchRemove), onAction = {}) {} },
+            "watched-go-to-chats" to { EmptyNote(HistoryTab.Watched.emptyIcon, "Nothing watched yet. Videos you finish, or mark as watched, appear here.", "Go to Chats") {} },
+            "archives" to {
+                ArchiveList(
+                    listOf(
+                        com.tmplayer.data.ArchiveFile(1, 3, 3, "Lectures 2024.zip", 734_003_200, 0, com.tmplayer.data.ArchiveKind.Zip),
+                        com.tmplayer.data.ArchiveFile(1, 2, 2, "Course.part2.rar", 2_000_000_000, 0, com.tmplayer.data.ArchiveKind.Rar, volume = true),
+                    ),
+                    noVideos = true,
+                    onExplain = {},
+                )
+            },
         )
-        for (dark in listOf(true, false)) {
-            val theme = if (dark) "dark" else "light"
+        for ((dark, black) in listOf(true to false, false to false, true to true)) {
+            val theme = if (black) "black" else if (dark) "dark" else "light"
             for ((name, page) in pages) {
                 ImageComposeScene(720, 420, Density(1.5f)) {
-                    TmMaterialTheme(dark = dark) {
+                    TmMaterialTheme(dark = dark, black = black) {
                         Surface(Modifier.fillMaxSize().background(Tone.background), color = Tone.background) { page() }
                     }
                 }.use { scene ->

@@ -482,6 +482,8 @@ class TelegramPlayerMedia(
      * names no episode, not even a bare "E5", is a film and asks nothing.
      */
     override suspend fun episodes(): Episodes {
+        // Started from a chat's audio: the list is the order, the next file plays when one ends.
+        com.tmplayer.data.PlayQueue.stepsFor(item)?.let { return it }
         val tag = EpisodeNeighbours.tagOf(item)
         val show = EpisodeNeighbours.showOf(item) ?: return Episodes()
         if (item.chatId == 0L) return Episodes(current = tag)

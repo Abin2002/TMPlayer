@@ -34,6 +34,9 @@ import kotlinx.coroutines.withContext
 object ResumeSync {
 
     private val lock = Mutex()
+
+    /** When this process last sent the message, for the guard in [write]. */
+    @Volatile private var lastSentAt = 0L
     private var pending: Job? = null
 
     /** What the last sync did, for the Settings row. */
@@ -128,7 +131,10 @@ object ResumeSync {
             if (message != null && isOurs(message)) return message
         }
         val found = td.searchChatMessages(chatId, null, ResumeSyncDoc.TAG, null, 0, 0, SEARCH_LIMIT, null)
-            .valueOrNull?.messages?.firstOrNull(::isOurs) ?: return null
+            .valueOrNull?.messages?.firstOrNull(::isOurs)
+            // Not indexed yet, or search not answering: the newest messages, from TDLib's own copy.
+            ?: td.getChatHistory(chatId, 0, 0, HISTORY_LIMIT, false).valueOrNull?.messages?.filterNotNull()?.firstOrNull(::isOurs)
+            ?: return null
         settings.setResumeSyncMessage(found.id)
         return found
     }
@@ -156,6 +162,11 @@ object ResumeSync {
         }
         // Silent, and the id it is given is only a stand in until Telegram confirms it, so the
         // next sync finds it again by its tag rather than by that id.
+        // Telegram's search can take a while to index a message just sent, so a second sync soon
+        // after the first could miss it and send another: never twice in [RESEND_GUARD_MS].
+        val now = System.currentTimeMillis()
+        if (now - lastSentAt < RESEND_GUARD_MS) return false
+        lastSentAt = now
         val options = MessageSendOptions(null, true, false, false, false, 0L, false, null, 0L, 0, false)
         val sent = td.sendMessage(chatId, null, null, options, null, content).valueOrNull ?: return false
         settings.setResumeSyncMessage(0L)
@@ -167,4 +178,6 @@ object ResumeSync {
     private const val PUSH_SETTLE_MS = 20_000L
     private const val PULL_TIMEOUT_MS = 2_500L
     private const val SEARCH_LIMIT = 5
+    private const val HISTORY_LIMIT = 30
+    private const val RESEND_GUARD_MS = 15 * 60 * 1000L
 }

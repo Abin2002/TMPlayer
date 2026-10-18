@@ -100,6 +100,14 @@ import org.openani.mediamp.mpv.compose.MpvMediampPlayerSurface
 import java.awt.Point
 import java.awt.Toolkit
 import java.awt.image.BufferedImage
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 
 /** Outlives the screen, so the resume write on the way out survives the Back that caused it. */
 private val playerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -1492,6 +1500,20 @@ fun PlayerScreen(
                     null
                 },
             ) }
+
+            // Sound alone: its name and chat where the picture would be, unless the file carries
+            // a cover, which mpv draws as the picture.
+            if (com.tmplayer.data.ChatAudio.isAudio(current.item) && phase == Phase.Playing && status.videoWidth == 0) {
+                Column(
+                    Modifier.align(Alignment.Center).padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    androidx.compose.material3.Icon(com.tmplayer.ui.icons.TmIcons.Audio, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(72.dp))
+                    Text(current.item.title, color = Color.White, fontSize = 22.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    if (current.chatTitle.isNotBlank()) Text(current.chatTitle, color = Color.White.copy(alpha = 0.72f), fontSize = 15.sp)
+                }
+            }
 
             FeedbackLayer(
                 flash = flash,

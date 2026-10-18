@@ -476,6 +476,9 @@ fun MediaGridScreen(
     // A refresh that keeps its content stays a Content state throughout, so the pull gesture waits
     // on a new state instance instead. The timeout stops the spinner turning for ever when a
     // request against a dead connection never emits at all.
+    // The chat's audio: how much there is, and whether its list is open.
+    val audioCount by viewModel.audioCount.collectAsState()
+    var audioOpen by remember(chatId) { mutableStateOf(false) }
     var refreshing by remember(chatId) { mutableStateOf(false) }
     LaunchedEffect(refreshing) {
         if (!refreshing) return@LaunchedEffect
@@ -673,6 +676,12 @@ fun MediaGridScreen(
                             if (course != null || loadedOnly) {
                                 item(key = "course", span = { GridItemSpan(maxLineSpan) }) { courseHeader() }
                             }
+                            // The chat's audio, as a list to play from, over its videos.
+                            if (audioCount > 0 && query.isBlank()) {
+                                item(key = "audio", span = { GridItemSpan(maxLineSpan) }) {
+                                    AudioEntry(audioCount, noVideos = feed.isEmpty(), onOpen = { audioOpen = true }, modifier = if (feed.isEmpty()) Modifier.focusRequester(firstItem) else Modifier)
+                                }
+                            }
                             shelfGrid(
                                 feed = feed,
                                 posterKeys = posterKeys,
@@ -727,7 +736,7 @@ fun MediaGridScreen(
                                     }
                             }
                             // The chat's compressed files, which cannot be played, each with why.
-                            archiveItems(list.archives, noVideos = feed.isEmpty(), first = if (feed.isEmpty()) firstItem else null, onExplain = onOfflineAction)
+                            archiveItems(list.archives, noVideos = feed.isEmpty() && audioCount == 0, first = if (feed.isEmpty() && audioCount == 0) firstItem else null, onExplain = onOfflineAction)
                         }
     
                         CardLayout.List -> LazyColumn(
@@ -738,6 +747,11 @@ fun MediaGridScreen(
                         ) {
                             if (metaNotice) item(key = "meta-notice") { metaNoticeCard() }
                             if (course != null || loadedOnly) item(key = "course") { courseHeader() }
+                            if (audioCount > 0 && query.isBlank()) {
+                                item(key = "audio") {
+                                    AudioEntry(audioCount, noVideos = feed.isEmpty(), onOpen = { audioOpen = true }, modifier = if (feed.isEmpty()) Modifier.focusRequester(firstItem) else Modifier)
+                                }
+                            }
                             items(
                                 items = feed,
                                 key = {
@@ -791,7 +805,7 @@ fun MediaGridScreen(
                                 }
                               }
                             }
-                            archiveItems(list.archives, noVideos = feed.isEmpty(), first = if (feed.isEmpty()) firstItem else null, onExplain = onOfflineAction)
+                            archiveItems(list.archives, noVideos = feed.isEmpty() && audioCount == 0, first = if (feed.isEmpty() && audioCount == 0) firstItem else null, onExplain = onOfflineAction)
                         }
                     }
                 }
@@ -946,7 +960,7 @@ fun MediaGridScreen(
             // on a remote: on a phone this would highlight a card nobody pointed at.
             // The rows or tiles button pressed in the heading keeps the remote, though: the list
             // under it changes, and the button is where the viewer is looking to press it again.
-            LaunchedEffect(list.items.firstOrNull()?.id, layout, touch) {
+            LaunchedEffect(list.items.firstOrNull()?.id, layout, touch, audioCount > 0) {
                 val switchedHere = laidOut[0] != layout && headerHasFocus
                 laidOut[0] = layout
                 if (!touch && !switchedHere) runCatching { firstItem.requestFocus() }
@@ -982,6 +996,10 @@ fun MediaGridScreen(
     // Null while every ticked video comes from a chat that restricts saving content.
     val downloadSelected = { downloadThese(selected.values.toList()) }
         .takeIf { selected.isEmpty() || selected.values.any { it.canBeSaved } }
+
+    if (audioOpen) {
+        AudioSheet(chatId, chatTitle, onPlay = onPlay, onDismiss = { audioOpen = false })
+    }
 
     var chatInfoOpen by remember { mutableStateOf(false) }
     if (chatInfoOpen) {

@@ -86,7 +86,7 @@ class SeekChromeRenderTest {
         idle()
         // Above the row, as the activity lifts it: the row's top, plus a gap.
         val cluster = root.findViewById<View>(R.id.controls_cluster)
-        chip.view.translationY = -(root.height - cluster.top - NextUpCard.BOTTOM_PX + 8 * activity.resources.displayMetrics.density).coerceAtLeast(0f)
+        chip.view.translationY = -(root.height - cluster.top - NextUpCard.bottomPx(root) + 8 * activity.resources.displayMetrics.density).coerceAtLeast(0f)
         idle()
         val decor = activity.window.decorView
         val bitmap = Bitmap.createBitmap(decor.width, decor.height, Bitmap.Config.ARGB_8888)

@@ -699,6 +699,11 @@
     "archive_reason": "A compressed {kind} file. TMPlayer streams videos as they were posted, so unpack it with a file manager first.",
     "archive_volume_reason": "One piece of a {kind} archive. Download every piece, then unpack them together with a file manager.",
     "archives_heading": "{count, plural, one {# archive here cannot be played} other {# archives here cannot be played}}",
+    "audio_count": "{count, plural, one {# audio file or voice message, played one after another} other {# audio files and voice messages, played one after another}}",
+    "audio_more": "Show more",
+    "audio_none": "No audio in this chat.",
+    "audio_play_all": "Play all, oldest first",
+    "audio_title": "Audio",
     "back_to_chats": "Back to chats",
     "badge_cached": "On device",
     "badge_downloaded": "Downloaded",
@@ -1103,9 +1108,11 @@
     "watched_cleared": "Watched list cleared"
   },
   "media": {
+    "untitled_audio": "Audio",
     "untitled_clip": "Clip",
     "untitled_file": "File",
-    "untitled_video": "Video"
+    "untitled_video": "Video",
+    "voice_message": "Voice message"
   },
   "meta": {
     "generic_name": "Video Player",
