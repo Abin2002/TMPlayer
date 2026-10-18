@@ -545,6 +545,28 @@ fun DownloadsScreen(
         }
     }
 
+    // The downloads as both lists draw them (the phone's page, the television's Downloaded tab).
+    // The episodes of one show sit together under its name, in watching order, and every other
+    // video stands on its own, newest first. The rows
+    // and every action on them are the tabs' own; only the order and the headings are new.
+    val shelf = remember(rows) {
+        com.tmplayer.data.DownloadShelf.arrange(rows, { it.record.toMediaItem() }, { it.key }, { it.record.updatedAt })
+    }
+    val keptCard: @Composable (DownloadRow) -> Unit = { row ->
+        DownloadCard(
+            row = row,
+            picking = picking,
+            checked = row.key in picked,
+            onPlay = { if (row.partial) saveToDownloads(row) else onPlay(row.record) },
+            onShare = { share(listOf(row)) },
+            onDelete = { if (row.missing) removeMissing(row) else confirmingDelete = row },
+            onToggle = { picked = if (row.key in picked) picked - row.key else picked + row.key },
+            onHold = {
+                picking = true
+                picked = picked + row.key
+            },
+        )
+    }
     // What each of the television's tabs lists.
     val tabBody: LazyListScope.() -> Unit = body@{
         if (tab == ONGOING) {
@@ -651,27 +673,24 @@ fun DownloadsScreen(
                 }
             }
         }
-        items(shown, key = { it.key }) { row ->
-            DownloadCard(
-                row = row,
-                picking = picking,
-                checked = row.key in picked,
-                onPlay = {
-                    // A part downloaded one carries on downloading; anything else plays.
-                    if (row.partial) saveToDownloads(row) else onPlay(row.record)
-                },
-                onShare = { share(listOf(row)) },
-                onDelete = { if (row.missing) removeMissing(row) else confirmingDelete = row },
-                onToggle = {
-                    picked = if (row.key in picked) picked - row.key else picked + row.key
-                },
-                // A hold is how a list of anything on a phone starts a selection, and it
-                // saves walking to the top bar for the first tick.
-                onHold = {
-                    picking = true
-                    picked = picked + row.key
-                },
-            )
+        // Grouped by show as the phone's page is, so the two read as one list. The headings take
+        // no focus: the remote steps from card to card and each heading scrolls in with its first.
+        shelf.forEach { entry ->
+            when (entry) {
+                is com.tmplayer.data.DownloadShelf.Entry.Single -> item(key = entry.key) { keptCard(entry.row) }
+                is com.tmplayer.data.DownloadShelf.Entry.Show -> {
+                    item(key = entry.key) {
+                        ShowHeading(
+                            title = entry.title,
+                            detail = listOf(
+                                L.seriesEpisodesCount(count = entry.episodes.size),
+                                Translator.messages.formatter.bytes(entry.episodes.sumOf { it.bytes }),
+                            ).joinToString(DOT),
+                        )
+                    }
+                    items(entry.episodes, key = { it.key }) { keptCard(it) }
+                }
+            }
         }
         if (counted && shown.isEmpty()) {
             item {
@@ -683,27 +702,6 @@ fun DownloadsScreen(
                 }
             }
         }
-    }
-    // The page's own list (phone and tablet). The episodes of one show sit together under its
-    // name, in watching order, and every other video stands on its own, newest first. The rows
-    // and every action on them are the tabs' own; only the order and the headings are new.
-    val shelf = remember(rows) {
-        com.tmplayer.data.DownloadShelf.arrange(rows, { it.record.toMediaItem() }, { it.key }, { it.record.updatedAt })
-    }
-    val keptCard: @Composable (DownloadRow) -> Unit = { row ->
-        DownloadCard(
-            row = row,
-            picking = picking,
-            checked = row.key in picked,
-            onPlay = { if (row.partial) saveToDownloads(row) else onPlay(row.record) },
-            onShare = { share(listOf(row)) },
-            onDelete = { if (row.missing) removeMissing(row) else confirmingDelete = row },
-            onToggle = { picked = if (row.key in picked) picked - row.key else picked + row.key },
-            onHold = {
-                picking = true
-                picked = picked + row.key
-            },
-        )
     }
     val pageBody: LazyListScope.() -> Unit = {
         var at = 0
@@ -1592,9 +1590,10 @@ private fun DownloadCard(
                 Checkbox(checked = checked, onCheckedChange = { onToggle() })
                 Spacer(Modifier.width(8.dp))
             }
-            if (usesFloatingChrome()) {
-                // The small poster History's rows and a chat's rows wear, so a download reads as
-                // the same kind of thing: the picture, or the generated cover until there is one.
+            run {
+                // The small poster History's rows and a chat's rows wear, on the phone, the
+                // television and the desktop alike, so a download reads as the same kind of thing:
+                // the picture, or the generated cover until there is one.
                 VideoPosterThumb(
                     item = row.record.toMediaItem(),
                     fraction = if (row.partial && row.totalBytes > 0) (row.bytes.toFloat() / row.totalBytes).coerceIn(0f, 1f) else 0f,
