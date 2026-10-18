@@ -1,41 +1,41 @@
 {
-  "source": "ph-tour-drawer-light.png",
+  "source": "ph-tour-chats-light.png",
   "output": "app/src/main/res/drawable-nodpi/tour_videos.webp",
   "crop": [
     0,
     0,
     1080,
-    1100
+    2400
   ],
   "width": 720,
   "marks": [
     {
       "type": "circle",
       "box": [
-        72,
-        864,
-        220,
-        70
+        70,
+        335,
+        1005,
+        168
       ],
       "seed": 61
     },
     {
       "type": "circle",
       "box": [
-        72,
-        728,
-        220,
-        70
+        70,
+        1200,
+        520,
+        140
       ],
       "seed": 62
     },
     {
       "type": "circle",
       "box": [
-        722,
-        52,
-        64,
-        64
+        655,
+        2212,
+        130,
+        116
       ],
       "seed": 63
     }

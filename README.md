@@ -36,7 +36,7 @@ No messages, no server, no account except yours.
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/devices.webp" width="90%" alt="TMPlayer on a television and a phone: Home on the TV with Continue watching above the newest posters from starred chats, and a show's page on the phone with its artwork, overview and resume button" />
+  <img src="docs/screenshots/devices.webp" width="90%" alt="TMPlayer on a television and a phone: Home on the TV with the newest video from starred chats across the top and Continue watching below it, and a show's page on the phone with its artwork, overview and resume button" />
 </p>
 
 <p align="center">

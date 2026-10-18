@@ -3,7 +3,7 @@
   "output": "app/src/main/res/drawable-nodpi/setup_performance_full_dark.webp",
   "crop": [
     36,
-    128,
+    1448,
     660,
     660
   ],
@@ -13,11 +13,11 @@
       "type": "arrow",
       "from": [
         630,
-        770
+        2090
       ],
       "to": [
         600,
-        470
+        1790
       ],
       "bend": 0.25,
       "seed": 47

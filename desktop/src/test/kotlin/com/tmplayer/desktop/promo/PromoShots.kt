@@ -199,7 +199,10 @@ class PromoShots {
                         chips.forEach { chip -> add(Choice(chip.label, chip.label, chip.icon, selected = chip == chips.first()) {}) }
                     },
                 )
-                ChatList(chats, favourites = library.favourites, listState = list, nav = nav, onOpen = {}, onStar = {})
+                // Every account has Saved Messages, and the app lists it first; the quick tour's
+                // first line points at it.
+                val saved = ChatSummary(SAVED_ID, "Saved Messages", null, 0, ChatKind.Saved)
+                ChatList(listOf(saved) + chats, favourites = library.favourites, listState = list, nav = nav, onOpen = {}, onStar = {})
             }
         }
     }
@@ -518,7 +521,7 @@ class PromoShots {
     @Test
     fun tourDownloads() {
         val folder = dir.resolve("Downloads").apply { mkdirs() }
-        both("tour-downloads", settleMs = 2_500, before = {
+        both("tour-downloads", settleMs = 6_000, before = {
             runBlocking {
                 listOf("Saltwater.Lanterns.2023.1080p", "Harbour.Lines.S01E04", "Skybound Academy - 04", "Lesson 04")
                     .mapNotNull { part -> library.all.firstOrNull { part in it.fileName } }
@@ -542,7 +545,7 @@ class PromoShots {
      */
     @Test
     fun tourSettings() = both("tour-settings", before = { shell.go(com.tmplayer.desktop.ui.Destination.Settings) }) {
-        withSidebar { com.tmplayer.desktop.ui.SettingsPage(shell, version = "1.26.0") }
+        withSidebar { com.tmplayer.desktop.ui.SettingsPage(shell, version = com.tmplayer.desktop.BuildInfo.VERSION) }
     }
 
     /**
@@ -685,6 +688,9 @@ class PromoShots {
 
         /** Unread counts on the chat list, as a busy account has them. */
         val UNREAD = mapOf(PromoCatalog.ANIME to 3, PromoCatalog.NATURE to 1, PromoCatalog.CLIPS to 12)
+
+        /** Saved Messages in the chats shot: an id no demo chat uses. */
+        const val SAVED_ID = 999L
 
         /** 1920 dp across at the same density, for the pages that change with a wide window. */
         const val WIDE = 2880

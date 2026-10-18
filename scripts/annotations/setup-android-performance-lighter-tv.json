@@ -3,7 +3,7 @@
   "output": "app/src/main/res/drawable-nodpi/setup_performance_lighter_tv.webp",
   "crop": [
     462,
-    160,
+    612,
     536,
     536
   ],
@@ -13,11 +13,11 @@
       "type": "arrow",
       "from": [
         950,
-        680
+        1132
       ],
       "to": [
         915,
-        450
+        902
       ],
       "bend": 0.25,
       "seed": 48
