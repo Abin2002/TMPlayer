@@ -25,6 +25,7 @@ import com.tmplayer.cast.CastRoute
 import com.tmplayer.cast.CastServer
 import com.tmplayer.cast.CastSessionState
 import com.tmplayer.cast.CastSource
+import com.tmplayer.cast.CAST_SUBTITLES
 import com.tmplayer.cast.CastStateMapper
 import com.tmplayer.cast.CastStreams
 import com.tmplayer.cast.CastSubtitle
@@ -276,7 +277,7 @@ class PlayerCast(
                 audio = pl.audioTrack
                 withContext(Dispatchers.IO) { ensureServer(connectedState) }
                 subs.clear()
-                hooks.subtitleFiles().forEach { (f, mime, label) -> addSubtitleFile(f, mime, label) }
+                if (CAST_SUBTITLES) hooks.subtitleFiles().forEach { (f, mime, label) -> addSubtitleFile(f, mime, label) }
                 activeSub = subs.lastOrNull()?.id
                 routeIndex = 0
                 startRoute(lastKnownMs)
@@ -410,7 +411,7 @@ class PlayerCast(
             r is CastRoute.Hls && r.audio.firstOrNull { it.number == audio }?.convert == true -> L.castSoundConvertedPhone
             r is CastRoute.Remux && r.audioTrack == null && p.audio.isNotEmpty() -> L.castSilent
             r is CastRoute.Direct && audioCodec != null && CastFormats.audioSupport(audioCodec, ReceiverCaps.forModel(model)) == Support.No -> L.castSilent
-            r !is CastRoute.Hls && p.text.any { it.isText } && subs.isEmpty() -> L.castSubtitlesInside
+            CAST_SUBTITLES && r !is CastRoute.Hls && p.text.any { it.isText } && subs.isEmpty() -> L.castSubtitlesInside
             else -> null
         }
     }
@@ -492,7 +493,7 @@ class PlayerCast(
             muted = remote.muted,
             volumeFixed = remote.volumeFixed,
             hasAudioChoice = audioChoices.value.size > 1,
-            hasSubtitles = true,
+            hasSubtitles = CAST_SUBTITLES,
             subtitlesOn = if (pub?.hls == true) hlsText != null else activeSub != null,
             speed = if (remote.supportsRate) rate else null,
         )
@@ -650,6 +651,9 @@ class PlayerCast(
     /** A subtitle file loaded while casting; true once it is on the TV. */
     fun addSubtitle(file: File, mime: String, label: String): Boolean {
         if (!casting) return false
+        // Casting goes without subtitles for now: the file stays with the phone's player, which
+        // has it when the video comes back, and the TV's stream is left alone.
+        if (!CAST_SUBTITLES) return true
         if (!addSubtitleFile(file, mime, label)) return false
         activeSub = subs.last().id
         publishChoices()
@@ -677,7 +681,7 @@ class PlayerCast(
 
     /** Said over the subtitle picker when the file has text subtitles of its own that stay behind. */
     fun subtitlesInsideNote(): String? =
-        if (published?.hls != true && probe?.text?.any { it.isText } == true) L.castSubtitlesInside else null
+        if (CAST_SUBTITLES && published?.hls != true && probe?.text?.any { it.isText } == true) L.castSubtitlesInside else null
 
     val episodes: StateFlow<EpisodeSteps> get() = hooks.episodes
 

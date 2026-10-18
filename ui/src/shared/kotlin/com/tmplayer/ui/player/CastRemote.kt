@@ -395,13 +395,16 @@ private fun PlayButton(state: CastRemoteState, s: Messages, size: Dp, enabled: B
 private fun RowScope.Tracks(state: CastRemoteState, actions: CastRemoteActions, s: Messages) {
     val live = !state.lost && state.phase != CastPhase.Starting
     if (state.hasAudioChoice) RoundIcon(TmIcons.Audio, s.playerAudio, enabled = live, onClick = actions::audio)
-    RoundIcon(
-        TmIcons.Subtitles,
-        s.tracksSubtitles,
-        enabled = live,
-        selected = state.subtitlesOn,
-        onClick = actions::subtitles,
-    )
+    // Left out altogether while casting goes without subtitles (CAST_SUBTITLES), the row closing up.
+    if (state.hasSubtitles) {
+        RoundIcon(
+            TmIcons.Subtitles,
+            s.tracksSubtitles,
+            enabled = live,
+            selected = state.subtitlesOn,
+            onClick = actions::subtitles,
+        )
+    }
     state.speed?.let { speed ->
         val label = s.playerPlaybackSpeed
         val text = speedText(speed)

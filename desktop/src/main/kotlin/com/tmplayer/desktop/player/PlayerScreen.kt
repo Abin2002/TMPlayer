@@ -1643,6 +1643,7 @@ fun PlayerScreen(
                     null
                 },
                 castButton = { CastButton() },
+                subtitlesButton = com.tmplayer.cast.CAST_SUBTITLES || activeEngine !is com.tmplayer.desktop.cast.CastPlaybackEngine,
             ) }
 
             // Sound alone: its name and chat where the picture would be, unless the file carries
