@@ -969,11 +969,15 @@
     "name_report_detail": "將每個已載入的檔名以及 TMPlayer 對它的解讀，存成這台裝置上的文字檔，用來核對辨識結果。不會傳送任何內容。",
     "name_report_empty": "請先開啟一個聊天，這樣才有檔名可以檢查。",
     "name_report_saved": "名稱檢查已儲存至 {place}",
+    "report_github": "在 GitHub 上回報",
     "save": "儲存記錄檔",
     "save_detail": "將最近的應用程式記錄檔存成文字檔，可附加到錯誤回報。名稱、號碼和檔名會先移除。",
     "save_title": "儲存 TMPlayer 記錄檔",
     "saved": "記錄檔已儲存",
-    "saved_to": "記錄檔已儲存至 {place}"
+    "saved_to": "記錄檔已儲存至 {place}",
+    "send": "傳送記錄檔",
+    "send_title": "傳送 TMPlayer 記錄檔",
+    "tv_saved_body": "記錄檔已存在這台電視的 {place}，名稱、號碼和檔名都已移除。要回報問題，請用手機掃描 QR 碼，它會在 GitHub 上開一則新的問題回報。"
   },
   "main": {
     "archived": "已封存 {title}",

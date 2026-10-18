@@ -969,11 +969,15 @@
     "name_report_detail": "불러온 모든 파일 이름과 TMPlayer가 그것을 읽은 방식을 이 기기의 텍스트 파일로 저장해 추측을 확인해요. 아무것도 보내지 않아요.",
     "name_report_empty": "확인할 파일 이름이 있도록 먼저 채팅을 여세요.",
     "name_report_saved": "이름 확인을 {place}에 저장했어요",
+    "report_github": "GitHub에 신고",
     "save": "로그 저장",
     "save_detail": "버그 제보에 첨부할 수 있도록 최근 앱 로그를 텍스트 파일로 저장해요. 이름, 번호, 파일 이름은 먼저 지워져요.",
     "save_title": "TMPlayer 로그 저장",
     "saved": "로그를 저장했어요",
-    "saved_to": "로그를 {place}에 저장했어요"
+    "saved_to": "로그를 {place}에 저장했어요",
+    "send": "로그 보내기",
+    "send_title": "TMPlayer 로그 보내기",
+    "tv_saved_body": "이름, 번호, 파일 이름을 뺀 로그가 이 TV의 {place}에 있어요. 문제를 신고하려면 휴대폰으로 코드를 스캔하세요. GitHub에서 새 이슈가 열려요."
   },
   "main": {
     "archived": "{title} 보관됨",

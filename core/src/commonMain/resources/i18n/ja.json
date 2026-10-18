@@ -969,11 +969,15 @@
     "name_report_detail": "読み込んだすべてのファイル名と TMPlayer の読み取り結果を、推測の確認用にこの端末のテキストファイルに書き出します。何も送信されません。",
     "name_report_empty": "確認するファイル名があるよう、先にチャットを開いてください。",
     "name_report_saved": "名前チェックを {place} に保存しました",
+    "report_github": "GitHub で報告",
     "save": "ログを保存",
     "save_detail": "最近のアプリのログをテキストファイルにまとめ、不具合の報告に添付できます。名前、番号、ファイル名は先に取り除かれます。",
     "save_title": "TMPlayer のログを保存",
     "saved": "ログを保存しました",
-    "saved_to": "ログを {place} に保存しました"
+    "saved_to": "ログを {place} に保存しました",
+    "send": "ログを送信",
+    "send_title": "TMPlayer のログを送信",
+    "tv_saved_body": "名前、番号、ファイル名を除いたうえで、このテレビの {place} に保存しました。問題を報告するには、スマートフォンでコードを読み取ってください。GitHub で新しい報告が開きます。"
   },
   "main": {
     "archived": "{title}をアーカイブしました",

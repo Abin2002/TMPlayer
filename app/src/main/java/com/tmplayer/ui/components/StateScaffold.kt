@@ -41,6 +41,7 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.ui.i18n.LocalStrings
+import com.tmplayer.ui.settings.SendLogsButton
 import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingSurface
@@ -344,8 +345,12 @@ fun BigEmpty(
     }
 }
 
+/**
+ * Something went wrong: what, Try again where there is something to retry, and Send logs
+ * ([SendLogsButton]) for a report. [sendLogs] is off only where a screen offers its own.
+ */
 @Composable
-fun BigError(message: String, onRetry: (() -> Unit)?) {
+fun BigError(message: String, onRetry: (() -> Unit)?, sendLogs: Boolean = true) {
     val s = LocalStrings.current
     val touch = isTouch()
     val danger = Tone.danger
@@ -385,25 +390,35 @@ fun BigError(message: String, onRetry: (() -> Unit)?) {
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.size(8.dp))
-            if (onRetry != null) {
-                val focus = remember { FocusRequester() }
-                TmButton(
-                    onClick = onRetry,
-                    modifier = Modifier.focusRequester(focus),
-                ) {
-                    Icon(
-                        TmIcons.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(s.commonTryAgain)
+            // Try again first, and the logs beside it for when trying again is not enough: the
+            // viewer chooses where they go, and nothing is sent without that choice.
+            // Wrapped rather than squeezed, for a narrow phone and the longer languages.
+            @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (onRetry != null) {
+                    val focus = remember { FocusRequester() }
+                    TmButton(
+                        onClick = onRetry,
+                        modifier = Modifier.focusRequester(focus),
+                    ) {
+                        Icon(
+                            TmIcons.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(s.commonTryAgain)
+                    }
+                    // The remote needs somewhere to land; a finger does not, and taking focus on a
+                    // phone only draws a ring around the button.
+                    if (!touch) {
+                        LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+                    }
                 }
-                // The remote needs somewhere to land; a finger does not, and taking focus on a
-                // phone only draws a ring around the button.
-                if (!touch) {
-                    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-                }
+                if (sendLogs) SendLogsButton()
             }
         }
     }

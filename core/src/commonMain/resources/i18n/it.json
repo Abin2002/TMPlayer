@@ -969,11 +969,15 @@
     "name_report_detail": "Ogni nome di file caricato e come TMPlayer lo ha letto, in un file di testo su questo dispositivo, per controllare le ipotesi. Non viene inviato nulla.",
     "name_report_empty": "Apri prima una chat, così ci sono nomi di file da controllare.",
     "name_report_saved": "Controllo nomi salvato in {place}",
+    "report_github": "Segnala su GitHub",
     "save": "Salva log",
     "save_detail": "I log recenti dell'app in un file di testo da allegare a una segnalazione di bug. Nomi, numeri e nomi dei file vengono rimossi prima.",
     "save_title": "Salva i log di TMPlayer",
     "saved": "Log salvati",
-    "saved_to": "Log salvati in {place}"
+    "saved_to": "Log salvati in {place}",
+    "send": "Invia log",
+    "send_title": "Invia i log di TMPlayer",
+    "tv_saved_body": "Sono in {place} su questa TV, senza nomi, numeri e nomi dei file. Per segnalare il problema, inquadra il codice con il telefono: apre una nuova segnalazione su GitHub."
   },
   "main": {
     "archived": "{title} archiviata",

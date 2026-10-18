@@ -969,11 +969,15 @@
     "name_report_detail": "Cada nombre de archivo cargado y cómo lo leyó TMPlayer, en un archivo de texto en este dispositivo, para revisar las suposiciones. No se envía nada.",
     "name_report_empty": "Abre un chat primero, para que haya nombres de archivo que revisar.",
     "name_report_saved": "Revisión de nombres guardada en {place}",
+    "report_github": "Reportar en GitHub",
     "save": "Guardar registros",
     "save_detail": "Registros recientes de la app en un archivo de texto para adjuntar a un reporte de error. Antes se quitan nombres, números y nombres de archivo.",
     "save_title": "Guardar registros de TMPlayer",
     "saved": "Registros guardados",
-    "saved_to": "Registros guardados en {place}"
+    "saved_to": "Registros guardados en {place}",
+    "send": "Enviar registros",
+    "send_title": "Enviar registros de TMPlayer",
+    "tv_saved_body": "Están en {place} en esta TV, sin nombres, números ni nombres de archivo. Para reportar el problema, escanea el código con tu teléfono: abre un nuevo reporte en GitHub."
   },
   "main": {
     "archived": "{title} archivado",

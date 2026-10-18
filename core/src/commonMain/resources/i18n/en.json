@@ -969,11 +969,15 @@
     "name_report_detail": "Every loaded file name and how TMPlayer read it, in a text file on this device, to check the guesses. Nothing is sent.",
     "name_report_empty": "Open a chat first, so there are file names to check.",
     "name_report_saved": "Name check saved to {place}",
+    "report_github": "Report on GitHub",
     "save": "Save logs",
     "save_detail": "Recent app logs in a text file to attach to a bug report. Names, numbers and file names are taken out first.",
     "save_title": "Save TMPlayer logs",
     "saved": "Logs saved",
-    "saved_to": "Logs saved to {place}"
+    "saved_to": "Logs saved to {place}",
+    "send": "Send logs",
+    "send_title": "Send TMPlayer logs",
+    "tv_saved_body": "They are in {place} on this TV, with names, numbers and file names taken out. To report the problem, scan the code with your phone: it opens a new issue on GitHub."
   },
   "main": {
     "archived": "{title} archived",

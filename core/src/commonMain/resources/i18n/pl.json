@@ -969,11 +969,15 @@
     "name_report_detail": "Każda wczytana nazwa pliku i to, jak TMPlayer ją odczytał, w pliku tekstowym na tym urządzeniu, by sprawdzić trafność odczytu. Nic nie jest wysyłane.",
     "name_report_empty": "Najpierw otwórz czat, żeby były nazwy plików do sprawdzenia.",
     "name_report_saved": "Sprawdzenie nazw zapisane w {place}",
+    "report_github": "Zgłoś na GitHubie",
     "save": "Zapisz logi",
     "save_detail": "Najnowsze logi aplikacji w pliku tekstowym do dołączenia do zgłoszenia błędu. Imiona, numery i nazwy plików są najpierw usuwane.",
     "save_title": "Zapisz logi TMPlayer",
     "saved": "Logi zapisane",
-    "saved_to": "Logi zapisane w {place}"
+    "saved_to": "Logi zapisane w {place}",
+    "send": "Wyślij logi",
+    "send_title": "Wyślij logi TMPlayera",
+    "tv_saved_body": "Są w {place} na tym telewizorze, bez nazw, numerów i nazw plików. Aby zgłosić problem, zeskanuj kod telefonem: otworzy nowe zgłoszenie na GitHubie."
   },
   "main": {
     "archived": "Zarchiwizowano: {title}",

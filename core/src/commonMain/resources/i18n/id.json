@@ -969,11 +969,15 @@
     "name_report_detail": "Setiap nama file yang dimuat dan cara TMPlayer membacanya, dalam file teks di perangkat ini, untuk memeriksa tebakannya. Tidak ada yang dikirim.",
     "name_report_empty": "Buka chat dulu, supaya ada nama file untuk dicek.",
     "name_report_saved": "Cek nama disimpan ke {place}",
+    "report_github": "Laporkan di GitHub",
     "save": "Simpan log",
     "save_detail": "Log aplikasi terbaru dalam file teks untuk dilampirkan ke laporan bug. Nama, nomor, dan nama file dihapus terlebih dahulu.",
     "save_title": "Simpan log TMPlayer",
     "saved": "Log disimpan",
-    "saved_to": "Log disimpan ke {place}"
+    "saved_to": "Log disimpan ke {place}",
+    "send": "Kirim log",
+    "send_title": "Kirim log TMPlayer",
+    "tv_saved_body": "Log ada di {place} di TV ini, tanpa nama, nomor, dan nama file. Untuk melaporkan masalahnya, pindai kode dengan ponsel Anda: kode ini membuka laporan baru di GitHub."
   },
   "main": {
     "archived": "{title} diarsipkan",

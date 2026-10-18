@@ -1046,7 +1046,11 @@ private fun Root() {
         com.tmplayer.ui.components.BrandLoaderHandOff(
             label = com.tmplayer.ui.auth.loaderLabel(auth, LocalStrings.current),
             modifier = Modifier.zIndex(1f),
-        )
+        ) {
+            // Telegram still out of reach after the long wait: the logs, for a report of it.
+            val stalled by Td.signInStalled.collectAsStateWithLifecycle()
+            if (stalled) com.tmplayer.ui.settings.SendLogsButton(Modifier.padding(top = 24.dp))
+        }
         if (auth !is AuthState.Ready) {
             // Signing out drops straight back to the login screen, so forget where we were.
             LaunchedEffect(Unit) {
@@ -1729,7 +1733,12 @@ private fun Root() {
                 cancelLabel = s.mainCrashDontSend,
                 destructive = false,
                 focusConfirm = true,
-                extra = { TickRow(s.mainCrashAlways, always) { always = !always } },
+                extra = {
+                    TickRow(s.mainCrashAlways, always) { always = !always }
+                    // The logs as well, sent the viewer's own way: the crash report carries the
+                    // stack, these carry what led up to it.
+                    com.tmplayer.ui.settings.SendLogsButton()
+                },
                 onConfirm = {
                     val keep = always
                     com.tmplayer.platform.Background.scope.launch(Dispatchers.IO) {

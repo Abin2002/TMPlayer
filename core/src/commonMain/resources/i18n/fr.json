@@ -969,11 +969,15 @@
     "name_report_detail": "Chaque nom de fichier chargé et la façon dont TMPlayer l'a lu, dans un fichier texte sur cet appareil, pour vérifier les suppositions. Rien n'est envoyé.",
     "name_report_empty": "Ouvrez d'abord une discussion, pour avoir des noms de fichiers à vérifier.",
     "name_report_saved": "Contrôle des noms enregistré dans {place}",
+    "report_github": "Signaler sur GitHub",
     "save": "Enregistrer les journaux",
     "save_detail": "Les journaux récents de l'app dans un fichier texte, à joindre à un signalement de bug. Les noms, les numéros et les noms de fichiers sont retirés au préalable.",
     "save_title": "Enregistrer les journaux de TMPlayer",
     "saved": "Journaux enregistrés",
-    "saved_to": "Journaux enregistrés dans {place}"
+    "saved_to": "Journaux enregistrés dans {place}",
+    "send": "Envoyer les journaux",
+    "send_title": "Envoyer les journaux de TMPlayer",
+    "tv_saved_body": "Ils sont dans {place} sur ce téléviseur, sans les noms, numéros et noms de fichiers. Pour signaler le problème, scannez le code avec votre téléphone : il ouvre un nouveau ticket sur GitHub."
   },
   "main": {
     "archived": "{title} archivée",

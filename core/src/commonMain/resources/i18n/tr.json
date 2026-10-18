@@ -969,11 +969,15 @@
     "name_report_detail": "Yüklenen her dosya adı ve TMPlayer'ın onu nasıl okuduğu, tahminleri kontrol etmek için bu cihazda bir metin dosyasında. Hiçbir şey gönderilmez.",
     "name_report_empty": "Kontrol edilecek dosya adları olması için önce bir sohbet aç.",
     "name_report_saved": "Ad kontrolü {place} konumuna kaydedildi",
+    "report_github": "GitHub'da bildir",
     "save": "Günlükleri kaydet",
     "save_detail": "Bir hata bildirimine eklemek için son uygulama günlükleri bir metin dosyasında. Adlar, numaralar ve dosya adları önce çıkarılır.",
     "save_title": "TMPlayer günlüklerini kaydet",
     "saved": "Günlükler kaydedildi",
-    "saved_to": "Günlükler {place} konumuna kaydedildi"
+    "saved_to": "Günlükler {place} konumuna kaydedildi",
+    "send": "Günlükleri gönder",
+    "send_title": "TMPlayer günlüklerini gönder",
+    "tv_saved_body": "Adlar, numaralar ve dosya adları çıkarılmış olarak bu TV'de {place} konumunda. Sorunu bildirmek için kodu telefonunuzla tarayın: GitHub'da yeni bir kayıt açar."
   },
   "main": {
     "archived": "{title} arşivlendi",

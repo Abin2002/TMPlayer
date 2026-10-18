@@ -969,11 +969,15 @@
     "name_report_detail": "Jeder geladene Dateiname und wie TMPlayer ihn gelesen hat, als Textdatei auf diesem Gerät, um die Vermutungen zu prüfen. Es wird nichts gesendet.",
     "name_report_empty": "Öffne zuerst einen Chat, damit es Dateinamen zum Prüfen gibt.",
     "name_report_saved": "Namensprüfung gespeichert unter {place}",
+    "report_github": "Auf GitHub melden",
     "save": "Protokolle speichern",
     "save_detail": "Aktuelle App-Protokolle als Textdatei, die du an einen Fehlerbericht anhängen kannst. Namen, Nummern und Dateinamen werden vorher entfernt.",
     "save_title": "TMPlayer-Protokolle speichern",
     "saved": "Protokolle gespeichert",
-    "saved_to": "Protokolle gespeichert unter {place}"
+    "saved_to": "Protokolle gespeichert unter {place}",
+    "send": "Protokolle senden",
+    "send_title": "TMPlayer-Protokolle senden",
+    "tv_saved_body": "Sie liegen auf diesem Fernseher unter {place}, ohne Namen, Nummern und Dateinamen. Um das Problem zu melden, scanne den Code mit deinem Handy: Er öffnet ein neues Issue auf GitHub."
   },
   "main": {
     "archived": "{title} archiviert",

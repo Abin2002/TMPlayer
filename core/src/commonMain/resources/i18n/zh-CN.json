@@ -969,11 +969,15 @@
     "name_report_detail": "把每个已加载的文件名以及 TMPlayer 对它的解读，存成本设备上的文本文件，用来核对识别结果。不会发送任何内容。",
     "name_report_empty": "请先打开一个聊天，这样才有文件名可以检查。",
     "name_report_saved": "名称检查已保存到 {place}",
+    "report_github": "在 GitHub 上报告",
     "save": "保存日志",
     "save_detail": "将最近的应用日志存为文本文件，可附在问题反馈中。名称、号码和文件名会先被去除。",
     "save_title": "保存 TMPlayer 日志",
     "saved": "日志已保存",
-    "saved_to": "日志已保存到 {place}"
+    "saved_to": "日志已保存到 {place}",
+    "send": "发送日志",
+    "send_title": "发送 TMPlayer 日志",
+    "tv_saved_body": "日志已保存在这台电视的 {place}，名称、号码和文件名已去除。要报告问题，请用手机扫描二维码，它会在 GitHub 上新建一个问题。"
   },
   "main": {
     "archived": "{title} 已归档",

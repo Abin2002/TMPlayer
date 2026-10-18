@@ -68,8 +68,8 @@ import com.tmplayer.ui.theme.Tone
 
 /**
  * One screen's worth of [UiState]: a spinner (with a first-time tip, and "Telegram is slow to
- * answer" once the wait runs long), an error with Try again, an empty line with its one action,
- * or content.
+ * answer" once the wait runs long), an error with Try again and Send logs ([SendLogsActions]), an
+ * empty line with its one action, or content.
  *
  * With [skeleton], the wait draws placeholders shaped like the content instead of the spinner, so
  * nothing moves when it arrives; the tip and the slow line then sit over the foot of them.
@@ -118,6 +118,8 @@ fun <T> StateBox(
             EmptyArt(TmIcons.Warning, tone = Tone.danger, modifier = Modifier.padding(bottom = 4.dp))
             Text(state.message, textAlign = TextAlign.Center)
             if (onRetry != null) OutlinedButton(onClick = onRetry) { Text(s.commonTryAgain) }
+            // The logs, for when trying again is not enough: saved and shown, never sent.
+            SendLogsActions()
         }
     }
 }

@@ -969,11 +969,15 @@
     "name_report_detail": "Mọi tên tệp đã tải và cách TMPlayer đọc chúng, trong một tệp văn bản trên thiết bị này, để kiểm tra các phỏng đoán. Không gửi đi gì cả.",
     "name_report_empty": "Hãy mở một cuộc trò chuyện trước, để có tên tệp mà kiểm tra.",
     "name_report_saved": "Đã lưu kiểm tra tên vào {place}",
+    "report_github": "Báo lỗi trên GitHub",
     "save": "Lưu nhật ký",
     "save_detail": "Nhật ký ứng dụng gần đây trong một tệp văn bản để đính kèm vào báo lỗi. Tên, số và tên tệp được lược bỏ trước.",
     "save_title": "Lưu nhật ký TMPlayer",
     "saved": "Đã lưu nhật ký",
-    "saved_to": "Đã lưu nhật ký vào {place}"
+    "saved_to": "Đã lưu nhật ký vào {place}",
+    "send": "Gửi nhật ký",
+    "send_title": "Gửi nhật ký TMPlayer",
+    "tv_saved_body": "Nhật ký nằm trong {place} trên TV này, đã bỏ tên, số và tên tệp. Để báo lỗi, hãy quét mã bằng điện thoại: mã sẽ mở một báo cáo mới trên GitHub."
   },
   "main": {
     "archived": "Đã lưu trữ {title}",

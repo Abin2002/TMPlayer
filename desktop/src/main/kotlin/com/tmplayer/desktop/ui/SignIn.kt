@@ -133,6 +133,7 @@ internal fun ConnectingStalled() {
             modifier = Modifier.widthIn(max = 460.dp).padding(top = 24.dp, bottom = 16.dp),
         )
         Button(onClick = { scope.launch { Td.retryConnecting() } }) { Text(s.commonRetry) }
+        SendLogsActions(Modifier.padding(top = 8.dp))
     }
 }
 
@@ -383,6 +384,7 @@ private fun FailedPane(message: String) {
     val scope = rememberCoroutineScope()
     Heading(s.signinFailed, message)
     Button(onClick = { scope.launch { Td.restartSignIn() } }) { Text(s.commonTryAgain) }
+    SendLogsActions()
 }
 
 private const val QR_PIXELS = 560
