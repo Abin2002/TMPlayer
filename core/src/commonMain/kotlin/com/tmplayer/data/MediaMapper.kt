@@ -87,7 +87,25 @@ data class MediaItem(
      * and one without a caption of its own takes the album's ([MediaMapper.shareAlbumCaptions]).
      */
     val albumId: Long = 0,
+    /**
+     * Every piece of a video cut into raw byte pieces ("Name.part001" to "Name.part007", or
+     * "Name.mkv.001"), this one first, in order, when this is the video they make: see
+     * [SplitPieces.join]. Unlike [parts], no piece plays alone; they play as one stream of their
+     * bytes joined, and this item (the first piece's message) is the video's identity for its
+     * place, its Watched mark and the cache. Its [sizeBytes] is then the pieces' added up. Empty
+     * for any other file. Like [versions], arranging's answer and not part of equality beyond its size.
+     */
+    val pieces: List<MediaItem> = emptyList(),
 ) {
+    /**
+     * Which byte piece of a cut video this file is, read off its name ([SplitPieces.pieceOf]), or
+     * null for a file that is not one.
+     */
+    val splitPiece: SplitPiece? by lazy(LazyThreadSafetyMode.PUBLICATION) { SplitPieces.pieceOf(fileName) }
+
+    /** Whether this item stands for a video cut into byte pieces, played joined. */
+    val isJoined: Boolean get() = pieces.isNotEmpty()
+
     /**
      * The file whose Watched mark stands for this tile: a split film's last piece, since the film
      * is watched only once that is, and the file itself otherwise.
@@ -201,6 +219,8 @@ data class MediaItem(
             extra == other.extra &&
             albumId == other.albumId &&
             parts.size == other.parts.size &&
+            pieces.size == other.pieces.size &&
+            pieces.indices.all { pieces[it].id == other.pieces[it].id } &&
             // By id: a copy found since (a new upload of the film) has to reach the tile and the
             // page, and comparing whole copies would compare their copies' thumbnails over again.
             versions.size == other.versions.size &&
@@ -228,6 +248,7 @@ data class MediaItem(
         result = 31 * result + topicId
         result = 31 * result + (extra?.hashCode() ?: 0)
         result = 31 * result + parts.size
+        result = 31 * result + pieces.size
         result = 31 * result + (miniThumbnail?.contentHashCode() ?: 0)
         result = 31 * result + versions.fold(0) { acc, copy -> 31 * acc + copy.id.hashCode() }
         return result
@@ -244,7 +265,7 @@ data class MediaItem(
 object MediaMapper {
 
     /** Container formats Media3 can demux, plus the ones NextLib's decoders cover. */
-    private val VIDEO_EXTENSIONS = setOf(
+    internal val VIDEO_EXTENSIONS = setOf(
         "mkv", "mp4", "m4v", "avi", "mov", "webm", "ts", "m2ts", "mts",
         "flv", "wmv", "mpg", "mpeg", "3gp", "ogv", "divx", "vob", "asf", "rmvb",
     )
@@ -384,10 +405,17 @@ object MediaMapper {
     }
 
     fun looksLikeVideo(fileName: String, mimeType: String): Boolean {
+        // An archive's volumes are never a video, whatever a sender's client called them.
+        if (SplitPieces.isArchiveVolume(fileName)) return false
         if (mimeType.startsWith("video/", ignoreCase = true)) return true
         // Plenty of uploads arrive as application/octet-stream; fall back to the extension.
         val extension = fileName.substringAfterLast('.', "").lowercase(Locale.ROOT)
-        return extension in VIDEO_EXTENSIONS
+        if (extension in VIDEO_EXTENSIONS) return true
+        // A piece of a video cut into byte pieces, which carries no media extension of its own:
+        // "Name.mkv.001", or "Name.part001" where the name says it is a release (2160p, HEVC).
+        val piece = SplitPieces.pieceOf(fileName) ?: return false
+        val inner = piece.base.substringAfterLast('.', "").lowercase(Locale.ROOT)
+        return inner in VIDEO_EXTENSIONS || EpisodeCopies.markers(piece.base).isNotEmpty() || qualityTags(piece.base).isNotEmpty()
     }
 
     /**

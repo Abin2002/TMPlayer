@@ -202,6 +202,8 @@ object LessonSteps {
     }
 
     fun lessonOf(item: MediaItem): Lesson? {
+        // "Name.part003" is a byte piece of one video, not lesson three of a course.
+        if (item.splitPiece != null) return null
         val caption = item.caption.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
         return listOfNotNull(item.nameForParsing.ifBlank { null }, caption).firstNotNullOfOrNull(::read)
     }

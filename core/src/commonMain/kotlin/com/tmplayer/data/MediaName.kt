@@ -503,7 +503,17 @@ object MediaName {
         .replace(WHITESPACE, " ")
         .trim()
 
-    private fun stripExtension(name: String): String {
+    private fun stripExtension(whole: String): String {
+        // A byte piece's suffix first ("Name.mkv.001", "Name.part007"): the name is its base's,
+        // and a "part007" left in would read as a piece of a film cut into parts, or as a lesson.
+        // Only a name that is surely a piece: "Name.part001.mkv" may be a whole file, "Part 1" of
+        // a film in parts, and keeps its number for [findPart].
+        val piece = SplitPieces.pieceOf(whole)?.takeIf { it.certain }
+        // "Name.part001" kept no extension, and the base's last word is the name's, not one.
+        if (piece != null && piece.base.substringAfterLast('.', "").lowercase(Locale.ROOT) !in MediaMapper.VIDEO_EXTENSIONS) {
+            return piece.base
+        }
+        val name = piece?.base ?: whole
         val dot = name.lastIndexOf('.')
         if (dot <= 0) return name
         val extension = name.substring(dot + 1).lowercase(Locale.ROOT)
@@ -530,7 +540,7 @@ object MediaName {
     private val TEASER_WORDS = listOf("டீசர்", "टीज़र", "ടീസർ")
 
     /** "CD1", "Disc 2", "Part2", "Part 2", "pt.3" (a dot is a space by now), "Pt-1". */
-    private val PART = Regex("""\b(cd|dis[ck]|part|pt)[\s-]?(\d{1,2})\b""", RegexOption.IGNORE_CASE)
+    private val PART = Regex("""\b(cd|dis[ck]|part|pt)[\s-]?0*(\d{1,2})\b""", RegexOption.IGNORE_CASE)
 
     /**
      * What a trailer or a sample calls itself. "Official" goes with the word after it, so "Night

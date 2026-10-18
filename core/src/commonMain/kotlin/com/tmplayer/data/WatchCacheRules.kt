@@ -99,19 +99,31 @@ class WatchCacheRules(
      * under [CacheRule.UnderCap] the least recently played go until the rest fit. Idempotent:
      * opening the same video twice claims it twice and deletes nothing more.
      */
-    suspend fun claim(item: MediaItem, chatTitle: String, fileId: Int = item.fileId) = claiming.withLock {
-        inFlight += fileId
+    suspend fun claim(item: MediaItem, chatTitle: String, fileId: Int = item.fileId) =
+        claimAll(listOf(item to fileId), chatTitle)
+
+    /**
+     * [claim] for one video held in several files: the byte pieces of a video cut to fit
+     * Telegram's limit ([SplitPieces]), each with the id it plays as. Every piece is recorded, and
+     * under either rule all of them are kept together, as the one video the cache now holds.
+     */
+    suspend fun claimAll(pieces: List<Pair<MediaItem, Int>>, chatTitle: String) = claiming.withLock {
+        if (pieces.isEmpty()) return@withLock
+        val ids = pieces.mapTo(HashSet()) { it.second }
+        inFlight += ids
         try {
-            val kept = runCatching { settings.isKeptDownload(item.chatId, item.messageId) }.getOrDefault(false)
-            // A download is not cache and must never be recorded as it: the next claim would
-            // delete a video the viewer chose to keep.
-            if (!kept) runCatching { settings.rememberCachedVideo(item.copy(fileId = fileId), chatTitle) }
+            for ((item, fileId) in pieces) {
+                val kept = runCatching { settings.isKeptDownload(item.chatId, item.messageId) }.getOrDefault(false)
+                // A download is not cache and must never be recorded as it: the next claim would
+                // delete a video the viewer chose to keep.
+                if (!kept) runCatching { settings.rememberCachedVideo(item.copy(fileId = fileId), chatTitle) }
+            }
             when (val current = rule()) {
-                CacheRule.OneVideo -> evictAllBut(fileId)
-                is CacheRule.UnderCap -> evictOverCap(current.capBytes, fileId)
+                CacheRule.OneVideo -> evictAllBut(ids)
+                is CacheRule.UnderCap -> evictOverCap(current.capBytes, ids)
             }
         } finally {
-            inFlight -= fileId
+            inFlight -= ids
         }
     }
 
@@ -121,7 +133,10 @@ class WatchCacheRules(
      * A record is only dropped when the bytes actually went. TDLib can refuse a delete, and a
      * record removed for a file still on disk loses track of those bytes for good.
      */
-    suspend fun evictAllBut(keepFileId: Int) {
+    suspend fun evictAllBut(keepFileId: Int) = evictAllBut(setOf(keepFileId))
+
+    /** [evictAllBut] keeping every one of [keepFileIds]: the pieces of one video cut into several. */
+    suspend fun evictAllBut(keepFileIds: Set<Int>) {
         val cached = runCatching { settings.cachedVideosNow() }.getOrDefault(emptyList())
         if (cached.isEmpty()) return
         val busyNow = busy()
@@ -129,7 +144,7 @@ class WatchCacheRules(
         val keptIds = keptFileIds()
         for (record in cached) {
             val fileId = resolve(record)
-            if (fileId == keepFileId || record.fileId == keepFileId) continue
+            if (fileId in keepFileIds || record.fileId in keepFileIds) continue
             if (fileId in busyNow || fileId in inFlight || fileId in playingNow) continue
             if (forgetIfDownloaded(record)) continue
             // The same file downloaded from another message: the record stays, since it is still
@@ -149,16 +164,20 @@ class WatchCacheRules(
      *
      * @return how many bytes went.
      */
-    suspend fun evictOverCap(capBytes: Long, keepFileId: Int? = null): Long {
+    suspend fun evictOverCap(capBytes: Long, keepFileId: Int? = null): Long =
+        evictOverCap(capBytes, listOfNotNull(keepFileId).toSet())
+
+    /** [evictOverCap] sparing every one of [keepFileIds]. */
+    suspend fun evictOverCap(capBytes: Long, keepFileIds: Set<Int>): Long {
         val cached = runCatching { settings.cachedVideosNow() }.getOrDefault(emptyList())
         if (cached.isEmpty()) return 0L
-        val spared = (busy() + playing() + inFlight.toSet() + keptFileIds() + listOfNotNull(keepFileId)).toMutableSet()
+        val spared = (busy() + playing() + inFlight.toSet() + keptFileIds() + keepFileIds).toMutableSet()
         val byId = mutableMapOf<Int, ResumeRecord>()
         val held = mutableListOf<CacheShelf.Held>()
         for (record in cached) {
             if (forgetIfDownloaded(record)) continue
             val fileId = resolve(record)
-            if (record.fileId == keepFileId) spared += fileId
+            if (record.fileId in keepFileIds) spared += fileId
             byId[fileId] = record
             held += CacheShelf.Held(fileId, bytesOf(fileId), record.updatedAt)
         }

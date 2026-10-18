@@ -53,7 +53,7 @@ object SameVideo {
         corrections: Map<String, VideoCorrection> = VideoCorrections.current,
         durationOf: (MediaItem) -> Int = statedLength,
     ): List<List<MediaItem>> {
-        val keyed = items.map { item -> item to SeriesShelf.candidateKey(item, corrections) }
+        val keyed = SplitPieces.join(items).map { item -> item to SeriesShelf.candidateKey(item, corrections) }
         val byKey = keyed.filter { it.second != null }.groupBy({ it.second!! }, { it.first })
         val groupOf = HashMap<String, List<MediaItem>>()
         for ((key, files) in byKey) {
@@ -63,7 +63,7 @@ object SameVideo {
             }
         }
         val seen = HashSet<String>()
-        return items.mapNotNull { item ->
+        return keyed.map { it.first }.mapNotNull { item ->
             val members = groupOf[item.id] ?: listOf(item)
             if (seen.add(members.first().id)) members.sortedWith(NEWEST_FIRST) else null
         }

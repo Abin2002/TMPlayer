@@ -293,7 +293,7 @@ private fun HoldMenu(
     val facts = remember(item.id) { MediaFacts.of(item) }
     val subtitle = listOfNotNull(
         item.durationSec.takeIf { it > 0 }?.let { s.formatter.duration(it.toLong()) },
-        item.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) },
+        item.sizeBytes.takeIf { it > 0 }?.let { com.tmplayer.data.SplitPieces.sizeFact(item, s.formatter.size(it)) },
         facts.resolution,
         facts.videoCodec,
         chatTitle.ifBlank { null },

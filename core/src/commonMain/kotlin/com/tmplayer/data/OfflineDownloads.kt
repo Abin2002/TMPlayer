@@ -143,6 +143,14 @@ object OfflineDownloads {
             Logger.i(TAG, "Not downloading ${item.title}: its chat does not allow saving")
             return
         }
+        // A video cut into byte pieces is kept as its pieces, every one, which the player joins
+        // again from Downloads as it does from Telegram.
+        if (item.isJoined) {
+            item.pieces.filter { !isDownloading(it.fileId) }.forEach { piece ->
+                start(runner, DownloadRequest.from(piece.copy(canBeSaved = item.canBeSaved), chatTitle))
+            }
+            return
+        }
         start(runner, DownloadRequest.from(item, chatTitle))
     }
 

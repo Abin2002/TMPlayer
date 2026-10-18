@@ -69,7 +69,9 @@ fun copyHeading(copy: MediaItem): String {
     val name = copy.fileName.ifBlank { copy.title }
     val facts = MediaFacts.read(name, copy.width, copy.height)
     val quality = VideoCopies.heightOf(copy)?.let { copy.copyQuality() }
-    return listOfNotNull(quality ?: MediaMapper.formatSize(copy.sizeBytes).ifEmpty { null }, facts.videoCodec, facts.dynamicRange, facts.source)
+    // A video cut into byte pieces says so: "4K  ·  7 parts  ·  HEVC", one choice, never seven.
+    val pieces = com.tmplayer.data.SplitPieces.countLabel(copy)
+    return listOfNotNull(quality ?: MediaMapper.formatSize(copy.sizeBytes).ifEmpty { null }, pieces, facts.videoCodec, facts.dynamicRange, facts.source)
         .joinToString("  ·  ")
 }
 
@@ -404,7 +406,7 @@ private fun CopyChooser(
                 val facts = MediaFacts.of(copy)
                 CopyOption(
                     copy = copy,
-                    title = copy.sizeBytes.takeIf { it > 0 }?.let { s.formatter.size(it) } ?: copyHeading(copy),
+                    title = copy.sizeBytes.takeIf { it > 0 }?.let { com.tmplayer.data.SplitPieces.sizeFact(copy, s.formatter.size(it)) } ?: copyHeading(copy),
                     what = listOfNotNull(
                         facts.source,
                         facts.videoCodec,

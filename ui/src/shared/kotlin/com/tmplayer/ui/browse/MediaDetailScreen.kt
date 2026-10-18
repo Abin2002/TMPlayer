@@ -360,6 +360,7 @@ private fun FactsBlock(page: DetailPage) {
         FactLine(facts)
         MetaFactsLines(page.extras)
         ResumeLine(page.watched, page.finished, page.item.durationSec)
+        PiecesMissingLine(page.item)
     }
 }
 
@@ -372,7 +373,7 @@ private fun videoFacts(page: DetailPage, s: Messages): List<Fact> {
         (parsed.year ?: page.meta?.year)?.let { Fact(it.toString()) },
         item.durationSec.takeIf { it > 0 }?.let { Fact(s.formatter.duration(it.toLong())) },
         facts.resolution?.let { Fact(it, chip = true) },
-        item.sizeBytes.takeIf { it > 0 }?.let { Fact(s.formatter.size(it)) },
+        item.sizeBytes.takeIf { it > 0 }?.let { Fact(com.tmplayer.data.SplitPieces.sizeFact(item, s.formatter.size(it))) },
         page.chatTitle.takeIf { it.isNotBlank() }?.let { Fact(it) },
         Fact(s.detailWatchedLine, accent = true).takeIf { page.finished },
     )
@@ -553,16 +554,19 @@ fun PageDiscButton(icon: ImageVector, label: String, onClick: () -> Unit, modifi
     val tv = !isTouch()
     val interactions = remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusVisibleAsState()
-    Box(
-        modifier
-            .size(if (tv) 48.dp else 40.dp)
-            .clip(CircleShape)
-            .background(if (focused) Tone.focusFill else Color.Black.copy(alpha = 0.55f))
-            .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClick)
-            .semantics { contentDescription = label },
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(icon, contentDescription = null, tint = if (focused) Tone.onFocusFill else Color.White, modifier = Modifier.size(24.dp))
+    // Its name under it: on a hover on the desktop, while the remote is on it on a television.
+    com.tmplayer.ui.components.IconTip(label, modifier, side = com.tmplayer.ui.components.TipSide.Below) {
+        Box(
+            Modifier
+                .size(if (tv) 48.dp else 40.dp)
+                .clip(CircleShape)
+                .background(if (focused) Tone.focusFill else Color.Black.copy(alpha = 0.55f))
+                .clickable(interactionSource = interactions, indication = if (tv) null else androidx.compose.foundation.LocalIndication.current, onClick = onClick)
+                .semantics { contentDescription = label },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = if (focused) Tone.onFocusFill else Color.White, modifier = Modifier.size(24.dp))
+        }
     }
 }
 

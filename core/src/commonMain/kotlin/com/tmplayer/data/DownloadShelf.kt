@@ -26,6 +26,12 @@ object DownloadShelf {
             /** In watching order: season, then episode. */
             val episodes: List<T>,
             override val newest: Long,
+            /**
+             * True when the rows are not episodes but the byte pieces of one video cut to fit
+             * Telegram's limit ([SplitPieces]), in order: the heading then counts parts, and
+             * playing any of them plays the video joined.
+             */
+            val pieces: Boolean = false,
         ) : Entry<T>
 
         data class Single<T>(override val key: String, val row: T, override val newest: Long) : Entry<T>
@@ -48,7 +54,24 @@ object DownloadShelf {
     ): List<Entry<T>> {
         class Found(val row: T, val show: String?, val title: String, val season: Int, val episode: Int)
 
-        val found = rows.map { row ->
+        // The pieces of one cut video under one heading, in order, before anything is read as a show.
+        val pieceSets = rows.filter { item(it).splitPiece?.certain == true }
+            .groupBy { item(it).let { video -> video.chatId to video.splitPiece!!.key } }
+            .filterValues { it.size > 1 }
+        val inSets = pieceSets.values.flatten().mapTo(HashSet()) { key(it) }
+        val joined = pieceSets.values.map { members ->
+            val ordered = members.sortedBy { item(it).splitPiece!!.number }
+            val lead = item(ordered.first())
+            Entry.Show(
+                key = "pieces:${lead.chatId}:${lead.splitPiece!!.key}",
+                title = SeriesShelf.filmTitle(lead),
+                episodes = ordered,
+                newest = members.maxOf(at),
+                pieces = true,
+            )
+        }
+
+        val found = rows.filter { key(it) !in inSets }.map { row ->
             val name = SeriesShelf.episodeOf(item(row), corrections)
             val episode = name.episode
             val show = if (episode != null) SeriesShelf.keyOf(name.title).ifEmpty { null } else null
@@ -72,6 +95,7 @@ object DownloadShelf {
                 newest = members.maxOf { at(it.row) },
             )
         }
+        entries += joined
         // Stable, so rows downloaded in the same moment keep the order they came in.
         return entries.sortedByDescending { it.newest }
     }

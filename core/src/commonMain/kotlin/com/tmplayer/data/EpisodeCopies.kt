@@ -56,7 +56,7 @@ object EpisodeCopies {
         val facts = MediaFacts.read(nameOf(item), item.width, item.height)
         val resolution = MediaMapper.qualityTags(nameOf(item)).firstOrNull() ?: facts.resolution
         val language = facts.languages.singleOrNull()?.let { L.messages.formatter.trackLanguage(it) }
-        val parts = item.parts.size.takeIf { it > 1 }?.let { L.gridPartsCount(it) }
+        val parts = item.parts.size.takeIf { it > 1 }?.let { L.gridPartsCount(it) } ?: SplitPieces.countLabel(item)
         val size = item.parts.ifEmpty { listOf(item) }.sumOf { it.sizeBytes.coerceAtLeast(0) }
         return listOfNotNull(language, resolution, facts.videoCodec, parts, MediaMapper.formatSize(size).ifEmpty { null })
             .joinToString("  ·  ")

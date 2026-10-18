@@ -51,6 +51,11 @@ object WatchCache {
         rules(context).claim(item, chatTitle)
     }
 
+    /** [claim] for the byte pieces of one video cut into several files, kept together. */
+    suspend fun claimAll(context: Context, pieces: List<MediaItem>, chatTitle: String) {
+        rules(context).claimAll(pieces.map { it to it.fileId }, chatTitle)
+    }
+
     /**
      * The files open in a player right now, counted, because backing out of a video and opening it
      * again can briefly put two players on one file.

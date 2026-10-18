@@ -421,6 +421,18 @@ internal fun ResumeLine(watched: WatchPoint?, finished: Boolean, durationSec: In
 }
 
 /**
+ * "Part 4 of 7 is not in this chat", under the facts of a video cut into byte pieces when one of
+ * them is missing ([com.tmplayer.data.SplitPieces]). Nothing for any other video.
+ */
+@Composable
+internal fun PiecesMissingLine(item: com.tmplayer.data.MediaItem, modifier: Modifier = Modifier) {
+    if (!item.isJoined) return
+    val s = LocalStrings.current
+    val line = remember(item, s) { com.tmplayer.data.SplitPieces.missingLine(item) } ?: return
+    Text(line, style = MaterialTheme.typography.labelLarge, color = Tone.muted, maxLines = 2, modifier = modifier)
+}
+
+/**
  * A page's backdrop: the art ([ArtBackdrop], which falls back from the online picture to the
  * Telegram thumbnail's soft field to the generated cover) with the long fades text needs.
  * [fromStart] adds the start fade, for a wide page whose text sits on the start half; the foot

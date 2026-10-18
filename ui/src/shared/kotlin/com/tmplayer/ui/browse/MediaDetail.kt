@@ -303,13 +303,14 @@ fun MediaDetailPanel(
                     (parsed.year ?: meta?.year)?.let { Fact(it.toString()) },
                     item.durationSec.takeIf { it > 0 }?.let { Fact(s.formatter.duration(it.toLong())) },
                     facts.resolution?.let { Fact(it, chip = true) },
-                    item.sizeBytes.takeIf { it > 0 }?.let { Fact(s.formatter.size(it)) },
+                    item.sizeBytes.takeIf { it > 0 }?.let { Fact(com.tmplayer.data.SplitPieces.sizeFact(item, s.formatter.size(it))) },
                     chatTitle.takeIf { it.isNotBlank() }?.let { Fact(it) },
                     Fact(s.detailWatchedLine, accent = true).takeIf { finished },
                 ),
             )
             MetaFactsLines(extras)
             ResumeLine(watched, finished, item.durationSec)
+            PiecesMissingLine(item)
         }
 
         if (!item.canBeSaved) {
@@ -442,7 +443,7 @@ internal fun DetailFacts(item: MediaItem, facts: MediaFacts, s: Messages, overvi
             )
         }
         facts.source?.let { add(s.detailSource to it) }
-        if (item.sizeBytes > 0) add(s.detailSize to s.formatter.size(item.sizeBytes))
+        if (item.sizeBytes > 0) add(s.detailSize to com.tmplayer.data.SplitPieces.sizeFact(item, s.formatter.size(item.sizeBytes)))
         if (item.durationSec > 0) add(s.detailLength to s.formatter.duration(item.durationSec.toLong()))
         if (item.date > TELEGRAM_LAUNCH) add(s.detailPosted to s.formatter.date(item.date * 1000L))
     }

@@ -143,6 +143,9 @@ object SeriesShelf {
         name: ParsedName = episodeOf(item, corrections),
     ): String? {
         if (corrections[item.id]?.separate == true || name.extra != null) return null
+        // One byte piece of a cut video is no video at all, so never a copy of one; the video the
+        // pieces make ([SplitPieces.join]) is keyed as any other.
+        if (item.splitPiece?.certain == true && item.pieces.isEmpty()) return null
         filmKeyOf(item, name)?.let { return it }
         val key = keyOf(name.title).ifEmpty { return null }
         name.airDate?.let { return "date:$key|$it" }
@@ -192,10 +195,12 @@ object SeriesShelf {
      *   weighs: the stated one by default, the player's learned one first where a caller has it.
      */
     fun arrange(
-        items: List<MediaItem>,
+        listed: List<MediaItem>,
         corrections: Map<String, VideoCorrection> = VideoCorrections.current,
         durationOf: (MediaItem) -> Int = SameVideo.statedLength,
     ): List<ShelfEntry> {
+        // A video cut into byte pieces is one video before anything else is decided about it.
+        val items = SplitPieces.join(listed)
         val plan = plan(items, corrections, durationOf)
         val placed = HashSet<String>()
         val out = ArrayList<ShelfEntry>(items.size)
@@ -362,10 +367,11 @@ object SeriesShelf {
      * A split film is one tile too, and an extra is labelled and follows its film, as in [arrange].
      */
     fun foldFilmCopies(
-        items: List<MediaItem>,
+        listed: List<MediaItem>,
         corrections: Map<String, VideoCorrection> = VideoCorrections.current,
         durationOf: (MediaItem) -> Int = SameVideo.statedLength,
     ): List<MediaItem> {
+        val items = SplitPieces.join(listed)
         val plan = plan(items, corrections, durationOf)
         if (plan.shown.isEmpty()) return items
         val placed = HashSet<String>()
@@ -422,7 +428,7 @@ object SeriesShelf {
         val renamed = VideoCorrections.current[item.id]?.title
         val title = when {
             renamed != null -> renamed
-            item.versions.size > 1 || item.parts.size > 1 -> filmTitle(item)
+            item.versions.size > 1 || item.parts.size > 1 || item.isJoined -> filmTitle(item)
             item.fileName.isBlank() || MediaMapper.isGenericName(item.fileName) -> item.title
             else -> MediaName.tileTitle(item.fileName, item.caption) ?: item.title
         }
