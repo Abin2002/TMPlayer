@@ -205,7 +205,7 @@ internal fun HomePane(
     // Home pressed again on the bar: back to the top, the featured carousel whole.
     ScrollToTopOnReselect(TouchDestination.Home) { animate -> listState.toTop(animate) }
     // Back from Home's rows to the TV top bar: the same, as Home looks when it opens.
-    if (!touch && TV_TOP_BAR) {
+    if (!touch) {
         // The bar takes the page's ground behind it once the rows run up under it.
         LaunchedEffect(listState) {
             androidx.compose.runtime.snapshotFlow { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0 }
@@ -237,9 +237,9 @@ internal fun HomePane(
         scrolled = true
     }
     LaunchedEffect(carousel) {
-        // Under the TV top bar too: a carousel arriving after the rows otherwise sits above the
-        // screen, out of reach of Up.
-        if ((touch || TV_TOP_BAR) && carousel && !scrolled) listState.scrollToItem(0)
+        // On a television too: a carousel arriving after the rows otherwise sits above the screen,
+        // out of reach of Up.
+        if (carousel && !scrolled) listState.scrollToItem(0)
     }
 
     // Asked for as the row would be when it first came on screen, and again after a refresh.
@@ -292,7 +292,7 @@ internal fun HomePane(
         val platformSpec = androidx.compose.foundation.gestures.LocalBringIntoViewSpec.current
         CompositionLocalProvider(
             LocalOnlineArt provides true,
-            androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides if (!touch && TV_TOP_BAR) calm else platformSpec,
+            androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides if (!touch) calm else platformSpec,
         ) {
           Column(Modifier.fillMaxSize()) {
             if (!touch && !headerOnArt) tvHeader?.invoke(false)
@@ -641,14 +641,8 @@ private fun TileRow(
         // On a television the tiles fade out over the margins rather than being cut off at the
         // rail, and the tile the remote moves to stays inside them.
         val row = rememberLazyListState()
-        // Under the TV top bar the remote's tile stands at one place, the start of the row, and
-        // the row slides under it; otherwise the row moves only as far as the margins ask.
-        val keep: @Composable (@Composable () -> Unit) -> Unit = if (TV_TOP_BAR) {
-            { body -> AnchoredAtStart(start, body) }
-        } else {
-            { body -> WithinMargins(start, end, body) }
-        }
-        keep {
+        // The remote's tile stands at one place, the start of the row, and the row slides under it.
+        AnchoredAtStart(start) {
             LazyRow(
                 state = row,
                 // Coming back down into a row lands on the tile it was left on, not whichever is nearest.

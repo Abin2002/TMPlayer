@@ -69,12 +69,6 @@ import com.tmplayer.ui.theme.rememberReducedMotion
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 
-/**
- * Experimental (diag/tv-top-bar): the television's slim bar across the top of the page in place
- * of the side rail. On by default in this test build; the phone and the desktop never see it.
- */
-internal const val TV_TOP_BAR = true
-
 /** The bar's row: tall enough for a pill grown under the remote. */
 private val BAR_ROW = 48.dp
 

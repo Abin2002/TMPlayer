@@ -2176,17 +2176,17 @@ private fun TvDownloads(
             .background(Tone.background)
             // The rows below keep 16dp of their own each side, so the page owes that much less to
             // the overscan margin and the heading, tabs and rows all start on one line.
-            // Under the TV top bar the page starts right below it.
-            .padding(start = Tv.SafeH - 16.dp, end = Tv.SafeH - 16.dp, top = if (com.tmplayer.ui.browse.TV_TOP_BAR) 4.dp else Tv.SafeV),
+            // The page starts right below the top bar.
+            .padding(start = Tv.SafeH - 16.dp, end = Tv.SafeH - 16.dp, top = 4.dp),
     ) {
         // Under the top bar, whose Back goes up to the bar, the page keeps a compact one line
-        // title (the bar marks the account's picture, not Downloads) and no back button.
-        val underBar = com.tmplayer.ui.browse.TV_TOP_BAR
+        // title (the bar marks the account's picture, not Downloads) and no back button but the
+        // one that leaves a selection.
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (!underBar || picking) {
+            if (picking) {
                 TvPill(
                     label = if (picking) s.downloadsLeaveSelection else s.commonBack,
                     icon = if (picking) TmIcons.Close else TmIcons.ArrowBack,
@@ -2202,20 +2202,11 @@ private fun TvDownloads(
                         chosenCount == 0 -> s.downloadsSelectVideos
                         else -> s.downloadsSelected(count = chosenCount)
                     },
-                    style = if (underBar) TvTheme.typography.titleLarge else TvTheme.typography.headlineLarge,
+                    style = TvTheme.typography.titleLarge,
                     color = Tone.text,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (!underBar) {
-                    TvText(
-                        s.downloadsKeptIn(folder = LegacyDownloads.FOLDER),
-                        style = TvTheme.typography.bodyMedium,
-                        color = Tone.muted,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 when {

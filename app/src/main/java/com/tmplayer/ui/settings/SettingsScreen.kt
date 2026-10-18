@@ -565,7 +565,7 @@ fun SettingsScreen(
             // The app bar already clears the status bar on a phone, so the list only owes the
             // gesture bar at the bottom.
             // Under the TV top bar the list starts right below it.
-            top = if (touch) 4.dp else if (com.tmplayer.ui.browse.TV_TOP_BAR && page == null) 4.dp else Tv.SafeV,
+            top = if (touch || page == null) 4.dp else Tv.SafeV,
             bottom = if (touch) maxOf(insets.calculateBottomPadding(), LocalBottomChrome.current) + 32.dp else 40.dp,
         ),
         // The gap between two rows of a phone's preference list is a divider's worth of nothing,
@@ -573,7 +573,7 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(if (touch) 0.dp else 10.dp),
     ) {
         // TV only: the phone's app bar already says where the viewer is and offers the way out.
-        if (!touch && com.tmplayer.ui.browse.TV_TOP_BAR) {
+        if (!touch) {
             // Under the TV top bar, whose Settings tab names the list: a page alone keeps a
             // compact title, one line, since the bar does not say which page it is.
             page?.let { shown ->
@@ -586,23 +586,6 @@ fun SettingsScreen(
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         modifier = Modifier.padding(bottom = 4.dp),
                     )
-                }
-            }
-        } else if (!touch) {
-            item {
-                Column(Modifier.padding(bottom = 12.dp)) {
-                    Text(
-                        page?.let(::titleOf) ?: s.settingsTitle,
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = Tone.text,
-                    )
-                    if (page == null) {
-                        Text(
-                            s.settingsSavesAsYouGo,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Tone.muted,
-                        )
-                    }
                 }
             }
         }

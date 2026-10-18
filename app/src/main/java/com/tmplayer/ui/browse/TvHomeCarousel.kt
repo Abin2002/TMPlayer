@@ -244,10 +244,9 @@ private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String, start
         EdgeBackdrop(
             source,
             Modifier.fillMaxSize(),
-            // Under the top bar the picture melts into the page's ground towards the top instead,
-            // across the whole width, so every item of the bar reads over it in every theme.
-            cornerShade = if (TV_TOP_BAR) 0.dp else with(LocalDensity.current) { (headerFade * HEADER_FADE_REACH).toDp() },
-            topFade = if (TV_TOP_BAR) with(LocalDensity.current) { (headerFade * BAR_FADE_REACH).toDp() } else 0.dp,
+            // The picture melts into the page's ground towards the top, across the whole width, so
+            // every item of the top bar reads over it in every theme.
+            topFade = with(LocalDensity.current) { (headerFade * BAR_FADE_REACH).toDp() },
             onPictured = HomeFirstPaint::markReady,
         )
         // The name alone over Play and Details; the facts are only in the page's description.
@@ -344,9 +343,6 @@ private const val TEXT_SHARE = 0.6f
 
 /** Between the name and Play: the hero is the name and its two buttons. */
 private val TITLE_GAP = 14.dp
-
-/** How far the glow behind the clock and the account reaches, as a share of the heading's height. */
-private const val HEADER_FADE_REACH = 1.5f
 
 /** How far down the picture fades in from the top under the TV top bar, as a share of the bar's height. */
 private const val BAR_FADE_REACH = 1.7f

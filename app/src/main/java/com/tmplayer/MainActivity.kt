@@ -1491,9 +1491,9 @@ private fun Root() {
             onUpdate = { showUpdate = true },
         )
 
-        // The television's top bar (experimental, TV_TOP_BAR) over Settings' own list and Downloads,
+        // The television's top bar over Settings' own list and Downloads,
         // as it is over the browser's pages; a Settings page, the PIN pad and About have none.
-        val tvBar = com.tmplayer.ui.browse.TV_TOP_BAR && FormFactor.isTv(context)
+        val tvBar = FormFactor.isTv(context)
         val tvBarShown = tvBar && (
             screen is Screen.Downloads ||
                 (screen is Screen.Settings && settingsPage == null && appLock?.let { !it.pinSet || settingsUnlocked } == true)
