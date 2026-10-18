@@ -82,8 +82,9 @@ class AppearanceRenderTest {
             if (!tv) {
                 // The wallpaper's colours win: the swatches fade and the line says why.
                 runBlocking { settings.setDynamicColour(true) }
-                idle(1_000)
-                assertTrue(texts(activity).contains("The wallpaper's colours are in use. Turn them off to pick one."))
+                val note = "The wallpaper's colours are in use. Turn them off to pick one."
+                repeat(30) { if (!texts(activity).contains(note)) { Thread.sleep(100); idle(200) } }
+                assertTrue("the swatches say the wallpaper's colours win", texts(activity).contains(note))
                 save("appearance-$form-accent-wallpaper.png", activity)
                 runBlocking { settings.setDynamicColour(false) }
                 idle(500)

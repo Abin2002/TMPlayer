@@ -83,10 +83,24 @@ private object SettingsFile {
     @Volatile
     private var store: DataStore<Preferences>? = null
 
-    fun get(context: Context): DataStore<Preferences> = store ?: synchronized(this) {
-        store ?: SettingsStore.openDataStore(
-            File(context.applicationContext.filesDir, "datastore/${SettingsStore.FILE_NAME}"),
-        ).also { store = it }
+    @Volatile
+    private var openedAt: File? = null
+
+    /**
+     * The one store for this process. Opened again only if the app's files folder is another one,
+     * which never happens in the app; Robolectric gives each test its own folder and deletes it
+     * after, and the store of the first test in a run was left writing into a folder that no
+     * longer existed.
+     */
+    fun get(context: Context): DataStore<Preferences> {
+        val file = File(context.applicationContext.filesDir, "datastore/${SettingsStore.FILE_NAME}")
+        store?.takeIf { openedAt == file }?.let { return it }
+        return synchronized(this) {
+            store?.takeIf { openedAt == file } ?: SettingsStore.openDataStore(file).also {
+                store = it
+                openedAt = file
+            }
+        }
     }
 }
 

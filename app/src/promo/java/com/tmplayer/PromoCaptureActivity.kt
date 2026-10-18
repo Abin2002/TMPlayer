@@ -376,20 +376,33 @@ class PromoCaptureActivity : ComponentActivity() {
                             com.tmplayer.ui.onboarding.TourScreen(tour, onDone = { screen = "chats" })
                         }
                         // A page of it from `--es page appearance|playback|subtitles|...`.
-                        "settings" -> SettingsScreen(
-                            chats = promoChats(),
-                            onLoggedOut = {},
-                            onBack = { screen = "chats" },
-                            onOpenAbout = { screen = "about" },
-                            initialPage = SettingsPage.entries.firstOrNull {
+                        "settings" -> {
+                            val page = SettingsPage.entries.firstOrNull {
                                 it.name.equals(intent.getStringExtra("page"), ignoreCase = true)
-                            },
-                            accountFolders = if (intent.getBooleanExtra("folders", false) || groupsDemo) PROMO_FOLDERS else emptyList(),
-                        )
+                            }
+                            // Settings' own list on a television stands under the top bar, as in the app.
+                            PromoTvBar(
+                                shown = tv && page == null,
+                                current = com.tmplayer.ui.browse.TvBarTab.Settings,
+                                inProfile = false,
+                                go = { screen = it },
+                            ) {
+                                SettingsScreen(
+                                    chats = promoChats(),
+                                    onLoggedOut = {},
+                                    onBack = { screen = "chats" },
+                                    onOpenAbout = { screen = "about" },
+                                    initialPage = page,
+                                    accountFolders = if (intent.getBooleanExtra("folders", false) || groupsDemo) PROMO_FOLDERS else emptyList(),
+                                )
+                            }
+                        }
                         "about" -> AboutScreen(onBack = { screen = "settings" })
                         // The Downloads screen as it is, over this build's own empty index: the
                         // storage panel and the "Remove after watching" row.
-                        "downloads" -> DownloadsScreen(onPlay = {}, onBack = { screen = "chats" })
+                        "downloads" -> PromoTvBar(shown = tv, current = null, inProfile = true, go = { screen = it }) {
+                            DownloadsScreen(onPlay = {}, onBack = { screen = "chats" })
+                        }
                         // Home's rows over demo chats: Continue, two starred chats (one of them
                         // a show), and the newest videos from the rest. `--es variant loading`
                         // leaves the starred rows and Recent waiting, `--es variant empty` is an
@@ -576,7 +589,23 @@ private fun PromoChatsScreen(
     }
     val account = Account("Demo", "demo", null, 0)
     val homeData = promoHome(home)
+    // The television's top bar, which BrowseScreen draws only when it is handed the bar's
+    // places; without it the TV layout has nothing to draw.
+    val tvNav = if (FormFactor.isTv(androidx.compose.ui.platform.LocalContext.current)) {
+        promoTvNav(
+            account = account,
+            onHome = { picked = BrowseSection.of(BrowseTab.Home) },
+            onChats = { picked = BrowseSection.of(BrowseTab.Chats) },
+            onSettings = onOpenSettings,
+            onDownloads = onOpenDownloads,
+            onFavourites = { picked = BrowseSection.of(BrowseTab.Favorites) },
+            onHistory = { picked = BrowseSection.of(BrowseTab.History) },
+        )
+    } else {
+        null
+    }
     BrowseScreen(
+        tvNav = tvNav,
         state = state ?: UiState.Content(BrowseData(chats, account)),
         favorites = homeData?.favourites ?: PromoMeta.library.favourites,
         continueWatching = homeData?.continueWatching.orEmpty(),
@@ -1077,3 +1106,75 @@ internal fun ComponentActivity.promoLanguage(asked: String?) {
 /** The Cinema Lounge chat's picture, for the listing's header as the chat list shows it. */
 private fun cinemaAvatar(): ByteArray? =
     PromoCatalog.chats.first { it.id == PromoCatalog.CINEMA }.avatar?.let(PromoMeta.pictures::bytes)
+
+/** The top bar's places over the demo library, for the television layout. */
+internal fun promoTvNav(
+    account: Account = Account("Demo", "demo", null, 0),
+    onHome: () -> Unit = {},
+    onChats: () -> Unit = {},
+    onSettings: () -> Unit = {},
+    onDownloads: () -> Unit = {},
+    onFavourites: () -> Unit = {},
+    onHistory: () -> Unit = {},
+) = com.tmplayer.ui.browse.TouchNav(
+    account = account,
+    favoriteCount = PromoMeta.library.favourites.size,
+    downloadCount = 0,
+    updateVersion = null,
+    onHome = onHome,
+    onChats = onChats,
+    onSearch = {},
+    onSettings = onSettings,
+    onFavourites = onFavourites,
+    onDownloads = onDownloads,
+    onHistory = { onHistory() },
+    onUpdate = {},
+)
+
+/**
+ * Settings' list and Downloads under the television's top bar, as MainActivity puts them; a
+ * tab picked on it goes to that fixture screen.
+ */
+@Composable
+private fun PromoTvBar(
+    shown: Boolean,
+    current: com.tmplayer.ui.browse.TvBarTab?,
+    inProfile: Boolean,
+    go: (String) -> Unit,
+    content: @Composable () -> Unit,
+) {
+    if (!FormFactor.isTv(androidx.compose.ui.platform.LocalContext.current)) {
+        content()
+        return
+    }
+    val barFocus = remember { FocusRequester() }
+    val pageFocus = remember { FocusRequester() }
+    val nav = promoTvNav(
+        onHome = { go("home") },
+        onChats = { go("chats") },
+        onSettings = { go("settings") },
+        onDownloads = { go("downloads") },
+    )
+    com.tmplayer.ui.browse.TvBarFrame(
+        shown = shown,
+        barFocus = barFocus,
+        contentFocus = pageFocus,
+        bar = {
+            com.tmplayer.ui.browse.TvTopBar(
+                nav = nav,
+                current = current,
+                inProfile = inProfile,
+                searchOpen = false,
+                onHome = nav.onHome,
+                onChats = nav.onChats,
+                onSettings = nav.onSettings,
+                onSearch = { go("chats") },
+                onRefresh = null,
+                currentFocus = barFocus,
+                contentFocus = pageFocus,
+                overArt = false,
+            )
+        },
+        content = content,
+    )
+}
