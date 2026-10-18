@@ -2097,12 +2097,8 @@
     "smaller": "Lebih kecil"
   },
   "support": {
-    "already": "Saya sudah mendukung",
     "buy_coffee": "Traktir kopi",
-    "done": "Selesai",
     "dont_show": "Jangan tampilkan lagi",
-    "later": "Nanti",
-    "link_copied": "Tautan disalin",
     "maybe_later": "Mungkin nanti",
     "never": "Jangan tanya lagi",
     "note_touch": "{note} Buka tautan di sini, atau pindai kode di perangkat lain.",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} Buka tautan di sini, atau pindai kode dengan ponselmu.",
     "qr_for": "Kode QR untuk {link}",
     "scan_coffee": "Pindai untuk Buy Me a Coffee",
-    "share": "Bagikan",
-    "share_text": "TMPlayer memutar video Telegram-mu di layar besar. Gratis, tanpa iklan: {url}",
-    "share_title": "Bagikan TMPlayer",
-    "sponsor_github": "Sponsori di GitHub",
-    "star": "Beri bintang di GitHub",
-    "star_or_share": "Beri bintang atau bagikan",
-    "support": "Dukung"
+    "sponsor_github": "Sponsori di GitHub"
   },
   "theme": {
     "dark": "Gelap",

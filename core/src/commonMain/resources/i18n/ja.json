@@ -2097,12 +2097,8 @@
     "smaller": "小さく"
   },
   "support": {
-    "already": "すでに支援しています",
     "buy_coffee": "Buy Me a Coffee",
-    "done": "完了",
     "dont_show": "今後は表示しない",
-    "later": "あとで",
-    "link_copied": "リンクをコピーしました",
     "maybe_later": "またあとで",
     "never": "今後は表示しない",
     "note_touch": "{note} ここでリンクを開くか、別の端末でコードを読み取ってください。",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} ここでリンクを開くか、スマートフォンでコードを読み取ってください。",
     "qr_for": "{link}のQRコード",
     "scan_coffee": "Buy Me a Coffeeはこちらを読み取り",
-    "share": "共有",
-    "share_text": "TMPlayerは、Telegramの動画を大画面で再生します。無料、広告なし: {url}",
-    "share_title": "TMPlayerを共有",
-    "sponsor_github": "GitHubでスポンサーになる",
-    "star": "GitHubでスター",
-    "star_or_share": "スターまたは共有",
-    "support": "支援"
+    "sponsor_github": "GitHubでスポンサーになる"
   },
   "theme": {
     "dark": "ダーク",

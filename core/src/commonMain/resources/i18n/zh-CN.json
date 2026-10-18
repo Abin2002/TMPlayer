@@ -2097,12 +2097,8 @@
     "smaller": "更小"
   },
   "support": {
-    "already": "我已经支持过了",
     "buy_coffee": "请我喝杯咖啡",
-    "done": "完成",
     "dont_show": "不再显示",
-    "later": "稍后",
-    "link_copied": "链接已复制",
     "maybe_later": "以后再说",
     "never": "不再询问",
     "note_touch": "{note} 在这里打开链接，或用另一台设备扫描二维码。",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} 在这里打开链接，或用手机扫描二维码。",
     "qr_for": "{link} 的二维码",
     "scan_coffee": "扫码请我喝咖啡",
-    "share": "分享",
-    "share_text": "TMPlayer 在大屏幕上播放你的 Telegram 视频。免费，无广告：{url}",
-    "share_title": "分享 TMPlayer",
-    "sponsor_github": "在 GitHub 上赞助",
-    "star": "在 GitHub 上点星",
-    "star_or_share": "点星或分享",
-    "support": "支持"
+    "sponsor_github": "在 GitHub 上赞助"
   },
   "theme": {
     "dark": "深色",

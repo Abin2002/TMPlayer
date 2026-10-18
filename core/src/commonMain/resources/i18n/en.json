@@ -2097,12 +2097,8 @@
     "smaller": "Smaller"
   },
   "support": {
-    "already": "I already support",
     "buy_coffee": "Buy me a coffee",
-    "done": "Done",
     "dont_show": "Don't show again",
-    "later": "Later",
-    "link_copied": "Link copied",
     "maybe_later": "Maybe later",
     "never": "Don't ask again",
     "note_touch": "{note} Open the page here, or scan the code on another device.",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} Open the page here, or scan the code with your phone.",
     "qr_for": "QR code for {link}",
     "scan_coffee": "Scan for Buy Me a Coffee",
-    "share": "Share",
-    "share_text": "TMPlayer plays your Telegram videos on a big screen. Free, no ads: {url}",
-    "share_title": "Share TMPlayer",
-    "sponsor_github": "Sponsor on GitHub",
-    "star": "Star on GitHub",
-    "star_or_share": "Star or share",
-    "support": "Support"
+    "sponsor_github": "Sponsor on GitHub"
   },
   "theme": {
     "dark": "Dark",

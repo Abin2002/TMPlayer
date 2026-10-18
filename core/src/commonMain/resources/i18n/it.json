@@ -2097,12 +2097,8 @@
     "smaller": "Più piccoli"
   },
   "support": {
-    "already": "Lo sostengo già",
     "buy_coffee": "Offrimi un caffè",
-    "done": "Fatto",
     "dont_show": "Non mostrare più",
-    "later": "Più tardi",
-    "link_copied": "Link copiato",
     "maybe_later": "Magari più tardi",
     "never": "Non chiedermelo più",
     "note_touch": "{note} Apri un link qui, o inquadra un codice con un altro dispositivo.",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} Apri un link qui, o inquadra un codice con il telefono.",
     "qr_for": "Codice QR per {link}",
     "scan_coffee": "Inquadra per Buy Me a Coffee",
-    "share": "Condividi",
-    "share_text": "TMPlayer riproduce i tuoi video di Telegram sul grande schermo. Gratis, senza pubblicità: {url}",
-    "share_title": "Condividi TMPlayer",
-    "sponsor_github": "Sostienici su GitHub",
-    "star": "Stella su GitHub",
-    "star_or_share": "Stella o condividi",
-    "support": "Sostieni"
+    "sponsor_github": "Sostienici su GitHub"
   },
   "theme": {
     "dark": "Scuro",

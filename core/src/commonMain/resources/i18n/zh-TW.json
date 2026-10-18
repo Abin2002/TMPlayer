@@ -2097,12 +2097,8 @@
     "smaller": "更小"
   },
   "support": {
-    "already": "我已經支持過了",
     "buy_coffee": "請我喝杯咖啡",
-    "done": "完成",
     "dont_show": "不再顯示",
-    "later": "稍後",
-    "link_copied": "已複製連結",
     "maybe_later": "以後再說",
     "never": "不要再詢問",
     "note_touch": "{note} 在這裡開啟連結，或用另一台裝置掃描 QR 碼。",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} 在這裡開啟連結，或用手機掃描 QR 碼。",
     "qr_for": "{link} 的 QR 碼",
     "scan_coffee": "掃描以前往 Buy Me a Coffee",
-    "share": "分享",
-    "share_text": "TMPlayer 能在大螢幕上播放你的 Telegram 影片。免費，無廣告：{url}",
-    "share_title": "分享 TMPlayer",
-    "sponsor_github": "在 GitHub 上贊助",
-    "star": "在 GitHub 上按星星",
-    "star_or_share": "按星星或分享",
-    "support": "支持"
+    "sponsor_github": "在 GitHub 上贊助"
   },
   "theme": {
     "dark": "深色",

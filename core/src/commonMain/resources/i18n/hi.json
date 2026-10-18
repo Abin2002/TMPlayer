@@ -2097,12 +2097,8 @@
     "smaller": "छोटा"
   },
   "support": {
-    "already": "मैं पहले से सपोर्ट करता हूँ",
     "buy_coffee": "Buy Me a Coffee",
-    "done": "हो गया",
     "dont_show": "फिर न दिखाएँ",
-    "later": "बाद में",
-    "link_copied": "लिंक कॉपी हो गया",
     "maybe_later": "शायद बाद में",
     "never": "फिर न पूछें",
     "note_touch": "{note} यहाँ कोई लिंक खोलें, या किसी दूसरे डिवाइस पर कोड स्कैन करें।",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} यहाँ कोई लिंक खोलें, या अपने फ़ोन से कोड स्कैन करें।",
     "qr_for": "{link} का QR कोड",
     "scan_coffee": "Buy Me a Coffee के लिए स्कैन करें",
-    "share": "शेयर करें",
-    "share_text": "TMPlayer आपके Telegram वीडियो बड़ी स्क्रीन पर चलाता है। मुफ़्त, बिना विज्ञापन: {url}",
-    "share_title": "TMPlayer शेयर करें",
-    "sponsor_github": "GitHub पर स्पॉन्सर करें",
-    "star": "GitHub पर स्टार दें",
-    "star_or_share": "स्टार दें या शेयर करें",
-    "support": "सपोर्ट"
+    "sponsor_github": "GitHub पर स्पॉन्सर करें"
   },
   "theme": {
     "dark": "डार्क",

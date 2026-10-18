@@ -2097,12 +2097,8 @@
     "smaller": "Мельче"
   },
   "support": {
-    "already": "Уже помогаю",
     "buy_coffee": "Угостить кофе",
-    "done": "Готово",
     "dont_show": "Больше не показывать",
-    "later": "Позже",
-    "link_copied": "Ссылка скопирована",
     "maybe_later": "Может, позже",
     "never": "Больше не спрашивать",
     "note_touch": "{note} Откройте ссылку здесь или отсканируйте код на другом устройстве.",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} Откройте ссылку здесь или отсканируйте код телефоном.",
     "qr_for": "QR-код для {link}",
     "scan_coffee": "Сканируйте для Buy Me a Coffee",
-    "share": "Поделиться",
-    "share_text": "TMPlayer показывает ваши видео из Telegram на большом экране. Бесплатно, без рекламы: {url}",
-    "share_title": "Поделиться TMPlayer",
-    "sponsor_github": "Спонсировать на GitHub",
-    "star": "Звезда",
-    "star_or_share": "Звезда или ссылка",
-    "support": "Поддержать"
+    "sponsor_github": "Спонсировать на GitHub"
   },
   "theme": {
     "dark": "Тёмная",

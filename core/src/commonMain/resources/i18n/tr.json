@@ -2097,12 +2097,8 @@
     "smaller": "Daha küçük"
   },
   "support": {
-    "already": "Zaten destek oluyorum",
     "buy_coffee": "Bana bir kahve ısmarla",
-    "done": "Tamam",
     "dont_show": "Bir daha gösterme",
-    "later": "Sonra",
-    "link_copied": "Bağlantı kopyalandı",
     "maybe_later": "Belki sonra",
     "never": "Bir daha sorma",
     "note_touch": "{note} Buradan bir bağlantı aç ya da başka bir cihazda bir kod tara.",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} Buradan bir bağlantı aç ya da telefonunla bir kod tara.",
     "qr_for": "{link} için QR kodu",
     "scan_coffee": "Buy Me a Coffee için tara",
-    "share": "Paylaş",
-    "share_text": "TMPlayer, Telegram videolarını büyük ekranda oynatır. Ücretsiz, reklamsız: {url}",
-    "share_title": "TMPlayer'ı paylaş",
-    "sponsor_github": "GitHub'da sponsor ol",
-    "star": "GitHub'da yıldız ver",
-    "star_or_share": "Yıldız ver ya da paylaş",
-    "support": "Destek"
+    "sponsor_github": "GitHub'da sponsor ol"
   },
   "theme": {
     "dark": "Koyu",

@@ -2097,12 +2097,8 @@
     "smaller": "Nhỏ hơn"
   },
   "support": {
-    "already": "Tôi đã ủng hộ rồi",
     "buy_coffee": "Mời tôi ly cà phê",
-    "done": "Xong",
     "dont_show": "Không hiện lại",
-    "later": "Để sau",
-    "link_copied": "Đã sao chép liên kết",
     "maybe_later": "Để sau nhé",
     "never": "Đừng hỏi lại",
     "note_touch": "{note} Mở liên kết tại đây, hoặc quét mã trên thiết bị khác.",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} Mở liên kết tại đây, hoặc quét mã bằng điện thoại.",
     "qr_for": "Mã QR cho {link}",
     "scan_coffee": "Quét để mời ly cà phê qua Buy Me a Coffee",
-    "share": "Chia sẻ",
-    "share_text": "TMPlayer phát video Telegram của bạn trên màn hình lớn. Miễn phí, không quảng cáo: {url}",
-    "share_title": "Chia sẻ TMPlayer",
-    "sponsor_github": "Tài trợ qua GitHub",
-    "star": "Gắn sao trên GitHub",
-    "star_or_share": "Gắn sao hoặc chia sẻ",
-    "support": "Ủng hộ"
+    "sponsor_github": "Tài trợ qua GitHub"
   },
   "theme": {
     "dark": "Tối",

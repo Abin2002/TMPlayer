@@ -2097,12 +2097,8 @@
     "smaller": "더 작게"
   },
   "support": {
-    "already": "이미 후원 중이에요",
     "buy_coffee": "커피 사 주기",
-    "done": "완료",
     "dont_show": "다시 보지 않기",
-    "later": "나중에",
-    "link_copied": "링크를 복사했어요",
     "maybe_later": "나중에 할게요",
     "never": "다시 묻지 않기",
     "note_touch": "{note} 여기서 링크를 열거나 다른 기기에서 코드를 스캔하세요.",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} 여기서 링크를 열거나 휴대폰으로 코드를 스캔하세요.",
     "qr_for": "{link} QR 코드",
     "scan_coffee": "스캔해서 Buy Me a Coffee 열기",
-    "share": "공유",
-    "share_text": "TMPlayer는 Telegram 동영상을 큰 화면에서 재생해요. 무료이고 광고도 없어요: {url}",
-    "share_title": "TMPlayer 공유하기",
-    "sponsor_github": "GitHub에서 후원하기",
-    "star": "GitHub 별 주기",
-    "star_or_share": "별 주기 또는 공유",
-    "support": "후원"
+    "sponsor_github": "GitHub에서 후원하기"
   },
   "theme": {
     "dark": "다크",

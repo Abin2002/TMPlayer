@@ -2097,12 +2097,8 @@
     "smaller": "کوچک‌تر"
   },
   "support": {
-    "already": "از قبل حمایت می‌کنم",
     "buy_coffee": "یک قهوه برایم بخرید",
-    "done": "تمام",
     "dont_show": "دیگر نشان نده",
-    "later": "بعداً",
-    "link_copied": "پیوند کپی شد",
     "maybe_later": "شاید بعداً",
     "never": "دیگر نپرس",
     "note_touch": "{note} یک پیوند را همین‌جا باز کنید، یا کدی را روی دستگاه دیگر اسکن کنید.",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} یک پیوند را همین‌جا باز کنید، یا کدی را با گوشی اسکن کنید.",
     "qr_for": "کد QR برای {link}",
     "scan_coffee": "اسکن برای Buy Me a Coffee",
-    "share": "اشتراک‌گذاری",
-    "share_text": "TMPlayer ویدیوهای Telegram شما را روی صفحهٔ بزرگ پخش می‌کند. رایگان و بدون تبلیغ: {url}",
-    "share_title": "اشتراک‌گذاری TMPlayer",
-    "sponsor_github": "حمایت در GitHub",
-    "star": "ستاره در GitHub",
-    "star_or_share": "ستاره یا اشتراک‌گذاری",
-    "support": "حمایت"
+    "sponsor_github": "حمایت در GitHub"
   },
   "theme": {
     "dark": "تیره",

@@ -2097,12 +2097,8 @@
     "smaller": "أصغر"
   },
   "support": {
-    "already": "أنا أدعمه بالفعل",
     "buy_coffee": "اشترِ لي قهوة",
-    "done": "تم",
     "dont_show": "لا تعرض هذا مجددًا",
-    "later": "لاحقًا",
-    "link_copied": "تم نسخ الرابط",
     "maybe_later": "ربما لاحقًا",
     "never": "لا تسألني مجددًا",
     "note_touch": "{note} افتح رابطًا هنا، أو امسح رمزًا على جهاز آخر.",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} افتح رابطًا هنا، أو امسح رمزًا بهاتفك.",
     "qr_for": "رمز QR لـ {link}",
     "scan_coffee": "امسح الرمز لـ Buy Me a Coffee",
-    "share": "مشاركة",
-    "share_text": "يشغّل TMPlayer فيديوهات Telegram على شاشة كبيرة. مجاني وبلا إعلانات: {url}",
-    "share_title": "شارك TMPlayer",
-    "sponsor_github": "ارعَه على GitHub",
-    "star": "نجمة على GitHub",
-    "star_or_share": "نجمة أو مشاركة",
-    "support": "الدعم"
+    "sponsor_github": "ارعَه على GitHub"
   },
   "theme": {
     "dark": "داكن",

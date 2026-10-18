@@ -2097,12 +2097,8 @@
     "smaller": "ചെറുതാക്കുക"
   },
   "support": {
-    "already": "പിന്തുണയ്ക്കുന്നുണ്ട്",
     "buy_coffee": "Buy me a coffee",
-    "done": "ശരി",
     "dont_show": "ഇനി കാണിക്കരുത്",
-    "later": "പിന്നീട്",
-    "link_copied": "ലിങ്ക് പകർത്തി",
     "maybe_later": "പിന്നീടാകാം",
     "never": "ഇനി ചോദിക്കരുത്",
     "note_touch": "{note} ഇവിടെ ഒരു ലിങ്ക് തുറക്കുക, അല്ലെങ്കിൽ മറ്റൊരു ഉപകരണത്തിൽ കോഡ് സ്കാൻ ചെയ്യുക.",
@@ -2110,13 +2106,7 @@
     "popup_note": "{note} ഇവിടെ ഒരു ലിങ്ക് തുറക്കുക, അല്ലെങ്കിൽ ഫോൺ കൊണ്ട് കോഡ് സ്കാൻ ചെയ്യുക.",
     "qr_for": "{link}-നുള്ള QR കോഡ്",
     "scan_coffee": "Buy Me a Coffee-ക്കായി സ്കാൻ ചെയ്യുക",
-    "share": "പങ്കിടുക",
-    "share_text": "TMPlayer നിങ്ങളുടെ Telegram വീഡിയോകൾ വലിയ സ്ക്രീനിൽ പ്ലേ ചെയ്യുന്നു. സൗജന്യം, പരസ്യങ്ങളില്ല: {url}",
-    "share_title": "TMPlayer പങ്കിടുക",
-    "sponsor_github": "GitHub-ൽ സ്പോൺസർ ചെയ്യുക",
-    "star": "GitHub സ്റ്റാർ",
-    "star_or_share": "സ്റ്റാർ അല്ലെങ്കിൽ പങ്കിടൽ",
-    "support": "പിന്തുണ"
+    "sponsor_github": "GitHub-ൽ സ്പോൺസർ ചെയ്യുക"
   },
   "theme": {
     "dark": "ഇരുണ്ടത്",
