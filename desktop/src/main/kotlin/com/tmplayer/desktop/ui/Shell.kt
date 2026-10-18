@@ -382,6 +382,8 @@ private fun Browse(state: ShellState, player: PlayerContent) {
             )
         }
 
+        // Telegram links from the palette and pinned posts (CP79), and videos off the grids (CP81).
+        DesktopLinkHost(state)
         UpdatePopupHost(state)
         LowStorageQuestionHost(state)
         // The language card and What's new wait for the setup, as on the phone.

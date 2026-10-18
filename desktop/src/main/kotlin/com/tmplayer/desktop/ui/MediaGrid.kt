@@ -173,6 +173,21 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
     val toast = rememberToast()
     var audioOpen by remember(chat.id) { mutableStateOf(false) }
     if (audioOpen) AudioListSheet(state, chat) { audioOpen = false }
+    // The chat's round videos (CP81), from their entry over the posters.
+    var roundOpen by remember(chat.id) { mutableStateOf(false) }
+    if (roundOpen) {
+        val roundScope = rememberCoroutineScope()
+        val rounds = remember(chat.id) { com.tmplayer.ui.browse.PagedVideos.roundVideos(roundScope, chat.id) }
+        MoreVideosDialog(
+            title = s.gridRoundTitle,
+            note = chat.title,
+            list = rounds,
+            empty = s.gridRoundNone,
+            round = true,
+            onPlay = { item -> state.noteChatTitle(chat.id, chat.title); state.openPlayer(item, startFromBeginning = false) },
+            onDismiss = { roundOpen = false },
+        )
+    }
     val minSize by state.settings.minSizeBytes.collectAsState(initial = null)
     val maxSize by state.settings.maxSizeBytes.collectAsState(initial = null)
     val min = minSize
@@ -195,6 +210,9 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
         val ui by model.state.collectAsState()
         var query by remember(chat.id) { mutableStateOf("") }
         val audioCount by model.audioCount.collectAsState()
+        val roundCount by model.roundCount.collectAsState()
+        val pinned by model.pinned.collectAsState()
+        val extras = audioCount > 0 || roundCount > 0 || pinned != null
         var openSeries by remember(chat.id) { mutableStateOf<com.tmplayer.data.Series?>(null) }
         // Where the grid stood when a show was opened over it: the grid is gone while the show is
         // up, so closing the show would otherwise land back at the top of the chat.
@@ -369,11 +387,21 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                 onNav = { gridNav = it },
                 // Online metadata is on by default, so the first grid says once where posters come
                 // from; not while searching, when the listing is what was searched for.
-                header = if (ad == null && course == null && !sortedLoaded && (audioCount == 0 || query.isNotBlank())) null else {
+                header = if (ad == null && course == null && !sortedLoaded && (!extras || query.isNotBlank())) null else {
                     {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             // The chat's audio, as a list to play from, over its posters.
-                            if (audioCount > 0 && query.isBlank()) AudioEntryRow(audioCount, noVideos = content.items.isEmpty()) { audioOpen = true }
+                            // The pinned video first, then the audio and the round videos (CP81).
+                            val noVideos = content.items.isEmpty()
+                            val pinnedShown = pinned
+                            if (pinnedShown != null && query.isBlank()) {
+                                PinnedEntryRow(pinnedShown, noVideos = noVideos) { item ->
+                                    state.noteChatTitle(chat.id, chat.title)
+                                    state.openPlayer(item, startFromBeginning = false)
+                                }
+                            }
+                            if (audioCount > 0 && query.isBlank()) AudioEntryRow(audioCount, noVideos = noVideos && pinnedShown == null) { audioOpen = true }
+                            if (roundCount > 0 && query.isBlank()) RoundEntryRow(roundCount, noVideos = noVideos && pinnedShown == null && audioCount == 0) { roundOpen = true }
                             if (sortedLoaded) {
                                 Text(s.gridSortLoadedNote(content.items.size), style = MaterialTheme.typography.bodySmall, color = Tone.muted)
                             }
@@ -395,7 +423,7 @@ fun MediaGridPage(state: ShellState, chat: ChatSummary) {
                                     OutlinedButton(onClick = model::retryMore) { Text(s.commonTryAgain) }
                                 }
                             }
-                            ArchiveList(content.archives, noVideos = content.items.isEmpty() && audioCount == 0, onExplain = { toast(it) })
+                            ArchiveList(content.archives, noVideos = content.items.isEmpty() && !extras, onExplain = { toast(it) })
                         }
                     }
                 },
