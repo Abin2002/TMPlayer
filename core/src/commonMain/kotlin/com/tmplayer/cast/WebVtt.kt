@@ -1,0 +1,149 @@
+package com.tmplayer.cast
+
+import com.tmplayer.online.SubtitleText
+import java.util.Locale
+
+/**
+ * Subtitles as a Cast receiver takes them: WebVTT, sent beside the video as a side track.
+ *
+ * SubRip becomes WebVTT with its timings rewritten and its basic tags kept (WebVTT has the same
+ * b, i and u). A styled ASS or SSA file is sent as plain text: its override blocks, drawing
+ * commands and comments go, its line breaks stay, and each event becomes a cue. WebVTT passes
+ * through with its header made sure of.
+ */
+object WebVtt {
+
+    const val MIME = "text/vtt"
+
+    data class Cue(val startMs: Long, val endMs: Long, val text: String)
+
+    /** [bytes] in the format [extension] names (srt, ass, ssa, vtt) as one WebVTT text. */
+    fun convert(bytes: ByteArray, extension: String): String = convert(SubtitleText.decode(bytes), extension)
+
+    fun convert(text: String, extension: String): String = when (extension.lowercase(Locale.ROOT)) {
+        "vtt" -> fromVtt(text)
+        "ass", "ssa" -> write(parseAss(text))
+        else -> if (looksLikeAss(text)) write(parseAss(text)) else write(parseSrt(text))
+    }
+
+    fun looksLikeAss(text: String): Boolean = text.trimStart().startsWith("[Script Info]", ignoreCase = true)
+
+    fun write(cues: List<Cue>): String {
+        val sb = StringBuilder("WEBVTT\n\n")
+        cues.sortedBy { it.startMs }.forEach { cue ->
+            if (cue.text.isBlank() || cue.endMs <= cue.startMs) return@forEach
+            sb.append(stamp(cue.startMs)).append(" --> ").append(stamp(cue.endMs)).append('\n')
+            // A blank line inside a cue would end it; WebVTT also forbids "-->" in the text.
+            sb.append(cue.text.replace("-->", "->").lines().filter { it.isNotBlank() }.joinToString("\n"))
+            sb.append("\n\n")
+        }
+        return sb.toString()
+    }
+
+    fun stamp(ms: Long): String {
+        val t = ms.coerceAtLeast(0)
+        val h = t / 3_600_000
+        val m = t / 60_000 % 60
+        val s = t / 1000 % 60
+        val f = t % 1000
+        return String.format(Locale.ROOT, "%02d:%02d:%02d.%03d", h, m, s, f)
+    }
+
+    private fun fromVtt(text: String): String {
+        val body = text.replace("\r\n", "\n").replace('\r', '\n')
+        return if (body.trimStart().startsWith("WEBVTT")) body.trimStart() else "WEBVTT\n\n$body"
+    }
+
+    private val srtTiming = Regex("""(\d+):(\d{1,2}):(\d{1,2})[,.](\d{1,3})\s*-->\s*(\d+):(\d{1,2}):(\d{1,2})[,.](\d{1,3})""")
+
+    fun parseSrt(text: String): List<Cue> {
+        val lines = text.replace("\r\n", "\n").replace('\r', '\n').split('\n')
+        val cues = ArrayList<Cue>()
+        var i = 0
+        while (i < lines.size) {
+            val match = srtTiming.find(lines[i])
+            if (match == null) {
+                i++
+                continue
+            }
+            val g = match.groupValues
+            val start = ms(g[1], g[2], g[3], g[4])
+            val end = ms(g[5], g[6], g[7], g[8])
+            i++
+            val body = StringBuilder()
+            while (i < lines.size && lines[i].isNotBlank()) {
+                // A timing line straight after, with no blank line between, starts the next cue.
+                if (srtTiming.containsMatchIn(lines[i])) break
+                if (body.isNotEmpty()) body.append('\n')
+                body.append(lines[i].trim())
+                i++
+            }
+            cues += Cue(start, end, cleanSrt(body.toString()))
+        }
+        return cues
+    }
+
+    private fun ms(h: String, m: String, s: String, frac: String): Long {
+        val f = frac.padEnd(3, '0').take(3).toLong()
+        return h.toLong() * 3_600_000 + m.toLong() * 60_000 + s.toLong() * 1000 + f
+    }
+
+    /** SubRip's tags WebVTT also has stay; font colours and the ASS-style braces in some files go. */
+    private fun cleanSrt(text: String): String =
+        text.replace(Regex("""\{\\[^}]*\}"""), "")
+            .replace(Regex("""</?font[^>]*>""", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("""<(/?)([biu])>""", RegexOption.IGNORE_CASE)) { "<${it.groupValues[1]}${it.groupValues[2].lowercase()}>" }
+            .replace(Regex("""<(?!/?[biu]>)[^>]*>"""), "")
+            .replace(Regex("""&(?![A-Za-z]+;|#[0-9]+;)"""), "&amp;")
+
+    fun parseAss(text: String): List<Cue> {
+        val lines = text.replace("\r\n", "\n").replace('\r', '\n').split('\n')
+        var inEvents = false
+        var format: List<String> = listOf("layer", "start", "end", "style", "name", "marginl", "marginr", "marginv", "effect", "text")
+        val cues = ArrayList<Cue>()
+        for (raw in lines) {
+            val line = raw.trim()
+            if (line.startsWith("[")) {
+                inEvents = line.equals("[Events]", ignoreCase = true)
+                continue
+            }
+            if (!inEvents) continue
+            when {
+                line.startsWith("Format:", ignoreCase = true) ->
+                    format = line.substringAfter(':').split(',').map { it.trim().lowercase(Locale.ROOT) }
+                line.startsWith("Dialogue:", ignoreCase = true) -> {
+                    val fields = line.substringAfter(':').split(',', limit = format.size)
+                    if (fields.size < format.size) continue
+                    val start = assTime(fields[format.indexOf("start")].trim()) ?: continue
+                    val end = assTime(fields[format.indexOf("end")].trim()) ?: continue
+                    val textAt = format.indexOf("text").takeIf { it >= 0 } ?: (format.size - 1)
+                    val body = fields[textAt]
+                    // A drawing (\p1 and on) is a shape, not words.
+                    if (Regex("""\\p[1-9]""").containsMatchIn(body)) continue
+                    val plain = body
+                        .replace(Regex("""\{[^}]*\}"""), "")
+                        .replace("\\N", "\n").replace("\\n", "\n").replace("\\h", " ")
+                        .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                        .trim()
+                    if (plain.isNotEmpty()) cues += Cue(start, end, plain)
+                }
+            }
+        }
+        // Several events at one moment (a sign and a line of dialogue) are one cue on the receiver,
+        // or it stacks them out of order.
+        return cues.groupBy { it.startMs to it.endMs }.map { (span, group) ->
+            Cue(span.first, span.second, group.joinToString("\n") { it.text })
+        }
+    }
+
+    private fun assTime(t: String): Long? {
+        val parts = t.split(':')
+        if (parts.size != 3) return null
+        val h = parts[0].toLongOrNull() ?: return null
+        val m = parts[1].toLongOrNull() ?: return null
+        val sec = parts[2].split('.')
+        val s = sec[0].toLongOrNull() ?: return null
+        val cs = sec.getOrNull(1)?.padEnd(2, '0')?.take(3)?.let { if (it.length == 2) it.toLong() * 10 else it.toLong() } ?: 0
+        return h * 3_600_000 + m * 60_000 + s * 1000 + cs
+    }
+}

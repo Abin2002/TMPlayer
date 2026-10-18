@@ -60,6 +60,11 @@ jna = "5.19.1"
 filekit = "0.16.0"
 # dbus-java logs through SLF4J; with no provider every start prints a warning. Nothing to log to.
 slf4j = "2.0.20"
+# Casting to a Chromecast or Google TV from the phone (CP73): Google's Cast framework and the
+# MediaRouter it finds receivers with. The regular APK only; an F-Droid build has neither
+# (app/build.gradle.kts, fdroidBuild).
+playServicesCast = "22.3.1"
+mediarouter = "1.8.1"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -121,6 +126,8 @@ jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
 jna-platform = { group = "net.java.dev.jna", name = "jna-platform", version.ref = "jna" }
 filekit-dialogs-compose = { group = "io.github.vinceglb", name = "filekit-dialogs-compose", version.ref = "filekit" }
 slf4j-nop = { group = "org.slf4j", name = "slf4j-nop", version.ref = "slf4j" }
+play-services-cast-framework = { group = "com.google.android.gms", name = "play-services-cast-framework", version.ref = "playServicesCast" }
+androidx-mediarouter = { group = "androidx.mediarouter", name = "mediarouter", version.ref = "mediarouter" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

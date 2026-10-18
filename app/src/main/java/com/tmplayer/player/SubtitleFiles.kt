@@ -46,6 +46,15 @@ class SubtitleFiles(
 ) {
     private val loaded = mutableListOf<Media3Item.SubtitleConfiguration>()
 
+    /** Every file loaded so far: what a cast sends to the TV as side tracks (CP73). */
+    val files: List<Media3Item.SubtitleConfiguration> get() = loaded.toList()
+
+    /**
+     * Set while the video is on a TV: a file loaded then goes to the cast (true when it took it)
+     * instead of into the stopped local player, which must not start playing under the cast.
+     */
+    var onCastFile: ((file: File, mimeType: String, label: String) -> Boolean)? = null
+
     /** The id of the file just loaded, until its track shows up and is selected. */
     private var pending: Pair<String, String>? = null
 
@@ -128,6 +137,11 @@ class SubtitleFiles(
             .setId(id)
             .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
             .build()
+        if (onCastFile?.invoke(copy.file, copy.mimeType, name) == true) {
+            // Kept in [loaded] for when the video comes back here; the cast shows it now.
+            say(L.tracksFileLoaded(name))
+            return
+        }
         pending = id to name
         exo.setMediaItem(item(video), exo.currentPosition)
         if (exo.playbackState == Player.STATE_IDLE) exo.prepare()

@@ -22,3 +22,7 @@
 # Keeps crash reports from release builds readable.
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# The Cast framework makes its options provider from the class name in the manifest (CP73). The
+# F-Droid build has neither the framework nor the class, and the rule then matches nothing.
+-keep class com.tmplayer.cast.CastOptionsProvider { <init>(); }

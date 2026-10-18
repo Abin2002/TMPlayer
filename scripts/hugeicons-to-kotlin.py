@@ -173,6 +173,10 @@ ICONS: list[tuple[str, list[Icon]]] = [
         Icon("ShapeCrop", "Crop", "The picture shape button on Crop: filled, the edges cut."),
         Icon("ShapeStretch", "MaximizeScreen", "The picture shape button on Stretch: pulled out to the screen's edges."),
         Icon("Trailer", "Clapperboard", "A title's trailer.", "TrailerIcon"),
+        Icon("Cast", "Cast", "Cast to a Chromecast or Google TV."),
+        Icon("Tv", "Tv01", "A TV in the cast picker."),
+        Icon("Rewind", "Backward01", "Skip back, on the cast screen."),
+        Icon("FastForward", "Forward01", "Skip forward, on the cast screen."),
     ]),
 ]
 
@@ -237,6 +241,7 @@ DRAWABLES: list[Drawable] = [
     Drawable("ic_rotate_landscape", "SmartPhoneLandscape", "Rotation held in landscape.", size=36, tint=True),
     Drawable("ic_rotate_portrait", "SmartPhone01", "Rotation held in portrait.", size=36, tint=True),
     Drawable("ic_pip", "PictureInPictureOn", "Picture in picture."),
+    Drawable("ic_cast", "Cast", "The player's Cast button."),
     Drawable("ic_lock", "SquareLock02", "Lock the player's screen, on its menu."),
     Drawable("ic_lock_open", "SquareUnlock02", "Unlock the locked player."),
     Drawable("ic_brightness", "Sun03", "The brightness swipe."),

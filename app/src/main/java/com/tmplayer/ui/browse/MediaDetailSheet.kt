@@ -4,6 +4,11 @@ import com.tmplayer.ui.components.TopMessageHost
 import android.widget.Toast
 import com.tmplayer.App
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -382,6 +387,19 @@ private fun DetailScreen(
                 onOpenBookmark = onOpenBookmark,
                 onPickCopy = onPickCopy,
                 copyStarted = copyStarted,
+            )
+        }
+        // Cast (CP73), opposite the round Back: picked here, Play then goes straight to the TV.
+        if (touch) {
+            com.tmplayer.cast.CastPageButton(
+                Modifier
+                    .align(androidx.compose.ui.Alignment.TopEnd)
+                    .windowInsetsPadding(
+                        androidx.compose.foundation.layout.WindowInsets.safeDrawing.only(
+                            androidx.compose.foundation.layout.WindowInsetsSides.Top + androidx.compose.foundation.layout.WindowInsetsSides.Horizontal,
+                        ),
+                    )
+                    .padding(end = com.tmplayer.ui.components.FloatingChrome.Inset, top = 10.dp),
             )
         }
         // Over the page, which is a window of its own above the app's.
