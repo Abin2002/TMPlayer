@@ -76,7 +76,11 @@ object CrashReports {
             options.isEnableUserInteractionBreadcrumbs = false
             options.isEnableNetworkEventBreadcrumbs = false
 
-            // No IP address and no device name.
+            // No IP address and no device name. Sentry 8.61 deprecates this for its Data Collection
+            // options, but setting any one of those switches every option left unset to collect,
+            // file paths and request bodies included, so the old off switch stays until 9.0
+            // removes it and the replacement is spelt out field by field.
+            @Suppress("DEPRECATION")
             options.isSendDefaultPii = false
             options.isAttachThreads = true
             options.isAttachStacktrace = true

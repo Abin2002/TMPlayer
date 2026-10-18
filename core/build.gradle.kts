@@ -129,7 +129,7 @@ fun accessorName(key: String): String {
 fun kotlinString(text: String): String =
     "\"" + text.replace("\\", "\\\\").replace("\"", "\\\"").replace("$", "\\$").replace("\n", "\\n") + "\""
 
-val generateStrings by tasks.registering {
+val generateStrings = tasks.register("generateStrings") {
     val source = file("src/commonMain/resources/i18n/en.json")
     val out = layout.buildDirectory.dir("generated/i18n")
     inputs.file(source)
@@ -173,7 +173,7 @@ val generateStrings by tasks.registering {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "com.tmplayer.core"
         // tdl-coroutines refuses anything older, as in :app.
         compileSdk = 37

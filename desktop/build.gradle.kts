@@ -38,7 +38,7 @@ val localProps = Properties().apply {
 }
 
 // Credentials and version reach the app as a generated object, the desktop's BuildConfig.
-val generateBuildInfo by tasks.registering {
+val generateBuildInfo = tasks.register("generateBuildInfo") {
     val out = layout.buildDirectory.dir("generated/buildinfo")
     val apiId = localProps.getProperty("TG_API_ID") ?: "0"
     val apiHash = localProps.getProperty("TG_API_HASH") ?: ""
@@ -281,7 +281,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     // ComposeUiTest: the browse keyboard and the player's mouse driven off screen.
-    testImplementation(compose.desktop.uiTestJUnit4)
+    testImplementation(libs.cmp.ui.test.junit4)
 }
 
 // The player on its own, over a file on disk, for working on it without a Telegram account:
@@ -330,7 +330,7 @@ tasks.matching { it.name == "proguardReleaseJars" }.configureEach {
 // (lib/app/resources on Linux) and names that folder in the compose.application.resources.dir
 // system property, which is where the About screen reads them from.
 val legalResources = layout.buildDirectory.dir("legal-resources")
-val syncLegalResources by tasks.registering(Sync::class) {
+val syncLegalResources = tasks.register<Sync>("syncLegalResources") {
     from(
         rootProject.file("LICENSE"),
         rootProject.file("LICENSE-OPENSSL-EXCEPTION.md"),
@@ -347,7 +347,7 @@ tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(sy
 // resources, which Compose merges into the app's resources on a Mac only. Each library gets an
 // @rpath install name, libssl finds libcrypto by that name, nothing points into Homebrew any more,
 // and both are signed again ad hoc.
-val macOpenSsl by tasks.registering {
+val macOpenSsl = tasks.register("macOpenSsl") {
     onlyIf { hostMac }
     val out = legalResources.map { it.dir("macos-arm64") }
     val prefix = providers.gradleProperty("macOpenSsl")

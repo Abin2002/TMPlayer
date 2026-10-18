@@ -23,7 +23,7 @@ plugins {
 
 // THIRD_PARTY_NOTICES.md, compiled in as a string so About can show it with no network: a TV has
 // no browser to read it in, and a constant needs no asset plumbing on either target.
-val generateNotices by tasks.registering {
+val generateNotices = tasks.register("generateNotices") {
     val source = rootProject.file("THIRD_PARTY_NOTICES.md")
     val out = layout.buildDirectory.dir("generated/notices")
     inputs.file(source)
@@ -43,7 +43,7 @@ val generateNotices by tasks.registering {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "com.tmplayer.ui"
         compileSdk = 37
         minSdk = 26
