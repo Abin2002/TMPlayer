@@ -85,7 +85,9 @@ internal object CrashReportScrubber {
         trace.registers = null
         trace.unknown = null
         trace.frames?.forEach { frame ->
-            frame.vars = frame.vars?.mapValues { (_, value) -> redact(value) }
+            // Sentry 8.61 types a frame's locals as objects rather than strings; each is read as
+            // its text, since that text is what would be sent.
+            frame.vars = frame.vars?.mapValues { (_, value) -> value?.let { redact(it.toString()) } }
             frame.absPath = null
             frame.preContext = null
             frame.postContext = null

@@ -1,7 +1,7 @@
 [versions]
 agp = "8.13.2"
 # tdl-coroutines 15.0.0 is built against kotlin-stdlib 2.4.10, so the compiler has to be at least 2.4
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 coreKtx = "1.18.0"
 activityCompose = "1.12.0"
 composeBom = "2026.06.01"
@@ -9,7 +9,7 @@ tvMaterial = "1.1.0"
 lifecycle = "2.10.0"
 coroutines = "1.11.0"
 tdl = "15.0.0"
-zxing = "3.5.3"
+zxing = "3.5.4"
 # 1.8.0 was the release that began surfacing transient AudioTrack underruns as visible
 # freeze-then-resume buffering; 1.9.1 added the 100 ms grace period that debounces them, which is
 # the fix for the momentary stall Dolby Digital 5.1 tracks showed. 1.10.1 is as far as nextlib's
@@ -21,10 +21,10 @@ fragment = "1.8.9"
 datastore = "1.2.1"
 # Crash reporting, and only when the viewer switches it on. Core alone: the "sentry-android"
 # umbrella pulls in NDK, fragment, Compose and Room integrations, none of which this needs.
-sentry = "8.16.0"
+sentry = "8.61.0"
 # Only for the R8 mapping: a UUID in the APK and the mapping uploaded under it, so a report's
 # stack trace reads as the source does. Every other feature of the plugin is off (app/build.gradle.kts).
-sentryGradle = "6.20.0"
+sentryGradle = "6.24.0"
 junit = "4.13.2"
 # Draws the TV player's Compose overlays on the JVM, so a screen that cannot compose fails CI.
 robolectric = "4.17"
@@ -32,11 +32,11 @@ androidxTestCore = "1.7.0"
 # Android ships org.json in the platform; a plain JVM does not, so `:core`'s jvm target carries
 # this for update-response parsing (and its tests), and the Android build never bundles it.
 json = "20240303"
-# Desktop (Part B of the 2026-10-03 plan). Compose Multiplatform 1.12.1 maps to Jetpack Compose
-# 1.12; mediamp 0.5.0 is built against 1.12.0 and wraps libmpv. Its native runtime is a separate
+# Desktop (Part B of the 2026-10-03 plan). Compose Multiplatform 1.12.2 maps to Jetpack Compose
+# 1.12; mediamp 0.5.2 is built against 1.12 and wraps libmpv. Its native runtime is a separate
 # artifact per OS and does not come in transitively, so :desktop names the ones it ships.
-composeMultiplatform = "1.12.1"
-mediamp = "0.5.0"
+composeMultiplatform = "1.12.2"
+mediamp = "0.5.2"
 appdirs = "1.4.0"
 # Material3 for Compose Multiplatform 1.12 (maps to Jetpack Material3 1.5 alphas); icons stay on
 # the last published core set, the same handful :app uses.
@@ -50,7 +50,7 @@ jna = "5.19.1"
 # FileChooser portal on Linux (so it works inside the Flatpak), NSOpenPanel on macOS.
 filekit = "0.16.0"
 # dbus-java logs through SLF4J; with no provider every start prints a warning. Nothing to log to.
-slf4j = "2.0.17"
+slf4j = "2.0.20"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
