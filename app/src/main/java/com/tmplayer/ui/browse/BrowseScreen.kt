@@ -44,6 +44,14 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -518,7 +526,7 @@ fun BrowseScreen(
                                 tvHeader = if (touch) {
                                     null
                                 } else {
-                                    { onArt -> TabHeading(tab, 0, insets, headerAccount, modifier = Modifier.padding(end = Tv.SafeH), onArt = onArt) { RefreshAction(onRefreshHome) } }
+                                    { _ -> TabHeading(tab, 0, insets, headerAccount, modifier = Modifier.padding(end = Tv.SafeH)) { RefreshAction(onRefreshHome) } }
                                 },
                             )
                         }
@@ -1740,8 +1748,11 @@ private fun RailItem(
         label = "railForeground",
     )
 
+    Box(modifier) {
+    // Icons only: the name, and the count where there is one, beside the item the remote is on.
+    if (reveal <= 0f) RailTip(visible = focused, label = label, badge = badge)
     Row(
-        modifier
+        Modifier
             .fillMaxWidth()
             .padding(vertical = RAIL_GAP / 2)
             .height(RAIL_ROW)
@@ -1794,6 +1805,51 @@ private fun RailItem(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.widthIn(max = RAIL_BADGE_MAX).alpha(reveal),
             )
+        }
+    }
+    }
+}
+
+/**
+ * The name of a folded rail's item, in a pill just past the rail's edge, level with the item. It
+ * never takes focus, so the remote stays on the rail, and it fades and slides in from the icon so
+ * the eye follows it there.
+ */
+@Composable
+private fun RailTip(visible: Boolean, label: String, badge: String?) {
+    val shown = remember { MutableTransitionState(false) }
+    shown.targetState = visible
+    if (!shown.currentState && !shown.targetState && shown.isIdle) return
+    val gap = with(LocalDensity.current) { RAIL_TIP_GAP.roundToPx() }
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    Popup(
+        popupPositionProvider = remember(gap, rtl) {
+            object : PopupPositionProvider {
+                override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
+                    val x = if (rtl) anchorBounds.left - gap - popupContentSize.width else anchorBounds.right + gap
+                    return IntOffset(x, anchorBounds.top + (anchorBounds.height - popupContentSize.height) / 2)
+                }
+            }
+        },
+        properties = PopupProperties(focusable = false),
+    ) {
+        val still = rememberReducedMotion() || Motion.reduced
+        AnimatedVisibility(
+            visibleState = shown,
+            enter = fadeIn(Motion.standard(Motion.Fast)) + if (still) EnterTransition.None else slideInHorizontally(Motion.standard(Motion.Fast)) { -it / 4 },
+            exit = fadeOut(Motion.standard(Motion.Fast)),
+        ) {
+            Row(
+                Modifier
+                    .clip(CircleShape)
+                    .background(Tone.surfaceHigh)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text(label, style = MaterialTheme.typography.titleSmall, color = Tone.text, maxLines = 1)
+                if (badge != null) Text(badge, style = MaterialTheme.typography.bodyMedium, color = Tone.muted, maxLines = 1)
+            }
         }
     }
 }
@@ -2972,6 +3028,9 @@ private val RAIL_MARK = 32.dp
 
 /** Horizontal padding every rail child carries, which is what keeps them out of the overscan. */
 private val RAIL_INSET = 16.dp
+
+/** Between a folded rail's edge and the name shown beside its item. */
+private val RAIL_TIP_GAP = 20.dp
 
 /** The most the rail widens for a language whose labels are long single words. */
 private val RAIL_WIDE = 240.dp

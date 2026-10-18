@@ -17,9 +17,17 @@ internal fun decodeImageFile(path: String, maxWidth: Int): ImageBitmap? {
     BitmapFactory.decodeFile(path, bounds)
     var sample = 1
     while (bounds.outWidth / sample > maxWidth * 2) sample *= 2
+    val sampled = bounds.outWidth / sample
     val options = BitmapFactory.Options().apply {
         inSampleSize = sample
         inPreferredConfig = Bitmap.Config.RGB_565
+        // Sampling only halves, so a picture up to twice [maxWidth] would keep its full size: an
+        // original still 1920 wide is 4 MB. Scaled to [maxWidth] as it is decoded instead.
+        if (sampled > maxWidth && maxWidth > 0) {
+            inScaled = true
+            inDensity = sampled
+            inTargetDensity = maxWidth
+        }
     }
     return BitmapFactory.decodeFile(path, options)?.asImageBitmap()
 }

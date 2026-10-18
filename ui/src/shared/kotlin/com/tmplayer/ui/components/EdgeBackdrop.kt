@@ -1,0 +1,184 @@
+package com.tmplayer.ui.components
+
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.scale
+import com.tmplayer.ui.theme.Tone
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import com.tmplayer.data.Thumbnails
+import com.tmplayer.ui.theme.Motion
+
+/**
+ * A hero's picture set into the page rather than laid over it: the Home carousel on every device.
+ *
+ * In a wide frame (a television, a desktop window, a phone on its side) the picture stands at the
+ * end edge, [share] of the width at its own 16:9 shape, and fades into the page towards the start,
+ * the foot and, by [topFade], the top; [cornerShade] grows a glow of the page's colour out of the
+ * top end corner for a clock or a window's buttons standing there. The start, where the name, the facts and the buttons sit, is
+ * the page itself, so the words need no shade and read in either theme. In a narrow frame (a phone
+ * held upright) there is no room beside it, so the picture spans the width and fills the height,
+ * and only the foot and the top fade.
+ *
+ * Nothing is drawn behind it: a wash of the thumbnail's colours showed a channel's logo as a giant
+ * ghost behind the words, since many a thumbnail is the channel's logo.
+ *
+ * A picture smaller than [SHARP_MIN_WIDTH] (Telegram's thumbnails are 320 pixels) is drawn no
+ * more than [EDGE_SMALL_SCALE] times its own size, so it is never blown up into a blur, and floats
+ * centred down the end, faded on every side but the edge. With no
+ * picture at all the video's [GeneratedCover] takes its place, faded the same way.
+ */
+@Composable
+fun EdgeBackdrop(
+    source: BackdropSource,
+    modifier: Modifier = Modifier,
+    share: Float = EDGE_SHARE,
+    topFade: Dp = 0.dp,
+    cornerShade: Dp = 0.dp,
+) {
+    BoxWithConstraints(modifier) {
+        val density = LocalDensity.current
+        val frameW = constraints.maxWidth
+        val frameH = constraints.maxHeight
+        val wide = frameW > frameH * WIDE_RATIO
+        val pictureW = if (wide) (frameW * share).toInt() else frameW
+        val art = rememberBackdropArt(source, pictureW)
+        val topFadePx = with(density) { topFade.toPx() }
+        val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+
+        val shown = art ?: return@BoxWithConstraints
+        Crossfade(targetState = shown, animationSpec = Motion.standard(), modifier = Modifier.fillMaxSize()) { step ->
+            Box(Modifier.fillMaxSize()) {
+                val picture = step.picture
+                // The size the picture is drawn at, in pixels: its own shape at the share of the
+                // width, no taller than the frame (cropped from its foot then), and a small one
+                // capped at a few times its own pixels.
+                // A thumbnail too small to stand at the top floats, centred down the end, faded at
+                // its top as well, so it reads as a vignette rather than a strip under the clock.
+                val small = wide && picture != null && picture.width < SHARP_MIN_WIDTH
+                val (w, h) = when {
+                    picture == null -> pictureW to (if (wide) minOf(frameH, pictureW * 9 / 16) else frameH)
+                    !wide -> frameW to frameH
+                    else -> {
+                        val cap = if (picture.width < SHARP_MIN_WIDTH) (picture.width * EDGE_SMALL_SCALE).toInt() else Int.MAX_VALUE
+                        val width = minOf(pictureW, cap)
+                        width to minOf(frameH, width * picture.height / picture.width.coerceAtLeast(1))
+                    }
+                }
+                val sized = with(density) { Modifier.size(w.toDp(), h.toDp()) }
+                val fades = Modifier
+                    .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                    .drawWithContent {
+                        drawContent()
+                        if (wide) {
+                            val across = fadeOut(START_FADE)
+                            drawRect(
+                                Brush.horizontalGradient(*(if (rtl) across.reversedStops() else across.inStops())),
+                                blendMode = BlendMode.DstIn,
+                            )
+                        }
+                        drawRect(Brush.verticalGradient(*fadeOut(FOOT_FADE).reversedStops()), blendMode = BlendMode.DstIn)
+                        val reach = if (small) FOOT_FADE else (topFadePx / size.height).coerceIn(0f, 1f)
+                        if (reach > 0f) drawRect(Brush.verticalGradient(*fadeOut(reach).inStops()), blendMode = BlendMode.DstIn)
+                    }
+                val place = Modifier.align(if (small) Alignment.CenterEnd else Alignment.TopEnd).then(sized).then(fades)
+                if (picture != null) {
+                    Image(
+                        bitmap = picture,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        alignment = Alignment.TopCenter,
+                        filterQuality = Thumbnails.drawFilter,
+                        modifier = place,
+                    )
+                } else {
+                    // The colours alone: the cover's number and initial would sit under the clock.
+                    GeneratedCover(
+                        remember(source.cover) { source.cover.copy(number = null, chatInitial = null) },
+                        place,
+                        showTitle = false,
+                    )
+                }
+            }
+        }
+        // The page's own colour, glowing out of the top end corner over the picture, so a clock or
+        // a window's buttons there read in either theme while the rest of the picture stays whole.
+        if (cornerShade > 0.dp) {
+            val ground = Tone.background
+            Box(
+                Modifier.fillMaxSize().drawBehind {
+                    val corner = Offset(if (rtl) 0f else size.width, 0f)
+                    scale(scaleX = CORNER_STRETCH, scaleY = 1f, pivot = corner) {
+                        drawCircle(
+                            Brush.radialGradient(
+                                0f to ground.copy(alpha = 0.86f),
+                                0.45f to ground.copy(alpha = 0.62f),
+                                0.75f to ground.copy(alpha = 0.22f),
+                                1f to Color.Transparent,
+                                center = corner,
+                                radius = cornerShade.toPx(),
+                            ),
+                            radius = cornerShade.toPx(),
+                            center = corner,
+                        )
+                    }
+                },
+            )
+        }
+    }
+}
+
+/**
+ * A fade over the first [reach] of a length, as (position, alpha) stops from the clear edge: an
+ * eased curve, so the picture melts into the page with no band where it starts.
+ */
+private fun fadeOut(reach: Float): List<Pair<Float, Float>> =
+    EASE.map { (at, alpha) -> at * reach to alpha } + (1f to 1f)
+
+/** The stops as they are, clear at the start of the gradient. */
+private fun List<Pair<Float, Float>>.inStops(): Array<Pair<Float, Color>> =
+    map { (at, alpha) -> at to Color.Black.copy(alpha = alpha) }.toTypedArray()
+
+/** The stops mirrored, clear at the end of the gradient. */
+private fun List<Pair<Float, Float>>.reversedStops(): Array<Pair<Float, Color>> =
+    map { (at, alpha) -> (1f - at) to Color.Black.copy(alpha = alpha) }.reversed().toTypedArray()
+
+private val EASE = listOf(0f to 0f, 0.2f to 0.06f, 0.4f to 0.24f, 0.6f to 0.52f, 0.8f to 0.82f, 1f to 1f)
+
+/** How much of a wide frame's width the picture takes, against the end edge. */
+const val EDGE_SHARE = 0.68f
+
+/** A frame this many times wider than tall puts the picture at its end; a narrower one spans it. */
+private const val WIDE_RATIO = 1.4f
+
+/** The share of the picture's width that fades into the page at its start. */
+private const val START_FADE = 0.38f
+
+/** The share of the picture's height that fades into the page at its foot. */
+private const val FOOT_FADE = 0.36f
+
+/** How much wider than tall the [cornerShade] glow reaches, to cover a clock beside an avatar. */
+private const val CORNER_STRETCH = 1.6f
+
+/** How many times its own width a thumbnail may be drawn here, at most, before it reads as a blur. */
+private const val EDGE_SMALL_SCALE = 2f

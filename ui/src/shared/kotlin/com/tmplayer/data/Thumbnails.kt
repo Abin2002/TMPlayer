@@ -156,8 +156,8 @@ object Thumbnails {
      * The best already decoded copy of the provider's picture [url] for drawing [pixels] wide: the
      * larger copy [sharp] would fetch, else the one named. For the first frame.
      */
-    fun peekSharp(url: String, pixels: Int, maxWidth: Int): ImageBitmap? {
-        val larger = sharperUrl(url, lighter(pixels))
+    fun peekSharp(url: String, pixels: Int, maxWidth: Int, sharper: (String, Int) -> String = ::sharperUrl): ImageBitmap? {
+        val larger = sharper(url, lighter(pixels))
         return (if (larger != url) cache.get(onlineKey(larger, lighter(maxWidth))) else null) ?: peekOnline(url, maxWidth)
     }
 
@@ -165,10 +165,17 @@ object Thumbnails {
      * [online], at the size the picture is drawn: where the platform decodes at full size (the
      * desktop), the provider's copy at least [pixels] wide ([sharperUrl]) is fetched in place of
      * the one [url] names, which is only fetched when there is no larger one or it cannot be had.
-     * [maxWidth] is the decode width Android samples down to, as for [online].
+     * [maxWidth] is the decode width Android samples down to, as for [online]. [sharper] picks the
+     * larger copy; a backdrop passes the provider's ladder on every platform.
      */
-    suspend fun sharp(url: String, pixels: Int, maxWidth: Int, fetch: suspend (String) -> java.io.File?): ImageBitmap? {
-        val larger = sharperUrl(url, lighter(pixels))
+    suspend fun sharp(
+        url: String,
+        pixels: Int,
+        maxWidth: Int,
+        sharper: (String, Int) -> String = ::sharperUrl,
+        fetch: suspend (String) -> java.io.File?,
+    ): ImageBitmap? {
+        val larger = sharper(url, lighter(pixels))
         if (larger != url) online(larger, maxWidth) { fetch(larger) }?.let { return it }
         return online(url, maxWidth) { fetch(url) }
     }

@@ -67,8 +67,6 @@ import kotlin.math.sign
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
@@ -97,7 +95,7 @@ import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.ui.browse.HeroPill
 import com.tmplayer.ui.browse.SeriesWatch
 import com.tmplayer.ui.browse.seriesPlayLabel
-import com.tmplayer.ui.components.ArtBackdrop
+import com.tmplayer.ui.components.EdgeBackdrop
 import com.tmplayer.ui.components.BackdropSource
 import com.tmplayer.ui.components.SkeletonBox
 import com.tmplayer.ui.components.pressScale
@@ -108,7 +106,6 @@ import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.online.rememberMeta
 import com.tmplayer.ui.theme.FloatingTone
 import com.tmplayer.ui.theme.Motion
-import com.tmplayer.ui.theme.Scrims
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingBorder
 import com.tmplayer.ui.theme.rememberReducedMotion
@@ -387,18 +384,9 @@ private fun FeaturedPage(
             .fillMaxSize()
             .semantics { contentDescription = listOf(title, facts).filter { it.isNotBlank() }.joinToString(". ") },
     ) {
-        ArtBackdrop(source, Modifier.fillMaxSize())
-        // Dark at the top under the window's buttons, a fade from the start edge under the words,
-        // and the foot fading into the page.
-        Box(Modifier.fillMaxSize().background(Scrims.startLong(0.6f)))
-        // Over the start fade too, so the window's buttons read in the light theme.
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(TOP_SCRIM)
-                .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.5f), Color.Transparent))),
-        )
-        Box(Modifier.fillMaxSize().background(Scrims.bottomLong(height * FOOT_FADE_SHARE)))
+        // The picture at the end, melting into the page at its start and foot: the words at the
+        // start stand on the page, and the window's buttons on a glow of its colour.
+        EdgeBackdrop(source, Modifier.fillMaxSize(), cornerShade = TOP_SCRIM * 2)
         Column(
             Modifier
                 .align(Alignment.BottomStart)
@@ -574,7 +562,6 @@ private const val SWIPE_THRESHOLD = 0.5f
 
 /** A gap this long in the scroll events ends a gesture, its momentum included. */
 private const val SWIPE_QUIET_MS = 280L
-private const val FOOT_FADE_SHARE = 0.5f
 private val MIN_HEIGHT = 340.dp
 private val TOP_SCRIM = 96.dp
 private val WORDS_WIDTH = 640.dp

@@ -73,7 +73,7 @@ import com.tmplayer.data.SeriesShelf
 import com.tmplayer.online.MetaConfidence
 import com.tmplayer.online.MetaQuery
 import com.tmplayer.online.OnlineMetadata
-import com.tmplayer.ui.components.ArtBackdrop
+import com.tmplayer.ui.components.EdgeBackdrop
 import com.tmplayer.ui.components.BackdropSource
 import com.tmplayer.ui.components.SkeletonBox
 import com.tmplayer.ui.components.rememberCover
@@ -250,7 +250,9 @@ private fun FeaturedPage(
             .fillMaxSize()
             .semantics { contentDescription = listOf(title, facts).filter { it.isNotBlank() }.joinToString(". ") },
     ) {
-        ArtBackdrop(source, Modifier.fillMaxSize())
+        // Upright the picture spans the width and melts into the page at its foot; on its side
+        // it stands at the end as on a television, and the words sit on the page.
+        EdgeBackdrop(source, Modifier.fillMaxSize())
         // The top darkened under the status bar, light in either theme.
         Box(
             Modifier
@@ -258,7 +260,6 @@ private fun FeaturedPage(
                 .height(under + TOP_SCRIM)
                 .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.55f), Color.Transparent))),
         )
-        Box(Modifier.fillMaxSize().background(Scrims.bottomLong(height * FOOT_FADE_SHARE)))
         Column(
             Modifier
                 .align(Alignment.BottomCenter)
@@ -480,9 +481,6 @@ private const val ADVANCE_MS = 6_000
 private const val VIEWPORT_SHARE = 0.7f
 
 private val MIN_HEIGHT = 320.dp
-
-/** The share of the carousel's height its foot fades over into the page. */
-private const val FOOT_FADE_SHARE = 0.55f
 
 private val SKELETON_FADE = 160.dp
 

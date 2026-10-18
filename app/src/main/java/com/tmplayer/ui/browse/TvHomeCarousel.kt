@@ -1,7 +1,6 @@
 package com.tmplayer.ui.browse
 
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.animation.Crossfade
@@ -43,8 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
@@ -64,7 +61,7 @@ import androidx.compose.ui.unit.dp
 import com.tmplayer.data.FeaturedPick
 import com.tmplayer.data.MediaItem
 import com.tmplayer.data.SeriesShelf
-import com.tmplayer.ui.components.ArtBackdrop
+import com.tmplayer.ui.components.EdgeBackdrop
 import com.tmplayer.ui.components.BackdropSource
 import com.tmplayer.ui.components.SkeletonBox
 import com.tmplayer.ui.components.rememberCover
@@ -74,7 +71,6 @@ import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.online.rememberMeta
 import com.tmplayer.ui.theme.Corner
 import com.tmplayer.ui.theme.Motion
-import com.tmplayer.ui.theme.Scrims
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.focusRing
 import com.tmplayer.ui.theme.rememberReducedMotion
@@ -155,7 +151,7 @@ internal fun TvFeaturedCarousel(
         Crossfade(targetState = pick, animationSpec = Motion.standard(), label = "tvFeatured", modifier = Modifier.matchParentSize()) { shown ->
             // The heading's words over any picture: a fade from the top, deeper than the heading,
             // under the page's own words.
-            TvFeaturedArt(shown, chatTitle, start = start, segments = count > 1, headerFade = if (header != null) headerPx * HEADER_FADE_REACH else 0f)
+            TvFeaturedArt(shown, chatTitle, start = start, segments = count > 1, headerFade = if (header != null) headerPx.toFloat() else 0f)
         }
         if (header != null) {
             Box(Modifier.fillMaxWidth().onSizeChanged { headerPx = it.height }) { header() }
@@ -253,14 +249,12 @@ private fun TvFeaturedArt(pick: FeaturedPick, chatTitle: (Long) -> String, start
     Box(
         Modifier
             .fillMaxSize()
-            .background(Tone.surface)
             .semantics { contentDescription = listOf(title, facts).filter { it.isNotBlank() }.joinToString(". ") },
     ) {
-        ArtBackdrop(source, Modifier.fillMaxSize())
-        Box(Modifier.fillMaxSize().background(Scrims.startLong()))
-        if (headerFade > 0f) Box(Modifier.fillMaxSize().drawBehind { drawRect(Scrims.headerTop(headerFade)) })
-        // The foot fades into the page, so the first row below reads as the same ground.
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.6f to Color.Transparent, 1f to Tone.background)))
+        // The picture at the end, melting into the page at its start and foot, so the words at the
+        // start and the heading above stand on the page itself; the clock and the account at the
+        // heading's end stand on a glow of the page's colour.
+        EdgeBackdrop(source, Modifier.fillMaxSize(), cornerShade = with(LocalDensity.current) { (headerFade * HEADER_FADE_REACH).toDp() })
         Column(
             Modifier
                 .align(Alignment.BottomStart)
@@ -350,6 +344,6 @@ private const val SEGMENTS_SHARE = 0.4f
 private val SEGMENTS_GAP = 4.dp
 private val SEGMENTS_ROOM = 28.dp
 
-/** How far below the heading its fade reaches, as a share of the heading's height. */
-private const val HEADER_FADE_REACH = 1.8f
+/** How far the glow behind the clock and the account reaches, as a share of the heading's height. */
+private const val HEADER_FADE_REACH = 1.5f
 
