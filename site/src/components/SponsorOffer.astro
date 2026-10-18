@@ -13,6 +13,12 @@
 // is an h2 in the notes' style, it is not revealed on scroll, and its line is the page's `lede`
 // followed by the release sentence below.
 //
+// On the content pages the line about ads sits behind an info button beside the heading, so the
+// offer is a heading and two links rather than a wall of text (user, 2026-10-18). It is a native
+// <details>: the words stay in the HTML, so search engines index them as they did, it opens with
+// a keyboard and a screen reader, and it works without scripting. The release cards and a page's
+// own `lede` keep their line in the open, as does the support page, where it is the subject.
+//
 // Buy Me a Coffee comes first, as the large button in its own brand, and GitHub Sponsors is the
 // quieter link under it (user, 2026-10-18).
 import Icon from './Icon.astro';
@@ -27,14 +33,28 @@ const t = (k: string) => text(Astro.locals.lang, k);
 const Card = slim ? 'div' : Fragment;
 const card = slim ? { class: 'support support-slim', 'data-reveal': release ? undefined : '' } : {};
 const H = release ? 'h2' : 'h3';
+const tucked = !release && lede === undefined;
+const why = t('home.support_why');
 const line = release
   ? `${lede} There are no ads of our own and no paid tier, so a coffee or a monthly sponsorship is what pays for the time each release takes. It is voluntary and unlocks nothing.`
   : lede ?? t('home.support_no_ads');
 ---
 <Card {...card}>
 <div class:list={['support-more', { 'support-more-solo': slim }]} id="sponsor">
-  <H class={release ? 'release-notes-h' : undefined}>{t('home.support_tmplayer')}</H>
-  <p>{line}</p>
+  {tucked ? (
+    <div class="support-head">
+      <H>{t('home.support_tmplayer')}</H>
+      <details class="support-why">
+        <summary aria-label={why} title={why}><Icon name="info" /></summary>
+        <p>{line}</p>
+      </details>
+    </div>
+  ) : (
+    <>
+      <H class={release ? 'release-notes-h' : undefined}>{t('home.support_tmplayer')}</H>
+      <p>{line}</p>
+    </>
+  )}
   <div class="support-coffee">
     <CoffeeButton label={t('home.buy_me_a_coffee')} large />
     <a class="support-alt" href={SPONSORS_URL} rel="noopener"><Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>

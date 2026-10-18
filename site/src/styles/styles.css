@@ -2674,6 +2674,32 @@ a.card:hover .card-go svg { transform: translateX(4px); }
   border-top: 1px solid var(--outline-variant);
 }
 .support-more h3 { margin: 0 0 10px; font-size: clamp(1.15rem, 2.2vw, 1.4rem); letter-spacing: -0.02em; }
+/* The line about ads behind an info button beside the heading (SponsorOffer.astro). A native
+   details: the button sits on the heading's line, and the line opens under both of them. */
+.support-head { margin: 0 0 10px; }
+.support-more .support-head h3 { display: inline; margin: 0; vertical-align: middle; }
+.support-why { display: inline; margin: 0; }
+.support-why > summary {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-inline-start: 4px;
+  padding: 0;
+  border-radius: var(--shape-full);
+  color: var(--on-surface-variant);
+  vertical-align: middle;
+  list-style: none;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: background-color 0.2s var(--ease-standard), color 0.2s var(--ease-standard);
+}
+.support-why > summary::-webkit-details-marker { display: none; }
+.support-why > summary::marker { content: ""; }
+.support-why > summary svg { width: 20px; height: 20px; }
+.support-why > summary:hover,
+.support-why[open] > summary { background: var(--surface-container-high); color: var(--on-surface); }
+.support-why > p { display: block; margin: 10px auto 0; }
 .support-more .support-stats a { color: var(--on-surface-variant); }
 .support-more .support-stats a:hover { color: var(--on-surface); }
 /* Two buttons, not three: kept to the width of two so they do not stretch across the card. */
@@ -3252,9 +3278,9 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
    the near-black on it is a contrast of about 14:1. GitHub Sponsors is the quieter link under it.
 
    The floating card (src/components/CoffeeCard.astro) sits at the start edge's foot: a pill on a
-   phone, a card with the scan code on a wide screen. It is fixed, so its arrival moves nothing,
-   and app.js puts .is-on on it once the page is idle and .is-away while the footer or the page's
-   own support offer is on screen. Its dialog is a native modal <dialog>. */
+   phone, a card from a small tablet up, one link straight to Buy Me a Coffee with the x beside it.
+   It is fixed, so its arrival moves nothing, and app.js puts .is-on on it once the page is idle
+   and .is-away while the footer or the page's own support offer is on screen. */
 
 :root {
   --bmc-yellow: #FFDD00;
@@ -3305,7 +3331,7 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
 .support-coffee-start { align-items: flex-start; margin-inline: 0; }
 .support-coffee-start .support-alt { margin-inline-start: -12px; }
 
-/* The yellow tile the cup stands on, in the card and the dialog. */
+/* The yellow tile the cup stands on, in the floating card. */
 .bmc-tile {
   flex: none;
   display: grid;
@@ -3317,8 +3343,6 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
   transition: transform 0.3s var(--ease-emphasised);
 }
 .bmc-tile img { width: 14px; height: 20px; }
-.bmc-tile-lg { width: 48px; height: 48px; border-radius: var(--shape-m); }
-.bmc-tile-lg img { width: 20px; height: 28px; }
 
 /* The floating card. Above the page and the download bar, under the back to top button. */
 .bmc-float {
@@ -3347,7 +3371,7 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
 .bmc-float[hidden] { display: none; }
 .bmc-float.is-on:not(.is-away) { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
 .bmc-float:hover { border-color: var(--outline); }
-.bmc-float-open {
+.bmc-float-link {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -3355,16 +3379,23 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
   min-height: 48px;
   padding: 6px;
   padding-inline-end: 2px;
-  border: 0;
   border-radius: inherit;
-  background: none;
   color: inherit;
-  text-align: start;
-  cursor: pointer;
+  text-decoration: none;
 }
-.bmc-float-open:hover .bmc-tile { transform: rotate(-8deg); }
+.bmc-float-link:hover { text-decoration: none; }
+.bmc-float-link:hover .bmc-tile { transform: rotate(-8deg); }
 .bmc-float-text { display: grid; min-width: 0; }
-.bmc-float-title { display: none; }
+/* On a phone the question is read out but not shown, so the link's name is the same everywhere. */
+.bmc-float-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .bmc-float-line {
   overflow: hidden;
   font-size: 0.9rem;
@@ -3372,7 +3403,6 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.bmc-float-qr { display: none; }
 .bmc-float-close {
   flex: none;
   display: inline-grid;
@@ -3397,106 +3427,22 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
 /* From a small tablet up: a card, with the question over the brand's words. */
 @media (min-width: 640px) {
   .bmc-float { border-radius: var(--shape-xl); max-width: 400px; }
-  .bmc-float-open { gap: 14px; padding: 12px; padding-inline-end: 4px; }
+  .bmc-float-link { gap: 14px; padding: 12px; padding-inline-end: 4px; }
   .bmc-float .bmc-tile { width: 44px; height: 44px; border-radius: var(--shape-m); }
   .bmc-float .bmc-tile img { width: 17px; height: 24px; }
-  .bmc-float-title { display: block; overflow: hidden; font-size: 0.95rem; font-weight: 600; line-height: 1.35; white-space: nowrap; text-overflow: ellipsis; }
+  .bmc-float-title { position: static; display: block; width: auto; height: auto; margin: 0; clip: auto; overflow: hidden; font-size: 0.95rem; font-weight: 600; line-height: 1.35; white-space: nowrap; text-overflow: ellipsis; }
   .bmc-float-line { color: var(--on-surface-variant); font-size: 0.86rem; font-weight: 500; line-height: 1.35; }
   .bmc-float-close { align-self: flex-start; width: 32px; height: 32px; margin: 6px; margin-inline-start: 0; }
   .bmc-float-close svg { width: 16px; height: 16px; }
 }
-/* On a wide screen the scan code is in the card too, for paying from the phone in the hand. */
-@media (min-width: 1024px) {
-  .bmc-float-open { padding-inline-end: 6px; }
-  .bmc-float-qr {
-    display: block;
-    flex: none;
-    width: 72px;
-    height: 72px;
-    margin-inline-start: 4px;
-    padding: 4px;
-    border-radius: var(--shape-s);
-    background: #fff;
-    box-shadow: 0 0 0 1px var(--outline-variant);
-  }
-  .bmc-float-qr svg { display: block; width: 100%; height: 100%; }
-}
-
-/* The dialog. */
-.bmc-dialog {
-  width: min(calc(100% - 32px), 420px);
-  max-height: calc(100dvh - 32px);
-  padding: 0;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--shape-xl);
-  background: var(--surface-container-low);
-  color: var(--on-surface);
-  box-shadow: var(--shadow-3);
-  overflow: auto;
-  overscroll-behavior: contain;
-}
-.bmc-dialog::backdrop { background: rgba(6, 8, 12, 0.55); }
-html:has(.bmc-dialog[open]) { overflow: hidden; }
-.bmc-dialog-box { display: flex; flex-direction: column; gap: 16px; padding: clamp(20px, 4vw, 28px); }
-.bmc-dialog-head { display: flex; align-items: center; gap: 14px; }
-.bmc-dialog-head h2 { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 1.3rem; letter-spacing: -0.02em; line-height: 1.25; }
-.bmc-dialog-close {
-  flex: none;
-  align-self: flex-start;
-  display: inline-grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--shape-full);
-  background: var(--surface-container-high);
-  color: var(--on-surface-variant);
-  cursor: pointer;
-}
-.bmc-dialog-close:hover { background: var(--surface-container-highest); color: var(--on-surface); }
-.bmc-dialog-close svg { width: 18px; height: 18px; }
-.bmc-dialog p { margin: 0; color: var(--on-surface-variant); font-size: 0.95rem; }
-.bmc-dialog-qr {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin: 4px 0 0;
-  padding: 20px 16px 14px;
-  border-radius: var(--shape-l);
-  background: var(--surface-container);
-}
-/* Black on a white plate in both themes, which is what a camera reads best. */
-.bmc-dialog-qr svg {
-  display: block;
-  width: 200px;
-  height: 200px;
-  padding: 10px;
-  border-radius: var(--shape-m);
-  background: #fff;
-}
-.bmc-dialog-qr figcaption { color: var(--on-surface-variant); font-size: 0.88rem; }
-.bmc-dialog .btn-bmc { width: 100%; }
-.bmc-dialog .support-alt { align-self: center; margin-top: -6px; }
-@media (max-width: 400px) {
-  .bmc-dialog-qr svg { width: 168px; height: 168px; }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .bmc-dialog[open] { animation: bmc-in 0.32s var(--ease-emphasised); }
-  .bmc-dialog[open]::backdrop { animation: bmc-fade 0.25s var(--ease-standard); }
-}
-@keyframes bmc-in { from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.98); } }
-@keyframes bmc-fade { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .bmc-float { transform: none; transition: opacity 0.2s linear, visibility 0s linear 0.2s; }
   .bmc-tile { transition: none; }
-  .bmc-float-open:hover .bmc-tile { transform: none; }
+  .bmc-float-link:hover .bmc-tile { transform: none; }
 }
 @media (hover: none) {
   .btn-bmc:hover { box-shadow: none; }
   .bmc-float:hover { border-color: var(--outline-variant); }
-  .bmc-float-open:hover .bmc-tile { transform: none; }
+  .bmc-float-link:hover .bmc-tile { transform: none; }
   .support-alt:hover { background: transparent; color: var(--on-surface-variant); }
 }

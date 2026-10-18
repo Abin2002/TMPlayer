@@ -49,6 +49,7 @@
     "forks": "forks",
     "gpl_3_0_and_free": "GPL-3.0, and free for good",
     "support_tmplayer": "Support TMPlayer",
+    "support_why": "About supporting TMPlayer",
     "support_no_ads": "TMPlayer has no ads of our own (Telegram's sponsored messages appear in public channels, as Telegram requires) and no paid tier. If it saves you some bother, a coffee or a monthly sponsorship pays for the time that goes into it. It is voluntary and unlocks nothing: every feature is free for everyone.",
     "sponsor_on_github": "Sponsor on GitHub",
     "buy_me_a_coffee": "Buy me a coffee",
@@ -61,9 +62,7 @@
     "scan_for_github_sponsors": "Scan for GitHub Sponsors",
     "scan_for_buy_me_a_coffee": "Scan for Buy Me a Coffee",
     "bmc_card_title": "Enjoying TMPlayer?",
-    "bmc_modal_lede": "Scan the code with your phone, or open the page here. Any amount helps, and it unlocks nothing: every feature stays free for everyone.",
     "bmc_hide": "Hide for now",
-    "bmc_close": "Close",
     "come_and_talk": "Come and talk",
     "news_and_help_live_on": "News and help live on Telegram and in GitHub Discussions.",
     "github_discussions": "GitHub Discussions"

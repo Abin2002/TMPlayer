@@ -1,56 +1,34 @@
 ---
 // The Buy Me a Coffee card that floats at the bottom of the page's start edge (bottom left, bottom
-// right on a right-to-left page), and the dialog it opens. Asked for on 2026-10-18.
+// right on a right-to-left page). Asked for on 2026-10-18.
 //
 // The card is written hidden and app.js shows it once the page has loaded and gone idle, with a
 // short slide and fade (none under reduced motion). It is position: fixed, so it moves nothing
-// when it arrives. On a phone it is a small pill; on a wide screen it is a card with a scan code.
-// It steps out of the way while the footer or the page's own support offer is on screen, and on a
-// phone it stands above the download bar. The x hides it for this page view only, on purpose: the
-// next page or a reload brings it back, and nothing is stored.
+// when it arrives. On a phone it is a small pill; on a wider screen it is a card with the question
+// over the brand's words. It steps out of the way while the footer or the page's own support offer
+// is on screen, and on a phone it stands above the download bar. The x hides it for this page view
+// only, on purpose: the next page or a reload brings it back, and nothing is stored.
 //
-// A click on the card opens a modal <dialog>: a larger scan code, the Buy Me a Coffee button and
-// the GitHub Sponsors link. Esc, the x or a click on the backdrop closes it, the focus stays inside
-// while it is open and goes back to the card when it closes. With scripting off, neither appears.
-//
-// The scan codes are the build-time SVGs QrCode.astro draws (src/icons/qr-coffee.svg); nothing is
-// fetched from a QR service. Every word is a catalog string, so both arrive translated.
+// The card is one link straight to the Buy Me a Coffee page, in a new tab like the site's other
+// support links (user, 2026-10-18: no dialog, no scan code on the card). The x is a separate
+// button beside the link. With scripting off, the card never appears. Every word is a catalog
+// string, so it arrives translated.
 import Icon from './Icon.astro';
-import CoffeeButton from './CoffeeButton.astro';
 import { text } from '../i18n/t';
 import { versioned } from '../lib/asset-version';
-import { SPONSORS_URL } from '../lib/support';
+import { BMC_URL } from '../lib/support';
 
 const t = (k: string) => text(Astro.locals.lang, k);
 const cup = versioned('/brand/bmc-cup-on-yellow.svg');
 const hide = t('home.bmc_hide');
-const close = t('home.bmc_close');
 ---
 <aside class="bmc-float" id="bmc-float" aria-label={t('home.support_tmplayer')} hidden>
-  <button type="button" class="bmc-float-open" aria-haspopup="dialog" aria-controls="bmc-dialog">
+  <a class="bmc-float-link" href={BMC_URL} rel="noopener" target="_blank">
     <span class="bmc-tile" aria-hidden="true"><img src={cup} alt="" width="14" height="20" loading="lazy" decoding="async"></span>
     <span class="bmc-float-text">
       <span class="bmc-float-title">{t('home.bmc_card_title')}</span>
       <span class="bmc-float-line">{t('home.buy_me_a_coffee')}</span>
     </span>
-    <span class="bmc-float-qr" aria-hidden="true"><Icon name="qr-coffee" /></span>
-  </button>
+  </a>
   <button type="button" class="bmc-float-close" data-bmc-hide aria-label={hide} title={hide}><Icon name="close" /></button>
 </aside>
-
-<dialog class="bmc-dialog" id="bmc-dialog" aria-labelledby="bmc-dialog-h" aria-describedby="bmc-dialog-p">
-  <div class="bmc-dialog-box">
-    <div class="bmc-dialog-head">
-      <span class="bmc-tile bmc-tile-lg" aria-hidden="true"><img src={cup} alt="" width="20" height="28" loading="lazy" decoding="async"></span>
-      <h2 id="bmc-dialog-h">{t('home.support_tmplayer')}</h2>
-      <button type="button" class="bmc-dialog-close" data-bmc-close aria-label={close} title={close}><Icon name="close" /></button>
-    </div>
-    <p id="bmc-dialog-p">{t('home.bmc_modal_lede')}</p>
-    <figure class="bmc-dialog-qr">
-      <Icon name="qr-coffee" />
-      <figcaption>{t('home.scan_for_buy_me_a_coffee')}</figcaption>
-    </figure>
-    <CoffeeButton label={t('home.buy_me_a_coffee')} large newTab />
-    <a class="support-alt" href={SPONSORS_URL} rel="noopener" target="_blank"><Icon name="heart-btn" /> {t('home.sponsor_on_github')}</a>
-  </div>
-</dialog>
