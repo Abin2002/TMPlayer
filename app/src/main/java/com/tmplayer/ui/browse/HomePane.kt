@@ -203,6 +203,12 @@ internal fun HomePane(
     ScrollToTopOnReselect(TouchDestination.Home) { animate -> listState.toTop(animate) }
     // Back from Home's rows to the TV top bar: the same, as Home looks when it opens.
     if (!touch && TV_TOP_BAR) {
+        // The bar takes the page's ground behind it once the rows run up under it.
+        LaunchedEffect(listState) {
+            androidx.compose.runtime.snapshotFlow { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0 }
+                .collect { TvBarSignals.homeScrolled.value = it }
+        }
+        androidx.compose.runtime.DisposableEffect(Unit) { onDispose { TvBarSignals.homeScrolled.value = false } }
         val still = com.tmplayer.ui.theme.rememberReducedMotion() || com.tmplayer.ui.theme.Motion.reduced
         LaunchedEffect(listState, still) { TvBarSignals.homeToTop.collect { listState.toTop(!still) } }
     }
@@ -228,7 +234,9 @@ internal fun HomePane(
         scrolled = true
     }
     LaunchedEffect(carousel) {
-        if (touch && carousel && !scrolled) listState.scrollToItem(0)
+        // Under the TV top bar too: a carousel arriving after the rows otherwise sits above the
+        // screen, out of reach of Up.
+        if ((touch || TV_TOP_BAR) && carousel && !scrolled) listState.scrollToItem(0)
     }
 
     // Asked for as the row would be when it first came on screen, and again after a refresh.

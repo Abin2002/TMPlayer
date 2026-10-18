@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
@@ -77,11 +78,11 @@ internal const val TV_TOP_BAR = true
 /** The bar's row: tall enough for a pill grown under the remote. */
 private val BAR_ROW = 48.dp
 
-/** The fade at the foot of the bar's backdrop, where a page passing under it dims away. */
-private val BAR_FADE = 12.dp
+/** Between the bar's row and the page under it. */
+private val TV_BAR_GAP = 12.dp
 
-/** What a page under the bar leaves clear at its top: the safe area, the row and the fade. */
-internal val TV_BAR_HEIGHT: Dp = Tv.SafeV + BAR_ROW + BAR_FADE
+/** What a page under the bar leaves clear at its top: the safe area, the row and a gap. */
+internal val TV_BAR_HEIGHT: Dp = Tv.SafeV + BAR_ROW + TV_BAR_GAP
 
 /**
  * The one start inset every page under the bar lines up with: the start edge of the bar's first
@@ -100,6 +101,9 @@ internal object TvBarSignals {
     /** Search was picked on a page with no search of its own: the browser opens its search. */
     val searchAsked = MutableStateFlow(false)
 
+    /** Home's rows have scrolled up under the bar, which then takes the page's ground behind it. */
+    val homeScrolled = MutableStateFlow(false)
+
     /** Back moved the remote from Home's rows to the bar: Home goes back to its top, the carousel whole. */
     val homeToTop = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 }
@@ -108,10 +112,11 @@ internal object TvBarSignals {
  * The bar: the account's picture at the start, which opens what the phone's picture opens
  * (Favourites, Downloads, History, Watch later, Refresh where the page has something to fetch again
  * ([onRefresh]), and Update when there is one); then Search, and the tabs Home, Chats and Settings
- * in the phone's order; and at the end the app's mark and name, which take no focus.
+ * in the phone's order; and at the end the app's mark, which takes no focus.
  *
- * Behind it the page's own ground, near solid over the row and fading out at its foot, so a page
- * scrolled up under it dims away instead of running into its words, in every theme.
+ * Nothing is behind it: every page but Home starts below it and is clipped at its foot, and Home's
+ * carousel picture melts into the page at its top; once Home's rows scroll up under the bar, the
+ * page's ground fills in behind it ([solid]).
  *
  * The page being shown is marked with an underline in the accent whether or not the remote is on
  * the bar; the item the remote is on fills and grows. [overArt] says Home runs up under the bar.
@@ -136,6 +141,8 @@ internal fun TvTopBar(
     contentFocus: FocusRequester,
     overArt: Boolean,
     modifier: Modifier = Modifier,
+    /** How much of the page's ground stands behind the bar: 1 once Home's rows are under it. */
+    solid: () -> Float = { 0f },
 ) {
     val s = LocalStrings.current
     var profileOpen by remember { mutableStateOf(false) }
@@ -155,19 +162,9 @@ internal fun TvTopBar(
         modifier
             .fillMaxWidth()
             .height(TV_BAR_HEIGHT)
-            .drawBehind {
-                val total = size.height
-                val row = (Tv.SafeV + BAR_ROW).toPx() / total
-                // Over Home's carousel too: its picture already melts into the page at its top, and
-                // the rows scrolled up under the bar must dim away like any page.
-                drawRect(
-                    Brush.verticalGradient(
-                        0f to ground,
-                        row to ground.copy(alpha = 0.96f),
-                        1f to Color.Transparent,
-                    ),
-                )
-            },
+            // Every other page starts below the bar and is clipped there; only Home runs up under
+            // it, and once its rows have scrolled up there the page's ground fills in behind.
+            .drawBehind { if (solid() > 0f) drawRect(ground.copy(alpha = solid())) },
     ) {
         Row(
             Modifier
@@ -214,11 +211,8 @@ internal fun TvTopBar(
                 BarTab(s.navSettings, TmIcons.Settings, current == TvBarTab.Settings && !searchOpen, onSettings, Modifier.focusRequester(focusOf(TvBarTab.Settings, settingsFocus)))
             }
             Spacer(Modifier.width(18.dp))
-            // The app's own mark and name, the way a television's home screen signs itself.
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                com.tmplayer.ui.components.AppMark(28.dp)
-                Text("TMPlayer", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = Tone.text, maxLines = 1)
-            }
+            // The app's own mark, the way a television's home screen signs itself: the picture's size.
+            com.tmplayer.ui.components.AppMark(CLUSTER_ITEM)
         }
     }
 
@@ -416,11 +410,12 @@ internal fun TvBarFrame(
     content: @Composable () -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
-        // The page's list runs up under the bar's fade, so it dims away as it scrolls.
+        // The page starts below the bar, as the browser's pages do, and is clipped there.
         Box(
             Modifier
                 .fillMaxSize()
-                .padding(top = if (shown) TV_BAR_HEIGHT - 8.dp else 0.dp)
+                .padding(top = if (shown) TV_BAR_HEIGHT else 0.dp)
+                .clipToBounds()
                 .then(if (shown) Modifier.underTvBar(contentFocus, barFocus) else Modifier),
         ) { content() }
         if (shown) bar()
@@ -433,7 +428,7 @@ internal fun TvBarFrame(
  * from the bar) lands on the item the remote was last on here, else the first.
  */
 @Composable
-internal fun Modifier.underTvBar(content: FocusRequester, bar: FocusRequester): Modifier {
+internal fun Modifier.underTvBar(content: FocusRequester, bar: FocusRequester, onUpToBar: () -> Unit = {}): Modifier {
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     return this
         .focusRequester(content)
@@ -441,7 +436,10 @@ internal fun Modifier.underTvBar(content: FocusRequester, bar: FocusRequester): 
         // page left alone moves here, and where it finds nothing above it goes to the bar.
         .onKeyEvent { event ->
             if (event.type != KeyEventType.KeyDown || event.key != Key.DirectionUp) return@onKeyEvent false
-            if (!focusManager.moveFocus(FocusDirection.Up)) runCatching { bar.requestFocus() }
+            if (!focusManager.moveFocus(FocusDirection.Up)) {
+                onUpToBar()
+                runCatching { bar.requestFocus() }
+            }
             true
         }
         .focusProperties {

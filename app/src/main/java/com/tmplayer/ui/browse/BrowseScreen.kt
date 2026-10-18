@@ -928,11 +928,18 @@ internal fun BrowseScreen(
             // Home runs up under the bar, its carousel's picture with it; every other page, and
             // Home while it loads, starts below the bar.
             val underBar = homeShown && state is UiState.Content
+            val homeScrolled by TvBarSignals.homeScrolled.collectAsState()
+            val barGround by androidx.compose.animation.core.animateFloatAsState(
+                if (underBar && homeScrolled) 1f else 0f,
+                com.tmplayer.ui.theme.Motion.standard(com.tmplayer.ui.theme.Motion.Fast),
+                label = "barGround",
+            )
             Column(
                 Modifier
                     .fillMaxSize()
                     .padding(top = if (underBar) 0.dp else TV_BAR_HEIGHT, end = if (homeShown) 0.dp else Tv.SafeH)
-                    .underTvBar(pageFocus, barFocus),
+                    // Up from Home's top row to the bar brings Home back to its top, the carousel whole.
+                    .underTvBar(pageFocus, barFocus, onUpToBar = { if (homeShown) TvBarSignals.homeToTop.tryEmit(Unit) }),
             ) {
                 if (tvSearchOpen) {
                     TvSearchPage(
@@ -987,6 +994,7 @@ internal fun BrowseScreen(
                 contentFocus = pageFocus,
                 overArt = homeShown,
                 modifier = Modifier.onFocusChanged { tvBarHasFocus = it.hasFocus },
+                solid = { barGround },
             )
         }
     } else {

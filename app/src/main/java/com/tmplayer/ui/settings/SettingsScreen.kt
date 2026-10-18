@@ -565,7 +565,7 @@ fun SettingsScreen(
             // The app bar already clears the status bar on a phone, so the list only owes the
             // gesture bar at the bottom.
             // Under the TV top bar the list starts right below it.
-            top = if (touch) 4.dp else if (com.tmplayer.ui.browse.TV_TOP_BAR && page == null) 8.dp else Tv.SafeV,
+            top = if (touch) 4.dp else if (com.tmplayer.ui.browse.TV_TOP_BAR && page == null) 4.dp else Tv.SafeV,
             bottom = if (touch) maxOf(insets.calculateBottomPadding(), LocalBottomChrome.current) + 32.dp else 40.dp,
         ),
         // The gap between two rows of a phone's preference list is a divider's worth of nothing,
