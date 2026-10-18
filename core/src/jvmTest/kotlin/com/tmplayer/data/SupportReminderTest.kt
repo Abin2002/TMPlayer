@@ -169,8 +169,8 @@ class SupportReminderTest {
     }
 
     @Test
-    fun `the sponsor reminders switch is off by default and kept through sign out`() = runBlocking {
-        assertFalse(settings.sponsorRemindersNow())
+    fun `the sponsor reminders switch is on by default and kept through sign out`() = runBlocking {
+        assertTrue(settings.sponsorRemindersNow())
         settings.setSponsorReminders(true)
         settings.clearEverything()
         assertTrue(settings.sponsorRemindersNow())

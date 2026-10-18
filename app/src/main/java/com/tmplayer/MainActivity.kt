@@ -175,6 +175,10 @@ private const val EXIT_WINDOW_MS = 2_000L
  */
 private const val PREPARE_CHIP_AFTER_MS = 400L
 
+/** A small store for asks that happen once per install, and so are not settings or in backups. */
+private const val ONCE_PREFS = "once"
+private const val ASKED_NOTIFICATIONS = "asked_notifications"
+
 /** Where the user is. Deliberately three screens deep and no more. */
 private sealed interface Screen {
     data object Chats : Screen
@@ -585,9 +589,26 @@ private fun Root() {
     LaunchedEffect(Unit) { runCatching { settings.noteSupportFirstSeen(System.currentTimeMillis()) } }
     // Finished videos are counted here, in the process, so a watch counts even while a screen is
     // being rebuilt behind the player.
+    // The notification permission, asked for once, after the first video watched to the end: the
+    // notifications that are on from the start (new episodes, downloads, low storage, updates, the
+    // support ask) can only reach someone who has allowed them, and launch is the wrong moment.
+    val askNotifications = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { }
     LaunchedEffect(Unit) {
         SupportReminder.finished.collect { done ->
             runCatching { settings.noteSupportCompleted(done.key, done.at) }
+            if (
+                android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
+                !FormFactor.isTv(context) &&
+                !com.tmplayer.data.BackgroundChecks.canNotify(context)
+            ) {
+                val once = context.getSharedPreferences(ONCE_PREFS, android.content.Context.MODE_PRIVATE)
+                if (!once.getBoolean(ASKED_NOTIFICATIONS, false)) {
+                    once.edit().putBoolean(ASKED_NOTIFICATIONS, true).apply()
+                    runCatching { askNotifications.launch(android.Manifest.permission.POST_NOTIFICATIONS) }
+                }
+            }
         }
     }
 

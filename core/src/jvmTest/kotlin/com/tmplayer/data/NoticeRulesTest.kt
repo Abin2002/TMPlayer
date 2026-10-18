@@ -160,8 +160,9 @@ class NoticeRulesTest {
     }
 
     @Test
-    fun `the episode switch is off by default and turning it on starts afresh`() = runBlocking {
-        assertFalse(settings.noticeOnNow(Notice.NewEpisodes))
+    fun `the episode switch is on by default and turning it on again starts afresh`() = runBlocking {
+        assertTrue(settings.noticeOnNow(Notice.NewEpisodes))
+        settings.setNoticeOn(Notice.NewEpisodes, false)
         settings.setEpisodeSeen(mapOf(1L to 5L))
         settings.setNoticeOn(Notice.NewEpisodes, true)
         assertTrue(settings.noticeOnNow(Notice.NewEpisodes))
@@ -270,9 +271,9 @@ class NoticeRulesTest {
     }
 
     @Test
-    fun `every switch is off by default but the finished downloads`() = runBlocking {
+    fun `every switch is on by default but new videos in starred chats`() = runBlocking {
         for (notice in Notice.entries) {
-            assertEquals(notice.name, notice == Notice.Downloads, settings.noticeOnNow(notice))
+            assertEquals(notice.name, notice != Notice.NewVideos, settings.noticeOnNow(notice))
         }
         settings.setNoticeOn(Notice.Downloads, false)
         assertFalse(settings.noticeOnNow(Notice.Downloads))
