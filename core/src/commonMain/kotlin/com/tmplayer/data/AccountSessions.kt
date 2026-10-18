@@ -127,7 +127,10 @@ object AccountSessions {
     suspend fun load(): Result<List<AccountSession>> {
         val td = runCatching { Td.awaitAuthorizedSession().client }.getOrElse { return Result.failure(it) }
         return when (val result = td.getActiveSessions()) {
-            is TdlResult.Success -> Result.success(arrange(result.result.sessions.orEmpty().map(::of)))
+            // TMPlayer's own sessions only (user, 2026-10-19): the page is about where this app is
+            // signed in, not every Telegram app on the account. Told apart by the API id the app
+            // signs in with; this device is always listed.
+            is TdlResult.Success -> Result.success(arrange(result.result.sessions.orEmpty().filter(::ours).map(::of)))
             is TdlResult.Failure -> Result.failure(IllegalStateException(Failures.humanise(result.message)))
         }
     }
@@ -139,11 +142,29 @@ object AccountSessions {
         return (result as? TdlResult.Failure)?.let { Failures.humanise(it.message) }
     }
 
-    /** Signs every device but this one out. Null on success, else what went wrong. */
+    /**
+     * Signs TMPlayer out on every other device, one session at a time: Telegram's own "all other
+     * sessions" would sign out every Telegram app on the account too. Null on success, else what
+     * went wrong first.
+     */
     suspend fun endAllOthers(): String? {
         val td = runCatching { Td.awaitAuthorizedSession().client }.getOrElse { return L.errorsNotConnected }
-        val result = td.terminateAllOtherSessions()
-        return (result as? TdlResult.Failure)?.let { Failures.humanise(it.message) }
+        val sessions = when (val result = td.getActiveSessions()) {
+            is TdlResult.Success -> result.result.sessions.orEmpty()
+            is TdlResult.Failure -> return Failures.humanise(result.message)
+        }
+        for (session in sessions.filter { !it.isCurrent && ours(it) }) {
+            val result = td.terminateSession(session.id)
+            if (result is TdlResult.Failure) return Failures.humanise(result.message)
+        }
+        return null
+    }
+
+    /** Whether [session] is TMPlayer's: this device, or one signed in with this app's API id. */
+    private fun ours(session: dev.g000sha256.tdl.dto.Session): Boolean {
+        if (session.isCurrent) return true
+        val apiId = Td.apiId
+        return if (apiId != 0) session.apiId == apiId else session.applicationName.orEmpty().contains("TMPlayer", ignoreCase = true)
     }
 }
 

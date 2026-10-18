@@ -220,6 +220,13 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
 - [ ] CP97 Desktop OS integration: macOS Now Playing and menu bar, Windows thumbnail buttons and Jump List, Linux desktop actions
 - [ ] CP98 Android shortcuts and accessibility: launcher shortcuts, subtitles following the system caption style, high contrast focus on TV, TalkBack pass
 - [ ] CP99 TV top bar in place of the side rail, Netflix 2025 style (in trial on the `diag/tv-top-bar` branch, 2026-10-19; the user decides after trying it on the stick whether it replaces the rail)
+- [ ] CP100 Shorter first run, colours in it (user, 2026-10-19; planned, not started). Today a first run is up to about 12 screens: Appearance (1), the preference steps (Posters, Storage or Device, Performance, Mobile data on a phone: up to 4) and the quick tour (5 to 7 pages, `Tour.pages`). Grouped into about 5:
+  - [ ] Appearance, one screen: Theme, the Pure black switch and the accent swatches (the colours from the Appearance work, Telegram blue first and selected) and interface size, with the screen behind it repainting live as they change.
+  - [ ] Preferences, one screen of rows with the recommended answer already set: online posters, Low storage mode, Save mobile data (phone only). Each is a switch with its one line of why, instead of a page per question with two cards.
+  - [ ] Performance and the Device step only when the device check finds it short of memory or storage (CP68), folded into the same screen as one "Recommended for this device" row that is on, not a page of its own.
+  - [ ] The tour cut to three pages by pairing what belongs together: Videos with Home, Player with Controls, Downloads with Settings (TV: TvHome with Settings), each still one marked picture with its numbered lines; offered as "Show me around" with Skip on the preferences screen's button rather than started by default.
+  - [ ] One step count and bar across the whole run, Back on every screen, Skip all kept, D-pad order on TV top to bottom then the buttons; the onboarding pictures and their specs (scripts/annotations, `scripts/tour-badges.py`) retaken for the merged pages.
+  - [ ] Render shots of every new screen on phone portrait and landscape, TV and desktop, light and dark, and a timed run on the stick against today's flow.
 
 ## Standing rules
 

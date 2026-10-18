@@ -35,7 +35,7 @@ import java.io.File
 class BrandLoaderRenderTest {
 
     @Test
-    fun `the light lands on the letters and nowhere else`() {
+    fun `the playhead moves only the mark, never the ground`() {
         for (dark in listOf(true, false)) {
             val unlit = pixels(render(1366, 768, dark, sweepAt = -1f))
             val ground = TmSchemes.of(dark).background.toArgb()
@@ -55,25 +55,16 @@ class BrandLoaderRenderTest {
     }
 
     @Test
-    fun `the light moves on its own and stands still with less motion`() {
-        // One line, so nothing steps: the lines change on real time, and a slow runner (macOS on
-        // CI) let 1.2 s of it pass between the two frames, which read as motion.
+    fun `the mark stands still`() {
+        // One line, so nothing steps: the lines change on real time. Two frames well apart, after
+        // one that lets anything still loading (a font on a slow runner) arrive.
         val oneLine = listOf(L.stateConnectingSession)
-        val moving = scene(1366, 768, dark = true, lines = oneLine) { frames(it, listOf(700L, 1_400L)) }
-        assertTrue(!moving[0].contentEquals(moving[1]))
-        Motion.reduced = true
-        try {
-            // Two frames well apart in real time too, after one that lets anything still loading
-            // (a font on a slow runner) arrive: only motion could tell them apart.
-            val still = scene(1366, 768, dark = true, lines = oneLine) { scene ->
-                frames(scene, listOf(700L))
-                Thread.sleep(1_500)
-                listOf(1_400L, 2_100L).map { scene.render(it * 1_000_000L).encodeToData(EncodedImageFormat.PNG)!!.bytes }
-            }
-            assertTrue(still[0].contentEquals(still[1]))
-        } finally {
-            Motion.reduced = false
+        val still = scene(1366, 768, dark = true, lines = oneLine) { scene ->
+            frames(scene, listOf(700L))
+            Thread.sleep(1_500)
+            listOf(1_400L, 2_100L).map { scene.render(it * 1_000_000L).encodeToData(EncodedImageFormat.PNG)!!.bytes }
         }
+        assertTrue(still[0].contentEquals(still[1]))
     }
 
     @Test
