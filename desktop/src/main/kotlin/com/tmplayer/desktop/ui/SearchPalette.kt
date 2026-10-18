@@ -152,6 +152,11 @@ private sealed interface PaletteRow {
     data class GoTo(val place: Place) : PaletteRow {
         override val key get() = "g-${place.name}"
     }
+
+    /** A pasted post or invite link, or a public chat to join (CP79): first in the list. */
+    data class Link(val offer: com.tmplayer.ui.browse.LinkOffer) : PaletteRow {
+        override val key get() = "l-${offer.link.url}"
+    }
 }
 
 /** The pages "Go to" offers: the side bar's places. */
@@ -265,6 +270,7 @@ internal fun BoxScope.SearchPalette(
     }
 
     val byUsername = com.tmplayer.ui.browse.rememberUsernameChat(query.text)
+    val offer = com.tmplayer.ui.browse.rememberLinkOffer(query.text, byUsername)
     // A first page that will not come says so, with Retry, after the app's usual wait.
     var slow by remember(query) { mutableStateOf(false) }
     LaunchedEffect(query, ui.searching) {
@@ -274,8 +280,8 @@ internal fun BoxScope.SearchPalette(
             slow = true
         }
     }
-    val rows = remember(ui, chats, favourites, recents, allowed, allChats, query.text, byUsername, slow) {
-        buildRows(ui, chats, favourites, if (allowed != null) emptyList() else recents, allChats, search, byUsername, onSearchWord = { word ->
+    val rows = remember(ui, chats, favourites, recents, allowed, allChats, query.text, byUsername, slow, offer) {
+        listOfNotNull(offer?.let { PaletteRow.Link(it) }) + buildRows(ui, chats, favourites, if (allowed != null) emptyList() else recents, allChats, search, byUsername, onSearchWord = { word ->
             state.paletteQuery = TextFieldValue(word, TextRange(word.length))
             search.submit(word)
         }, slow = slow)
@@ -295,6 +301,10 @@ internal fun BoxScope.SearchPalette(
             is PaletteRow.MoreChats -> allChats = true
             is PaletteRow.Video -> openVideo(row.group, play)
             is PaletteRow.Action -> row.run()
+            is PaletteRow.Link -> {
+                close()
+                com.tmplayer.ui.browse.LinkRequests.ask(row.offer.link)
+            }
             is PaletteRow.GoTo -> {
                 close()
                 row.place.go(state)
@@ -564,6 +574,9 @@ private fun PaletteLine(
         is PaletteRow.MoreChats -> SimpleLine(TmIcons.ChevronDown, s.searchShowAllChats(row.count), selected, pickable)
         is PaletteRow.Action -> SimpleLine(TmIcons.Search, row.text, selected, pickable)
         is PaletteRow.GoTo -> SimpleLine(row.place.icon, row.place.label, selected, pickable)
+        is PaletteRow.Link -> SimpleLine(TmIcons.Send, row.offer.label, selected, pickable) {
+            Text(row.offer.detail, style = MaterialTheme.typography.bodySmall, color = Tone.muted, maxLines = 1)
+        }
     }
 }
 

@@ -11,6 +11,12 @@ data class ChatInfo(
     val username: String?,
     val about: String?,
     val memberCount: Int?,
+    /**
+     * A public group or channel the account is not in, which the sheet offers to join (CP79);
+     * [joinByRequest] when the group's admins approve each newcomer.
+     */
+    val canJoin: Boolean = false,
+    val joinByRequest: Boolean = false,
 ) {
     /** The public t.me address, for sharing and copying; null for a chat with no username. */
     val link: String? get() = username?.let { "https://t.me/$it" }
@@ -29,7 +35,14 @@ object Usernames {
         var t = text.trim()
         t = t.removePrefix("https://").removePrefix("http://").removePrefix("www.")
         for (host in listOf("t.me/", "telegram.me/", "telegram.dog/")) {
-            if (t.startsWith(host, ignoreCase = true)) t = t.substring(host.length).substringBefore('/').substringBefore('?')
+            if (t.startsWith(host, ignoreCase = true)) {
+                t = t.substring(host.length)
+                // The web preview of a channel, t.me/s/<username>.
+                if (t.startsWith("s/", ignoreCase = true)) t = t.substring(2)
+                t = t.substringBefore('/').substringBefore('?')
+                // Telegram's own paths (an invite, a private post, a proxy) name nobody.
+                if (t.lowercase() in TelegramLinks.RESERVED) return null
+            }
         }
         t = t.removePrefix("@")
         return t.takeIf { NAME.matches(it) }

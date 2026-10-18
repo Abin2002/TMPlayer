@@ -65,6 +65,7 @@ import com.tmplayer.ui.browse.DETAIL_PANE_WIDTH
 import com.tmplayer.ui.browse.DetailRow
 import com.tmplayer.ui.browse.MediaDetailPanel
 import com.tmplayer.ui.browse.detailRow
+import com.tmplayer.ui.browse.refusedForwarding
 import com.tmplayer.ui.components.rememberToast
 import com.tmplayer.ui.i18n.LocalStrings
 import com.tmplayer.ui.icons.TmIcons
@@ -167,6 +168,8 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
     val corrections by com.tmplayer.data.VideoCorrections.state.collectAsState()
     val correction = corrections[item.id]
     val matched = com.tmplayer.ui.online.rememberMatched(item) != null
+    // The comments under a channel post (CP81).
+    val comments = com.tmplayer.ui.browse.rememberCommentCount(item)
 
     val actions = DetailActions.of(
         DetailContext(
@@ -187,6 +190,10 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
             separated = correction?.separate == true,
             matched = matched,
             wrongMatch = correction?.wrongMatch == true,
+            comments = comments,
+            canForward = true,
+            // A copy of the finished download in a folder the viewer picks (CP82).
+            canExport = true,
         ),
     ).filterNot { it == DetailAction.Share }
 
@@ -198,6 +205,9 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
     var confirmingRemove by remember(item.id) { mutableStateOf(false) }
     // "Rename" is asked over the pane too, which closes once the title is saved.
     var renaming by remember(item.id) { mutableStateOf(false) }
+    // The comments' videos and the chat picker open over the pane, which stays until they close.
+    var commentsOpen by remember(item.id) { mutableStateOf(false) }
+    var forwardOpen by remember(item.id) { mutableStateOf(false) }
 
     fun run(action: DetailAction) {
         if (action == DetailAction.RemoveDownload) {
@@ -206,6 +216,14 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
         }
         if (action == DetailAction.Rename) {
             renaming = true
+            return
+        }
+        if (action == DetailAction.CommentVideos) {
+            commentsOpen = true
+            return
+        }
+        if (action == DetailAction.ForwardToChat) {
+            forwardOpen = true
             return
         }
         close()
@@ -271,13 +289,39 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
                     runCatching { state.settings.correct(com.tmplayer.data.VideoCorrections.filesOf(item)) { it.copy(wrongMatch = wrong) } }
                 }
             }
-            DetailAction.Rename -> Unit
+            DetailAction.Rename, DetailAction.CommentVideos, DetailAction.ForwardToChat -> Unit
+            DetailAction.ForwardToSaved -> forwardTo(item, null, toast)
+            DetailAction.ExportCopy -> outlives.launch {
+                val file = record?.localPath?.let(::File)?.takeIf { it.isFile }
+                if (file == null) {
+                    toast(s.downloadsFileGone)
+                    return@launch
+                }
+                // Asked again at the copy: the chat may have restricted saving since.
+                if (!Td.maySave(item.chatId, item.messageId)) {
+                    toast(ContentProtection.NOT_SAVABLE)
+                    return@launch
+                }
+                val folder = com.tmplayer.desktop.os.FolderPicker.pick(s.keepExportFolder, DesktopPaths.downloadsDir.parentFile) ?: return@launch
+                toast(s.keepExporting(item.title))
+                val said = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val target = com.tmplayer.desktop.DesktopExport.freeName(folder, file.name)
+                        java.nio.file.Files.copy(file.toPath(), target.toPath())
+                        s.keepExportedFolder(folder.path)
+                    }.getOrElse { s.keepExportFailed(com.tmplayer.data.Failures.humanise(it)) }
+                }
+                toast(said)
+            }
         }
     }
 
     val freeLabel = DiskInfo.freeLabel(free)
     val rows: List<DetailRow> = actions.map { action ->
         val row = detailRow(action, s, point, chat?.title ?: title, onSelect = { run(action) }, free = freeLabel)
+            .refusedForwarding(item) { toast(it) }
+            // The desktop's own copy goes to a folder, not a gallery.
+            .let { if (it.action == DetailAction.ExportCopy) it.copy(label = s.keepExportFolder, detail = s.keepExportFolderDetail, icon = TmIcons.Folder) else it }
         // The desktop's own words where it has them: the queue lives on the Downloads page.
         if (action == DetailAction.CancelDownload) row.copy(label = s.downloadsCancel) else row
     }
@@ -337,6 +381,23 @@ private fun DetailPane(state: ShellState, request: DetailRequest) {
         }
     }
     LaunchedEffect(item.id) { runCatching { first.requestFocus() } }
+
+    if (commentsOpen) {
+        val commentScope = rememberCoroutineScope()
+        val list = remember(item.id) { com.tmplayer.ui.browse.PagedVideos.comments(commentScope, item.chatId, item.messageId) }
+        MoreVideosDialog(
+            title = s.detailCommentsVideos,
+            note = s.detailCommentsCount(comments),
+            list = list,
+            empty = s.detailCommentsNone,
+            round = false,
+            onPlay = { video -> close(); com.tmplayer.ui.browse.LinkRequests.play(video) },
+            onDismiss = { commentsOpen = false },
+        )
+    }
+    if (forwardOpen) {
+        ForwardDialog(item, onDismiss = { forwardOpen = false })
+    }
 
     if (renaming) {
         RenameDialog(

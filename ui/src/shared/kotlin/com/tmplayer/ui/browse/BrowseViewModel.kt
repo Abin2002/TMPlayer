@@ -614,6 +614,16 @@ class MediaListViewModel(
      */
     val audioCount: StateFlow<Int> = _audioCount.asStateFlow()
 
+    private val _roundCount = MutableStateFlow(0)
+
+    /** How many round video messages the chat holds, for their entry over the listing; 0 for none. */
+    val roundCount: StateFlow<Int> = _roundCount.asStateFlow()
+
+    private val _pinned = MutableStateFlow<com.tmplayer.data.PinnedPost?>(null)
+
+    /** The chat's pinned post when it is or links to a video, for the card over the listing. */
+    val pinned: StateFlow<com.tmplayer.data.PinnedPost?> = _pinned.asStateFlow()
+
     /** The archives the pages read so far have met, since the listing last started over. */
     private var archives = emptyList<com.tmplayer.data.ArchiveFile>()
 
@@ -663,12 +673,35 @@ class MediaListViewModel(
             val count = runCatching { com.tmplayer.data.ChatAudio.count(session.client, chatId) }.getOrDefault(0)
             if (!session.isCurrent() || count <= 0) return@launch
             _audioCount.value = count
-            val shown = _state.value
-            if (shown is UiState.Empty && query.isBlank() && pageJob?.isActive != true) {
-                _state.value = UiState.Content(MediaListState(sponsored = sponsored, endReached = true, archives = archives))
-            }
+            showExtrasInsteadOfEmpty()
+        }
+        // The chat's round videos and its pinned post (CP81), beside the first page the same way.
+        viewModelScope.launch {
+            val session = Td.awaitAuthorizedSession()
+            val count = runCatching { com.tmplayer.data.ChatVideoNotes.count(session.client, chatId) }.getOrDefault(0)
+            if (!session.isCurrent() || count <= 0) return@launch
+            _roundCount.value = count
+            showExtrasInsteadOfEmpty()
+        }
+        viewModelScope.launch {
+            val session = Td.awaitAuthorizedSession()
+            val pinned = runCatching { com.tmplayer.data.PinnedPosts.of(session.client, chatId) }.getOrNull()
+            if (!session.isCurrent() || pinned == null) return@launch
+            _pinned.value = pinned
+            showExtrasInsteadOfEmpty()
         }
     }
+
+    /** An empty listing turned into the entries alone, once one of them is known to be there. */
+    private fun showExtrasInsteadOfEmpty() {
+        val shown = _state.value
+        if (shown is UiState.Empty && query.isBlank() && pageJob?.isActive != true) {
+            _state.value = UiState.Content(MediaListState(sponsored = sponsored, endReached = true, archives = archives))
+        }
+    }
+
+    /** Whether anything besides the videos is listed: audio, round videos, a pinned video. */
+    private fun hasExtras(): Boolean = _audioCount.value > 0 || _roundCount.value > 0 || _pinned.value != null
 
     /**
      * Finds out whether this chat has topics and which of them hold videos.
@@ -1048,7 +1081,7 @@ class MediaListViewModel(
      */
     /** [emptyState], or the audio entry alone where the chat has audio and no videos. */
     private fun nothingFound(reachedEnd: Boolean = true): UiState<MediaListState> =
-        if (_audioCount.value > 0 && query.isBlank() && reachedEnd) {
+        if (hasExtras() && query.isBlank() && reachedEnd) {
             UiState.Content(MediaListState(sponsored = sponsored, endReached = true, archives = archives))
         } else {
             emptyState(reachedEnd)

@@ -181,6 +181,29 @@ internal fun MediaDetailOpened(
         return
     }
 
+    // The comments under a channel post (CP81), and the two sheets that keep a video (CP82).
+    val comments = rememberCommentCount(item)
+    var commentsOpen by remember { mutableStateOf(false) }
+    var forwardOpen by remember { mutableStateOf(false) }
+    if (commentsOpen) {
+        val list = remember(item.id) { PagedVideos.comments(scope, item.chatId, item.messageId) }
+        MoreVideosSheet(
+            title = s.detailCommentsVideos,
+            note = s.detailCommentsCount(comments),
+            list = list,
+            empty = s.detailCommentsNone,
+            round = false,
+            // The comments live in the discussion group, whose name the window looks up.
+            onPlay = { video -> onDismiss(); LinkRequests.play(video) },
+            onDismiss = { commentsOpen = false },
+        )
+        return
+    }
+    if (forwardOpen) {
+        ForwardPickerSheet(item, onDismiss = { forwardOpen = false; onDismiss() })
+        return
+    }
+
     val actions = DetailActions.of(
         DetailContext(
             canBeSaved = item.canBeSaved,
@@ -200,6 +223,11 @@ internal fun MediaDetailOpened(
             separated = correction?.separate == true,
             matched = matched,
             wrongMatch = correction?.wrongMatch == true,
+            comments = comments,
+            canForward = true,
+            // The phone's gallery: Android 10 and later, where MediaStore needs no permission. A
+            // television has no gallery anyone looks at.
+            canExport = touch && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q,
         ),
     )
     val free = DiskInfo.freeLabel(freeBytes)
@@ -252,11 +280,36 @@ internal fun MediaDetailOpened(
                 onDismiss()
             } }
             DetailAction.Rename -> { { renaming = true } }
+            DetailAction.CommentVideos -> { { commentsOpen = true } }
+            DetailAction.ForwardToSaved -> { {
+                com.tmplayer.ui.components.showMessage(context, s.keepForwarding)
+                App.backgroundScope.launch(Dispatchers.Main) {
+                    com.tmplayer.ui.components.showMessage(context, forwardVideo(item, null))
+                }
+                onDismiss()
+            } }
+            DetailAction.ForwardToChat -> { { forwardOpen = true } }
+            DetailAction.ExportCopy -> { {
+                com.tmplayer.ui.components.showMessage(context, s.keepExporting(item.title))
+                App.backgroundScope.launch(Dispatchers.Main) {
+                    val file = LocalDownloads.fileFor(settings, item.chatId, item.messageId)
+                    val said = when {
+                        file == null -> s.downloadsFileGone
+                        // Asked again at the copy: the chat may have restricted saving since.
+                        !Td.maySave(item.chatId, item.messageId) -> com.tmplayer.data.ContentProtection.NOT_SAVABLE
+                        else -> com.tmplayer.data.GalleryExport.copy(context, file, item.fileName.ifBlank { item.title }, item.mimeType)
+                            ?: s.keepExportedGallery
+                    }
+                    com.tmplayer.ui.components.showMessage(context, said)
+                }
+                onDismiss()
+            } }
         }
         if (action == DetailAction.CancelDownload && downloading != null) {
             cancelRow(s, downloading, run)
         } else {
             detailRow(action, s, watched, chatTitle, run, free = free)
+                .refusedForwarding(item) { com.tmplayer.ui.components.showMessage(context, it) }
         }
     }
 
