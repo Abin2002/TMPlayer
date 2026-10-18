@@ -121,10 +121,40 @@ class PlayerControls(
         set(value) {
             if (field == value) return
             field = value
-            val marks = listOfNotNull(value?.startMs, value?.endMs).toLongArray()
-            timeBar.setAdGroupTimesMs(marks, BooleanArray(marks.size), marks.size)
+            renderMarks()
             if (visible) renderProgress()
         }
+
+    /**
+     * The file's chapters ([MkvChapters]), or none. Their starts cut the bar into its parts, as
+     * the desktop's bar and YouTube's are cut, and the chapter playing (or, during a scrub, the
+     * one the scrubber is over) is named after the time.
+     */
+    var chapters: List<Chapter> = emptyList()
+        set(value) {
+            if (field == value) return
+            field = value
+            renderMarks()
+            if (visible) renderProgress()
+        }
+
+    /** The length the marks were last placed for: the chapter cuts wait for a known one. */
+    private var marksFor = -1L
+
+    /**
+     * Media3's bar has one kind of mark, the ad marker, drawn in one of two colours by whether it
+     * is "played". The repeat's two marks are the unplayed kind, in amber; the chapter cuts are
+     * the played kind, drawn in the bar's dark gap colour, so the two never read as one another.
+     */
+    private fun renderMarks() {
+        val duration = player()?.duration?.takeIf { it > 0 } ?: 0L
+        marksFor = duration
+        val loopMarks = listOfNotNull(loop?.startMs, loop?.endMs)
+        val cuts = if (duration > 0) Chapters.marks(chapters, duration) else emptyList()
+        val times = (loopMarks + cuts).toLongArray()
+        val kinds = BooleanArray(times.size) { it >= loopMarks.size }
+        timeBar.setAdGroupTimesMs(times, kinds, times.size)
+    }
 
     /** How long the row stays up while playing; zero keeps it up until tapped away. */
     var timeoutMs = TIMEOUT_MS
@@ -192,6 +222,11 @@ class PlayerControls(
         // and fixed rather than Media3's twentieth-of-a-film so a press means the same thing on a
         // short clip as on a long film.
         timeBar.setKeyTimeIncrement(Skip.BAR_MS)
+        // The chapter cuts: see [renderMarks].
+        timeBar.setPlayedAdMarkerColor(CHAPTER_CUT)
+        // A chapter's name rides after the time: one line, cut short rather than wrapping the row.
+        timesPosition.maxLines = 1
+        timesPosition.ellipsize = android.text.TextUtils.TruncateAt.END
         // The pill behind the bar comes from its state-list background; the scrubber joins it by
         // turning white, because from a sofa the accent-blue dot alone does not read as "focused"
         // against the accent-blue played run it sits on.
@@ -717,6 +752,7 @@ class PlayerControls(
     private fun renderProgress() {
         val exo = player() ?: return
         val duration = exo.duration.takeIf { it > 0 } ?: 0L
+        if (chapters.isNotEmpty() && duration != marksFor) renderMarks()
         timeBar.setDuration(duration)
         timeBar.setBufferedPosition(exo.bufferedPosition)
         if (!scrubbing) {
@@ -736,16 +772,23 @@ class PlayerControls(
             } else {
                 Translator.messages.formatter.clock(duration)
             }
-            time.text = "${Translator.messages.formatter.clock(position)} / $end" + loopBadge()
+            time.text = "${Translator.messages.formatter.clock(position)} / $end" + loopBadge() + chapterBadge(position)
             return
         }
-        timesPosition.text = Translator.messages.formatter.clock(position) + loopBadge()
+        timesPosition.text = Translator.messages.formatter.clock(position) + loopBadge() + chapterBadge(position)
         timesDuration.text = if (showRemaining && duration > 0) {
             "-" + Translator.messages.formatter.clock((duration - position).coerceAtLeast(0))
         } else {
             Translator.messages.formatter.clock(duration)
         }
         describe(timesDuration, if (showRemaining) L.playerShowTotalLength else L.playerShowTimeRemaining)
+    }
+
+    /** The chapter at [position] after the time, cut short so a long name leaves the total in view. */
+    private fun chapterBadge(position: Long): String {
+        val label = Chapters.labelAt(chapters, position) ?: return ""
+        val short = if (label.length > CHAPTER_CHARS) label.take(CHAPTER_CHARS - 1).trimEnd() + "\u2026" else label
+        return "  \u00b7  $short"
     }
 
     /** The repeat's mark after the time, with the separator the player's other readouts use. */
@@ -788,6 +831,12 @@ class PlayerControls(
         /** The scrub thumbnail's width; its height is the 16:9 of that. */
         const val PREVIEW_WIDTH_DP = 240
         const val PREVIEW_CORNER_DP = 10f
+
+        /** About as much of a chapter's name as fits beside the times on a phone held upright. */
+        const val CHAPTER_CHARS = 34
+
+        /** A cut in the bar, near the black of the scrim it sits on. */
+        val CHAPTER_CUT = Color.argb(0xE6, 0x10, 0x10, 0x10)
     }
 }
 

@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -123,3 +124,50 @@ internal fun BookmarkLine(mark: Bookmark, onJump: () -> Unit, onEdit: () -> Unit
         }
     }
 }
+
+/**
+ * "Go to a time" ({cmd}+G, and the menu): a time typed the way it is said, read by
+ * [com.tmplayer.player.TimeEntry]. Enter goes; text that is no place in this video says so under
+ * the field and the dialog stays, so the viewer can mend it rather than start again.
+ */
+@Composable
+internal fun GoToTimeDialog(durationMs: Long, positionMs: Long, onGo: (Long) -> Unit, onDismiss: () -> Unit) {
+    val s = LocalStrings.current
+    var text by remember { mutableStateOf("") }
+    var refused by remember { mutableStateOf(false) }
+    val field = remember { FocusRequester() }
+    fun go() {
+        val target = com.tmplayer.player.TimeEntry.parse(text, durationMs, positionMs)
+        if (target == null) refused = true else onGo(target)
+    }
+    TmAlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(s.playerGoToTime) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = {
+                    text = it.take(MAX_TIME_TEXT)
+                    refused = false
+                },
+                label = { Text(if (durationMs > 0) "${SeekMath.clock(positionMs)} / ${SeekMath.clock(durationMs)}" else SeekMath.clock(positionMs)) },
+                supportingText = { Text(if (refused) s.playerGoToTimeInvalid else s.playerGoToTimeHint) },
+                isError = refused,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                keyboardActions = KeyboardActions(onGo = { go() }, onDone = { go() }),
+                modifier = Modifier.fillMaxWidth().focusRequester(field).testTag("go-to-time"),
+            )
+        },
+        confirmButton = { TextButton(onClick = ::go) { Text(s.playerGo) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(s.commonCancel) } },
+    )
+    LaunchedEffect(Unit) {
+        repeat(5) {
+            withFrameNanos { }
+            if (runCatching { field.requestFocus() }.isSuccess) return@LaunchedEffect
+        }
+    }
+}
+
+private const val MAX_TIME_TEXT = 24

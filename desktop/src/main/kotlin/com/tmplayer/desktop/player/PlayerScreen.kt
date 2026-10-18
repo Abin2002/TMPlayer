@@ -17,6 +17,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -74,6 +75,7 @@ import com.tmplayer.desktop.WatchedWords
 import com.tmplayer.data.DownloadRunner
 import com.tmplayer.data.OfflineDownloads
 import com.tmplayer.player.PlaybackSpeed
+import com.tmplayer.player.SeekUndo
 import com.tmplayer.player.SleepTimer
 import com.tmplayer.player.SpeedMemory
 import com.tmplayer.player.PauseControls
@@ -319,6 +321,16 @@ fun PlayerScreen(
     }.collectAsState(initial = emptyList())
     // The note dialog: for a new bookmark at a position, or for one already made.
     var notePrompt by remember { mutableStateOf<NotePrompt?>(null) }
+    // "Back to 12:34" after a long jump, for the video playing only. See [SeekUndo].
+    val seekUndo = remember(current) { SeekUndo() }
+    var undoOffer by remember(current) { mutableStateOf<SeekUndo.Offer?>(null) }
+    // The "Go to a time" dialog ({cmd}+G).
+    var timePrompt by remember { mutableStateOf(false) }
+    LaunchedEffect(undoOffer) {
+        val offer = undoOffer ?: return@LaunchedEffect
+        delay((offer.untilMs - System.currentTimeMillis()).coerceAtLeast(0))
+        undoOffer = seekUndo.current(System.currentTimeMillis())
+    }
 
     fun showFlash(kind: Flash.Kind, text: String = "") {
         flash = Flash(kind, text, System.nanoTime())
@@ -326,6 +338,34 @@ fun PlayerScreen(
 
     fun refocus() {
         runCatching { focus.requestFocus() }
+    }
+
+    /**
+     * Every seek the viewer asks for goes through here and [jumpBy], so [SeekUndo] hears of it:
+     * the keys, the bar, chapters, bookmarks, the skip pill and Start over. "Watch again" from
+     * the end sheet does not, since the place it leaves is the end.
+     */
+    fun jumpTo(target: Long) {
+        val to = SeekMath.clampTarget(target, status.durationMs)
+        undoOffer = seekUndo.seeked(status.positionMs, to, System.currentTimeMillis())
+        // The resume notice holds the same corner and answers the same question; the newer wins.
+        if (undoOffer != null) resumedFrom = null
+        engine.seekTo(target)
+    }
+
+    fun jumpBy(delta: Long) {
+        val to = SeekMath.clampSeek(status.positionMs, delta, status.durationMs)
+        undoOffer = seekUndo.seeked(status.positionMs, to, System.currentTimeMillis())
+        if (undoOffer != null) resumedFrom = null
+        engine.seekBy(delta)
+    }
+
+    /** The chip, or Shift+Backspace: back to where the viewer was before the jump. */
+    fun undoSeek() {
+        val back = seekUndo.take(System.currentTimeMillis()) ?: return
+        undoOffer = null
+        engine.seekTo(back)
+        showFlash(Flash.Kind.Text, SeekMath.clock(back))
     }
 
     // ---- open, resume, episodes --------------------------------------------------------------
@@ -729,7 +769,7 @@ fun PlayerScreen(
     fun skipSegment() {
         val segment = activeSkip ?: return
         skipped = skipped + segment.startMs
-        engine.seekTo(segment.target(status.durationMs))
+        jumpTo(segment.target(status.durationMs))
     }
 
     // The subtitle look is one setting for every video: a change in Settings (or in the subtitle
@@ -950,7 +990,7 @@ fun PlayerScreen(
     }
 
     fun startOver() {
-        engine.seekTo(0)
+        jumpTo(0)
         engine.play()
         resumedFrom = null
         // A short watch from here leaves a saved place alone, so starting over forgets it.
@@ -1009,7 +1049,7 @@ fun PlayerScreen(
         if (chapters.isEmpty()) {
             // The minute those keys seeked before they meant chapters, for a file that has none.
             val delta = if (forward) PlayerKeys.SEEK_LONG_MS else -PlayerKeys.SEEK_LONG_MS
-            engine.seekBy(delta)
+            jumpBy(delta)
             seekFlash(delta)
             return
         }
@@ -1019,7 +1059,7 @@ fun PlayerScreen(
             showFlash(Flash.Kind.Text, if (forward) L.playerLastChapter else L.playerBeforeFirstChapter)
             return
         }
-        engine.seekTo(chapters[target].startMs)
+        jumpTo(chapters[target].startMs)
         showFlash(Flash.Kind.Text, Chapters.label(chapters, target))
     }
 
@@ -1055,14 +1095,14 @@ fun PlayerScreen(
             PlayerAction.Play -> engine.play()
             PlayerAction.Pause -> engine.pause()
             is PlayerAction.SeekBy -> {
-                engine.seekBy(action.deltaMs)
+                jumpBy(action.deltaMs)
                 seekFlash(action.deltaMs)
             }
             is PlayerAction.JumpToTenth -> SeekMath.tenth(status.durationMs, action.tenth)?.let {
-                engine.seekTo(it)
+                jumpTo(it)
                 showFlash(Flash.Kind.Text, L.messages.formatter.percent(action.tenth / 10.0))
             }
-            PlayerAction.JumpToEnd -> if (status.durationMs > 0) engine.seekTo(status.durationMs)
+            PlayerAction.JumpToEnd -> if (status.durationMs > 0) jumpTo(status.durationMs)
             is PlayerAction.FrameStep -> if (!status.playing) engine.frameStep(action.forward)
             is PlayerAction.VolumeBy -> setVolume(SeekMath.volume(status.volume, action.delta))
             PlayerAction.ToggleMute -> toggleMute()
@@ -1104,6 +1144,11 @@ fun PlayerScreen(
             PlayerAction.CycleShape -> setScale(status.scale.next())
             is PlayerAction.ChapterStep -> stepChapter(action.forward)
             PlayerAction.AddBookmark -> addBookmark()
+            PlayerAction.UndoSeek -> undoSeek()
+            PlayerAction.GoToTime -> if (status.opened) {
+                menu = null
+                timePrompt = true
+            }
         }
     }
 
@@ -1345,7 +1390,7 @@ fun PlayerScreen(
                 onBack = onBack,
                 onTogglePlay = ::togglePlay,
                 onSeekBy = { dispatch(PlayerAction.SeekBy(it)) },
-                onSeekTo = { engine.seekTo(it) },
+                onSeekTo = ::jumpTo,
                 onEpisode = ::switchTo,
                 onToggleRemaining = {
                     showRemaining = !showRemaining
@@ -1403,7 +1448,7 @@ fun PlayerScreen(
                         }
                         MenuAction.AddBookmark -> addBookmark()
                         is MenuAction.JumpTo -> {
-                            engine.seekTo(action.bookmark.positionMs)
+                            jumpTo(action.bookmark.positionMs)
                             showFlash(Flash.Kind.Text, SeekMath.clock(action.bookmark.positionMs))
                         }
                         is MenuAction.EditBookmark -> notePrompt = NotePrompt(action.bookmark.chatId, action.bookmark.messageId, action.bookmark.positionMs, action.bookmark)
@@ -1445,6 +1490,16 @@ fun PlayerScreen(
                     skipSegment()
                     refocus()
                 })
+            }
+
+            // Not while the screen is locked: nothing under the shield takes a click.
+            undoOffer?.takeIf { phase == Phase.Playing && !screenLocked }?.let { offer ->
+                key(offer.backToMs) {
+                    UndoSeekChip(backToMs = offer.backToMs, lifted = showControls, onUndo = {
+                        undoSeek()
+                        refocus()
+                    })
+                }
             }
 
             if (nextUpVisible && next != null) {
@@ -1606,6 +1661,23 @@ fun PlayerScreen(
                 )
             }
 
+            if (timePrompt) {
+                GoToTimeDialog(
+                    durationMs = status.durationMs,
+                    positionMs = status.positionMs,
+                    onGo = { target ->
+                        timePrompt = false
+                        jumpTo(target)
+                        showFlash(Flash.Kind.Text, SeekMath.clock(target))
+                        refocus()
+                    },
+                    onDismiss = {
+                        timePrompt = false
+                        refocus()
+                    },
+                )
+            }
+
             if (showShortcuts) {
                 ShortcutSheet(
                     onClose = {
@@ -1637,7 +1709,7 @@ fun PlayerScreen(
     // without focus inside it: take the keyboard again once the change has settled.
     // Not while a sheet or a menu is up: those hold the keyboard themselves, some for typing.
     fun keysBack() {
-        if (!showEpisodes && !showShortcuts && !showDetails && !showOnline && notePrompt == null && menu == null) refocus()
+        if (!showEpisodes && !showShortcuts && !showDetails && !showOnline && notePrompt == null && !timePrompt && menu == null) refocus()
     }
     LaunchedEffect(fullscreen) {
         delay(FULLSCREEN_SETTLE_MS)

@@ -89,8 +89,9 @@ keeps it up to date.
 | **OK** | Play / pause in one press; a pause brings the controls up with a play sign in the middle. **Up / Down** show the controls without pausing |
 | **⏯** (if your remote has it) | Play / pause; paused, the controls stay up with a play sign in the middle |
 | **Left / Right** (on the seek bar) | Travel: 30 seconds a press, presses pile up and land as one seek a moment after the last |
-| **Down** (controls up) | The button row: subtitles, audio, speed, and More at the end. More holds the previous and next episode, picture shape, picture in picture, start over, volume boost, sleep timer and the rest |
+| **Down** (controls up) | The button row: subtitles, audio, speed, and More at the end. More holds the previous and next episode, the previous and next chapter of a video that has chapters, picture shape, picture in picture, start over, volume boost, sleep timer and the rest |
 | **0 - 9** (if your remote has them) | Jump to that tenth of the video; 5 is halfway |
+| **Up** (after a long jump) | Back to where you were before it, while the "Back to" sign is up in the corner |
 | **⏪ / ⏩** (if your remote has them) | Jump back 5 / forward 10 seconds |
 | **⏮ / ⏭** (if your remote has them) | The previous or next episode, when the chat has one; also in the More menu |
 | **Hold OK** (controls up) | Open the video in another app |
@@ -478,6 +479,8 @@ None of them fire while a search field has focus.
 | **S / Shift+S** | Screenshot, with or without the subtitles, into Pictures/TMPlayer |
 | **B** | Bookmark this moment, with a short note if you like; the menu's Bookmarks lists them |
 | **0 - 9** | Jump to that tenth of the video; 5 is halfway. **Home** and **End** go to the start and the end |
+| **Ctrl+G** | Go to a time: type 1:05:30, 45:10, 90s or 50% (Cmd+G on a Mac) |
+| **Shift+Backspace** | Back to where you were before a long jump, while the "Back to" sign is up (also a click on it) |
 | **Up / Down** | Volume (also the mouse wheel) |
 | **M** | Mute |
 | **F**, **F11**, **Alt+Enter** | Fullscreen (also a double click); **Esc** leaves it |

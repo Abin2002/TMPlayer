@@ -107,7 +107,9 @@ import com.tmplayer.data.DiskSpace
 import com.tmplayer.data.RoomOnDisk
 import com.tmplayer.data.Td
 import com.tmplayer.data.Thumbnails
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.unit.dp
 import com.tmplayer.data.WatchCache
 import com.tmplayer.data.WatchedRecord
 import com.tmplayer.data.WatchedStore
@@ -366,7 +368,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         override fun run() {
             val loop = abLoop?.takeIf { it.complete } ?: return
             val exo = player
-            if (exo != null) loop.wrap(exo.currentPosition)?.let(exo::seekTo)
+            if (exo != null) loop.wrap(exo.currentPosition)?.let { quietly { exo.seekTo(it) } }
             // Only while the picture moves: paused, buffering or stopped there is nothing to wrap,
             // and [onIsPlayingChanged] starts the watch again when it plays.
             if (exo?.isPlaying == true) loopHandler.postDelayed(this, LOOP_TICK_MS)
@@ -506,6 +508,27 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private val skippedSegments = mutableSetOf<Long>()
     private var offeredSkip: SkipSegment? = null
 
+    /**
+     * "Back to 12:34" after a long jump ([SeekUndo]): the chip, and what it works from. Every seek
+     * reaches [noteSeek] through the player's own discontinuity report, so the bar, the double tap,
+     * the digits, chapters, bookmarks and the skip pill all count without each saying so; the
+     * seeks that are not the viewer's (a repeat wrapping, Watch again) run with [quietSeek] set.
+     */
+    private var undoChip: UndoSeekChip? = null
+    private val seekUndo = SeekUndo()
+    private var quietSeek = false
+    private val undoExpiry = Runnable { refreshUndoChip() }
+
+    /**
+     * The file's chapter marks, read from its own bytes once they are on the disk ([MkvChapters];
+     * Media3 reads none). Empty for a file without any, and until they are found.
+     */
+    private var chapters: List<Chapter> = emptyList()
+    private var chaptersAsked = false
+
+    /** "Send logs" on the failure sheet: the shared action, hosted in Compose. */
+    private var statusLogs: View? = null
+
     /** True while the transport row is up: the download figure is shown alongside it. */
     private var controlsUp = false
 
@@ -615,6 +638,17 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         statusReload?.text = L.commonReload
         statusOpenWith?.text = L.playerOpenInAnotherApp
         statusBack?.text = L.playerGoBack
+        statusLogs = androidx.compose.ui.platform.ComposeView(this).apply {
+            setContent {
+                com.tmplayer.ui.theme.TMPlayerTheme {
+                    com.tmplayer.ui.settings.SendLogsButton(androidx.compose.ui.Modifier.padding(top = 10.dp))
+                }
+            }
+            visibility = View.GONE
+        }.also { logs ->
+            val column = statusOpenWith?.parent as? android.view.ViewGroup
+            column?.addView(logs, column.indexOfChild(statusOpenWith) + 1, android.view.ViewGroup.LayoutParams(-2, -2))
+        }
         statusName = findViewById(R.id.status_name)
         loaderHost = PlayerLoaderHost(
             root = findViewById(R.id.player_root),
@@ -672,6 +706,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 sleepChoice = ::sleepChoice,
                 loop = { abLoop },
                 paused = ::isPaused,
+                chapter = {
+                    if (chapters.isEmpty()) null
+                    else Chapters.labelAt(chapters, player?.currentPosition ?: 0L) ?: L.playerBeforeFirstChapter
+                },
                 onEntry = ::onTvMenuEntry,
                 onShape = ::applyScale,
                 onClosed = { menuOpen = false; holdControls(); controls?.show(); controls?.focusRow() },
@@ -919,7 +957,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 onTapControls = ::toggleControls,
                 onTogglePlay = ::togglePlaybackFromPicture,
                 isOnChrome = { x, y ->
-                    controls?.isOnChrome(x, y) == true || isOnNextUpCard(x, y) || isOnSkipPill(x, y)
+                    controls?.isOnChrome(x, y) == true || isOnNextUpCard(x, y) || isOnSkipPill(x, y) || isOnUndoChip(x, y)
                 },
                 systemEdges = ::systemGestureEdges,
             ).also { it.prefs = touchPrefs }
@@ -1929,6 +1967,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 Player.STATE_READY -> {
                     recoveryAttempts = 0
                     firstFrameReady = true
+                    readChapters()
                     offerStartOver()
                     controls?.setBuffering(false)
                     hideStatus()
@@ -1943,6 +1982,15 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 Player.STATE_ENDED -> if (!creditsSkipped) onVideoEnded()
                 else -> Unit
             }
+        }
+
+        override fun onPositionDiscontinuity(
+            oldPosition: Player.PositionInfo,
+            newPosition: Player.PositionInfo,
+            reason: Int,
+        ) {
+            if (reason != Player.DISCONTINUITY_REASON_SEEK) return
+            noteSeek(oldPosition.positionMs, newPosition.positionMs)
         }
 
         override fun onPlayerError(error: PlaybackException) {
@@ -2564,7 +2612,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             setOnClickListener {
                 text = L.commonTryAgain
                 setOnClickListener { retryPlayback() }
-                player?.seekTo(0)
+                quietly { player?.seekTo(0) }
                 player?.playWhenReady = true
                 hideStatus()
                 keepScreenOn(true)
@@ -2852,6 +2900,15 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 }
             }
             KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> {
+                // Up while "Back to" is offered takes it, row up or down: a key that otherwise
+                // only raises the row, so Left, Right and OK keep 1.16.0's meanings. The chip's
+                // second line says so.
+                if (event.keyCode == KeyEvent.KEYCODE_DPAD_UP && FormFactor.isTv(this) &&
+                    undoChip?.isShown == true && statusOverlay.visibility != View.VISIBLE
+                ) {
+                    if (event.repeatCount == 0) undoSeek()
+                    return true
+                }
                 // Any other press over the bare picture asks for the row rather than doing
                 // anything irreversible; the second press does the thing it lands on.
                 if (FormFactor.isTv(this) && !controlsUp && statusOverlay.visibility != View.VISIBLE) {
@@ -3241,6 +3298,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             feedback?.clear()
             hideNextUp()
             hideSkipPill()
+            undoChip?.hide()
         }
         subtitleView.visibility = if (isInPictureInPictureMode) View.GONE else View.VISIBLE
         downloadChip.visibility = View.GONE
@@ -3282,6 +3340,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             markWatched = hasMessage(),
             paused = isPaused(),
             bookmarks = hasMessage(),
+            chapters = chapters.isNotEmpty(),
         )
         // Speed and the sleep timer open the pickers' sheet rather than a submenu, so a choice
         // of one of several looks the same here as the subtitle and audio pickers.
@@ -3308,6 +3367,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 PhoneMenuEntry.VolumeBoost -> toggleVolumeBoost()
                 PhoneMenuEntry.SleepTimer -> showSheet { it.showSleep(sleepTimerDetail(), sleepChoice(), ::setSleepTimer) }
                 PhoneMenuEntry.AbLoop -> pressLoop()
+                PhoneMenuEntry.NextChapter -> stepChapter(forward = true)
+                PhoneMenuEntry.PreviousChapter -> stepChapter(forward = false)
                 PhoneMenuEntry.NextFrame -> frameStep(forward = true)
                 PhoneMenuEntry.PreviousFrame -> frameStep(forward = false)
                 PhoneMenuEntry.OpenInAnotherApp -> openInAnotherApp()
@@ -3339,6 +3400,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             PlayerMenuEntry.MarkWatched -> toggleWatched()
             PlayerMenuEntry.VolumeBoost -> toggleVolumeBoost()
             PlayerMenuEntry.AbLoop -> pressLoop()
+            PlayerMenuEntry.NextChapter -> stepChapter(forward = true)
+            PlayerMenuEntry.PreviousChapter -> stepChapter(forward = false)
             PlayerMenuEntry.NextFrame -> frameStep(forward = true)
             PlayerMenuEntry.PreviousFrame -> frameStep(forward = false)
             PlayerMenuEntry.AddBookmark -> addBookmark(player?.currentPosition ?: 0L, "")
@@ -3389,6 +3452,139 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         exo.setSeekParameters(SeekParameters.EXACT)
         exo.seekTo(FrameStep.target(exo.currentPosition, exo.duration.coerceAtLeast(0L), fps, forward))
     }
+    /** Runs [seek] as one the viewer did not ask for: no "Back to" offer comes of it. */
+    private inline fun quietly(seek: () -> Unit) {
+        quietSeek = true
+        try {
+            seek()
+        } finally {
+            quietSeek = false
+        }
+    }
+
+    /**
+     * Every seek, from the player's report of it. Ignored before the first frame (the resume
+     * position is not a jump) and while [quietSeek] is set; otherwise [SeekUndo] decides whether
+     * it was long enough to offer the way back.
+     */
+    private fun noteSeek(fromMs: Long, toMs: Long) {
+        if (quietSeek) {
+            seekUndo.clear()
+            refreshUndoChip()
+            return
+        }
+        if (!firstFrameReady) return
+        seekUndo.seeked(fromMs, toMs, SystemClock.elapsedRealtime())
+        refreshUndoChip()
+    }
+
+    /** Shows the standing offer, or takes the chip away when none stands; and the expiry with it. */
+    private fun refreshUndoChip() {
+        val chip = undoChip ?: return
+        loopHandler.removeCallbacks(undoExpiry)
+        val now = SystemClock.elapsedRealtime()
+        val offer = seekUndo.current(now)?.takeIf {
+            !locked && !inPictureInPicture && statusOverlay.visibility != View.VISIBLE
+        }
+        if (offer == null) {
+            chip.hide()
+            return
+        }
+        val wasShown = chip.isShown
+        chip.show(offer.backToMs)
+        if (!wasShown) liftCornerOffers()
+        loopHandler.postDelayed(undoExpiry, (offer.untilMs - now).coerceAtLeast(0))
+    }
+
+    /** The chip's tap, or Up on a television: back to where the viewer was before the jump. */
+    private fun undoSeek() {
+        val exo = player ?: return
+        val back = seekUndo.take(SystemClock.elapsedRealtime()) ?: return
+        loopHandler.removeCallbacks(undoExpiry)
+        undoChip?.hide(taken = true)
+        exo.seekTo(back)
+        showGestureFeedback(Translator.messages.formatter.clock(back))
+    }
+
+    private fun isOnUndoChip(rawX: Float, rawY: Float): Boolean {
+        val chip = undoChip?.view ?: return false
+        if (chip.visibility != View.VISIBLE) return false
+        val at = IntArray(2)
+        chip.getLocationInWindow(at)
+        return rawX >= at[0] && rawX < at[0] + chip.width && rawY >= at[1] && rawY < at[1] + chip.height
+    }
+
+    /** The menus' chapter lines: the next chapter, or the start of this one, as [Chapters] has it. */
+    private fun stepChapter(forward: Boolean) {
+        val exo = player ?: return
+        val at = exo.currentPosition
+        val target = if (forward) Chapters.next(chapters, at) else Chapters.previous(chapters, at)
+        if (target == null) {
+            showGestureFeedback(if (forward) L.playerLastChapter else L.playerBeforeFirstChapter)
+            return
+        }
+        exo.seekTo(chapters[target].startMs)
+        showGestureFeedback(Chapters.label(chapters, target))
+    }
+
+    /**
+     * Reads the chapter marks of a Matroska file ([MkvChapters]) from the parts of it already on
+     * the disk: a download straight from its file, a stream through TDLib's own reads, which never
+     * move the download window (a part not there yet is simply not read). Asked once the picture
+     * is up, when Media3 has read the head of the file; a file whose chapters sit further in, past
+     * its attached fonts, is asked again a few times as the download reaches them.
+     */
+    private fun readChapters() {
+        if (chaptersAsked) return
+        chaptersAsked = true
+        val item = currentItem()
+        val name = item.fileName.ifBlank { item.title }.lowercase()
+        val matroska = "matroska" in item.mimeType || "webm" in item.mimeType ||
+            name.endsWith(".mkv") || name.endsWith(".webm")
+        if (!matroska) return
+        val language = Translator.messages.tag
+        lifecycleScope.launch {
+            repeat(CHAPTER_TRIES) { attempt ->
+                if (attempt > 0) delay(CHAPTER_RETRY_MS)
+                val local = downloadedFile
+                val found = withContext(Dispatchers.IO) {
+                    runCatching {
+                        if (local != null) {
+                            MkvChapters.read(language) { offset, length -> readLocal(local, offset, length) }
+                        } else {
+                            val client = Td.awaitAuthorizedSession().client
+                            MkvChapters.read(language) { offset, length -> readDownloaded(client, offset, length) }
+                        }
+                    }.onFailure { Log.w("TMPlayer", "Chapters not read", it) }.getOrDefault(emptyList())
+                }
+                if (found.isNotEmpty()) {
+                    chapters = found
+                    controls?.chapters = found
+                    return@launch
+                }
+                // All of it is here and there are none: nothing later will change that.
+                if (local != null || downloadComplete) return@launch
+            }
+        }
+    }
+
+    private fun readLocal(file: File, offset: Long, length: Int): ByteArray? =
+        java.io.RandomAccessFile(file, "r").use { raf ->
+            if (offset >= raf.length()) return null
+            val count = minOf(length.toLong(), raf.length() - offset).toInt()
+            ByteArray(count).also { raf.seek(offset); raf.readFully(it) }
+        }
+
+    /** [length] bytes at [offset] of the file streaming, or null unless TDLib has all of them. */
+    private suspend fun readDownloaded(client: TdlClient, offset: Long, length: Int): ByteArray? {
+        val size = fileSizeBytes
+        val wanted = if (size > 0) minOf(length.toLong(), size - offset) else length.toLong()
+        if (wanted <= 0) return null
+        val ready = client.getFileDownloadedPrefixSize(fileId, offset).valueOrNull?.size ?: 0L
+        if (ready < wanted) return null
+        return client.readFilePart(fileId, offset, wanted).valueOrNull?.data
+    }
+
     /**
      * Saves a bookmark at [positionMs]. The television's menu calls this straight away, without
      * the keyboard, and says where a note can be added; the phone calls it from the note sheet.
@@ -3716,6 +3912,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * Everything is off, the orientation is frozen, and a tap anywhere offers the unlock pill.
      */
     private fun lockScreen() {
+        undoChip?.hide()
         if (locked) return
         locked = true
         lockedAt = android.os.SystemClock.uptimeMillis()
@@ -3870,6 +4067,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             below = findViewById(R.id.overlay_container),
             tv = FormFactor.isTv(this),
             onSkip = ::skipOffered,
+        )
+        undoChip = UndoSeekChip(
+            root = findViewById(R.id.player_root),
+            below = findViewById(R.id.overlay_container),
+            tv = FormFactor.isTv(this),
+            onUndo = ::undoSeek,
         )
         watchForTheEnd()
     }
@@ -4141,10 +4344,13 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      * around them, and the remote never reaches them while it is up.
      */
     private fun liftCornerOffers() {
-        if (FormFactor.isTv(this)) return
+        // The "Back to" chip climbs on a television too: it comes up after a scrub on the bar,
+        // with the row up, in the corner the row's title sits in.
+        val tv = FormFactor.isTv(this)
         val cluster = findViewById<View>(R.id.controls_cluster)
         val root = findViewById<View>(R.id.player_root)
-        listOfNotNull(skipPill?.view, nextUpCard?.view).forEach { offer ->
+        val offers = if (tv) listOfNotNull(undoChip?.view) else listOfNotNull(skipPill?.view, nextUpCard?.view, undoChip?.view)
+        offers.forEach { offer ->
             // After the next layout, so an offer that has only just been shown has a height.
             offer.doOnPreDraw {
                 val origin = IntArray(2)
@@ -4547,6 +4753,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
      */
     private fun showError(message: String, retryable: Boolean = true) {
         openingFilm = false
+        undoChip?.hide()
         keepScreenOn(false)
         statusOverlay.visibility = View.VISIBLE
         // The only state that earns the warning triangle, matching the error screens the rest of
@@ -4574,6 +4781,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** Puts the sheet back to the one button it had, for every state that is not a failure. */
     private fun hideFailureActions() {
+        statusLogs?.visibility = View.GONE
         statusReload?.visibility = View.GONE
         statusOpenWith?.visibility = View.GONE
         statusBack?.visibility = View.GONE
@@ -4596,6 +4804,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     private fun showFailureActions(retryable: Boolean) {
         statusReload?.visibility = View.GONE
         statusOpenWith?.visibility = View.GONE
+        // Last and quietest: the logs to send with a report of it. See [rememberSendLogs].
+        statusLogs?.visibility = View.VISIBLE
         statusBack?.apply {
             visibility = View.VISIBLE
             if (!retryable) requestFocus()
@@ -5096,6 +5306,10 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
         /** How often a running A-B repeat looks at the position: the loop overruns its end by at most this. */
         private const val LOOP_TICK_MS = 100L
+
+        /** Chapters past the head of a stream are looked for this many times, this far apart. */
+        private const val CHAPTER_TRIES = 4
+        private const val CHAPTER_RETRY_MS = 20_000L
 
         /** How long the first-run hint stays up. */
         private const val HINT_MS = 5_000L

@@ -54,6 +54,12 @@ sealed interface PlayerAction {
 
     /** Saves the moment playing as a bookmark, asking for an optional note. See [com.tmplayer.data.BookmarkStore]. */
     data object AddBookmark : PlayerAction
+
+    /** Back to where the viewer was before a long jump, while the "Back to" chip offers it. See [com.tmplayer.player.SeekUndo]. */
+    data object UndoSeek : PlayerAction
+
+    /** Asks for a time to go to, typed. See [com.tmplayer.player.TimeEntry]. */
+    data object GoToTime : PlayerAction
     data object Back : PlayerAction
     data object Quit : PlayerAction
     data object ShortcutSheet : PlayerAction
@@ -104,6 +110,7 @@ object PlayerKeys {
         if (command && key == Key.Q) return PlayerAction.Quit
         if (command && key == Key.T) return PlayerAction.AlwaysOnTop
         if (command && key == Key.P) return PlayerAction.MiniPlayer
+        if (command && !shift && !alt && key == Key.G) return PlayerAction.GoToTime
         if (context.mac && ctrl && meta && key == Key.F) return PlayerAction.ToggleFullscreen
         if (alt && (key == Key.Enter || key == Key.NumPadEnter)) return PlayerAction.ToggleFullscreen
 
@@ -135,7 +142,12 @@ object PlayerKeys {
             Key.PageUp -> return PlayerAction.PreviousEpisode
             Key.F11 -> return PlayerAction.ToggleFullscreen
             Key.Escape -> return if (context.fullscreen) PlayerAction.ExitFullscreen else PlayerAction.Back
-            Key.Backspace -> return if (context.speedIsNormal) PlayerAction.Back else PlayerAction.SpeedReset
+            // mpv's revert-seek. Shift alone: Backspace with nothing held keeps its two meanings.
+            Key.Backspace -> return when {
+                shift && !ctrl && !alt && !meta -> PlayerAction.UndoSeek
+                context.speedIsNormal -> PlayerAction.Back
+                else -> PlayerAction.SpeedReset
+            }
             Key.MoveHome -> return PlayerAction.JumpToTenth(0)
             Key.MoveEnd -> return PlayerAction.JumpToEnd
             Key.Back -> return PlayerAction.Back
@@ -240,6 +252,8 @@ object PlayerKeys {
                 // The pill's own words name the row; it skips a recap or the credits the same way.
                 L.playerSkipIntro to "G",
                 L.keysRowJump to L.keysDigits,
+                L.playerGoToTime to L.playerKeyCommandG(cmd),
+                L.keysRowUndoSeek to L.keysShiftBackspace,
                 L.keysRowStartEnd to L.keysHomeEnd,
             ),
             L.keysGroupAudioSubtitles to listOf(

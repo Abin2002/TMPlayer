@@ -50,6 +50,15 @@ class PlayerMenuTest {
     }
 
     @Test
+    fun `the chapter steps come only with a chaptered file, after the repeat line`() {
+        assertFalse(PlayerMenuEntry.NextChapter in PlayerMenu.tvEntries(pictureInPicture = true))
+        val tv = PlayerMenu.tvEntries(pictureInPicture = true, chapters = true)
+        assertEquals(tv.indexOf(PlayerMenuEntry.AbLoop) + 1, tv.indexOf(PlayerMenuEntry.NextChapter))
+        assertFalse(PhoneMenuEntry.PreviousChapter in PlayerMenu.phoneEntries(true, true, true, true))
+        assertTrue(PhoneMenuEntry.PreviousChapter in PlayerMenu.phoneEntries(true, true, true, true, chapters = true))
+    }
+
+    @Test
     fun `lock the screen is the first line on the phone and the television alike`() {
         assertEquals(PhoneMenuEntry.LockScreen, PlayerMenu.phoneEntries(false, false, false, false).first())
         assertEquals(PlayerMenuEntry.LockScreen, PlayerMenu.tvEntries(pictureInPicture = false, openInAnotherApp = false).first())
@@ -106,6 +115,7 @@ class PlayerMenuTest {
             markWatched = true,
             paused = true,
             bookmarks = true,
+            chapters = true,
         )
         assertFalse(PlayerMenuEntry.PictureInPicture in entries)
         assertEquals(PlayerMenuEntry.entries.size - 1, entries.size)
@@ -121,6 +131,7 @@ class PlayerMenuTest {
                 markWatched = true,
                 paused = true,
                 bookmarks = true,
+                chapters = true,
             ).toSet(),
         )
     }
@@ -134,6 +145,8 @@ class PlayerMenuTest {
                 PhoneMenuEntry.VolumeBoost,
                 PhoneMenuEntry.SleepTimer,
                 PhoneMenuEntry.AbLoop,
+                PhoneMenuEntry.NextChapter,
+                PhoneMenuEntry.PreviousChapter,
                 PhoneMenuEntry.NextFrame,
                 PhoneMenuEntry.PreviousFrame,
                 PhoneMenuEntry.AddBookmark,
@@ -151,9 +164,10 @@ class PlayerMenuTest {
                 markWatched = true,
                 paused = true,
                 bookmarks = true,
+                chapters = true,
             ),
         )
-        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true, paused = true, bookmarks = true).toSet())
+        assertEquals(PhoneMenuEntry.entries.toSet(), PlayerMenu.phoneEntries(true, true, true, true, paused = true, bookmarks = true, chapters = true).toSet())
     }
 
     @Test
@@ -181,7 +195,7 @@ class PlayerMenuTest {
     fun `the key table names every key the player answers, each once`() {
         val keys = RemoteKeys.ROWS.map { it.first }
         assertEquals(keys.size, keys.toSet().size)
-        listOf("OK", "Play / Pause", "Next / Previous", "Back", "Hold OK, controls up", "OK on the time", "0 to 9").forEach {
+        listOf("OK", "Play / Pause", "Next / Previous", "Back", "Hold OK, controls up", "OK on the time", "0 to 9", "Up, after a long jump").forEach {
             assertTrue("missing $it", it in keys)
         }
         assertTrue(RemoteKeys.ROWS.all { (key, does) -> key.isNotBlank() && does.isNotBlank() })

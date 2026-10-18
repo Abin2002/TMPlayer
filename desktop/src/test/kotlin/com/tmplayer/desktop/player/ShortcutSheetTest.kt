@@ -24,6 +24,8 @@ class ShortcutSheetTest {
         "Repeat A to B: start, end, off" to { it == PlayerAction.AbRepeat },
         "Add a bookmark" to { it == PlayerAction.AddBookmark },
         "Jump to 0 to 90 %" to { it is PlayerAction.JumpToTenth },
+        "Go to a time" to { it == PlayerAction.GoToTime },
+        "Back to where you were before a long jump" to { it == PlayerAction.UndoSeek },
         "Start, end" to { it == PlayerAction.JumpToTenth(0) || it == PlayerAction.JumpToEnd },
         "Volume" to { it is PlayerAction.VolumeBy },
         "Seek 10 s with the wheel" to { false },

@@ -94,6 +94,8 @@ class PlayerTvMenu(
     private val loop: () -> AbLoop? = { null },
     /** Whether the video is paused, which is when the frame steps are offered. */
     private val paused: () -> Boolean = { false },
+    /** The chapter playing ("Chapter 3 of 12: The Station"), or null for a file without chapters. */
+    private val chapter: () -> String? = { null },
     private val onEntry: (PlayerMenuEntry) -> Unit,
     private val onShape: (VideoScale) -> Unit = {},
     private val onClosed: () -> Unit,
@@ -139,6 +141,7 @@ class PlayerTvMenu(
                     openInAnotherApp(),
                     paused(),
                     bookmarks(),
+                    chapters = chapter() != null,
                 ).map { action(it) },
                 onDismiss = ::close,
                 onClose = ::close,
@@ -200,6 +203,11 @@ class PlayerTvMenu(
                         ?: s.playerLoopFromDetail(clock(marked.startMs))
                 },
             ) { choose(entry) }
+            // The chapter playing as the detail, so a step is a choice and not a guess.
+            PlayerMenuEntry.NextChapter ->
+                MenuAction(s.playerChapterNext, TmIcons.SkipNext, detail = chapter()) { choose(entry) }
+            PlayerMenuEntry.PreviousChapter ->
+                MenuAction(s.playerChapterPrevious, TmIcons.SkipPrevious) { choose(entry) }
             PlayerMenuEntry.NextFrame ->
                 MenuAction(s.playerFrameNext, TmIcons.ChevronRight) { choose(entry) }
             PlayerMenuEntry.PreviousFrame ->

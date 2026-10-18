@@ -62,6 +62,21 @@ class PlayerKeysTest {
     }
 
     @Test
+    fun `shift and backspace go back to before a long jump, as mpv's revert-seek`() {
+        assertEquals(PlayerAction.UndoSeek, action(Key.Backspace, shift = true, context = KeyContext(speedIsNormal = true)))
+        assertEquals(PlayerAction.UndoSeek, action(Key.Backspace, shift = true, context = KeyContext(speedIsNormal = false)))
+    }
+
+    @Test
+    fun `the command key and G ask for a time to go to, Cmd on a Mac`() {
+        assertEquals(PlayerAction.GoToTime, action(Key.G, ctrl = true))
+        assertEquals(PlayerAction.GoToTime, action(Key.G, meta = true, context = KeyContext(mac = true)))
+        // G alone is still the skip pill's key.
+        assertEquals(PlayerAction.SkipSegment, action(Key.G))
+        assertEquals(null, action(Key.G, ctrl = true, context = KeyContext(mac = true)))
+    }
+
+    @Test
     fun `fullscreen keys`() {
         assertEquals(PlayerAction.ToggleFullscreen, action(Key.F))
         assertEquals(PlayerAction.ToggleFullscreen, action(Key.F11))

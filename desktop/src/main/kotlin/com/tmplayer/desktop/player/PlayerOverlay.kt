@@ -33,6 +33,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -848,6 +849,12 @@ internal fun PlayerMenu(
                     else -> s.playerLoopClear
                 }
                 Entry(repeat, trailing = "R") { pick(MenuAction.Do(PlayerAction.AbRepeat)) }
+                Entry(s.playerGoToTime, trailing = s.playerKeyCommandG(commandKey(s))) { pick(MenuAction.Do(PlayerAction.GoToTime)) }
+                // A chaptered file only; the menu stays open for the next step, as the frame steps do.
+                if (status.chapters.isNotEmpty()) {
+                    Entry(s.playerChapterNext) { onAction(MenuAction.Do(PlayerAction.ChapterStep(forward = true))) }
+                    Entry(s.playerChapterPrevious) { onAction(MenuAction.Do(PlayerAction.ChapterStep(forward = false))) }
+                }
                 // Paused only, as on the phone; the menu stays open for the next step.
                 if (!status.playing) {
                     Entry(s.playerFrameNext, trailing = ".") { onAction(MenuAction.Do(PlayerAction.FrameStep(forward = true))) }
@@ -1106,6 +1113,52 @@ internal fun BoxScope.SkipPill(kind: SkipKind, lifted: Boolean, onSkip: () -> Un
     }
 }
 
+/**
+ * "Back to 12:34" after a long jump ([com.tmplayer.player.SeekUndo]): bottom left, where the
+ * resume notice sits, since it answers the same question (where was I?). Slides in from its edge
+ * (fades only with reduced motion), sinks a little under the press, and takes the viewer back.
+ * Shift+Backspace does the same; the tooltip says so.
+ */
+@Composable
+internal fun BoxScope.UndoSeekChip(backToMs: Long, lifted: Boolean, onUndo: () -> Unit) {
+    val s = LocalStrings.current
+    val reduced = com.tmplayer.ui.theme.rememberReducedMotion()
+    val label = s.playerBackTo(SeekMath.clock(backToMs))
+    val shown = remember { androidx.compose.animation.core.MutableTransitionState(false) }.apply { targetState = true }
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        if (pressed && !reduced) 0.94f else 1f,
+        tween(if (reduced) 0 else 120),
+        label = "undo-press",
+    )
+    AnimatedVisibility(
+        shown,
+        Modifier.align(Alignment.BottomStart).padding(start = 16.dp, bottom = if (lifted) 120.dp else 24.dp),
+        enter = if (reduced) fadeIn(tween(120)) else slideInHorizontally(tween(220, easing = Motion.Standard)) { -it } + fadeIn(tween(220)),
+        exit = fadeOut(tween(120)),
+    ) {
+        Tip("$label (${s.keysShiftBackspace})") {
+            Row(
+                Modifier.testTag("undo-seek").graphicsLayer { scaleX = scale; scaleY = scale }
+                    .height(44.dp).clip(RoundedCornerShape(22.dp))
+                    .background(NextUpSurface)
+                    .background(if (hovered) Color(0x33FFFFFF) else Color.Transparent)
+                    .border(1.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(22.dp))
+                    .hoverable(interaction)
+                    .clickable(interactionSource = interaction, indication = androidx.compose.foundation.LocalIndication.current, onClick = onUndo)
+                    .padding(start = 14.dp, end = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(TmIcons.History, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                Text(label, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            }
+        }
+    }
+}
+
 /** "Episodes" with its glyph, a pill on the bar: words, since a stack of frames alone says little. */
 @Composable
 private fun EpisodesButton(onClick: () -> Unit) {
@@ -1246,6 +1299,9 @@ internal fun BoxScope.StatusSheet(
                         TextButton(onClick = onRetry) { Text(s.commonTryAgain) }
                         TextButton(onClick = onBack) { Text(s.commonBack) }
                     }
+                    // The logs to send with a report of it: saved and shown, or straight to GitHub.
+                    Spacer(Modifier.height(8.dp))
+                    com.tmplayer.desktop.ui.SendLogsActions()
                 }
                 is Phase.Countdown -> {
                     Text(s.playerNextUp(nextLabel(phase.next)), color = Color.White, fontSize = 17.sp)

@@ -25,6 +25,12 @@ enum class PlayerMenuEntry {
     SleepTimer,
     /** A-B repeat: set the start, then the end, then stop; the line says which comes next. */
     AbLoop,
+    /**
+     * A chaptered file only ([MkvChapters]). Lines rather than keys, as the frame steps are: Left
+     * and Right on the bare picture jump and on the bar travel, and 1.16.0's key model stays.
+     */
+    NextChapter,
+    PreviousChapter,
     /** Only while paused, and only here: the arrows already seek, so frame steps get no key. */
     NextFrame,
     PreviousFrame,
@@ -56,6 +62,9 @@ enum class PhoneMenuEntry {
     SleepTimer,
     /** A-B repeat, as on the television: one line that says what the next press does. */
     AbLoop,
+    /** A chaptered file only, as on the television. */
+    NextChapter,
+    PreviousChapter,
     /** Only while paused: a step on a playing video would be lost in the next frame anyway. */
     NextFrame,
     PreviousFrame,
@@ -86,6 +95,8 @@ fun PhoneMenuEntry.label(
     PhoneMenuEntry.VolumeBoost -> L.playerVolumeBoost
     PhoneMenuEntry.SleepTimer -> sleepDetail?.let { L.playerSleepTimerNow(it) } ?: L.playerSleepTimer
     PhoneMenuEntry.AbLoop -> PlayerMenu.loopLabel(loop)
+    PhoneMenuEntry.NextChapter -> L.playerChapterNext
+    PhoneMenuEntry.PreviousChapter -> L.playerChapterPrevious
     PhoneMenuEntry.NextFrame -> L.playerFrameNext
     PhoneMenuEntry.PreviousFrame -> L.playerFramePrevious
     PhoneMenuEntry.OpenInAnotherApp -> L.playerOpenInAnotherApp
@@ -129,6 +140,8 @@ object PlayerMenu {
      * [bookmarks] is whether the video can keep bookmarks: like the Watched list, they are keyed
      * by its message. Their lines sit with the repeat and the frame steps, the other ways of
      * working through one moment of a video.
+     *
+     * [chapters] is whether the file has chapter marks, which adds the chapter steps.
      */
     fun tvEntries(
         pictureInPicture: Boolean,
@@ -137,6 +150,7 @@ object PlayerMenu {
         openInAnotherApp: Boolean = true,
         paused: Boolean = false,
         bookmarks: Boolean = false,
+        chapters: Boolean = false,
     ): List<PlayerMenuEntry> = buildList {
         add(PlayerMenuEntry.LockScreen)
         add(PlayerMenuEntry.PlaybackDetails)
@@ -144,6 +158,10 @@ object PlayerMenu {
         add(PlayerMenuEntry.VolumeBoost)
         add(PlayerMenuEntry.SleepTimer)
         add(PlayerMenuEntry.AbLoop)
+        if (chapters) {
+            add(PlayerMenuEntry.NextChapter)
+            add(PlayerMenuEntry.PreviousChapter)
+        }
         if (paused) {
             add(PlayerMenuEntry.NextFrame)
             add(PlayerMenuEntry.PreviousFrame)
@@ -165,7 +183,7 @@ object PlayerMenu {
      * it; [openInAnotherApp] false for a chat that restricts saving; [markWatched]
      * needs a message to point at, and so does [bookmarks]; [saveToDownloads] only while the video
      * can still become one; [paused] adds the frame steps. Lines rather than buttons, so the row
-     * CP37 cleared stays clear.
+     * CP37 cleared stays clear. [chapters] adds the chapter steps.
      */
     fun phoneEntries(
         pictureInPicture: Boolean,
@@ -174,12 +192,17 @@ object PlayerMenu {
         markWatched: Boolean,
         paused: Boolean = false,
         bookmarks: Boolean = false,
+        chapters: Boolean = false,
     ): List<PhoneMenuEntry> = buildList {
         add(PhoneMenuEntry.LockScreen)
         if (pictureInPicture) add(PhoneMenuEntry.PictureInPicture)
         add(PhoneMenuEntry.VolumeBoost)
         add(PhoneMenuEntry.SleepTimer)
         add(PhoneMenuEntry.AbLoop)
+        if (chapters) {
+            add(PhoneMenuEntry.NextChapter)
+            add(PhoneMenuEntry.PreviousChapter)
+        }
         if (paused) {
             add(PhoneMenuEntry.NextFrame)
             add(PhoneMenuEntry.PreviousFrame)
@@ -211,6 +234,7 @@ object RemoteKeys {
         L.playerKeyDown to L.playerKeyDownDoes,
         L.playerKeyTime to L.playerKeyTimeDoes,
         L.playerKeyDigits to L.playerKeyDigitsDoes,
+        L.playerKeyUpJump to L.playerKeyUpJumpDoes,
         L.playerKeyRewind to L.playerKeyRewindDoes,
         L.playerKeyNext to L.playerKeyNextDoes,
         L.playerKeyHoldOk to L.playerKeyHoldOkDoes,
