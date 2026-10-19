@@ -156,6 +156,12 @@ jobs:
           # the build is the same, and its reports' stack traces stay minified.
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
+          # Said in the run's summary rather than left to be found out from Sentry, where every
+          # crash of a release without its mapping reads as renamed classes and "SourceFile". The
+          # mapping is still kept as a workflow artifact below, for an upload by hand.
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "::notice::SENTRY_AUTH_TOKEN is not set. The R8 mapping is not uploaded, so this release's crash reports stay unreadable until it is uploaded by hand."
+          fi
           ./gradlew :app:assembleRelease \
             -PtmVersionName=${{ needs.version.outputs.name }} \
             -PtmVersionCode=${{ needs.version.outputs.code }}
