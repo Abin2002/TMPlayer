@@ -228,6 +228,16 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
   - [ ] One step count and bar across the whole run, Back on every screen, Skip all kept, D-pad order on TV top to bottom then the buttons; the onboarding pictures and their specs (scripts/annotations, `scripts/tour-badges.py`) retaken for the merged pages.
   - [ ] Render shots of every new screen on phone portrait and landscape, TV and desktop, light and dark, and a timed run on the stick against today's flow.
 - [ ] CP101 Robolectric: a setting changed in the middle of a render test (DataStore written from the test, collected by the screen) sometimes never reaches the screen when other render tests ran first in the same process; AppearanceRenderTest dropped its two checks on it (the switch folding under Light, the wallpaper line) on 2026-10-19 and keeps the shots, the behaviour checked on the phone instead. Find why (the shared SettingsFile, the paused looper and DataStore's IO collector) and restore them. Also FeaturedCarouselRenderTest's first case sat for 58 minutes in one full local run and a CI run took 56 minutes.
+- [ ] U31 Sentry on the free plan: a token for the mapping upload, an email alert, spike protection (see the U31 section; needed before CP102a)
+- [ ] CP102 Crash reports that arrive and can be read (user, 2026-10-19; plan below, parts in this order):
+  - [ ] CP102a Mapping upload from CI and the 1.27.x backfill (needs U31)
+  - [ ] CP102b A crash from an older build is still sent, decoded with that build's mapping
+  - [ ] CP102c The crash prompt shown before Home builds, so a start-up crash loop is still reported
+  - [ ] CP102d App not responding and native crashes (TDLib, mpv, FFmpeg)
+  - [ ] CP102e Stay inside the free plan's 5,000 errors a month
+  - [ ] CP102f The crash report question in the first run (with CP100)
+  - [ ] CP102g Crash reports on the desktop
+  - [ ] CP102h (ask the user first) Chosen errors the app survives
 
 ## Standing rules
 
@@ -1101,6 +1111,122 @@ and before batch 2, since batch 2 builds on the same screens. Patterns only, non
 Needs U30. OAuth on each platform (TV through a QR or device code), push watched episodes and progress, pull
 the lists for a Home row. Privacy page, sitemap lastmod and `llms.txt` updated.
 
+### CP102 Crash reports that arrive and can be read
+**Why:** the user, 2026-10-19: "is it optimal way to get more reports? am i missing out anything?" The
+privacy design stays as it is (off on a fresh install, the manifest's `io.sentry.auto-init` off, the
+beforeSend gate, `CrashReportScrubber`, no breadcrumbs, sessions or tracing). What is wrong is that few
+reports arrive and the ones that do cannot be read. The account is Sentry's free Developer plan: one user,
+5,000 errors a month, email alerts only, about 30 days of retention (check sentry.io/pricing; the privacy
+page's "at most 90 days" stays true).
+
+**Found 2026-10-19:**
+- No release has uploaded its R8 mapping. `SENTRY_AUTH_TOKEN` is not a repository secret, and the 1.27.0
+  run (39192922014) shows it empty, so `autoUploadProguardMapping` was false. The Nord 2 crash in Sentry
+  (issue 154596076) reads `iw2 in f`, `SourceFile`, every frame "Not in app". The last is a symptom, not a
+  setting: sentry-android-core adds the package name as an in-app include itself
+  (`AndroidOptionsInitializer`, 8.61.0), and `iw2` does not match `com.tmplayer` until it is decoded.
+- The mappings are kept only as workflow artifacts (`mapping-<version>`, 90 days, the most a public repo
+  allows). 1.27.0's and 1.27.1's expire on 2027-01-17; after that a build's crashes can never be read.
+- `CrashReports.review()` deletes a pending crash from another build. People who crash update next (1.27.1
+  was the fix for 1.27.0's crash), so those reports are lost.
+- The pending prompt is drawn inside MainActivity's shell. A crash before it is drawn (1.27.0's Home crash)
+  repeats on every start, overwrites `crash/pending.json`, and is never asked about.
+- With the switch off only Java and Kotlin crashes are written down. App not responding (ANR) and native
+  crashes are never recorded; with it on, native crashes are still missed, since only core is included.
+- The desktop has no crash reporting at all (`StartupFailure` only shows a launch error). No handled error is
+  ever captured (no `captureException` anywhere).
+
+**CP102a Mapping upload from CI and the backfill** (needs U31)
+- With `SENTRY_AUTH_TOKEN` set, check on a test tag or a local `assembleRelease` that
+  `uploadSentryProguardMappingsRelease` uploads (sentry-cli prints the UUID) and that Sentry's Project
+  Settings, ProGuard lists it. If an organization token is refused for debug files, use the personal token
+  from U31.
+- release.yml: a `::notice::` when `SENTRY_AUTH_TOKEN` is unset, like the DSN's, so a release without a
+  readable mapping says so.
+- Backfill 1.27.0 and 1.27.1: `gh run download <run> -n mapping-<version>`, the UUID from the released APK
+  (`unzip -p TMPlayer-<version>-universal.apk assets/sentry-debug-meta.properties`, key
+  `io.sentry.ProguardUuids`), then `sentry-cli upload-proguard --uuid <uuid> mapping-<version>.txt`
+  (`--org nevil-i0 --project <id>`). Then open issue 154596076 and check it reads as source.
+- Keep every mapping past 90 days: ask the user where (an asset on a draft release that is never
+  published, which only collaborators see, or a private repo). Uploading to a release needs their go-ahead.
+- **Done when:** a release build's crash (a debug-only crash button in the promo or a test tag) shows class
+  names and line numbers in Sentry.
+
+**CP102b A crash from an older build is still sent**
+- `CrashRecord` also keeps the build's ProGuard UUID (read from `assets/sentry-debug-meta.properties` at
+  `watch()`), and `toEvent()` sets `release`, `dist` (the version code) and a `DebugMeta` with that UUID as
+  a `proguard` image. Sentry keeps an image already on the event: `DebugMeta.isMatchingDebugImage` in
+  8.61.0 treats an existing ProGuard image as taking precedence over the option's, so the running build's
+  UUID is not added beside it.
+- `review()` stops deleting other builds' crashes; it deletes one older than 30 days instead (the free
+  plan's retention). A record without a UUID (written by 1.27.1 or older) is still deleted.
+- The privacy page's "A crash from an older version of the app is deleted without asking" changes to match.
+- **Done when:** a unit test writes a record as build A, reads it as build B and checks release, dist and
+  the single proguard image; a promo crash in one build is sent from the next and reads as source.
+
+**CP102c The crash prompt before Home builds**
+- `CrashRecord` gains the time since the process started. A crash in the first ~15 s of a run, twice in a
+  row, is a start-up loop.
+- MainActivity checks `CrashReports.pending` before building the shell. With a pending start-up crash it
+  shows only the crash question (phone and TV, focus on Send), then builds the shell after the answer. The
+  ordinary prompt keeps its place for other crashes.
+- With the switch on, a start-up crash is sent by `review()` before the shell builds and flushed
+  (`Sentry.flush`), so the next start's crash cannot cut it off.
+- **Done when:** a promo flag that throws in Home's first composition gives the question on the second
+  start, on the phone and the TV emulator, and Send reaches Sentry.
+
+**CP102d App not responding and native crashes**
+- With the switch on: `options.isTombstoneEnabled = true` (in core since 8.32, Android 12 and newer, from
+  `ApplicationExitInfo.REASON_CRASH_NATIVE`, no NDK module needed). ANR v2 is on by default. Leave
+  `attachAnrThreadDump` and `attachRawTombstone` off (attachments count against the plan, and a raw dump
+  is more than the privacy page lists). TDLib's and FFmpeg's prebuilt libraries have no symbols, so frames
+  show the library and offset; that is enough to tell which one.
+- With the switch off (Android 11 and newer): at start, read `getHistoricalProcessExitReasons` for an ANR
+  or native crash newer than the last one asked about, and offer it in the same prompt ("TMPlayer stopped
+  responding" or "TMPlayer closed unexpectedly"). Send brings the SDK up for that report, as
+  `sendPending` does, and the ANR and tombstone integrations send the latest exit. Don't send stores its
+  timestamp, and beforeSend drops a `HistoricalAppExitInfo` or tombstone event at or before it, so turning
+  the switch on later never sends what was declined.
+- The scrubber covers the new events: registers already go, thread names stay, the abort message is
+  redacted, debug images are kept (they are what decodes a native frame). The privacy page lists ANRs and
+  native crashes.
+- **Done when:** on the TV emulator (Android 12 and newer) a debug-only ANR (the main thread asleep for 10 s
+  while a key is pressed) and a debug-only native crash arrive in Sentry with the switch on, and are offered,
+  sent and declined correctly with it off.
+
+**CP102e Stay inside the free plan**
+- In beforeSend, after the scrubber: the same crash (exception type plus the top in-app frame) at most once
+  a day per device, and no more than 10 events a day per device, counted in a small private file. A crash
+  loop on many phones must not use the month's 5,000 in a day.
+- Sentry's own spike protection (U31) is the second line.
+- **Done when:** a unit test sends the same event twice and a burst of twelve, and checks what is dropped.
+
+**CP102f The question in the first run** (with CP100)
+- A "Send crash reports" row in CP100's Preferences screen, off, with one line saying what a report holds and
+  a link to the privacy page. Not preselected, no nudge (consent). Settings and the per-crash prompt stay.
+- Strings in all 21 languages; the privacy page says where it is asked.
+- **Done when:** render shots of the row (phone, TV, desktop when CP102g lands), and turning it on starts the
+  SDK.
+
+**CP102g Crash reports on the desktop**
+- `io.sentry:sentry` (plain JVM, no Compose integration) on Windows, Linux and macOS, the same opt-in switch
+  in Settings, the same pending file and prompt, the same scrubber (moved where both apps can use it; it only
+  needs `io.sentry.protocol`). A separate Sentry project, `tmplayer-desktop`, sharing the plan's quota.
+- The desktop is shrunk but not obfuscated (`obfuscate.set(false)`), so no mapping is needed.
+- `StartupFailure` keeps showing the launch error; the report is sent first when the switch is on.
+- The privacy page drops "It exists on Android phones and Android TV only".
+- **Done when:** a dev-only crash on the AppImage and in the win11 VM arrives with the switch on, and is
+  offered with it off.
+
+**CP102h (ask the user first) Chosen errors the app survives**
+- A short list only, each as a `warning`, only with the switch on, through the scrubber and CP102e's limits:
+  a player error that ends playback (the codec and container names, never the file), a failed cast LOAD, a
+  TDLib error that ends sign in. The privacy page would have to say so, which is why it waits for a yes.
+
+**STOP** after each part: build, unit tests, the dash grep, commit, tick, push. The device checks for
+CP102b to CP102d can wait for one pass at the end. Nothing here needs a release of its own; it goes out with
+the next one (not before 2026-10-26).
+
 ## Your tasks
 
 ### CP69 Full setup, Save mobile data and a quick tour after sign in (for 1.26.0)
@@ -1396,6 +1522,19 @@ Permission email sent 2026-10-05. Nothing MSone-related is built (not even a lin
   production (about 7 days review).
 - **U29** Production with a staged rollout (20 %), then **Advanced settings → Form factors → Android TV**, TV
   screenshots and banner, a separate TV review.
+
+### U31 Sentry on the free plan
+1. **A token for the mapping upload.** sentry.io, **Settings → Developer Settings → Organization Tokens →
+   Create New Token**. On this page there are no scopes to pick: an organization token always gets
+   `org:ci` (release creation and uploads), which is why the earlier advice to give it release rights could
+   not be followed. If that page is missing or the upload is refused, use **User Settings → Personal Tokens**
+   with Project: Read & Write, Release: Admin and Organization: Read instead.
+2. `gh secret set SENTRY_AUTH_TOKEN` and paste it (nothing is echoed). For the backfill on this machine,
+   also `export SENTRY_AUTH_TOKEN=...` in the shell, or give it to Claude in that session.
+3. **Alerts → Create Alert → Issues:** email when a new issue is created and when one regresses (the free
+   plan has email, not Slack).
+4. **Settings → Subscription (or Spike Protection):** check spike protection is on for the project.
+5. Tell Claude: done, and which token kind worked.
 
 ## Design reference
 
