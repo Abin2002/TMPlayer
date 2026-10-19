@@ -471,6 +471,14 @@ private fun SetupOverlay(state: ShellState, chatsLoaded: Boolean) {
             onDone = finish,
             fit = fit,
             recommendations = recommendations,
+            // The crash reports question (CP102f), in a build that has somewhere to send them.
+            crashReporting = remember {
+                com.tmplayer.ui.onboarding.CrashReporting(com.tmplayer.desktop.DesktopCrashReports.available) { on ->
+                    com.tmplayer.platform.Background.scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        if (on) com.tmplayer.desktop.DesktopCrashReports.start(true) else com.tmplayer.desktop.DesktopCrashReports.stop()
+                    }
+                }
+            },
         )
     }
 }

@@ -50,6 +50,14 @@ val generateBuildInfo = tasks.register("generateBuildInfo") {
     // Optional: without it films get no posters, as on Android; shows still come from TVmaze.
     val tmdbKey = localProps.getProperty("TMDB_API_KEY") ?: System.getenv("TMDB_API_KEY") ?: ""
     inputs.property("tmdbKey", tmdbKey)
+    // Optional: without it the desktop has nowhere to send a crash report, and Settings and the
+    // setup never offer the switch, as on Android. The desktop's own Sentry project first
+    // (tmplayer-desktop), else the phone's; a blank value counts as none.
+    val sentryDsn = listOf("SENTRY_DSN_DESKTOP", "SENTRY_DSN")
+        .flatMap { listOf(localProps.getProperty(it), System.getenv(it)) }
+        .firstOrNull { !it.isNullOrBlank() }
+        .orEmpty()
+    inputs.property("sentryDsn", sentryDsn)
     inputs.property("version", desktopVersion)
     outputs.dir(out)
     doLast {
@@ -64,6 +72,7 @@ val generateBuildInfo = tasks.register("generateBuildInfo") {
             |    const val TG_API_HASH = "$apiHash"
             |    const val OPENSUBTITLES_API_KEY = "$openSubtitlesKey"
             |    const val TMDB_API_KEY = "$tmdbKey"
+            |    const val SENTRY_DSN = "$sentryDsn"
             |}
             |""".trimMargin(),
         )
@@ -279,6 +288,9 @@ dependencies {
     // The Cast protocol's messages are JSON (CP73). Already on the runtime classpath through
     // :core's jvm target; named here so the cast client compiles against it.
     implementation(libs.json)
+    // Crash reports, only once the viewer turns them on (DesktopCrashReports): the plain JVM SDK,
+    // with no integration of its own beyond the uncaught exception handler.
+    implementation(libs.sentry)
     runtimeOnly(libs.slf4j.nop)
 
     testImplementation(libs.junit)

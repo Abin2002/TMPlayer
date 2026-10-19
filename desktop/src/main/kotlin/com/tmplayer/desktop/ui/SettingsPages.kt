@@ -595,6 +595,24 @@ internal fun AboutRows(state: ShellState, version: String, onShowAbout: () -> Un
     Action(s.settingsPrivacy, s.settingsPrivacyComputer, TmIcons.Lock, end = RowEnd.External) {
         OpenExternal.browse(About.PRIVACY)
     }
+    // The one setting that sends anything anywhere but Telegram and GitHub, off until it is asked
+    // for (CP102g). A build with no DSN has nowhere to send a report, so the row is not drawn.
+    if (com.tmplayer.desktop.DesktopCrashReports.available) {
+        val crashReports by settings.crashReports.collectAsState(initial = false)
+        Toggle(
+            s.settingsCrashReports,
+            if (crashReports) s.settingsCrashReportsOn else s.settingsCrashReportsOff,
+            crashReports,
+            icon = TmIcons.Warning,
+        ) { on ->
+            scope.launch {
+                runCatching { settings.setCrashReports(on) }
+                withContext(Dispatchers.IO) {
+                    if (on) com.tmplayer.desktop.DesktopCrashReports.start(true) else com.tmplayer.desktop.DesktopCrashReports.stop()
+                }
+            }
+        }
+    }
     Action(s.settingsLawfulUse, s.settingsLawfulUseDetail, TmIcons.Gavel, end = RowEnd.External) {
         OpenExternal.browse(About.LEGAL)
     }

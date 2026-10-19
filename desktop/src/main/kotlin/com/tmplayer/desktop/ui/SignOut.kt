@@ -75,6 +75,10 @@ internal suspend fun signOut(
     val downloads = runCatching { settings.downloadsNow() }.getOrDefault(emptyList())
     if (deleteDownloads) downloads.forEach { runCatching { DownloadIndex.delete(settings, it) } }
     runCatching { Td.clearMediaCache() }
+    // Consent was the leaving account's to give: reporting stops, and a crash waiting to be asked
+    // about goes, as on the phone. clearEverything turns the switch itself off.
+    runCatching { com.tmplayer.desktop.DesktopCrashReports.stop() }
+    runCatching { com.tmplayer.desktop.DesktopCrashReports.discardPending() }
     runCatching { settings.clearEverything(keepDownloads = !deleteDownloads) }
     // What this account watched is its own as much as the preferences are, and it lives in a
     // file of its own, so it is cleared on its own, and so is Watch later, which shares it.
