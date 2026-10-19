@@ -205,6 +205,15 @@ class HomeViewModel(
 
     private var showsJob: Job? = null
 
+    /**
+     * The rows whose last fetch failed or ran past [ROW_TIMEOUT_MS], asked for again once Telegram
+     * is reachable ([retryFailed]): a row lost to a dropped line comes back with the line, rather
+     * than staying gone, or a skeleton waiting for good, until the next launch. Declared ahead of
+     * `init`, whose collector of [Td.connected] can call [retryFailed] before the constructor ends.
+     */
+    private val failedChats = java.util.Collections.synchronizedSet(mutableSetOf<Long>())
+    @Volatile private var recentFailed = false
+
     init {
         // A show's new episodes are worked out again whenever anything they are drawn from moves:
         // a search landing, a starred chat's row or the recent row arriving or refreshing (which
@@ -275,14 +284,6 @@ class HomeViewModel(
             if (chatId in following || following.size >= FOLLOW_MAX) handle.close() else following[chatId] = handle
         }
     }
-
-    /**
-     * The rows whose last fetch failed or ran past [ROW_TIMEOUT_MS], asked for again once Telegram
-     * is reachable ([retryFailed]): a row lost to a dropped line comes back with the line, rather
-     * than staying gone, or a skeleton waiting for good, until the next launch.
-     */
-    private val failedChats = java.util.Collections.synchronizedSet(mutableSetOf<Long>())
-    @Volatile private var recentFailed = false
 
     /** Fetches a starred chat's row, once (again after a post in it). */
     fun request(chatId: Long) = once("chat:$chatId") {
