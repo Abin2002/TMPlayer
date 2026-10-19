@@ -2494,7 +2494,7 @@
     "controls_title_tv": "你的遙控器",
     "controls_tv_back": "返回鍵回到上一層。在播放器中，左右鍵用來跳轉。",
     "controls_tv_ok": "OK 開啟或播放。長按 OK 查看更多選項，例如「加入我的最愛」。",
-    "controls_tv_rail": "按左鍵進入側邊選單。",
+    "controls_tv_rail": "按上鍵或返回鍵進入頂部列。",
     "downloads_list": "「下載」列出保存在這部裝置上的所有內容。",
     "downloads_remove": "它們佔用的空間，以及「釋出空間」。同一頁上的「看完後移除」會在你看完後刪除下載項目。",
     "downloads_save": "下載一部影片或整季，不需連線也能觀看。",
