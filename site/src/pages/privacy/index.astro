@@ -13,7 +13,7 @@ Astro.locals.lang = ENGLISH;
 <Base path="/privacy/" title="Privacy policy - TMPlayer" description="What TMPlayer keeps on your phone, TV or computer, which services it contacts, what an opt-in crash report contains, and how to delete your data.">
   <JsonLd slot="head" data={breadcrumb(['Privacy', '/privacy/'])} />
   <HeaderPlain />
-  <PolicyPage eyebrow="Effective 15 October 2026" title="Privacy">
+  <PolicyPage eyebrow="Effective 19 October 2026" title="Privacy">
     <p class="policy-lede">TMPlayer is an unofficial Telegram video player for Android phones, Android TV, Windows and Linux, with a macOS preview for Apple Silicon. It talks directly to Telegram from your device, using your own Telegram account. There is no TMPlayer account and no developer-operated backend.</p>
 
     <PolicySection title="Who runs TMPlayer">
@@ -38,7 +38,7 @@ Astro.locals.lang = ENGLISH;
         <li><strong>Telegram</strong> handles sign-in, chat and channel lists, file metadata and media downloads, under <a href="https://telegram.org/privacy" rel="noopener">Telegram's privacy policy</a>. Where Telegram shows sponsored messages, TMPlayer reports to Telegram when one is seen and when it is clicked, as every Telegram app must.</li>
         <li><strong>tmplayer.org</strong>, hosted by Vercel, is asked for one small file, <code>latest.json</code>, that names the newest release, when the app starts and every six hours while it runs. <strong>GitHub</strong> is asked instead when the site cannot be reached. Like any web request, it reveals your IP address, and it names the TMPlayer version you run. It carries nothing about your account. Settings can turn it off. An update is downloaded from GitHub only after you choose to update.</li>
         <li><strong>Your device's speech-recognition provider (Android TV only)</strong> receives audio only when you deliberately start voice search.</li>
-        <li><strong>Sentry</strong> receives a crash report, and only if you have switched crash reporting on in Settings or agreed to send that one report. See below.</li>
+        <li><strong>Sentry</strong> receives a crash report, and only if you have switched crash reporting on (in the setup or in Settings) or agreed to send that one report. See below.</li>
         <li><strong>OpenSubtitles.com</strong> is asked only when you choose Search online in the subtitle picker. A search sends the video's file name (or the parsed title, season and episode), its OpenSubtitles hash (a number made from its size and its first and last 64 KB, never the file itself) and the languages wanted. Signing in under Settings, Online subtitles sends your OpenSubtitles username and password to OpenSubtitles once; the password is not kept, only the session OpenSubtitles returns, and downloads count against your own OpenSubtitles account. Their <a href="https://www.opensubtitles.com/en/privacy" rel="noopener">privacy policy</a> applies. Searches and subtitles are cached on your device for at most six months, and Settings can clear them.</li>
         <li><strong>SubDL</strong> is asked the same kind of search, with your own SubDL key, only if you have entered one under Settings, Online subtitles.</li>
         <li><strong>TMDB, TVmaze and AniList</strong> are asked for posters and overviews. This is on by default and can be switched off under Settings, Posters and details. A lookup sends the video's cleaned-up title, and the year, season and episode read from its name, never the file or your account. Answers are cached on your device for at most six months, and Settings can clear them.</li>
@@ -48,17 +48,21 @@ Astro.locals.lang = ENGLISH;
     </PolicySection>
 
     <PolicySection title="Crash reporting, only with your consent">
-      <p><strong>Off on a fresh install, and off again after signing out.</strong> With the switch off, no crash reporting library is started and no server is contacted. It exists on Android phones and Android TV only.</p>
-      <p>With the switch off, a crash is written to a file inside the app's private storage on your device, and nothing is sent. The next time TMPlayer starts, it asks whether to send that report. Send sends it once; ticking Always send also turns the switch on; Don't send deletes the file. A crash from an older version of the app is deleted without asking, and so is one waiting when you sign out.</p>
-      <p>With it on, or when you choose Send, a crash sends exactly this to <a href="https://sentry.io" rel="noopener">Sentry</a>, which stores it on the developer's behalf in its EU region (Frankfurt, Germany):</p>
+      <p><strong>Off on a fresh install, and off again after signing out.</strong> Crash reports are off until you turn them on: you are asked once, in the setup after you first sign in, and can change your answer any time in Settings. With the switch off, no crash reporting library is started and no server is contacted. It exists on Android phones, Android TV, Windows, Linux and macOS.</p>
+      <p>With the switch off, a crash is written to a file inside the app's private storage on your device (on a computer, in the TMPlayer data folder listed above), and nothing is sent. The next time TMPlayer starts, it asks whether to send that report. Send sends it once; ticking Always send also turns the switch on; Don't send deletes the file. A crash from an older version of the app is still offered, and is sent as that version. One that has waited more than 30 days is deleted without asking, and so is one written on Android by a version before 1.27.2, which did not record its build ID. One still waiting when you sign out is deleted.</p>
+      <p>On Android 11 and newer, TMPlayer also asks after Android closed it for not responding (an ANR), and from Android 12 after a crash in native code. Android keeps that record, not TMPlayer. Send sends it once; Don't send is remembered on the device, and that report is never sent, even if you turn the switch on later.</p>
+      <p>With it on, or when you choose Send, a crash, an ANR or a native crash sends exactly this to <a href="https://sentry.io" rel="noopener">Sentry</a>, which stores it on the developer's behalf in its EU region (Frankfurt, Germany):</p>
       <ul>
         <li>the exception and its stack trace, with file paths and anything that looks like a video file name replaced before sending;</li>
-        <li>the TMPlayer version and build number;</li>
-        <li>the operating system name and version (for example Android 14);</li>
-        <li>the device manufacturer and model (for example Xiaomi 23021RAA2Y).</li>
+        <li>for an ANR or a native crash, the stack traces of the app's threads with their names, and the list of libraries loaded in the app (debug images), but no register values;</li>
+        <li>the TMPlayer version and build number, those of the version that crashed;</li>
+        <li>on Android, the build's mapping ID, a random ID for that build of the app, not for your device, which turns the stack trace back into readable code;</li>
+        <li>the operating system name and version (for example Android 14, or Windows 11 10.0);</li>
+        <li>on a phone or TV, the device manufacturer and model (for example Xiaomi 23021RAA2Y). On a computer, the operating system and its version stand in for a device model: no computer model and no computer name are sent.</li>
       </ul>
-      <p>Everything else the Sentry library would normally attach is removed on the device before the report is sent: device name and identifier, installation identifier, timezone, language, battery, memory, storage, screen, network type, boot time, app permissions, tags and breadcrumbs. No chat names, search terms or viewing history are included, and the IP address is not stored as personal data.</p>
-      <p><strong>Legal basis:</strong> your consent, given by switching it on or by choosing Send for one report. <strong>Withdrawing it:</strong> switch it off in Settings and reporting stops at once; a crash that happens after that is dropped even if it was already being prepared. <strong>Retention:</strong> Sentry deletes each report automatically after at most 90 days. To have reports you sent deleted sooner, email the address above with the approximate date and device model.</p>
+      <p>Everything else the Sentry library would normally attach is removed on the device before the report is sent: device name and identifier, computer name, installation identifier, timezone, language, battery, memory, storage, screen, network type, boot time, app permissions, tags and breadcrumbs. No chat names, search terms or viewing history are included, and the IP address is not stored as personal data.</p>
+      <p>A device sends the same crash at most once a day, and at most 10 reports a day in all. The count is kept in a private file on the device that holds only the day, the number sent and the class and method names of the crashes already sent.</p>
+      <p><strong>Legal basis:</strong> your consent, given by switching it on or by choosing Send for one report. <strong>Withdrawing it:</strong> switch it off in Settings and reporting stops at once; a crash that happens after that is dropped even if it was already being prepared. <strong>Retention:</strong> Sentry deletes each report automatically after at most 90 days. To have reports you sent deleted sooner, email the address above with the approximate date and the device model, or the computer's operating system.</p>
     </PolicySection>
 
     <PolicySection title="Delete your data">
@@ -85,6 +89,7 @@ Astro.locals.lang = ENGLISH;
     <PolicySection title="Changes">
       <p>Material changes update the effective date above and are listed here.</p>
       <ul>
+        <li><strong>19 October 2026:</strong> crash reporting on Windows, Linux and macOS too, without a device model or computer name; a crash from an older version is still offered and sent as that version, and one more than 30 days old is deleted; Android asks about not responding (ANR) and native crashes as well, and remembers a Don't send; lists the thread stacks and loaded libraries those reports add, the crashed build's mapping ID and the daily limit of 10 reports; says the question is asked once, in the setup after you first sign in.</li>
         <li><strong>15 October 2026:</strong> adds macOS, a preview from 1.26.0, and where it keeps its data.</li>
         <li><strong>13 October 2026:</strong> lists the poster and overview lookups (TMDB, TVmaze, AniList) and the skip intro times (TheIntroDB, IntroDB.app, AniSkip), both on by default and switched off under Settings, Posters and details.</li>
         <li><strong>6 October 2026:</strong> covers phones, Windows and Linux as well as Android TV; lists exactly what a crash report keeps and how long; adds where data lives on each platform, the system media controls, sponsored message reporting, what the update check reveals, how to delete your data, processors and your rights.</li>
