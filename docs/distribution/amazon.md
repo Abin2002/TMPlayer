@@ -1,6 +1,6 @@
 # Amazon Appstore listing pack
 
-Used by **U23** in [docs/PLAN.md](../PLAN.md). Written 2026-10-06 for CP30. Status: **draft, nothing
+Used by **U23** in the working plan. Written 2026-10-06 for CP30. Status: **draft, nothing
 submitted.** The user submits it from the Amazon Developer Console; Claude never does.
 
 Amazon's field limits and asset sizes below were checked on 2026-10-06 against

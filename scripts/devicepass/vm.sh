@@ -9,11 +9,11 @@
 #   scripts/devicepass/vm.sh queue-install [--clean] [--jars]   # needs runner.ps1 running in the VM
 #   scripts/devicepass/vm.sh stop                  # only if this script started it
 #
-# From memory and docs/PLAN.md:
+# From memory and the working plan:
 # - Container `win11` (dockurr/windows). Web viewer http://127.0.0.1:8006, VNC 127.0.0.1:5900,
 #   RDP 3389, SSH 127.0.0.1:2222 (often resets; VNC with vncdotool works, `key 'shift-;'` for a
 #   colon, plain `type` drops Shift).
-# - Host /home/dracu/vms/win11/shared is \\host.lan\Data inside the VM.
+# - Host $HOME/vms/win11/shared is \\host.lan\Data inside the VM.
 # - CI's MSI is unsigned and has no Telegram keys; the keyed local jars (core-jvm, ui-jvm, desktop)
 #   are swapped in after install, as shared/test.ps1 does.
 # - Since 1ac79d3 the MSI installs per user to %LOCALAPPDATA%\TMPlayer App (not ...\TMPlayer),
@@ -23,7 +23,7 @@
 set -euo pipefail
 
 NAME="${VM_NAME:-win11}"
-SHARED="${VM_SHARED:-/home/dracu/vms/win11/shared}"
+SHARED="${VM_SHARED:-$HOME/vms/win11/shared}"
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 STATE="${XDG_RUNTIME_DIR:-/tmp}/tmplayer-devicepass"
 mkdir -p "$STATE"

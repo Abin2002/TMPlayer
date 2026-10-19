@@ -1,7 +1,7 @@
 # Distribution channels
 
 Reference drafts for getting TMPlayer listed beyond GitHub and tmplayer.org. **Status and next steps
-live in [docs/PLAN.md](../PLAN.md)** (Phase C and the U tasks); this folder only keeps the material
+live in the maintainer's working plan** (Phase C and the U tasks, kept off GitHub); this folder only keeps the material
 those steps use.
 
 | File | Used by |

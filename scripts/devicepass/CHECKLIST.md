@@ -174,7 +174,7 @@ scripts/devicepass/vm.sh queue-install --jars      # upgrade in place; --clean f
 
 Inside the VM (http://127.0.0.1:8006), if the runner is not running:
 `powershell -executionpolicy bypass -file \\host.lan\Data\runner.ps1`. Output lands in
-`/home/dracu/vms/win11/shared/q/NN-devicepass-install.out`.
+`$VM_SHARED/q/NN-devicepass-install.out` (default `~/vms/win11/shared`).
 
 - W1. Upgrade in place from the previous MSI: still signed in, settings, favourites, resume points
   kept (the 1.26.0 MSI update used to delete them: issue #7). Installed under

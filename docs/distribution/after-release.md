@@ -1,7 +1,7 @@
 # After the next release: GitHub CLI tasks
 
 Everything outstanding that is done through `gh` (plus the two `wingetcreate` steps that open a GitHub
-PR), collected from `docs/PLAN.md`, this folder and the live state on GitHub. Live state read on
+PR), collected from the working plan, this folder and the live state on GitHub. Live state read on
 2026-10-06 with `gh`; nothing was posted, commented, opened or closed while collecting it.
 
 `<v>` below is the new version (for example `1.23.0`), `v<v>` its tag. The next release cannot go out

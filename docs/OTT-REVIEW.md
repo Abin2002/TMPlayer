@@ -9,7 +9,7 @@ the Android phone and the desktop separately.
 Only gaps that fit a player for the videos already in your own Telegram chats are listed. Anything
 that needs a catalogue is left out: studio trailers, cast databases, paid tiers, recommendations
 across a service, rent or buy, live channels. TMPlayer today means `main` at `ef057f3` plus the plan's
-ticked items (docs/PLAN.md up to CP92) and the code read for this review.
+ticked items in the working plan (up to CP92) and the code read for this review.
 
 **In trial, not re-planned here:** a separate experiment is building a TV top bar in the style of
 Netflix's 2025 TV home, Back opening that menu, and a focused row card that grows into an info tile.
