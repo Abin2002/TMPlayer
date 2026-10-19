@@ -2,6 +2,9 @@ package com.tmplayer.data
 
 import io.sentry.SentryEvent
 import io.sentry.SentryLevel
+import io.sentry.protocol.App
+import io.sentry.protocol.DebugImage
+import io.sentry.protocol.DebugMeta
 import io.sentry.protocol.Mechanism
 import io.sentry.protocol.SentryException
 import io.sentry.protocol.SentryStackFrame
@@ -18,6 +21,11 @@ import java.util.Date
  * It holds what a report would: the exception chain with its stack frames, the moment, and the
  * build it happened in. It is never sent on its own; [CrashReports] turns it into a report only
  * after the viewer says yes, and the report then goes through [CrashReportScrubber] like any other.
+ *
+ * The build is named in full, down to the UUID its R8 mapping was uploaded under, so a crash can
+ * still be read after the viewer has updated: people who crash tend to update next, and the
+ * update is often the fix for that very crash. The report then says it came from the old build,
+ * and Sentry decodes its frames with the old build's mapping rather than the running one's.
  */
 internal class CrashRecord(
     val time: Long,
@@ -25,6 +33,12 @@ internal class CrashRecord(
     val versionCode: Long,
     /** Outermost first, each followed by its cause. */
     val chain: List<Link>,
+    /**
+     * The UUIDs of the build's R8 mappings, from `assets/sentry-debug-meta.properties`, which the
+     * Sentry Gradle plugin writes into a release APK. Empty for a record written by 1.27.1 or
+     * older, and for a debug build, which is not minified and has nothing to decode.
+     */
+    val proguardUuids: List<String> = emptyList(),
 ) {
 
     class Link(
@@ -39,7 +53,24 @@ internal class CrashRecord(
      */
     fun toEvent(): SentryEvent = SentryEvent(Date(time)).apply {
         level = SentryLevel.FATAL
+        // The build that crashed, not the one sending: the SDK fills these in only where they are
+        // still empty. The app context it fills regardless, so [stampBuild] puts that back after.
         release = "tmplayer@$versionName"
+        dist = versionCode.toString()
+        stampBuild(this)
+        // The crashed build's mapping. Sentry keeps a ProGuard image already on an event rather
+        // than adding the running build's beside it (DebugMeta.buildDebugMeta in 8.61), so the
+        // frames are decoded with this one alone.
+        if (proguardUuids.isNotEmpty()) {
+            debugMeta = DebugMeta().apply {
+                images = proguardUuids.map { uuid ->
+                    DebugImage().apply {
+                        type = DebugImage.PROGUARD
+                        this.uuid = uuid
+                    }
+                }
+            }
+        }
         setExceptions(chain.reversed().map { link ->
             SentryException().apply {
                 type = link.type.substringAfterLast('.')
@@ -63,11 +94,24 @@ internal class CrashRecord(
         })
     }
 
+    /**
+     * Writes the crashed build's version into the event's app context. The SDK's own processor
+     * fills that context from the running package, after [toEvent] and before beforeSend, so a
+     * crash from an older build would otherwise be listed under the newer one.
+     */
+    fun stampBuild(event: SentryEvent) {
+        val app = event.contexts.app ?: App()
+        app.appVersion = versionName
+        app.appBuild = versionCode.toString()
+        event.contexts.setApp(app)
+    }
+
     fun write(file: File) {
         val json = JSONObject()
             .put("time", time)
             .put("versionName", versionName)
             .put("versionCode", versionCode)
+            .put("proguardUuids", JSONArray(proguardUuids))
             .put("chain", JSONArray(chain.map { link ->
                 JSONObject()
                     .put("type", link.type)
@@ -93,12 +137,50 @@ internal class CrashRecord(
         /** Deep enough for any real chain, and a stop for one that loops back on itself. */
         private const val MAX_CAUSES = 8
 
-        fun of(error: Throwable, versionName: String, versionCode: Long): CrashRecord {
+        /**
+         * How long a crash is kept for the viewer to be asked about: the free plan's retention.
+         * A report older than that would be thrown away by Sentry the day it arrived.
+         */
+        const val KEEP_MILLIS = 30L * 24 * 60 * 60 * 1000
+
+        fun of(
+            error: Throwable,
+            versionName: String,
+            versionCode: Long,
+            proguardUuids: List<String> = emptyList(),
+        ): CrashRecord {
             val chain = generateSequence(error) { it.cause.takeIf { cause -> cause !== it } }
                 .take(MAX_CAUSES)
                 .map { Link(it.javaClass.name, it.message, it.stackTrace.toList()) }
                 .toList()
-            return CrashRecord(System.currentTimeMillis(), versionName, versionCode, chain)
+            return CrashRecord(System.currentTimeMillis(), versionName, versionCode, chain, proguardUuids)
+        }
+
+        /**
+         * Whether a crash left on the device is still worth asking about from the build
+         * [runningVersionCode], at [now].
+         *
+         * Not once it is older than [KEEP_MILLIS]. A crash from another build is kept only when it
+         * names that build's mapping: without one its frames could only be decoded with the
+         * running build's mapping, which is the wrong one, and that is every record written by
+         * 1.27.1 or older. A crash from the running build needs no UUID, since the SDK adds its own.
+         */
+        fun worthSending(record: CrashRecord, runningVersionCode: Long, now: Long): Boolean = when {
+            now - record.time > KEEP_MILLIS -> false
+            record.versionCode == runningVersionCode -> true
+            else -> record.proguardUuids.isNotEmpty()
+        }
+
+        /**
+         * The mapping UUIDs in the text of `sentry-debug-meta.properties`: the value of
+         * `io.sentry.ProguardUuids`, which the plugin writes as one UUID, or several joined by `|`.
+         */
+        fun proguardUuidsIn(properties: String): List<String> {
+            val props = java.util.Properties().apply { load(properties.reader()) }
+            return props.getProperty("io.sentry.ProguardUuids").orEmpty()
+                .split('|', ',')
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
         }
 
         /** The record in [file], or null when there is none or it cannot be read. */
@@ -124,7 +206,11 @@ internal class CrashRecord(
                     )
                 }
             }
-            CrashRecord(json.getLong("time"), json.getString("versionName"), json.getLong("versionCode"), chain)
+            // Absent from a record written by 1.27.1 or older.
+            val uuids = json.optJSONArray("proguardUuids")
+                ?.let { array -> (0 until array.length()).map { array.getString(it) } }
+                .orEmpty()
+            CrashRecord(json.getLong("time"), json.getString("versionName"), json.getLong("versionCode"), chain, uuids)
         }.getOrNull()
     }
 }

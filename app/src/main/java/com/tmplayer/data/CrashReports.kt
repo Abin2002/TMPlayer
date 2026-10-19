@@ -90,8 +90,13 @@ object CrashReports {
             // trace, the versions and the device model; see CrashReportScrubber.
             // The one exception to the first gate is the crash the viewer has just agreed to send.
             options.setBeforeSend { event, _ ->
+                val record = sendingRecord
                 when {
-                    sendingPending -> CrashReportScrubber.scrub(event.apply { threads = null })
+                    // Matched by its id, not by the moment, so nothing else the SDK sends while
+                    // this one goes out passes as the viewer's answer.
+                    record != null && event.eventId == record.second ->
+                        CrashReportScrubber.scrub(event.apply { threads = null })
+                            .also { record.first.stampBuild(it) }
                     !enabledNow -> null
                     else -> CrashReportScrubber.scrub(event)
                 }
@@ -110,11 +115,16 @@ object CrashReports {
     fun watch(context: Context) {
         if (!available) return
         file = File(context.filesDir, "crash/pending.json")
+        // A few dozen bytes from the APK, read now rather than in the dying process, where an
+        // out of memory error could stop the read. Absent from a build the Sentry plugin skips.
+        val uuids = runCatching {
+            context.assets.open(DEBUG_META).use { CrashRecord.proguardUuidsIn(it.reader().readText()) }
+        }.getOrDefault(emptyList())
         val previous = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
             if (!enabledNow) {
                 runCatching {
-                    CrashRecord.of(error, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toLong())
+                    CrashRecord.of(error, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toLong(), uuids)
                         .write(file!!)
                 }
             }
@@ -132,14 +142,18 @@ object CrashReports {
     /**
      * What to do with a crash left from the last run, once the switch has been read at startup.
      *
-     * A crash from another build is thrown away: its line numbers belong to code this device no
-     * longer runs. With the switch on (turned on after the crash, or before Sentry had finished
-     * starting) it is sent without asking; otherwise [pending] asks.
+     * A crash from an older build is asked about too: it carries that build's version and mapping
+     * UUID, so it is listed and decoded as the build it happened in. It is thrown away only when
+     * it is older than Sentry keeps anything, or comes from another build without a UUID (see
+     * [CrashRecord.worthSending]). With the switch on (turned on after the crash, or before Sentry
+     * had finished starting) it is sent without asking; otherwise [pending] asks.
      */
     fun review(context: Context, enabled: Boolean) {
         val file = file ?: return
         val record = CrashRecord.read(file)
-        if (record == null || record.versionCode != BuildConfig.VERSION_CODE.toLong()) {
+        if (record == null ||
+            !CrashRecord.worthSending(record, BuildConfig.VERSION_CODE.toLong(), System.currentTimeMillis())
+        ) {
             file.delete()
             return
         }
@@ -161,11 +175,12 @@ object CrashReports {
         if (record == null || !available) return
         val wasStarted = started
         if (!wasStarted) init(context)
+        val event = record.toEvent()
         try {
-            sendingPending = true
-            Sentry.captureEvent(record.toEvent())
+            sendingRecord = record to event.eventId
+            Sentry.captureEvent(event)
         } finally {
-            sendingPending = false
+            sendingRecord = null
         }
         Sentry.flush(FLUSH_MILLIS)
         if (!wasStarted) runCatching { Sentry.close() }
@@ -178,8 +193,12 @@ object CrashReports {
         file?.delete()
     }
 
+    /** The crash the viewer agreed to send and its event id, while it goes out. */
     @Volatile
-    private var sendingPending = false
+    private var sendingRecord: Pair<CrashRecord, io.sentry.protocol.SentryId?>? = null
+
+    /** Where the Sentry Gradle plugin puts the build's mapping UUID in the APK. */
+    private const val DEBUG_META = "sentry-debug-meta.properties"
 
     /**
      * Turns reporting off and closes the SDK.
