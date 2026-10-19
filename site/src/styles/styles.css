@@ -1316,6 +1316,23 @@ kbd {
   .compare-apps { min-width: 860px; }
   .compare-apps tbody th { width: 128px; }
 }
+/* The one-app comparisons under /alternatives/: two apps, so on a phone each row stacks, the row's
+   label over the two cells, each cell led by its app's name, instead of scrolling sideways. */
+@media (max-width: 560px) {
+  .compare-vs { min-width: 0; }
+  .compare-vs thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .compare-vs tbody, .compare-vs tr, .compare-vs tbody th, .compare-vs td { display: block; width: auto; }
+  .compare-vs tbody th { position: static; padding-bottom: 4px; }
+  .compare-vs tbody tr > td { border-top: 0; padding-top: 4px; }
+  .compare-vs td::before {
+    content: attr(data-app);
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    color: var(--on-surface);
+  }
+}
 .formats-3 { margin-top: 0; }
 @media (min-width: 880px) { .formats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .prose-band { max-width: 72ch; }

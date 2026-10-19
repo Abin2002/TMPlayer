@@ -358,6 +358,24 @@
     ]
   },
   {
+    "path": "/alternatives/tmp-telegram-media-player/",
+    "lastmod": "2026-10-19",
+    "changefreq": "monthly",
+    "priority": "0.6"
+  },
+  {
+    "path": "/alternatives/tvgramplayer/",
+    "lastmod": "2026-10-19",
+    "changefreq": "monthly",
+    "priority": "0.6"
+  },
+  {
+    "path": "/alternatives/telegram-app/",
+    "lastmod": "2026-10-19",
+    "changefreq": "monthly",
+    "priority": "0.6"
+  },
+  {
     "path": "/translate/",
     "lastmod": "2026-10-14",
     "changefreq": "monthly",

@@ -35,10 +35,21 @@ export function catalog(lang: Lang): Flat {
   return catalogs.get(lang.tag) ?? {};
 }
 
-/** Share of the English keys (minus the build.* ones) a catalog fills. */
+/**
+ * The keys of the English-only pages that still read their text from en.json: vs.* is the one-app
+ * comparisons under /alternatives/ (src/pages/alternatives/[slug].astro). No translated page shows
+ * them, so they do not count towards a language's share, and adding one cannot unpublish a
+ * language. scripts/site-i18n-check.py keeps the same list.
+ */
+const ENGLISH_ONLY = ['vs.'];
+
+/** Whether a key counts towards a catalog's share: not a build.* string, not an English-only page's. */
+export const countsForCoverage = (k: string) => !k.startsWith('build.') && !ENGLISH_ONLY.some((p) => k.startsWith(p));
+
+/** Share of the English keys (minus the build.* and English-only ones) a catalog fills. */
 export function coverage(lang: Lang): number {
   const cat = catalog(lang);
-  const keys = Object.keys(english).filter((k) => !k.startsWith('build.'));
+  const keys = Object.keys(english).filter(countsForCoverage);
   return keys.length ? keys.filter((k) => cat[k]).length / keys.length : 0;
 }
 

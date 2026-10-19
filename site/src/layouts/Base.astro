@@ -39,10 +39,14 @@ interface Props {
   notice?: boolean;
   /** the 404 page: noindex, no canonical and no social tags */
   notFound?: boolean;
+  /** the phone's download bar; every localized page but download and install has it, and an
+   * English-only content page (the one-app comparisons) can ask for it */
+  getBar?: boolean;
 }
 const {
   page, path, title, socialTitle = title, description, ogType = 'website', imageAlt, secureImage = false, feed = false,
   publishedTime, notice = true, notFound = false,
+  getBar = page !== undefined && page !== 'download' && page !== 'install',
 } = Astro.props;
 const lang = Astro.locals.lang;
 const url = ORIGIN + (page !== undefined ? pageUrl(lang, page) : path);
@@ -140,7 +144,7 @@ const strings = lang.path ? jsStrings(lang) : {};
 <a class="skip" href="#main">{text(lang, 'common.skip_to_content')}</a>
 {notice && <KaoNotice />}
 <slot />
-{page !== undefined && page !== 'download' && page !== 'install' && <GetBar />}
+{getBar && <GetBar />}
 {/* The Buy Me a Coffee card, everywhere but the pages whose one job is another button: download,
     install, the support page (which is the offer itself) and the 404. */}
 {!notFound && page !== 'download' && page !== 'install' && path !== '/support/' && <CoffeeCard />}

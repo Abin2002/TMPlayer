@@ -73,7 +73,10 @@ once its catalog covers 95 per cent of the keys.
 
 A localized page is `src/pages/[...lang]/<path>/index.astro` with `export const getStaticPaths =
 langPaths`, plus its id in `PAGES` in `src/i18n/langs.ts`. An English-only page is
-`src/pages/<path>/index.astro`. Either way: pass the head to `<Base>` (title, description, and the
+`src/pages/<path>/index.astro`. The one-app comparisons under `/alternatives/` are English only
+but still read their words from `en.json`, under `vs.*`: a new one is an entry in
+`src/data/vs.json` plus its `vs.<id>.*` strings, and `vs.*` does not count towards a language's
+share, so adding one never unpublishes a language. Either way: pass the head to `<Base>` (title, description, and the
 page id or path), give it JSON-LD with at least a BreadcrumbList, add its sitemap entry to
 `src/data/lastmod.json`, and mention it in `public/llms.txt`.
 

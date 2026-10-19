@@ -21,6 +21,7 @@ import DeviceShot from '../../../components/DeviceShot.astro';
 import Action from '../../../components/guides/Action.astro';
 import MoreHelp from '../../../components/guides/MoreHelp.astro';
 import data from '../../../data/alternatives.json';
+import vs from '../../../data/vs.json';
 import { langPaths } from '../../../i18n/paths';
 import { english, format, text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -142,6 +143,7 @@ const itemList = {
       </ul>
       <h3>{t(a('tmp_move_h'))}</h3>
       <p>{t(a('tmp_move_p'))}</p>
+      <p><a href="/alternatives/tmp-telegram-media-player/">{t(a('tmp_compare_link'))}</a></p>
     </div>
     <div class="shots alt-shots">
       <DeviceShot device="tv" shot={{ src: '/screenshots/tv-home.webp', light: '/screenshots/tv-home-light.webp', alt: t('home.tv_home_hero_alt'), width: 1920, height: 1080 }}><T k={a('shot_tv_home')}><b slot="b1">{t(a('shot_tv_home__b1'))}</b></T></DeviceShot>
@@ -190,7 +192,14 @@ const itemList = {
     <p class="muted small section-note" data-reveal>{t(a('table_note'))}</p>
   </Band>
 
-  <Band wave id="different" title={t(a('diff_title'))} sub={t(a('diff_sub'))}>
+  {/* One page per app people search for by name (src/pages/alternatives/[slug].astro), in English. */}
+  <Band wave id="one-by-one" title={t(a('one_h'))} sub={t(a('one_sub'))}>
+    <Cards>
+      {vs.pages.map((x) => <LinkCard href={`/alternatives/${x.slug}/`} icon="tv-card" title={x.id === 'telegram' ? t(a('one_telegram_h')) : x.name} body={t(a(`one_${x.id}`))} go={t(a('one_go'))} />)}
+    </Cards>
+  </Band>
+
+  <Band wave tonal id="different"title={t(a('diff_title'))} sub={t(a('diff_sub'))}>
     <Cards>
       <Card title={t(a('diff_free_h'))}>{t(a('diff_free_p'))}</Card>
       <Card title={t(a('diff_open_h'))}>{t(a('diff_open_p'))}</Card>
@@ -206,14 +215,14 @@ const itemList = {
     <p class="muted small section-note" data-reveal><T k={a('diff_also')}><a href={l('/features/')} slot="a1">{t(a('diff_also__a1'))}</a></T></p>
   </Band>
 
-  <Band wave tonal id="apple-tv" title={t(a('apple_title'))}>
+  <Band wave id="apple-tv" title={t(a('apple_title'))}>
     <div class="section-body prose-band" data-reveal>
       <p>{t(a('apple_p1'))}</p>
       <p><T k={a('apple_p2')} vars={{ ...tevegram.price, price: tvForTelegram.price.price! }}><a href={tevegram.also!.url} rel={nofollow} slot="a1">{tevegram.name}</a><a href={tvForTelegram.url} rel={nofollow} slot="a2">{tvForTelegram.name}</a></T></p>
     </div>
   </Band>
 
-  <MoreHelp>
+  <MoreHelp tonal>
     <T k="guide_no_casting.tmplayer_does_not_provide_media"><a href={l('/faq/')} slot="a1">{t('guide_no_casting.tmplayer_does_not_provide_media__a1')}</a></T>
   </MoreHelp>
 

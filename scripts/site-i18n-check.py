@@ -31,6 +31,9 @@ LANGS = ["es-419", "pt-BR", "fr", "de", "it", "pl", "ru", "uk", "tr", "id", "vi"
          "zh-TW", "ja", "ko", "hi", "bn", "ml"]
 # Strings the layout keeps for languages that still carry them, though no page shows them today.
 UNUSED_OK = {"build.languages"}
+# Keys of the English-only pages that read their text from en.json (the one-app comparisons under
+# /alternatives/). They do not count towards a language's share, as in site/src/i18n/t.ts.
+ENGLISH_ONLY = ("vs.",)
 PH = re.compile(r"\{(\w+)\}")
 JS_RE = re.compile(r"""tmT\(\s*'([a-z0-9_]+)'\s*,\s*'((?:[^'\\]|\\.)*)'""")
 
@@ -60,7 +63,7 @@ def main():
     problems = []
 
     if a.status:
-        keys = [k for k in en if not k.startswith("build.")]
+        keys = [k for k in en if not k.startswith("build.") and not k.startswith(ENGLISH_ONLY)]
         published = ["en"]
         for tag in LANGS:
             cat = load(tag)
