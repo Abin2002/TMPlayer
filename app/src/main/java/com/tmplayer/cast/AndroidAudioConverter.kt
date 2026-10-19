@@ -72,13 +72,16 @@ class AndroidAudioConverter : AudioConverter {
             return out
         }
         val d = decoder ?: return out
+        // Wait for a free input buffer, draining output meanwhile. Asked for once more after one is
+        // held, SimpleDecoder throws (one input buffer out at a time), so the wait stops at the first.
         var input: DecoderInputBuffer? = null
-        // Wait for a free input buffer, draining output meanwhile.
-        repeat(WAIT_TRIES) {
+        var tries = 0
+        while (input == null && tries++ < WAIT_TRIES) {
             input = d.dequeueInputBuffer()
-            if (input != null) return@repeat
-            drainDecoder(d, out)
-            Thread.sleep(2)
+            if (input == null) {
+                drainDecoder(d, out)
+                Thread.sleep(2)
+            }
         }
         val buffer = input ?: throw IOException("Audio decoder stalled")
         buffer.ensureSpaceForWrite(frame.size)

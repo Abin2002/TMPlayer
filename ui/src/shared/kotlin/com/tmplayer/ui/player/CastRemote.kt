@@ -266,7 +266,7 @@ private fun StatusPanel(state: CastRemoteState, actions: CastRemoteActions, s: M
                 StateLine(state, s)
             }
         }
-        val note = state.note?.takeIf { !state.lost && state.error == null }
+        val note = state.note?.takeIf { !state.lost && state.error == null && state.phase != CastPhase.Failed }
         if (note != null) {
             Spacer(Modifier.height(if (inline) 6.dp else 12.dp))
             Text(note, style = MaterialTheme.typography.bodySmall, color = Tone.muted, maxLines = if (inline) 2 else 4, overflow = TextOverflow.Ellipsis)

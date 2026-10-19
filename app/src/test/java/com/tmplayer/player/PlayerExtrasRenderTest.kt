@@ -3,11 +3,13 @@ package com.tmplayer.player
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -185,6 +187,77 @@ class PlayerExtrasRenderTest {
     @Test
     @Config(sdk = [35], qualifiers = "w960dp-h540dp-land-night-xhdpi")
     fun errorSheetTelevision() = errorSheet(tv = true, name = "extras-error-tv.png")
+
+    /**
+     * The sheet that says the video stopped arriving, in the shape the player gives it: a handset
+     * puts the poster beside the words and the three buttons in a row under them, which a sideways
+     * phone needs to show all of them at once. A television keeps the stack.
+     */
+    private fun stallSheet(tv: Boolean, name: String, oneLine: Boolean = false) {
+        FormFactor.override(tv)
+        val activity = Robolectric.buildActivity(FragmentActivity::class.java).setup().get()
+        activity.setTheme(R.style.Theme_TMPlayer_Player)
+        activity.setContentView(R.layout.activity_player)
+        val overlay = activity.findViewById<View>(R.id.status_overlay)
+        overlay.visibility = View.VISIBLE
+        activity.findViewById<View>(R.id.status_spinner)?.visibility = View.GONE
+        activity.findViewById<View>(R.id.status_progress).visibility = View.GONE
+        activity.findViewById<ImageView>(R.id.status_poster).apply {
+            setImageDrawable(android.graphics.drawable.ColorDrawable(0xFFB5462B.toInt()))
+            visibility = View.VISIBLE
+        }
+        activity.findViewById<TextView>(R.id.status_name).apply {
+            text = "Harbour.Lights.2026.1080p.10bit.6CH.HEVC.mkv"
+            visibility = View.VISIBLE
+        }
+        activity.findViewById<TextView>(R.id.status_title).text = L.playerStalledMidTitle
+        activity.findViewById<TextView>(R.id.status_meta).apply {
+            text = "2.0 GB"
+            visibility = View.VISIBLE
+        }
+        activity.findViewById<TextView>(R.id.status_text).text = L.playerStalledMidSlow
+        activity.findViewById<TextView>(R.id.status_detail).apply {
+            text = L.playerStalledDownloadHint
+            visibility = View.VISIBLE
+        }
+        val reload = activity.findViewById<Button>(R.id.status_reload).apply {
+            text = L.commonTryAgain
+            visibility = View.VISIBLE
+            setBackgroundResource(R.drawable.bg_control_pill_primary)
+            setTextColor(context.getColorStateList(R.color.player_primary_text))
+        }
+        val back = activity.findViewById<Button>(R.id.status_back).apply {
+            text = L.playerGoBack
+            visibility = View.VISIBLE
+        }
+        val download = activity.findViewById<Button>(R.id.status_open_with).apply {
+            text = L.playerDownloadFirst
+            visibility = View.VISIBLE
+        }
+        StatusSheetShape.apply(overlay, sideBySide = !tv)
+        idle()
+        val screen = Rect().also { overlay.getGlobalVisibleRect(it) }
+        for (button in listOf(reload, download, back)) {
+            val box = Rect().also { button.getGlobalVisibleRect(it) }
+            assertTrue("${button.text} is on the screen whole", button.isShown && screen.contains(box) && box.height() == button.height)
+        }
+        if (oneLine) {
+            assertEquals("the buttons share a line beside the poster", reload.top, back.top)
+        }
+        shot(activity, name, dialog = false)
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w873dp-h393dp-land-night-xxhdpi")
+    fun stallSheetPhoneSideways() = stallSheet(tv = false, name = "extras-stall-phone-sideways.png", oneLine = true)
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w393dp-h873dp-port-night-xxhdpi")
+    fun stallSheetPhoneUpright() = stallSheet(tv = false, name = "extras-stall-phone-upright.png")
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w960dp-h540dp-land-night-xhdpi")
+    fun stallSheetTelevision() = stallSheet(tv = true, name = "extras-stall-tv.png")
 
     // ---- the frame saved answer and the fine scrub ---------------------------------------------
 

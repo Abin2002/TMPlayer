@@ -288,7 +288,13 @@ class PlayerCast(
                 plan = pl
                 Log.i(TAG, "Plan for $file on ${connectedState.model}: $pl ($p)")
                 if (!pl.castable) {
-                    throw IOException(if (pl.refusal == CastRefusal.VideoCodec) L.castCannotCastPicture else L.castCannotCastContainer)
+                    throw IOException(
+                        when (pl.refusal) {
+                            CastRefusal.VideoCodec -> L.castCannotCastPicture
+                            CastRefusal.Resolution -> L.castPictureTooLarge
+                            else -> L.castCannotCastContainer
+                        },
+                    )
                 }
                 audio = pl.audioTrack
                 withContext(Dispatchers.IO) { ensureServer(connectedState) }
@@ -301,7 +307,7 @@ class PlayerCast(
                 throw e
             } catch (e: Exception) {
                 Log.w(TAG, "Cast failed to start", e)
-                error = e.message ?: L.castLoadFailed
+                error = e.message ?: failureText()
                 refresh()
             }
         }
@@ -332,7 +338,7 @@ class PlayerCast(
             if (load(pl.routes[routeIndex], atMs)) return
             routeIndex++
         }
-        throw IOException(L.castLoadFailed)
+        throw IOException(failureText())
     }
 
     private suspend fun load(r: CastRoute, atMs: Long): Boolean {
@@ -409,7 +415,7 @@ class PlayerCast(
         val r = route ?: return retryFromStart(atMs)
         activity.lifecycleScope.launch {
             if (!load(r, atMs)) {
-                error = L.castLoadFailed
+                error = failureText()
                 refresh()
             }
         }
@@ -419,10 +425,19 @@ class PlayerCast(
         activity.lifecycleScope.launch {
             routeIndex = 0
             runCatching { startRoute(atMs) }.onFailure {
-                error = L.castLoadFailed
+                error = failureText()
                 refresh()
             }
         }
+    }
+
+    /**
+     * What the cast screen says when the TV turns the video down: that it is 4K where the TV may
+     * only play 1080p (an unnamed TV, which was tried), or the plain failure.
+     */
+    private fun failureText(): String {
+        val model = (support.session.value as? CastSessionState.Connected)?.model
+        return if (CastFormats.mayBeTooLarge(probe?.video, ReceiverCaps.forModel(model))) L.castLoadFailedLarge else L.castLoadFailed
     }
 
     private fun noteFor(r: CastRoute): String? {
@@ -459,7 +474,7 @@ class PlayerCast(
                 published = null
                 activity.lifecycleScope.launch {
                     runCatching { startRoute(at) }.onFailure {
-                        error = L.castLoadFailed
+                        error = failureText()
                         refresh()
                     }
                 }
@@ -533,7 +548,7 @@ class PlayerCast(
             device = device,
             phase = view.phase,
             lost = lost,
-            error = error,
+            error = error ?: failureText().takeIf { view.phase == CastPhase.Failed && it != L.castLoadFailed },
             note = note,
             positionMs = shown,
             durationMs = duration,
@@ -670,7 +685,7 @@ class PlayerCast(
         val at = lastKnownMs
         activity.lifecycleScope.launch {
             if (!load(next, at)) {
-                error = L.castLoadFailed
+                error = failureText()
                 refresh()
             }
         }

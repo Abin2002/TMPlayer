@@ -1,0 +1,123 @@
+package com.tmplayer.player
+
+import android.content.Context
+import android.util.AttributeSet
+import android.view.View
+import android.view.ViewGroup
+import kotlin.math.max
+
+/**
+ * The status sheet's buttons, as a column or as a row that wraps.
+ *
+ * A column is what a television keeps: one axis of the D-pad reaches every button, in the order
+ * they should be tried. A phone held sideways has about 390dp of height, and three full width pills
+ * under a message pushed the last one off the bottom while the right half of the screen sat empty.
+ * There the same buttons go side by side from the start edge, each as wide as its words, centred on
+ * their line, and a label too long for what is left of the line starts the next one.
+ */
+class SheetActions @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+) : ViewGroup(context, attrs) {
+
+    private val gap = (12 * resources.displayMetrics.density).toInt()
+
+    /** Above a row: one gap between the words and the buttons, whichever button comes first. */
+    private val rowTop = (20 * resources.displayMetrics.density).toInt()
+
+    /** Side by side when true; stacked and centred, each button's top margin kept, when false. */
+    var inRow: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            requestLayout()
+        }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val maxWidth = if (MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.UNSPECIFIED) {
+            Int.MAX_VALUE
+        } else {
+            MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight
+        }
+        val childSpec = MeasureSpec.makeMeasureSpec(maxWidth, MeasureSpec.AT_MOST)
+        val shown = shown()
+        shown.forEach { it.measure(childSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)) }
+        var width = 0
+        var height = 0
+        if (inRow) {
+            val lines = lines(shown, maxWidth)
+            lines.forEach { line -> width = max(width, lineWidth(line)) }
+            if (lines.isNotEmpty()) height = rowTop + lines.sumOf(::lineHeight) + gap * (lines.size - 1)
+        } else {
+            shown.forEach {
+                width = max(width, it.measuredWidth)
+                height += topMargin(it) + it.measuredHeight
+            }
+        }
+        setMeasuredDimension(
+            resolveSize(width + paddingLeft + paddingRight, widthMeasureSpec),
+            resolveSize(height + paddingTop + paddingBottom, heightMeasureSpec),
+        )
+    }
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        val inner = r - l - paddingLeft - paddingRight
+        var y = paddingTop
+        if (!inRow) {
+            for (child in shown()) {
+                y += topMargin(child)
+                val x = paddingLeft + (inner - child.measuredWidth) / 2
+                child.layout(x, y, x + child.measuredWidth, y + child.measuredHeight)
+                y += child.measuredHeight
+            }
+            return
+        }
+        val rtl = layoutDirection == View.LAYOUT_DIRECTION_RTL
+        y += rowTop
+        for (line in lines(shown(), inner)) {
+            val height = lineHeight(line)
+            var x = 0
+            for (child in line) {
+                val left = if (rtl) paddingLeft + inner - x - child.measuredWidth else paddingLeft + x
+                val top = y + (height - child.measuredHeight) / 2
+                child.layout(left, top, left + child.measuredWidth, top + child.measuredHeight)
+                x += child.measuredWidth + gap
+            }
+            y += height + gap
+        }
+    }
+
+    /** The buttons cut into lines no wider than [width], in order. */
+    private fun lines(shown: List<View>, width: Int): List<List<View>> {
+        val lines = mutableListOf<MutableList<View>>()
+        var used = 0
+        for (child in shown) {
+            val line = lines.lastOrNull()
+            if (line == null || used + gap + child.measuredWidth > width) {
+                lines += mutableListOf(child)
+                used = child.measuredWidth
+            } else {
+                line += child
+                used += gap + child.measuredWidth
+            }
+        }
+        return lines
+    }
+
+    private fun lineWidth(line: List<View>): Int = line.sumOf { it.measuredWidth } + gap * (line.size - 1)
+
+    private fun lineHeight(line: List<View>): Int = line.maxOf { it.measuredHeight }
+
+    override fun generateLayoutParams(attrs: AttributeSet?): LayoutParams = MarginLayoutParams(context, attrs)
+
+    override fun generateDefaultLayoutParams(): LayoutParams =
+        MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+
+    override fun checkLayoutParams(p: LayoutParams?): Boolean = p is MarginLayoutParams
+
+    override fun generateLayoutParams(p: LayoutParams?): LayoutParams = MarginLayoutParams(p)
+
+    private fun shown(): List<View> = (0 until childCount).map(::getChildAt).filter { it.visibility != View.GONE }
+
+    private fun topMargin(child: View): Int = (child.layoutParams as? MarginLayoutParams)?.topMargin ?: 0
+}

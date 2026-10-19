@@ -20,7 +20,10 @@ import kotlinx.coroutines.delay
 /**
  * The Cast picker, the app's picker sheet: the Chromecasts and Google TVs on the Wi-Fi, found while
  * it is open, the one in use marked, and Stop casting under them during a cast. Picking one starts
- * the session; the player (or the next video played) goes to the TV once it is up.
+ * the session and the sheet stays up, the TV's line saying it is connecting, until the session is
+ * up (then it closes) or has failed (then it says so, and another try is a tap away). Closed at
+ * once, it left nothing on the screen to say anything was happening. The player (or the next video
+ * played) goes to the TV once the session is up.
  */
 @Composable
 fun CastPickerSheet(support: CastSupport, onDismiss: () -> Unit) {
@@ -37,11 +40,18 @@ fun CastPickerSheet(support: CastSupport, onDismiss: () -> Unit) {
         waitedLong = true
     }
     val connected = session is CastSessionState.Connected
+    // The TV just picked: the sheet waits for it.
+    var asked by remember { mutableStateOf(false) }
+    LaunchedEffect(session, asked) {
+        if (asked && session is CastSessionState.Connected) onDismiss()
+    }
+    val failed = (session as? CastSessionState.Failed)?.takeIf { asked }
     ChoiceSheet(
         title = s.castButton,
         onDismiss = onDismiss,
         onClose = onDismiss,
         note = when {
+            failed != null -> s.castConnectFailed(failed.name)
             devices.isNotEmpty() -> null
             waitedLong -> s.castNoneFound
             else -> s.castSearching
@@ -54,8 +64,12 @@ fun CastPickerSheet(support: CastSupport, onDismiss: () -> Unit) {
                 selected = if (connected) d.connected else null,
                 icon = TmIcons.Tv,
             ) {
-                if (!d.connected) support.connect(d.id)
-                onDismiss()
+                if (d.connected) {
+                    onDismiss()
+                } else if (!d.connecting) {
+                    asked = true
+                    support.connect(d.id)
+                }
             }
         }
         if (connected) {

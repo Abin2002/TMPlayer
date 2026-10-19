@@ -5789,84 +5789,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         statusArt?.scaleY = 1f
     }
 
-    /**
-     * Stacks the loading and failure sheet, or lays it out in two columns where stacking will not
-     * fit.
-     *
-     * A phone held sideways has around 390dp of height, and the sheet is a poster, a title, a
-     * message and up to three buttons: stacked, that overflows and the buttons fall off the bottom
-     * of the display. Side by side it is a picture on the left and everything readable on the
-     * right. A television, and a phone held upright, have the height and keep the stack.
-     *
-     * Applied every time the sheet is put up rather than once at startup: this activity chooses its
-     * own orientation and is not recreated when it changes, so the screen it was built against is
-     * regularly not the screen it ends up on.
-     */
+    /** The sheet stacked or in two columns, for the screen it is on now ([StatusSheetShape]). */
     private fun layOutSheetForThisScreen() {
-        val sheet = findViewById<LinearLayout>(R.id.status_sheet) ?: return
-        val column = findViewById<LinearLayout>(R.id.status_column) ?: return
-        val side = findViewById<LinearLayout>(R.id.status_side) ?: return
-        val sideBySide = sheetGoesSideways()
-        val wanted = if (sideBySide) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
-        if (sheet.orientation == wanted) return
-        sheet.orientation = wanted
-
-        val density = resources.displayMetrics.density
-        fun px(dp: Float) = (dp * density).toInt()
-
-        // The picture side takes a narrow, fixed slice: it is there to be recognised, not read, so
-        // every point it does not use goes to the message and the buttons.
-        side.updateLayoutParams<LinearLayout.LayoutParams> {
-            marginEnd = if (sideBySide) px(POSTER_GAP_DP) else 0
-        }
-        statusPoster?.updateLayoutParams<LinearLayout.LayoutParams> {
-            width = if (sideBySide) {
-                px(SIDE_POSTER_WIDTH_DP)
-            } else {
-                resources.getDimensionPixelSize(R.dimen.player_poster_width)
-            }
-            height = if (sideBySide) {
-                px(SIDE_POSTER_HEIGHT_DP)
-            } else {
-                resources.getDimensionPixelSize(R.dimen.player_poster_height)
-            }
-            // The gap between the two moves with them: what was space underneath the poster is now
-            // space to the right of the pair.
-            bottomMargin = if (sideBySide) px(NAME_GAP_DP) else px(POSTER_STACK_GAP_DP)
-        }
-        // The name wraps to the width of the picture it belongs to rather than running the width of
-        // the screen, which is what keeps the two of them reading as one thing on the left.
-        statusName?.apply {
-            maxWidth = if (sideBySide) px(SIDE_POSTER_WIDTH_DP) else px(NAME_STACK_MAX_WIDTH_DP)
-            maxLines = if (sideBySide) SIDE_NAME_LINES else STACK_NAME_LINES
-        }
-        // Weighted rather than wrapped, so a long message takes the width that is left over
-        // instead of pushing the picture off the side of the screen.
-        column.updateLayoutParams<LinearLayout.LayoutParams> {
-            width = if (sideBySide) 0 else LinearLayout.LayoutParams.WRAP_CONTENT
-            weight = if (sideBySide) 1f else 0f
-        }
-        // The bars run the width of the column they are in rather than a width chosen for a screen
-        // with nothing beside them.
-        listOfNotNull(statusProgress, statusSpinner).forEach { bar ->
-            bar.updateLayoutParams<LinearLayout.LayoutParams> {
-                width = if (sideBySide) {
-                    LinearLayout.LayoutParams.MATCH_PARENT
-                } else {
-                    resources.getDimensionPixelSize(R.dimen.player_progress_width)
-                }
-            }
-        }
-        // Both columns read from the same left edge, and the words run into the width they have
-        // been given. Centred is right for a stacked sheet, where the column is the whole screen,
-        // and wrong beside a picture.
-        val flow = if (sideBySide) Gravity.START or Gravity.CENTER_VERTICAL else Gravity.CENTER
-        sheet.gravity = flow
-        column.gravity = flow
-        side.gravity = flow
-        listOfNotNull(statusName, statusTitle, statusMeta, statusText, statusDetail).forEach {
-            it.gravity = if (sideBySide) Gravity.START else Gravity.CENTER
-        }
+        StatusSheetShape.apply(findViewById(R.id.status_overlay) ?: return, sheetGoesSideways())
     }
 
     /**
@@ -6921,17 +6846,6 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         /** Three quarters black: dark enough to read white on, light enough to see the picture. */
         private const val SUBTITLE_BOX_COLOUR = 0xC0000000.toInt()
 
-        /** The gap between the poster and the words, beside them and above them. */
-        private const val POSTER_GAP_DP = 24f
-        private const val POSTER_STACK_GAP_DP = 22f
-
-        /** The picture's slice of a sideways sheet, and the name that sits under it. */
-        private const val SIDE_POSTER_WIDTH_DP = 176f
-        private const val SIDE_POSTER_HEIGHT_DP = 99f
-        private const val NAME_GAP_DP = 10f
-        private const val SIDE_NAME_LINES = 3
-        private const val STACK_NAME_LINES = 2
-        private const val NAME_STACK_MAX_WIDTH_DP = 720f
 
         /** Anything at or above this is 4K territory, where a stick's decoder gives up. */
         private const val UHD_HEIGHT = 1600

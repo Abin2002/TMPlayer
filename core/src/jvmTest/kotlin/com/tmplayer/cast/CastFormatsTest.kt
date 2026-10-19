@@ -162,6 +162,42 @@ class CastFormatsTest {
         assertEquals(ReceiverCaps.GOOGLE_TV, ReceiverCaps.forModel("BRAVIA 4K VH2"))
         assertEquals(ReceiverCaps.UNKNOWN, ReceiverCaps.forModel("Chromecast"))
         assertEquals(ReceiverCaps.UNKNOWN, ReceiverCaps.forModel(null))
+        assertEquals(ReceiverCaps.FULL_HD_STICK, ReceiverCaps.forModel("MiTV-AESP0"))
+        assertEquals(ReceiverCaps.FULL_HD_STICK, ReceiverCaps.forModel("Chromecast HD"))
+        assertEquals(Support.Maybe, ReceiverCaps.forModel("Some TV 55").uhd)
+    }
+
+    private val scope4k = VideoTrack(1, Codecs.HEVC, 3832, 1600)
+
+    @Test
+    fun `a 4k picture on a 1080p stick is refused for its size, not its codec`() {
+        // The device test: a 3832x1600 HEVC Matroska on the Mi TV Stick, whose decoder would not open.
+        val p = plan(Container.Matroska, scope4k, listOf(audio(2, Codecs.AAC)), ReceiverCaps.forModel("MiTV-AESP0"))
+        assertFalse(p.castable)
+        assertEquals(CastRefusal.Resolution, p.refusal)
+        assertTrue(CastFormats.mayBeTooLarge(scope4k, ReceiverCaps.FULL_HD_STICK))
+    }
+
+    @Test
+    fun `a 4k picture in a codec the stick lacks is refused for the codec`() {
+        val p = plan(Container.Matroska, VideoTrack(1, Codecs.AV1, 3840, 2160), listOf(audio(2, Codecs.AAC)), ReceiverCaps.LEGACY)
+        assertEquals(CastRefusal.VideoCodec, p.refusal)
+    }
+
+    @Test
+    fun `a 4k picture plays on a 4k receiver and is tried on an unnamed one`() {
+        assertTrue(plan(Container.Matroska, scope4k, listOf(audio(2, Codecs.AAC)), ReceiverCaps.GOOGLE_TV).castable)
+        assertFalse(CastFormats.mayBeTooLarge(scope4k, ReceiverCaps.GOOGLE_TV))
+        val unnamed = ReceiverCaps.forModel("Some TV 55")
+        assertTrue(plan(Container.Matroska, scope4k, listOf(audio(2, Codecs.AAC)), unnamed).castable)
+        assertTrue(CastFormats.mayBeTooLarge(scope4k, unnamed))
+    }
+
+    @Test
+    fun `1080p is never held to the 4k limit`() {
+        assertTrue(plan(Container.Matroska, video(Codecs.HEVC), listOf(audio(2, Codecs.AAC)), ReceiverCaps.FULL_HD_STICK).castable)
+        assertFalse(CastFormats.mayBeTooLarge(video(Codecs.HEVC), ReceiverCaps.LEGACY))
+        assertFalse(CastFormats.aboveFullHd(VideoTrack(1, Codecs.H264, 1920, 1088)))
     }
 
     @Test

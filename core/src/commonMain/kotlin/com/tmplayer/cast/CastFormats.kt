@@ -21,14 +21,29 @@ data class ReceiverCaps(
     val matroska: Support = Support.Maybe,
     /** Dolby Digital and Dolby Digital Plus handed to the TV or amplifier as they are. */
     val dolbyPassthrough: Support = Support.Yes,
+    /**
+     * A picture larger than 1080p (4K, or a 3840 wide scope picture). A 1080p stick turns it away
+     * whatever the codec: its decoder will not open at that size.
+     */
+    val uhd: Support = Support.Maybe,
 ) {
     companion object {
         /** The first three Chromecasts: H.264 and VP8 only, up to 1080p. */
-        val LEGACY = ReceiverCaps(hevc = Support.No, vp9 = Support.No, av1 = Support.No, tenBit = Support.No, matroska = Support.No)
-        val ULTRA = ReceiverCaps(hevc = Support.Yes, vp9 = Support.Yes, av1 = Support.No, tenBit = Support.Yes, matroska = Support.No)
-        val GOOGLE_TV = ReceiverCaps(hevc = Support.Yes, vp9 = Support.Yes, av1 = Support.Maybe, tenBit = Support.Yes, matroska = Support.Maybe)
-        val STREAMER = ReceiverCaps(hevc = Support.Yes, vp9 = Support.Yes, av1 = Support.Yes, tenBit = Support.Yes, matroska = Support.Maybe)
+        val LEGACY = ReceiverCaps(hevc = Support.No, vp9 = Support.No, av1 = Support.No, tenBit = Support.No, matroska = Support.No, uhd = Support.No)
+        val ULTRA = ReceiverCaps(hevc = Support.Yes, vp9 = Support.Yes, av1 = Support.No, tenBit = Support.Yes, matroska = Support.No, uhd = Support.Yes)
+        val GOOGLE_TV = ReceiverCaps(hevc = Support.Yes, vp9 = Support.Yes, av1 = Support.Maybe, tenBit = Support.Yes, matroska = Support.Maybe, uhd = Support.Yes)
+        val STREAMER = ReceiverCaps(hevc = Support.Yes, vp9 = Support.Yes, av1 = Support.Yes, tenBit = Support.Yes, matroska = Support.Maybe, uhd = Support.Yes)
         val UNKNOWN = ReceiverCaps()
+
+        /**
+         * A 1080p Android TV box or stick: what a Google TV plays, at 1080p. The Google TV HD and
+         * the Mi TV Stick (MiTV-AESP0, the device test's stick, whose HEVC decoder would not open
+         * a 3832x1600 picture) are of this kind.
+         */
+        val FULL_HD_STICK = GOOGLE_TV.copy(uhd = Support.No)
+
+        /** Model names of 1080p sticks and boxes, as they announce themselves. */
+        private val FULL_HD_MODELS = setOf("chromecast hd", "google tv hd", "mitv-aesp0", "mi tv stick")
 
         /**
          * From the model name in the device's announcement ("md" in its mDNS record, the Cast
@@ -41,11 +56,15 @@ data class ReceiverCaps(
                 m.isEmpty() -> UNKNOWN
                 "ultra" in m -> ULTRA
                 "streamer" in m -> STREAMER
-                "google tv" in m || m == "chromecast hd" || "android tv" in m || "shield" in m || "bravia" in m -> GOOGLE_TV
+                m in FULL_HD_MODELS -> FULL_HD_STICK
+                "google tv" in m || "shield" in m || "bravia" in m -> GOOGLE_TV
+                // Another television or box with Cast built in: a Google TV's codecs, but nothing
+                // in the name says whether its panel and decoder go past 1080p.
+                "android tv" in m -> GOOGLE_TV.copy(uhd = Support.Maybe)
                 m == "chromecast" -> UNKNOWN
                 "audio" in m || "home" in m || "nest" in m && "hub" !in m -> ReceiverCaps(hevc = Support.No, vp9 = Support.No, av1 = Support.No, matroska = Support.No)
                 "hub" in m -> LEGACY
-                else -> GOOGLE_TV
+                else -> GOOGLE_TV.copy(uhd = Support.Maybe)
             }
         }
     }
@@ -74,8 +93,8 @@ sealed interface CastRoute {
     data class TranscodeVideo(val audioTrack: Int?) : CastRoute
 }
 
-/** Why a video cannot be cast at all. */
-enum class CastRefusal { VideoCodec, AudioCodec, Container, Pictures }
+/** Why a video cannot be cast at all. [Resolution]: a picture past 1080p on a 1080p receiver. */
+enum class CastRefusal { VideoCodec, Resolution, AudioCodec, Container, Pictures }
 
 /**
  * The plan for one video: the routes to try in order (a Maybe goes first and falls back on a
@@ -127,9 +146,17 @@ object CastFormats {
             Codecs.AV1 -> caps.av1
             else -> Support.No
         }
-        if (codec == Support.No || !video.tenBit) return codec
-        return worse(codec, caps.tenBit)
+        if (codec == Support.No) return codec
+        val sized = if (aboveFullHd(video)) worse(codec, caps.uhd) else codec
+        return if (video.tenBit) worse(sized, caps.tenBit) else sized
     }
+
+    /** Larger than 1080p either way (a scope 4K picture is 3840 by about 1600). */
+    fun aboveFullHd(video: VideoTrack): Boolean = video.width > 1920 || video.height > 1088
+
+    /** The picture is past 1080p and [caps] says the receiver may not open it. */
+    fun mayBeTooLarge(video: VideoTrack?, caps: ReceiverCaps): Boolean =
+        video != null && aboveFullHd(video) && caps.uhd != Support.Yes
 
     fun audioSupport(codec: String, caps: ReceiverCaps): Support = when (codec) {
         in RECEIVER_AUDIO -> Support.Yes
@@ -161,8 +188,13 @@ object CastFormats {
 
         // The picture cannot be shown as it is: conversion or nothing.
         if (videoOk == Support.No) {
+            val why = if (video != null && aboveFullHd(video) && caps.uhd == Support.No && videoSupport(video, caps.copy(uhd = Support.Yes)) != Support.No) {
+                CastRefusal.Resolution
+            } else {
+                CastRefusal.VideoCodec
+            }
             return if (transcode != null) CastPlan(listOf(transcode), audioTrack?.number)
-            else CastPlan(emptyList(), audioTrack?.number, CastRefusal.VideoCodec)
+            else CastPlan(emptyList(), audioTrack?.number, why)
         }
 
         val convert = audioTrack?.takeIf { canConvertAudio }?.let { CastRoute.ConvertAudio(it.number) }

@@ -137,6 +137,7 @@ class CastPlaybackEngine(
                     throw IOException(
                         when (pl.refusal) {
                             CastRefusal.VideoCodec -> L.castCannotCastPicture
+                            CastRefusal.Resolution -> L.castPictureTooLarge
                             else -> L.castCannotCastContainer
                         },
                     )
@@ -151,11 +152,15 @@ class CastPlaybackEngine(
                 throw e
             } catch (e: Exception) {
                 Logger.w(TAG, "Cast open failed", e)
-                _state.value = PlaybackStatus(error = e.message ?: L.castLoadFailed)
+                _state.value = PlaybackStatus(error = e.message ?: failureText())
                 _phase.value = CastPhase.Failed
             }
         }
     }
+
+    /** The TV turned the video down: 4K where it may only play 1080p, or the plain failure. */
+    private fun failureText(): String =
+        if (CastFormats.mayBeTooLarge(probe?.video, ReceiverCaps.forModel(client.device.model))) L.castLoadFailedLarge else L.castLoadFailed
 
     private fun ensureServer() {
         if (server?.running == true) return
@@ -174,7 +179,7 @@ class CastPlaybackEngine(
             if (load(r, atMs)) return
             routeIndex++
         }
-        throw IOException(L.castLoadFailed)
+        throw IOException(failureText())
     }
 
     /** One LOAD; true when the receiver took it. */
@@ -298,7 +303,7 @@ class CastPlaybackEngine(
                 Logger.i(TAG, "Receiver failed on ${route?.let { it::class.simpleName }}, trying the next way")
                 routeIndex++
                 published = null
-                runCatching { startRoute(targetMs) }.onFailure { _state.value = _state.value.copy(error = L.castLoadFailed) }
+                runCatching { startRoute(targetMs) }.onFailure { _state.value = _state.value.copy(error = failureText()) }
             }
             return
         }
@@ -339,7 +344,7 @@ class CastPlaybackEngine(
         if (!loading && mine) place.heard(view, nowMs())
         _phase.value = view.phase
         val error = when (view.phase) {
-            CastPhase.Failed -> _state.value.error ?: L.castLoadFailed
+            CastPhase.Failed -> _state.value.error ?: failureText()
             // The TV playing again clears an old complaint.
             CastPhase.Playing, CastPhase.Paused, CastPhase.Buffering -> null
             else -> _state.value.error
@@ -425,7 +430,7 @@ class CastPlaybackEngine(
         scope.launch {
             val r = route
             val ok = if (r != null && published != null) load(r, at) else runCatching { routeIndex = 0; startRoute(at) }.isSuccess
-            if (!ok) _state.value = _state.value.copy(error = L.castLoadFailed)
+            if (!ok) _state.value = _state.value.copy(error = failureText())
         }
     }
 
@@ -439,7 +444,7 @@ class CastPlaybackEngine(
         } else {
             // A rewrap starts again from the cue before the target.
             val r = route ?: return
-            scope.launch { if (!load(r, target)) _state.value = _state.value.copy(error = L.castLoadFailed) }
+            scope.launch { if (!load(r, target)) _state.value = _state.value.copy(error = failureText()) }
         }
     }
 
