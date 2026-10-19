@@ -335,7 +335,10 @@ class MainActivity : ComponentActivity() {
                     androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().noteTouchOrigin()) {
                         // The last runs crashed as they started: the question alone, then the shell.
                         val holding by CrashReports.holdShell.collectAsStateWithLifecycle()
-                        if (holding) StartupCrashQuestion() else Root()
+                        // On a remote, a list keeps still while the focused item is in full view.
+                        com.tmplayer.ui.components.StillWhenVisible(enabled = !com.tmplayer.ui.components.isTouch()) {
+                            if (holding) StartupCrashQuestion() else Root()
+                        }
                         // Messages at the top, clear of the floating bar and the buttons at the foot.
                         TopMessageHost()
                     }

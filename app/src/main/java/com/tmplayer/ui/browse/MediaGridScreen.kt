@@ -620,9 +620,14 @@ fun MediaGridScreen(
                     if (state.isFocused) {
                         scope.launch {
                             delay(FOCUS_SETTLE_MS)
+                            // Only when the list has moved off its start: asked again on every
+                            // press along a row already at the top, it pulled the grid back up
+                            // after each step and the row jumped.
                             if (layout == CardLayout.Grid) {
-                                gridState.animateScrollToItem(0)
-                            } else {
+                                if (gridState.firstVisibleItemIndex != 0 || gridState.firstVisibleItemScrollOffset != 0) {
+                                    gridState.animateScrollToItem(0)
+                                }
+                            } else if (listState.firstVisibleItemIndex != 0 || listState.firstVisibleItemScrollOffset != 0) {
                                 listState.animateScrollToItem(0)
                             }
                         }

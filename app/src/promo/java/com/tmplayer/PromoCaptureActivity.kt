@@ -302,6 +302,8 @@ class PromoCaptureActivity : ComponentActivity() {
                 // The theme's own background, not the television's literal. Painting the dark
                 // constant here put a black page behind a light-mode screen, so every light shot
                 // taken from this fixture was of something the app never draws.
+                // As the app's own shell does: a list keeps still while the focused item is in view.
+                com.tmplayer.ui.components.StillWhenVisible(enabled = tv || !com.tmplayer.ui.components.isTouch()) {
                 Box(Modifier.fillMaxSize().background(Tone.background)) {
                     when (screen) {
                         "media" -> {
@@ -529,6 +531,7 @@ class PromoCaptureActivity : ComponentActivity() {
                             onDismiss = { confirming = false },
                         )
                     }
+                }
                 }
             }
         }
