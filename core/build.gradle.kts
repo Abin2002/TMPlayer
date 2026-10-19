@@ -191,6 +191,11 @@ kotlin {
             api(libs.androidx.datastore.preferences.core)
             implementation(project.dependencies.platform(libs.androidx.compose.bom))
             implementation(libs.androidx.compose.runtime)
+            // The shared half of crash reporting (CrashRecord, CrashReportScrubber, CrashLimits),
+            // which builds and trims Sentry's events with its protocol classes. Each app brings
+            // the SDK up itself: Android through sentry-android-core, which is built on this very
+            // artifact at the same version, and the desktop directly.
+            api(libs.sentry)
         }
         jvmMain.dependencies {
             // Android ships org.json in the platform, and bundling it there would shadow the

@@ -92,10 +92,18 @@ fun main(args: Array<String>) {
     if (!SingleInstance.acquire(args.toList(), handedOver)) return
     // Only the first instance, so a second launch never rotates the log of the one running.
     DesktopLog.install(java.io.File(DesktopPaths.dataDir, "logs"))
+    // An uncaught exception is written down while crash reports are off, to be offered on the next
+    // start; before StartupFailure, whose handler runs this one first (DesktopCrashReports).
+    DesktopCrashReports.watch(java.io.File(DesktopPaths.dataDir, "crash"))
     // Until the window is up, an error ends the launch out loud instead of leaving a process with
     // no window that holds the single instance lock (see StartupFailure).
     StartupFailure.install()
     try {
+        // The crash reports switch first, so whatever fails from here on can be reported, and a
+        // crash left from the last run is sent or asked about before anything else is built.
+        DesktopCrashReports.launch(DesktopServices.settings)
+        // `-Dtmplayer.crashAtStart=true`: a launch that fails before the window, for testing that.
+        DesktopCrashReports.crashAtStartIfAsked()
         NativeInventory.log()
         Td.start(DesktopPaths, desktopDeviceInfo(), desktopCredentials())
         OnlineSubtitles.current = desktopOnlineSubtitles()
@@ -295,6 +303,8 @@ fun main(args: Array<String>) {
                     withFrameNanos { }
                     SingleInstance.markReady()
                     StartupFailure.started()
+                    // `-Dtmplayer.crashAfterWindow=true`: an uncaught exception with the window up.
+                    DesktopCrashReports.crashAfterWindowIfAsked()
                 }
                 DesktopTheme(settings) {
                     val colors = MaterialTheme.colorScheme
@@ -333,6 +343,8 @@ fun main(args: Array<String>) {
                             // Nothing on screen with a page header (sign in, the PIN pad): the
                             // buttons on their own, top right. The player has its own in its bar.
                             if (shell.nowPlaying == null) WindowControlsFallback(Modifier.align(Alignment.TopEnd))
+                            // A crash from the last run, signed in or not (DesktopCrashReports).
+                            com.tmplayer.desktop.ui.CrashQuestionHost(settings)
                             // Undecorated and floating: a hairline for the edge the system no
                             // longer draws, and the edges to resize by.
                             if (undecorated && windowState.placement == WindowPlacement.Floating && !shell.fullscreen) {

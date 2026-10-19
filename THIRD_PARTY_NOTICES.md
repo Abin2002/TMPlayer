@@ -177,6 +177,8 @@ source at <https://github.com/adoptium/jdk21u>.
 - FileKit 0.16.0: MIT: <https://github.com/vinceglb/FileKit>
 - AppDirs 1.4.0: Apache License 2.0: <https://github.com/harawata/appdirs>
 - SLF4J 2.0.17 (no-operation binding): MIT: <https://github.com/qos-ch/slf4j>
+- Sentry Java SDK 8.61.0 (crash reports, off until turned on, see the privacy page): MIT:
+  <https://github.com/getsentry/sentry-java>
 
 ### Fonts on the desktop
 

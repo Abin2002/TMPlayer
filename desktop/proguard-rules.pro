@@ -55,6 +55,10 @@
 -keep class io.github.vinceglb.filekit.** { *; }
 -keep class kotlinx.io.** { *; }
 
+# Sentry (crash reports, off until the viewer turns them on): integrations and the transport are
+# looked up by class name, and its JSON serialisers are reached through tables, not calls.
+-keep class io.sentry.** { *; }
+
 # Native methods keep their names whatever class they are in.
 -keepclasseswithmembernames,includedescriptorclasses class * { native <methods>; }
 

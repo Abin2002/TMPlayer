@@ -133,6 +133,13 @@ class ThemeAuditRenderTest {
                     SignOutDialog(shell, onDismiss = {})
                 }
             }
+            // The crash question (CP102g): its Always send box and the logs' buttons in the extra slot.
+            shot("crash-question") {
+                Box(Modifier.fillMaxSize()) {
+                    SettingsPage(shell, "2.0.0")
+                    CrashQuestion(onSend = {}, onDismiss = {})
+                }
+            }
             // One of the prompts the CP41 sweep added, with a detail line.
             shot("confirm-remove-after-watching") {
                 Box(Modifier.fillMaxSize()) {

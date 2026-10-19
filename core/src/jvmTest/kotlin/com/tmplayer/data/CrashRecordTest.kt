@@ -112,6 +112,15 @@ class CrashRecordTest {
     }
 
     @Test
+    fun `the desktop keeps another build's crash without a UUID, for a month`() {
+        val now = System.currentTimeMillis()
+        val old = CrashRecord(now, "1.27.2", 12702, emptyList())
+        assertTrue(CrashRecord.worthSending(old, 12800, now, needsMapping = false))
+        val stale = CrashRecord(now - CrashRecord.KEEP_MILLIS - 1, "1.27.2", 12702, emptyList())
+        assertFalse(CrashRecord.worthSending(stale, 12800, now, needsMapping = false))
+    }
+
+    @Test
     fun `a record written by 1_27_1 or older reads with no UUID`() {
         val file = dir.root.resolve("pending.json")
         file.writeText(

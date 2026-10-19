@@ -61,7 +61,8 @@ fun CrashReportsQuestion(
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OptionRow(
             title = s.settingsCrashReports,
-            detail = s.setupCrashHolds,
+            // A computer's report names the operating system, not a device (CP102g).
+            detail = if (deviceForm() == DeviceForm.Desktop) s.setupCrashHoldsDesktop else s.setupCrashHolds,
             selected = on,
             role = Role.Switch,
             modifier = Modifier.arrowsMoveFocus(),

@@ -46,6 +46,9 @@ object StartupFailure {
             error.printStackTrace()
             System.err.flush()
         }
+        // Sent and flushed before the dialog with the crash reports switch on, written down for the
+        // next start otherwise (CP102g): the dialog can sit unanswered, and the exit after it halts.
+        com.tmplayer.desktop.DesktopCrashReports.beforeStartupFailure(error)
         runCatching {
             val trace = StringWriter().also { error.printStackTrace(PrintWriter(it)) }.toString()
             val log = DesktopLog.file?.let { "\n\nThe full log is in $it" }.orEmpty()
