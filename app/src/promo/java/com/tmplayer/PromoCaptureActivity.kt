@@ -287,6 +287,7 @@ class PromoCaptureActivity : ComponentActivity() {
             // the "Now in ..." card over the chat list, in whatever language is active.
             var overlay by remember { mutableStateOf(intent.getStringExtra("overlay")) }
             var languageNotice by remember { mutableStateOf(intent.getBooleanExtra("language_notice", false)) }
+            var updateDialog by remember { mutableStateOf(intent.getBooleanExtra("update_dialog", false)) }
             TMPlayerTheme {
                 // The real app does this from MainActivity, which the fixture does not run
                 // through. Without it a light shot carries a white clock on a white status bar,
@@ -438,6 +439,12 @@ class PromoCaptureActivity : ComponentActivity() {
                         )
                     }
                     if (supporting) SupportDialog(from = "card1", onClose = { supporting = false })
+                    // `--ez update_dialog true` opens the update popup over the screen, offering
+                    // whatever the site's live feed names (this build calls itself x.y.z-promo).
+                    if (updateDialog) {
+                        LaunchedEffect(Unit) { com.tmplayer.data.Updates.check() }
+                        com.tmplayer.ui.update.UpdateDialog(onDismiss = { updateDialog = false })
+                    }
                     if (languageNotice && screen == "chats") {
                         val active by Translator.active.collectAsState()
                         LanguageNoticeCard(

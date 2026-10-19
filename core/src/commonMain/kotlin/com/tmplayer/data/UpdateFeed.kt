@@ -31,6 +31,12 @@ data class Release(
     val version: String,
     val pageUrl: String,
     val notes: String = "",
+    /**
+     * The same notes as a list, one change per item: `latest.json`'s `changes`, or the leading
+     * "- " list of the GitHub release page. Empty from a feed written before 1.27.1, which only
+     * has [notes]; [points] reads those instead.
+     */
+    val changes: List<String> = emptyList(),
     val assets: Map<String, ReleaseAsset> = emptyMap(),
     /** The release's `SHA256SUMS` file, for an asset whose own hash is not known. */
     val checksumsUrl: String? = null,
@@ -114,6 +120,10 @@ object UpdateFeed {
             version = version,
             pageUrl = root.optString("releaseUrl").ifBlank { "$RELEASES_PAGE/tag/v$version" }, // i18n-ok: a JSON field
             notes = root.optString("notes").trim(),
+            changes = buildList {
+                val list = root.optJSONArray("changes") ?: return@buildList
+                for (i in 0 until list.length()) list.optString(i).trim().takeIf { it.isNotEmpty() }?.let(::add)
+            },
             assets = assets,
         )
     }.getOrNull()
@@ -151,10 +161,38 @@ object UpdateFeed {
             version = version,
             pageUrl = root.optString("html_url").ifBlank { "$RELEASES_PAGE/tag/$tag" },
             notes = "",
+            changes = leadingList(root.optString("body")),
             assets = assets,
             checksumsUrl = checksums,
         )
     }.getOrNull()
+
+    /**
+     * The "- " list a release page opens with, one item per change. Stops at the first other line
+     * after it, so the page's table of files and its links are left out.
+     */
+    fun leadingList(markdown: String): List<String> {
+        val items = mutableListOf<String>()
+        for (raw in markdown.lineSequence()) {
+            val line = raw.trim()
+            when {
+                line.startsWith("- ") || line.startsWith("* ") -> line.drop(2).trim().takeIf { it.isNotEmpty() }?.let(items::add)
+                line.isEmpty() -> Unit
+                items.isNotEmpty() -> break
+            }
+        }
+        return items
+    }
+
+    /**
+     * Notes written as one paragraph (a feed from before `changes`) cut back into points, a
+     * sentence each, without the closing full stop a list item does not carry.
+     */
+    fun sentences(notes: String): List<String> =
+        notes.split(SENTENCE_BREAK).map { it.trim().removeSuffix(".") }.filter { it.isNotEmpty() }
+
+    /** A full stop, question or exclamation mark, then space, then a capital or a digit. */
+    private val SENTENCE_BREAK = Regex("""(?<=[.!?])\s+(?=[\p{Lu}\d])""")
 
     /**
      * The feed key a release file name stands for, by the names CI gives them. The names CI no
@@ -259,3 +297,6 @@ object UpdateFeed {
     internal const val CONNECT_TIMEOUT_MS = 8_000
     internal const val READ_TIMEOUT_MS = 20_000
 }
+
+/** What the update popup lists under What's new: [Release.changes], or the notes cut into sentences. */
+val Release.points: List<String> get() = changes.ifEmpty { UpdateFeed.sentences(notes) }

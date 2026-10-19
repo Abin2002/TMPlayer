@@ -1,22 +1,17 @@
 package com.tmplayer.ui.update
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon as M3Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text as M3Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,16 +23,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.Icon
-import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tmplayer.data.FormFactor
 import com.tmplayer.data.MeteredPolicy
@@ -50,6 +44,7 @@ import com.tmplayer.data.UpdateWords
 import com.tmplayer.data.Updates
 import com.tmplayer.data.canInstall
 import com.tmplayer.data.downloadAndInstall
+import com.tmplayer.data.points
 import com.tmplayer.data.release
 import com.tmplayer.data.unknownSourcesIntent
 import com.tmplayer.data.updateScheduler
@@ -58,14 +53,13 @@ import com.tmplayer.i18n.Translator
 import com.tmplayer.platform.Background
 import com.tmplayer.ui.components.FloatingWindow
 import com.tmplayer.ui.components.PhonePad
-import com.tmplayer.ui.components.TmAlertDialog
 import com.tmplayer.ui.components.TmButton
 import com.tmplayer.ui.components.TmSecondaryButton
+import com.tmplayer.ui.components.UpdateCard
+import com.tmplayer.ui.components.UpdateCardProgress
 import com.tmplayer.ui.components.isTouch
 import com.tmplayer.ui.components.paneAction
 import com.tmplayer.ui.i18n.LocalStrings
-import com.tmplayer.ui.icons.TmIcons
-import com.tmplayer.ui.theme.Caution
 import com.tmplayer.ui.theme.Tone
 import com.tmplayer.ui.theme.floatingSurface
 import kotlinx.coroutines.launch
@@ -156,42 +150,16 @@ fun UpdateDialog(onDismiss: () -> Unit) {
         // A ceiling rather than a width: 620dp is a comfortable paragraph on a television.
         val panel = min(maxWidth - PhonePad.Side * 2, PANEL_MAX)
 
-        Column(
-            Modifier
-                .width(panel)
-                .floatingSurface()
-                .padding(28.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+        UpdateCard(
+            title = title(state, offer),
+            installed = offer?.let { UpdateWords.youHave(Updates.installedVersion) },
+            points = offer?.release?.points.orEmpty(),
+            status = status(state, offer, device = "TV"),
+            statusIsError = state is UpdateState.Failed,
+            progress = cardProgress(state),
+            tv = true,
+            modifier = Modifier.width(panel).padding(vertical = 24.dp).floatingSurface(),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    TmIcons.Refresh,
-                    contentDescription = null,
-                    tint = Caution,
-                    modifier = Modifier.size(28.dp),
-                )
-                Spacer(Modifier.width(14.dp))
-                Text(
-                    title(state, offer),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Tone.text,
-                )
-            }
-
-            body(state, offer, device = "TV").forEach { paragraph ->
-                Text(
-                    paragraph,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = if (state is UpdateState.Failed) Tone.danger else Tone.muted,
-                )
-            }
-
-            (state as? UpdateState.Downloading)?.let { downloading ->
-                Spacer(Modifier.height(6.dp))
-                ProgressBar(downloading.fraction)
-            }
-
-            Spacer(Modifier.height(10.dp))
             // A remote steps along a row; nothing here while the download runs, so a stray
             // press cannot abandon it. Four buttons are wider than the panel, so the row wraps.
             FlowRow(
@@ -262,9 +230,9 @@ private val RELEASE_PAGE: String get() = L.updateReleasePage
 private val PANEL_MAX = 620.dp
 
 /**
- * The phone's version: Material's own dialog rather than the hand-built panel above, which is drawn
- * for a television and its D-pad. On a phone the platform already decides the scrim, the width, the
- * corner radius, the button order, tap-outside to dismiss and the screen reader announcement.
+ * The phone's version: the same card in a dialog of its own, with the buttons stacked for a thumb,
+ * Update now across the full width and the two ways out under it. Tapping outside closes it, except
+ * while the download runs, when the dialog is what holds the download's progress on screen.
  */
 @Composable
 private fun TouchUpdateDialog(
@@ -277,95 +245,75 @@ private fun TouchUpdateDialog(
     onReleasePage: (() -> Unit)?,
 ) {
     val s = LocalStrings.current
-    val downloading = state as? UpdateState.Downloading
-    TmAlertDialog(
-        // A download in progress is the one state that must not be dismissed by a stray tap
-        // outside it: the dialog is what is holding the download's own progress on screen.
-        onDismissRequest = { if (downloading == null) onDismiss() },
-        // Amber on a white card is barely a colour, so Tone hands the phone a darker one.
-        icon = { M3Icon(TmIcons.Refresh, contentDescription = null, tint = Tone.caution) },
-        title = { M3Text(title(state, offer)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                body(state, offer, device = "phone").forEach { paragraph ->
-                    M3Text(paragraph, color = if (state is UpdateState.Failed) Tone.danger else Color.Unspecified)
+    val downloading = state is UpdateState.Downloading
+    // A phone on its side has too little height to stack the list over the buttons.
+    val short = LocalConfiguration.current.screenHeightDp < SHORT_SCREEN
+    Dialog(
+        onDismissRequest = { if (!downloading) onDismiss() },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        UpdateCard(
+            title = title(state, offer),
+            installed = offer?.let { UpdateWords.youHave(Updates.installedVersion) },
+            points = offer?.release?.points.orEmpty(),
+            status = status(state, offer, device = "phone"),
+            statusIsError = state is UpdateState.Failed,
+            progress = cardProgress(state),
+            split = short,
+            modifier = Modifier
+                .systemBarsPadding()
+                .padding(horizontal = 20.dp, vertical = if (short) 12.dp else 24.dp)
+                .widthIn(max = if (short) 860.dp else 560.dp)
+                .floatingSurface(),
+        ) {
+            if (downloading) return@UpdateCard
+            // A dialog's button is too narrow for a spinner beside the words, so the label names
+            // the check while it runs, and the button is disabled against a second press.
+            val checking = state is UpdateState.Checking
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Button(
+                    onClick = onPrimary,
+                    enabled = !checking && (offer == null || !offer.allowed || !offer.waitsForWifi),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                ) {
+                    M3Text(
+                        when {
+                            checking -> s.updateChecking
+                            offer != null -> primaryLabel(state, offer)
+                            else -> s.updateCheckAgain
+                        },
+                    )
                 }
-                if (downloading != null) {
-                    // An unknown length becomes the indeterminate bar rather than an empty trough.
-                    val fraction = downloading.fraction
-                    if (fraction != null) {
-                        LinearProgressIndicator(
-                            progress = { fraction.coerceIn(0f, 1f) },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    } else {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                if (onReleasePage != null) {
+                    TextButton(onClick = onReleasePage, modifier = Modifier.fillMaxWidth()) {
+                        M3Text(s.updateOpenReleasePage)
                     }
                 }
-                // Under the words rather than in the button row, which is already three wide.
-                if (onReleasePage != null) {
-                    TextButton(onClick = onReleasePage) { M3Text(s.updateOpenReleasePage) }
+                Row(Modifier.fillMaxWidth()) {
+                    if (offer != null) {
+                        TextButton(onClick = onSkip, modifier = Modifier.weight(1f)) {
+                            M3Text(UpdateWords.SKIP, color = Tone.muted)
+                        }
+                        TextButton(onClick = onLater, modifier = Modifier.weight(1f)) {
+                            M3Text(UpdateWords.LATER)
+                        }
+                    } else {
+                        TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                            M3Text(s.commonClose)
+                        }
+                    }
                 }
             }
-        },
-        confirmButton = {
-            if (downloading != null) return@TmAlertDialog
-            // A dialog's button row is too narrow for a spinner beside the words, so the label
-            // names the check while it runs, and the button is disabled against a second press.
-            val checking = state is UpdateState.Checking
-            Button(
-                onClick = onPrimary,
-                enabled = !checking && (offer == null || !offer.allowed || !offer.waitsForWifi),
-            ) {
-                M3Text(
-                    when {
-                        checking -> s.updateChecking
-                        offer != null -> primaryLabel(state, offer)
-                        else -> s.updateCheckAgain
-                    },
-                )
-            }
-        },
-        dismissButton = {
-            if (downloading != null) return@TmAlertDialog
-            Row {
-                if (offer != null) {
-                    TextButton(onClick = onSkip) { M3Text(UpdateWords.SKIP) }
-                    TextButton(onClick = onLater) { M3Text(UpdateWords.LATER) }
-                } else {
-                    TextButton(onClick = onDismiss) { M3Text(s.commonClose) }
-                }
-            }
-        },
-    )
-}
-
-/**
- * A plain bar, filled as far as the download has come.
- *
- * An unknown length shows as a full-width trough with nothing in it rather than as a spinner:
- * this dialog already says what it is doing in words, and a second moving thing is noise.
- */
-@Composable
-private fun ProgressBar(fraction: Float?) {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(6.dp)
-            .clip(CircleShape)
-            .background(Tone.muted.copy(alpha = 0.25f)),
-    ) {
-        if (fraction != null) {
-            Box(
-                Modifier
-                    .fillMaxWidth(fraction.coerceIn(0f, 1f))
-                    .height(6.dp)
-                    .clip(CircleShape)
-                    .background(Caution),
-            )
         }
     }
 }
+
+/** Below this height (dp) the phone's card goes side by side. */
+private const val SHORT_SCREEN = 520
+
+private fun cardProgress(state: UpdateState): UpdateCardProgress =
+    (state as? UpdateState.Downloading)?.let { it.fraction?.let(UpdateCardProgress::Part) ?: UpdateCardProgress.Unknown }
+        ?: UpdateCardProgress.None
 
 private fun title(state: UpdateState, offer: Offer?): String = when {
     offer != null -> UpdateWords.title(offer.release, offer.skipped)
@@ -382,36 +330,26 @@ private fun primaryLabel(state: UpdateState, offer: Offer): String = when {
 }
 
 /**
- * The paragraphs under the title. A failure replaces them all; otherwise the installed version and
- * the release's notes, then one line on how the update reaches this device.
+ * The line under What's new: a failure, the answer to a check, or how the update reaches this
+ * device. The release's own notes are the card's list, not part of this.
  *
  * @param device what to call the machine this is running on, which the install notice names.
  */
-private fun body(state: UpdateState, offer: Offer?, device: String): List<String> {
-    if (state is UpdateState.Failed) return listOf(state.message)
+private fun status(state: UpdateState, offer: Offer?, device: String): String {
+    if (state is UpdateState.Failed) return state.message
     if (offer == null) {
-        return listOf(
-            if (state is UpdateState.Checking) {
-                L.updateAskingGithub
-            } else {
-                L.updateNewest(version = Updates.installedVersion, page = Updates.RELEASES_PAGE)
-            },
-        )
+        return if (state is UpdateState.Checking) {
+            L.updateAskingGithub
+        } else {
+            L.updateNewest(version = Updates.installedVersion, page = Updates.RELEASES_PAGE)
+        }
     }
     val size = Translator.messages.formatter.bytes(offer.sizeBytes)
-    val how = when {
+    return when {
         state is UpdateState.Downloading -> L.updateDownloading(size = size)
-        !offer.allowed && device.equals("tv", ignoreCase = true) ->
-            L.updateBlockedTv
-        !offer.allowed ->
-            L.updateBlockedPhone
+        !offer.allowed && device.equals("tv", ignoreCase = true) -> L.updateBlockedTv
+        !offer.allowed -> L.updateBlockedPhone
         offer.waitsForWifi -> UPDATE_WAITS_FOR_WIFI
         else -> L.updateSizeAndConfirm(size = size)
     }
-    return listOf(
-        listOf(UpdateWords.youHave(Updates.installedVersion), offer.release.notes)
-            .filter { it.isNotBlank() }
-            .joinToString(" "),
-        how,
-    )
 }

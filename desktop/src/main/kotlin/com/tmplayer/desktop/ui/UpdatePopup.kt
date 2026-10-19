@@ -1,40 +1,43 @@
 package com.tmplayer.desktop.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import com.tmplayer.i18n.L
-import com.tmplayer.ui.components.TmAlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.tmplayer.data.Release
 import com.tmplayer.data.UpdateScheduler
 import com.tmplayer.data.UpdateState
 import com.tmplayer.data.UpdateWords
 import com.tmplayer.data.Updates
+import com.tmplayer.data.points
 import com.tmplayer.data.release
 import com.tmplayer.desktop.BuildInfo
 import com.tmplayer.desktop.InstallKind
 import com.tmplayer.desktop.SelfUpdate
 import com.tmplayer.desktop.UpdateProgress
 import com.tmplayer.desktop.os.OpenExternal
+import com.tmplayer.i18n.L
 import com.tmplayer.platform.Background
 import com.tmplayer.player.StreamStats
+import com.tmplayer.ui.components.UpdateCard
+import com.tmplayer.ui.components.UpdateCardProgress
 import com.tmplayer.ui.i18n.LocalStrings
-import com.tmplayer.ui.icons.TmIcons
 import com.tmplayer.ui.theme.Tone
+import com.tmplayer.ui.theme.floatingSurface
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -125,9 +128,9 @@ fun UpdatePopupHost(state: ShellState) {
 }
 
 /**
- * "TMPlayer 1.20.0 is out": what is new, how this install takes it, and the three choices. The
- * download, the check, the install and Restart now all happen in here, where the corner notice
- * used to show them.
+ * "TMPlayer 1.20.0 is out": what is new as a list that scrolls, how this install takes it, and
+ * the choices. The download, the check, the install and Restart now all happen in here, where the
+ * corner notice used to show them.
  */
 @Composable
 fun UpdatePopup(
@@ -146,60 +149,51 @@ fun UpdatePopup(
 ) {
     val s = LocalStrings.current
     val busy = progress is UpdateProgress.Downloading || progress == UpdateProgress.Verifying || progress == UpdateProgress.Installing
-    TmAlertDialog(
-        onDismissRequest = onClose,
-        icon = { Icon(TmIcons.Refresh, contentDescription = null, tint = Tone.caution) },
-        title = { Text(UpdateWords.title(release, skipped)) },
-        text = {
-            Column(Modifier.widthIn(max = 460.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    listOf(UpdateWords.youHave(installed), release.notes).filter { it.isNotBlank() }.joinToString(" "),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Text(
-                    updateLine(kind, canUpdate, progress, release),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (progress is UpdateProgress.Failed) Tone.danger else Tone.muted,
-                )
-                when (progress) {
-                    is UpdateProgress.Downloading -> {
-                        val fraction = progress.fraction
-                        if (fraction == null) {
-                            LinearProgressIndicator(Modifier.fillMaxWidth())
-                        } else {
-                            LinearProgressIndicator({ fraction }, Modifier.fillMaxWidth())
-                        }
-                    }
-                    UpdateProgress.Verifying, UpdateProgress.Installing -> LinearProgressIndicator(Modifier.fillMaxWidth())
-                    else -> Unit
-                }
-            }
-        },
-        confirmButton = {
-            when {
-                progress is UpdateProgress.Ready -> Button(onClick = onRestart) { Text(s.updateRestartNow) }
-                busy -> Unit
-                !canUpdate -> Button(onClick = onOpenPage) { Text(UpdateWords.OPEN_RELEASE_PAGE) }
-                else -> Button(onClick = onUpdate) {
-                    Text(if (progress is UpdateProgress.Failed) UpdateWords.TRY_AGAIN else UpdateWords.UPDATE_NOW)
-                }
-            }
-        },
-        dismissButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        UpdateCard(
+            title = UpdateWords.title(release, skipped),
+            installed = UpdateWords.youHave(installed),
+            points = release.points,
+            status = updateLine(kind, canUpdate, progress, release),
+            statusIsError = progress is UpdateProgress.Failed,
+            progress = when (progress) {
+                is UpdateProgress.Downloading -> progress.fraction?.let(UpdateCardProgress::Part) ?: UpdateCardProgress.Unknown
+                UpdateProgress.Verifying, UpdateProgress.Installing -> UpdateCardProgress.Unknown
+                else -> UpdateCardProgress.None
+            },
+            modifier = Modifier.padding(24.dp).widthIn(max = 540.dp).floatingSurface(),
+        ) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 when {
                     // Later keeps the side bar item, which now reads "Restart to update".
-                    progress is UpdateProgress.Ready -> TextButton(onClick = onClose) { Text(s.updateLaterShort) }
+                    progress is UpdateProgress.Ready -> {
+                        Spacer(Modifier.weight(1f))
+                        TextButton(onClick = onClose) { Text(s.updateLaterShort) }
+                        Spacer(Modifier.width(8.dp))
+                        Button(onClick = onRestart) { Text(s.updateRestartNow) }
+                    }
                     // The download goes on with the popup closed; the item reopens it.
-                    busy -> TextButton(onClick = onClose) { Text(s.commonHide) }
+                    busy -> {
+                        Spacer(Modifier.weight(1f))
+                        TextButton(onClick = onClose) { Text(s.commonHide) }
+                    }
                     else -> {
-                        TextButton(onClick = onSkip) { Text(UpdateWords.SKIP) }
+                        TextButton(onClick = onSkip) { Text(UpdateWords.SKIP, color = Tone.muted) }
+                        Spacer(Modifier.weight(1f))
                         TextButton(onClick = onLater) { Text(UpdateWords.LATER) }
+                        Spacer(Modifier.width(8.dp))
+                        if (canUpdate) {
+                            Button(onClick = onUpdate) {
+                                Text(if (progress is UpdateProgress.Failed) UpdateWords.TRY_AGAIN else UpdateWords.UPDATE_NOW)
+                            }
+                        } else {
+                            Button(onClick = onOpenPage) { Text(UpdateWords.OPEN_RELEASE_PAGE) }
+                        }
                     }
                 }
             }
-        },
-    )
+        }
+    }
 }
 
 /** The line under the notes: how this install takes the update, or how far it has got. */

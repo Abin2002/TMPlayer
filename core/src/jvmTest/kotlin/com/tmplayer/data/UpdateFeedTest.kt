@@ -276,4 +276,29 @@ class UpdateFeedTest {
         assertEquals(1, asked)
         assertTrue(Updates.state.value is UpdateState.Available)
     }
+
+    @Test
+    fun `the feed's changes are the popup's points, one each`() {
+        val release = UpdateFeed.parseFeed(
+            """{ "schema": 1, "version": "1.28.0", "notes": "One. Two.", "changes": ["Casting: MKV plays", " ", "Fixes"] }""",
+        )!!
+        assertEquals(listOf("Casting: MKV plays", "Fixes"), release.points)
+    }
+
+    @Test
+    fun `an older feed's paragraph is cut into sentences`() {
+        val release = UpdateFeed.parseFeed(
+            """{ "schema": 1, "version": "1.27.0", "notes": "Android TV: a new top bar. Proxies (t.me/proxy links) work. A video cut into .part001 pieces plays as one. 21 languages." }""",
+        )!!
+        assertEquals(
+            listOf("Android TV: a new top bar", "Proxies (t.me/proxy links) work", "A video cut into .part001 pieces plays as one", "21 languages"),
+            release.points,
+        )
+    }
+
+    @Test
+    fun `the GitHub page gives its opening list and not the file table under it`() {
+        val body = "- First change\n- Second: with detail\n\n\n| Platform | File |\n| --- | --- |\n- not this\n"
+        assertEquals(listOf("First change", "Second: with detail"), UpdateFeed.leadingList(body))
+    }
 }

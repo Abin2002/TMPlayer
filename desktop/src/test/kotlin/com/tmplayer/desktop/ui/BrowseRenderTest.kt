@@ -505,7 +505,9 @@ class BrowseRenderTest {
 
     @Test
     fun updatePopupOffers() {
-        val release = Release("2.0.1", "page", notes = "Downloads leave the cache.")
+        // A release with as much to say as 1.27.0, written the old way (one paragraph), so the
+        // shot shows the points cut from it and the list scrolling under its height cap.
+        val release = Release("2.0.1", "page", notes = UPDATE_NOTES)
         val png = render(update = NavUpdate("Update", "2.0.1")) {
             UpdatePopup(
                 release = release,
@@ -791,5 +793,6 @@ class BrowseRenderTest {
     private companion object {
         const val WIDTH = 1280
         const val HEIGHT = 800
+        const val UPDATE_NOTES = "Android TV: a new top bar in place of the side rail. Your profile, Search, Home, Chats and Settings along the top, the pages at full width, Up and Down between the bar and the page, and Back to reach the bar from anywhere. Cast to a Chromecast or Google TV from the phone and the desktop, with the controls staying on your device: MKV videos play without stalling, audio tracks switch on the TV, and your place follows you back to the phone. Connecting to Telegram never waits in silence: a live status line, and when it takes too long the likely reason with Retry, Use a proxy and Send logs, on phone, TV and desktop. Proxies (MTProto, SOCKS5, HTTP or a t.me/proxy link), before sign in and from Settings, for networks where Telegram is blocked; sign in with an email code works too. Search across all your chats, with one result per video and filters, and find a person, group or channel by @username; tap a chat's name for its picture, username, description and link. t.me links open in TMPlayer: a post plays from its start time, a public chat or an invite shows before you join. Telegram's own lighter copies of a big video (720p, 480p) to pick from, picked for you on a slow line, with Telegram's seek previews and the uploader's cover. A video posted more than once is one card: pick the copy and quality, and your place follows it. A video cut into .part001 pieces plays as one. Home opens on a calmer carousel of the newest videos, and Home appears ready rather than filling in. Player: chapters, picture shape on the bar, finer speed steps, Night mode for quieter loud scenes, a way back after a long jump, and subtitles at the same height on every video. Appearance: a Pure black switch for OLED screens that also follows the system's dark mode, and nine accent colours. Connected devices: where TMPlayer is signed in, and ending those sessions without signing out Telegram's own apps. Storage at a glance in a chart, everything on the device listed, Free up space with Low storage mode, and Low storage mode keeping to its limit. Notifications for new episodes of shows you watch, finished downloads, low storage and updates, each with its own switch. Videos in a post's comments, round videos, Forward to a chat, Save to the gallery, an Audio list per chat, and resume on your other devices through your Saved Messages (opt in). macOS: sign in works on Macs without Homebrew, and a new installer window. Windows: an update keeps TMPlayer and your sign in. Many fixes on phone, TV and desktop, in all 21 languages."
     }
 }

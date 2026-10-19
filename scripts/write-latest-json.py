@@ -69,6 +69,20 @@ def popup_notes(notes):
     return " ".join(sentences)
 
 
+def popup_changes(notes):
+    """The tag's "- " list as a list, one change per item, for the popup's What's new.
+
+    Copies from 1.27.1 on show these as points and fall back to `notes` when the list is empty
+    (prose notes, or a feed from before). Older copies never read this field.
+    """
+    items = []
+    for line in notes.splitlines():
+        line = " ".join(line.split())
+        if line.startswith(("- ", "* ")) and line[2:].strip():
+            items.append(line[2:].strip())
+    return items
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--version", required=True)
@@ -124,6 +138,7 @@ def main():
         "published": published,
         "releaseUrl": f"https://github.com/{REPO}/releases/tag/{tag}",
         "notes": popup_notes(args.notes) or DEFAULT_NOTES,
+        "changes": popup_changes(args.notes),
         "assets": assets,
     }
     with open(args.out, "w") as f:
