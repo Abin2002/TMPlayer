@@ -243,6 +243,12 @@ android {
             isReturnDefaultValues = true
             // Robolectric reads the real resources, so a vectorResource in a smoke test resolves.
             isIncludeAndroidResources = true
+            all {
+                // The render tests draw whole screens in Robolectric (the TV's top bar, Settings and
+                // its pages, the player), more than the test worker's default heap holds: CI ran
+                // out of memory part way once they grew (2026-10-19).
+                it.maxHeapSize = "3g"
+            }
         }
     }
 }
