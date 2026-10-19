@@ -762,6 +762,17 @@ class ChatRepository(private val td: TdlClient) {
         )
     }
 
+    /**
+     * The account's own Saved Messages, for the places that open it straight away rather than
+     * through a list holding that one chat. Null before sign in, or when TDLib cannot answer.
+     */
+    suspend fun savedMessages(): ChatSummary? = withContext(Dispatchers.IO) {
+        val myId = Td.myId().takeIf { it != 0L } ?: return@withContext null
+        val id = td.createPrivateChat(myId, false).valueOrNull?.id ?: myId
+        val chat = td.getChat(id).valueOrNull ?: return@withContext null
+        summarise(chat, myId)
+    }
+
     /** One chat as the list draws it, read from TDLib (from memory for a chat it has seen). */
     suspend fun summary(chatId: Long): ChatSummary? = withContext(Dispatchers.IO) {
         val chat = td.getChat(chatId).valueOrNull ?: return@withContext null
@@ -884,3 +895,12 @@ class ChatRepository(private val td: TdlClient) {
         private const val CHAT_CHUNK = 32
     }
 }
+
+/**
+ * [ChatRepository.savedMessages] on the signed-in session: what a Saved Messages button opens,
+ * straight into the chat. Null when there is no session yet or TDLib has not answered within
+ * [timeoutMs], and the caller then shows the list it showed before.
+ */
+suspend fun savedMessagesNow(timeoutMs: Long = 5_000): ChatSummary? = runCatching {
+    kotlinx.coroutines.withTimeoutOrNull(timeoutMs) { ChatRepository(Td.awaitAuthorizedSession().client).savedMessages() }
+}.getOrNull()

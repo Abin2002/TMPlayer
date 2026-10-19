@@ -181,13 +181,29 @@ class ShellState(
 
     /** Which slice the Chats page shows, without going there: for a section the side bar no longer offers. */
     fun pickChatSection(section: BrowseSection) {
-        chatSection = section
+        if (section == SAVED) openSavedMessages { chatSection = section } else chatSection = section
     }
 
-    /** The chat list, showing [section]. */
+    /** The chat list, showing [section]. Saved Messages opens as the chat itself. */
     fun showChats(section: BrowseSection) {
-        chatSection = section
-        go(Destination.Chats)
+        val show = {
+            chatSection = section
+            go(Destination.Chats)
+        }
+        if (section == SAVED) openSavedMessages(show) else show()
+    }
+
+    /**
+     * Saved Messages is one chat, so it opens over the page it was asked from, rather than as a
+     * list holding it alone, which took a second click. [orList] is the old way, for when the
+     * chat cannot be found yet.
+     */
+    private fun openSavedMessages(orList: () -> Unit) {
+        knownChats.values.firstOrNull { it.kind == com.tmplayer.data.ChatKind.Saved }?.let { openChat(it); return }
+        Background.scope.launch {
+            val saved = com.tmplayer.data.savedMessagesNow()
+            withContext(Dispatchers.Main) { if (saved != null) openChat(saved) else orList() }
+        }
     }
 
     /** The chat whose videos are on screen, over whichever destination opened it. */
@@ -450,3 +466,5 @@ class ShellState(
         return false
     }
 }
+
+private val SAVED = BrowseSection.of(com.tmplayer.ui.browse.BrowseTab.Saved)

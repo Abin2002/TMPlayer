@@ -1129,6 +1129,17 @@ private fun Root() {
     }
 
     /**
+     * Saved Messages is one chat, so asking for it opens that chat's videos at once rather than
+     * a list holding it alone, which took a second press. Back returns to where it was asked
+     * from. [orList] is the old way, for when the chat cannot be found yet.
+     */
+    fun openSavedMessages(orList: () -> Unit) {
+        chats.firstOrNull { it.kind == com.tmplayer.data.ChatKind.Saved }?.let { openChat(it); return }
+        scope.launch { com.tmplayer.data.savedMessagesNow()?.let { openChat(it) } ?: orList() }
+    }
+    val savedSection = BrowseSection.of(BrowseTab.Saved)
+
+    /**
      * Marks a video watched by hand, or takes the mark off. Marking also forgets the saved
      * position, which is what takes it out of Continue watching.
      */
@@ -1552,8 +1563,11 @@ private fun Root() {
         val reducedMotion = rememberReducedMotion() || Motion.reduced
         // A page of the browser, from Settings or Downloads: the browser comes back on it.
         val browseTo: (BrowseSection) -> Unit = { section ->
-            pickedTabKey = BrowseSection.encode(section)
-            screen = Screen.Chats
+            val show = {
+                pickedTabKey = BrowseSection.encode(section)
+                screen = Screen.Chats
+            }
+            if (section == savedSection) openSavedMessages(show) else show()
         }
         val touchNav = TouchNav(
             account = accountHeader,
@@ -1731,7 +1745,10 @@ private fun Root() {
                     // Marked "Opens on launch" only while Carry on from the last chat is on.
                     launchChatId = if (openLastChat) lastChatId else 0L,
                     picked = pickedTab,
-                    onPickTab = { pickedTabKey = BrowseSection.encode(it) },
+                    onPickTab = { section ->
+                        if (section == savedSection) openSavedMessages { pickedTabKey = BrowseSection.encode(section) }
+                        else pickedTabKey = BrowseSection.encode(section)
+                    },
                     folders = folders,
                     onToggleLayout = { scope.launch { settings.setChatLayout(chatLayout.toggled()) } },
                     layout = chatLayout,
