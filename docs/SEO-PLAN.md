@@ -184,8 +184,8 @@ date here.
 | Site | Article | Where to write | Language | Sent |
 |---|---|---|---|---|
 | Xataka Android | "Cómo ver todo el contenido de Telegram en tu tele con Android TV o Google TV" (Jose Antonio Carmona, 2025-01-07): links TMP's Google Play listing, now not found | the editors' addresses on https://www.xatakandroid.com/quienes-somos (or its "Contacta con nosotros" link); name the article | Spanish | no |
-| Líbero (Peru) | "cómo ver chats, videos, fotos de Telegram en tu televisor Android TV" (2022-04-17): recommends only TMP | infolibero@glr.pe, the address its https://libero.pe/politicas-y-estandares page gives for corrections | Spanish | no |
-| YourLifeUpdated (Italy) | "Come avere Telegram su Fire TV Stick con Telegram Media Player" (Riccardo Conti, 2020-12-04): its own banner says TMP no longer works | yourlifeupdated@gmail.com, from https://www.yourlifeupdated.net/contatti (a one-person site, slow replies; not "COLLABORAZIONE" in the subject, which is for paid work) | Italian | no |
+| Líbero (Peru) | "cómo ver chats, videos, fotos de Telegram en tu televisor Android TV" (2022-04-17): recommends only TMP | infolibero@glr.pe, the address its https://libero.pe/politicas-y-estandares page gives for corrections | Spanish | 2026-10-19 (email) |
+| YourLifeUpdated (Italy) | "Come avere Telegram su Fire TV Stick con Telegram Media Player" (Riccardo Conti, 2020-12-04): its own banner says TMP no longer works | yourlifeupdated@gmail.com, from https://www.yourlifeupdated.net/contatti (a one-person site, slow replies; not "COLLABORAZIONE" in the subject, which is for paid work) | Italian | 2026-10-19 (email) |
 
 **Spanish draft** (Xataka Android; for Líbero change the greeting and the article name):
 
@@ -242,15 +242,15 @@ once is what spam filters and editors both discard.
 
 | # | Site | Why | Where to write | Language | Sent |
 |---|---|---|---|---|---|
-| 1 | AFTVnews | Fire TV and Google TV news, covers sideloaded apps (makes Downloader) | contact@aftvnews.com (aftvnews.com/contact/); support questions are not answered, so send it as news | English | no |
-| 2 | 9to5Google | Covered Telegram's Chromecast casting (2025-03-10) | gtips@9to5g.com (9to5google.com/contact/); a tip may be published as sent | English | no |
-| 3 | XDA Developers | "Open source tool" and smart TV app columns (2026-08-12 list) | editorial@xda-developers.com ("topic ideas, corrections", xda-developers.com/contact/; no form) | English | no |
-| 4 | Android Police | Google TV app lists (2025-02-10 "apps you've never heard of") | editorial@androidpolice.com (androidpolice.com/contact/; no form) | English | no |
-| 5 | OMG! Ubuntu | Linux apps; the AppImage and AUR | contact@omgubuntu.co.uk (app developers use the address, not the form) | English | no |
-| 6 | It's FOSS | Open source apps that "should reach more people" | the form at itsfoss.com/contact-us/ | English | 2026-10-19 (form, reply to the user's Gmail) |
+| 1 | AFTVnews | Fire TV and Google TV news, covers sideloaded apps (makes Downloader) | contact@aftvnews.com (aftvnews.com/contact/); support questions are not answered, so send it as news | English | 2026-10-19 (email) |
+| 2 | 9to5Google | Covered Telegram's Chromecast casting (2025-03-10) | gtips@9to5g.com (9to5google.com/contact/); a tip may be published as sent | English | 2026-10-19 (email) |
+| 3 | XDA Developers | "Open source tool" and smart TV app columns (2026-08-12 list) | editorial@xda-developers.com ("topic ideas, corrections", xda-developers.com/contact/; no form) | English | 2026-10-19 (email) |
+| 4 | Android Police | Google TV app lists (2025-02-10 "apps you've never heard of") | editorial@androidpolice.com (androidpolice.com/contact/; no form) | English | 2026-10-19 (email) |
+| 5 | OMG! Ubuntu | Linux apps; the AppImage and AUR | contact@omgubuntu.co.uk (app developers use the address, not the form) | English | 2026-10-19 (email) |
+| 6 | It's FOSS | Open source apps that "should reach more people" | the form at itsfoss.com/contact-us/ | English | 2026-10-19 (form; the first try had a wrong reply address, the correction not yet sent) |
 | 7 | TuAppPara | "Telegram en Smart TV" (updated 2026-09-09) says no TV app exists | the form at tuapppara.com/contacto/ | Spanish | no |
-| 8 | Aranzulla | "Come collegare Telegram alla TV", a top Italian result, names no TV app | errori@aranzulla.it, for changes to an existing article; no press releases | Italian | no |
-| 9 | Olhar Digital | Wrote up Telegram casting (2025-03-11) | redacao@olhardigital.com.br (/fale-conosco/) | Portuguese | no |
+| 8 | Aranzulla | "Come collegare Telegram alla TV", a top Italian result, names no TV app | errori@aranzulla.it, for changes to an existing article; no press releases | Italian | 2026-10-19 (email) |
+| 9 | Olhar Digital | Wrote up Telegram casting (2025-03-11) | redacao@olhardigital.com.br (/fale-conosco/) | Portuguese | 2026-10-19 (email) |
 | 10 | Trashbox | Russian app catalogue, already lists Tevegram | self-publish: register, then "Добавить пост" (trashbox.ru/link/how-to-publish-apps); free apps only, the APK is checked | Russian | no |
 
 Next in line, if the first ten go quiet: El Grupo Informático (noticias@elgrupoinformatico.com,
