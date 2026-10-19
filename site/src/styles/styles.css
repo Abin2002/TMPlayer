@@ -2820,6 +2820,7 @@ a.card:hover .card-go svg { transform: translateX(4px); }
 /* A release's own page (/changelog/<version>): the notes card, a card on how to get it, and the
    neighbouring releases either side, older on the start edge and newer on the end edge. */
 .release-article, .release-get { margin-bottom: 16px; }
+.release-story { margin: 1rem 0 0; }
 .release-notes-h { margin: 0 0 12px; font-size: clamp(1.15rem, 2vw, 1.35rem); letter-spacing: -0.015em; }
 .release-get .page-actions { justify-content: flex-start; margin-top: 4px; }
 .release-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin: 8px 0 24px; }

@@ -6,6 +6,8 @@ import SponsorOffer from '../../../components/SponsorOffer.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
+// Hand kept: a release whose story the developer wrote up, version to the post's address.
+import posts from '../../../data/release-posts.json';
 import { ENGLISH } from '../../../i18n/langs';
 import { PAGE_URL, SITE, hasMac, humanDate, notesHtml, releaseUrl, releases, summary, type Release } from '../../../lib/releases';
 
@@ -22,6 +24,7 @@ Astro.locals.lang = ENGLISH;
 
 const v = r.version;
 const url = releaseUrl(v);
+const story = (posts as Record<string, string>)[v];
 const description = summary(r);
 const post = {
   '@context': 'https://schema.org',
@@ -72,6 +75,7 @@ const get = latest
         <div class="changelog-notes">
 <Fragment set:html={notesHtml(r, ' '.repeat(8))} />
         </div>
+        {story && <p class="muted small release-story"><a href={story}>The story behind this release, on the developer's blog</a></p>}
       </article>
 
       <div class="changelog-entry release-get">
