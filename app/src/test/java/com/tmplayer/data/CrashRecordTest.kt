@@ -129,6 +129,30 @@ class CrashRecordTest {
         assertTrue(CrashRecord.proguardUuidsIn("io.sentry.build-tool=gradle").isEmpty())
     }
 
+    @Test
+    fun `two start-up crashes in a row are a loop, and a later crash breaks the run`() {
+        val file = dir.root.resolve("crash/pending.json")
+        val first = CrashRecord.of(crash(), "1.27.0", 12700, sinceStartMillis = 2_000)
+        assertEquals(1, first.startupRun)
+        assertFalse(first.startupLoop)
+        first.write(file)
+
+        // The next run crashes as early, with the first still waiting: a loop, and it survives the disk.
+        val second = CrashRecord.of(crash(), "1.27.0", 12700, sinceStartMillis = 3_000, previous = CrashRecord.read(file))
+        assertTrue(second.startupLoop)
+        second.write(file)
+        val read = CrashRecord.read(file)!!
+        assertEquals(2, read.startupRun)
+        assertEquals(3_000L, read.sinceStartMillis)
+        assertTrue(read.startupLoop)
+
+        val late = CrashRecord.of(crash(), "1.27.0", 12700, sinceStartMillis = CrashRecord.STARTUP_MILLIS + 1, previous = read)
+        assertEquals(0, late.startupRun)
+        assertFalse(late.startupLoop)
+        val unknown = CrashRecord.of(crash(), "1.27.0", 12700, previous = read)
+        assertFalse("a crash with no start time is not counted", unknown.startupLoop)
+    }
+
     private companion object {
         const val UUID_A = "6f1c9e2a-0b3d-4c7e-9a51-2d8f4b6e1a01"
         const val UUID_B = "0d4e7b1c-5a2f-4e93-8c60-7b1a9d3f2e02"

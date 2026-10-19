@@ -79,6 +79,19 @@ class App : Application() {
         SetupImages.tour = ::tourDrawable
         // The PIN's waits run on time since boot, deep sleep included, which no date setting moves.
         com.tmplayer.data.PinClock.source = { android.os.SystemClock.elapsedRealtime() }
+        // Before anything else that could throw: a crash reporter that starts after the crash is
+        // worth nothing. It reads one flag off the disk on a background thread and stays inert
+        // unless that flag is true, so no SDK is initialised and no endpoint is contacted on a
+        // device where the viewer has not asked for this. Before the promo return too, which has
+        // no Telegram in it, so the crash question can be tried in the fixture (CP102c), and the
+        // review always runs, since MainActivity may be holding its shell back for its answer.
+        if (CrashReports.available) {
+            backgroundScope.launch {
+                val enabled = runCatching { SettingsStore(this@App).crashReportsNow() }.getOrDefault(false)
+                runCatching { CrashReports.start(this@App, enabled) }
+                runCatching { CrashReports.review(this@App, enabled) }
+            }
+        }
         // The isolated screenshot fixture must never open TDLib or touch a Telegram account.
         // BuildConfig is variant-specific, and the promo package is never part of a release APK.
         if (BuildConfig.APPLICATION_ID.endsWith(".promo")) return
@@ -100,19 +113,6 @@ class App : Application() {
             cache = SubtitleCache(java.io.File(cacheDir, "online-subtitles")),
             appVersion = BuildConfig.VERSION_NAME,
         ).also { online -> backgroundScope.launch { runCatching { online.cache.prune() } } }
-        // Before anything else that could throw: a crash reporter that starts after the crash is
-        // worth nothing. It reads one flag off the disk on a background thread and stays inert
-        // unless that flag is true, so no SDK is initialised and no endpoint is contacted on a
-        // device where the viewer has not asked for this.
-        if (CrashReports.available) {
-            backgroundScope.launch {
-                runCatching {
-                    val enabled = SettingsStore(this@App).crashReportsNow()
-                    CrashReports.start(this@App, enabled)
-                    CrashReports.review(this@App, enabled)
-                }
-            }
-        }
         // Sized against this device's heap before anything is cached. A stick and a phone are an
         // order of magnitude apart, and one fixed figure is wrong for both.
         val memory = (getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager).memoryClass

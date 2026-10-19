@@ -1,6 +1,7 @@
 package com.tmplayer.data
 
 import android.content.Context
+import android.os.SystemClock
 import android.util.Log
 import com.tmplayer.BuildConfig
 import io.sentry.Sentry
@@ -111,10 +112,21 @@ object CrashReports {
      * Called first thing in [com.tmplayer.App.onCreate]. When the switch is on, Sentry puts its own
      * handler in front of this one and reports the crash itself; this one then sees it is on and
      * writes nothing. Only the newest crash is kept.
+     *
+     * Also says, before any activity is built, whether the last runs were a start-up loop
+     * ([holdShell]). That costs a file check on every start and a read of a few kilobytes only
+     * after a crash, which is the one start where it matters.
      */
     fun watch(context: Context) {
         if (!available) return
-        file = File(context.filesDir, "crash/pending.json")
+        val startedAt = SystemClock.elapsedRealtime()
+        val file = File(context.filesDir, "crash/pending.json")
+        this.file = file
+        if (file.isFile) {
+            val waiting = CrashRecord.read(file)
+            _holdShell.value = waiting?.startupLoop == true &&
+                CrashRecord.worthSending(waiting, BuildConfig.VERSION_CODE.toLong(), System.currentTimeMillis())
+        }
         // A few dozen bytes from the APK, read now rather than in the dying process, where an
         // out of memory error could stop the read. Absent from a build the Sentry plugin skips.
         val uuids = runCatching {
@@ -124,8 +136,13 @@ object CrashReports {
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
             if (!enabledNow) {
                 runCatching {
-                    CrashRecord.of(error, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toLong(), uuids)
-                        .write(file!!)
+                    // The record still waiting, if nobody answered it, carries the count of
+                    // start-up crashes on.
+                    CrashRecord.of(
+                        error, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toLong(), uuids,
+                        sinceStartMillis = SystemClock.elapsedRealtime() - startedAt,
+                        previous = CrashRecord.read(file),
+                    ).write(file)
                 }
             }
             previous?.uncaughtException(thread, error)
@@ -139,6 +156,19 @@ object CrashReports {
     /** Whether a crash from an earlier run is waiting for the viewer's answer. */
     val pending: StateFlow<Boolean> = _pending.asStateFlow()
 
+    private val _holdShell = MutableStateFlow(false)
+
+    /**
+     * Whether MainActivity holds back its shell: the last runs crashed one after another as they
+     * started ([CrashRecord.startupLoop]). A crash in the shell itself, as 1.27.0's in Home was,
+     * would otherwise come round again before the question in the shell was ever drawn, write
+     * over the record and never be asked about. Held, the activity shows the question alone, on
+     * a phone or a television, and builds the shell once it is answered. With the switch on there
+     * is no question: the hold lasts while [review] sends the crash, so the next start's crash
+     * cannot cut the send off.
+     */
+    val holdShell: StateFlow<Boolean> = _holdShell.asStateFlow()
+
     /**
      * What to do with a crash left from the last run, once the switch has been read at startup.
      *
@@ -149,6 +179,15 @@ object CrashReports {
      * had finished starting) it is sent without asking; otherwise [pending] asks.
      */
     fun review(context: Context, enabled: Boolean) {
+        // Whatever happens below, a held shell is let go unless there is now a question for it.
+        try {
+            reviewCrash(context, enabled)
+        } finally {
+            if (!_pending.value) _holdShell.value = false
+        }
+    }
+
+    private fun reviewCrash(context: Context, enabled: Boolean) {
         val file = file ?: return
         val record = CrashRecord.read(file)
         if (record == null ||
@@ -165,9 +204,20 @@ object CrashReports {
      * out, so it belongs on a background thread.
      *
      * With the switch off the SDK is brought up for this one report and closed again after it.
+     *
+     * A held shell ([holdShell]) is let go only after the flush, so a crash in the shell as it is
+     * built cannot cut this send off.
      */
-    @Synchronized
     fun sendPending(context: Context) {
+        try {
+            sendPendingCrash(context)
+        } finally {
+            _holdShell.value = false
+        }
+    }
+
+    @Synchronized
+    private fun sendPendingCrash(context: Context) {
         _pending.value = false
         val file = file ?: return
         val record = CrashRecord.read(file)
@@ -191,6 +241,7 @@ object CrashReports {
     fun discardPending() {
         _pending.value = false
         file?.delete()
+        _holdShell.value = false
     }
 
     /** The crash the viewer agreed to send and its event id, while it goes out. */

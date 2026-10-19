@@ -39,7 +39,17 @@ internal class CrashRecord(
      * older, and for a debug build, which is not minified and has nothing to decode.
      */
     val proguardUuids: List<String> = emptyList(),
+    /** How long the process had been running at the crash, or -1 where that is not known. */
+    val sinceStartMillis: Long = -1,
+    /**
+     * How many runs in a row, this one included, crashed within [STARTUP_MILLIS] of starting: 0
+     * for a crash later in a run. Two or more is a start-up loop ([startupLoop]).
+     */
+    val startupRun: Int = 0,
 ) {
+
+    /** The app keeps closing as it opens, so the question is asked before anything else is built. */
+    val startupLoop: Boolean get() = startupRun >= LOOP_RUNS
 
     class Link(
         val type: String,
@@ -112,6 +122,8 @@ internal class CrashRecord(
             .put("versionName", versionName)
             .put("versionCode", versionCode)
             .put("proguardUuids", JSONArray(proguardUuids))
+            .put("sinceStart", sinceStartMillis)
+            .put("startupRun", startupRun)
             .put("chain", JSONArray(chain.map { link ->
                 JSONObject()
                     .put("type", link.type)
@@ -143,17 +155,38 @@ internal class CrashRecord(
          */
         const val KEEP_MILLIS = 30L * 24 * 60 * 60 * 1000
 
+        /**
+         * A crash this soon after the process started is a start-up crash: the shell and Home have
+         * been built by then on the slowest television the app runs on, and nobody has had the
+         * time to do anything of their own yet.
+         */
+        const val STARTUP_MILLIS = 15_000L
+
+        /** Start-up crashes in a row that make a loop. One could be anything; two is a pattern. */
+        const val LOOP_RUNS = 2
+
+        /**
+         * The record of [error], [sinceStartMillis] into the run. [previous] is the record still
+         * waiting from an earlier run, if any, which is how a run of start-up crashes is counted:
+         * the count carries on only while each crash in turn came early and nobody answered.
+         */
         fun of(
             error: Throwable,
             versionName: String,
             versionCode: Long,
             proguardUuids: List<String> = emptyList(),
+            sinceStartMillis: Long = -1,
+            previous: CrashRecord? = null,
         ): CrashRecord {
             val chain = generateSequence(error) { it.cause.takeIf { cause -> cause !== it } }
                 .take(MAX_CAUSES)
                 .map { Link(it.javaClass.name, it.message, it.stackTrace.toList()) }
                 .toList()
-            return CrashRecord(System.currentTimeMillis(), versionName, versionCode, chain, proguardUuids)
+            val early = sinceStartMillis in 0..STARTUP_MILLIS
+            val run = if (early) (previous?.startupRun ?: 0) + 1 else 0
+            return CrashRecord(
+                System.currentTimeMillis(), versionName, versionCode, chain, proguardUuids, sinceStartMillis, run,
+            )
         }
 
         /**
@@ -210,7 +243,11 @@ internal class CrashRecord(
             val uuids = json.optJSONArray("proguardUuids")
                 ?.let { array -> (0 until array.length()).map { array.getString(it) } }
                 .orEmpty()
-            CrashRecord(json.getLong("time"), json.getString("versionName"), json.getLong("versionCode"), chain, uuids)
+            CrashRecord(
+                json.getLong("time"), json.getString("versionName"), json.getLong("versionCode"), chain, uuids,
+                sinceStartMillis = json.optLong("sinceStart", -1),
+                startupRun = json.optInt("startupRun", 0),
+            )
         }.getOrNull()
     }
 }
