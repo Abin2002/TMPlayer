@@ -247,7 +247,7 @@ once is what spam filters and editors both discard.
 | 3 | XDA Developers | "Open source tool" and smart TV app columns (2026-08-12 list) | editorial@xda-developers.com ("topic ideas, corrections", xda-developers.com/contact/; no form) | English | no |
 | 4 | Android Police | Google TV app lists (2025-02-10 "apps you've never heard of") | editorial@androidpolice.com (androidpolice.com/contact/; no form) | English | no |
 | 5 | OMG! Ubuntu | Linux apps; the AppImage and AUR | contact@omgubuntu.co.uk (app developers use the address, not the form) | English | no |
-| 6 | It's FOSS | Open source apps that "should reach more people" | the form at itsfoss.com/contact-us/ | English | no |
+| 6 | It's FOSS | Open source apps that "should reach more people" | the form at itsfoss.com/contact-us/ | English | 2026-10-19 (form, reply to the user's Gmail) |
 | 7 | TuAppPara | "Telegram en Smart TV" (updated 2026-09-09) says no TV app exists | the form at tuapppara.com/contacto/ | Spanish | no |
 | 8 | Aranzulla | "Come collegare Telegram alla TV", a top Italian result, names no TV app | errori@aranzulla.it, for changes to an existing article; no press releases | Italian | no |
 | 9 | Olhar Digital | Wrote up Telegram casting (2025-03-11) | redacao@olhardigital.com.br (/fale-conosco/) | Portuguese | no |
