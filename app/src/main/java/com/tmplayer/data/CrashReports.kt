@@ -137,9 +137,12 @@ object CrashReports {
      * viewer said Don't send to is dropped for good, switch or no switch. Otherwise the report is
      * cut down to the stack trace, the versions and the device model; see CrashReportScrubber.
      * The exceptions to the switch are the crash record and the exit the viewer has just agreed
-     * to send.
+     * to send. Last of all, after the scrubber, the day's limits (see [CrashLimits]).
      */
-    private fun gate(event: SentryEvent, hint: Hint?): SentryEvent? {
+    private fun gate(event: SentryEvent, hint: Hint?): SentryEvent? =
+        pass(event, hint)?.takeIf { kept -> limits?.admit(kept) != false }
+
+    private fun pass(event: SentryEvent, hint: Hint?): SentryEvent? {
         val record = sendingRecord
         // Matched by its id, not by the moment, so nothing else the SDK sends while this one goes
         // out passes as the viewer's answer.
@@ -176,6 +179,7 @@ object CrashReports {
         val file = File(context.filesDir, "crash/pending.json")
         this.file = file
         answers = ExitAnswers(File(context.filesDir, "crash/exits.properties"))
+        limits = CrashLimits(File(context.filesDir, "crash/limits.json"))
         if (file.isFile) {
             val waiting = CrashRecord.read(file)
             _holdShell.value = waiting?.startupLoop == true &&
@@ -208,6 +212,10 @@ object CrashReports {
     /** What the viewer has said about ANRs and native crashes. Set by [watch]. */
     @Volatile
     private var answers: ExitAnswers? = null
+
+    /** How many reports this device has sent today. Set by [watch]. */
+    @Volatile
+    private var limits: CrashLimits? = null
 
     /** The ANR or native crash [pending] is asking about, when it is one. */
     @Volatile
