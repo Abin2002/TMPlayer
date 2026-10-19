@@ -28,3 +28,4 @@ __pycache__/
 site/dist/
 site/node_modules/
 site/.astro/
+scripts/outreach-sent.json
