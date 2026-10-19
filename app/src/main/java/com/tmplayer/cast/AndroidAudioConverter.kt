@@ -86,6 +86,9 @@ class AndroidAudioConverter : AudioConverter {
         val buffer = input ?: throw IOException("Audio decoder stalled")
         buffer.ensureSpaceForWrite(frame.size)
         buffer.data!!.put(frame)
+        // Flipped as a renderer does: the decoder reads up to the limit, and unflipped that is the
+        // whole buffer, the frame and the garbage after it ("Error in avcodec_send_packet").
+        buffer.flip()
         buffer.timeUs = ptsUs
         d.queueInputBuffer(buffer)
         // Give the decoder's thread a moment, then take what it has.
