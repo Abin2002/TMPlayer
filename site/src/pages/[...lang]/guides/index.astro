@@ -1,5 +1,5 @@
 ---
-// /guides/ in every published language: the three guides, one line each. The crumbs on each guide
+// /guides/ in every published language: the five guides, one line each. The crumbs on each guide
 // lead back here.
 import Base from '../../../layouts/Base.astro';
 import BgArt from '../../../components/BgArt.astro';
@@ -33,6 +33,10 @@ const guides = [
     title: 'common.telegram_on_fire_tv', body: 'guides.install_tmplayer_on_a_fire', go: 'features.read_the_steps' },
   { path: '/guides/telegram-on-tv-without-casting/', crumb: 'Telegram on TV without casting', icon: 'play-card',
     title: 'common.telegram_without_casting', body: 'guides.casting_screen_mirroring_telegram_s', go: 'guide_no_casting.compare_the_options' },
+  { path: '/guides/cast-telegram-videos-to-chromecast/', crumb: 'Cast to Chromecast', icon: 'play-card',
+    title: 'common.cast_to_chromecast', body: 'guides.cast_card', go: 'features.read_the_steps' },
+  { path: '/guides/telegram-on-samsung-or-lg-tv/', crumb: 'Samsung or LG TV', icon: 'tv-card',
+    title: 'common.telegram_on_samsung_or_lg', body: 'guides.samsung_lg_card', go: 'guide_no_casting.compare_the_options' },
 ];
 
 const itemList = {
@@ -58,7 +62,7 @@ const itemList = {
 
 <main id="main">
 
-  <PageHead lede={t('guides.three_guides_to_watching_the')} updated="/guides/">
+  <PageHead lede={t('guides.lede')} updated="/guides/">
     <Fragment slot="crumbs"><a href={l('/')}>{t('common.home')}</a><span aria-hidden="true">/</span>{t('common.guides')}</Fragment>
     <T slot="title" k="guides.telegram_on_the_tv"><em slot="em1">{t('guides.telegram_on_the_tv__em1')}</em></T>
     <Fragment slot="actions">

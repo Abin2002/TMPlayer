@@ -234,6 +234,152 @@ date here.
 > Grazie,
 > Nevil, TMPlayer
 
+#### More targets (researched 2026-10-19, ranked; nothing sent)
+
+Every address below was read on the publisher's own page (named in the row). Send one at a
+time, a few a day, each written to that article or outlet. The same text sent to many outlets at
+once is what spam filters and editors both discard.
+
+| # | Site | Why | Where to write | Language | Sent |
+|---|---|---|---|---|---|
+| 1 | AFTVnews | Fire TV and Google TV news, covers sideloaded apps (makes Downloader) | contact@aftvnews.com (aftvnews.com/contact/); support questions are not answered, so send it as news | English | no |
+| 2 | 9to5Google | Covered Telegram's Chromecast casting (2025-03-10) | gtips@9to5g.com (9to5google.com/contact/); a tip may be published as sent | English | no |
+| 3 | XDA Developers | "Open source tool" and smart TV app columns (2026-08-12 list) | the Valnet form at xda-developers.com/contact/ | English | no |
+| 4 | Android Police | Google TV app lists (2025-02-10 "apps you've never heard of") | "Have a News Tip?" form at androidpolice.com/contact/ | English | no |
+| 5 | OMG! Ubuntu | Linux apps; the AppImage and AUR | contact@omgubuntu.co.uk (app developers use the address, not the form) | English | no |
+| 6 | It's FOSS | Open source apps that "should reach more people" | the form at itsfoss.com/contact-us/ | English | no |
+| 7 | TuAppPara | "Telegram en Smart TV" (updated 2026-09-09) says no TV app exists | the form at tuapppara.com/contacto/ | Spanish | no |
+| 8 | Aranzulla | "Come collegare Telegram alla TV", a top Italian result, names no TV app | errori@aranzulla.it, for changes to an existing article; no press releases | Italian | no |
+| 9 | Olhar Digital | Wrote up Telegram casting (2025-03-11) | redacao@olhardigital.com.br (/fale-conosco/) | Portuguese | no |
+| 10 | Trashbox | Russian app catalogue, already lists Tevegram | self-publish: register, then "Добавить пост" (trashbox.ru/link/how-to-publish-apps); free apps only, the APK is checked | Russian | no |
+
+Next in line, if the first ten go quiet: El Grupo Informático (noticias@elgrupoinformatico.com,
+Spanish), Androidphoria (contacto@androidphoria.com, Spanish), Xataka Home (prensa@xatakahome.com,
+send after the Xataka Android correction, same group), TuttoAndroid (marco@tuttoandroid.net,
+Italian, no guest posts or paid links), Telefonino.net (redazione@telefonino.net, Italian, its
+2026-02-04 Fire TV app list), Beebom (contact@beebom.com, India), JalanTikus (info@jalantikus.com,
+Indonesian), Linux Uprising (contact@linuxuprising.com), LinuxLinks (the form at
+linuxlinks.com/suggest-open-source-program/; it judges AI-built projects case by case),
+smarttvs.org (hi@smarttvs.org, its Android TV list updated 2026-10-07), gadgetjunction.in
+(contactus@gadgetjunction.in, India).
+
+Skipped on purpose: kodibeginner.com and emoticonwiki.de (both recommend TMP, but one is a Kodi
+and IPTV site and the other mentions pirated videos in groups, which the wording rule keeps us
+away from), firestickhacks, troypoint and the other jailbreak or IPTV list sites, vendor pages
+(AirDroid, Apowersoft) that promote their own mirroring apps, paid "partner content" (techloy),
+Habr (bans AI-written text and limits self-promotion), and Zoomit (Telegram is filtered in Iran).
+Fire TV pitches say Fire OS 7 or later: the newest Fire TV Sticks run Vega OS and cannot sideload.
+
+**One draft per target.** Each is cut to what that outlet runs: a tip line wants three facts and
+a link, a correction names the article and the one thing that changed, a Linux site wants the
+package. Send each by hand from hello@tmplayer.org, a few a day.
+
+**1. AFTVnews** (contact@aftvnews.com). They make Downloader, so lead with it:
+
+> **Subject:** Open source Telegram video player for Fire TV, installs with Downloader (tmplayer.org/apk)
+>
+> Hi Elias,
+>
+> TMPlayer is a free, GPL-3.0 player for the videos in your own Telegram chats, built for the
+> remote: QR sign in through Telegram's TDLib, MKV, subtitles, audio tracks. On Fire OS 7 or later
+> it installs by typing tmplayer.org/apk into Downloader. No ads, nothing to buy.
+>
+> https://tmplayer.org/guides/telegram-videos-on-fire-tv/ · https://github.com/dracu-lah/TMPlayer
+>
+> Nevil, TMPlayer (legal: https://tmplayer.org/legal)
+
+**2. 9to5Google** (gtips@9to5g.com). A tip, so three lines:
+
+> **Subject:** Tip: open source Telegram video app for Google TV
+>
+> You covered Telegram's Chromecast casting in March 2025. TMPlayer is a free, open source
+> (GPL-3.0) Google TV and Android TV app for the videos in your own Telegram chats: QR sign in,
+> streams while it downloads, casts from phone or desktop. https://tmplayer.org/ ·
+> https://github.com/dracu-lah/TMPlayer
+>
+> Nevil, TMPlayer
+
+**3. XDA Developers** (Valnet form). Their angle is open source tools worth sideloading:
+
+> **Subject:** Open source Google TV app: TMPlayer, a player for your own Telegram videos
+>
+> TMPlayer is a GPL-3.0 Kotlin/Compose app on TDLib that plays the videos in your own Telegram
+> chats on Android TV, Google TV, Fire TV, phones, Windows, Linux and macOS. Every release is
+> built by GitHub Actions from the public code. Telegram has no TV app of its own, so this fills a
+> gap your "smart TV apps that deserve more attention" readers might like.
+> https://github.com/dracu-lah/TMPlayer · https://tmplayer.org/
+>
+> Nevil
+
+**4. Android Police** (news tip form). Their "Google TV apps you've never heard of" list:
+
+> **Subject:** For your Google TV app lists: TMPlayer
+>
+> A free, open source app that plays the videos in your own Telegram chats on Google TV, with a
+> QR sign in and subtitles, no ads. Telegram has no Google TV app. https://tmplayer.org/
+>
+> Nevil, TMPlayer
+
+**5. OMG! Ubuntu** (contact@omgubuntu.co.uk). They want the Linux side and how to get it:
+
+> **Subject:** TMPlayer: open source Telegram video player for Linux (AppImage)
+>
+> Hi Joey,
+>
+> TMPlayer plays the videos in your own Telegram chats on Linux (AppImage), Windows, macOS and
+> Android TV. GPL-3.0, TDLib, QR sign in, streams while downloading, casts to Chromecast from the
+> desktop. Screenshots and download: https://tmplayer.org/download/ · source:
+> https://github.com/dracu-lah/TMPlayer
+>
+> Nevil
+
+**6. It's FOSS** (contact form). Their reason to write is "an open source product that should
+reach more people":
+
+> Hi, TMPlayer is a GPL-3.0 player for the videos in your own Telegram chats, on Linux, Windows,
+> macOS and Android TV, with releases built in public on GitHub. It is a one-person project with
+> few users so far and might fit your open source app coverage. https://tmplayer.org/ ·
+> https://github.com/dracu-lah/TMPlayer . Nevil
+
+**7. TuAppPara** (form, Spanish). A correction to one sentence:
+
+> Hola: vuestro artículo «Telegram en Smart TV: cómo verlo sin app en 2026» (actualizado el 9 de
+> septiembre) dice que no hay app de Telegram para la tele. Existe TMPlayer, gratuita y de código
+> abierto (GPL-3.0), para los vídeos de tus propios chats en Android TV, Google TV y Fire TV, con
+> inicio de sesión por QR mediante la librería oficial de Telegram: https://tmplayer.org/es/ .
+> Por si queréis añadirla. Gracias, Nevil
+
+**8. Aranzulla** (errori@aranzulla.it, Italian). They take changes to existing articles, not
+press releases:
+
+> **Oggetto:** Aggiornamento a «Come collegare Telegram alla TV»
+>
+> Buongiorno, nell'articolo non è indicata nessuna app per vedere i video di Telegram sulla TV.
+> Ne esiste una gratuita e open source, TMPlayer, per Android TV, Google TV e Fire TV, che
+> riproduce i video delle proprie chat e accede con un codice QR: https://tmplayer.org/it/ .
+> Grazie, Nevil
+
+**9. Olhar Digital** (redacao@olhardigital.com.br, Portuguese). A story idea:
+
+> **Assunto:** Pauta: app aberto para ver os vídeos do Telegram na TV
+>
+> Olá, vocês noticiaram em março de 2025 o envio de vídeos do Telegram ao Chromecast. O TMPlayer
+> é um app gratuito e de código aberto que roda direto na Android TV, Google TV e Fire TV, além de
+> Windows, Linux e macOS, e reproduz os vídeos dos seus próprios chats com login por QR, sem
+> anúncios: https://tmplayer.org/pt/ · https://github.com/dracu-lah/TMPlayer . Abraço, Nevil
+
+**10. Trashbox** (self-publish, Russian). Not an email: the catalogue post itself. Fill their form
+with the APK from the GitHub release and this description:
+
+> TMPlayer: бесплатный плеер с открытым кодом (GPL-3.0) для видео из ваших собственных чатов
+> Telegram. Android TV, Google TV, Fire TV и телефоны; вход по QR-коду через TDLib, потоковое
+> воспроизведение во время загрузки, MKV, субтитры, звуковые дорожки, трансляция на Chromecast.
+> Без рекламы и покупок. Сайт: https://tmplayer.org/ru/ · Код: https://github.com/dracu-lah/TMPlayer
+
+Before sending: open each localized link once, check the names in greetings against the site
+(AFTVnews is Elias Saba, OMG! Ubuntu is Joey Sneddon; drop the name if unsure), and note the date
+in the table's Sent column.
+
 Keep it true:
 
 - **Recheck the table monthly** (each listing's update date, installs, rating and price), move the
@@ -301,6 +447,71 @@ to 65 KB). Still open: smaller image variants for phones (about 250 to 300 KB a 
 user's say, since source images are not downscaled without asking) and a Content-Security-Policy
 header (not a ranking factor; needs care with the inline theme script and the Vercel and GitHub
 requests).
+
+## Two guides, profiles and release stories (2026-10-19)
+
+**Done 2026-10-19**, in all 21 languages, each in `lastmod.json` (2026-10-19), `llms.txt`, the
+guides hub (now five guides) and linked from the related pages:
+
+- **`/guides/telegram-on-samsung-or-lg-tv/`**, "Telegram on a Samsung or LG TV: what works", for
+  "telegram on samsung tv", "telegram lg tv", "telegram smart tv". Says plainly that Tizen and
+  webOS install no Android apps, so neither Telegram nor TMPlayer goes on them, then compares a TV
+  stick in the HDMI port, casting from TMPlayer, screen mirroring and Telegram Web in a table, and
+  answers the questions people type as H2s (install, cast, which TVs have Google Cast, mirroring,
+  Telegram Web, which to pick). Article JSON-LD, no HowTo, no FAQPage. Linked from the
+  no-casting guide (a Samsung or LG card), `/alternatives/` and the casting guide.
+- **`/guides/cast-telegram-videos-to-chromecast/`**, "Cast Telegram videos to a Chromecast or
+  Google TV", with a four step HowTo. TMPlayer's facts come only from the 1.27.0 and 1.27.1 tag
+  notes and CP73 in `docs/PLAN.md`: Android phone or computer, Cast in the player (top bar on a
+  phone, player bar on a computer), same Wi-Fi, the device keeps the controls, MKV as HLS cut at
+  its cues, a soundtrack the TV cannot play converted to AAC on a phone (not on a computer, CP73
+  "Not done"), subtitles on the TV (1.27.1), a 4K video on a 1080p TV says so, Reconnect and Play
+  here, the place kept for Continue watching, no AirPlay, the player stays open while casting
+  (CP73 "Not done": a cast that outlives the player). Telegram's app: only what its own
+  announcement says. Linked from the FAQ's casting answer (its `more` link), the no-casting
+  guide's table note and `/alternatives/`.
+- **Organization and SoftwareApplication `sameAs`** on the home page now name the Telegram
+  channel (t.me/tmplayerapp) and group (t.me/tmplayer_chat) beside GitHub.
+- **Release pages** link the developer's write-up where there is one, from the hand-kept
+  `site/src/data/release-posts.json`: 1.26.0 and 1.27.0 (both answered 200 on 2026-10-19). Only
+  on that release's own page.
+
+Sources for every brand and Telegram claim on the two guides, checked 2026-10-19:
+
+- Telegram's apps exist for Android, iOS, Windows, macOS, Linux and the web, none for Tizen or
+  webOS: [telegram.org/apps](https://telegram.org/apps).
+- Telegram's Android app casts to Chromecast: Telegram, [Star Messages, Pinned Gifts,
+  Verification Platform 2.0, and More](https://telegram.org/blog/star-messages-gateway-2-0-and-more)
+  (7 March 2025: "Stream to Chromecast on Android", "Open a video, tap the Settings icon, and
+  select Chromecast", Android only), and [9to5Google, 10 March 2025](https://9to5google.com/2025/03/10/telegram-chromecast-support-android-update/)
+  (videos, in the latest Android update; no version, button or limits stated). Neither says
+  which formats, soundtracks or subtitles it handles, so the guide says that.
+- Samsung: [SamMobile, 24 March 2026](https://www.sammobile.com/news/samsung-tvs-launched-2026-feature-google-cast/)
+  (Google Cast in the specifications of the 2026 Crystal UHD, Mini LED and Neo QLED models on
+  Samsung's US site; before that only commercial and hotel TVs, since 2025);
+  [9to5Google, 2 April 2026](https://9to5google.com/2026/04/02/google-cast-support-rolling-out-to-samsung-tvs-and-not-just-the-newest-ones/)
+  (a One UI on Tizen update brings it to at least some older models, an S90D owner reported).
+- LG: [9to5Google, 14 October 2024](https://9to5google.com/2024/10/14/lg-2023-tvs-google-cast-update/)
+  (Google Cast started on 2024 TVs, then the 2023 C3 and G3 OLED with firmware 23.20.50);
+  [What Hi-Fi](https://www.whathifi.com/news/lg-brings-google-chromecast-and-a-major-filmmaker-mode-upgrade-to-its-2022-oled-tvs)
+  (webOS 24 brings Chromecast to LG's 2022 OLED TVs; the page body did not load for us, the
+  headline and search summary did, so the guide says "some of its 2022 OLED TVs").
+- Sony: [Sony support, How to use Google Cast on Sony's Google TV or Android TV](https://www.sony.ca/en/electronics/support/articles/00135368)
+  (Google TV and Android TV yes, other TVs no; same Wi-Fi). The page answers 403 to fetchers;
+  read through search results.
+- Google TV makers: [tv.google/products](https://tv.google/products/) ("Meet our partner
+  brands": Hisense, Sony, TCL). The page does not mention Cast, so the guide credits Cast on
+  Google TV sets to Sony and Philips only.
+- Philips: Philips Google TV spec sheets on documents.philips.com list "Chromecast built-in"
+  (for example the 7000 series, [one sheet](https://www.documents.philips.com/assets/20230823/e9c83ef3572a4a22a81eb0670076917b.pdf)).
+- Vizio: [vizio.com/google](https://vizio.com/google) ("Chromecast built-in" on VIZIO Smart TVs;
+  no model list).
+
+Left out because no source confirmed it: TCL and Hisense having Google Cast (only retailer and
+spec-site listings, no maker page), Samsung's update version number and regions, LG's exact
+2022 models, the names of Samsung's and LG's mirroring features, and any test of TMPlayer's
+casting on a Samsung or LG set (the guide says it was tried on an Android TV stick only).
+Recheck the Samsung and LG lines in a few months: both are rolling out.
 
 ## The plan
 

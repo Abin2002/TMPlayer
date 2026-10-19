@@ -282,6 +282,42 @@
     "priority": "0.7"
   },
   {
+    "path": "/guides/telegram-on-samsung-or-lg-tv/",
+    "lastmod": "2026-10-19",
+    "changefreq": "monthly",
+    "priority": "0.7",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home.webp",
+        "title": "TMPlayer's Home on a TV stick, which plays Telegram videos on a Samsung or LG TV through its HDMI port"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home-light.webp",
+        "title": "TMPlayer's Home on a television, in the light theme"
+      }
+    ]
+  },
+  {
+    "path": "/guides/cast-telegram-videos-to-chromecast/",
+    "lastmod": "2026-10-19",
+    "changefreq": "monthly",
+    "priority": "0.7",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show.webp",
+        "title": "A show's page in TMPlayer on a phone, where a video is picked before casting it"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show-light.webp",
+        "title": "A show's page in TMPlayer on a phone, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-player.webp",
+        "title": "TMPlayer's player on a computer, whose bar drives the TV while casting"
+      }
+    ]
+  },
+  {
     "path": "/alternatives/",
     "lastmod": "2026-10-19",
     "changefreq": "monthly",
