@@ -174,11 +174,65 @@ What the page claims, and why:
   TV, not AirPlay; Tevegram and tv for Telegram are named with their prices.
 - Images are TMPlayer's own demo screenshots only, never another app's screenshots, logos or icons.
 
-Outreach list (not contacted; the user decides):
+### Outreach (user, 2026-10-19: "i will do it later"; nothing sent yet)
 
-- xatakandroid.com, article of 2025-01-07: links TMP's dead Google Play listing.
-- libero.pe, article of 2022-04-17: recommends only TMP.
-- yourlifeupdated.net: its own banner says TMP no longer works.
+One correction email each, from hello@tmplayer.org, one follow-up after two weeks at most. No payment
+and no request for a "dofollow" link (Google counts paid links as spam). Before sending, open the
+two localized guide links once to check they are live. When one of them adds TMPlayer, note the
+date here.
+
+| Site | Article | Where to write | Language | Sent |
+|---|---|---|---|---|
+| Xataka Android | "Cómo ver todo el contenido de Telegram en tu tele con Android TV o Google TV" (Jose Antonio Carmona, 2025-01-07): links TMP's Google Play listing, now not found | the editors' addresses on https://www.xatakandroid.com/quienes-somos (or its "Contacta con nosotros" link); name the article | Spanish | no |
+| Líbero (Peru) | "cómo ver chats, videos, fotos de Telegram en tu televisor Android TV" (2022-04-17): recommends only TMP | infolibero@glr.pe, the address its https://libero.pe/politicas-y-estandares page gives for corrections | Spanish | no |
+| YourLifeUpdated (Italy) | "Come avere Telegram su Fire TV Stick con Telegram Media Player" (Riccardo Conti, 2020-12-04): its own banner says TMP no longer works | yourlifeupdated@gmail.com, from https://www.yourlifeupdated.net/contatti (a one-person site, slow replies; not "COLLABORAZIONE" in the subject, which is for paid work) | Italian | no |
+
+**Spanish draft** (Xataka Android; for Líbero change the greeting and the article name):
+
+> **Asunto:** Corrección: el enlace a TMP en «Cómo ver todo el contenido de Telegram en tu tele»
+>
+> Hola,
+>
+> En vuestro artículo sobre cómo ver Telegram en Android TV se recomienda TMP - Telegram Media
+> Player con un enlace a Google Play. Esa ficha ya no existe: el 19 de octubre de 2026 la página de
+> Google Play devolvía «no encontrada», y su última versión allí es de octubre de 2020.
+>
+> Por si os sirve para actualizarlo: desarrollo TMPlayer, un reproductor gratuito y de código
+> abierto (GPL-3.0) para los vídeos que ya están en tus propios chats de Telegram. Funciona en
+> Android TV, Google TV, Fire TV, móviles Android, Windows, Linux y macOS, inicia sesión con un
+> código QR mediante la librería oficial de Telegram, y no tiene anuncios ni compras. No es la
+> misma app que TMP.
+>
+> - Web y descarga: https://tmplayer.org/
+> - Guía para Android TV: https://tmplayer.org/es/guides/telegram-videos-on-android-tv/
+> - Código fuente: https://github.com/dracu-lah/TMPlayer
+> - Aviso legal: https://tmplayer.org/legal
+>
+> Gracias por vuestro trabajo,
+> Nevil, TMPlayer
+
+**Italian draft** (YourLifeUpdated):
+
+> **Oggetto:** Segnalazione: l'app TMP nell'articolo su Telegram per Fire TV Stick
+>
+> Ciao Riccardo,
+>
+> nel tuo articolo «Come avere Telegram su Fire TV Stick con Telegram Media Player» il banner dice
+> già che l'app non funziona più. Ti scrivo nel caso tu voglia indicare un'alternativa funzionante.
+>
+> Sviluppo TMPlayer, un lettore gratuito e open source (GPL-3.0) per i video che hai già nelle tue
+> chat di Telegram. Gira su Fire TV (Fire OS 7 o successivo), Android TV, Google TV, telefoni
+> Android, Windows, Linux e macOS. Si installa sulla Fire TV con l'app Downloader e si accede con
+> un codice QR, tramite la libreria ufficiale di Telegram. Non ha pubblicità né acquisti, e non è
+> la stessa app di TMP.
+>
+> - Sito e download: https://tmplayer.org/
+> - Guida per Fire TV: https://tmplayer.org/it/guides/telegram-videos-on-fire-tv/
+> - Codice sorgente: https://github.com/dracu-lah/TMPlayer
+> - Note legali: https://tmplayer.org/legal
+>
+> Grazie,
+> Nevil, TMPlayer
 
 Keep it true:
 
