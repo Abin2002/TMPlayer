@@ -228,15 +228,15 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
   - [ ] One step count and bar across the whole run, Back on every screen, Skip all kept, D-pad order on TV top to bottom then the buttons; the onboarding pictures and their specs (scripts/annotations, `scripts/tour-badges.py`) retaken for the merged pages.
   - [ ] Render shots of every new screen on phone portrait and landscape, TV and desktop, light and dark, and a timed run on the stick against today's flow.
 - [ ] CP101 Robolectric: a setting changed in the middle of a render test (DataStore written from the test, collected by the screen) sometimes never reaches the screen when other render tests ran first in the same process; AppearanceRenderTest dropped its two checks on it (the switch folding under Light, the wallpaper line) on 2026-10-19 and keeps the shots, the behaviour checked on the phone instead. Find why (the shared SettingsFile, the paused looper and DataStore's IO collector) and restore them. Also FeaturedCarouselRenderTest's first case sat for 58 minutes in one full local run and a CI run took 56 minutes.
-- [ ] U31 Sentry on the free plan: a token for the mapping upload, an email alert, spike protection (see the U31 section; needed before CP102a)
-- [ ] CP102 Crash reports that arrive and can be read (user, 2026-10-19; plan below, parts in this order):
-  - [ ] CP102a Mapping upload from CI and the 1.27.x backfill (needs U31)
-  - [ ] CP102b A crash from an older build is still sent, decoded with that build's mapping
-  - [ ] CP102c The crash prompt shown before Home builds, so a start-up crash loop is still reported
-  - [ ] CP102d App not responding and native crashes (TDLib, mpv, FFmpeg)
-  - [ ] CP102e Stay inside the free plan's 5,000 errors a month
-  - [ ] CP102f The crash report question in the first run (with CP100)
-  - [ ] CP102g Crash reports on the desktop
+- [~] U31 Sentry on the free plan (2026-10-19: organization token made, `org:ci` covers ProGuard uploads, repository secret and local.properties set; still open: the email alert, spike protection, and a `tmplayer-desktop` project with `gh secret set SENTRY_DSN_DESKTOP`, until then the desktop sends to the Android project)
+- [x] CP102 Crash reports that arrive and can be read (user, 2026-10-19; built the same day, ships with the next release; open items in the parts):
+  - [x] CP102a Mapping upload from CI and the 1.27.x backfill (20a58d5; 1.27.0 and 1.27.1 mappings uploaded by hand 2026-10-19; the first CI upload is seen at the next release; keeping mappings past 90 days is the user's call)
+  - [x] CP102b A crash from an older build is still sent, decoded with that build's mapping (86024bc; decoding across builds seen only after the next release)
+  - [x] CP102c The crash prompt shown before Home builds, so a start-up crash loop is still reported (523ca73, 13eb792 also asks on the sign in screens; checked on the TV emulator: asked after two start-up crashes, Send went)
+  - [x] CP102d App not responding and native crashes (TDLib, mpv, FFmpeg) (9cd0d73; TV emulator: native crash and ANR asked, sent, a declined one not asked again; switch on not tried)
+  - [x] CP102e Stay inside the free plan's 5,000 errors a month (cffc887, unit tested)
+  - [x] CP102f The crash report question in the first run (10e4712, its own setup step until CP100 folds it in; render tested, not seen on a device)
+  - [x] CP102g Crash reports on the desktop (6aa2fc9, f8cc844, 68a351c privacy and security pages; unit and render tested, not run on Windows, Linux or macOS yet: do it in the pre-release VM pass)
   - [ ] CP102h (ask the user first) Chosen errors the app survives
 
 ## Standing rules
