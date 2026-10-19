@@ -166,4 +166,32 @@ class CrashReportScrubberTest {
         assertEquals("index 3 out of bounds for length 2", r("index 3 out of bounds for length 2"))
         assertFalse(r("x /storage/emulated/0/a.mp4").contains("emulated"))
     }
+
+    @Test
+    fun redactsComputerPaths() {
+        val r = CrashReportScrubber::redact
+        assertEquals("[path] (Access is denied)", r("""C:\Users\Jane\AppData\Local\TMPlayer\x.db (Access is denied)"""))
+        assertEquals("cannot open [path]", r("""cannot open C:\Users\Jane Doe\Videos\holiday.mkv"""))
+        assertEquals("on [path] now", r("on D:/TMPlayer/cache now"))
+        assertEquals("share [path]", r("""share \\nas\films\a.mp4"""))
+        assertEquals("[path] (No such file or directory)", r("/Users/Jane Doe/Movies/TMPlayer/a.mkv (No such file or directory)"))
+        assertFalse(r("""C:\Users\Jane Doe\Videos\a.mkv""").contains("Jane"))
+        assertEquals("ratio 3/4 at Lcom/tmplayer/Foo;", r("ratio 3/4 at Lcom/tmplayer/Foo;"))
+    }
+
+    @Test
+    fun aComputerKeepsNoDevice() {
+        val event = SentryEvent().apply {
+            contexts.setDevice(Device().apply { model = "Inspiron 15"; manufacturer = "Dell" })
+            contexts.setOperatingSystem(OperatingSystem().apply { name = "Windows 11"; version = "10.0" })
+            contexts.setApp(App().apply { appVersion = "1.27.2"; appBuild = "1.27.2" })
+            serverName = "JANES-LAPTOP"
+        }
+        CrashReportScrubber.scrub(event, keepDevice = false)
+        assertNull(event.contexts.device)
+        assertNull(event.serverName)
+        assertEquals("Windows 11", event.contexts.operatingSystem!!.name)
+        assertEquals("10.0", event.contexts.operatingSystem!!.version)
+        assertEquals("1.27.2", event.contexts.app!!.appVersion)
+    }
 }

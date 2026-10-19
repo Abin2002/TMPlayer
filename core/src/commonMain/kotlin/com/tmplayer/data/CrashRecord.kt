@@ -27,7 +27,7 @@ import java.util.Date
  * update is often the fix for that very crash. The report then says it came from the old build,
  * and Sentry decodes its frames with the old build's mapping rather than the running one's.
  */
-internal class CrashRecord(
+class CrashRecord(
     val time: Long,
     val versionName: String,
     val versionCode: Long,
@@ -197,10 +197,18 @@ internal class CrashRecord(
          * names that build's mapping: without one its frames could only be decoded with the
          * running build's mapping, which is the wrong one, and that is every record written by
          * 1.27.1 or older. A crash from the running build needs no UUID, since the SDK adds its own.
+         *
+         * [needsMapping] is false for the desktop, whose code is shrunk but never renamed: its
+         * frames read as the source does whichever build they came from.
          */
-        fun worthSending(record: CrashRecord, runningVersionCode: Long, now: Long): Boolean = when {
+        fun worthSending(
+            record: CrashRecord,
+            runningVersionCode: Long,
+            now: Long,
+            needsMapping: Boolean = true,
+        ): Boolean = when {
             now - record.time > KEEP_MILLIS -> false
-            record.versionCode == runningVersionCode -> true
+            record.versionCode == runningVersionCode || !needsMapping -> true
             else -> record.proguardUuids.isNotEmpty()
         }
 

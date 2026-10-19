@@ -104,6 +104,9 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 sentry-android-core = { group = "io.sentry", name = "sentry-android-core", version.ref = "sentry" }
+# The plain JVM SDK that sentry-android-core is built on: the desktop's crash reports, and the
+# record, scrubber and daily limits both apps share in :core.
+sentry = { group = "io.sentry", name = "sentry", version.ref = "sentry" }
 
 mediamp-api = { group = "org.openani.mediamp", name = "mediamp-api", version.ref = "mediamp" }
 mediamp-mpv = { group = "org.openani.mediamp", name = "mediamp-mpv", version.ref = "mediamp" }

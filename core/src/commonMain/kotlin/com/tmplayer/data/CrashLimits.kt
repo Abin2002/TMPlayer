@@ -19,7 +19,7 @@ import java.io.File
  * holds the day, the count and the crashes already sent that day, as class and method names; no
  * message, no file and nothing about the viewer.
  */
-internal class CrashLimits(
+class CrashLimits(
     private val file: File,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
