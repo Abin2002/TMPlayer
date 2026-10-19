@@ -1188,6 +1188,8 @@
     "back_online": "Di nuovo online. Libreria aggiornata.",
     "connect_to_play": "Connettiti a internet per riprodurre questo video.",
     "crash_always": "Invia sempre le segnalazioni di arresto anomalo",
+    "crash_anr_message": "Inviare una segnalazione del punto in cui si è bloccato, così può essere risolto?",
+    "crash_anr_title": "TMPlayer ha smesso di rispondere",
     "crash_detail": "Una segnalazione contiene l'errore, le versioni di TMPlayer e di Android e il modello del dispositivo. Niente nomi di chat, nomi di file o cronologia.",
     "crash_dont_send": "Non inviare",
     "crash_message": "Inviare una segnalazione dell'arresto, così può essere risolto?",

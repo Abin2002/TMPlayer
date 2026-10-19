@@ -1188,6 +1188,8 @@
     "back_online": "Połączenie wróciło. Biblioteka zaktualizowana.",
     "connect_to_play": "Połącz się z internetem, aby odtworzyć ten film.",
     "crash_always": "Zawsze wysyłaj raporty o awariach",
+    "crash_anr_message": "Wysłać raport o tym, gdzie się zawiesił, żeby można było to naprawić?",
+    "crash_anr_title": "TMPlayer przestał odpowiadać",
     "crash_detail": "Raport to błąd, wersje TMPlayera i Androida oraz model urządzenia. Bez nazw czatów, nazw plików i historii.",
     "crash_dont_send": "Nie wysyłaj",
     "crash_message": "Wysłać raport o awarii, żeby można było ją naprawić?",
