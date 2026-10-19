@@ -1336,6 +1336,10 @@ private fun Root() {
                 )
             }
             com.tmplayer.ui.connect.ProxyScreenHost(Modifier.zIndex(3f))
+            // The crash question is asked on the sign in screens too: the shell's copy below is
+            // never reached from here, and an ANR or native crash before sign in would otherwise
+            // wait for a sign in that may never come.
+            CrashReports.pending.collectAsStateWithLifecycle().value?.let { CrashQuestion(it, settings) }
             return@Box
         }
 
