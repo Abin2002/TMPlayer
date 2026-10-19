@@ -313,8 +313,17 @@ class MainActivity : ComponentActivity() {
         if (BuildConfig.DEBUG) {
             intent?.getIntExtra(EXTRA_SUPPORT_RUNG, 0)?.takeIf { it > 0 }?.let { SupportReminder.forcedRung = it }
         }
-        // Debug builds only; R8 drops it from a release, where BuildConfig.DEBUG is false.
-        if (BuildConfig.DEBUG) debugCrashAtStart = intent?.getBooleanExtra(EXTRA_CRASH_AT_START, false) == true
+        // Debug builds only; R8 drops these from a release, where BuildConfig.DEBUG is false.
+        if (BuildConfig.DEBUG) {
+            debugCrashAtStart = intent?.getBooleanExtra(EXTRA_CRASH_AT_START, false) == true
+            debugHangSeconds = intent?.getIntExtra(EXTRA_DEBUG_ANR, 0) ?: 0
+            if (intent?.getBooleanExtra(EXTRA_DEBUG_NATIVE_CRASH, false) == true) {
+                // A moment after the first frame, so the crash is the running app's and not the
+                // launch's. SIGSEGV through debuggerd, as a real native crash goes, which leaves
+                // a tombstone and an exit of REASON_CRASH_NATIVE in Android's list.
+                window.decorView.postDelayed({ android.os.Process.sendSignal(android.os.Process.myPid(), 11) }, 3_000)
+            }
+        }
         noteRequestedScreen(intent)
         setContent {
             TMPlayerTheme {
@@ -373,6 +382,29 @@ class MainActivity : ComponentActivity() {
             val store = SettingsStore(this@MainActivity)
             runCatching { AppLocales.adopt(this@MainActivity, store.language.first())?.let { store.setLanguage(it) } }
         }
+    }
+
+    /**
+     * The debug-only hang (CP102d): the first key or touch after a start with the debug_anr extra
+     * puts the main thread to sleep for that many seconds while the input waits, which is what
+     * Android counts as not responding. Choose "Close app" in its dialog so the exit is recorded
+     * as an ANR. Never in a release build.
+     */
+    private fun debugHangOnInput(down: Boolean) {
+        if (!BuildConfig.DEBUG || !down || debugHangSeconds <= 0) return
+        val seconds = debugHangSeconds
+        debugHangSeconds = 0
+        Thread.sleep(seconds * 1_000L)
+    }
+
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        debugHangOnInput(event.action == android.view.KeyEvent.ACTION_DOWN)
+        return super.dispatchKeyEvent(event)
+    }
+
+    override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
+        debugHangOnInput(event.actionMasked == android.view.MotionEvent.ACTION_DOWN)
+        return super.dispatchTouchEvent(event)
     }
 
     /**
@@ -457,6 +489,21 @@ class MainActivity : ComponentActivity() {
         /** Whether this start was asked to crash in the shell. See [EXTRA_CRASH_AT_START]. */
         @Volatile
         internal var debugCrashAtStart = false
+
+        /**
+         * Debug and promo builds only, for the ANR question (CP102d): `--ei debug_anr 10` hangs the
+         * main thread for 10 s on the next key or touch. See [debugHangOnInput].
+         */
+        const val EXTRA_DEBUG_ANR = "debug_anr"
+
+        /** Seconds the next key or touch hangs the main thread for, from [EXTRA_DEBUG_ANR]. */
+        private var debugHangSeconds = 0
+
+        /**
+         * Debug and promo builds only, for the native crash question (CP102d):
+         * `--ez debug_native_crash true` sends the app a SIGSEGV three seconds after it opens.
+         */
+        const val EXTRA_DEBUG_NATIVE_CRASH = "debug_native_crash"
 
         const val OPEN_DOWNLOADS = SCREEN_DOWNLOADS
 
@@ -845,7 +892,7 @@ private fun Root() {
     val supportScreen = screen is Screen.Chats || screen is Screen.Downloads
     var supportForcedShown by remember { mutableStateOf(false) }
     val supportOpenRequested by SupportReminder.openRequested.collectAsStateWithLifecycle()
-    val crashAsking by CrashReports.pending.collectAsStateWithLifecycle()
+    val crashAsking = CrashReports.pending.collectAsStateWithLifecycle().value != null
     // Anything else up: the update, the language notice, the crash question, What's new, the
     // support page's own codes. The window waits for all of them.
     val otherWindowUp = showUpdate || languageNotice.language != null || crashAsking || whatsNew.showing || supporting != null
@@ -1981,8 +2028,9 @@ private fun Root() {
             UpdateDialog(onDismiss = { showUpdate = false; Updates.dismiss() })
         }
 
-        val crashPending by CrashReports.pending.collectAsStateWithLifecycle()
-        if (crashPending && !showUpdate) CrashQuestion(settings)
+        val crashQuestion by CrashReports.pending.collectAsStateWithLifecycle()
+        val crashPending = crashQuestion != null
+        crashQuestion?.let { question -> if (!showUpdate) CrashQuestion(question, settings) }
 
         val noticeLanguage = languageNotice.language
         if (noticeLanguage != null && inShell && screen is Screen.Chats && !showUpdate) {
@@ -2110,21 +2158,23 @@ private const val SUPPORT_CARD_DELAY_MS = 4_000L
  * device's figures said.
  */
 /**
- * The question about a crash left from an earlier run.
+ * The question about a crash left from an earlier run, or the app having stopped responding.
  *
  * Asked once per crash, and only while the switch in Settings is off: with it on, the report went
  * without asking. Back or a tap outside counts as Don't send, so a viewer who waves it away is not
  * asked again about the same crash. Drawn in the shell for an ordinary crash, and on its own
- * before the shell for a start-up loop ([StartupCrashQuestion]).
+ * before the shell for a start-up loop ([StartupCrashQuestion]). A native crash is a crash to the
+ * viewer, and is asked about in the same words.
  */
 @Composable
-private fun CrashQuestion(settings: SettingsStore) {
+private fun CrashQuestion(question: CrashReports.Question, settings: SettingsStore) {
     val s = LocalStrings.current
     val context = LocalContext.current
     var always by remember { mutableStateOf(false) }
+    val stalled = question == CrashReports.Question.NotResponding
     TvConfirm(
-        title = s.mainCrashTitle,
-        message = s.mainCrashMessage,
+        title = if (stalled) s.mainCrashAnrTitle else s.mainCrashTitle,
+        message = if (stalled) s.mainCrashAnrMessage else s.mainCrashMessage,
         detail = s.mainCrashDetail,
         confirmLabel = s.mainCrashSend,
         cancelLabel = s.mainCrashDontSend,
@@ -2165,7 +2215,7 @@ private fun StartupCrashQuestion() {
     androidx.compose.foundation.layout.Box(
         androidx.compose.ui.Modifier.fillMaxSize().background(Tone.background),
     ) {
-        if (asking) CrashQuestion(settings)
+        asking?.let { CrashQuestion(it, settings) }
     }
 }
 

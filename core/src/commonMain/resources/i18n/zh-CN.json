@@ -1188,6 +1188,8 @@
     "back_online": "已恢复网络，资料库已更新。",
     "connect_to_play": "请连接互联网后播放此视频。",
     "crash_always": "始终发送崩溃报告",
+    "crash_anr_message": "发送卡住位置的报告，以便修复？",
+    "crash_anr_title": "TMPlayer 已停止响应",
     "crash_detail": "报告只包含错误、TMPlayer 和 Android 版本以及设备型号。不含聊天名称、文件名或历史记录。",
     "crash_dont_send": "不发送",
     "crash_message": "发送这次崩溃的报告，以便修复？",

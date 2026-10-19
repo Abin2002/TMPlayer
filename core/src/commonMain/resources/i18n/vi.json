@@ -1188,6 +1188,8 @@
     "back_online": "Đã có mạng trở lại. Thư viện đã được cập nhật.",
     "connect_to_play": "Hãy kết nối internet để phát video này.",
     "crash_always": "Luôn gửi báo cáo sự cố",
+    "crash_anr_message": "Gửi báo cáo về chỗ ứng dụng bị treo để có thể sửa?",
+    "crash_anr_title": "TMPlayer đã ngừng phản hồi",
     "crash_detail": "Báo cáo gồm lỗi, phiên bản TMPlayer và Android, và kiểu thiết bị. Không có tên cuộc trò chuyện, tên tệp hay lịch sử.",
     "crash_dont_send": "Không gửi",
     "crash_message": "Gửi báo cáo về sự cố này để có thể sửa?",

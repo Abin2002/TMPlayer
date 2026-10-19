@@ -1188,6 +1188,8 @@
     "back_online": "Kembali online. Pustaka diperbarui.",
     "connect_to_play": "Sambungkan ke internet untuk memutar video ini.",
     "crash_always": "Selalu kirim laporan crash",
+    "crash_anr_message": "Kirim laporan tentang di mana aplikasi macet agar bisa diperbaiki?",
+    "crash_anr_title": "TMPlayer berhenti merespons",
     "crash_detail": "Laporan berisi galatnya, versi TMPlayer dan Android, serta model perangkat. Tanpa nama chat, nama file, atau riwayat.",
     "crash_dont_send": "Jangan kirim",
     "crash_message": "Kirim laporan crash ini agar bisa diperbaiki?",

@@ -1188,6 +1188,8 @@
     "back_online": "Wieder online. Bibliothek aktualisiert.",
     "connect_to_play": "Verbinde dich mit dem Internet, um dieses Video abzuspielen.",
     "crash_always": "Absturzberichte immer senden",
+    "crash_anr_message": "Einen Bericht senden, wo es hängen geblieben ist, damit es behoben werden kann?",
+    "crash_anr_title": "TMPlayer hat nicht mehr reagiert",
     "crash_detail": "Ein Bericht enthält den Fehler, die Versionen von TMPlayer und Android und das Gerätemodell. Keine Chatnamen, keine Dateinamen, kein Verlauf.",
     "crash_dont_send": "Nicht senden",
     "crash_message": "Einen Bericht zum Absturz senden, damit er behoben werden kann?",

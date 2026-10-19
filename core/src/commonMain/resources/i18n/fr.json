@@ -1188,6 +1188,8 @@
     "back_online": "De nouveau en ligne. Bibliothèque mise à jour.",
     "connect_to_play": "Connectez-vous à internet pour lire cette vidéo.",
     "crash_always": "Toujours envoyer les rapports de plantage",
+    "crash_anr_message": "Envoyer un rapport sur l'endroit où il s'est bloqué pour qu'il puisse être corrigé ?",
+    "crash_anr_title": "TMPlayer a cessé de répondre",
     "crash_detail": "Un rapport contient l'erreur, les versions de TMPlayer et d'Android et le modèle de l'appareil. Ni noms de discussions, ni noms de fichiers, ni historique.",
     "crash_dont_send": "Ne pas envoyer",
     "crash_message": "Envoyer un rapport du plantage pour qu'il puisse être corrigé ?",

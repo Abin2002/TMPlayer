@@ -1188,6 +1188,8 @@
     "back_online": "De volta online. Biblioteca atualizada.",
     "connect_to_play": "Conecte-se à internet para reproduzir este vídeo.",
     "crash_always": "Sempre enviar relatórios de falhas",
+    "crash_anr_message": "Enviar um relatório de onde ele travou para que isso possa ser corrigido?",
+    "crash_anr_title": "O TMPlayer parou de responder",
     "crash_detail": "Um relatório traz o erro, as versões do TMPlayer e do Android e o modelo do aparelho. Sem nomes de chats, nomes de arquivos ou histórico.",
     "crash_dont_send": "Não enviar",
     "crash_message": "Enviar um relatório da falha para que ela possa ser corrigida?",

@@ -1188,6 +1188,8 @@
     "back_online": "オンラインに戻りました。ライブラリを更新しました。",
     "connect_to_play": "この動画を再生するには、インターネットに接続してください。",
     "crash_always": "クラッシュレポートを常に送信",
+    "crash_anr_message": "修正のため、止まった箇所のレポートを送信しますか?",
+    "crash_anr_title": "TMPlayerが応答しなくなりました",
     "crash_detail": "レポートに含まれるのは、エラー、TMPlayerとAndroidのバージョン、端末のモデルです。チャット名、ファイル名、履歴は含まれません。",
     "crash_dont_send": "送信しない",
     "crash_message": "修正のため、クラッシュのレポートを送信しますか?",

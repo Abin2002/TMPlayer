@@ -1188,6 +1188,8 @@
     "back_online": "Yeniden çevrimiçi. Kitaplık güncellendi.",
     "connect_to_play": "Bu videoyu oynatmak için internete bağlan.",
     "crash_always": "Çökme raporlarını her zaman gönder",
+    "crash_anr_message": "Düzeltilebilmesi için nerede takıldığının raporu gönderilsin mi?",
+    "crash_anr_title": "TMPlayer yanıt vermeyi durdurdu",
     "crash_detail": "Rapor yalnızca hatayı, TMPlayer ve Android sürümlerini ve cihaz modelini içerir. Sohbet adı, dosya adı ya da geçmiş yok.",
     "crash_dont_send": "Gönderme",
     "crash_message": "Düzeltilebilmesi için çökmenin raporu gönderilsin mi?",

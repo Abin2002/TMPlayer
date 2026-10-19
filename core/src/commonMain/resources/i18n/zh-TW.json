@@ -1188,6 +1188,8 @@
     "back_online": "已恢復連線。媒體庫已更新。",
     "connect_to_play": "請連上網路以播放這部影片。",
     "crash_always": "一律傳送當機報告",
+    "crash_anr_message": "要傳送卡住位置的報告，以便修正嗎？",
+    "crash_anr_title": "TMPlayer 已停止回應",
     "crash_detail": "報告只包含錯誤、TMPlayer 和 Android 版本以及裝置型號。不含聊天名稱、檔案名稱或紀錄。",
     "crash_dont_send": "不要傳送",
     "crash_message": "要傳送這次當機的報告，以便修正嗎？",
