@@ -298,6 +298,12 @@
     ]
   },
   {
+    "path": "/guides/external-player-for-telegram/",
+    "lastmod": "2026-10-19",
+    "changefreq": "monthly",
+    "priority": "0.6"
+  },
+  {
     "path": "/guides/cast-telegram-videos-to-chromecast/",
     "lastmod": "2026-10-19",
     "changefreq": "monthly",

@@ -102,7 +102,8 @@
     "get_tmplayer": "Get TMPlayer",
     "step_by_step_guide": "Step by step guide",
     "telegram_on_samsung_or_lg": "Telegram on Samsung or LG",
-    "cast_to_chromecast": "Cast to Chromecast"
+    "cast_to_chromecast": "Cast to Chromecast",
+    "external_player": "External player for Telegram"
   },
   "ld": {
     "a_free_open_source_4a30": "A free, open source Telegram video player for Android TV, Android phones, Windows, macOS and Linux that streams the videos in your own chats.",
@@ -224,7 +225,18 @@
     "pick_the_tv_dd8e": "Pick the TV",
     "choose_the_tv_from_6438": "Choose the TV from the list. It says it is connecting until the TV is ready, then the video starts there.",
     "control_it_from_your_cc96": "Control it from your device",
-    "play_pause_seek_skip_e187": "Play, pause, seek, skip, switch audio tracks and subtitles and set the TV's volume from the phone or computer. When you stop casting, your place is kept for Continue watching."
+    "play_pause_seek_skip_e187": "Play, pause, seek, skip, switch audio tracks and subtitles and set the TV's volume from the phone or computer. When you stop casting, your place is kept for Continue watching.",
+    "an_external_player_for_74e0": "An external player for Telegram videos, and VLC",
+    "tmplayer_is_an_external_1837": "TMPlayer is an external player for Telegram videos, with subtitles, audio tracks and resume. On Android it also hands a video to VLC or MX Player.",
+    "external_player_8d52": "External player",
+    "install_the_other_player_f22b": "Install the other player",
+    "install_vlc_mx_player_386c": "Install VLC, MX Player or the player you like on the same device, from its store.",
+    "play_the_video_in_a36f": "Play the video in TMPlayer",
+    "open_the_chat_in_94c6": "Open the chat in TMPlayer and start the video.",
+    "open_the_player_s_5df4": "Open the player's menu",
+    "on_a_phone_tap_8d2a": "On a phone, tap More options in the player's top bar. On a TV, press Down for the button row and choose More at its end; holding OK while the controls show goes straight to the next step.",
+    "choose_open_in_another_306b": "Choose Open in another app",
+    "pick_vlc_mx_player_8fc7": "Pick VLC, MX Player or any other player in the list. TMPlayer saves your place first, so when you come back you carry on from there."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer features: stream Telegram videos on TV, phone and PC",
@@ -1357,7 +1369,8 @@
     "looking_at_other_apps": "Looking at other apps too? {a1}.",
     "lede": "Five guides to watching the videos in your own Telegram chats on a television: two that install TMPlayer step by step, one on casting, one for Samsung and LG TVs, and one that compares the ways to get there.",
     "samsung_lg_card": "Samsung and LG TVs cannot install Android apps: a TV stick, casting, mirroring and Telegram Web, compared.",
-    "cast_card": "Cast from TMPlayer on a phone or computer to a Chromecast or Google TV, and how Telegram's own app compares."
+    "cast_card": "Cast from TMPlayer on a phone or computer to a Chromecast or Google TV, and how Telegram's own app compares.",
+    "external_card": "TMPlayer as the external player for your Telegram videos, and how to hand one to VLC or MX Player."
   },
   "alternatives": {
     "title": "Telegram TV apps compared: TMPlayer and alternatives",
@@ -1713,5 +1726,45 @@
       "better_stick_h": "At home on a small stick",
       "better_stick_p": "Tested on a TV stick with 1 GB of RAM. Low storage mode keeps only the part of a video you are watching, and the app offers its own updates."
     }
+  },
+  "guide_external": {
+    "title": "External player for Telegram videos, and VLC | TMPlayer",
+    "social_title": "An external player for Telegram videos, and VLC",
+    "description": "TMPlayer is an external player for Telegram videos, with subtitles, audio tracks and resume. On Android it also hands a video to VLC or MX Player.",
+    "crumb": "External player",
+    "h1": "An external player for {em1}",
+    "h1__em1": "Telegram videos",
+    "lede": "Looking for an external player for Telegram, or a way to play Telegram videos in VLC? TMPlayer is one: a free Telegram video player app that signs in to your own account and plays the videos in your chats, with nothing to save first. On Android it can also pass a video on to VLC, MX Player or any other player.",
+    "what_h": "TMPlayer is the external player",
+    "what_sub": "On Android TV, Fire TV, Android phones, Windows, Linux and Mac.",
+    "tracks_h": "Subtitles and every audio track",
+    "tracks_p": "MKV, MP4, AVI and TS, with embedded subtitles, image-based ones included, and every audio track, switched while the video plays.",
+    "resume_h": "Picks up where you stopped",
+    "resume_p": "Your place is kept for Continue watching, and a show's episodes are in order on a page of their own.",
+    "stream_h": "No file to save first",
+    "stream_p": "A video starts within seconds and keeps downloading while it plays, so there is no file to save and open somewhere else.",
+    "steps_h": "Play a Telegram video in VLC or MX Player",
+    "steps_sub": "On Android: a phone, a tablet, an Android TV or a Fire TV.",
+    "step_1_h": "Install the other player",
+    "step_1_p": "Install VLC, MX Player or the player you like on the same device, from its store.",
+    "step_2_h": "Play the video in TMPlayer",
+    "step_2_p": "Open the chat in TMPlayer and start the video.",
+    "step_3_h": "Open the player's menu",
+    "step_3_p": "On a phone, tap More options in the player's top bar. On a TV, press Down for the button row and choose More at its end; holding OK while the controls show goes straight to the next step.",
+    "step_4_h": "Choose Open in another app",
+    "step_4_p": "Pick VLC, MX Player or any other player in the list. TMPlayer saves your place first, so when you come back you carry on from there.",
+    "gets_h": "What the other player gets",
+    "gets_whole": "A finished download goes over whole.",
+    "gets_partial": "A video still downloading goes over as far as it has got, and TMPlayer warns that the other player will stop there. The download carries on in the background.",
+    "gets_nothing": "A video with nothing on the device yet cannot go over, and TMPlayer says so.",
+    "gets_protected": "A video from a chat that does not allow saving stays in TMPlayer: Open in another app is not in its menu.",
+    "gets_formats": "It is also the way out for the few formats TMPlayer does not play on Android, such as WMV, RealMedia and Ogg video: when one will not play, the player offers Open in another app. {a1}.",
+    "gets_formats__a1": "Every format, by platform",
+    "desktop_h": "On a computer",
+    "desktop_p1": "On Windows, Linux and Mac, TMPlayer plays every video itself through mpv, with its subtitles, every audio track and keyboard shortcuts.",
+    "desktop_p2": "A video that is downloaded, or already all on the computer, also has Open in another app in its menu. It opens the file in the app the computer uses for that kind of file, such as VLC when VLC is the default. A chat that does not allow saving keeps its videos in TMPlayer here too.",
+    "formats_card": "Which video and audio formats play on Android, on a TV and on a computer.",
+    "more": "A video that will not start, or a question about formats: {a1}.",
+    "more__a1": "the questions page"
   }
 }

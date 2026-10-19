@@ -20,6 +20,7 @@ export const PAGES = {
   guide_no_casting: 'guides/telegram-on-tv-without-casting/',
   guide_smart_tv: 'guides/telegram-on-samsung-or-lg-tv/',
   guide_cast: 'guides/cast-telegram-videos-to-chromecast/',
+  guide_external: 'guides/external-player-for-telegram/',
   alternatives: 'alternatives/',
 } as const;
 export type PageId = keyof typeof PAGES;
