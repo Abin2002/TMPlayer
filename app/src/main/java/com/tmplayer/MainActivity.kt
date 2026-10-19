@@ -1311,6 +1311,12 @@ private fun Root() {
                 onDone = finish,
                 fit = fit,
                 recommendations = recommendations,
+                // CP102f: the crash report question, only in a build with somewhere to send one.
+                crashReporting = remember {
+                    com.tmplayer.ui.onboarding.CrashReporting(CrashReports.available) { on ->
+                        if (on) CrashReports.start(context, true) else CrashReports.stop()
+                    }
+                },
             )
             return@Box
         }

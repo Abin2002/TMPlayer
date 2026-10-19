@@ -639,6 +639,8 @@ fun SettingsScreen(
                                 SetupStep.MobileData -> SettingsPage.Storage
                                 // Its settings are on three pages; each row above has its own.
                                 SetupStep.Device -> null
+                                // Never listed here: its switch is on the privacy rows already.
+                                SetupStep.CrashReports -> null
                             }
                             target?.let {
                                 SetupPlace(titleOf(it)) {

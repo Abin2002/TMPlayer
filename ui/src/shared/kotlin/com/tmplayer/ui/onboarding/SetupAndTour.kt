@@ -28,13 +28,20 @@ fun SetupAndTour(
     modifier: Modifier = Modifier,
     fit: DeviceFit = DeviceFit.Fine,
     recommendations: List<Recommendation> = emptyList(),
+    /**
+     * Whether this build can send crash reports, and what turns them on (CP102f). Available, the
+     * preferences end with the crash report question; the desktop passes the default until it
+     * reports crashes.
+     */
+    crashReporting: CrashReporting = CrashReporting.Unavailable,
 ) {
     val form = deviceForm()
     val pages = remember(form) { Tour.pages(form) }
-    val setup = remember(steps) { steps.takeIf { it.isNotEmpty() }?.let { SetupState(it) } }
+    val asked = remember(steps, crashReporting.available) { Setup.withCrashReports(steps, crashReporting.available) }
+    val setup = remember(asked) { asked.takeIf { it.isNotEmpty() }?.let { SetupState(it) } }
     val tour = remember(pages) { TourProgress(pages) }
     var phase by remember { mutableStateOf(SetupPhase.Appearance) }
-    val groups = listOf(1, steps.size, pages.size)
+    val groups = listOf(1, asked.size, pages.size)
 
     when {
         phase == SetupPhase.Appearance -> AppearanceStep(
@@ -56,12 +63,13 @@ fun SetupAndTour(
             moreAfter = true,
             onSkipAll = onDone,
             onBackFromFirst = { phase = SetupPhase.Appearance },
+            crashReporting = crashReporting,
         )
         else -> TourScreen(
             tour,
             onDone = onDone,
             modifier = modifier,
-            before = 1 + steps.size,
+            before = 1 + asked.size,
             groups = groups,
             onBackFromFirst = { phase = if (setup != null) SetupPhase.Preferences else SetupPhase.Appearance },
         )

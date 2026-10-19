@@ -175,11 +175,59 @@ class SetupTest {
     fun `each step has two answers, the recommended one first and every setting's default`() {
         for (step in SetupStep.entries) {
             assertEquals(2, step.choices.size)
+            if (step == SetupStep.CrashReports) continue
             assertTrue(step.choices.first().recommended)
             assertFalse(step.choices.last().recommended)
         }
         val defaults = SetupValues(posters = true, lowStorage = false)
         for (step in SetupStep.entries) assertEquals(step.choices.first(), defaults.current(step))
+    }
+
+    @Test
+    fun `the crash report question is asked only where the build can send a report`() {
+        val steps = Setup.stepsFor(com.tmplayer.data.DeviceForm.Phone, posters = true, recommendations = emptyList())
+        assertFalse(SetupStep.CrashReports in steps)
+        assertEquals(steps, Setup.withCrashReports(steps, available = false))
+        assertEquals(steps, Setup.withCrashReports(steps, CrashReporting.Unavailable.available))
+        val asked = Setup.withCrashReports(steps, available = true)
+        assertEquals(steps + SetupStep.CrashReports, asked)
+        // Last of the preferences, and only once.
+        assertEquals(asked, Setup.withCrashReports(asked, available = true))
+        // Settings' Setup choices never list it, on any device: Settings has its own switch.
+        for (form in com.tmplayer.data.DeviceForm.entries) {
+            assertFalse(SetupStep.CrashReports in Setup.stepsFor(form, true, com.tmplayer.data.Recommendation.entries))
+        }
+    }
+
+    @Test
+    fun `crash reports start off and no answer is suggested`() {
+        assertEquals(SetupChoice.CrashReportsOff, SetupValues(posters = true, lowStorage = false).current(SetupStep.CrashReports))
+        assertEquals(SetupChoice.CrashReportsOff, SetupValues(posters = true, lowStorage = false).chosen(SetupStep.CrashReports))
+        assertTrue(SetupStep.CrashReports.choices.none { it.recommended })
+        assertTrue(SetupStep.CrashReports.choices.none { it.screenshot })
+        // Run again from Settings with the switch on, the question shows it on.
+        val on = SetupValues(posters = true, lowStorage = false, crashReports = true)
+        assertEquals(SetupChoice.CrashReportsOn, on.current(SetupStep.CrashReports))
+        assertFalse(store().let { runBlocking { it.crashReportsNow() } })
+    }
+
+    @Test
+    fun `yes sets Settings' crash report switch and starts reporting, no turns both off`() = runBlocking {
+        val settings = store()
+        val calls = mutableListOf<Boolean>()
+        SetupChoice.CrashReportsOn.applyTo(settings, posters = null, crashReports = { calls += it })
+        assertTrue(settings.crashReports.first())
+        assertTrue(settings.crashReportsNow())
+        SetupChoice.CrashReportsOff.applyTo(settings, posters = null, crashReports = { calls += it })
+        assertFalse(settings.crashReportsNow())
+        assertEquals(listOf(true, false), calls)
+        // No other answer touches it.
+        SetupChoice.CrashReportsOn.applyTo(settings, posters = null)
+        for (choice in SetupChoice.entries.filter { it.step != SetupStep.CrashReports }) {
+            choice.applyTo(settings, posters = null, crashReports = { calls += it })
+        }
+        assertTrue(settings.crashReportsNow())
+        assertEquals(listOf(true, false), calls)
     }
 
     @Test

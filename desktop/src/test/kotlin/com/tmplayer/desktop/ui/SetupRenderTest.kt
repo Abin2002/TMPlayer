@@ -6,12 +6,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
@@ -39,6 +44,7 @@ import com.tmplayer.online.OnlineMetadata
 import com.tmplayer.ui.nav.BackStack
 import com.tmplayer.ui.nav.LocalBackStack
 import com.tmplayer.ui.onboarding.AppearanceStep
+import com.tmplayer.ui.onboarding.CrashReporting
 import com.tmplayer.ui.onboarding.SetupScreen
 import com.tmplayer.ui.onboarding.SetupAndTour
 import com.tmplayer.ui.onboarding.SetupState
@@ -321,6 +327,102 @@ class SetupRenderTest {
         waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.saveMobileData.first() } }
         // Wi-Fi only is not part of the answer: it would stop streaming on mobile data altogether.
         assertFalse(runBlocking { settings.wifiOnlyDownloads.first() })
+    }
+
+    /**
+     * CP102f: the crash report question opens off with nothing suggested. Pressing the switch only
+     * marks it; Done writes Settings' "Send crash reports" and starts reporting.
+     */
+    @Test
+    fun crashReportsTurnedOn() = runComposeUiTest {
+        var started: Boolean? = null
+        var done = false
+        val setup = SetupState(listOf(SetupStep.Storage, SetupStep.CrashReports), start = 1)
+        setContent {
+            TmMaterialTheme(dark = true) {
+                Box(Modifier.size(1280.dp, 800.dp)) {
+                    SetupScreen(settings, setup, onDone = { done = true }, crashReporting = CrashReporting(true) { started = it })
+                }
+            }
+        }
+        val row = hasText("Send crash reports") and hasClickAction()
+        onNode(hasText("Crash reports")).assertExists()
+        onNode(row).assertIsNotSelected()
+        onNode(hasText("Recommended")).assertDoesNotExist()
+        onNode(hasText("Read the privacy policy") and hasClickAction()).assertExists()
+        onNode(row).performClick()
+        waitForIdle()
+        onNode(row).assertIsSelected()
+        assertFalse("marked, not yet written", runBlocking { settings.crashReportsNow() })
+        onNode(hasText("Done") and hasClickAction()).performClick()
+        waitForIdle()
+        assertTrue(done)
+        waitUntil(timeoutMillis = WRITE_MS) { runBlocking { settings.crashReportsNow() } && started == true }
+    }
+
+    /** CP102f: Done on the untouched question sends nothing and starts nothing. */
+    @Test
+    fun crashReportsLeftOff() = runComposeUiTest {
+        var started: Boolean? = null
+        var done = false
+        setContent {
+            TmMaterialTheme(dark = true) {
+                Box(Modifier.size(1280.dp, 800.dp)) {
+                    SetupScreen(
+                        settings,
+                        remember { SetupState(listOf(SetupStep.CrashReports)) },
+                        onDone = { done = true },
+                        crashReporting = CrashReporting(true) { started = it },
+                    )
+                }
+            }
+        }
+        onNode(hasText("Done") and hasClickAction()).performClick()
+        waitForIdle()
+        assertTrue(done)
+        assertFalse(runBlocking { settings.crashReportsNow() })
+        assertEquals(null, started)
+    }
+
+    /**
+     * CP102f: the whole flow asks the question last among the preferences when the build can
+     * report, and never when it cannot (the desktop today).
+     */
+    @Test
+    fun crashReportsOnlyWhereAvailable() = runComposeUiTest {
+        var available by mutableStateOf(true)
+        setContent {
+            TmMaterialTheme(dark = true) {
+                Box(Modifier.size(1280.dp, 800.dp)) {
+                    key(available) {
+                        SetupAndTour(
+                            settings,
+                            listOf(SetupStep.Storage),
+                            onDone = {},
+                            crashReporting = if (available) CrashReporting(true) else CrashReporting.Unavailable,
+                        )
+                    }
+                }
+            }
+        }
+        onNode(hasText("Next") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Keep whole videos") and hasClickAction()).assertExists()
+        onNode(hasText("Next") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Send crash reports") and hasClickAction()).assertIsNotSelected()
+        onNode(hasText("Next") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Quick tour")).assertExists()
+
+        available = false
+        waitForIdle()
+        onNode(hasText("Next") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Next") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasText("Quick tour")).assertExists()
+        onNode(hasText("Send crash reports")).assertDoesNotExist()
     }
 
     /** CP69: every tour page light and dark, in Arabic and the pseudo-locale, and narrow. */

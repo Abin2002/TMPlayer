@@ -33,6 +33,13 @@ enum class SetupStep {
     MobileData,
 
     /**
+     * Send crash reports (CP102f), the one consent question: off until it is turned on, with no
+     * answer suggested. Only in a build that can report ([CrashReporting.available]), always the
+     * last of the preferences, and drawn as one switch rather than two pictured answers.
+     */
+    CrashReports,
+
+    /**
      * A device short of memory or storage (CP68): apply the recommended settings, or not now. It
      * takes the storage step's place, since Low storage mode is among them when storage is short.
      */
@@ -55,14 +62,19 @@ enum class SetupChoice(val step: SetupStep) {
     NoLimits(SetupStep.MobileData),
     ApplyRecommended(SetupStep.Device),
     NotNow(SetupStep.Device),
+    // Off first: it is what Next keeps when the switch was never touched.
+    CrashReportsOff(SetupStep.CrashReports),
+    CrashReportsOn(SetupStep.CrashReports),
     ;
 
     /**
      * True for the answer the setup suggests. That is every setting's default, except on Mobile
      * data, where saving it is suggested although the settings start off: an install updated from
-     * a version without the step keeps behaving as it did.
+     * a version without the step keeps behaving as it did. Crash reports suggest neither: sending
+     * them is consent, so nothing there is marked as the better answer.
      */
-    val recommended: Boolean get() = step.choices.first() == this
+    val recommended: Boolean
+        get() = step != SetupStep.CrashReports && step.choices.first() == this
 
     /**
      * Whether this answer is pictured with a screenshot. The storage and mobile data steps draw
@@ -78,6 +90,7 @@ data class SetupValues(
     val lowStorage: Boolean,
     val lighter: Boolean = false,
     val saveData: Boolean = false,
+    val crashReports: Boolean = false,
 ) {
     /**
      * The answer on [step] that matches what is set, as Settings' Setup choices names it. Unlike
@@ -99,6 +112,8 @@ data class SetupValues(
         SetupStep.MobileData -> SetupChoice.SaveData
         // Apply is what the step is for; Not now is the press that changes nothing.
         SetupStep.Device -> SetupChoice.ApplyRecommended
+        // What is set, which on a fresh install is off: the switch is never turned on for anyone.
+        SetupStep.CrashReports -> if (crashReports) SetupChoice.CrashReportsOn else SetupChoice.CrashReportsOff
     }
 }
 
@@ -152,6 +167,14 @@ object Setup {
      */
     const val STORAGE_STEP = true
 
+    /**
+     * [steps] with the crash report question at the end, where the build can send a report
+     * ([CrashReporting.available]). Settings' Setup choices leave it out: Settings has the same
+     * switch in its own place, and the per-crash prompt stays as it is.
+     */
+    fun withCrashReports(steps: List<SetupStep>, available: Boolean): List<SetupStep> =
+        if (available && SetupStep.CrashReports !in steps) steps + SetupStep.CrashReports else steps
+
     /** What the shell does about the setup right now. */
     enum class Decision {
         /** Nothing to do: not armed, or already done. */
@@ -191,12 +214,14 @@ object Setup {
  * Writes what [choice] stands for. The one place an answer is applied, by the setup's steps and by
  * Settings' Setup choices alike, so changing a choice there does exactly what the setup did.
  * [posters] switches online posters and details (`OnlineMetadata.setEnabled`), null in a build
- * without them, and [recommendations] what Apply turns on.
+ * without them, [recommendations] what Apply turns on, and [crashReports] the platform's own
+ * start or stop of crash reporting once the setting is written ([CrashReporting.onChange]).
  */
 suspend fun SetupChoice.applyTo(
     settings: SettingsStore,
     posters: ((Boolean) -> Unit)?,
     recommendations: List<Recommendation> = emptyList(),
+    crashReports: ((Boolean) -> Unit)? = null,
 ) {
     when (this) {
         SetupChoice.PostersOn -> posters?.invoke(true)
@@ -224,6 +249,31 @@ suspend fun SetupChoice.applyTo(
         }
         SetupChoice.ApplyRecommended -> settings.applyRecommendations(recommendations)
         SetupChoice.NotNow -> Unit
+        // The setting Settings' "Send crash reports" switch writes, then the SDK brought up or down.
+        SetupChoice.CrashReportsOn -> {
+            settings.setCrashReports(true)
+            crashReports?.invoke(true)
+        }
+        SetupChoice.CrashReportsOff -> {
+            settings.setCrashReports(false)
+            crashReports?.invoke(false)
+        }
+    }
+}
+
+/**
+ * What a platform tells the first run about crash reports (CP102f). [available] is whether this
+ * build can send a report at all (on Android `CrashReports.available`: a build with no DSN has
+ * nowhere to send one, so the question is not asked, as Settings leaves out its switch).
+ * [onChange] runs after the setting is written, to start the reporting SDK or stop it.
+ *
+ * The desktop passes [Unavailable] until it reports crashes (CP102g). CP100's Preferences screen
+ * takes the same value for its "Send crash reports" row ([CrashReportsQuestion]).
+ */
+class CrashReporting(val available: Boolean, val onChange: (Boolean) -> Unit = {}) {
+    companion object {
+        /** A build that cannot send a report: the question is never shown. */
+        val Unavailable = CrashReporting(available = false)
     }
 }
 
@@ -275,6 +325,7 @@ fun Strings.setupCopy(step: SetupStep): SetupCopy = when (step) {
     SetupStep.MobileData -> SetupCopy(setupMobileTitle, setupMobileBody)
     // The screen says which: memory, storage or both (fitHeadline).
     SetupStep.Device -> SetupCopy(deviceShortMemory, deviceQuestion)
+    SetupStep.CrashReports -> SetupCopy(setupCrashTitle, setupCrashBody)
 }
 
 fun Strings.choiceCopy(choice: SetupChoice): ChoiceCopy = when (choice) {
@@ -288,4 +339,6 @@ fun Strings.choiceCopy(choice: SetupChoice): ChoiceCopy = when (choice) {
     SetupChoice.NoLimits -> ChoiceCopy(setupMobileNoLimits, setupMobileNoLimitsDetail)
     SetupChoice.ApplyRecommended -> ChoiceCopy(deviceApply, deviceQuestion)
     SetupChoice.NotNow -> ChoiceCopy(deviceNotNow, settingsSavesAsYouGo)
+    SetupChoice.CrashReportsOn -> ChoiceCopy(settingsCrashReports, setupCrashHolds)
+    SetupChoice.CrashReportsOff -> ChoiceCopy(settingsCrashReports, settingsCrashReportsOff)
 }

@@ -120,6 +120,8 @@ fun SetupScreen(
     onSkipAll: () -> Unit = onDone,
     /** Back from the first step, to what came before it; null leaves as Skip all does. */
     onBackFromFirst: (() -> Unit)? = null,
+    /** What the crash report step starts or stops once its answer is written (CP102f). */
+    crashReporting: CrashReporting = CrashReporting.Unavailable,
 ) {
     val s = LocalStrings.current
     val scope = rememberCoroutineScope()
@@ -127,12 +129,14 @@ fun SetupScreen(
     val lowStorage by settings.lowStorageMode.collectAsState(initial = false)
     val lighter by settings.lighterPictures.collectAsState(initial = false)
     val saveData by settings.saveMobileData.collectAsState(initial = false)
+    val crashReports by settings.crashReports.collectAsState(initial = false)
     val posters = online?.settings?.collectAsState()?.value?.enabled ?: true
     val values = SetupValues(
         posters = posters,
         lowStorage = lowStorage,
         lighter = lighter,
         saveData = saveData,
+        crashReports = crashReports,
     )
     val form = deviceForm()
     val remote = form != DeviceForm.Phone
@@ -156,6 +160,7 @@ fun SetupScreen(
                         settings,
                         posters = online?.let { o -> { on: Boolean -> o.setEnabled(on) } },
                         recommendations = recommendations,
+                        crashReports = crashReporting.onChange,
                     )
                 }
             }
@@ -206,6 +211,10 @@ fun SetupScreen(
                         Column(Modifier.verticalScroll(rememberScrollState())) {
                             DeviceChoices(recommendations, selected, ::mark)
                         }
+                    } else if (step == SetupStep.CrashReports) {
+                        Column(Modifier.verticalScroll(rememberScrollState())) {
+                            CrashChoice(selected, ::mark)
+                        }
                     } else {
                         Choices(step, selected, side, ::mark)
                     }
@@ -219,6 +228,8 @@ fun SetupScreen(
                 StepHeading(copy.title, copy.body)
                 if (step == SetupStep.Device) {
                     DeviceChoices(recommendations, selected, ::mark)
+                } else if (step == SetupStep.CrashReports) {
+                    CrashChoice(selected, ::mark)
                 } else {
                     Choices(step, selected, side = null, onPick = ::mark)
                 }
@@ -273,6 +284,19 @@ private fun DeviceChoices(
             ) { onPick(choice) }
         }
     }
+}
+
+/**
+ * The crash report step's one switch ([CrashReportsQuestion]): pressing it marks the other answer,
+ * and Next writes what is marked, as on every other step.
+ */
+@Composable
+private fun CrashChoice(selected: SetupChoice, onPick: (SetupChoice) -> Unit) {
+    val on = selected == SetupChoice.CrashReportsOn
+    CrashReportsQuestion(
+        on = on,
+        onToggle = { onPick(if (on) SetupChoice.CrashReportsOff else SetupChoice.CrashReportsOn) },
+    )
 }
 
 /**

@@ -96,6 +96,7 @@ class SetupChoicesTest {
         lowStorage = settings.lowStorageMode.first(),
         lighter = settings.lighterPictures.first(),
         saveData = settings.saveMobileData.first(),
+        crashReports = settings.crashReports.first(),
     )
 
     private fun store(): SettingsStore {
