@@ -117,10 +117,17 @@ fun HomePage(state: ShellState, chats: ChatListViewModel) {
     val later by state.watched.watchLater.items.collectAsState(initial = emptyList())
     val watched by state.watched.watched.collectAsState(initial = emptyMap())
     val art by model.art.collectAsState()
-    val rows = rememberHomeRows(model, list, favourites, history, later, watched.values)
+    // Recently added fills the carousel, so one starred chat is enough for it, as on the phone and
+    // the television; with fewer than two it is not drawn as a row as well (see HomeRowsView).
+    val rows = rememberHomeRows(model, list, favourites, history, later, watched.values, recentMinStarred = 1)
+    // Asked for as soon as the starred chats are known, not once the chat list has loaded and the
+    // row is drawn: the loader waits on the carousel, and the carousel on this row.
+    LaunchedEffect(favourites.isNotEmpty()) { if (favourites.isNotEmpty()) model.requestRecent() }
     // With nothing of its own to show yet, Home waits on the chat list, or says why it failed,
-    // rather than greet somebody with starred chats as a first run.
-    if (rows.isEmpty() && (chatState is UiState.Loading || chatState is UiState.Error)) {
+    // rather than greet somebody with starred chats as a first run. With starred chats it waits
+    // for the list anyway: drawn from Continue watching alone, the carousel counted as empty.
+    val waitForChats = rows.isEmpty() || (favourites.isNotEmpty() && chatState is UiState.Loading)
+    if (waitForChats && (chatState is UiState.Loading || chatState is UiState.Error)) {
         StateBox(chatState, onRetry = { chats.load() }) {}
         return
     }
@@ -212,7 +219,12 @@ internal fun HomeRowsView(
     LaunchedEffect(continueRow?.records) { continueRow?.records?.forEach(onArtWanted) }
     val featured = rememberFeatured(recentRow, continueRow, art)
     // Every tile on Home has a picture of its own; "See all" still lists the whole row.
-    val shownRows = remember(rows, art) { rows.mapNotNull { HomeRows.withArt(it, art) } }
+    // Recently added stands as a row of its own only beside two starred chats or more: with one it
+    // would repeat that chat's row, and the carousel already shows it.
+    val shownRows = remember(rows, art) {
+        val recentAsRow = rows.count { it is HomeRow.Chat } >= HomeRows.RECENT_MIN_STARRED
+        rows.filter { recentAsRow || it !is HomeRow.Recent }.mapNotNull { HomeRows.withArt(it, art) }
+    }
     val watch = rememberSeriesWatch(state)
     // In line with the page header's title, whatever the window's width.
     val side = pageMargin()

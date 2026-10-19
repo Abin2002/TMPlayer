@@ -465,7 +465,12 @@ internal fun rememberFeatured(recent: HomeRow.Recent?, resume: HomeRow.Continue?
     }
     var ranked by remember { mutableStateOf<List<FeaturedPick>?>(null) }
     LaunchedEffect(fresh, going, online) {
-        if (recent != null && fresh == null) return@LaunchedEffect
+        // Recently added still on its way: the skeleton, not the empty carousel worked out before
+        // the row was there, which dropped the frame and let the loader go before the carousel.
+        if (recent != null && fresh == null) {
+            ranked = null
+            return@LaunchedEffect
+        }
         suspend fun order(sharp: (FeaturedPick) -> Boolean) = withContext(Dispatchers.IO) {
             val mixed = HomeFeatured.mix(fresh.orEmpty(), going, online = sharp)
             if (mixed.isEmpty()) mixed else HomeFeatured.rank(mixed, sharp)
