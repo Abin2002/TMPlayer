@@ -96,6 +96,12 @@ what it plays.
 - **Fire TV:** Fire TV Stick (2nd gen and later on Fire OS 7+), Stick Lite, Stick 4K, 4K Max,
   Fire TV Cube, Fire TV Edition and Omni televisions on Fire OS 7 or 8. Not Vega OS devices: they
   do not run Android apps.
+- **No phones.** Amazon closed the Appstore on other makers' Android phones on 2025-08-20; only
+  Amazon's own devices remain (checked 2026-10-19,
+  <https://developer.amazon.com/docs/app-submission/release-notes.html>).
+- **Vega OS** (Fire TV Stick 4K Select and later) takes only VPKG apps built for Vega, and allows
+  no sideloading at all, so neither the Appstore listing nor the APK reaches those sticks. Supporting
+  them would mean a separate app; the site's Fire TV page should say which sticks work.
 - **Fire tablets:** the phone layout runs on them (portrait and landscape). Untested on a real
   Fire tablet; target them only if the user wants tablet users at all.
 - **1 GB devices** (Fire TV Stick Lite, Stick 3rd gen, older Sticks): supported, with trickplay

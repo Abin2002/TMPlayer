@@ -10,6 +10,7 @@ those steps use.
 | [telegram-apps.md](telegram-apps.md) | U17 AlternativeTo, U18 Uptodown, U19 XDA (a fact list only) |
 | [flathub.md](flathub.md) | U16, Flathub PR #10513 |
 | [amazon.md](amazon.md) | U23 Amazon Appstore listing (text, images, content rating) |
+| [play.md](play.md) | Phase G Google Play (set aside), and Android developer verification for every APK |
 | [izzyondroid.md](izzyondroid.md) | Set aside (see PLAN), kept in case the policy changes |
 
 ## Already done in the repository
@@ -42,5 +43,8 @@ those steps use.
   sponsored messages in public channels because the API terms (3.3) require it. The drafts say so.
 - **Sentry is in the public APK.** Opt-in and off by default, but the SDK and a DSN are compiled in,
   and IzzyOnDroid's scanner types it as "Mobile Analytics". Expect a Tracking label there.
+- **No updater in a store build.** Play forbids an app updating itself outside the store, and an
+  Amazon install would fight Amazon's own updates. Any store file is built without the updater and
+  `REQUEST_INSTALL_PACKAGES`, like the F-Droid build (CP34).
 - **Release cadence.** winget and Uptodown add a step per release (winget can be automated).
   None of this needs a new release.
