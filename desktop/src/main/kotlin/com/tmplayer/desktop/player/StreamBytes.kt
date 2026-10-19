@@ -31,6 +31,12 @@ interface StreamBytes {
      */
     suspend fun fetch(offset: Long, length: Int): ByteArray?
 
+    /**
+     * A wait at [position] gave up: asks whatever fetches the bytes for them again from there,
+     * for a reader that tries once more (the cast server's). Nothing for bytes on the disk.
+     */
+    suspend fun askAgain(position: Long) = Unit
+
     /** Stops listening. Reads after this are not expected. */
     fun close()
 }

@@ -9,6 +9,7 @@ import androidx.mediarouter.media.MediaRouteSelector
 import androidx.mediarouter.media.MediaRouter
 import com.google.android.gms.cast.CastDevice
 import com.google.android.gms.cast.CastMediaControlIntent
+import com.google.android.gms.cast.CastStatusCodes
 import com.google.android.gms.cast.HlsSegmentFormat
 import com.google.android.gms.cast.HlsVideoSegmentFormat
 import com.google.android.gms.cast.MediaInfo
@@ -128,6 +129,9 @@ private class GoogleCastSupport(context: Context) : CastSupport {
 
     private var client: RemoteMediaClient? = null
 
+    /** The session was suspended and has not come back: its end is a drop, whatever the error says. */
+    private var suspended = false
+
     /** When the receiver's last media status arrived, for the position's run on from it. */
     private var statusAtMs = 0L
 
@@ -171,7 +175,13 @@ private class GoogleCastSupport(context: Context) : CastSupport {
             connectingId = null
             releaseHeldDiscovery()
             detach()
-            _session.value = CastSessionState.Idle
+            // Stopped by someone (Stop casting here, the notification, the system's Cast dialog),
+            // a session ends with no error; one the framework gave up on ends with an error, or
+            // after a suspension it never came back from ("Disconnecting due to heartbeat timeout").
+            val dropped = error != CastStatusCodes.SUCCESS || suspended
+            suspended = false
+            Log.i(TAG, "Cast session ended (error $error, ${if (dropped) "lost" else "stopped"})")
+            _session.value = if (dropped) CastSessionState.Lost(session.castDevice?.friendlyName.orEmpty()) else CastSessionState.Idle
         }
 
         override fun onSessionResuming(session: CastSession, sessionId: String) = Unit
@@ -180,10 +190,13 @@ private class GoogleCastSupport(context: Context) : CastSupport {
 
         override fun onSessionResumeFailed(session: CastSession, error: Int) {
             detach()
-            _session.value = CastSessionState.Idle
+            suspended = false
+            Log.i(TAG, "Cast session could not be resumed (error $error)")
+            _session.value = CastSessionState.Lost(session.castDevice?.friendlyName.orEmpty())
         }
 
         override fun onSessionSuspended(session: CastSession, reason: Int) {
+            suspended = true
             _session.value = CastSessionState.Suspended(session.castDevice?.friendlyName.orEmpty())
         }
     }
@@ -196,6 +209,7 @@ private class GoogleCastSupport(context: Context) : CastSupport {
 
     private fun attach(session: CastSession) {
         detach()
+        suspended = false
         val device = session.castDevice
         connectingId = null
         releaseHeldDiscovery()

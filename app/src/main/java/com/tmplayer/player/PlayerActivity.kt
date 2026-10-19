@@ -1207,8 +1207,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             built.setMediaItem(subtitleFiles.item(source))
             if (resumeMs > 0) built.seekTo(resumeMs)
             // With a cast up (the next episode, or a video opened while casting) the TV plays it
-            // and this player waits, unprepared, for the cast to end.
-            if (cast?.connected != true) {
+            // and this player waits, unprepared, for the cast to end. So it does while the cast
+            // screen says the TV was lost: only Play here starts it.
+            if (cast?.connected != true && cast?.casting != true) {
                 built.prepare()
                 built.playWhenReady = true
             }

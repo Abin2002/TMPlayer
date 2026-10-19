@@ -25,6 +25,14 @@ sealed interface CastSessionState {
     /** The connection dropped (the TV went off, the Wi-Fi changed); the framework is trying again. */
     data class Suspended(val name: String) : CastSessionState
 
+    /**
+     * The session ended without anyone asking for it: the framework gave up on a dropped
+     * connection (a heartbeat to the TV timed out, the Wi-Fi went), or resuming it failed. Unlike
+     * [Idle], a session someone stopped, nothing starts playing here on its own: the cast screen
+     * stays up with Reconnect and Play here.
+     */
+    data class Lost(val name: String) : CastSessionState
+
     data class Failed(val name: String) : CastSessionState
 }
 

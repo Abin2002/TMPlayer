@@ -46,6 +46,9 @@ class StreamBytesCastSource(private val bytes: StreamBytes) : CastSource {
         override fun close() = Unit
     }
 
+    /** A stalled read's recovery ([com.tmplayer.cast.RecoveringCastSource]): TDLib asked afresh from [position]. */
+    override fun askAgain(position: Long) = blocking { bytes.askAgain(position) }
+
     private fun <T> blocking(block: suspend () -> T): T = try {
         runBlocking { withTimeout(READ_TIMEOUT_MS) { block() } }
     } catch (e: TimeoutCancellationException) {

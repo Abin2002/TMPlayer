@@ -66,6 +66,8 @@ class TdStreamBytes(private val td: TdlClient, val fileId: Int) : StreamBytes {
         }
     }
 
+    override suspend fun askAgain(position: Long) = window.askAgainFrom(position)
+
     override fun close() = window.close()
 
     private companion object {

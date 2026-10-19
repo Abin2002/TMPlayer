@@ -9,9 +9,14 @@ import java.io.IOException
  * subtitle track a rendition), or the one rewrapped stream made as it is sent, with its sound
  * converted where the route asks for that. Subtitle files go up beside it as WebVTT, and into the
  * HLS playlists as renditions of their own.
+ *
+ * Every read of the video goes through a [RecoveringCastSource], so a short Telegram stall under
+ * a segment is ridden out here instead of failing the TV's request.
  */
 class CastStreams(
     private val server: CastServer,
+    /** How the receiver's reads ride out a Telegram stall; null reads the source as it is. */
+    private val recovery: CastRecovery? = CastRecovery(),
     private val converterFactory: (() -> AudioConverter)? = null,
 ) {
 
@@ -39,7 +44,8 @@ class CastStreams(
     private val files = ArrayList<HlsSubtitleFile>()
 
     /** Publishes [source] by [route] from [startMs] on. [name] gives the receiver an extension to see. */
-    fun publish(source: CastSource, probe: MediaProbe, route: CastRoute, startMs: Long, name: String): Published {
+    fun publish(given: CastSource, probe: MediaProbe, route: CastRoute, startMs: Long, name: String): Published {
+        val source = recovering(given)
         val n = ++counter
         return when (route) {
             is CastRoute.Direct -> {
@@ -94,6 +100,19 @@ class CastStreams(
             }
             is CastRoute.TranscodeVideo -> throw IOException("Converting the picture is not available here")
         }.also { Logger.i(TAG, "Published ${route::class.simpleName} for $name at ${it.url}") }
+    }
+
+    private var wrapped: RecoveringCastSource? = null
+
+    /**
+     * [given] with its reads riding out a Telegram stall, one wrapper per video, so the
+     * remuxers kept for a video are found again on its next publish.
+     */
+    private fun recovering(given: CastSource): CastSource {
+        val r = recovery ?: return given
+        if (given is RecoveringCastSource) return given
+        wrapped?.takeIf { it.inner === given }?.let { return it }
+        return RecoveringCastSource(given, r).also { wrapped = it }
     }
 
     /**

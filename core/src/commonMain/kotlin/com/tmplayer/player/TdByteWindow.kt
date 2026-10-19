@@ -380,6 +380,21 @@ class TdByteWindow(private val td: TdlClient) {
     }
 
     /**
+     * After a read at [target] gave up ("Telegram stopped sending"): TDLib's download of the file
+     * dropped and asked for afresh from [target], the reopen the stall wait does when bytes arrive
+     * elsewhere, for a reader (the cast server's) that tries again rather than failing. A download
+     * the viewer asked to keep is left running, and moved by the fresh request just the same.
+     */
+    suspend fun askAgainFrom(target: Long) {
+        if (completed) return
+        Logger.i(TAG, "Asking again for file $fileId from $target after a stall")
+        if (!OfflineDownloads.isDownloading(fileId)) {
+            td.cancelDownloadFile(fileId, onlyIfPending = false)
+        }
+        requestDownloadFrom(target)
+    }
+
+    /**
      * `limit = 0` means "keep going to the end of the file", exactly what playback wants, unless
      * Low storage mode or "Save mobile data" bounds the request.
      *

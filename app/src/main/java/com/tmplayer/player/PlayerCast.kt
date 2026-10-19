@@ -59,6 +59,10 @@ import java.util.Locale
  * A video file's bytes for the cast server, read through the player's own Media3 data sources
  * (TdDataSource for a Telegram file, JoinedDataSource for split pieces, the disk for a download),
  * so a cast keeps to Low storage mode's and "Save mobile data"'s bounds as the phone's playback does.
+ *
+ * A stalled read needs no [CastSource.askAgain] here: the cast server's retry
+ * ([com.tmplayer.cast.RecoveringCastSource]) opens a fresh data source at the byte it stopped at,
+ * and TdDataSource's open asks TDLib for the download from there.
  */
 @UnstableApi
 class DataSourceCastSource(
@@ -237,16 +241,24 @@ class PlayerCast(
                 if (casting && lost) {
                     // Back after a drop: the receiver may have kept playing, or not; load again here.
                     lost = false
+                    device = state.name
                     reload(lastKnownMs)
                 } else if (!casting && ready) {
                     begin(hooks.handOff())
                 }
             }
-            is CastSessionState.Suspended -> if (casting) {
+            // Dropped, or a Reconnect that did not get through: the cast screen stays up saying
+            // the TV was lost, with Reconnect and Play here, and the TV's place stays the one kept
+            // for Continue watching. Nothing plays on the phone until the viewer says so; playing
+            // here by itself took the sound to the phone's speaker, with nobody looking at it.
+            is CastSessionState.Suspended, is CastSessionState.Lost, is CastSessionState.Failed -> if (casting) {
+                if (!lost) Log.i(TAG, "Cast session lost ($state); waiting for Reconnect or Play here")
                 lost = true
                 refresh()
             }
-            is CastSessionState.Idle, is CastSessionState.Failed -> if (casting) end(resumeHere = true)
+            // Stopped by the viewer from outside the cast screen (the notification, the system's
+            // Cast dialog): the video carries on here at the TV's place, as Stop casting does.
+            is CastSessionState.Idle -> if (casting) end(resumeHere = true)
             is CastSessionState.Connecting -> Unit
         }
     }

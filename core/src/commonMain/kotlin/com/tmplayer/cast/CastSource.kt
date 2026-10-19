@@ -22,6 +22,13 @@ interface CastSource {
 
     /** A reader positioned at [position]; it ends at the end of the file. */
     fun open(position: Long): CastReader
+
+    /**
+     * A read at [position] stalled ([RecoveringCastSource]): asks whatever fetches the bytes for
+     * them again from there, before the read is opened afresh. Nothing to do for a file on the
+     * disk, or for a source whose [open] already asks (Android's Media3 data sources do).
+     */
+    fun askAgain(position: Long) = Unit
 }
 
 /** One open read of a [CastSource], from where it was opened to the end of the file. */

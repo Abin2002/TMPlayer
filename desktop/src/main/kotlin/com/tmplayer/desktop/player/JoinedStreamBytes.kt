@@ -63,6 +63,12 @@ class JoinedStreamBytes(
         return pieceAt(spot.index, spot.offset, reading = false).fetch(spot.offset, length)
     }
 
+    override suspend fun askAgain(position: Long) {
+        val spot = map.locate(position) ?: return
+        // Only a piece already open: one that is not has nothing stalled to ask again for.
+        opened[spot.index]?.askAgain(spot.offset)
+    }
+
     override fun close() {
         closed = true
         opened.forEachIndexed { index, piece ->
