@@ -120,6 +120,74 @@ What this changes:
   are (a full Telegram client, a player, a casting tool) and what each needs, without claims about
   their quality. Facts to be checked against each listing on the day it is written.
 
+## Competitors, rechecked 2026-10-19
+
+The 2026-10-15 notes above, checked again listing by listing for the new `/alternatives/` page
+(`site/src/pages/[...lang]/alternatives/`, its rows in `site/src/data/alternatives.json`). The
+queries it is meant to answer: "tmp tv", "tmp apk", "tmp app", "tmp - telegram media player",
+"telegram media player", "telegram player", "telegram for android tv", "telegram for fire tv",
+"tvgramplayer", "teleplayer".
+
+| App (developer) | What it is | Platforms | Price | Open source | Store facts on 2026-10-19 | Source |
+|---|---|---|---|---|---|---|
+| TMPlayer (dracu-lah) | player for your chats | Android phones, Android TV, Google TV, Fire TV, Windows, Linux, macOS | free, no ads, no purchases | yes, GPL-3.0 | release 1.27.1 on 2026-10-19 | github.com/dracu-lah/TMPlayer |
+| TMP - Telegram Media Player (T.M.P) | player for your chats on TV | Android TV, Fire TV | free | no | Google Play `com.tmp.com` "not found"; last archived Play listing (December 2020) showed 10.0.21, updated 2020-10-06; Amazon still up, 10.0.25, 2.2/5 from 3,219 ratings | amazon.com/dp/B088DY5LTT |
+| Tevegram (Cassian Lemans / clapps) | full Telegram client for TV | Android TV, Google TV, Apple TV | in-app Premium (lifetime or yearly); on Apple TV videos need Premium, $2.99 a month, $5.99 a year or $13.99 lifetime | no | Play 1M+ installs, 2.4 stars from 4.38K reviews, updated 2026-10-12 | play.google.com `cassian.telegram.ooa.pro`, apps.apple.com/app/id6477915879 |
+| Echogram - Player for Telegram (Illuzion Apps) | player for your chats, casts (Google Cast, DLNA) | phones, Android TV, Fire TV | free with in-app purchases (Premium for live streams) | no | Play 50K+, updated 2026-09-18; Amazon 3.9/5 from 29 ratings | play.google.com `com.liori.echogram` |
+| Telegram Video Player: TvGram (Vishnu V) | player for your chats | phones, Android TV | free with in-app purchases | not checked | Play 50K+, updated 2026-10-05 | play.google.com `dev.vishnuv.tvgram` |
+| TeleV: Telegram for Android TV (telev.app) | viewer for TV, QR sign in | Android TV | free, says no ads | not checked | Play 10K+, updated 2026-10-14 | play.google.com `com.telev.tv` |
+| VelaTV: Telegram Player for TV (Vela Studio) | media player for Telegram and other sources (local, NAS, WebDAV, Google Drive) | phones, Android TV, Google TV, Fire TV | 10-day free trial, then subscription or one-time purchase | not checked | Play 1K+, updated 2026-10-11 | play.google.com `com.velatv.app` |
+| KiloGram (D3NMOH) | full Telegram client for TV | Android TV, Google TV | free | not checked | Play 1K+, updated 2026-09-02 | play.google.com `xyz.d3nmoh.kilogram` |
+| TvGramPlayer (Lucas Rosillo Fuste) | full Telegram client with a media player | Android TV, Fire TV, Chromecast with Google TV | $2.49 | not checked | Play 100+, updated 2026-10-11 | play.google.com `com.network.tvgramplayer.playstore` |
+| tv for Telegram (Phil Trevor) | full client on Apple TV | Apple TV | $1.99 plus in-app purchases | not checked | not checked | apps.apple.com/app/id6642679198 |
+| Telegram Desktop (Telegram) | the official desktop app, plays videos itself | Windows, macOS, Linux | free | yes | not in a store row | desktop.telegram.org |
+
+"Not checked" on the page means the research did not confirm it (open source for TvGram, TeleV,
+VelaTV, KiloGram, TvGramPlayer and tv for Telegram; the last update of tv for Telegram and
+Telegram Desktop). Fill them in at the next recheck rather than guessing.
+
+New since 2026-10-15, not in the table (smaller, or not a TV app; watch them):
+
+- TeleV (now in the table), and a second "TvGram" by Ghost Dev.
+- BingeGram, TeleMedia TV and Teleplayer (the "teleplayer" query).
+- Vexeron's "Telegram Player" holds the generic name on Google Play, with 1M+ installs: the
+  likeliest app behind a plain "telegram player" search.
+- Tortugram and gPlayer on the Amazon Appstore.
+- SyncGram on Apple TV.
+
+What the page claims, and why:
+
+- **Facts with a date and a source, nothing else.** Every row has a `checked` date and links its
+  listing with `rel="nofollow noopener"` (naming an app is not endorsing it). The page says
+  "Checked on 19 October 2026; stores change". No "best", no ranking, no remarks on quality.
+- **TMP is answered, not borrowed.** The page and its description say what TMP's listings showed
+  (Google Play not found, Amazon at 10.0.25 from 2020) so "tmp tv" and "tmp apk" searchers see at
+  once that this is a different, maintained app. TMPlayer never calls itself "TMP" or "Telegram
+  Media Player" (no `alternateName`), and the page says it is a separate, unrelated project. The
+  FAQ answer about TMP carries the same facts and links the page.
+- **What TMPlayer does differently** is limited to what the table proves: free with nothing to
+  buy and no ads of its own; open source GPL-3.0, built by GitHub from public code; the only app
+  in the table on Android phones, TVs and Windows, Linux and macOS; TDLib with no server or bot.
+  QR sign in, MKV, subtitles, audio tracks and casting are listed as things it does, not as
+  unique, since other apps have them.
+- **Apple TV** is answered honestly: TMPlayer does not run there and casts to Chromecast or Google
+  TV, not AirPlay; Tevegram and tv for Telegram are named with their prices.
+- Images are TMPlayer's own demo screenshots only, never another app's screenshots, logos or icons.
+
+Outreach list (not contacted; the user decides):
+
+- xatakandroid.com, article of 2025-01-07: links TMP's dead Google Play listing.
+- libero.pe, article of 2022-04-17: recommends only TMP.
+- yourlifeupdated.net: its own banner says TMP no longer works.
+
+Keep it true:
+
+- **Recheck the table monthly** (each listing's update date, installs, rating and price), move the
+  `checked` dates and the page's `lastmod` with it, and add a row only for an app with a real
+  listing.
+- An **Amazon Appstore listing** would be where Fire TV owners search, and TMP's Amazon page is
+  still up with 3,219 ratings. Whether to list there is the user's decision.
+
 ## How search and AI answers work now (sources at the end)
 
 - Google says AI Overviews and AI Mode run on its normal Search systems, with "query fan-out"
