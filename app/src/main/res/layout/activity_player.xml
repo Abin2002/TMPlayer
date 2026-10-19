@@ -88,10 +88,12 @@
           Stacked is the shape it was drawn for and the shape a television keeps. On a screen with
           no room to stack, which is any phone held sideways, the same two parts are laid out as
           two columns instead: picture on the left, everything that can be read or pressed on the
-          right. Which of the two is decided in code rather than by a layout-land folder, because
-          the rest of this file is four hundred lines that would then exist twice.
+          right. A phone held upright has no room beside the picture either, and stacks with a
+          smaller one. Which of them is decided by the sheet from the width it is measured at
+          (StatusSheet), rather than by a layout-land folder, because the rest of this file is
+          four hundred lines that would then exist twice.
         -->
-        <LinearLayout
+        <com.tmplayer.player.StatusSheet
             android:id="@+id/status_sheet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -334,7 +336,7 @@
                     android:visibility="gone" />
             </com.tmplayer.player.SheetActions>
             </LinearLayout>
-        </LinearLayout>
+        </com.tmplayer.player.StatusSheet>
         </ScrollView>
     </FrameLayout>
 

@@ -177,6 +177,10 @@ class PlayerExtrasRenderTest {
         logs?.visibility = View.VISIBLE
         idle()
         assertTrue("Send logs is in the sheet", logs != null && logs.isShown)
+        val sheet = activity.findViewById<StatusSheet>(R.id.status_sheet)
+        val expected = if (tv) StatusSheetShape.Shape.Column else StatusSheetShape.Shape.Stacked
+        assertEquals("the sheet's shape", expected, sheet.shape)
+        assertWordsWhole(activity.findViewById(R.id.status_title), listOfNotNull<TextView>(activity.findViewById(R.id.status_reload), logs as? TextView, activity.findViewById(R.id.status_back)))
         shot(activity, name, dialog = false)
     }
 
@@ -188,12 +192,30 @@ class PlayerExtrasRenderTest {
     @Config(sdk = [35], qualifiers = "w960dp-h540dp-land-night-xhdpi")
     fun errorSheetTelevision() = errorSheet(tv = true, name = "extras-error-tv.png")
 
+    /** The title is not cut short, and no button label wraps inside its pill. */
+    private fun assertWordsWhole(title: TextView, buttons: List<TextView>) {
+        val titleLayout = title.layout
+        for (line in 0 until titleLayout.lineCount) {
+            assertEquals("\"${title.text}\" is not cut short", 0, titleLayout.getEllipsisCount(line))
+        }
+        for (button in buttons) {
+            assertEquals("\"${button.text}\" is on one line", 1, button.lineCount)
+        }
+    }
+
     /**
      * The sheet that says the video stopped arriving, in the shape the player gives it: a handset
-     * puts the poster beside the words and the three buttons in a row under them, which a sideways
-     * phone needs to show all of them at once. A television keeps the stack.
+     * held sideways puts the poster beside the words and the three buttons in a row under them,
+     * which it needs to show all of them at once; held upright it stacks with a smaller poster and
+     * centres the row. A television keeps the stack. [askedSideways] is the player having asked for
+     * landscape, which is what keeps the phone that reports a portrait window side by side.
      */
-    private fun stallSheet(tv: Boolean, name: String, oneLine: Boolean = false) {
+    private fun stallSheet(
+        tv: Boolean,
+        name: String,
+        expected: StatusSheetShape.Shape,
+        askedSideways: Boolean = false,
+    ) {
         FormFactor.override(tv)
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).setup().get()
         activity.setTheme(R.style.Theme_TMPlayer_Player)
@@ -234,30 +256,49 @@ class PlayerExtrasRenderTest {
             text = L.playerDownloadFirst
             visibility = View.VISIBLE
         }
-        StatusSheetShape.apply(overlay, sideBySide = !tv)
+        activity.findViewById<StatusSheet>(R.id.status_sheet).askedSideways = askedSideways
         idle()
+        assertEquals("the sheet's shape", expected, activity.findViewById<StatusSheet>(R.id.status_sheet).shape)
         val screen = Rect().also { overlay.getGlobalVisibleRect(it) }
         for (button in listOf(reload, download, back)) {
             val box = Rect().also { button.getGlobalVisibleRect(it) }
             assertTrue("${button.text} is on the screen whole", button.isShown && screen.contains(box) && box.height() == button.height)
         }
-        if (oneLine) {
+        // Asked sideways on a portrait test screen is that phone's lie drawn literally: only the
+        // shape is the point there, not how the buttons fit a width the real screen never has.
+        if (expected == StatusSheetShape.Shape.SideBySide && !askedSideways) {
             assertEquals("the buttons share a line beside the poster", reload.top, back.top)
+            assertEquals("the buttons share a line beside the poster", reload.top, download.top)
+        }
+        if (expected == StatusSheetShape.Shape.Stacked) {
+            assertWordsWhole(activity.findViewById(R.id.status_title), listOf(reload, download, back))
         }
         shot(activity, name, dialog = false)
     }
 
     @Test
     @Config(sdk = [35], qualifiers = "w873dp-h393dp-land-night-xxhdpi")
-    fun stallSheetPhoneSideways() = stallSheet(tv = false, name = "extras-stall-phone-sideways.png", oneLine = true)
+    fun stallSheetPhoneSideways() =
+        stallSheet(tv = false, name = "extras-stall-phone-sideways.png", expected = StatusSheetShape.Shape.SideBySide)
+
+    /** The phone that reports a portrait window on a landscape panel, with the player asking for landscape. */
+    @Test
+    @Config(sdk = [35], qualifiers = "w393dp-h873dp-port-night-xxhdpi")
+    fun stallSheetPhoneAskedSideways() = stallSheet(
+        tv = false,
+        name = "extras-stall-phone-asked-sideways.png",
+        expected = StatusSheetShape.Shape.SideBySide,
+        askedSideways = true,
+    )
 
     @Test
     @Config(sdk = [35], qualifiers = "w393dp-h873dp-port-night-xxhdpi")
-    fun stallSheetPhoneUpright() = stallSheet(tv = false, name = "extras-stall-phone-upright.png")
+    fun stallSheetPhoneUpright() =
+        stallSheet(tv = false, name = "extras-stall-phone-upright.png", expected = StatusSheetShape.Shape.Stacked)
 
     @Test
     @Config(sdk = [35], qualifiers = "w960dp-h540dp-land-night-xhdpi")
-    fun stallSheetTelevision() = stallSheet(tv = true, name = "extras-stall-tv.png")
+    fun stallSheetTelevision() = stallSheet(tv = true, name = "extras-stall-tv.png", expected = StatusSheetShape.Shape.Column)
 
     // ---- the frame saved answer and the fine scrub ---------------------------------------------
 

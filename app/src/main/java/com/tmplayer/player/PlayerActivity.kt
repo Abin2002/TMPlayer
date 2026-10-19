@@ -1823,6 +1823,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         lifecycleScope.launch { runCatching { settings.setScreenOrientation(orientation.name) } }
         applyOrientation()
         renderOrientationButton()
+        layOutSheetForThisScreen()
         showGestureFeedback(orientation.label)
     }
 
@@ -4367,6 +4368,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         orientation = ScreenOrientation.Follow
         applyOrientation()
         renderOrientationButton()
+        layOutSheetForThisScreen()
     }
 
     /**
@@ -5789,24 +5791,29 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         statusArt?.scaleY = 1f
     }
 
-    /** The sheet stacked or in two columns, for the screen it is on now ([StatusSheetShape]). */
+    /**
+     * The sheet stacked or in two columns, for the screen it is on now ([StatusSheetShape]).
+     *
+     * The sheet chooses by the width it is measured at, which is the space it really has; all the
+     * player adds is [sheetGoesSideways], for the phone whose width cannot be believed.
+     */
     private fun layOutSheetForThisScreen() {
-        StatusSheetShape.apply(findViewById(R.id.status_overlay) ?: return, sheetGoesSideways())
+        findViewById<StatusSheet>(R.id.status_sheet)?.askedSideways = sheetGoesSideways()
     }
 
     /**
-     * Whether the poster goes beside the words rather than above them.
+     * Whether the player has itself asked for the screen sideways, which puts the poster beside
+     * the words whatever width the sheet is measured at.
      *
-     * Asked of the device and nothing else. "Is this window landscape?" cannot be asked here: some
-     * phones present a portrait window rotated onto a landscape panel, so window bounds, display
-     * metrics, rotation and Configuration.orientation all answer "portrait" while the sheet is
-     * plainly drawn sideways.
-     *
-     * A handset gets the compact shape either way round, which is also the better of the two
-     * upright: a small picture with the name beside it, and the failure and its buttons in one
-     * glance. A television has the room for the poster it was designed around and keeps it.
+     * The width alone is not enough on every phone: some present a portrait window rotated onto a
+     * landscape panel, so the views, window bounds, display metrics, rotation and
+     * Configuration.orientation all answer a 393dp portrait while the sheet is plainly drawn
+     * sideways. What the player asked for is the one signal that phone cannot get wrong, and the
+     * player opens sideways by default. Following the phone's own rotation, or held upright, the
+     * measured width decides: side by side from 560dp, stacked with a smaller poster below that.
      */
-    private fun sheetGoesSideways(): Boolean = !FormFactor.isTv(this)
+    private fun sheetGoesSideways(): Boolean =
+        !FormFactor.isTv(this) && orientation == ScreenOrientation.Landscape
 
     private fun showStatus(message: String) {
         openingFilm = true

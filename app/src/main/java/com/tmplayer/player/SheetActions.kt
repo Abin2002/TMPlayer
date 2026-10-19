@@ -13,7 +13,12 @@ import kotlin.math.max
  * they should be tried. A phone held sideways has about 390dp of height, and three full width pills
  * under a message pushed the last one off the bottom while the right half of the screen sat empty.
  * There the same buttons go side by side from the start edge, each as wide as its words, centred on
- * their line, and a label too long for what is left of the line starts the next one.
+ * their line, and a label too long for what is left of the line starts the next one. Held upright,
+ * under words that are centred, each line of buttons is centred too ([centred]).
+ *
+ * In a row a label never wraps inside its pill: each button is measured at the width of its words
+ * on one line, and one that does not fit beside the others moves to a line of its own. Only a label
+ * wider than the whole sheet is given the width there is and allowed to wrap.
  */
 class SheetActions @JvmOverloads constructor(
     context: Context,
@@ -33,6 +38,14 @@ class SheetActions @JvmOverloads constructor(
             requestLayout()
         }
 
+    /** In a row, each line centred across the width rather than starting from the start edge. */
+    var centred: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            requestLayout()
+        }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val maxWidth = if (MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.UNSPECIFIED) {
             Int.MAX_VALUE
@@ -40,8 +53,18 @@ class SheetActions @JvmOverloads constructor(
             MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight
         }
         val childSpec = MeasureSpec.makeMeasureSpec(maxWidth, MeasureSpec.AT_MOST)
+        val anyHeight = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         val shown = shown()
-        shown.forEach { it.measure(childSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)) }
+        shown.forEach { child ->
+            if (inRow) {
+                // The width its words take on one line, and only the room there is when even a
+                // line of its own is too narrow for that.
+                child.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), anyHeight)
+                if (child.measuredWidth > maxWidth) child.measure(childSpec, anyHeight)
+            } else {
+                child.measure(childSpec, anyHeight)
+            }
+        }
         var width = 0
         var height = 0
         if (inRow) {
@@ -76,7 +99,7 @@ class SheetActions @JvmOverloads constructor(
         y += rowTop
         for (line in lines(shown(), inner)) {
             val height = lineHeight(line)
-            var x = 0
+            var x = if (centred) ((inner - lineWidth(line)) / 2).coerceAtLeast(0) else 0
             for (child in line) {
                 val left = if (rtl) paddingLeft + inner - x - child.measuredWidth else paddingLeft + x
                 val top = y + (height - child.measuredHeight) / 2
