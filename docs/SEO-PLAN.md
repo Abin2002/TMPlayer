@@ -52,6 +52,43 @@ where the result does not yet look like the answer.
 Still missing from the data, and asked of the user below: which queries each page ranks for, the
 Page indexing report, and Bing.
 
+## Export of 2026-10-19 (last 3 months, web, data to 2026-10-17)
+
+524 clicks from 4,407 impressions (CTR 11.9 per cent), up from 400 and 2,738 four days earlier.
+Impressions per day keep climbing (301 on 15 October, 446 on the 16th, 427 on the 17th) at an
+average position of 5 to 6. Mobile 3,190 impressions at 5.2, desktop 1,063 at 8.4, tablet 154 at
+4.2. Search appearance is still empty.
+
+**Queries the site did not answer, and what was done (2026-10-19):**
+- Casting: "cast from telegram to tv", "telegram airplay", "telegram to tv", "telegram on tv".
+  1.27.0 added casting to a Chromecast or Google TV and the site never said so. New FAQ entry
+  "Can I cast Telegram videos to a Chromecast or Google TV?" (FAQPage JSON-LD and the page; says
+  plainly that AirPlay is not supported), and a Casting line in `llms.txt`.
+- Music and audio: "telegram audio player" (position 37.5), "telegram music player" (40). The FAQ
+  answered "No, videos only", which 1.27.0's Audio list per chat made wrong. The answer now says
+  yes and what is not listed yet (audio sent as a plain document); the guide's comparison row and
+  `llms.txt` follow.
+- The safety answer said crash reports exist "on Android" only; it now holds for every platform
+  (CP102g).
+
+**Already answered, no change:** Android TV, Google TV and Fire TV (`telegram para fire stick`,
+`google tv telegram`, `telegram tv 版`, the Persian, Russian, Indonesian, French and Hindi "how do
+I watch Telegram on the TV" queries, all with a localized guide), PC and Windows (`/desktop/`),
+external players such as VLC, "is it free" (`alguna que no sea de pago`), the long and short
+names. "telegram player for windows" sits at 13.3 and "telegram player download" or "apk" at 10
+to 11: `/desktop/` and `/download/` are the pages; watch them in the next export before
+changing their titles.
+
+**Not chased, on purpose:** "telegram porn", "telegram 🔥 videos", "videos de telegram gratis",
+the "mod apk" queries and "tmp live" or "tmp tv" (someone else's product). TMPlayer is a player
+for the videos already in your own chats, and the site does not court searches for free content
+or modified APKs (CLAUDE.md wording rules). "tvgramplayer" and "teleplayer" are other apps; the
+comparison table in the no-casting guide is their landing place, with no digs.
+
+**Still open:** "telegram link video app" (opening a t.me link in TMPlayer, CP79) waits for the
+release that ships it; then a FAQ entry. A Burmese catalog (Myanmar: 175 impressions, CTR 24 per
+cent) remains the user's call. Next export: 2026-11-12, as Phase 5 says.
+
 ## Competitors (checked 2026-10-15)
 
 Telegram has no TV app of its own, so the results for these queries are third-party apps, mostly

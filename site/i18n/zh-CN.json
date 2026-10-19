@@ -190,16 +190,20 @@
     "is_tmplayer_free_is_76f2": "TMPlayer 免费吗？有付费版吗？",
     "yes_it_is_free_a7e9": "是的，它是免费的，也没有付费版。所有功能人人可用，无需 TMPlayer 账号，无需订阅，也没有试用期。代码以 GPL-3.0 开源，任何人都可以阅读和构建。它自己没有广告；按照 Telegram 的要求，公开频道中仍会出现 Telegram 的赞助消息。项目的费用由自愿支持的人承担：GitHub Sponsors 和 Buy Me a Coffee 接受任意金额，不会解锁任何功能。",
     "is_tmplayer_safe_can_c92b": "TMPlayer 安全吗？它能读取我的消息吗？",
-    "it_talks_to_telegram_0579": "它通过 Telegram 官方客户端库 TDLib 直接与 Telegram 通信，中间没有任何 TMPlayer 服务器或机器人。这次登录会出现在 Telegram 的设备列表中，你可以随时在那里结束它。它只显示你聊天中的视频：你无法用它阅读、回复或发送任何内容。它不含任何分析或广告库，在 Android 上只有你开启后才会发送崩溃报告。全部代码以 GPL-3.0 公开，每个版本都由 GitHub 根据这些代码构建，安全页面介绍了如何校验你下载的文件。",
+    "it_talks_to_telegram_6ede": "它通过 Telegram 官方客户端库 TDLib 直接与 Telegram 通信，中间没有任何 TMPlayer 服务器或机器人。这次登录会出现在 Telegram 的设备列表中，你可以随时在那里结束它。它只显示你聊天中的视频：你无法用它阅读、回复或发送任何内容。它不含任何分析或广告库，只有你同意发送时才会发送崩溃报告。全部代码以 GPL-3.0 公开，每个版本都由 GitHub 根据这些代码构建，安全页面介绍了如何校验你下载的文件。",
     "is_it_the_same_2bed": "它和官方 Telegram 应用一样吗？",
     "no_the_official_telegram_cc99": "不一样。官方 Telegram 应用是 Telegram 为手机和电脑制作的通讯软件，Telegram 没有电视应用。TMPlayer 是一款非官方的独立播放器：它通过 Telegram 自己的库登录同一个 Telegram 账号，只显示你聊天中的视频，界面针对电视遥控器、手机或桌面窗口而设计。它不能发送消息、拨打电话或更改你的账号，这些事情请继续使用官方应用。两者可以同时登录同一个账号。",
     "do_i_need_a_0351": "登录需要手机吗？",
     "not_always_you_need_579a": "不一定。你需要 Telegram 账号，以及两种登录方式之一。一种是二维码，电视和电脑会首先显示它：在手机上的 Telegram 中打开“设置”、“设备”、“链接桌面设备”并扫描。另一种是手机号登录，手机会首先显示它，电视和电脑则作为第二选项提供：输入你的号码，再输入 Telegram 发来的验证码，通常发到已登录设备（例如电脑）上的 Telegram，否则通过短信或电话发送。如果开启了两步验证，接下来还要输入你的 Telegram 密码。",
     "does_it_play_music_a59f": "它能播放音乐和音频文件吗？",
-    "no_tmplayer_lists_videos_4257": "不能。TMPlayer 只列出视频：Telegram 视频、无声短片，以及 Telegram 视为视频或文件名以 MKV、MP4 等视频格式结尾的文件。音乐、语音消息以及单独发送的音频文件（如 MP3 或 FLAC）不会出现在其中，请在 Telegram 中打开它们。视频里的声音则另当别论：AAC、MP3、Opus、FLAC、Dolby Digital、DTS、TrueHD 等都能播放，带多条音轨的视频还可以在播放时切换。",
+    "yes_a_chat_with_48f9": "可以。含有音乐、音频文件或语音消息的聊天，在手机、电视和电脑上都会在视频旁边显示“音频”列表：“全部播放”从最早的开始，也可以挑一个，每一个播完都会接着播放之后发布的下一个。在手机上，关掉屏幕也会继续播放。作为普通文件发送的音频，例如以文件形式附加的 MP3，暂时还不会列出。视频里的声音也能播放：AAC、MP3、Opus、FLAC、Dolby Digital、DTS、TrueHD 等都支持，带多条音轨的视频还可以在播放时切换。",
+    "can_i_use_an_83a7": "可以用 VLC 这样的外部播放器播放 Telegram 视频吗？",
+    "yes_tmplayer_is_itself_0c29": "可以。TMPlayer 本身就是播放你 Telegram 聊天中视频的外部播放器：它登录你自己的账号，连同字幕和每一条音轨一起播放，并记住你停在哪里，所以不需要先保存文件再到别处打开。在 Android 上，它也能把视频交给别的应用：播放器菜单里有“用其他应用打开”，可以把视频交给 VLC、MX Player 或设备上的任何其他播放器。下载完成的视频会完整交出，仍在下载的视频交出已下载的部分，而来自不允许保存的聊天的视频会留在 TMPlayer 中。桌面版通过 mpv 自己播放所有内容。",
     "guides_929a": "指南",
     "can_i_download_telegram_2c9f": "可以在电视上下载 Telegram 吗？",
-    "telegram_makes_no_app_732d": "Telegram 没有电视应用。它的 Android 手机应用可以手动装到 Android TV 上，但那是为触屏设计的，用遥控器很难操作。TMPlayer 是为电视做的：在 Android TV、Google TV 或 Fire TV 上，它用二维码登录你自己的 Telegram 账号，播放你聊天中的视频，不显示消息。运行 Tizen 的三星电视、运行 webOS 的 LG 电视、Roku 和 Apple TV 都无法安装，因为它们不是 Android；可以在电视的 HDMI 接口插一根 Android TV 电视棒或 Fire TV Stick。"
+    "telegram_makes_no_app_732d": "Telegram 没有电视应用。它的 Android 手机应用可以手动装到 Android TV 上，但那是为触屏设计的，用遥控器很难操作。TMPlayer 是为电视做的：在 Android TV、Google TV 或 Fire TV 上，它用二维码登录你自己的 Telegram 账号，播放你聊天中的视频，不显示消息。运行 Tizen 的三星电视、运行 webOS 的 LG 电视、Roku 和 Apple TV 都无法安装，因为它们不是 Android；可以在电视的 HDMI 接口插一根 Android TV 电视棒或 Fire TV Stick。",
+    "can_i_cast_telegram_3b85": "可以把 Telegram 视频投屏到 Chromecast 或 Google TV 吗？",
+    "yes_from_tmplayer_on_fcf1": "可以，在 Android 手机或电脑上的 TMPlayer 里即可。在播放器中按投屏按钮，选择同一 Wi-Fi 下的电视，视频就会在电视上播放，而控制仍留在你的手机或电脑上：暂停、拖动进度、音轨、字幕和电视音量。TMPlayer 自己把视频从 Telegram 发送到电视，所以 MKV 视频也能播放；在手机上，电视无法播放的音轨会在传输途中转换。停止后，播放位置会保留在“继续观看”中。支持 Chromecast、Chromecast with Google TV 以及内置 Google Cast 的电视；不支持通过 AirPlay 投到 Apple TV。在 Android TV 或 Google TV 上，你也可以直接把 TMPlayer 安装在电视上，这样手机就空出来了。"
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer 功能：在电视、手机和电脑上串流 Telegram 视频",
@@ -1092,7 +1096,7 @@
     "calls_and_notifications_show_on": "来电和通知会显示在电视上。画面是手机屏幕经 Wi-Fi 再传一遍，所以更模糊、可能卡顿，而且要在手机上操作。",
     "it_is_the_phone_app": "这是放到大屏上的手机应用，为触控设计，所以每个聊天和视频都得用方向键在手机布局里一步步找过去。",
     "a_page_made_for_a": "为鼠标和键盘设计的网页，却要用遥控器操作。视频只能以电视浏览器能解码的格式播放，MKV 往往不行。",
-    "it_is_installed_from_the": "需要通过 APK 安装，而不是电视的应用商店，并且只播放你聊天中的视频：没有消息、音乐或照片。没有 Apple TV 版本。"
+    "it_is_installed_from_the": "需要通过 APK 安装，而不是电视的应用商店，并且只播放你聊天中的视频和音频：没有消息或照片。没有 Apple TV 版本。"
   },
   "desktop": {
     "title": "TMPlayer：Windows 电脑、Mac、Linux 版 Telegram 播放器",

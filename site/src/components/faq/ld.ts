@@ -49,7 +49,7 @@ export const faqLd = {
       "name": "Is TMPlayer safe? Can it read my messages?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "It talks to Telegram directly through TDLib, Telegram's official client library, with no TMPlayer server or bot in between. The sign-in shows up in Telegram's list of devices, where you can end it at any time. It only ever shows the videos in your chats: you cannot read, reply or send anything from it. There is no analytics or advertising library, and on Android crash reports go out only if you switch them on. All of the code is public under the GPL-3.0, every release is built by GitHub from that code, and the security page shows how to check the file you downloaded."
+        "text": "It talks to Telegram directly through TDLib, Telegram's official client library, with no TMPlayer server or bot in between. The sign-in shows up in Telegram's list of devices, where you can end it at any time. It only ever shows the videos in your chats: you cannot read, reply or send anything from it. There is no analytics or advertising library, and a crash report goes out only if you agree to send it. All of the code is public under the GPL-3.0, every release is built by GitHub from that code, and the security page shows how to check the file you downloaded."
       }
     },
     {
@@ -73,7 +73,15 @@ export const faqLd = {
       "name": "Does it play music and audio files?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. TMPlayer lists videos only: Telegram videos, short silent clips, and files that Telegram calls video or whose names end in a video format such as MKV or MP4. Music, voice messages and audio files sent on their own, such as MP3 or FLAC, do not appear in it, so open those in Telegram. The sound inside a video is another matter: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD and the rest play, and a video with several audio tracks lets you switch between them during playback."
+        "text": "Yes. A chat with music, audio files or voice messages has an Audio list beside its videos, on a phone, a TV and a computer: Play all starts from the oldest, or pick one, and each goes on to the next one posted. On a phone it keeps playing with the screen off. An audio file sent as a plain document, such as an MP3 attached as a file, is not listed yet. The sound inside a video plays too: AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD and the rest, and a video with several audio tracks lets you switch between them during playback."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I cast Telegram videos to a Chromecast or Google TV?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, from TMPlayer on an Android phone or on a computer. Press the Cast button in the player, pick the TV on the same Wi-Fi, and the video plays on the TV while your phone or computer keeps the controls: pause, seek, audio tracks, subtitles and the TV's volume. TMPlayer sends the video from Telegram to the TV itself, so MKV videos play, and on a phone a soundtrack the TV cannot play is converted on the way. When you stop, your place is kept for Continue watching. It works with a Chromecast, a Chromecast with Google TV and televisions with Google Cast built in; AirPlay to an Apple TV is not supported. On an Android TV or Google TV you can also install TMPlayer on the TV itself, which leaves the phone free."
       }
     },
     {

@@ -190,16 +190,20 @@
     "is_tmplayer_free_is_76f2": "TMPlayer는 무료인가요? 유료 버전이 있나요?",
     "yes_it_is_free_a7e9": "네, 무료이고 유료 버전은 없어요. TMPlayer 계정, 구독, 체험 기간 없이 모든 기능을 누구나 쓸 수 있어요. 코드는 GPL-3.0 오픈 소스라 누구나 읽고 빌드할 수 있어요. 자체 광고는 없어요. 다만 Telegram의 요구에 따라 공개 채널에는 Telegram 스폰서 메시지가 나와요. 프로젝트는 스스로 원하는 사람들의 후원으로 운영돼요. GitHub Sponsors와 Buy Me a Coffee는 얼마든 받고, 그 대가로 잠금 해제되는 건 없어요.",
     "is_tmplayer_safe_can_c92b": "TMPlayer는 안전한가요? 내 메시지를 읽을 수 있나요?",
-    "it_talks_to_telegram_0579": "Telegram 공식 클라이언트 라이브러리인 TDLib으로 Telegram과 직접 통신하고, 중간에 TMPlayer 서버나 봇이 없어요. 로그인은 Telegram의 기기 목록에 나타나고, 언제든 거기서 끝낼 수 있어요. 채팅 속 동영상만 보여 줄 뿐, 메시지를 읽거나 답장하거나 보낼 수 없어요. 분석이나 광고 라이브러리가 없고, Android에서 오류 보고서는 직접 켰을 때만 전송돼요. 모든 코드는 GPL-3.0으로 공개되어 있고, 모든 릴리스는 그 코드로 GitHub가 빌드하며, 받은 파일을 확인하는 방법은 보안 페이지에 있어요.",
+    "it_talks_to_telegram_6ede": "Telegram 공식 클라이언트 라이브러리인 TDLib으로 Telegram과 직접 통신하고, 중간에 TMPlayer 서버나 봇이 없어요. 로그인은 Telegram의 기기 목록에 나타나고, 언제든 거기서 끝낼 수 있어요. 채팅 속 동영상만 보여 줄 뿐, 메시지를 읽거나 답장하거나 보낼 수 없어요. 분석이나 광고 라이브러리가 없고, 오류 보고서는 보내기에 동의했을 때만 전송돼요. 모든 코드는 GPL-3.0으로 공개되어 있고, 모든 릴리스는 그 코드로 GitHub가 빌드하며, 받은 파일을 확인하는 방법은 보안 페이지에 있어요.",
     "is_it_the_same_2bed": "공식 Telegram 앱과 같은 건가요?",
     "no_the_official_telegram_cc99": "아니요. 공식 Telegram 앱은 Telegram이 휴대폰과 컴퓨터용으로 만든 메신저이고, Telegram에는 TV용 앱이 없어요. TMPlayer는 비공식 독립 플레이어예요. Telegram 자체 라이브러리로 같은 Telegram 계정에 로그인해서, 채팅 속 동영상만 TV 리모컨, 휴대폰, 데스크톱 창에 맞게 보여 줘요. 메시지를 보내거나 전화를 걸거나 계정을 바꿀 수는 없으니, 그런 일에는 공식 앱을 쓰세요. 두 앱 모두 같은 계정에 동시에 로그인해 둘 수 있어요.",
     "do_i_need_a_0351": "로그인하려면 휴대폰이 필요한가요?",
     "not_always_you_need_579a": "꼭 그렇지는 않아요. Telegram 계정과 두 가지 방법 중 하나가 필요해요. 하나는 QR 코드로, TV와 컴퓨터에서 먼저 나와요. 휴대폰의 Telegram에서 설정, 기기, 데스크톱 기기 연결을 열고 스캔하세요. 다른 하나는 전화번호로 로그인으로, 휴대폰에서는 먼저 나오고 TV와 컴퓨터에서는 두 번째 선택지로 나와요. 번호를 입력한 다음 Telegram이 보내는 코드를 입력하세요. 코드는 보통 컴퓨터처럼 이미 로그인된 기기의 Telegram으로 오고, 그렇지 않으면 문자나 전화로 와요. 2단계 인증을 켜 두었다면 이어서 Telegram 비밀번호를 입력해요.",
     "does_it_play_music_a59f": "음악과 오디오 파일도 재생하나요?",
-    "no_tmplayer_lists_videos_4257": "아니요. TMPlayer는 동영상만 보여 줘요. Telegram 동영상, 소리 없는 짧은 클립, 그리고 Telegram이 동영상으로 분류하거나 이름이 MKV, MP4 같은 동영상 형식으로 끝나는 파일이에요. 음악, 음성 메시지, 따로 보낸 MP3나 FLAC 같은 오디오 파일은 나오지 않으니 Telegram에서 여세요. 동영상 안의 소리는 다른 이야기예요. AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD 등이 모두 재생되고, 오디오 트랙이 여러 개인 동영상은 재생 중에 바꿀 수 있어요.",
+    "yes_a_chat_with_48f9": "네. 음악, 오디오 파일, 음성 메시지가 있는 채팅에는 휴대폰, TV, 컴퓨터 어디서나 동영상 옆에 오디오 목록이 있어요. 모두 재생을 누르면 가장 오래된 것부터 재생되고, 하나를 골라도 되며, 각각 다음에 올라온 것으로 이어져요. 휴대폰에서는 화면을 꺼도 계속 재생돼요. MP3를 파일로 첨부한 것처럼 일반 문서로 보낸 오디오 파일은 아직 목록에 나오지 않아요. 동영상 안의 소리도 재생돼요. AAC, MP3, Opus, FLAC, Dolby Digital, DTS, TrueHD 등이 모두 재생되고, 오디오 트랙이 여러 개인 동영상은 재생 중에 바꿀 수 있어요.",
+    "can_i_use_an_83a7": "Telegram 동영상에 VLC 같은 외부 플레이어를 쓸 수 있나요?",
+    "yes_tmplayer_is_itself_0c29": "네. TMPlayer 자체가 Telegram 채팅 속 동영상을 위한 외부 플레이어예요. 내 계정으로 로그인해서 자막과 모든 오디오 트랙과 함께 재생하고, 멈춘 위치도 기억하니까 파일을 저장해서 다른 곳에서 열 필요가 없어요. Android에서는 동영상을 넘겨줄 수도 있어요. 플레이어 메뉴의 다른 앱에서 열기를 누르면 VLC, MX Player 등 기기에 있는 다른 플레이어로 넘어가요. 다운로드가 끝난 동영상은 전체가, 아직 다운로드 중인 동영상은 받은 데까지 넘어가고, 저장을 허용하지 않는 채팅의 동영상은 TMPlayer에 남아요. 데스크톱 앱은 mpv로 모든 것을 직접 재생해요.",
     "guides_929a": "가이드",
     "can_i_download_telegram_2c9f": "TV에 Telegram을 다운로드할 수 있나요?",
-    "telegram_makes_no_app_732d": "Telegram에는 TV용 앱이 없어요. 휴대폰용 Android 앱을 Android TV에 직접 설치할 수는 있지만, 터치용으로 만들어져서 리모컨으로는 쓰기 어려워요. TMPlayer는 TV용으로 만들어졌어요. Android TV, Google TV, Fire TV에서 QR 코드로 내 Telegram 계정에 로그인하고, 메시지 없이 채팅 속 동영상을 재생해요. Tizen을 쓰는 Samsung TV, webOS를 쓰는 LG TV, Roku, Apple TV는 Android가 아니라서 설치할 수 없어요. 대신 TV의 HDMI 단자에 Android TV 스틱이나 Fire TV Stick을 꽂으세요."
+    "telegram_makes_no_app_732d": "Telegram에는 TV용 앱이 없어요. 휴대폰용 Android 앱을 Android TV에 직접 설치할 수는 있지만, 터치용으로 만들어져서 리모컨으로는 쓰기 어려워요. TMPlayer는 TV용으로 만들어졌어요. Android TV, Google TV, Fire TV에서 QR 코드로 내 Telegram 계정에 로그인하고, 메시지 없이 채팅 속 동영상을 재생해요. Tizen을 쓰는 Samsung TV, webOS를 쓰는 LG TV, Roku, Apple TV는 Android가 아니라서 설치할 수 없어요. 대신 TV의 HDMI 단자에 Android TV 스틱이나 Fire TV Stick을 꽂으세요.",
+    "can_i_cast_telegram_3b85": "Telegram 동영상을 Chromecast나 Google TV로 캐스트할 수 있나요?",
+    "yes_from_tmplayer_on_fcf1": "네, Android 휴대폰이나 컴퓨터의 TMPlayer에서 할 수 있어요. 플레이어에서 캐스트 버튼을 누르고 같은 Wi-Fi에 있는 TV를 고르면, 동영상은 TV에서 재생되고 조작은 휴대폰이나 컴퓨터에 남아요. 일시정지, 탐색, 오디오 트랙, 자막, TV 볼륨까지요. TMPlayer가 직접 Telegram의 동영상을 TV로 보내기 때문에 MKV 동영상도 재생되고, 휴대폰에서는 TV가 재생하지 못하는 사운드트랙을 중간에 변환해요. 멈추면 보던 위치가 이어보기에 남아요. Chromecast, Google TV 탑재 Chromecast, Google Cast가 내장된 TV에서 작동하고, Apple TV로의 AirPlay는 지원하지 않아요. Android TV나 Google TV에서는 TMPlayer를 TV에 직접 설치할 수도 있어서 휴대폰이 자유로워요."
   },
   "features": {
     "tmplayer_features_stream_telegram_videos": "TMPlayer 기능: TV, 휴대폰, PC에서 Telegram 동영상 스트리밍",
@@ -1092,7 +1096,7 @@
     "calls_and_notifications_show_on": "전화와 알림이 TV에 떠요. 화면은 휴대폰 화면을 Wi-Fi로 다시 보낸 것이라 덜 선명하고 끊길 수 있으며, 조작도 휴대폰으로 해요.",
     "it_is_the_phone_app": "터치용으로 만든 휴대폰 앱을 큰 화면에 띄운 것이라, 채팅과 동영상마다 휴대폰 화면 구성을 D-pad로 하나씩 거쳐 가야 해요.",
     "a_page_made_for_a": "마우스와 키보드용 페이지를 리모컨으로 조작해야 해요. 동영상은 TV 브라우저가 디코딩할 수 있는 형식만 재생돼서 MKV는 안 되는 경우가 많아요.",
-    "it_is_installed_from_the": "TV 앱 스토어가 아니라 APK로 설치하고, 채팅 속 동영상만 재생해요. 메시지, 음악, 사진은 안 돼요. Apple TV 버전은 없어요."
+    "it_is_installed_from_the": "TV 앱 스토어가 아니라 APK로 설치하고, 채팅 속 동영상과 오디오만 재생해요. 메시지나 사진은 안 돼요. Apple TV 버전은 없어요."
   },
   "desktop": {
     "title": "TMPlayer: Windows PC·Mac·Linux용 Telegram 플레이어",
