@@ -227,6 +227,7 @@ Batch 1 is the offline features, batch 2 the larger ones, sync last because it n
   - [ ] The tour cut to three pages by pairing what belongs together: Videos with Home, Player with Controls, Downloads with Settings (TV: TvHome with Settings), each still one marked picture with its numbered lines; offered as "Show me around" with Skip on the preferences screen's button rather than started by default.
   - [ ] One step count and bar across the whole run, Back on every screen, Skip all kept, D-pad order on TV top to bottom then the buttons; the onboarding pictures and their specs (scripts/annotations, `scripts/tour-badges.py`) retaken for the merged pages.
   - [ ] Render shots of every new screen on phone portrait and landscape, TV and desktop, light and dark, and a timed run on the stick against today's flow.
+- [ ] CP101 Robolectric: a setting changed in the middle of a render test (DataStore written from the test, collected by the screen) sometimes never reaches the screen when other render tests ran first in the same process; AppearanceRenderTest dropped its two checks on it (the switch folding under Light, the wallpaper line) on 2026-10-19 and keeps the shots, the behaviour checked on the phone instead. Find why (the shared SettingsFile, the paused looper and DataStore's IO collector) and restore them. Also FeaturedCarouselRenderTest's first case sat for 58 minutes in one full local run and a CI run took 56 minutes.
 
 ## Standing rules
 

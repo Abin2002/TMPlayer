@@ -12,10 +12,15 @@ import androidx.compose.ui.Modifier
 /**
  * A row that belongs to the one above it and is only there while that one allows it, such as the
  * Pure black switch under the theme: it unfolds downward and fades in, and folds back the same
- * way, so the rows below move rather than jump.
+ * way, so the rows below move rather than jump. Under Reduce motion it is simply there or not.
  */
 @Composable
 fun RevealUnder(visible: Boolean, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    // Reduce motion: there or not, at once.
+    if (rememberLessMotion()) {
+        if (visible) Column(modifier) { content() }
+        return
+    }
     AnimatedVisibility(
         visible = visible,
         modifier = modifier,
