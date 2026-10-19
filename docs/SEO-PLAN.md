@@ -244,8 +244,8 @@ once is what spam filters and editors both discard.
 |---|---|---|---|---|---|
 | 1 | AFTVnews | Fire TV and Google TV news, covers sideloaded apps (makes Downloader) | contact@aftvnews.com (aftvnews.com/contact/); support questions are not answered, so send it as news | English | no |
 | 2 | 9to5Google | Covered Telegram's Chromecast casting (2025-03-10) | gtips@9to5g.com (9to5google.com/contact/); a tip may be published as sent | English | no |
-| 3 | XDA Developers | "Open source tool" and smart TV app columns (2026-08-12 list) | the Valnet form at xda-developers.com/contact/ | English | no |
-| 4 | Android Police | Google TV app lists (2025-02-10 "apps you've never heard of") | "Have a News Tip?" form at androidpolice.com/contact/ | English | no |
+| 3 | XDA Developers | "Open source tool" and smart TV app columns (2026-08-12 list) | editorial@xda-developers.com ("topic ideas, corrections", xda-developers.com/contact/; no form) | English | no |
+| 4 | Android Police | Google TV app lists (2025-02-10 "apps you've never heard of") | editorial@androidpolice.com (androidpolice.com/contact/; no form) | English | no |
 | 5 | OMG! Ubuntu | Linux apps; the AppImage and AUR | contact@omgubuntu.co.uk (app developers use the address, not the form) | English | no |
 | 6 | It's FOSS | Open source apps that "should reach more people" | the form at itsfoss.com/contact-us/ | English | no |
 | 7 | TuAppPara | "Telegram en Smart TV" (updated 2026-09-09) says no TV app exists | the form at tuapppara.com/contacto/ | Spanish | no |
@@ -299,7 +299,7 @@ package. Send each by hand from hello@tmplayer.org, a few a day.
 >
 > Nevil, TMPlayer
 
-**3. XDA Developers** (Valnet form). Their angle is open source tools worth sideloading:
+**3. XDA Developers** (editorial@xda-developers.com). Their angle is open source tools worth sideloading:
 
 > **Subject:** Open source Google TV app: TMPlayer, a player for your own Telegram videos
 >
@@ -311,7 +311,7 @@ package. Send each by hand from hello@tmplayer.org, a few a day.
 >
 > Nevil
 
-**4. Android Police** (news tip form). Their "Google TV apps you've never heard of" list:
+**4. Android Police** (editorial@androidpolice.com). Their "Google TV apps you've never heard of" list:
 
 > **Subject:** For your Google TV app lists: TMPlayer
 >
