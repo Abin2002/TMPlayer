@@ -259,7 +259,7 @@
   },
   {
     "path": "/guides/",
-    "lastmod": "2026-10-15",
+    "lastmod": "2026-10-19",
     "changefreq": "monthly",
     "priority": "0.6"
   },
@@ -280,6 +280,46 @@
     "lastmod": "2026-10-19",
     "changefreq": "monthly",
     "priority": "0.7"
+  },
+  {
+    "path": "/alternatives/",
+    "lastmod": "2026-10-19",
+    "changefreq": "monthly",
+    "priority": "0.7",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home.webp",
+        "title": "TMPlayer's Home on Android TV: the newest from starred chats across the top, then Continue watching"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home-light.webp",
+        "title": "TMPlayer's Home on a television, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show.webp",
+        "title": "A show's page in TMPlayer on a phone, with its artwork, overview and resume button"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show-light.webp",
+        "title": "A show's page in TMPlayer on a phone, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-chats.webp",
+        "title": "The TMPlayer chat list on Android TV"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-chats-light.webp",
+        "title": "The TMPlayer chat list on a television, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-grid.webp",
+        "title": "Playable videos in a Telegram chat, in the TMPlayer desktop app"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-grid-light.webp",
+        "title": "Playable videos in a Telegram chat, in the TMPlayer desktop app, in the light theme"
+      }
+    ]
   },
   {
     "path": "/translate/",

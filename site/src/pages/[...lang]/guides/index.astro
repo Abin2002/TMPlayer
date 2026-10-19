@@ -70,6 +70,7 @@ const itemList = {
     <Cards>
       {guides.map((g) => <LinkCard href={l(g.path)} icon={g.icon} title={t(g.title)} body={t(g.body)} go={t(g.go)} />)}
     </Cards>
+    <p class="muted small section-note" data-reveal><T k="guides.looking_at_other_apps"><a href={l('/alternatives/')} slot="a1">{t('common.telegram_tv_apps_compared')}</a></T></p>
   </Band>
 
   <MoreHelp>

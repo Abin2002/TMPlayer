@@ -1307,6 +1307,26 @@ kbd {
   .compare tbody th { width: 112px; }
 }
 
+/* The alternatives page's table of apps: six columns, so it is wider and scrolls in its wrapper
+   sooner, with the developer, a second listing and the store figures as smaller lines in a cell. */
+.compare-apps { min-width: 980px; }
+.compare-apps .cell-note { display: block; margin-top: 4px; font-size: 0.84rem; font-weight: 400; color: var(--on-surface-variant); }
+.compare-apps tbody th a { color: inherit; text-decoration: underline; text-decoration-color: var(--outline); text-underline-offset: 3px; }
+@media (max-width: 560px) {
+  .compare-apps { min-width: 860px; }
+  .compare-apps tbody th { width: 128px; }
+}
+.formats-3 { margin-top: 0; }
+@media (min-width: 880px) { .formats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.prose-band { max-width: 72ch; }
+.prose-band p { color: var(--on-surface-variant); margin: 0 0 0.9rem; }
+.prose-band h3 { margin: 1.6rem 0 0.7rem; }
+.fact-list { margin: 0 0 1rem; padding-inline-start: 1.2em; color: var(--on-surface-variant); }
+.fact-list li { margin-bottom: 0.5rem; }
+.prose-band + .card-grid { margin-top: clamp(20px, 3vw, 28px); }
+.alt-shots { margin-top: clamp(36px, 5vw, 56px); }
+.alt-shots + .card-grid { margin-top: clamp(36px, 5vw, 56px); }
+
 /* ---------- Screenshots ---------- */
 
 .shots { display: grid; gap: clamp(40px, 6vw, 80px); }

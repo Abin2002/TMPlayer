@@ -4,10 +4,13 @@ import { createHash } from 'node:crypto';
 import { text } from './t';
 import { ldUrl } from './links';
 import type { Lang } from './langs';
+import alternatives from '../data/alternatives.json';
 
 const NO_TRANSLATE = new Set(['TMPlayer', 'Telegram', 'GitHub', 'nevil.dev', 'Nevil', 'dracu-lah',
   'Infoek.cz', 'Android TV', 'Android', 'Windows', 'Linux', 'macOS', 'DMG', 'Fire TV', 'Flatpak',
-  'AppImage', 'Telegram group', 'Obtainium', 'Downloader', 'mpv']);
+  'AppImage', 'Telegram group', 'Obtainium', 'Downloader', 'mpv',
+  // the apps the alternatives page lists, by their own names
+  ...alternatives.apps.map((a) => a.name)]);
 const LD_TEXT_KEYS = new Set(['name', 'alternateName', 'description', 'text', 'headline',
   'featureList', 'about', 'abstract', 'acceptedAnswer']);
 const LD_URL_KEYS = new Set(['url', 'item', '@id', 'mainEntityOfPage']);
