@@ -444,7 +444,7 @@ jobs:
         id: nextlib
         run: |
           LINKED="1.11.1-0.16.0"
-          TAG=""
+          TAG="v1.27.0"
           USED="$(sed -n 's/^nextlib = "\(.*\)"$/\1/p' gradle/libs.versions.toml)"
           if [ "$USED" != "$LINKED" ]; then
             echo "::error::nextlib is $USED but the release notes link the source of $LINKED. Update scripts/build-nextlib-source.sh for $USED, attach its archive, and update LINKED and TAG here."
@@ -468,7 +468,7 @@ jobs:
         id: mediamp
         run: |
           COVERED="0.5.2"
-          TAG=""
+          TAG="v1.27.0"
           USED="$(sed -n 's/^mediamp = "\(.*\)"$/\1/p' gradle/libs.versions.toml)"
           if [ "$USED" != "$COVERED" ]; then
             echo "::error::mediamp is $USED but the linked corresponding source covers $COVERED. Update scripts/build-mediamp-source.sh for $USED, attach its archive, and update COVERED and TAG here."
@@ -484,7 +484,7 @@ jobs:
           # The macOS runtime's libraries are Homebrew's, not MSYS2's or Ubuntu's, so their source
           # is a second archive (scripts/build-mediamp-source.sh --macos), attached by hand next to
           # the first. MAC_TAG works as TAG does: empty links this release's own copy.
-          MAC_TAG=""
+          MAC_TAG="v1.27.0"
           MAC_URL="https://github.com/${{ github.repository }}/releases/download/${MAC_TAG:-$GITHUB_REF_NAME}/mediamp-corresponding-source-$COVERED-macos.tar.gz"
           if [ -n "$MAC_TAG" ]; then
             curl --fail --silent --show-error --head --location --max-time 60 "$MAC_URL" > /dev/null
