@@ -1,5 +1,11 @@
 [
   {
+    "version": "1.27.1",
+    "published": "2026-10-19T11:43:51Z",
+    "url": "https://github.com/dracu-lah/TMPlayer/releases/tag/v1.27.1",
+    "notes": "- Windows: TMPlayer starts again on computers where it closed at once with \"failedChats must not be null\"\n- Desktop Home: one starred chat is enough for the carousel, and the rows no longer jump while Home fills in\n- Casting: subtitles show on the TV, and a soundtrack the TV cannot play is converted on the phone so it is heard, with its audio and subtitle choices kept\n- Casting: the device list stays open and says it is connecting until the TV is ready, and a 4K video on a 1080p TV says so instead of failing\n- Casting: if the connection to the TV drops, the video waits with Reconnect and Play here instead of starting on the phone, and a short pause from Telegram is retried\n- The update window shows what changed as a list, on phone, TV and desktop\n- On a phone, the screen shown when a video stops arriving fits sideways and upright"
+  },
+  {
     "version": "1.27.0",
     "published": "2026-10-19T03:23:46Z",
     "url": "https://github.com/dracu-lah/TMPlayer/releases/tag/v1.27.0",

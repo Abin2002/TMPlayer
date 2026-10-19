@@ -1,35 +1,44 @@
 {
   "schema": 1,
-  "version": "1.27.0",
-  "versionCode": 12700,
-  "published": "2026-10-19T03:23:35Z",
-  "releaseUrl": "https://github.com/dracu-lah/TMPlayer/releases/tag/v1.27.0",
-  "notes": "Android TV: a new top bar in place of the side rail. Your profile, Search, Home, Chats and Settings along the top, the pages at full width, Up and Down between the bar and the page, and Back to reach the bar from anywhere. Cast to a Chromecast or Google TV from the phone and the desktop, with the controls staying on your device: MKV videos play without stalling, audio tracks switch on the TV, and your place follows you back to the phone. Connecting to Telegram never waits in silence: a live status line, and when it takes too long the likely reason with Retry, Use a proxy and Send logs, on phone, TV and desktop. Proxies (MTProto, SOCKS5, HTTP or a t.me/proxy link), before sign in and from Settings, for networks where Telegram is blocked; sign in with an email code works too. Search across all your chats, with one result per video and filters, and find a person, group or channel by @username; tap a chat's name for its picture, username, description and link. t.me links open in TMPlayer: a post plays from its start time, a public chat or an invite shows before you join. Telegram's own lighter copies of a big video (720p, 480p) to pick from, picked for you on a slow line, with Telegram's seek previews and the uploader's cover. A video posted more than once is one card: pick the copy and quality, and your place follows it. A video cut into .part001 pieces plays as one. Home opens on a calmer carousel of the newest videos, and Home appears ready rather than filling in. Player: chapters, picture shape on the bar, finer speed steps, Night mode for quieter loud scenes, a way back after a long jump, and subtitles at the same height on every video. Appearance: a Pure black switch for OLED screens that also follows the system's dark mode, and nine accent colours. Connected devices: where TMPlayer is signed in, and ending those sessions without signing out Telegram's own apps. Storage at a glance in a chart, everything on the device listed, Free up space with Low storage mode, and Low storage mode keeping to its limit. Notifications for new episodes of shows you watch, finished downloads, low storage and updates, each with its own switch. Videos in a post's comments, round videos, Forward to a chat, Save to the gallery, an Audio list per chat, and resume on your other devices through your Saved Messages (opt in). macOS: sign in works on Macs without Homebrew, and a new installer window. Windows: an update keeps TMPlayer and your sign in. Many fixes on phone, TV and desktop, in all 21 languages.",
+  "version": "1.27.1",
+  "versionCode": 12701,
+  "published": "2026-10-19T11:43:41Z",
+  "releaseUrl": "https://github.com/dracu-lah/TMPlayer/releases/tag/v1.27.1",
+  "notes": "Windows: TMPlayer starts again on computers where it closed at once with \"failedChats must not be null\". Desktop Home: one starred chat is enough for the carousel, and the rows no longer jump while Home fills in. Casting: subtitles show on the TV, and a soundtrack the TV cannot play is converted on the phone so it is heard, with its audio and subtitle choices kept. Casting: the device list stays open and says it is connecting until the TV is ready, and a 4K video on a 1080p TV says so instead of failing. Casting: if the connection to the TV drops, the video waits with Reconnect and Play here instead of starting on the phone, and a short pause from Telegram is retried. The update window shows what changed as a list, on phone, TV and desktop. On a phone, the screen shown when a video stops arriving fits sideways and upright.",
+  "changes": [
+    "Windows: TMPlayer starts again on computers where it closed at once with \"failedChats must not be null\"",
+    "Desktop Home: one starred chat is enough for the carousel, and the rows no longer jump while Home fills in",
+    "Casting: subtitles show on the TV, and a soundtrack the TV cannot play is converted on the phone so it is heard, with its audio and subtitle choices kept",
+    "Casting: the device list stays open and says it is connecting until the TV is ready, and a 4K video on a 1080p TV says so instead of failing",
+    "Casting: if the connection to the TV drops, the video waits with Reconnect and Play here instead of starting on the phone, and a short pause from Telegram is retried",
+    "The update window shows what changed as a list, on phone, TV and desktop",
+    "On a phone, the screen shown when a video stops arriving fits sideways and upright"
+  ],
   "assets": {
     "android-universal": {
-      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.27.0/TMPlayer-1.27.0-universal.apk",
-      "sha256": "b52cfd504fcbf6624c0bf22ecef54af3e1c4fd37108c53d60e7d29dd2f79e29f",
-      "size": 32491908
+      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.27.1/TMPlayer-1.27.1-universal.apk",
+      "sha256": "a674b67b2e587a51db888a374d37f70c04b60c0e19d2a58c44f27d9a4d1d3aea",
+      "size": 32520968
     },
     "windows-x64-msi-v2": {
-      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.27.0/TMPlayer-1.27.0-windows-x64.msi",
-      "sha256": "746590b92d1d5f2e3a4bb80a9c88a4a19be5a2ae1b119dffb128512fe88e617e",
-      "size": 106783864
+      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.27.1/TMPlayer-1.27.1-windows-x64.msi",
+      "sha256": "904f0eaee884215e705072edf4f9a87d739439e019555bb99ed610dc6be79afc",
+      "size": 106869880
     },
     "macos-arm64-dmg": {
-      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.27.0/TMPlayer-1.27.0-macos-arm64.dmg",
-      "sha256": "42346c180d488ed2287ad85b0e06523d6f73b06f33845156ea5b2819eba1ea85",
-      "size": 113352625
+      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.27.1/TMPlayer-1.27.1-macos-arm64.dmg",
+      "sha256": "9e4a29771413853d021f14df5440066bf8dc3a43eb20fa3c12e2dab278ff9540",
+      "size": 113470449
     },
     "linux-x64-appimage": {
-      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.27.0/TMPlayer-1.27.0-x86_64.AppImage",
-      "sha256": "dfc0ebf27c4968e12e23c0ab9236d92f14db447e24b3872dfb41eeaa926ad25f",
-      "size": 100817400
+      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.27.1/TMPlayer-1.27.1-x86_64.AppImage",
+      "sha256": "a933ff6535227df92bbbe26a7463db86b0035ec2faa920d1b961c67145d45a75",
+      "size": 100878840
     },
     "linux-x64-tarball": {
-      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.27.0/TMPlayer-1.27.0-linux-x64.tar.xz",
-      "sha256": "5905025622be66c2d1ed6b90621cdff75e3e71e22137dd717b2336347535043c",
-      "size": 72085244
+      "url": "https://github.com/dracu-lah/TMPlayer/releases/download/v1.27.1/TMPlayer-1.27.1-linux-x64.tar.xz",
+      "sha256": "236aebd3f6ba9e857613eea3cc31068edcf1bda5f3a9041343adf53c9c3cb7a7",
+      "size": 72131156
     }
   }
 }
