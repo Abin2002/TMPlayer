@@ -596,13 +596,29 @@ jobs:
       # annotated tags' messages: this release's tag is here, as the checkout fetched it, and the
       # older ones are asked of the API rather than fetched, which on a shallow clone would mean
       # pulling a tree for every tag. gh reads GH_TOKEN for that and for the release list.
+      #
+      # The Arch Linux PKGBUILD moves in the same commit when this release is the newest:
+      # scripts/aur-bump.py sets its version and the tarball's SHA-256 from this run's latest.json,
+      # and is redone after every fresh checkout of the retry loop. The step's `aur` output says
+      # whether the AUR step below should run: main's PKGBUILD names this version and the
+      # AUR_SSH_PRIVATE_KEY secret is set (a step's `if` cannot read secrets, so it is told here as
+      # a plain true or false, never the key).
       - name: Publish the update feed and the changelog on the site
+        id: feed
         env:
           GH_TOKEN: ${{ github.token }}
+          AUR_KEY_SET: ${{ secrets.AUR_SSH_PRIVATE_KEY != '' }}
         run: |
           VERSION="${{ needs.version.outputs.name }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          aur_output() {
+            if [ "$AUR_KEY_SET" = "true" ] && grep -qx "pkgver=$VERSION" desktop/packaging/aur/PKGBUILD; then
+              echo "aur=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "aur=false" >> "$GITHUB_OUTPUT"
+            fi
+          }
           for attempt in 1 2 3; do
             git fetch --depth=1 origin main
             git checkout -B feed FETCH_HEAD
@@ -615,20 +631,40 @@ jobs:
               # tmplayer.org/apk follows the newest release's APK, named in full: a release
               # carries one APK, whose name has the version in it.
               python3 scripts/point-apk-redirect.py "$VERSION"
+              python3 scripts/aur-bump.py "$VERSION" --feed "$RUNNER_TEMP/latest.json"
               MESSAGE="site: the update feed names $VERSION"
             fi
             python3 scripts/release-data.py
-            git add site/public/latest.json site/vercel.json site/src/data/releases.json
+            git add site/public/latest.json site/vercel.json site/src/data/releases.json desktop/packaging/aur/PKGBUILD
             if git diff --cached --quiet; then
               echo "The site already names $VERSION."
+              aur_output
               exit 0
             fi
             git commit -m "$MESSAGE"
-            if git push origin HEAD:main; then exit 0; fi
+            if git push origin HEAD:main; then aur_output; exit 0; fi
             echo "main moved while the feed was written; trying again."
           done
           echo "::error::Could not push the update feed and the changelog to main"
           exit 1
+
+      # The Arch Linux package, tmplayer-bin on the AUR, from the PKGBUILD the step above just
+      # pushed to main (it is in this checkout). The action runs in an Arch container, writes
+      # .SRCINFO itself and pushes to the AUR over SSH with the AUR_SSH_PRIVATE_KEY repository
+      # secret; a fork or a repository without that secret skips it, and so does a tag older than
+      # the one main's PKGBUILD names. Like the steps around it, a failure costs only the AUR
+      # update. The one-time setup is in docs/distribution/aur.md.
+      - name: Publish the AUR package
+        if: steps.feed.outputs.aur == 'true'
+        continue-on-error: true
+        uses: KSXGitHub/github-actions-deploy-aur@v4.2.0
+        with:
+          pkgname: tmplayer-bin
+          pkgbuild: desktop/packaging/aur/PKGBUILD
+          commit_username: dracu-lah
+          commit_email: noreply@github.com
+          commit_message: Update to ${{ needs.version.outputs.name }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
 
       # Tells Bing, Yandex, Seznam and Naver (through IndexNow) that the release's pages changed,
       # instead of waiting for their next crawl. Google does not take part and reads the sitemap.

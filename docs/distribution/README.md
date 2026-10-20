@@ -9,6 +9,7 @@ those steps use.
 | [winget/](winget/) and [winget.md](winget.md) | CP13, CP16, U13 |
 | [telegram-apps.md](telegram-apps.md) | U17 AlternativeTo, U18 Uptodown, U19 XDA (a fact list only) |
 | [flathub.md](flathub.md) | U16, Flathub PR #10513 |
+| [aur.md](aur.md) | The AUR package `tmplayer-bin`: one-time setup, then published by the release job |
 | [amazon.md](amazon.md) | U23 Amazon Appstore listing (text, images, content rating) |
 | [play.md](play.md) | Phase G Google Play (set aside), and Android developer verification for every APK |
 | [izzyondroid.md](izzyondroid.md) | Set aside (see PLAN), kept in case the policy changes |

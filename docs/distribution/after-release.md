@@ -22,7 +22,7 @@ before 2026-10-13 (cadence guard: 1.20.0, 1.21.0, 1.22.0 and 1.22.1 all went out
 | Labels | `translation` exists; not yet on issue #2 | |
 | Secrets | no `WINGET_CREATE_GITHUB_TOKEN` yet | |
 | mediamp source archive | not attached to any release yet (1.22.0 and 1.22.1 have none) | |
-| AUR PKGBUILD | still `pkgver=1.22.0`; it was never bumped to 1.22.1 | |
+| AUR PKGBUILD | at 1.27.1 (2026-10-20); the release job bumps it from now on, and publishes it once `AUR_SSH_PRIVATE_KEY` is set ([aur.md](aur.md)) | us |
 
 ## Do right after the release
 
@@ -71,18 +71,15 @@ Also check `site/public/latest.json` and the changelog commit the run pushed (`g
 `jq . site/public/latest.json`), and the Telegram post on t.me/tmplayerapp (U06 is the same check for
 1.22.1, still open). Depends on the release: yes.
 
-### 4. CP12: bump the AUR PKGBUILD
+### 4. CP12: check the AUR PKGBUILD
 
-Repo commit, not a gh call, but the hash comes from the release:
-
-```sh
-gh release download v<v> -p 'TMPlayer-<v>-linux-x64.tar.xz' -D /tmp/tmp-verify
-sha256sum /tmp/tmp-verify/TMPlayer-<v>-linux-x64.tar.xz
-```
-
-Set `pkgver=<v>`, `pkgrel=1` and the new `sha256sums` in `desktop/packaging/aur/PKGBUILD`, regenerate
-`.SRCINFO` if one is kept. From this release on, `package()` installs the notices, which the 1.22.x
-tarballs lack. Depends on the release: yes.
+Automatic since 2026-10-20: the release job's feed step runs `scripts/aur-bump.py`, which sets
+`pkgver`, `pkgrel=1` and the tarball's SHA-256 from that run's `latest.json` in the same commit
+as the feed, and the next step pushes it to the AUR as `tmplayer-bin` when the
+`AUR_SSH_PRIVATE_KEY` secret is set. Check that main's `desktop/packaging/aur/PKGBUILD` names the
+new version and, once the AUR package exists, that aur.archlinux.org/packages/tmplayer-bin shows
+it. By hand, for a release that went out some other way: `python3 scripts/aur-bump.py <v>` (it
+reads the digest from GitHub through gh). Depends on the release: yes.
 
 ### 5. CP13 then U13: winget
 
