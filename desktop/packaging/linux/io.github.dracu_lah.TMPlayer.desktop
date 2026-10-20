@@ -47,7 +47,7 @@ Exec=tmplayer
 Icon=io.github.dracu_lah.TMPlayer
 Terminal=false
 Categories=AudioVideo;Video;Player;
-Keywords=Telegram;Video;Player;Stream;Movie;
+Keywords=Telegram;Video;Player;Stream;Media;
 # The AWT window class, which Java derives from the main class: it is what lets the dock and the
 # task bar group the running window under this launcher.
 StartupWMClass=com-tmplayer-desktop-MainKt
