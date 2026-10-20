@@ -8,6 +8,10 @@
 // own, for a page without a star card. `lede` replaces the line about ads, and the default slot goes
 // under the buttons (the download page's QR codes).
 //
+// `short` adds one short line in the open under the heading, beside the tucked longer one (the
+// landscape card, GiveLCard). `heading2` makes its heading an h2, for a support card that is a section of its own (GiveLCard on
+// the home page).
+//
 // `release` is the slim card on the changelog and the release pages, which are English only and
 // read by people who just got the update, the moment the offer makes the most sense. Its heading
 // is an h2 in the notes' style, it is not revealed on scroll, and its line is the page's `lede`
@@ -26,13 +30,13 @@ import CoffeeButton from './CoffeeButton.astro';
 import { text } from '../i18n/t';
 import { SPONSORS_URL } from '../lib/support';
 
-interface Props { slim?: boolean; release?: boolean; lede?: string }
-const { release = false, lede } = Astro.props;
+interface Props { slim?: boolean; release?: boolean; lede?: string; heading2?: boolean; short?: string }
+const { release = false, lede, heading2 = false, short } = Astro.props;
 const slim = release || (Astro.props.slim ?? false);
 const t = (k: string) => text(Astro.locals.lang, k);
 const Card = slim ? 'div' : Fragment;
 const card = slim ? { class: 'support support-slim', 'data-reveal': release ? undefined : '' } : {};
-const H = release ? 'h2' : 'h3';
+const H = release || heading2 ? 'h2' : 'h3';
 const tucked = !release && lede === undefined;
 const why = t('home.support_why');
 const line = release
@@ -42,6 +46,7 @@ const line = release
 <Card {...card}>
 <div class:list={['support-more', { 'support-more-solo': slim }]} id="sponsor">
   {tucked ? (
+    <>
     <div class="support-head">
       <H>{t('home.support_tmplayer')}</H>
       <details class="support-why">
@@ -49,6 +54,8 @@ const line = release
         <p>{line}</p>
       </details>
     </div>
+    {short && <p class="support-short">{short}</p>}
+    </>
   ) : (
     <>
       <H class={release ? 'release-notes-h' : undefined}>{t('home.support_tmplayer')}</H>

@@ -1531,26 +1531,18 @@ var tmT = (function () {
 })();
 
 
-/* The Buy Me a Coffee card (src/components/CoffeeCard.astro), a link straight to the page. It comes in once
-   the page has loaded and the browser is idle, so it is never part of the first paint and never
-   competes with the page for the network; it is fixed, so it shifts nothing. It steps away while
-   the footer or the page's own support offer is in view (an IntersectionObserver, no layout reads),
-   and comes back after. The x hides it for this page view only: nothing is stored, so the next page
-   or a reload shows it again (user, 2026-10-18). */
+/* The Buy Me a Coffee card (src/components/CoffeeCard.astro), a link straight to the page. It comes in
+   shortly after the page has loaded, so it is never part of the first paint, and then stays on screen
+   (user, 2026-10-20: shown always, no longer stepping aside for the footer or the page's own offer);
+   it is fixed, so it shifts nothing. The x hides it for this page view only: nothing is stored, so
+   the next page or a reload shows it again (user, 2026-10-18). */
 (function () {
   'use strict';
 
   var card = document.getElementById('bmc-float');
   if (!card) { return; }
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var away = {};
   var gone = false;
-
-  function paint() {
-    var hidden = false;
-    for (var k in away) { if (away[k]) { hidden = true; } }
-    card.classList.toggle('is-away', hidden);
-  }
 
   function show() {
     if (gone) { return; }
@@ -1559,30 +1551,10 @@ var tmT = (function () {
     requestAnimationFrame(function () {
       requestAnimationFrame(function () { card.classList.add('is-on'); });
     });
-    if (window.IntersectionObserver) {
-      // On a phone the card is a pill over the middle of the bottom edge, where the home page's
-      // stats row sits on the first screen, so it waits until those figures are scrolled past.
-      var narrow = window.matchMedia && window.matchMedia('(max-width: 639px)').matches;
-      var targets = document.querySelectorAll(narrow ? '.site-footer, #sponsor, .stats' : '.site-footer, #sponsor');
-      var observer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          away[entry.target.id || entry.target.className] = entry.isIntersecting;
-        });
-        paint();
-      });
-      Array.prototype.forEach.call(targets, function (node) { observer.observe(node); });
-    }
   }
 
-  function whenIdle() {
-    var go = function () {
-      var later = function () { setTimeout(show, reduced ? 600 : 1200); };
-      if (typeof window.requestIdleCallback === 'function') {
-        window.requestIdleCallback(later, { timeout: 3000 });
-      } else {
-        later();
-      }
-    };
+  function whenLoaded() {
+    var go = function () { setTimeout(show, reduced ? 300 : 700); };
     if (document.readyState === 'complete') { go(); } else { window.addEventListener('load', go); }
   }
 
@@ -1597,7 +1569,7 @@ var tmT = (function () {
     }
   });
 
-  whenIdle();
+  whenLoaded();
 })();
 
 /* The home page's stats row counts up once, as it comes into view (an IntersectionObserver, no
@@ -1644,9 +1616,14 @@ var tmT = (function () {
 })();
 
 /* The support links open the Buy Me a Coffee page over the site, in CoffeeDialog's <dialog>
-   (user, 2026-10-20). The frame gets its src on the first open, so nothing is fetched from
-   buymeacoffee.com before somebody asks. A middle click, a modified click or a browser without
-   <dialog> follows the link as before. Esc closes it natively; so do the x and the backdrop. */
+   (user, 2026-10-20). Their widget page takes a second or more to arrive, so it is fetched ahead of
+   the click (user, 2026-10-20, "pre inject"): once the page has loaded, the first sign of a person
+   (a scroll, a touch, a key, the pointer moving) loads the frame into the closed dialog, and
+   pointing at or focusing a support link does so at once. A test runner that never touches the
+   page never loads it, and neither does a visitor who asked to save data. Until the frame has
+   loaded, the dialog shows the cup on Buy Me a Coffee's yellow. A middle click, a modified click
+   or a browser without <dialog> follows the link as before. Esc closes it natively; so do the x
+   and the backdrop. */
 (function () {
   'use strict';
 
@@ -1655,12 +1632,37 @@ var tmT = (function () {
   var frame = dialog.querySelector('.bmc-dialog-frame');
   var opener = null;
 
+  function warm() {
+    if (frame.getAttribute('src')) { return; }
+    frame.addEventListener('load', function () { dialog.classList.add('is-loaded'); }, { once: true });
+    frame.setAttribute('src', frame.getAttribute('data-src'));
+  }
+
+  var saveData = navigator.connection && (navigator.connection.saveData || /2g/.test(navigator.connection.effectiveType || ''));
+  if (!saveData && document.querySelector('a[data-bmc]')) {
+    var signs = ['scroll', 'pointermove', 'touchstart', 'keydown', 'wheel'];
+    var onSign = function () {
+      signs.forEach(function (type) { window.removeEventListener(type, onSign, true); });
+      var later = function () { setTimeout(warm, 0); };
+      if (typeof window.requestIdleCallback === 'function') { window.requestIdleCallback(later, { timeout: 2000 }); } else { later(); }
+    };
+    var listen = function () {
+      signs.forEach(function (type) { window.addEventListener(type, onSign, { capture: true, passive: true }); });
+    };
+    if (document.readyState === 'complete') { listen(); } else { window.addEventListener('load', listen); }
+  }
+  ['pointerover', 'focusin', 'touchstart'].forEach(function (type) {
+    document.addEventListener(type, function (e) {
+      if (e.target.closest && e.target.closest('a[data-bmc]')) { warm(); }
+    }, { capture: true, passive: true });
+  });
+
   document.addEventListener('click', function (e) {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
     var link = e.target.closest && e.target.closest('a[data-bmc]');
     if (!link) { return; }
     e.preventDefault();
-    if (!frame.getAttribute('src')) { frame.setAttribute('src', frame.getAttribute('data-src')); }
+    warm();
     opener = link;
     dialog.showModal();
   });
@@ -1672,4 +1674,156 @@ var tmT = (function () {
     if (opener && document.contains(opener)) { opener.focus({ preventScroll: true }); }
     opener = null;
   });
+})();
+
+
+/* The header's hover pill, over 1080 px: one pill behind the page links that slides to the link
+   under the pointer and fades when the pointer leaves the bar. The boxes are read on the pointer's
+   arrival, never while the page is being built. Without it the links keep their own hover. */
+(function () {
+  'use strict';
+
+  var nav = document.getElementById('site-nav');
+  if (!nav || !window.matchMedia || !nav.classList) { return; }
+  var wide = window.matchMedia('(min-width: 1081px)');
+  var pill = document.createElement('span');
+  pill.className = 'nav-pill';
+  pill.setAttribute('aria-hidden', 'true');
+  nav.insertBefore(pill, nav.firstChild);
+
+  function moveTo(link) {
+    if (!wide.matches) { return; }
+    nav.classList.add('has-pill');
+    pill.style.width = link.offsetWidth + 'px';
+    pill.style.height = link.offsetHeight + 'px';
+    pill.style.transform = 'translate(' + link.offsetLeft + 'px, ' + link.offsetTop + 'px)';
+    pill.classList.add('is-on');
+  }
+
+  Array.prototype.forEach.call(nav.querySelectorAll('a'), function (link) {
+    link.addEventListener('pointerenter', function (event) { if (event.pointerType === 'mouse') { moveTo(link); } });
+    link.addEventListener('focus', function () { moveTo(link); });
+  });
+  nav.addEventListener('pointerleave', function () { pill.classList.remove('is-on'); });
+  nav.addEventListener('focusout', function (event) {
+    if (!nav.contains(event.relatedTarget)) { pill.classList.remove('is-on'); }
+  });
+})();
+
+/* The features page's "What it does" on a phone: the first tiles of each group, and a button for
+   the rest. The stylesheet folds the rest only when this script runs (the js class) and the group
+   is not opened, so every tile is in the page and shows without script. */
+(function () {
+  'use strict';
+
+  var groups = document.querySelectorAll('[data-feat-group]');
+  Array.prototype.forEach.call(groups, function (group) {
+    var button = group.querySelector('[data-feat-more]');
+    if (!button || !group.querySelector('.feat-extra')) { return; }
+    button.hidden = false;
+    button.addEventListener('click', function () {
+      group.classList.add('is-all');
+      button.hidden = true;
+      var first = group.querySelector('.feat-extra p');
+      if (first) { first.setAttribute('tabindex', '-1'); first.focus({ preventScroll: true }); }
+    });
+  });
+})();
+
+/* The install page's platform tiles: the visitor's own system gets a ring, a class and nothing
+   else, so the row never moves. The same reading of the browser as the download page's. */
+(function () {
+  'use strict';
+
+  var tiles = document.querySelectorAll('.install-pick-row a[data-os]');
+  if (!tiles.length) { return; }
+  var nav = window.navigator || {};
+  var ua = String(nav.userAgent || '');
+  var platform = String((nav.userAgentData && nav.userAgentData.platform) || nav.platform || '');
+  var os = null;
+  if (/Android/i.test(ua)) {
+    os = /\b(TV|AFT[A-Z0-9]*|BRAVIA|SmartTV|GoogleTV|Chromecast|AndroidTV)\b/i.test(ua) ? 'android-tv' : 'android';
+  } else if (/iPhone|iPad|iPod/i.test(ua)) {
+    os = null;
+  } else if (/Win/i.test(platform) || /Windows/i.test(ua)) {
+    os = 'windows';
+  } else if (/Mac/i.test(platform) || /Macintosh/i.test(ua)) {
+    os = nav.maxTouchPoints > 1 ? null : 'macos';
+  } else if (/Linux|X11/i.test(platform + ' ' + ua) && !/CrOS/i.test(ua)) {
+    os = 'linux';
+  }
+  if (!os) { return; }
+  Array.prototype.forEach.call(tiles, function (tile) {
+    if (tile.getAttribute('data-os') === os) { tile.classList.add('is-yours'); }
+  });
+})();
+
+/* The download page's device tabs. The head's inline script has already chosen one before the
+   first paint (html[data-dl-tab]) and the stylesheet shows only that device's card. This adds the
+   tab roles, the selection on a press or the arrow keys, and follows the address's #id, so every
+   link from another page (/download/#windows and the rest) still lands on its device. The address
+   is replaced rather than pushed, so the page does not jump to the card. */
+(function () {
+  'use strict';
+
+  var root = document.documentElement;
+  var list = document.getElementById('dl-tabs');
+  if (!list || !root.getAttribute('data-dl-tab')) { return; }
+  var tabs = Array.prototype.slice.call(list.querySelectorAll('a[data-tab]'));
+
+  function shown() { return tabs.filter(function (tab) { return !tab.hidden; }); }
+  function idOf(tab) { return tab.getAttribute('data-tab'); }
+
+  list.setAttribute('role', 'tablist');
+  tabs.forEach(function (tab) {
+    var id = idOf(tab);
+    tab.setAttribute('role', 'tab');
+    tab.id = 'tab-' + id;
+    tab.setAttribute('aria-controls', id);
+    var panel = document.getElementById(id);
+    if (panel) { panel.setAttribute('role', 'tabpanel'); }
+  });
+
+  function select(id, focus) {
+    var match = shown().filter(function (tab) { return idOf(tab) === id; })[0];
+    if (!match) { return false; }
+    root.setAttribute('data-dl-tab', id);
+    tabs.forEach(function (tab) {
+      var on = tab === match;
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      tab.setAttribute('tabindex', on ? '0' : '-1');
+    });
+    if (focus) { match.focus(); }
+    return true;
+  }
+
+  select(root.getAttribute('data-dl-tab'), false);
+  // From here on a change of tab cross-fades (styles.css); the card drawn with the page did not.
+  root.classList.add('dl-tabs-live');
+
+  list.addEventListener('click', function (event) {
+    var tab = event.target.closest ? event.target.closest('a[data-tab]') : null;
+    if (!tab || event.ctrlKey || event.metaKey || event.shiftKey || event.button) { return; }
+    event.preventDefault();
+    if (select(idOf(tab), false) && window.history && history.replaceState) {
+      history.replaceState(null, '', '#' + idOf(tab));
+    }
+  });
+
+  list.addEventListener('keydown', function (event) {
+    var visible = shown();
+    var at = visible.indexOf(document.activeElement);
+    if (at < 0) { return; }
+    var next = null;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') { next = visible[(at + 1) % visible.length]; }
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') { next = visible[(at - 1 + visible.length) % visible.length]; }
+    else if (event.key === 'Home') { next = visible[0]; }
+    else if (event.key === 'End') { next = visible[visible.length - 1]; }
+    if (!next) { return; }
+    event.preventDefault();
+    select(idOf(next), true);
+    if (window.history && history.replaceState) { history.replaceState(null, '', '#' + idOf(next)); }
+  });
+
+  window.addEventListener('hashchange', function () { select(location.hash.slice(1), false); });
 })();

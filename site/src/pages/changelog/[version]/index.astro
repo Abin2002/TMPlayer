@@ -3,6 +3,7 @@
 import Shell from '../../../components/changelog/Shell.astro';
 import PageHead from '../../../components/PageHead.astro';
 import SponsorOffer from '../../../components/SponsorOffer.astro';
+import StarBand from '../../../components/StarBand.astro';
 import Icon from '../../../components/Icon.astro';
 import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
@@ -77,6 +78,9 @@ const get = latest
         </div>
         {story && <p class="muted small release-story"><a href={story}>The story behind this release, on the developer's blog</a></p>}
       </article>
+
+      {/* The star between the notes and the files; the release's own offer stays further down. */}
+      <StarBand inset title="Star it if it helped" lede="If this release was worth the update, a star tells the next person." />
 
       <div class="changelog-entry release-get">
         <h2 class="release-notes-h">Get it</h2>

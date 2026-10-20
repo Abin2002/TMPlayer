@@ -14,7 +14,8 @@ import Cards from '../../../components/Cards.astro';
 import Panel from '../../../components/Panel.astro';
 import KeysTable from '../../../components/formats/KeysTable.astro';
 import KeysRow from '../../../components/formats/KeysRow.astro';
-import SponsorOffer from '../../../components/SponsorOffer.astro';
+import StarBand from '../../../components/StarBand.astro';
+import GiveBand from '../../../components/GiveBand.astro';
 import DownloadCard from '../../../components/DownloadCard.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
@@ -62,6 +63,8 @@ const listed = [
     </Cards>
   </Band>
 
+    <StarBand lede={t('features.every_feature_here_started_as')} />
+
     <Band wave id="android" labelledby="android-h" title={t('formats.on_android_tv_and_phones_2')} sub={t('formats.the_device_s_own_decoders')}>
     <KeysTable>
       <KeysRow what={t('formats.containers')}>{t('formats.mkv_webm_mp4_m4v_mov')}</KeysRow>
@@ -102,8 +105,9 @@ const listed = [
     <p class="muted small section-note" data-reveal><T k="formats.picture_based_vobsub_files_cannot"><code slot="code1">.sub</code></T></p>
 
     <DownloadCard />
-    <SponsorOffer slim />
   </Band>
+
+  <GiveBand wave tonal />
 
 </main>
 

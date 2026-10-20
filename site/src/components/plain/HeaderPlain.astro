@@ -1,46 +1,7 @@
 ---
-// The older inline header the English-only pages kept. It differs from the shared Header: a 30px
-// brand image and the sun drawn as one path. Security has its own later variant: a 32px image
-// decoded async and the sun drawn with rays.
-import Icon from '../Icon.astro';
-import NavCta from '../NavCta.astro';
+// The English-only pages' header: the site header itself, with no current page and no language
+// picker, so the two cannot drift apart. Those pages set Astro.locals.lang to English.
+import Header from '../Header.astro';
 
-interface Props { variant?: 'policy' | 'security' }
-const security = Astro.props.variant === 'security';
-const size = security ? 32 : 30;
-// The policy pages write the links with no space between them, security one per line; the visible
-// text differs only in that space.
-const nav = [
-  ['/', 'Home'], ['/features/', 'Features'], ['/install/', 'Install'],
-  ['/android-tv/', 'Android TV'], ['/faq/', 'Questions'], ['/download/', 'Download'],
-];
-// The page list's own Download link is the last row of the menu card on a phone, where the
-// Download button in the bar gives up its place (NavCta).
-const cls: Record<string, string> = { '/android-tv/': 'only-menu', '/download/': 'nav-dl' };
 ---
-<header class="site-header">
-  <div class="wrap header-inner">
-    <a class="brand" href="/" aria-label="TMPlayer home">
-      <img class="brand-mark" src="/favicon.svg" width={size} height={size} alt="" decoding={security ? 'async' : undefined}>
-      <span class="brand-name">TMPlayer</span>
-    </a>
-    <nav class="nav-links" id="site-nav" aria-label="Primary">{nav.map(([href, label], i) => (
-      <>{security && i > 0 && ' '}<a class={cls[href]} href={href}>{label}</a></>
-    ))}</nav>
-    <div class="nav">
-      <NavCta href="/download/" label="Download" />
-      <a class="nav-icon" href="https://github.com/dracu-lah/TMPlayer" rel="noopener" aria-label="TMPlayer on GitHub">
-        <Icon name="github" />
-        <span class="nav-icon-count is-loading" data-count="stars" data-count-skeleton aria-hidden="true"></span>
-      </a>
-      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme">
-        <Icon name={security ? 'sun' : 'sun-path'} />
-        <Icon name="moon" />
-      </button>
-      <button class="menu-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
-        <Icon name="menu" />
-        <Icon name="menu-close" />
-      </button>
-    </div>
-  </div>
-</header>
+<Header />

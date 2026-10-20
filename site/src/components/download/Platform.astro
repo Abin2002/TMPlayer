@@ -1,8 +1,13 @@
 ---
 // One platform's card. app.js finds it by its id and data-os, shows the "your device" badge on the
 // one that matches the visitor, and fills the rows (AbiRow) inside it. The rows go in the default
-// slot, then the "foot" slot (the install link line) and anything after it in "after".
+// slot, then the "steps" slot (the numbered install lines), the "foot" slot (the install link
+// line) and anything after it in "after". `shot` is a
+// small cropped screenshot beside the heading, from 600 px up, so a reader sees which app the card
+// is for; it loads lazily and a phone, where it is hidden, never fetches it.
 import Icon from '../Icon.astro';
+import Shot, { type ShotProps } from '../Shot.astro';
+import { SHOT_PLATFORM } from '../shot-sizes';
 import { text } from '../../i18n/t';
 
 interface Props {
@@ -13,11 +18,12 @@ interface Props {
   req: string;
   computer?: boolean;
   hidden?: boolean;
+  shot?: ShotProps;
 }
-const { id, icon, tone, title, req, computer = false, hidden = false } = Astro.props;
+const { id, icon, tone, title, req, computer = false, hidden = false, shot } = Astro.props;
 const t = (k: string) => text(Astro.locals.lang, k);
 ---
-<article class="platform" id={id} data-os={id} aria-labelledby={`${id}-h`} hidden={hidden}>
+<section class="platform" id={id} data-os={id} aria-labelledby={`${id}-h`} hidden={hidden}>
             <div class="platform-head">
               <span class={`panel-icon icon-${tone}`} aria-hidden="true">
                 <Icon name={icon} />
@@ -27,11 +33,13 @@ const t = (k: string) => text(Astro.locals.lang, k);
                 <p class="platform-req">{req}</p>
               </div>
               <span class="badge platform-yours" hidden>{t(computer ? 'download.your_computer' : 'download.your_device')}</span>
+              {shot && <Shot frame="platform-shot" sizes={SHOT_PLATFORM} {...shot} />}
             </div>
             <slot name="before" />
             <ul class="abi-list">
               <slot />
             </ul>
+            <slot name="steps" />
             <p class="platform-foot"><slot name="foot" /></p>
             <slot name="after" />
-          </article>
+          </section>

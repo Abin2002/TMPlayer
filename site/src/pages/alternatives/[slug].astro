@@ -28,6 +28,7 @@ import Steps from '../../components/Steps.astro';
 import Step from '../../components/Step.astro';
 import Action from '../../components/guides/Action.astro';
 import MoreHelp from '../../components/guides/MoreHelp.astro';
+import StarBand from '../../components/StarBand.astro';
 import T from '../../components/T.astro';
 import data from '../../data/vs.json';
 import { ENGLISH } from '../../i18n/langs';
@@ -176,6 +177,8 @@ const webPage = {
       </table>
     </div>
   </Band>
+
+  <StarBand lede={t('android_tv.a_tv_app_outside_the')} />
 
   <Band wave tonal={tonal('better')} id="better" title={t('vs.common.better_h')}>
     <div class={grid(p.better.length)} data-reveal>

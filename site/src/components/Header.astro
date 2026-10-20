@@ -1,6 +1,8 @@
 ---
-// The site header of the localized pages: brand, primary nav, the Download button, GitHub stars,
-// language picker, theme toggle and the menu button that folds the nav on narrow screens.
+// The site header, on every page: brand, primary nav, the Download button, GitHub stars, language
+// picker, theme toggle and the menu button that folds the nav on narrow screens. The English-only
+// pages and the changelog render it too (HeaderPlain, ChangelogHeader) with no `page`, so they get
+// no current link and no language picker.
 import Icon from './Icon.astro';
 import LangPicker from './LangPicker.astro';
 import NavCta from './NavCta.astro';
@@ -10,8 +12,8 @@ import { l } from '../i18n/links';
 import type { PageId } from '../i18n/langs';
 
 interface Props {
-  /** the page this is, for the picker and the nav's aria-current */
-  page: PageId;
+  /** the page this is, for the picker and the nav's aria-current; none on English-only pages */
+  page?: PageId;
   /** the home page draws the brand mark as SVG, the others load favicon.svg */
   brandSvg?: boolean;
 }
@@ -27,13 +29,17 @@ const cur = (id: PageId) => (id === page ? 'page' : undefined);
       <span class="brand-name">TMPlayer</span>
     </a>
 
+    {/* Home, then what a visitor checks first: whether it runs on their television, what it does,
+        how hard the install is, and the questions about trust. The icons and the GitHub row show
+        only in the phone's menu card. */}
     <nav class="nav-links" id="site-nav" aria-label={t('common.primary')}>
-        <a href={l(lang, '/')} aria-current={cur('home')}><T k="common.home" /></a>
-        <a href={l(lang, '/features/')} aria-current={cur('features')}><T k="common.features" /></a>
-        <a href={l(lang, '/install/')} aria-current={cur('install')}><T k="common.install" /></a>
-        <a class="only-menu" href={l(lang, '/android-tv/')}>Android TV</a>
-        <a href={l(lang, '/faq/')} aria-current={cur('faq')}><T k="common.questions" /></a>
+        <a href={l(lang, '/')} aria-current={cur('home')}><span class="nav-ico" aria-hidden="true"><Icon name="home" /></span><span><T k="common.home" /></span></a>
+        <a href={l(lang, '/android-tv/')} aria-current={cur('android_tv')}><span class="nav-ico" aria-hidden="true"><Icon name="tv-card" /></span><span>Android TV</span></a>
+        <a href={l(lang, '/features/')} aria-current={cur('features')}><span class="nav-ico" aria-hidden="true"><Icon name="play-card" /></span><span><T k="common.features" /></span></a>
+        <a href={l(lang, '/install/')} aria-current={cur('install')}><span class="nav-ico" aria-hidden="true"><Icon name="spec-tested-on" /></span><span><T k="common.install" /></span></a>
+        <a href={l(lang, '/faq/')} aria-current={cur('faq')}><span class="nav-ico" aria-hidden="true"><Icon name="question-card" /></span><span><T k="common.questions" /></span></a>
         <a class="nav-dl" href={l(lang, '/download/')} aria-current={cur('download')}><T k="common.download" /></a>
+        <a class="nav-gh" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"><span class="nav-ico" aria-hidden="true"><Icon name="github" /></span><span>{t('common.tmplayer_on_github')}</span><span class="nav-gh-count" data-count-wrap hidden><Icon name="star-small" /><span data-count="stars"></span></span></a>
       </nav>
 
     <div class="nav">
@@ -42,7 +48,7 @@ const cur = (id: PageId) => (id === page ? 'page' : undefined);
         <Icon name="github" />
         <span class="nav-icon-count is-loading" data-count="stars" data-count-skeleton aria-hidden="true"></span>
       </a>
-      <LangPicker page={page} />
+      {page && <LangPicker page={page} />}
       <button class="theme-toggle" id="theme-toggle" type="button" aria-label={t('common.switch_to_dark_theme')}>
         <Icon name="sun" />
         <Icon name="moon" />

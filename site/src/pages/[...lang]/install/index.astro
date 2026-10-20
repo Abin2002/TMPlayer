@@ -13,12 +13,16 @@ import JsonLd from '../../../components/JsonLd.astro';
 import { breadcrumb } from '../../../components/breadcrumb';
 import Band from '../../../components/Band.astro';
 import Steps from '../../../components/Steps.astro';
-import StarCard from '../../../components/StarCard.astro';
+import TvCodes from '../../../components/TvCodes.astro';
+import StarBand from '../../../components/StarBand.astro';
+import GiveBand from '../../../components/GiveBand.astro';
 import Step from '../../../components/Step.astro';
 import SignIn from '../../../components/install/SignIn.astro';
 import Way from '../../../components/Way.astro';
 import Panel from '../../../components/Panel.astro';
 import FaqItem from '../../../components/FaqItem.astro';
+import Shot from '../../../components/Shot.astro';
+import { SHOT_STEP_PIC } from '../../../components/shot-sizes';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -86,7 +90,7 @@ const ld1 = {
 
 <Header page="install" />
 
-<main id="main">
+<main id="main" class="hp">
 
   <PageHead lede={t('install.on_a_tv_a_phone')}>
     <Fragment slot="crumbs"><T k="install.how_to_install"><a href={l('/')} slot="a1">{t('install.how_to_install__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
@@ -95,32 +99,38 @@ const ld1 = {
       <a class="btn btn-filled" href={l('/download/')}> <Icon name="download-btn" /> {t('install.all_downloads')}</a>
       <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/blob/main/INSTALL.md" rel="noopener">{t('install.the_full_install_md')} <Icon name="arrow-right-sm" /></a>
     </Fragment>
-    <nav class="platform-jump" aria-label={t('download.platforms')}>
-      <a href="#android-tv">Android TV</a>
-      <a href="#android">{t('download.android_phone')}</a>
-      <a href="#windows">Windows</a>
-      <a href="#macos">macOS</a>
-      <a href="#linux">Linux</a>
-      <a href="#shortcuts">{t('install.desktop_and_menu_shortcuts')}</a>
+    {/* One tile per platform, the visitor's own marked by app.js (a class only, so nothing moves). */}
+    <nav class="install-pick" aria-label={t('download.platforms')}>
+      <p class="install-pick-h">{t('install.pick_h')}</p>
+      <div class="install-pick-row">
+        <a href="#android-tv" data-os="android-tv"><Icon name="tv-card" /><span>Android TV</span></a>
+        <a href="#android" data-os="android"><Icon name="phone-panel" /><span>{t('download.android_phone')}</span></a>
+        <a href="#windows" data-os="windows"><Icon name="windows-panel" /><span>Windows</span></a>
+        <a href="#macos" data-os="macos"><Icon name="laptop-panel" /><span>macOS</span></a>
+        <a href="#linux" data-os="linux"><Icon name="terminal-panel" /><span>Linux</span></a>
+      </div>
+      <a class="install-pick-more" href="#shortcuts">{t('install.desktop_and_menu_shortcuts')}</a>
     </nav>
   </PageHead>
 
   <Band wave id="android-tv" labelledby="tv-h" title={t('install.tv_title')} tonal body>
     <T slot="sub" k="install.tv_sub"><a href={l('/guides/telegram-videos-on-fire-tv/')} slot="a1">{t('install.tv_sub__a1')}</a></T>
-        <Steps>
+        <p class="step-time"><Icon name="tv-card" />{t('install.time_note')}</p>
+        <Steps rail>
           <Step id="step-1" title={t('install.tv_step1_h')}>
             <p><T k="install.tv_step1"><em slot="em1">Downloader</em></T></p>
           </Step>
           <Step id="step-2" title={t('install.tv_step2_h')}>
-            <pre class="code"><code>tmplayer.org/apk</code></pre>
+            <p>{t('download.tv_s2')}</p>
+            <TvCodes />
             <p><T k="install.tv_step2"><em slot="em1">{t('install.tv_step2__em1')}</em></T></p>
-            <p class="muted small"><T k="install.tv_step2_code"><code slot="code1">3206503</code></T></p>
           </Step>
           <Step id="step-3" title={t('install.tv_step3_h')}>
             <p><T k="install.tv_step3"><em slot="em1">{t('install.tv_step3__em1')}</em><em slot="em2">{t('install.tv_step3__em2')}</em><em slot="em3">{t('install.tv_step3__em3')}</em><em slot="em4">{t('install.tv_step3__em4')}</em><em slot="em5">{t('install.tv_step3__em5')}</em><em slot="em6">{t('install.tv_step3__em6')}</em></T></p>
           </Step>
           <Step id="step-4" title={t('home.sign_in')}>
             <p><T k="install.tv_step4"><em slot="em1">{t('install.tv_step4__em1')}</em><em slot="em2">{t('install.tv_step4__em2')}</em><em slot="em3">{t('install.tv_step4__em3')}</em></T></p>
+            <Shot frame="step-pic" src="/screenshots/tv-sign-in.webp" light="/screenshots/tv-sign-in-light.webp" alt={t('android_tv.sign_in_shot_alt')} width={960} height={480} sizes={SHOT_STEP_PIC} />
           </Step>
         </Steps>
 
@@ -138,8 +148,12 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
         </div>
   </Band>
 
-  <Band wave id="android" labelledby="phone-h" title={t('install.phone_title')} sub={t('install.phone_sub')} body>
-    <Steps>
+  <Icon name="wave-flip" />
+
+  <StarBand lede={t('install.if_these_steps_got_your')} />
+
+  <Band id="android" labelledby="phone-h" title={t('install.phone_title')} sub={t('install.phone_sub')} body>
+    <Steps rail>
       <Step id="phone-1" title={t('install.phone_step1_h')}>
         <p><T k="install.phone_step1"><a href={l('/download/')} slot="a1">{t('install.phone_step1__a1')}</a></T></p>
       </Step>
@@ -154,7 +168,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
   </Band>
 
   <Band wave id="windows" labelledby="windows-h" title={t('install.on_windows')} sub={t('install.windows_10_or_11_64')} tonal body>
-    <Steps>
+    <Steps rail>
       <Step id="win-1" title={t('install.win_step1_h')}>
         <p><T k="install.win_step1"><em slot="em1">{t('install.win_step1__em1')}</em><em slot="em2">{t('install.win_step1__em2')}</em></T></p>
       </Step>
@@ -176,7 +190,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
   </Band>
 
   <Band wave id="macos" labelledby="macos-h" title={t('install.on_macos')} sub={t('install.macos_sub')} body>
-    <Steps>
+    <Steps rail>
       <Step id="mac-1" title={t('install.mac_step1_h')}>
         <p><T k="install.mac_step1"><code slot="code1">TMPlayer-&lt;version&gt;-macos-arm64.dmg</code><a href={l('/download/#macos')} slot="a1">{t('install.mac_step1__a1')}</a><em slot="em1">TMPlayer</em><em slot="em2">{t('install.mac_step1__em2')}</em></T></p>
       </Step>
@@ -196,7 +210,7 @@ adb install <span data-name="android-universal">TMPlayer-&lt;version&gt;-univers
   </Band>
 
   <Band wave id="linux" labelledby="linux-h" title={t('install.on_linux')} sub={t('download.x86_64_with_glibc_2')} tonal body>
-    <Steps>
+    <Steps rail>
       <Step id="linux-1" title={t('install.linux_step1_h')}>
         <p><T k="install.linux_step1"><code data-name="linux-x64-appimage" slot="code1">TMPlayer-&lt;version&gt;-x86_64.AppImage</code><a href={l('/download/#linux')} slot="a1">{t('install.linux_step1__a1')}</a></T></p>
       </Step>
@@ -238,6 +252,8 @@ chmod +x <span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.Ap
 
     <Panel title={t('install.linux_appimage_in_the_app')} wide>
       <p>{t('install.a_single_file_has_no')}</p>
+      <details class="code-fold">
+        <summary>{t('install.launcher_by_hand')}<Icon name="faq-chevron" /></summary>
       <pre class="code"><code>mkdir -p ~/Applications ~/.local/share/icons ~/.local/share/applications
 mv ~/Downloads/<span data-name="linux-x64-appimage">TMPlayer-&lt;version&gt;-x86_64.AppImage</span> ~/Applications/TMPlayer.AppImage
 chmod +x ~/Applications/TMPlayer.AppImage
@@ -257,6 +273,7 @@ EOF
 
 chmod +x ~/.local/share/applications/tmplayer.desktop
 update-desktop-database ~/.local/share/applications</code></pre>
+      </details>
       <p>{t('install.then_pin_it_as_above')}</p>
       <p><T k="install.prefer_clicking_and_do_all"><a href="https://flathub.org/apps/it.mijorus.gearlever" rel="noopener" slot="a1">{t('install.prefer_clicking_and_do_all__a1')}</a><a href="https://github.com/TheAssassin/AppImageLauncher" rel="noopener" slot="a2">{t('install.prefer_clicking_and_do_all__a2')}</a></T></p>
     </Panel>
@@ -284,7 +301,7 @@ gio set ~/Desktop/tmplayer.desktop metadata::trusted true</code></pre>
     <p class="muted small section-note" data-reveal><T k="install.still_stuck_with_your_device"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('install.still_stuck_with_your_device__a1')}</a></T></p>
   </Band>
 
-  <StarCard wave lede={t('install.if_these_steps_got_your')} />
+  <GiveBand wave />
 
 </main>
 

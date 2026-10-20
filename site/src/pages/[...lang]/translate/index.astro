@@ -18,7 +18,8 @@ import Step from '../../../components/Step.astro';
 import Steps from '../../../components/Steps.astro';
 import LangList from '../../../components/translate/LangList.astro';
 import Card from '../../../components/Card.astro';
-import SponsorOffer from '../../../components/SponsorOffer.astro';
+import StarBand from '../../../components/StarBand.astro';
+import GiveBand from '../../../components/GiveBand.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -64,6 +65,8 @@ const webPage = {
       <LangList />
     </div>
   </Band>
+  <StarBand lede={t('features.every_feature_here_started_as')} />
+
   <Band wave id="fix" title={t('translate.fix_a_word')} sub={t('translate.three_ways_from_the_quickest')} body>
     <Steps>
       <Step id="fix-1" title={t('translate.tell_us')}>
@@ -89,8 +92,9 @@ const webPage = {
     <p class="muted small section-note" data-reveal><T k="translate.naming_the_language_and_saying"><a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener" slot="a1">{t('translate.naming_the_language_and_saying__a1')}</a></T></p>
 
     <DownloadCard />
-    <SponsorOffer slim />
   </Band>
+
+  <GiveBand wave tonal />
 
 </main>
 

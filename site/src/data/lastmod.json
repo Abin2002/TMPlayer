@@ -28,12 +28,48 @@
       {
         "loc": "https://tmplayer.org/screenshots/tv-sign-in-light.webp",
         "title": "The TMPlayer QR sign-in on a television, in the light theme"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-chats.webp",
+        "title": "TMPlayer's Chats screen on a phone, with demo channels and groups"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-grid.webp",
+        "title": "A demo channel's video posters in TMPlayer on a phone"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-player.webp",
+        "title": "The TMPlayer desktop player, with the downloaded part of the video shown on the timebar"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-chats.webp",
+        "title": "TMPlayer's Chats screen on a television: chats only, no messages"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-player-timebar.webp",
+        "title": "The player's timebar up close: the played part up to the playhead, then a lighter part already downloaded, then the part still to come."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show-season.webp",
+        "title": "A demo series on a phone: its artwork, one of four episodes watched, a button to resume the second episode, and Season 1."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-grid-rows.webp",
+        "title": "Two rows of demo video posters on a phone, marked 4K, 1080p and 720p, each with its year, size or number of versions."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-next-episode.webp",
+        "title": "The player on a television with a card in the corner: next, S01E05, starting in 12 seconds, with a Play now button."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-search.webp",
+        "title": "A search in a demo chat on a television, typed as harbor lines, finding every Harbour Lines episode."
       }
     ]
   },
   {
     "path": "/features/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.9",
     "images": [
@@ -92,6 +128,54 @@
       {
         "loc": "https://tmplayer.org/screenshots/tv-home-screen.webp",
         "title": "A TMPlayer row of recently added videos and shows on the Android TV home screen"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-player.webp",
+        "title": "The TMPlayer player on Android TV, paused on a demo episode"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-grid-top.webp",
+        "title": "A demo chat's videos as posters on Android TV"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show.webp",
+        "title": "A demo series page in TMPlayer on an Android phone"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-subtitles-online.webp",
+        "title": "Searching for subtitles online from the TMPlayer desktop player"
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-grid-top.webp",
+        "title": "The TMPlayer desktop app: a demo chat's videos as posters, each with its year, size and resolution."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-grid-badges.webp",
+        "title": "Three demo posters in the desktop app, with the 1080p badge and the line under one poster giving its year and file size marked."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-continue.webp",
+        "title": "The Continue watching row on Android TV, each demo video with the time left and a progress bar."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-grid-top.webp",
+        "title": "A chat's demo videos as posters on an Android phone, each with its resolution, year and size."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show-season.webp",
+        "title": "A demo series page on an Android phone: poster, progress, a Resume button, the overview and season 1."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-search.webp",
+        "title": "A search in a demo chat on a television, typed as harbor lines, finding every Harbour Lines episode."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-grid-posters.webp",
+        "title": "A row of demo posters on an Android phone, with a 4K badge and two versions folded into one poster."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-next-episode.webp",
+        "title": "The player on a television with a card in the corner: next, S01E05, starting in 12 seconds, with a Play now button."
       }
     ]
   },
@@ -105,11 +189,17 @@
     "path": "/install/",
     "lastmod": "2026-10-20",
     "changefreq": "monthly",
-    "priority": "0.8"
+    "priority": "0.8",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-sign-in.webp",
+        "title": "The sign-in screen on a television: a QR code to scan with Telegram on your phone, and the three steps beside it."
+      }
+    ]
   },
   {
     "path": "/android-tv/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.8",
     "images": [
@@ -153,7 +243,7 @@
   },
   {
     "path": "/android/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.8",
     "images": [
@@ -185,7 +275,7 @@
   },
   {
     "path": "/desktop/",
-    "lastmod": "2026-10-18",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.8",
     "images": [
@@ -205,7 +295,7 @@
   },
   {
     "path": "/faq/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.7"
   },
@@ -235,19 +325,19 @@
   },
   {
     "path": "/changelog/",
-    "lastmod": "2026-10-14",
+    "lastmod": "2026-10-20",
     "changefreq": "weekly",
     "priority": "0.7"
   },
   {
     "path": "/fire-tv/",
-    "lastmod": "2026-10-18",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.8"
   },
   {
     "path": "/formats/",
-    "lastmod": "2026-10-18",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.6"
   },
@@ -259,13 +349,13 @@
   },
   {
     "path": "/guides/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.6"
   },
   {
     "path": "/guides/telegram-videos-on-android-tv/",
-    "lastmod": "2026-10-18",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.7"
   },
@@ -277,13 +367,13 @@
   },
   {
     "path": "/guides/telegram-on-tv-without-casting/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.7"
   },
   {
     "path": "/guides/telegram-on-samsung-or-lg-tv/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.7",
     "images": [
@@ -299,13 +389,23 @@
   },
   {
     "path": "/guides/external-player-for-telegram/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
-    "priority": "0.6"
+    "priority": "0.6",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show.webp",
+        "title": "A show's page in TMPlayer on a phone: the demo series Skybound Academy with its artwork, its overview and a button to resume the second episode."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-grid.webp",
+        "title": "The TMPlayer desktop app on Windows or Linux: a chat's demo videos as posters, each with its year, size and resolution, with the chat's name floating at the top and its bar of actions at the foot."
+      }
+    ]
   },
   {
     "path": "/guides/cast-telegram-videos-to-chromecast/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.7",
     "images": [
@@ -325,7 +425,7 @@
   },
   {
     "path": "/alternatives/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.7",
     "images": [
@@ -365,25 +465,51 @@
   },
   {
     "path": "/alternatives/tmp-telegram-media-player/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
-    "priority": "0.6"
+    "priority": "0.6",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home.webp",
+        "title": "TMPlayer's Home on a television: the newest demo video from starred chats across the top with Play and Details, above demo videos and shows to continue, each with the time left."
+      }
+    ]
   },
   {
     "path": "/alternatives/tvgramplayer/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
-    "priority": "0.6"
+    "priority": "0.6",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-chats.webp",
+        "title": "The TMPlayer chat list on Android TV, with the bar of Search, Home, Chats and Settings along the top."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/phone-show.webp",
+        "title": "A show's page in TMPlayer on a phone: the demo series Skybound Academy with its artwork, its overview and a button to resume the second episode."
+      }
+    ]
   },
   {
     "path": "/alternatives/telegram-app/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
-    "priority": "0.6"
+    "priority": "0.6",
+    "images": [
+      {
+        "loc": "https://tmplayer.org/screenshots/tv-home.webp",
+        "title": "TMPlayer's Home on a television: the newest demo video from starred chats across the top with Play and Details, above demo videos and shows to continue, each with the time left."
+      },
+      {
+        "loc": "https://tmplayer.org/screenshots/desktop-grid.webp",
+        "title": "The TMPlayer desktop app on Windows or Linux: a chat's demo videos as posters, each with its year, size and resolution, with the chat's name floating at the top and its bar of actions at the foot."
+      }
+    ]
   },
   {
     "path": "/translate/",
-    "lastmod": "2026-10-14",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.5"
   }

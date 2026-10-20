@@ -11,17 +11,15 @@ import Footer from '../../components/Footer.astro';
 import ToTop from '../../components/ToTop.astro';
 import T from '../../components/T.astro';
 import Icon from '../../components/Icon.astro';
-import Band from '../../components/Band.astro';
-import LinkCard from '../../components/LinkCard.astro';
-import Device from '../../components/Device.astro';
-import Shot from '../../components/Shot.astro';
-import { SHOT_HERO_TV, SHOT_HERO_PHONE, SHOT_STEP } from '../../components/shot-sizes';
-import Cards from '../../components/Cards.astro';
-import Step from '../../components/Step.astro';
-import Steps from '../../components/Steps.astro';
+import HeroStage from '../../components/home/HeroStage.astro';
+import RunsOn from '../../components/home/RunsOn.astro';
+import Bento from '../../components/home/Bento.astro';
+import Trust from '../../components/home/Trust.astro';
+import SetupSteps from '../../components/home/SetupSteps.astro';
+import FaqTeaser from '../../components/home/FaqTeaser.astro';
 import JsonLd from '../../components/JsonLd.astro';
-import LangCount from '../../components/LangCount.astro';
-import StarCard from '../../components/StarCard.astro';
+import StarBand from '../../components/StarBand.astro';
+import GiveBand from '../../components/GiveBand.astro';
 import { langPaths } from '../../i18n/paths';
 import { format, text } from '../../i18n/t';
 import { DOWNLOADS, LANGUAGES, LATEST, PLATFORMS, compact } from '../../lib/stats';
@@ -32,6 +30,9 @@ const { lang } = Astro.props;
 Astro.locals.lang = lang;
 const t = (k: string) => text(lang, k);
 const l = (href: string) => link(lang, href);
+// A headline longer than the English one (German, Russian, Arabic, Malayalam and others) is set a
+// step smaller, so it keeps to two or three lines in the hero's column.
+const heroTitleLength = t('home.your_telegram_videos').replace('{svg1} ', '').replace('{em1}', t('home.your_telegram_videos__em1')).length;
 
 const ld0 = {
   "@context": "https://schema.org",
@@ -177,23 +178,30 @@ const ld2 = {
 <main id="main">
 
   <!--
-    One opening section rather than two stacked bands. The sentence, the single control, the two
-    devices and the four facts are all the same idea: what this is, and what it looks like. They
-    used to be a full-height hero followed by a separate showcase band, which read as two arrivals.
+    The opening section is a split: the words and the one control on the start side, the
+    television and three phones on the end side, so a visitor sees the app on the first screen
+    instead of a column of text with the screenshots below the fold. Under 1080 px the stage drops
+    beneath the words.
   -->
   <section class="hero" id="showcase" aria-labelledby="hero-h">
-    <div class="wrap hero-wrap">
+    <div class="wrap">
+    <div class="hero-split">
     <div class="hero-inner">
       <!-- The latest release, from the release data the site is built with, so it is always the
            version the download button gives. The changelog is English only, like its link. -->
       {LATEST && <a class="news-pill" href={`/changelog/${LATEST.version}`}><span class="news-pill-tag">{format(lang, 'home.new_in', { version: LATEST.version })}</span><span class="news-pill-text">{t('home.see_whats_new')}</span><Icon name="arrow-right-sm" /></a>}
-      <p class="eyebrow"> <Icon name="star-small" /> {t('home.free_and_open_source_for')}</p>
 
-      <!-- The full stop is hung outside the measure. Centring counts it as a character
-           the width of a comma, and at this size that is enough to push a short headline
-           visibly left of the middle. -->
-      <h1 id="hero-h"><T k="home.your_telegram_videos"><Icon name="h1-mark" slot="svg1" /><em slot="em1">{t('home.your_telegram_videos__em1')}</em></T><span class="stop">.</span></h1>
-      <p class="lede">{t('home.a_free_unofficial_telegram_video')}</p>
+      <h1 id="hero-h" class:list={[{ 'hero-h-long': heroTitleLength > 34 }]}><T k="home.your_telegram_videos"><Icon name="h1-mark" slot="svg1" /><em slot="em1">{t('home.your_telegram_videos__em1')}</em></T>.</h1>
+      <p class="lede">{t('home.hero_lede')}</p>
+
+      <!-- The three figures, over the button they vouch for: worked out at build time by
+           lib/stats.ts and drawn final in the first paint; app.js only counts them up once, as they
+           come into view, and the hidden copy of each number holds its width. -->
+      <ul class="stats" aria-label={t('home.stats_label')}>
+        <li><b class="stat-n" data-count-to={DOWNLOADS}><span class="stat-ghost" aria-hidden="true">{compact(DOWNLOADS, lang.tag)}</span><span class="stat-live">{compact(DOWNLOADS, lang.tag)}</span></b> <span class="stat-label">{t('home.stat_downloads')}</span></li>
+        <li><b class="stat-n" data-count-to={PLATFORMS}><span class="stat-ghost" aria-hidden="true">{compact(PLATFORMS, lang.tag)}</span><span class="stat-live">{compact(PLATFORMS, lang.tag)}</span></b> <span class="stat-label">{t('home.stat_platforms')}</span></li>
+        <li><b class="stat-n" data-count-to={LANGUAGES}><span class="stat-ghost" aria-hidden="true">{compact(LANGUAGES, lang.tag)}</span><span class="stat-live">{compact(LANGUAGES, lang.tag)}</span></b> <span class="stat-label">{t('home.stat_languages')}</span></li>
+      </ul>
 
       <!--
         One primary control, shaped like a command box rather than a plain button: the leading icon
@@ -207,97 +215,35 @@ const ld2 = {
         <span class="palette-text" id="hero-download-label">{t('home.download_tmplayer')}</span>
         <span class="palette-go" aria-hidden="true">{t('home.get_it')} <Icon name="arrow-right" /> </span>
       </a>
-
-      <p class="hero-quiet"><T k="home.android_phones_and_tvs_windows"><a href={l('/install/')} slot="a1">{t('home.android_phones_and_tvs_windows__a1')}</a><span class="sep" aria-hidden="true" slot="span1">&middot;</span><a href={l('/download/')} slot="a2">{t('home.android_phones_and_tvs_windows__a2')}</a></T> </p>
-
-      <!-- Three figures, worked out at build time by lib/stats.ts and drawn final in the first
-           paint; app.js only counts them up once, as they come into view. The hidden copy of each
-           number holds its width, so the count moves nothing around it. -->
-      <ul class="stats" aria-label={t('home.stats_label')}>
-        <li><b class="stat-n" data-count-to={DOWNLOADS}><span class="stat-ghost" aria-hidden="true">{compact(DOWNLOADS, lang.tag)}</span><span class="stat-live">{compact(DOWNLOADS, lang.tag)}</span></b> <span class="stat-label">{t('home.stat_downloads')}</span></li>
-        <li><b class="stat-n" data-count-to={PLATFORMS}><span class="stat-ghost" aria-hidden="true">{compact(PLATFORMS, lang.tag)}</span><span class="stat-live">{compact(PLATFORMS, lang.tag)}</span></b> <span class="stat-label">{t('home.stat_platforms')}</span></li>
-        <li><b class="stat-n" data-count-to={LANGUAGES}><span class="stat-ghost" aria-hidden="true">{compact(LANGUAGES, lang.tag)}</span><span class="stat-live">{compact(LANGUAGES, lang.tag)}</span></b> <span class="stat-label">{t('home.stat_languages')}</span></li>
-      </ul>
     </div>
 
-      <!-- Both frames are drawn in CSS around the real screenshots: Home on the television, and a
-           show's page on the phone, for a different title, so the two frames show more of the
-           demo library rather than the same pictures twice. -->
-      <figure class="showcase">
-        <Device kind="tv">
-          <Shot src="/screenshots/tv-home.webp" light="/screenshots/tv-home-light.webp" alt={t('home.tv_home_hero_alt')} width="1920" height="1080" sizes={SHOT_HERO_TV} fetchpriority="high" lazy={false} />
-        </Device>
-        <Device kind="phone">
-          <Shot src="/screenshots/phone-show.webp" light="/screenshots/phone-show-light.webp" alt={t('home.phone_show_page_alt')} width="1080" height="2400" sizes={SHOT_HERO_PHONE} lazy={false} />
-        </Device>
-      </figure>
-
-      <dl class="spec">
-        <div>
-          <dt> <Icon name="spec-platform" /> {t('home.platform')}</dt>
-          <dd>{t('home.android_8_0_and_above')}</dd>
-        </div>
-        <div>
-          <dt> <Icon name="spec-sign-in" /> {t('home.sign_in')}</dt>
-          <dd>{t('home.qr_code_your_own_account')}</dd>
-        </div>
-        <div>
-          <dt> <Icon name="spec-tested-on" /> {t('home.tested_on')}</dt>
-          <dd>{t('home.mi_tv_stick_with_1')}</dd>
-        </div>
-        <div>
-          <dt> <Icon name="spec-costs" /> {t('home.costs')}</dt>
-          <dd>{t('home.nothing_no_server_no_bot')}</dd>
-        </div>
-      </dl>
+      <HeroStage />
+    </div>
     </div>
   </section>
 
-  <!-- A hand drawn wave, in the spirit of Material's shape work, marking the change of tone. -->
-    <Band wave id="what" title={t('home.a_player_for_the_account')} sub={t('home.tmplayer_signs_in_as_you')} tonal>
-    <Cards>
-      <LinkCard href={l('/features/')} icon="play-card" title={t('home.what_it_does')} body={t('home.streams_as_it_downloads_plays')} go={t('home.the_full_list')} />
-
-      <LinkCard href={l('/android-tv/')} icon="tv-card" title={t('home.on_android_tv')} body={t('home.a_ten_foot_layout_for')} go={t('home.made_for_the_television')} />
-
-      <LinkCard href={l('/faq/')} icon="question-card" title={t('home.what_it_is_not')} body={t('home.not_a_media_service_messages')} go={t('home.questions_and_limits')} />
-    </Cards>
-  </Band>
-
-    <Band wave id="start" title={t('home.set_up_in_three_steps')} sub={t('home.you_do_it_once_then')} body>
-    <Steps>
-      <Step title={t('home.get_the_file')}>
-        <p>{t('home.get_the_file_all')}</p>
-        <p><a href={l('/download/')}>{t('home.go_to_the_download_page')}</a></p>
-      </Step>
-      <Step title={t('home.install_it')}>
-        <p>{t('home.install_it_each')}</p>
-        <p><a href={l('/install/')}>{t('home.read_the_install_steps')}</a></p>
-      </Step>
-      <Step title={t('home.scan_the_qr_code')}>
-        <p>{t('home.sign_in_with_telegram_s')}</p>
-        <p><a href={l('/faq/')}>{t('home.what_that_does_and_does')}</a></p>
-        <Shot src="/screenshots/tv-sign-in.webp" light="/screenshots/tv-sign-in-light.webp" alt={t('home.sign_in_qr_alt')} width="960" height="480" sizes={SHOT_STEP} frame="step-shot" />
-      </Step>
-    </Steps>
-    <p class="steps-cta"><a class="btn btn-filled" href={l('/download/')}>{t('common.download')}</a></p>
-  </Band>
-
-  <Icon name="wave" />
-
   <!--
-    The support band. A sideloaded APK asks a stranger for a lot of trust, and the only evidence
-    it can offer is that other people already gave it. So the star goes here, at full size, with
-    the real figure next to it rather than a badge nobody can read.
+    Below the hero the page answers, in order, what someone about to sideload an app checks: does
+    it run on my device, what does it do once I press play, what does it do with my account, how
+    long does setup take, and the doubts left over. Then the star.
   -->
-  <StarCard id="support" tonal title={t('home.if_it_earned_its_place')} lede={t('home.a_star_takes_one_click')}>
-    <div class="support-actions" slot="actions">
-      <a class="btn btn-filled" href="https://github.com/dracu-lah/TMPlayer" rel="noopener"> <Icon name="star-btn" /> {t('home.star_on_github')}</a>
-      <a class="btn btn-outline" href="https://t.me/tmplayerapp" rel="noopener"> <Icon name="telegram-btn" /> {t('home.telegram_channel')}</a>
-      <a class="btn btn-outline" href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener"> <Icon name="bug-btn" /> {t('home.report_a_problem')}</a>
-    </div>
-    <LangCount slot="stats" />
-  </StarCard>
+  <RunsOn />
+  <Bento />
+  <!-- The star, between what the app does and what it does with your account: a stranger's
+       sideloaded APK asks for trust, and the star count is the evidence others already gave it. -->
+  <StarBand id="support" between fork={false} title={t('home.if_it_earned_its_place')} lede={t('home.a_star_takes_one_click')}>
+    <p class="support-links" slot="links">
+      <a href="https://t.me/tmplayerapp" rel="noopener"><Icon name="telegram-btn" /> {t('home.telegram_channel')}</a>
+      <a href="https://github.com/dracu-lah/TMPlayer/issues" rel="noopener"><Icon name="bug-btn" /> {t('home.report_a_problem')}</a>
+    </p>
+  </StarBand>
+  <Trust />
+  <SetupSteps />
+  <!-- The support offer, once the reader has seen what setting it up takes (user, 2026-10-20: the
+       star and the offer as separate cards between the sections, not one block at the end). -->
+  <GiveBand between />
+  <FaqTeaser />
+
 
 </main>
 
@@ -308,5 +254,5 @@ const ld2 = {
 -->
 <ToTop />
 
-<Footer home />
+<Footer />
 </Base>

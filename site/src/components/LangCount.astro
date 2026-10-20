@@ -1,6 +1,0 @@
----
-// "21 languages", with the number in bold.
-import { buildString, escapeHtml, published } from '../i18n/t';
-const html = escapeHtml(buildString(Astro.locals.lang, 'build.languages_count')).replace('{count}', `<b>${published.length}</b>`);
----
-<span set:html={html} />

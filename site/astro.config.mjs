@@ -43,7 +43,9 @@ const usedKeys = {
 
 export default defineConfig({
   site: 'https://tmplayer.org',
-  trailingSlash: 'always',
+  // The dev server takes either form. Vercel serves a release page without the slash
+  // (/changelog/1.27.1, see releaseUrl()), and a strict dev server answered that link with a 404.
+  trailingSlash: process.argv.includes('dev') ? 'ignore' : 'always',
   build: { format: 'directory', inlineStylesheets: 'never' },
   compressHTML: false,
   outDir: 'dist',

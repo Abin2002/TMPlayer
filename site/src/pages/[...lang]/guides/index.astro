@@ -1,6 +1,7 @@
 ---
 // /guides/ in every published language: the six guides, one line each. The crumbs on each guide
 // lead back here.
+import StarBand from '../../../components/StarBand.astro';
 import Base from '../../../layouts/Base.astro';
 import BgArt from '../../../components/BgArt.astro';
 import Header from '../../../components/Header.astro';
@@ -78,6 +79,8 @@ const itemList = {
     </Cards>
     <p class="muted small section-note" data-reveal><T k="guides.looking_at_other_apps"><a href={l('/alternatives/')} slot="a1">{t('common.telegram_tv_apps_compared')}</a></T></p>
   </Band>
+
+  <StarBand lede={t('features.every_feature_here_started_as')} />
 
   <MoreHelp>
     <T k="guide_no_casting.tmplayer_does_not_provide_media"><a href={l('/faq/')} slot="a1">{t('guide_no_casting.tmplayer_does_not_provide_media__a1')}</a></T>

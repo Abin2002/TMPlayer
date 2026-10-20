@@ -4,6 +4,7 @@
 // search for the older "TMP - Telegram Media Player". Facts only, each with the day it was
 // checked and the listing it came from; no app is ranked, and the links to them are nofollow,
 // since naming an app is not recommending it.
+import StarBand from '../../../components/StarBand.astro';
 import Base from '../../../layouts/Base.astro';
 import BgArt from '../../../components/BgArt.astro';
 import Header from '../../../components/Header.astro';
@@ -193,6 +194,8 @@ const itemList = {
   </Band>
 
   {/* One page per app people search for by name (src/pages/alternatives/[slug].astro), in English. */}
+  <StarBand lede={t('android_tv.a_tv_app_outside_the')} />
+
   <Band wave id="one-by-one" title={t(a('one_h'))} sub={t(a('one_sub'))}>
     <Cards>
       {vs.pages.map((x) => <LinkCard href={`/alternatives/${x.slug}/`} icon="tv-card" title={x.id === 'telegram' ? t(a('one_telegram_h')) : x.name} body={t(a(`one_${x.id}`))} go={t(a('one_go'))} />)}

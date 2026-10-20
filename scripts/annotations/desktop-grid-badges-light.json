@@ -1,0 +1,34 @@
+{
+  "source": "desktop/grid-light.png",
+  "output": "site/public/screenshots/desktop-grid-badges-light.webp",
+  "crop": [
+    286,
+    100,
+    800,
+    500
+  ],
+  "marks": [
+    {
+      "type": "circle",
+      "box": [
+        1004,
+        122,
+        64,
+        26
+      ],
+      "seed": 6
+    },
+    {
+      "type": "underline",
+      "from": [
+        836,
+        584
+      ],
+      "to": [
+        944,
+        582
+      ],
+      "seed": 2
+    }
+  ]
+}

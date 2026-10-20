@@ -14,11 +14,16 @@ import { breadcrumb } from '../../../components/breadcrumb';
 import { appLd } from '../../../lib/app-ld';
 import Band from '../../../components/Band.astro';
 import Shot from '../../../components/Shot.astro';
+import Device from '../../../components/Device.astro';
+import { SHOT_DL_TV, SHOT_DL_PHONE } from '../../../components/shot-sizes';
 import Platform from '../../../components/download/Platform.astro';
 import AbiRow from '../../../components/download/AbiRow.astro';
 import NextSteps from '../../../components/download/NextSteps.astro';
 import Panel from '../../../components/Panel.astro';
-import StarCard from '../../../components/StarCard.astro';
+import TickRow from '../../../components/TickRow.astro';
+import TvCodes from '../../../components/TvCodes.astro';
+import StarBand from '../../../components/StarBand.astro';
+import GiveBand from '../../../components/GiveBand.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -37,6 +42,9 @@ const LATEST = 'https://github.com/dracu-lah/TMPlayer/releases/latest';
 // shift Lighthouse scored at 0.125 on a phone). app.js still shows them if a newer release adds one.
 const hasMac = Boolean((latest.assets as Record<string, unknown>)['macos-arm64-dmg']);
 
+// The four things a visitor checks before taking a file from outside a store, beside the button.
+const trust = ['download.trust_free', 'download.trust_source', 'download.trust_account', 'download.trust_unofficial'];
+
 ---
 <Base page="download" title={t('download.download_tmplayer_for_android_tv')} description={t('download.download_tmplayer_free_the_apk')}>
   {/*
@@ -53,42 +61,180 @@ const hasMac = Boolean((latest.assets as Record<string, unknown>)['macos-arm64-d
   <Fragment slot="head">
     <JsonLd data={breadcrumb(['Download', '/download/'])} />
     <JsonLd data={appLd()} />
+    {/*
+      Which device's tab shows, chosen before the first paint so the page is drawn once in its
+      final shape: the address's #id (every link other pages use: #android-tv, #android, #windows,
+      #macos, #linux), then ?os=, then the browser's own system, then the television. With
+      scripting off this never runs, the attribute is never set and every device shows, stacked,
+      which is also what a crawler reads. app.js switches tabs after that (the tabs IIFE).
+    */}
+    <script is:inline define:vars={{ hasMac }}>
+      (function () {
+        var ids = ['android-tv', 'android', 'windows', 'macos', 'linux'];
+        var pick = location.hash.slice(1);
+        var forced = /[?&]os=([a-z-]+)/.exec(location.search);
+        if (ids.indexOf(pick) < 0 && forced) { pick = forced[1] === 'mac' ? 'macos' : forced[1]; }
+        if (ids.indexOf(pick) < 0) {
+          var nav = navigator, ua = String(nav.userAgent || '');
+          var pf = String((nav.userAgentData && nav.userAgentData.platform) || nav.platform || '');
+          if (/Android/i.test(ua)) { pick = /\b(TV|AFT[A-Z0-9]*|BRAVIA|SmartTV|GoogleTV|Chromecast|AndroidTV)\b/i.test(ua) ? 'android-tv' : 'android'; }
+          else if (/Win/i.test(pf) || /Windows/i.test(ua)) { pick = 'windows'; }
+          else if ((/Mac/i.test(pf) || /Macintosh/i.test(ua)) && !(nav.maxTouchPoints > 1)) { pick = 'macos'; }
+          else if (/Linux|X11/i.test(pf + ' ' + ua) && !/CrOS/i.test(ua)) { pick = 'linux'; }
+        }
+        if (ids.indexOf(pick) < 0 || (pick === 'macos' && !hasMac)) { pick = 'android-tv'; }
+        document.documentElement.setAttribute('data-dl-tab', pick);
+      })();
+    </script>
   </Fragment>
 {/* Decorative background art, hidden from assistive technology and still under reduced motion. */}
 <BgArt />
 
 <Header page="download" />
 
-<main id="main">
+<main id="main" class="hp">
 
-  <PageHead lede={t('download.for_android_tv_phones_windows')}>
+  <PageHead lede={t('download.lede_pick')}>
     <Fragment slot="crumbs"><T k="download.download"><a href={l('/')} slot="a1">{t('download.download__a1')}</a><span aria-hidden="true" slot="span1">/</span></T></Fragment>
     <Fragment slot="title">{t('common.download')}{' '}<em>TMPlayer</em></Fragment>
-    <Fragment slot="actions">
-      {/*
-        The filled button is there only with scripting on (js-only), from the first paint, so the
-        page does not move when app.js names the system; app.js hides it again where it has no file
-        to offer (an iPhone, or a system it cannot tell). With scripting off there is no guess to
-        make, and the platform list below does the job.
-      */}
-      <a class="btn btn-filled js-only" id="os-download" href="#platforms">
-        <Icon name="download-btn" />
-        <span id="os-download-label">{t('common.download')}</span>
-      </a>
-      <a class="btn btn-outline" href={l('/install/')}>{t('download.how_to_install_it')} <Icon name="arrow-right-sm" /></a>
-    </Fragment>
-    <p class="os-note" id="os-note" role="status" hidden></p>
-    <nav class="platform-jump" aria-label={t('download.platforms')}>
-      <a href="#android">{t('download.android_phone')}</a>
-      <a href="#android-tv">Android TV</a>
-      <a href="#windows">Windows</a>
-      <a href="#macos" data-mac-jump hidden={!hasMac}>macOS</a>
-      <a href="#linux">Linux</a>
+    {/*
+      One question, which device. The tabs are links to each device's card, so they work as a
+      jump list with scripting off, when every card shows. With it, the head's inline script has
+      picked one before the first paint (html[data-dl-tab]) and the stylesheet shows only that
+      card; app.js adds the tab roles and keys and follows the address's #id.
+    */}
+    <nav class="dl-tabs" id="dl-tabs" aria-label={t('download.platforms')}>
+      <a href="#android-tv" data-tab="android-tv"><Icon name="tv-card" /><span class="dl-tab-name">{t('download.tab_tv')}</span></a>
+      <a href="#android" data-tab="android"><Icon name="phone-panel" /><span class="dl-tab-name">{t('download.tab_phone')}</span></a>
+      <a href="#windows" data-tab="windows"><Icon name="windows-panel" /><span class="dl-tab-name">Windows</span></a>
+      <a href="#macos" data-tab="macos" data-mac-jump hidden={!hasMac}><Icon name="laptop-panel" /><span class="dl-tab-name">Mac</span></a>
+      <a href="#linux" data-tab="linux"><Icon name="terminal-panel" /><span class="dl-tab-name">Linux</span></a>
     </nav>
+    <TickRow items={trust.map((k) => t(k))} />
+    <p class="only-here muted small">{t('download.only_here')}</p>
+    <Fragment slot="aside">
+      {/* Decoration for a wide screen only, hidden under 1080 px. Not lazy, since on a computer it
+          is the largest thing in the first screen; a phone, whose `sizes` is 1px, is sent the
+          smallest copies (about 25 KB together) and never shows them. */}
+      <div class="dl-hero" aria-hidden="true">
+        <Device kind="tv"><Shot lazy={false} src="/screenshots/tv-home.webp" light="/screenshots/tv-home-light.webp" alt="" width={1920} height={1080} sizes={SHOT_DL_TV} /></Device>
+        <div class="dl-hero-phone"><Device kind="phone"><Shot lazy={false} src="/screenshots/phone-chats.webp" light="/screenshots/phone-chats-light.webp" alt="" width={1080} height={2400} sizes={SHOT_DL_PHONE} /></Device></div>
+      </div>
+    </Fragment>
   </PageHead>
 
-  <Band wave id="download" labelledby="download-h" title={t('download.every_platform_one_release')} tonal body>
-    <T slot="sub" k="download.every_file_comes_from_one_github"><a href="https://about.signpath.io/" rel="noopener" slot="a1">{t('download.every_file_comes_from_one_github__a1')}</a><a href="/signing/" slot="a2">{t('download.every_file_comes_from_one_github__a2')}</a></T>
+  {/* Right under the tabs: the chosen device's card, then the release it comes from. */}
+  <Band id="download" labelledby="download-h" body>
+    <h2 id="download-h" class="sr-only">{t('download.which_device')}</h2>
+        <div class="platforms" id="platforms">
+
+          <Platform id="android-tv" icon="tv-card" tone="play" title={t('download.tab_tv_title')} req={t('download.tv_req')}>
+            <Fragment slot="before">
+              <ol class="dl-steps">
+                <li><T k="download.tv_s1"><em slot="em1">Downloader</em></T></li>
+                <li>
+                  {t('download.tv_s2')}
+                  <TvCodes />
+                </li>
+                <li><T k="download.tv_s3"><em slot="em1">{t('install.tv_step2__em1')}</em><em slot="em2">{t('install.tv_step3__em1')}</em></T></li>
+              </ol>
+              <p class="dl-sign-in">{t('download.sign_in_qr')}</p>
+              <p class="dl-or-file">{t('download.tv_or_apk')}</p>
+            </Fragment>
+            <AbiRow asset="apk-universal">
+              <T slot="name" k="download.universal_apk"><span class="badge badge-quiet" slot="span1">{t('download.universal_apk__span1')}</span></T>
+              <Fragment slot="note">{t('download.tv_file_note')}</Fragment>
+              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_universal_apk')}</p>
+            </AbiRow>
+            <Fragment slot="foot"><a href={l('/install/#android-tv')}>{t('download.full_steps')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/fire-tv/')}>{t('download.fire_tv_guide')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/android-tv/')}>{t('download.made_for_the_tv')}</a></Fragment>
+          </Platform>
+
+          <Platform id="android" icon="phone-panel" tone="yes" title={t('download.android_phone')} req={t('download.android_8_0_and_above')}>
+            <AbiRow asset="apk-universal">
+              <T slot="name" k="download.universal_apk"><span class="badge badge-quiet" slot="span1">{t('download.universal_apk__span1')}</span></T>
+              <Fragment slot="note">{t('download.one_file_for_every_phone')}</Fragment>
+              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_universal_apk')}</p>
+            </AbiRow>
+            <ol slot="steps" class="dl-steps">
+              <li>{t('download.phone_s1')}</li>
+              <li>{t('download.phone_s2')}</li>
+              <li>{t('download.phone_s3')}</li>
+            </ol>
+            <Fragment slot="foot"><a href={l('/install/#android')}>{t('download.full_steps')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/android/')}>{t('android.made_for_phones')}</a></Fragment>
+            <details slot="after" class="code-fold dl-more">
+              <summary>{t('download.updates_from_obtainium')}<Icon name="faq-chevron" /></summary>
+              <p class="platform-badges"><a class="store-badge" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener"><Shot src="/badges/obtainium.png" width="161" height="48" alt={t('download.add_to_obtainium')} /></a></p>
+              <p class="platform-note"><T k="download.kao_note"><a href="https://keepandroidopen.org/" target="_blank" rel="noopener" slot="a1">{t('download.kao_note__a1')}</a></T></p>
+            </details>
+          </Platform>
+
+          <Platform id="windows" icon="windows-panel" tone="browse" title="Windows" req={t('download.windows_10_and_11_64')} computer>
+            <AbiRow asset="win-msi">
+              <Fragment slot="name">{t('download.win_installer')}</Fragment>
+              <T slot="note" k="download.win_msi_note"><em slot="em1">{t('download.win_msi_note__em1')}</em><em slot="em2">{t('download.win_msi_note__em2')}</em></T>
+              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_windows_x64_msi')}</p>
+            </AbiRow>
+            <ol slot="steps" class="dl-steps">
+              <li>{t('download.win_s1')}</li>
+              <li><T k="download.win_s2"><em slot="em1">{t('download.win_msi_note__em1')}</em><em slot="em2">{t('download.win_msi_note__em2')}</em></T></li>
+              <li>{t('download.win_s3')}</li>
+            </ol>
+            <Fragment slot="foot"><a href={l('/install/#windows')}>{t('download.full_steps')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/desktop/')}>{t('desktop.features_link__a1')}</a></Fragment>
+            <details slot="after" class="code-fold dl-more">
+              <summary>{t('download.win_ps_h')}<Icon name="faq-chevron" /></summary>
+              <div class="callout">
+                <p><T k="download.win_cmd_steps"><em slot="em1">{t('download.win_cmd_steps__em1')}</em><em slot="em2">{t('download.win_cmd_steps__em2')}</em><a href={l('/install/#windows')} slot="a1">{t('download.win_cmd_steps__a1')}</a></T></p>
+                <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
+              </div>
+            </details>
+          </Platform>
+
+          {/*
+            The macOS card arrives with the first release that has a DMG. The site can deploy before
+            that release does, so the card is hidden unless latest.json (hasMac) names a DMG, and
+            app.js shows it once the latest release carries a macos-arm64.dmg: until then it would
+            offer a file that does not exist.
+          */}
+          <Platform id="macos" icon="laptop-panel" tone="play" title="Mac" req={t('download.macos_req')} computer hidden={!hasMac}>
+            <AbiRow asset="mac-dmg">
+              <Fragment slot="name">DMG <span class="badge badge-quiet">{t('download.preview')}</span></Fragment>
+              <T slot="note" k="download.mac_dmg_note"><em slot="em1">{t('download.mac_dmg_note__em1')}</em><em slot="em2">{t('download.mac_dmg_note__em2')}</em><em slot="em3">{t('download.mac_dmg_note__em3')}</em><em slot="em4">{t('download.mac_dmg_note__em4')}</em></T>
+              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_macos_arm64_dmg')}</p>
+            </AbiRow>
+            <ol slot="steps" class="dl-steps">
+              <li>{t('download.mac_s1')}</li>
+              <li><T k="download.mac_s2"><em slot="em1">{t('install.mac_step2b__em4')}</em></T></li>
+              <li>{t('download.sign_in_qr')}</li>
+            </ol>
+            <Fragment slot="foot"><a href={l('/install/#macos')}>{t('download.full_steps')}</a></Fragment>
+          </Platform>
+
+          <Platform id="linux" icon="terminal-panel" tone="no" title="Linux" req={t('download.x86_64_with_glibc_2')} computer>
+            <AbiRow asset="linux-appimage">
+              <Fragment slot="name">AppImage <span class="badge badge-quiet">{t('download.any_distribution')}</span></Fragment>
+              <Fragment slot="note">{t('download.one_file_that_runs_on')}</Fragment>
+              <pre slot="file" class="abi-cmd"><code>chmod +x <span data-file>TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
+            </AbiRow>
+            <ol slot="steps" class="dl-steps">
+              <li>{t('download.linux_s1')}</li>
+              <li>{t('download.sign_in_qr')}</li>
+            </ol>
+            <Fragment slot="foot"><a href={l('/install/#linux')}>{t('download.full_steps')}</a></Fragment>
+            <details slot="after" class="code-fold dl-more">
+              <summary>{t('download.arch_linux')}<Icon name="faq-chevron" /></summary>
+              <ul class="abi-list">
+                <AbiRow href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" label={t('download.arch_pkgbuild_link')}>
+                  <Fragment slot="name">{t('download.arch_linux')}</Fragment>
+                  <T slot="note" k="download.a_pkgbuild_lives_in_it"><code slot="code1">desktop/packaging/aur</code><code slot="code2">linux-x64.tar.xz</code></T>
+                </AbiRow>
+              </ul>
+            </details>
+          </Platform>
+
+        </div>
+
+        {/* Opened by app.js under whichever download was pressed. */}
+        <NextSteps />
 
         {/*
           The version line is drawn before GitHub has answered, in the shape the answer will take.
@@ -108,93 +254,31 @@ const hasMac = Boolean((latest.assets as Record<string, unknown>)['macos-arm64-d
           <div id="release-status" class="status" role="status" hidden></div>
         </div>
 
-        <div class="platforms" id="platforms">
-
-          <Platform id="android" icon="phone-panel" tone="yes" title={t('download.android_phone')} req={t('download.android_8_0_and_above')}>
-            <AbiRow asset="apk-universal">
-              <T slot="name" k="download.universal_apk"><span class="badge badge-quiet" slot="span1">{t('download.universal_apk__span1')}</span></T>
-              <Fragment slot="note">{t('download.one_file_for_every_phone')}</Fragment>
-              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_universal_apk')}</p>
-            </AbiRow>
-            <Fragment slot="foot"><a href={l('/install/#android')}>{t('download.how_to_install_on_a')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/android/')}>{t('android.made_for_phones')}</a></Fragment>
-            <Fragment slot="after">
-            <p class="platform-badges"><a class="store-badge" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/dracu-lah/TMPlayer" rel="noopener"><Shot src="/badges/obtainium.png" width="161" height="48" alt={t('download.add_to_obtainium')} /></a></p>
-            <p class="platform-note"><T k="download.kao_note"><a href="https://keepandroidopen.org/" target="_blank" rel="noopener" slot="a1">{t('download.kao_note__a1')}</a></T></p>
-            </Fragment>
-          </Platform>
-
-          <Platform id="android-tv" icon="tv-card" tone="play" title="Android TV" req={t('download.android_tv_8_0_and')}>
-            <AbiRow asset="apk-universal">
-              <T slot="name" k="download.universal_apk"><span class="badge badge-quiet" slot="span1">{t('download.universal_apk__span1')}</span></T>
-              <T slot="note" k="download.tv_note"><code slot="code1">tmplayer.org/apk</code></T>
-              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_universal_apk')}</p>
-            </AbiRow>
-            <Fragment slot="foot"><a href={l('/install/#android-tv')}>{t('download.how_to_install_on_a_2')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/android-tv/')}>{t('download.made_for_the_tv')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/fire-tv/')}>{t('download.fire_tv_guide')}</a></Fragment>
-          </Platform>
-
-          <Platform id="windows" icon="windows-panel" tone="browse" title="Windows" req={t('download.windows_10_and_11_64')} computer>
-            <div slot="before" class="callout">
-              <p><T k="download.win_cmd_steps"><em slot="em1">{t('download.win_cmd_steps__em1')}</em><em slot="em2">{t('download.win_cmd_steps__em2')}</em><a href={l('/install/#windows')} slot="a1">{t('download.win_cmd_steps__a1')}</a></T></p>
-              <pre class="abi-cmd"><code>irm https://tmplayer.org/install.ps1 | iex</code></pre>
-            </div>
-            <AbiRow asset="win-msi">
-              <Fragment slot="name">{t('download.win_msi_name')}</Fragment>
-              <T slot="note" k="download.win_msi_note"><em slot="em1">{t('download.win_msi_note__em1')}</em><em slot="em2">{t('download.win_msi_note__em2')}</em></T>
-              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_windows_x64_msi')}</p>
-            </AbiRow>
-            <Fragment slot="foot"><a href={l('/install/#windows')}>{t('download.how_to_install_on_windows')}</a><span class="sep" aria-hidden="true">&middot;</span><a href={l('/desktop/')}>{t('desktop.features_link__a1')}</a></Fragment>
-          </Platform>
-
-          {/*
-            The macOS card arrives with the first release that has a DMG. The site can deploy before
-            that release does, so the card is hidden unless latest.json (hasMac) names a DMG, and
-            app.js shows it once the latest release carries a macos-arm64.dmg: until then it would
-            offer a file that does not exist.
-          */}
-          <Platform id="macos" icon="laptop-panel" tone="play" title="macOS" req={t('download.macos_req')} computer hidden={!hasMac}>
-            <AbiRow asset="mac-dmg">
-              <Fragment slot="name">DMG <span class="badge badge-quiet">{t('download.preview')}</span></Fragment>
-              <T slot="note" k="download.mac_dmg_note"><em slot="em1">{t('download.mac_dmg_note__em1')}</em><em slot="em2">{t('download.mac_dmg_note__em2')}</em><em slot="em3">{t('download.mac_dmg_note__em3')}</em><em slot="em4">{t('download.mac_dmg_note__em4')}</em></T>
-              <p slot="file" class="abi-file" data-file>{t('download.tmplayer_version_macos_arm64_dmg')}</p>
-            </AbiRow>
-            <a slot="foot" href={l('/install/#macos')}>{t('download.how_to_install_on_macos')}</a>
-          </Platform>
-
-          <Platform id="linux" icon="terminal-panel" tone="no" title="Linux" req={t('download.x86_64_with_glibc_2')} computer>
-            <AbiRow asset="linux-appimage">
-              <Fragment slot="name">AppImage <span class="badge badge-quiet">{t('download.any_distribution')}</span></Fragment>
-              <Fragment slot="note">{t('download.one_file_that_runs_on')}</Fragment>
-              <pre slot="file" class="abi-cmd"><code>chmod +x <span data-file>TMPlayer-&lt;version&gt;-x86_64.AppImage</span></code></pre>
-            </AbiRow>
-            <AbiRow href="https://github.com/dracu-lah/TMPlayer/tree/main/desktop/packaging/aur" label={t('download.arch_pkgbuild_link')}>
-              <Fragment slot="name">{t('download.arch_linux')}</Fragment>
-              <T slot="note" k="download.a_pkgbuild_lives_in_it"><code slot="code1">desktop/packaging/aur</code><code slot="code2">linux-x64.tar.xz</code></T>
-            </AbiRow>
-            <a slot="foot" href={l('/install/#linux')}>{t('download.how_to_install_on_linux')}</a>
-          </Platform>
-
-        </div>
-
-        {/* Opened by app.js under whichever download was pressed. */}
-        <NextSteps />
 
         <div class="later">
           <p>{t('download.no_iphone_or_ipad')}</p>
         </div>
 
-        <p class="muted small section-note"><T k="download.checksum_note"><a href={LATEST} rel="noopener" slot="a1">{t('download.checksum_note__a1')}</a><code slot="code1">sha256sum</code><code slot="code2">shasum -a 256</code><code slot="code3">Get-FileHash</code><a href="/security/#verify" slot="a2">{t('download.checksum_note__a2')}</a></T></p>
+        {/* The technical part, folded: checksums, the release notes and the older releases. */}
+        <details class="code-fold dl-files">
+          <summary>{t('download.more_files')}<Icon name="faq-chevron" /></summary>
+          <p class="muted small"><T k="download.every_file_comes_from_one_github"><a href="https://about.signpath.io/" rel="noopener" slot="a1">{t('download.every_file_comes_from_one_github__a1')}</a><a href="/signing/" slot="a2">{t('download.every_file_comes_from_one_github__a2')}</a></T></p>
+          <p class="muted small"><T k="download.checksum_note"><a href={LATEST} rel="noopener" slot="a1">{t('download.checksum_note__a1')}</a><code slot="code1">sha256sum</code><code slot="code2">shasum -a 256</code><code slot="code3">Get-FileHash</code><a href="/security/#verify" slot="a2">{t('download.checksum_note__a2')}</a></T></p>
 
-        <details id="release-notes-wrap" hidden>
-          <summary>{t('download.release_notes')}</summary>
-          <pre class="notes" id="release-notes"></pre>
+          <details id="release-notes-wrap" hidden>
+            <summary>{t('download.release_notes')}</summary>
+            <pre class="notes" id="release-notes"></pre>
+          </details>
+
+          <section class="previous" id="previous-wrap" aria-labelledby="previous-h" hidden>
+            <h3 id="previous-h">{t('download.previous_releases')}</h3>
+            <ul class="previous-list" id="previous-list"></ul>
+            <p class="muted small"><a href="https://github.com/dracu-lah/TMPlayer/releases" rel="noopener">{t('download.all_releases_on_github')}</a></p>
+          </section>
         </details>
-
-        <section class="previous" id="previous-wrap" aria-labelledby="previous-h" hidden>
-          <h3 id="previous-h">{t('download.previous_releases')}</h3>
-          <ul class="previous-list" id="previous-list"></ul>
-          <p class="muted small"><a href="https://github.com/dracu-lah/TMPlayer/releases" rel="noopener">{t('download.all_releases_on_github')}</a></p>
-        </section>
   </Band>
+
+  <StarBand lede={t('download.an_app_from_outside_the')} />
 
   <Band wave labelledby="before-h" title={t('download.before_you_open_the_file')} sub={t('download.worth_knowing_about_any_app')}>
     <div class="two-col" data-reveal>
@@ -209,7 +293,7 @@ const hasMac = Boolean((latest.assets as Record<string, unknown>)['macos-arm64-d
     </div>
   </Band>
 
-  <StarCard wave tonal lede={t('download.an_app_from_outside_the')} codes talk />
+  <GiveBand wave tonal codes talk />
 
 </main>
 

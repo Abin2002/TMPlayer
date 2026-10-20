@@ -1,4 +1,5 @@
 ---
+import StarBand from '../../../../components/StarBand.astro';
 import GuidePage from '../../../../components/guides/GuidePage.astro';
 import PageHead from '../../../../components/PageHead.astro';
 import Crumbs from '../../../../components/guides/Crumbs.astro';
@@ -83,6 +84,8 @@ const ld: Guide = {
       </Step>
     </Steps>
   </Band>
+
+  <StarBand lede={t('install.if_these_steps_got_your')} />
 
   <Band wave tonal id="tips" title={t('guide_android_tv.worth_knowing')}>
     <Cards>

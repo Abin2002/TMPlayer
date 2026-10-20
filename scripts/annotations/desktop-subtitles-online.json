@@ -1,0 +1,9 @@
+{
+  "source": "desktop/player-subtitles-online.png",
+  "output": "site/public/screenshots/desktop-subtitles-online.webp",
+  "crop": [0, 0, 1100, 620],
+  "width": 960,
+  "marks": [
+    {"type": "circle", "box": [296, 292, 172, 48], "seed": 3}
+  ]
+}

@@ -3,6 +3,7 @@
 // step by step, what it handles, what it does not, and Telegram's Android app beside it. TMPlayer's
 // facts come from the 1.27.0 and 1.27.1 release notes and the casting checkpoint (CP73) of the working plan; Telegram's from
 // its own announcement of 7 March 2025, and nothing it does not say is claimed for it.
+import StarBand from '../../../../components/StarBand.astro';
 import GuidePage from '../../../../components/guides/GuidePage.astro';
 import PageHead from '../../../../components/PageHead.astro';
 import Crumbs from '../../../../components/guides/Crumbs.astro';
@@ -83,6 +84,8 @@ const table = [
       <DeviceShot device="desktop" shot={{ src: '/screenshots/desktop-player.webp', alt: t('features.the_tmplayer_desktop_player_over'), width: 1920, height: 1200 }}><T k="guide_cast.shot_desktop"><b slot="b1">{g('shot_desktop__b1')}</b></T></DeviceShot>
     </div>
   </Band>
+
+  <StarBand lede={t('features.every_feature_here_started_as')} />
 
   <Band wave tonal id="handles" title={g('handles_h')}>
     <Cards>

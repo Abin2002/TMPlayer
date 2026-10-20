@@ -142,8 +142,10 @@ changed.
   `site/public/latest.json` is the installed apps' update feed: only the release job writes it.
 - **Download page** keeps its `preconnect` hints to GitHub's API, github.com and
   `release-assets.githubusercontent.com`, the host the release files are served from.
-- **Sponsoring.** Every content page ends with the "Support TMPlayer" offer: inside the page's
-  star card where it has one, otherwise as a `support-slim` card in the last band. Use the shared
+- **Sponsoring.** Every content page ends with the "Support TMPlayer" offer: in the page's star
+  band (`StarCard`, two landscape cards, the star then the offer) where it has one, otherwise as a
+  `support-slim` card in the last band. The home page instead sets the star card (`StarLCard`) after
+  its bento and the offer card (`GiveLCard`) after its setup steps (user, 2026-10-20). Use the shared
   `SponsorOffer` component, which carries the `home.support_tmplayer`, `home.support_no_ads`,
   `home.sponsor_on_github` and `home.buy_me_a_coffee` keys so it arrives translated; a new page
   gets it too. Its line about ads (`home.support_no_ads`) sits behind an info button beside the
@@ -156,26 +158,27 @@ changed.
   and GitHub Sponsors is the quieter link under it. The links live in `site/src/lib/support.ts`;
   the page is `buymeacoffee.com/nevil.dev` (`/nevil` is somebody else). Every page but download,
   install, support and the 404 also has the floating `CoffeeCard`: a pill on a phone, a card on a
-  wider screen, at the bottom of the start edge, shown by app.js once the page is idle, stepping
-  aside for the footer, the page's own offer and the phone's download bar. The card has no scan
+  wider screen, at the bottom of the start edge, shown by app.js shortly after the page loads and then always on screen (user, 2026-10-20),
+  standing above the phone's download bar. The card has no scan
   code on it (user, 2026-10-18); the QR codes stay on the support page and the star cards. Every
   Buy Me a Coffee link (`data-bmc`: the card, `CoffeeButton`, the footer chips) opens their widget
-  page in `CoffeeDialog`, a native `<dialog>` over the site whose iframe loads only on the first
-  click, and stays a real link for a middle click or with scripting off (user, 2026-10-20, after
+  page in `CoffeeDialog`, a native `<dialog>` over the site whose iframe app.js loads ahead of the
+  click, on the visitor's first scroll, touch or key or on pointing at a support link (never for a
+  test runner that does not touch the page, nor with Save-Data), and stays a real link for a middle click or with scripting off (user, 2026-10-20, after
   devb.io; this replaced the 2026-10-18 "new tab, no dialog"). `vercel.json`'s Permissions-Policy
   lets that frame use `payment`. The card's x is a separate
   button that hides it for that page view only and nothing is stored, so it is back on the next
   page or a reload (the user's choice). It stays an offer: no popup that opens by itself, no nag,
   nothing locked.
 - **Home page pill and stats row** (user, 2026-10-20, after devb.io): the "New in X" pill above
-  the eyebrow links the latest release page, and the row under the hero links shows downloads,
-  platforms and languages. `site/src/lib/stats.ts` works them out at build time, so they are drawn
+  the headline links the latest release page, and the stats row between the hero's sentence and
+  its download box (words on the start side, the TV and phone on the end side from 1080 px) shows
+  downloads, platforms and languages; three short facts sit centred under the split. `site/src/lib/stats.ts` works them out at build time, so they are drawn
   final in the first paint (no browser call to GitHub, no layout shift); app.js only counts them up
   in view. Downloads are the app files downloaded from GitHub across releases (the in-app updater
   fetches them too), so they are "downloads", never users or installs: the build asks GitHub and,
   if that fails, adds up the `downloads` that `scripts/release-data.py` stores per release in
-  `releases.json`. The build logs `[tm-stats]` with which one it used. On a phone the coffee pill
-  waits until the stats row is scrolled past.
+  `releases.json`. The build logs `[tm-stats]` with which one it used.
 - **After changing the site**, run `pnpm -C site build`, `python3 scripts/site-i18n-check.py` and
   `python3 scripts/site-links.py` (CI runs all three).
 

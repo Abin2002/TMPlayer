@@ -1,55 +1,86 @@
 ---
-// The site footer of the localized pages. The home page leaves out the link to itself and names
-// the code signing page.
+// The site footer, on every page (FooterPlain and ChangelogFooter render this one). The brand with
+// the app's mark, its one line and the profiles on the start side; the pages in four labelled
+// columns; and a bottom row with the licence line and the policy pages. Buy Me a Coffee stays the
+// larger button in its own brand, with GitHub Sponsors the quieter link under it.
 import { versioned } from '../lib/asset-version';
 import { BMC_URL, SPONSORS_URL } from '../lib/support';
+import Icon from './Icon.astro';
 import T from './T.astro';
 import { text } from '../i18n/t';
 import { l } from '../i18n/links';
 
-interface Props { home?: boolean }
-const { home = false } = Astro.props;
 const lang = Astro.locals.lang;
 const t = (k: string) => text(lang, k);
 const cup = versioned('/brand/bmc-cup-on-yellow.svg');
 ---
 <footer class="site-footer">
-  <div class="wrap footer-inner">
-    <p class="footer-brand">TMPlayer</p>
-    <nav class="footer-links" aria-label={t('common.footer')}>
-      {!home && <a href={l(lang, '/')}><T k="common.home" /></a>}
-      <a href={l(lang, '/features/')}><T k="common.features" /></a>
-      <a href={l(lang, '/download/')}><T k="common.download" /></a>
-      <a href={l(lang, '/install/')}><T k="common.install" /></a>
-      <a href={l(lang, '/android-tv/')}>Android TV</a>
-      <a href={l(lang, '/android/')}><T k="download.android_phone" /></a>
-      <a href={l(lang, '/desktop/')}><T k="features.jump_windows_and_linux" /></a>
-      <a href={l(lang, '/faq/')}><T k="common.questions" /></a>
-      <a href="/changelog/"><T k="common.changelog" /></a>
-      <a href={l(lang, '/fire-tv/')}>Fire TV</a>
-      <a href={l(lang, '/formats/')}><T k="common.formats" /></a>
-      <a href={l(lang, '/translate/')}><T k="common.translate" /></a>
-      <a href="/security/"><T k="common.security" /></a>
-      <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener"><T k="common.source" /></a>
-      <a href="/privacy/"><T k="common.privacy" /></a>
-      {home && <a href="/signing/"><T k="common.code_signing" /></a>}
-      <a href="/legal/"><T k="common.lawful_use" /></a>
-      <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
-    </nav>
-    <nav class="footer-links footer-guides" aria-label={t('common.guides')}>
-      <a href={l(lang, '/guides/telegram-videos-on-android-tv/')}><T k="common.telegram_on_android_tv" /></a>
-      <a href={l(lang, '/guides/telegram-videos-on-fire-tv/')}><T k="common.telegram_on_fire_tv" /></a>
-      <a href={l(lang, '/guides/telegram-on-tv-without-casting/')}><T k="common.telegram_without_casting" /></a>
-      <a href={l(lang, '/alternatives/')}><T k="common.telegram_tv_apps_compared" /></a>
-    </nav>
-    <nav class="footer-links footer-community" aria-label={t('common.community')}>
-      <a href="https://t.me/tmplayerapp" rel="noopener"><T k="home.telegram_channel" /></a>
-      <a href="https://t.me/tmplayer_chat" rel="noopener">Telegram group</a>
-      <a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener"><T k="common.discussions" /></a>
-      <a class="footer-bmc" data-bmc href={BMC_URL} rel="noopener"><img src={cup} alt="" width="10" height="14" loading="lazy" decoding="async"> <T k="home.buy_me_a_coffee" /></a>
-      <a href={SPONSORS_URL} rel="noopener"><T k="common.sponsor" /></a>
-      <a href="mailto:hello@tmplayer.org">hello@tmplayer.org</a>
-    </nav>
-    <p class="footer-legal muted small"><T k="common.gpl_3_0_2026_dracu" /></p>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-about">
+        <a class="footer-brand" href={l(lang, '/')} aria-label={t('common.tmplayer_home')}><Icon name="brand-mark" /> TMPlayer</a>
+        <p class="footer-tagline">{t('home.hero_lede')}</p>
+        <div class="footer-social">
+          <a class="footer-icon" href="https://github.com/dracu-lah/TMPlayer" rel="noopener" aria-label={t('common.tmplayer_on_github')} title={t('common.tmplayer_on_github')}><Icon name="github" /></a>
+          <a class="footer-icon" href="https://t.me/tmplayerapp" rel="noopener" aria-label={t('home.telegram_channel')} title={t('home.telegram_channel')}><Icon name="telegram-btn" /></a>
+          <a class="footer-icon" href="mailto:hello@tmplayer.org" aria-label="hello@tmplayer.org" title="hello@tmplayer.org"><Icon name="mail-btn" /></a>
+        </div>
+      </div>
+
+      <nav class="footer-cols" aria-label={t('common.footer')}>
+        <div>
+          <p class="footer-head">{t('common.footer_product')}</p>
+          <ul>
+            <li><a href={l(lang, '/features/')}><T k="common.features" /></a></li>
+            <li><a href={l(lang, '/download/')}><T k="common.download" /></a></li>
+            <li><a href={l(lang, '/install/')}><T k="common.install" /></a></li>
+            <li><a href={l(lang, '/faq/')}><T k="common.questions" /></a></li>
+            <li><a href="/changelog/"><T k="common.changelog" /></a></li>
+            <li><a href={l(lang, '/formats/')}><T k="common.formats" /></a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-head">{t('common.footer_platforms')}</p>
+          <ul>
+            <li><a href={l(lang, '/android-tv/')}>Android TV</a></li>
+            <li><a href={l(lang, '/fire-tv/')}>Fire TV</a></li>
+            <li><a href={l(lang, '/android/')}><T k="download.android_phone" /></a></li>
+            <li><a href={l(lang, '/desktop/')}><T k="features.jump_windows_and_linux" /></a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-head">{t('common.guides')}</p>
+          <ul>
+            <li><a href={l(lang, '/guides/telegram-videos-on-android-tv/')}><T k="common.telegram_on_android_tv" /></a></li>
+            <li><a href={l(lang, '/guides/telegram-videos-on-fire-tv/')}><T k="common.telegram_on_fire_tv" /></a></li>
+            <li><a href={l(lang, '/guides/telegram-on-tv-without-casting/')}><T k="common.telegram_without_casting" /></a></li>
+            <li><a href={l(lang, '/alternatives/')}><T k="common.telegram_tv_apps_compared" /></a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-head">{t('common.community')}</p>
+          <ul>
+            <li><a href="https://t.me/tmplayerapp" rel="noopener"><T k="home.telegram_channel" /></a></li>
+            <li><a href="https://t.me/tmplayer_chat" rel="noopener"><T k="common.telegram_group" /></a></li>
+            <li><a href="https://github.com/dracu-lah/TMPlayer/discussions" rel="noopener"><T k="common.discussions" /></a></li>
+            <li><a href={l(lang, '/translate/')}><T k="common.translate" /></a></li>
+            <li><a class="footer-bmc" data-bmc href={BMC_URL} rel="noopener"><img src={cup} alt="" width="10" height="14" loading="lazy" decoding="async"> <T k="home.buy_me_a_coffee" /></a></li>
+            <li><a href={SPONSORS_URL} rel="noopener"><T k="common.sponsor" /></a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="footer-legal"><T k="common.gpl_3_0_2026_dracu" /></p>
+      <nav class="footer-policy" aria-label={t('common.footer_policies')}>
+        <a href="/privacy/"><T k="common.privacy" /></a>
+        <a href="/legal/"><T k="common.lawful_use" /></a>
+        <a href="/security/"><T k="common.security" /></a>
+        <a href="/signing/"><T k="common.code_signing" /></a>
+        <a href="https://github.com/dracu-lah/TMPlayer" rel="noopener"><T k="common.source" /></a>
+        <a href="https://nevil.dev" rel="noopener">nevil.dev</a>
+      </nav>
+    </div>
   </div>
 </footer>

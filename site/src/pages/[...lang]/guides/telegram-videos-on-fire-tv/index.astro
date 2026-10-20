@@ -1,4 +1,5 @@
 ---
+import StarBand from '../../../../components/StarBand.astro';
 import GuidePage from '../../../../components/guides/GuidePage.astro';
 import PageHead from '../../../../components/PageHead.astro';
 import Crumbs from '../../../../components/guides/Crumbs.astro';
@@ -82,6 +83,8 @@ const ld: Guide = {
       </Step>
     </Steps>
   </Band>
+
+  <StarBand lede={t('install.if_these_steps_got_your')} />
 
   <Band wave tonal id="downloader" title={t('fire_tv.five_steps_with_the_remote')} sub={t('fire_tv.no_computer_needed_amazon_s')}>
     <div class="section-body" data-reveal>

@@ -7,6 +7,7 @@
 // with nothing on disk, the download left running), PlayerMenu (the line left out for a chat that
 // restricts saving, More options on the phone, More at the end of the TV's row, hold OK), and on
 // the desktop the tile and detail menus' Open in another app through OpenExternal.open.
+import StarBand from '../../../../components/StarBand.astro';
 import GuidePage from '../../../../components/guides/GuidePage.astro';
 import PageHead from '../../../../components/PageHead.astro';
 import Crumbs from '../../../../components/guides/Crumbs.astro';
@@ -74,6 +75,8 @@ const gets = ['whole', 'partial', 'nothing', 'protected'];
       ))}
     </Steps>
   </Band>
+
+  <StarBand lede={t('features.every_feature_here_started_as')} />
 
   <Band wave tonal id="gets" title={g('gets_h')}>
     <div class="section-body prose-band" data-reveal>

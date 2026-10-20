@@ -1,4 +1,5 @@
 ---
+import StarBand from '../../../../components/StarBand.astro';
 import GuidePage from '../../../../components/guides/GuidePage.astro';
 import PageHead from '../../../../components/PageHead.astro';
 import Action from '../../../../components/guides/Action.astro';
@@ -95,6 +96,8 @@ const table = [
     <p class="muted small section-note" data-reveal><T k="guide_no_casting.cast_note"><a href={l('/guides/cast-telegram-videos-to-chromecast/')} slot="a1">{t('guide_no_casting.cast_note__a1')}</a></T></p>
     <p class="muted small section-note" data-reveal><T k="guide_no_casting.which_apps_play_telegram"><a href={l('/alternatives/')} slot="a1">{t('common.telegram_tv_apps_compared')}</a></T></p>
   </Band>
+
+  <StarBand lede={t('android_tv.a_tv_app_outside_the')} />
 
   <Band wave id="how" title={t('guide_no_casting.how_tmplayer_does_it')} sub={t('guide_no_casting.no_casting_no_copies_no')}>
     <Cards>

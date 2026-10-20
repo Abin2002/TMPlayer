@@ -17,7 +17,8 @@ import Band from '../../../components/Band.astro';
 import DeviceShot from '../../../components/DeviceShot.astro';
 import Panel from '../../../components/Panel.astro';
 import TickPanel from '../../../components/features/TickPanel.astro';
-import StarCard from '../../../components/StarCard.astro';
+import StarBand from '../../../components/StarBand.astro';
+import GiveBand from '../../../components/GiveBand.astro';
 import { langPaths } from '../../../i18n/paths';
 import { text } from '../../../i18n/t';
 import { l as link } from '../../../i18n/links';
@@ -81,6 +82,8 @@ const desktopPlayer = [
       <TickPanel icon="play-card" tone="play" title="features.the_player" items={desktopPlayer} />
     </div>
   </Band>
+
+  <StarBand lede={t('desktop.star_lede')} />
 
   <Band wave tonal labelledby="sign-h" title={t('desktop.sign_in_and_updates')}>
     <div class="two-col" data-reveal>
@@ -156,7 +159,7 @@ const desktopPlayer = [
     </div>
   </Band>
 
-  <StarCard wave tonal lede={t('desktop.star_lede')} />
+  <GiveBand wave tonal />
 
 </main>
 
