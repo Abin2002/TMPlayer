@@ -15,11 +15,16 @@ import java.net.URI
  */
 object OpenExternal {
 
-    fun browse(url: String) = launch("browse $url") {
-        val uri = URI(url)
+    fun browse(url: String) = launch("browse $url") { browseNow(url) }
+
+    /**
+     * [browse] on the caller's thread, for the one caller that cannot hand it to another: the
+     * startup failure dialog, which ends the process right after.
+     */
+    fun browseNow(url: String): Boolean {
         val desktop = desktopFor(Desktop.Action.BROWSE)
-        if (desktop != null && runCatching { desktop.browse(uri) }.isSuccess) return@launch true
-        run(command(OsInfo.osTag, url))
+        if (desktop != null && runCatching { desktop.browse(URI(url)) }.isSuccess) return true
+        return run(command(OsInfo.osTag, url))
     }
 
     /** A `mailto:` link in the mail program, with the shell's opener when AWT has no mail action. */

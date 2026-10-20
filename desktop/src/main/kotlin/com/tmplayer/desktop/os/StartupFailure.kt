@@ -1,5 +1,6 @@
 package com.tmplayer.desktop.os
 
+import com.tmplayer.desktop.SelfUpdate
 import java.io.PrintWriter
 import java.io.StringWriter
 import javax.swing.JOptionPane
@@ -14,6 +15,10 @@ import javax.swing.JTextArea
  * settings file) left a process with no window that TDLib's threads kept alive, holding the single
  * instance lock, so every later launch handed over to it and quit: the app "did not open" and said
  * nothing. The text is English on purpose, since the catalogs may be what failed.
+ *
+ * The dialog offers the download page, since a crash at start also keeps the in-app updater from
+ * running (it waits for the first frame): 1.27.0 on Windows crashed at Home, and the 1.27.1 that
+ * fixed it could only be reached by hand.
  */
 object StartupFailure {
 
@@ -52,11 +57,17 @@ object StartupFailure {
         runCatching {
             val trace = StringWriter().also { error.printStackTrace(PrintWriter(it)) }.toString()
             val log = DesktopLog.file?.let { "\n\nThe full log is in $it" }.orEmpty()
-            val text = JTextArea("TMPlayer could not start.$log\n\n$trace", 16, 72).apply {
+            val newer = "\n\nA newer version may already fix this: ${SelfUpdate.DOWNLOAD_PAGE}"
+            val text = JTextArea("TMPlayer could not start.$log$newer\n\n$trace", 16, 72).apply {
                 isEditable = false
                 caretPosition = 0
             }
-            JOptionPane.showMessageDialog(null, JScrollPane(text), "TMPlayer", JOptionPane.ERROR_MESSAGE)
+            val options = arrayOf<Any>("Open the download page", "Close")
+            val choice = JOptionPane.showOptionDialog(
+                null, JScrollPane(text), "TMPlayer", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE,
+                null, options, options[0],
+            )
+            if (choice == 0) OpenExternal.browseNow(SelfUpdate.DOWNLOAD_PAGE)
         }
         AppExit.now(1)
     }
