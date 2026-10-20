@@ -19,7 +19,7 @@ export const DESCRIPTION =
 /** The first release with a Mac build; the ones before it name only the systems they shipped for. */
 const FIRST_MAC = [1, 26, 0];
 
-interface Raw { version: string; published: string; url: string; notes: string }
+interface Raw { version: string; published: string; url: string; notes: string; downloads?: number }
 export interface Release extends Raw {
   /** the publish time as a Date (UTC) */
   date: Date;

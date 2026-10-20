@@ -1560,10 +1560,13 @@ var tmT = (function () {
       requestAnimationFrame(function () { card.classList.add('is-on'); });
     });
     if (window.IntersectionObserver) {
-      var targets = document.querySelectorAll('.site-footer, #sponsor');
+      // On a phone the card is a pill over the middle of the bottom edge, where the home page's
+      // stats row sits on the first screen, so it waits until those figures are scrolled past.
+      var narrow = window.matchMedia && window.matchMedia('(max-width: 639px)').matches;
+      var targets = document.querySelectorAll(narrow ? '.site-footer, #sponsor, .stats' : '.site-footer, #sponsor');
       var observer = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
-          away[entry.target.id || 'footer'] = entry.isIntersecting;
+          away[entry.target.id || entry.target.className] = entry.isIntersecting;
         });
         paint();
       });
@@ -1595,4 +1598,78 @@ var tmT = (function () {
   });
 
   whenIdle();
+})();
+
+/* The home page's stats row counts up once, as it comes into view (an IntersectionObserver, no
+   layout reads). The final figures are already in the HTML; under reduced motion, or without
+   the observer, they simply stay. Each figure is drawn in the page's own short form of a number,
+   as the build drew it (lib/stats.ts). */
+(function () {
+  'use strict';
+
+  var nodes = document.querySelectorAll('[data-count-to]');
+  if (!nodes.length || !window.IntersectionObserver || typeof Intl === 'undefined') { return; }
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
+  var fmt;
+  try {
+    fmt = new Intl.NumberFormat(document.documentElement.lang || 'en', { notation: 'compact', maximumFractionDigits: 1 });
+  } catch (e) { return; }
+
+  function run(node) {
+    var live = node.querySelector('.stat-live');
+    var to = Number(node.getAttribute('data-count-to'));
+    if (!live || !(to > 0)) { return; }
+    var done = live.textContent;
+    var start = null;
+    var span = 1100;
+    function frame(now) {
+      if (start === null) { start = now; }
+      var p = Math.min(1, (now - start) / span);
+      // Ease out, so the figure slows into its final value.
+      var eased = 1 - Math.pow(1 - p, 3);
+      live.textContent = p < 1 ? fmt.format(Math.round(to * eased)) : done;
+      if (p < 1) { requestAnimationFrame(frame); }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) { return; }
+      observer.unobserve(entry.target);
+      run(entry.target);
+    });
+  }, { threshold: 0.6 });
+  Array.prototype.forEach.call(nodes, function (node) { observer.observe(node); });
+})();
+
+/* The support links open the Buy Me a Coffee page over the site, in CoffeeDialog's <dialog>
+   (user, 2026-10-20). The frame gets its src on the first open, so nothing is fetched from
+   buymeacoffee.com before somebody asks. A middle click, a modified click or a browser without
+   <dialog> follows the link as before. Esc closes it natively; so do the x and the backdrop. */
+(function () {
+  'use strict';
+
+  var dialog = document.getElementById('bmc-dialog');
+  if (!dialog || typeof dialog.showModal !== 'function') { return; }
+  var frame = dialog.querySelector('.bmc-dialog-frame');
+  var opener = null;
+
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+    var link = e.target.closest && e.target.closest('a[data-bmc]');
+    if (!link) { return; }
+    e.preventDefault();
+    if (!frame.getAttribute('src')) { frame.setAttribute('src', frame.getAttribute('data-src')); }
+    opener = link;
+    dialog.showModal();
+  });
+
+  dialog.querySelector('[data-bmc-close]').addEventListener('click', function () { dialog.close(); });
+  // A click on the backdrop lands on the dialog itself, outside its box.
+  dialog.addEventListener('click', function (e) { if (e.target === dialog) { dialog.close(); } });
+  dialog.addEventListener('close', function () {
+    if (opener && document.contains(opener)) { opener.focus({ preventScroll: true }); }
+    opener = null;
+  });
 })();

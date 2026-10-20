@@ -25,8 +25,14 @@ The tag's message is read from git when the tag is here and annotated, and from 
 is not: the release job's checkout is shallow and holds only the tag it was started by, and the
 two sources give the same text, so the data does not depend on which one answered.
 
+Each release also carries how many times its app files were downloaded from GitHub (the APKs and
+the desktop packages, not the checksums, notices or source archives). The home page adds them up
+for its stats row when the build cannot ask GitHub itself (site/src/lib/stats.ts). The in-app
+updater fetches the same files, so this counts downloads, not people.
+
 The notes stay markdown source; site/src/lib/releases.ts turns them into HTML. Same input, same
-bytes out: nothing here reads the clock, so the job only commits when a release changed something.
+bytes out: nothing here reads the clock. The download counts do move between runs, which is fine
+because the job runs this once per release.
 """
 
 import argparse
@@ -43,6 +49,9 @@ from pathlib import Path
 REPO = "dracu-lah/TMPlayer"
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "site" / "src" / "data" / "releases.json"
+
+# The files a person installs, as opposed to checksums, notices and source archives.
+APP_FILE = re.compile(r"^tmplayer(?!.*-source\.)(?:[-_.].*)?\.(apk|msi|dmg|appimage|deb|rpm|flatpak|zip|tar\.xz|tar\.gz)$", re.I)
 
 # Lines git adds to a message that are not part of what the release says.
 TRAILER = re.compile(r"^(Co-Authored-By|Claude-Session|Signed-off-by|Change-Id):", re.I)
@@ -144,6 +153,8 @@ def collect(raw: list) -> list:
             "published": r["published_at"],
             "url": r.get("html_url") or f"https://github.com/{REPO}/releases/tag/{tag}",
             "notes": notes,
+            "downloads": sum(a.get("download_count", 0) for a in r.get("assets") or []
+                             if APP_FILE.match(a.get("name", ""))),
         })
     # Newest first by version, then by date, so a patch to an old line sits with its line.
     releases.sort(key=lambda r: (version_key(r["version"]), r["published"]), reverse=True)

@@ -2,6 +2,12 @@
   "home": {
     "tmplayer_free_unofficial_telegram_video": "TMPlayer: unofficial Telegram media player for TV, phone and PC",
     "free_and_open_source_for": "Free and open source, for Android, Windows, Mac and Linux",
+    "new_in": "New in {version}",
+    "see_whats_new": "See what changed",
+    "stats_label": "TMPlayer in numbers",
+    "stat_downloads": "downloads",
+    "stat_platforms": "platforms",
+    "stat_languages": "languages",
     "your_telegram_videos": "Your {svg1} Telegram videos, {em1}",
     "your_telegram_videos__em1": "on the TV",
     "a_free_unofficial_telegram_video": "TMPlayer is a free, unofficial Telegram media player that starts in seconds and downloads while you watch.",
@@ -63,6 +69,8 @@
     "scan_for_buy_me_a_coffee": "Scan for Buy Me a Coffee",
     "bmc_card_title": "Enjoying TMPlayer?",
     "bmc_hide": "Hide for now",
+    "bmc_close": "Close",
+    "bmc_open_page": "Open on Buy Me a Coffee",
     "come_and_talk": "Come and talk",
     "news_and_help_live_on": "News and help live on Telegram and in GitHub Discussions.",
     "github_discussions": "GitHub Discussions"

@@ -696,6 +696,70 @@ summary {
   margin: 0 0 clamp(30px, 4.5vw, 46px);
 }
 
+/* The latest release above the eyebrow, devb.io's pill (user, 2026-10-20): the version in a
+   filled tag, then the link's words and an arrow that nudges on hover. */
+.news-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  margin: 0 0 14px;
+  padding: 5px 14px 5px 5px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-full);
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: border-color 0.2s var(--ease-standard), background-color 0.2s var(--ease-standard);
+}
+.news-pill:hover { border-color: var(--outline); background: var(--surface-container); text-decoration: none; }
+/* On a phone it stands over an eyebrow that wraps to two lines, so it is smaller and closer. */
+@media (max-width: 480px) {
+  .news-pill { margin-bottom: 10px; padding: 4px 12px 4px 4px; gap: 8px; font-size: 0.82rem; }
+  .news-pill-tag { padding: 3px 9px; font-size: 0.74rem; }
+}
+.news-pill-tag {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: var(--shape-full);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.news-pill-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.news-pill svg { flex: none; width: 16px; height: 16px; transition: transform 0.2s var(--ease-standard); }
+.news-pill:hover svg { transform: translateX(3px); }
+[dir="rtl"] .news-pill svg { transform: scaleX(-1); }
+[dir="rtl"] .news-pill:hover svg { transform: scaleX(-1) translateX(3px); }
+
+/* The stats row under the hero's links. Each number sits on its hidden final copy in one grid
+   cell, so counting up never changes its width. */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px clamp(24px, 5vw, 56px);
+  margin: clamp(22px, 3vw, 30px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.stats li { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stat-n {
+  display: inline-grid;
+  font-size: clamp(1.6rem, 3.2vw, 2.1rem);
+  /* 600: one of the weights Base.astro preloads, so the figures do not swap font after paint. */
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--on-surface);
+}
+.stat-n > span { grid-area: 1 / 1; text-align: center; }
+.stat-ghost { visibility: hidden; }
+.stat-label { color: var(--on-surface-variant); font-size: 0.86rem; font-weight: 500; }
+
 /* The one primary control: a command box rather than a plain button. The whole
    surface is the link, and the pill on the right is where the eye lands. */
 .palette {
@@ -2092,6 +2156,8 @@ kbd {
 .hero-inner > *:nth-child(3) { animation-delay: 0.2s; }
 .hero-inner > *:nth-child(4) { animation-delay: 0.28s; }
 .hero-inner > *:nth-child(5) { animation-delay: 0.36s; }
+.hero-inner > *:nth-child(6) { animation-delay: 0.44s; }
+.hero-inner > *:nth-child(7) { animation-delay: 0.52s; }
 .showcase { animation-delay: 0.2s; }
 
 /* Every other page opens the same way, so arriving at one from the home page is the same
@@ -3338,8 +3404,8 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
 }
 .btn-bmc:hover { background: var(--bmc-yellow); color: var(--bmc-ink); box-shadow: var(--bmc-glow); }
 .btn-bmc .bmc-cup { flex: none; width: 14px; height: 20px; }
-.btn-bmc-lg { min-height: 56px; padding: 14px 30px; gap: 12px; font-size: 1.04rem; }
-.btn-bmc-lg .bmc-cup { width: 17px; height: 24px; }
+.btn-bmc-lg { min-height: 64px; padding: 16px 36px; gap: 14px; font-size: 1.16rem; }
+.btn-bmc-lg .bmc-cup { width: 20px; height: 28px; }
 
 .support-alt {
   display: inline-flex;
@@ -3363,11 +3429,70 @@ button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointe
   gap: 12px;
   margin: clamp(24px, 3vw, 32px) auto clamp(20px, 2.6vw, 28px);
 }
-.support-coffee .btn-bmc { width: min(100%, 340px); }
+.support-coffee .btn-bmc { width: min(100%, 380px); }
 .support-more-solo .support-coffee { margin-bottom: 0; }
 /* The support page is left-aligned prose. */
 .support-coffee-start { align-items: flex-start; margin-inline: 0; }
 .support-coffee-start .support-alt { margin-inline-start: -12px; }
+
+/* The Buy Me a Coffee page over the site (CoffeeDialog.astro): their widget page in a frame the
+   size their widget script gives it, 420 px wide and nearly the window's height, full screen on a
+   phone. The frame's own page is white, so the box is too, in either theme. */
+.bmc-dialog {
+  width: min(420px, 100%);
+  max-width: 100%;
+  height: min(720px, calc(100% - 64px));
+  max-height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--shape-xl);
+  background: #ffffff;
+  color: var(--bmc-ink);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+.bmc-dialog::backdrop { background: rgba(13, 12, 34, 0.55); }
+.bmc-dialog[open] { animation: bmc-dialog-in 0.3s var(--ease-emphasised); }
+@keyframes bmc-dialog-in { from { opacity: 0; transform: translate3d(0, 24px, 0) scale(0.97); } }
+.bmc-dialog-box { position: relative; display: flex; flex-direction: column; height: 100%; }
+.bmc-dialog-frame { flex: 1; width: 100%; min-height: 0; border: 0; background: #ffffff; }
+.bmc-dialog-close {
+  position: absolute;
+  top: 10px;
+  inset-inline-end: 10px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--shape-full);
+  background: rgba(13, 12, 34, 0.06);
+  color: var(--bmc-ink);
+  cursor: pointer;
+  transition: background-color 0.2s var(--ease-standard), transform 0.2s var(--ease-standard);
+}
+.bmc-dialog-close svg { width: 20px; height: 20px; }
+.bmc-dialog-close:hover { background: rgba(13, 12, 34, 0.12); }
+.bmc-dialog-close:active { transform: scale(0.92); }
+.bmc-dialog-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(13, 12, 34, 0.08);
+  color: rgba(13, 12, 34, 0.72);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.bmc-dialog-page svg { width: 14px; height: 14px; }
+.bmc-dialog-page:hover { color: var(--bmc-ink); }
+@media (max-width: 480px) {
+  .bmc-dialog { width: 100%; height: 100%; border-radius: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bmc-dialog[open] { animation: none; }
+}
 
 /* The yellow tile the cup stands on, in the floating card. */
 .bmc-tile {

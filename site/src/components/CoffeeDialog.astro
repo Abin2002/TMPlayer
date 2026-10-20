@@ -1,0 +1,23 @@
+---
+// The Buy Me a Coffee page, opened over the site instead of in a new tab (user, 2026-10-20, after
+// devb.io). It is Buy Me a Coffee's own widget page in an iframe, the one their widget script
+// opens, without that script: app.js opens this native <dialog> when a support link marked
+// data-bmc is clicked, and only then gives the iframe its src, so no page loads anything from
+// buymeacoffee.com until somebody asks for it. The links stay real links: with scripting off, or a
+// middle click or ctrl click, they open the page as before. Esc, the backdrop and the x close it,
+// and the link under the frame opens the full page for anyone the frame does not suit.
+import Icon from './Icon.astro';
+import { text } from '../i18n/t';
+import { BMC_URL } from '../lib/support';
+
+const t = (k: string) => text(Astro.locals.lang, k);
+const close = t('home.bmc_close');
+const src = `${BMC_URL.replace('buymeacoffee.com/', 'buymeacoffee.com/widget/page/')}?description=${encodeURIComponent(t('home.support_tmplayer'))}&color=${encodeURIComponent('#FFDD00')}`;
+---
+<dialog class="bmc-dialog" id="bmc-dialog" aria-label={t('home.buy_me_a_coffee')}>
+  <div class="bmc-dialog-box">
+    <button type="button" class="bmc-dialog-close" data-bmc-close aria-label={close} title={close}><Icon name="close" /></button>
+    <iframe class="bmc-dialog-frame" data-src={src} title={t('home.buy_me_a_coffee')} allow="payment"></iframe>
+    <a class="bmc-dialog-page" href={BMC_URL} rel="noopener" target="_blank">{t('home.bmc_open_page')}<Icon name="external-link" /></a>
+  </div>
+</dialog>

@@ -12,6 +12,7 @@ import appUrl from '../scripts/app.js?url';
 import KaoNotice from '../components/KaoNotice.astro';
 import GetBar from '../components/GetBar.astro';
 import CoffeeCard from '../components/CoffeeCard.astro';
+import CoffeeDialog from '../components/CoffeeDialog.astro';
 import { buildString, jsStrings, published, text } from '../i18n/t';
 import { pageUrl } from '../i18n/links';
 import { ORIGIN, type PageId } from '../i18n/langs';
@@ -148,6 +149,8 @@ const strings = lang.path ? jsStrings(lang) : {};
 {/* The Buy Me a Coffee card, everywhere but the pages whose one job is another button: download,
     install, the support page (which is the offer itself) and the 404. */}
 {!notFound && page !== 'download' && page !== 'install' && path !== '/support/' && <CoffeeCard />}
+{/* Where the support links open the Buy Me a Coffee page, over the site. */}
+<CoffeeDialog />
 {Object.keys(strings).length > 0 && <script type="application/json" id="tm-strings" set:html={json(strings)} is:inline></script>}
 <script is:inline src={appUrl}></script>
 <!--

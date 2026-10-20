@@ -157,12 +157,25 @@ changed.
   the page is `buymeacoffee.com/nevil.dev` (`/nevil` is somebody else). Every page but download,
   install, support and the 404 also has the floating `CoffeeCard`: a pill on a phone, a card on a
   wider screen, at the bottom of the start edge, shown by app.js once the page is idle, stepping
-  aside for the footer, the page's own offer and the phone's download bar. The card is one link
-  straight to the Buy Me a Coffee page in a new tab, with no scan code on it and no dialog (user,
-  2026-10-18); the QR codes stay on the support page and the star cards. Its x is a separate
+  aside for the footer, the page's own offer and the phone's download bar. The card has no scan
+  code on it (user, 2026-10-18); the QR codes stay on the support page and the star cards. Every
+  Buy Me a Coffee link (`data-bmc`: the card, `CoffeeButton`, the footer chips) opens their widget
+  page in `CoffeeDialog`, a native `<dialog>` over the site whose iframe loads only on the first
+  click, and stays a real link for a middle click or with scripting off (user, 2026-10-20, after
+  devb.io; this replaced the 2026-10-18 "new tab, no dialog"). `vercel.json`'s Permissions-Policy
+  lets that frame use `payment`. The card's x is a separate
   button that hides it for that page view only and nothing is stored, so it is back on the next
   page or a reload (the user's choice). It stays an offer: no popup that opens by itself, no nag,
   nothing locked.
+- **Home page pill and stats row** (user, 2026-10-20, after devb.io): the "New in X" pill above
+  the eyebrow links the latest release page, and the row under the hero links shows downloads,
+  platforms and languages. `site/src/lib/stats.ts` works them out at build time, so they are drawn
+  final in the first paint (no browser call to GitHub, no layout shift); app.js only counts them up
+  in view. Downloads are the app files downloaded from GitHub across releases (the in-app updater
+  fetches them too), so they are "downloads", never users or installs: the build asks GitHub and,
+  if that fails, adds up the `downloads` that `scripts/release-data.py` stores per release in
+  `releases.json`. The build logs `[tm-stats]` with which one it used. On a phone the coffee pill
+  waits until the stats row is scrolled past.
 - **After changing the site**, run `pnpm -C site build`, `python3 scripts/site-i18n-check.py` and
   `python3 scripts/site-links.py` (CI runs all three).
 

@@ -23,7 +23,8 @@ import JsonLd from '../../components/JsonLd.astro';
 import LangCount from '../../components/LangCount.astro';
 import StarCard from '../../components/StarCard.astro';
 import { langPaths } from '../../i18n/paths';
-import { text } from '../../i18n/t';
+import { format, text } from '../../i18n/t';
+import { DOWNLOADS, LANGUAGES, LATEST, PLATFORMS, compact } from '../../lib/stats';
 import { l as link } from '../../i18n/links';
 
 export const getStaticPaths = langPaths;
@@ -183,6 +184,9 @@ const ld2 = {
   <section class="hero" id="showcase" aria-labelledby="hero-h">
     <div class="wrap hero-wrap">
     <div class="hero-inner">
+      <!-- The latest release, from the release data the site is built with, so it is always the
+           version the download button gives. The changelog is English only, like its link. -->
+      {LATEST && <a class="news-pill" href={`/changelog/${LATEST.version}`}><span class="news-pill-tag">{format(lang, 'home.new_in', { version: LATEST.version })}</span><span class="news-pill-text">{t('home.see_whats_new')}</span><Icon name="arrow-right-sm" /></a>}
       <p class="eyebrow"> <Icon name="star-small" /> {t('home.free_and_open_source_for')}</p>
 
       <!-- The full stop is hung outside the measure. Centring counts it as a character
@@ -205,6 +209,15 @@ const ld2 = {
       </a>
 
       <p class="hero-quiet"><T k="home.android_phones_and_tvs_windows"><a href={l('/install/')} slot="a1">{t('home.android_phones_and_tvs_windows__a1')}</a><span class="sep" aria-hidden="true" slot="span1">&middot;</span><a href={l('/download/')} slot="a2">{t('home.android_phones_and_tvs_windows__a2')}</a></T> </p>
+
+      <!-- Three figures, worked out at build time by lib/stats.ts and drawn final in the first
+           paint; app.js only counts them up once, as they come into view. The hidden copy of each
+           number holds its width, so the count moves nothing around it. -->
+      <ul class="stats" aria-label={t('home.stats_label')}>
+        <li><b class="stat-n" data-count-to={DOWNLOADS}><span class="stat-ghost" aria-hidden="true">{compact(DOWNLOADS, lang.tag)}</span><span class="stat-live">{compact(DOWNLOADS, lang.tag)}</span></b> <span class="stat-label">{t('home.stat_downloads')}</span></li>
+        <li><b class="stat-n" data-count-to={PLATFORMS}><span class="stat-ghost" aria-hidden="true">{compact(PLATFORMS, lang.tag)}</span><span class="stat-live">{compact(PLATFORMS, lang.tag)}</span></b> <span class="stat-label">{t('home.stat_platforms')}</span></li>
+        <li><b class="stat-n" data-count-to={LANGUAGES}><span class="stat-ghost" aria-hidden="true">{compact(LANGUAGES, lang.tag)}</span><span class="stat-live">{compact(LANGUAGES, lang.tag)}</span></b> <span class="stat-label">{t('home.stat_languages')}</span></li>
+      </ul>
     </div>
 
       <!-- Both frames are drawn in CSS around the real screenshots: Home on the television, and a
