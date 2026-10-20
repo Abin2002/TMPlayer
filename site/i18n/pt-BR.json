@@ -751,7 +751,6 @@
     "press_go_the_apk": "Pressione {em1}. A versão mais recente do TMPlayer baixa na hora; pressione {em2} quando o Fire OS perguntar. O Downloader oferece apagar o APK depois: diga que sim, ele não é mais necessário.",
     "press_go_the_apk__em1": "Go",
     "press_go_the_apk__em2": "Instalar",
-    "a_short_downloader_code_is": "Um código curto do Downloader está chegando, então você poderá digitar alguns números em vez do endereço.",
     "open_it_and_sign_in": "Abra o app e faça login",
     "tmplayer_lands_under_the_icon": "O TMPlayer fica em {em1}, o ícone de três quadrados e um sinal de mais na tela inicial. Para deixá-lo na frente, destaque-o, pressione o botão de menu (três linhas) e escolha {em2}.",
     "tmplayer_lands_under_the_icon__em1": "Seus apps",

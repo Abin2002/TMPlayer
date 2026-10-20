@@ -751,7 +751,6 @@
     "press_go_the_apk": "按 {em1}。最新版 TMPlayer 會立刻下載；Fire OS 詢問時按 {em2}。安裝完成後，Downloader 會詢問是否刪除 APK：請選是，因為已經不需要了。",
     "press_go_the_apk__em1": "Go",
     "press_go_the_apk__em2": "安裝",
-    "a_short_downloader_code_is": "之後會提供簡短的 Downloader 代碼，屆時只要輸入幾個數字，就不用輸入整個網址。",
     "open_it_and_sign_in": "開啟並登入",
     "tmplayer_lands_under_the_icon": "TMPlayer 會出現在 {em1} 中，也就是主畫面上由三個方塊加一個加號組成的圖示。要把它放在最前面，請將游標移到它上面，按選單鍵（三條線），再選 {em2}。",
     "tmplayer_lands_under_the_icon__em1": "你的應用程式",

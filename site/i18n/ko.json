@@ -751,7 +751,6 @@
     "press_go_the_apk": "{em1}를 누르세요. 최신 TMPlayer가 바로 다운로드돼요. Fire OS가 물으면 {em2}를 누르세요. Downloader가 나중에 APK를 지울지 물으면 그렇다고 하세요. 더 필요하지 않아요.",
     "press_go_the_apk__em1": "Go",
     "press_go_the_apk__em2": "설치",
-    "a_short_downloader_code_is": "짧은 Downloader 코드가 곧 나와요. 그러면 주소 대신 몇 자리 숫자만 입력하면 돼요.",
     "open_it_and_sign_in": "열고 로그인하기",
     "tmplayer_lands_under_the_icon": "TMPlayer는 홈 화면의 사각형 세 개와 더하기 모양 아이콘인 {em1}에 들어가요. 맨 앞에 두려면 선택한 뒤 메뉴 버튼(줄 세 개)을 누르고 {em2}를 고르세요.",
     "tmplayer_lands_under_the_icon__em1": "내 앱",

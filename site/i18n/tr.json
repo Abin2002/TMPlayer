@@ -751,7 +751,6 @@
     "press_go_the_apk": "{em1} düğmesine bas. TMPlayer'ın son sürümü hemen iner; Fire OS sorunca {em2} düğmesine bas. Downloader sonra APK'yı silmeyi önerir: evet de, artık gerekmez.",
     "press_go_the_apk__em1": "Go",
     "press_go_the_apk__em2": "Yükle",
-    "a_short_downloader_code_is": "Kısa bir Downloader kodu geliyor, böylece adres yerine birkaç rakam yazabileceksin.",
     "open_it_and_sign_in": "Aç ve giriş yap",
     "tmplayer_lands_under_the_icon": "TMPlayer, ana ekrandaki üç kare ve bir artı simgesi olan {em1} altına gelir. Öne almak için üzerine gel, menü düğmesine (üç çizgi) bas ve {em2} seç.",
     "tmplayer_lands_under_the_icon__em1": "Uygulamalarım",

@@ -751,7 +751,6 @@
     "press_go_the_apk": "Drücke {em1}. Die neueste Version von TMPlayer wird sofort heruntergeladen; drücke {em2}, wenn Fire OS fragt. Downloader bietet danach an, die APK zu löschen: Sag ja, sie wird nicht mehr gebraucht.",
     "press_go_the_apk__em1": "Go",
     "press_go_the_apk__em2": "Installieren",
-    "a_short_downloader_code_is": "Ein kurzer Downloader-Code ist in Arbeit, dann kannst du ein paar Ziffern statt der Adresse eintippen.",
     "open_it_and_sign_in": "Öffnen und anmelden",
     "tmplayer_lands_under_the_icon": "TMPlayer landet unter {em1}, dem Symbol mit drei Quadraten und einem Plus auf dem Startbildschirm. Damit es ganz vorn bleibt, markiere es, drücke die Menütaste (drei Striche) und wähle {em2}.",
     "tmplayer_lands_under_the_icon__em1": "Deine Apps",

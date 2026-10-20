@@ -751,7 +751,6 @@
     "press_go_the_apk": "{em1} চাপুন। TMPlayer-এর সর্বশেষ সংস্করণ সঙ্গে সঙ্গে ডাউনলোড হয়; Fire OS জিজ্ঞেস করলে {em2} চাপুন। Downloader পরে APK মুছে ফেলার প্রস্তাব দেয়: হ্যাঁ বলুন, আর এর দরকার নেই।",
     "press_go_the_apk__em1": "Go",
     "press_go_the_apk__em2": "Install",
-    "a_short_downloader_code_is": "একটি ছোট Downloader কোড আসছে, তখন ঠিকানার বদলে কয়েকটি সংখ্যা লিখলেই চলবে।",
     "open_it_and_sign_in": "খুলে সাইন ইন করুন",
     "tmplayer_lands_under_the_icon": "TMPlayer থাকে {em1}-এ, হোম স্ক্রিনের তিনটি বর্গ ও একটি প্লাসের আইকনের নিচে। এটা সামনে রাখতে হাইলাইট করে মেনু বোতাম (তিনটি দাগ) চাপুন এবং {em2} বেছে নিন।",
     "tmplayer_lands_under_the_icon__em1": "Your Apps",

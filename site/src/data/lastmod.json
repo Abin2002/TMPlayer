@@ -97,13 +97,13 @@
   },
   {
     "path": "/download/",
-    "lastmod": "2026-10-19",
+    "lastmod": "2026-10-20",
     "changefreq": "weekly",
     "priority": "0.9"
   },
   {
     "path": "/install/",
-    "lastmod": "2026-10-18",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.8"
   },
@@ -271,7 +271,7 @@
   },
   {
     "path": "/guides/telegram-videos-on-fire-tv/",
-    "lastmod": "2026-10-18",
+    "lastmod": "2026-10-20",
     "changefreq": "monthly",
     "priority": "0.7"
   },

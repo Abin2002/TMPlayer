@@ -751,7 +751,6 @@
     "press_go_the_apk": "{em1}を押します。最新のTMPlayerがすぐにダウンロードされるので、Fire OSの確認が出たら{em2}を押します。インストール後にDownloaderがAPKの削除を提案するので、「はい」を選んでください。もう不要です。",
     "press_go_the_apk__em1": "Go",
     "press_go_the_apk__em2": "インストール",
-    "a_short_downloader_code_is": "Downloaderの短いコードを近日用意する予定です。アドレスの代わりに、数字を数桁入力するだけになります。",
     "open_it_and_sign_in": "アプリを開いてサインイン",
     "tmplayer_lands_under_the_icon": "TMPlayerは、ホーム画面にある四角3つとプラスのアイコン、{em1}に追加されます。先頭に置くには、アプリを選択してメニューボタン(3本線)を押し、{em2}を選びます。",
     "tmplayer_lands_under_the_icon__em1": "あなたのアプリ",
