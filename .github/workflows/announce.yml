@@ -1,0 +1,37 @@
+name: Announce
+
+# Posts one message to the Telegram channel through the release bot, for news that is not a
+# release (a launch, a guide, a call for testers). Started by hand, with the text as the input:
+#
+#   gh workflow run announce.yml -f text="$(cat message.html)"
+#
+# The text is Telegram HTML (<b>, <i>, <a href="...">); link previews stay on so a launch link
+# shows its card. The bot token and the channel are the same secrets the release job posts with.
+on:
+  workflow_dispatch:
+    inputs:
+      text:
+        description: The message, in Telegram HTML
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    name: Post to the Telegram channel
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Send the message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL: ${{ secrets.TELEGRAM_CHANNEL }}
+          TEXT: ${{ inputs.text }}
+        run: |
+          reply="$(curl -sS "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHANNEL}" \
+            --data-urlencode "text=${TEXT}" \
+            --data-urlencode "parse_mode=HTML")"
+          echo "$reply" | python3 -c 'import json,sys; r=json.load(sys.stdin); print("sent" if r.get("ok") else "refused: " + str(r.get("description"))); sys.exit(0 if r.get("ok") else 1)'
