@@ -323,6 +323,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** The viewer's Downmix to stereo answer, or null for the device default. See [AudioDownmix.wanted]. */
     private var downmixChoice: Boolean? = null
 
+    /** The projector resolution ceiling, read with the other settings before the player is built. */
+    private var projectorResolution = ProjectorMode.AUTO
+
     /**
      * How far this file's subtitles and sound are moved against the picture, read with the other
      * settings before the player is built and written back on every step. See [SyncDelays].
@@ -805,6 +808,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 openInAnotherApp = { savable == true },
                 volumeBoost = { volumeBoostOn },
                 nightMode = { nightModeOn },
+                audioChannelsLabel = ::audioChannelsLabel,
                 sleepTimer = ::sleepTimerDetail,
                 onSleepTimer = ::setSleepTimer,
                 sleepChoice = ::sleepChoice,
@@ -1173,6 +1177,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             settingsSubtitlesPending = trackPlan.subtitleSource == TrackSource.Settings &&
                 (trackPlan.subtitles is SubtitlePlan.On || trackPlan.subtitles is SubtitlePlan.IfForeignAudio)
             downmixChoice = runCatching { settings.downmixChoiceNow() }.getOrNull()
+            projectorResolution = runCatching { settings.projectorResolutionNow() }.getOrDefault(ProjectorMode.AUTO)
+            // After the subtitle plan is known: the hunt respects the viewer's own "off".
+            huntChatSubtitle(currentItem())
             volumeBoostOn = runCatching { settings.volumeBoostNow() }.getOrDefault(false)
             nightModeOn = runCatching { settings.nightModeNow() }.getOrDefault(false)
             skipSilence = runCatching { settings.skipSilenceNow() }.getOrDefault(false)
@@ -1579,6 +1586,70 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             val key = VideoCopies.keyOf(here)
             setCopies(copies + found.filter { VideoCopies.keyOf(it) == key })
         }
+    }
+
+    /**
+     * A subtitle file posted beside the video, fetched by itself.
+     *
+     * Films travel with their subtitles as separate messages in the same chat; a viewer who
+     * asked for subtitles should not have to go looking. Once per video, the chat is searched
+     * for a subtitle file named like the video, the best match is downloaded whole (a subtitle
+     * is kilobytes) and attached the way a hand-picked file is ([SubtitleFiles]). Silent
+     * throughout: finding nothing is the common case, not an error, and the viewer's own
+     * "off" is respected.
+     */
+    private var subtitleHuntFor = 0L
+
+    private fun huntChatSubtitle(here: MediaItem) {
+        if (chatId == 0L || messageId == 0L) return
+        if (trackPlan.subtitles is SubtitlePlan.Off) return
+        if (subtitleHuntFor == messageId) return
+        subtitleHuntFor = messageId
+        val videoBase = here.fileName.ifBlank { here.title }.substringBeforeLast('.').trim()
+        if (videoBase.isEmpty()) return
+        itemScope.launch {
+            val session = runCatching { Td.awaitAuthorizedSession() }.getOrNull() ?: return@launch
+            val found = runCatching {
+                ChatRepository(session.client).mediaPage(chatId, query = videoBase).items
+            }.getOrNull().orEmpty()
+            val sub = pickChatSubtitle(found, videoBase) ?: return@launch
+            // Off the main thread: the synchronous download blocks until the bytes are here.
+            val file = withContext(Dispatchers.IO) {
+                val downloaded = runCatching {
+                    session.client.downloadFile(
+                        fileId = sub.fileId,
+                        priority = 32,
+                        offset = 0,
+                        limit = 0,
+                        synchronous = true,
+                    )
+                }.getOrNull() ?: return@withContext null
+                if (downloaded.errorMessage != null) return@withContext null
+                val path = session.client.getFile(sub.fileId).valueOrNull?.local?.path
+                    ?.takeIf { it.isNotBlank() } ?: return@withContext null
+                File(path).takeIf { it.isFile }
+            } ?: return@launch
+            subtitleFiles.attachFile(file, sub.fileName.ifBlank { sub.title }.ifBlank { videoBase })
+        }
+    }
+
+    /**
+     * The subtitle file among [items] that names [videoBase]: an exact name match first, then
+     * one carrying the viewer's subtitle language in its name, then whatever came closest.
+     */
+    private fun pickChatSubtitle(items: List<MediaItem>, videoBase: String): MediaItem? {
+        val subs = items.filter { ExternalSubtitle.accepts(it.fileName.ifBlank { it.title }) }
+        if (subs.isEmpty()) return null
+        val want = videoBase.lowercase()
+        val language = (trackPlan.subtitles as? SubtitlePlan.On)?.language
+            ?: (trackPlan.subtitles as? SubtitlePlan.IfForeignAudio)?.language
+        fun baseOf(item: MediaItem) = item.fileName.ifBlank { item.title }.substringBeforeLast('.').lowercase()
+        return subs.sortedWith(
+            compareBy(
+                { baseOf(it) != want },
+                { language != null && !it.fileName.contains(language, ignoreCase = true) },
+            ),
+        ).firstOrNull()
     }
 
     /** Takes [list] as the copies, and names the one playing on the copy button when there is a choice. */
@@ -2205,6 +2276,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 .setPreferredTextLanguage((subtitles as? SubtitlePlan.On)?.language)
                 .setSelectUndeterminedTextLanguage(false)
                 .setPreferredAudioLanguage(plan.audioLanguage)
+                // Projector display mode: a ceiling on the resolution, so a projector or a weak
+                // stick driving one is never handed a 4K stream it can only choke on.
+                .apply { ProjectorMode.maxSize(projectorResolution)?.let { (w, h) -> setMaxVideoSize(w, h) } }
                 .build()
         }
 
@@ -3095,6 +3169,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         // Started from a chat's audio: the list is the order, the next file plays when one ends.
         com.tmplayer.data.PlayQueue.stepsFor(here)?.let { steps ->
             _episodes.value = steps
+            warmNextEpisode(steps)
             return
         }
         val show = EpisodeNeighbours.showOf(here) ?: return
@@ -3114,6 +3189,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 runCatching { repository.mediaPage(chatId, cursors, query = query, topicId = topic) }.getOrNull()
             }
             _episodes.value = steps
+            warmNextEpisode(steps, session.client)
             refreshSessionMetadata()
             // The providers' episode names, where lookups are on: a label first, then a better one.
             val named = withContext(Dispatchers.IO) { EpisodeNames.named(steps, here, OnlineMetadata.current) }
@@ -3121,6 +3197,19 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 _episodes.value = named
                 refreshSessionMetadata()
             }
+        }
+    }
+
+    /**
+     * Warms the next episode's head while this one plays, so opening it finds the container
+     * headers already on disk instead of an empty file. Best effort and silent throughout;
+     * see [PrefetchHeads].
+     */
+    private fun warmNextEpisode(steps: EpisodeSteps, client: TdlClient? = null) {
+        val next = steps.next ?: return
+        App.backgroundScope.launch {
+            val td = client ?: runCatching { Td.awaitAuthorizedSession().client }.getOrNull() ?: return@launch
+            PrefetchHeads.warm(td, next.fileId)
         }
     }
 
@@ -4496,6 +4585,8 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             saveFrame = savable == true,
             // Only while the row has no button for it: a phone held upright.
             pictureShape = controls?.shapeOnRow != true,
+            // Switching restarts the video, which needs a message to keep the position.
+            audioChannels = hasMessage(),
         )
         // Speed and the sleep timer open the pickers' sheet rather than a submenu, so a choice
         // of one of several looks the same here as the subtitle and audio pickers.
@@ -4506,6 +4597,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 loop = abLoop,
                 bookmarks = bookmarkList.value.size,
                 shape = videoScale,
+                channels = audioChannelsLabel(),
             )
             // Lock the screen heads the menu in a group of its own, under a divider, with the
             // lock the television's and the desktop's menus draw beside the same words.
@@ -4524,6 +4616,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 PhoneMenuEntry.PictureShape -> showSheet { it.showShape(videoScale, ::applyScale) }
                 PhoneMenuEntry.VolumeBoost -> toggleVolumeBoost()
                 PhoneMenuEntry.NightMode -> toggleNightMode()
+                PhoneMenuEntry.AudioChannels -> cycleAudioChannels()
                 PhoneMenuEntry.SleepTimer -> showSheet { it.showSleep(sleepTimerDetail(), sleepChoice(), ::setSleepTimer) }
                 PhoneMenuEntry.AbLoop -> pressLoop()
                 PhoneMenuEntry.NextChapter -> stepChapter(forward = true)
@@ -4560,6 +4653,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             PlayerMenuEntry.MarkWatched -> toggleWatched()
             PlayerMenuEntry.VolumeBoost -> toggleVolumeBoost()
             PlayerMenuEntry.NightMode -> toggleNightMode()
+            PlayerMenuEntry.AudioChannels -> cycleAudioChannels()
             PlayerMenuEntry.AbLoop -> pressLoop()
             PlayerMenuEntry.NextChapter -> stepChapter(forward = true)
             PlayerMenuEntry.PreviousChapter -> stepChapter(forward = false)
@@ -4836,6 +4930,34 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         volumeBoost?.night = on
         showGestureFeedback(if (on) L.playerNightModeOn else L.playerNightModeOff)
         lifecycleScope.launch { runCatching { settings.setNightMode(on) } }
+    }
+
+    /**
+     * The player menus' audio channel switch: Automatic, a stereo fold, or the file's own
+     * channels, then back round. The fold is fixed into the audio sink when the player is built,
+     * so the choice restarts the video where it is, the resume bookmark carrying the position
+     * across to the new player.
+     */
+    private fun cycleAudioChannels() {
+        val next = when (downmixChoice) {
+            null -> true
+            true -> false
+            else -> null
+        }
+        downmixChoice = next
+        lifecycleScope.launch {
+            runCatching { if (next == null) settings.clearDownmix() else settings.setDownmix(next) }
+        }
+        showGestureFeedback(L.commonWithDetail(L.playerAudioChannels, audioChannelsLabel()))
+        if (hasMessage()) BookmarkJump.request(chatId, messageId, player?.currentPosition ?: 0L)
+        playEpisode(currentItem())
+    }
+
+    /** What the menus' Audio channels line says is chosen. */
+    private fun audioChannelsLabel(): String = when (downmixChoice) {
+        null -> L.playerAudioChannelsAuto
+        true -> L.playerAudioChannelsStereo
+        false -> L.playerAudioChannelsOriginal
     }
 
     /** What the menu says about a running sleep timer, or null when there is none. */
