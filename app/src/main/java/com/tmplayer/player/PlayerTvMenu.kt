@@ -84,6 +84,8 @@ class PlayerTvMenu(
     private val volumeBoost: () -> Boolean = { false },
     /** Whether Night mode is on, for the line's detail. */
     private val nightMode: () -> Boolean = { false },
+    /** The audio channel layout chosen ("Automatic", "Stereo", "Original"), for the line's detail. */
+    private val audioChannelsLabel: () -> String = { "" },
     /** The running sleep timer's detail ("23 minutes left"), or null when there is none. */
     private val sleepTimer: () -> String? = { null },
     /** A sleep timer chosen from its page: minutes, [SleepTimer.END_OF_VIDEO], or null for off. */
@@ -94,6 +96,11 @@ class PlayerTvMenu(
     private val loop: () -> AbLoop? = { null },
     /** Whether the video is paused, which is when the frame steps are offered. */
     private val paused: () -> Boolean = { false },
+    /**
+     * Whether the audio channel line is offered: switching restarts the video, which needs a
+     * message to keep the position across the restart. Defaults to the bookmark lines' answer.
+     */
+    private val audioChannels: () -> Boolean = markWatched,
     /** The chapter playing ("Chapter 3 of 12: The Station"), or null for a file without chapters. */
     private val chapter: () -> String? = { null },
     private val onEntry: (PlayerMenuEntry) -> Unit,
@@ -141,6 +148,7 @@ class PlayerTvMenu(
                     paused(),
                     bookmarks(),
                     chapters = chapter() != null,
+                    audioChannels = audioChannels(),
                 ).map { action(it) },
                 onDismiss = ::close,
                 onClose = ::close,
@@ -178,6 +186,11 @@ class PlayerTvMenu(
                 label = s.playerNightMode,
                 icon = TmIcons.VolumeDown,
                 detail = if (nightMode()) s.playerNightModeOnDetail else s.commonOff,
+            ) { choose(entry) }
+            PlayerMenuEntry.AudioChannels -> MenuAction(
+                label = s.playerAudioChannels,
+                icon = TmIcons.Audio,
+                detail = audioChannelsLabel(),
             ) { choose(entry) }
             PlayerMenuEntry.SleepTimer -> MenuAction(
                 label = s.playerSleepTimer,
