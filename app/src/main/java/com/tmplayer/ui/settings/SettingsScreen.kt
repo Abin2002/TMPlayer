@@ -310,6 +310,7 @@ fun SettingsScreen(
     val tvChannelsSupported = remember { TvChannelsPublisher.supported(context) }
     val touchPrefs by settings.touchPrefs.collectAsStateWithLifecycle(initialValue = TouchPrefs())
     val downmixChoice by settings.downmixChoice.collectAsStateWithLifecycle(initialValue = null)
+    val projectorResolution by settings.projectorResolution.collectAsStateWithLifecycle(initialValue = 0)
     val backgroundAudio by settings.backgroundAudio.collectAsStateWithLifecycle(initialValue = false)
     val subtitleStyle by settings.subtitleStyle.collectAsStateWithLifecycle(initialValue = SubtitleStyle())
     val trackPrefs by settings.trackPreferences.collectAsStateWithLifecycle(initialValue = TrackPreferences())
@@ -358,6 +359,7 @@ fun SettingsScreen(
     var pickingLanguage by remember { mutableStateOf(false) }
     var stylingSubtitles by remember { mutableStateOf(false) }
     var trackPicker by remember { mutableStateOf<TrackLanguagePicker?>(null) }
+    var projectorPicker by remember { mutableStateOf(false) }
     var editingSizes by remember { mutableStateOf(false) }
     var whatsNew by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
@@ -847,6 +849,16 @@ fun SettingsScreen(
                         icon = ImageVector.vectorResource(R.drawable.ic_audio_language),
                         checked = downmix,
                         onToggle = { scope.launch { settings.setDownmix(!downmix) } },
+                    )
+                }
+                // Projector display mode: the ceiling on the video resolution, for a projector or
+                // a weak stick driving one. Applied to the next video opened, like the fold above.
+                item {
+                    ActionRow(
+                        title = s.settingsProjector,
+                        subtitle = projectorSummary(projectorResolution),
+                        icon = ImageVector.vectorResource(R.drawable.ic_cast),
+                        onClick = { projectorPicker = true },
                     )
                 }
                 // The phone only: a television has no screen to turn off and nothing else to switch to.
@@ -1948,6 +1960,13 @@ fun SettingsScreen(
             prefs = trackPrefs,
             onChange = { next -> scope.launch { settings.setTrackPreferences(next) } },
             onClose = { trackPicker = null },
+        )
+    }
+    if (projectorPicker) {
+        ProjectorSheet(
+            current = projectorResolution,
+            onChange = { mode -> scope.launch { settings.setProjectorResolution(mode) } },
+            onClose = { projectorPicker = false },
         )
     }
     if (editingSizes) {

@@ -7,10 +7,12 @@ import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.tmplayer.player.SpeedMemory
+import com.tmplayer.player.ProjectorMode
 import com.tmplayer.player.SubtitleStyle
 import com.tmplayer.player.SyncDelays
 import com.tmplayer.player.TouchPrefs
@@ -36,6 +38,7 @@ private val AUTOPLAY_NEXT = booleanPreferencesKey("autoplay_next")
 private val DETAIL_FIRST = booleanPreferencesKey("detail_first")
 private val COMPACT_NAV = booleanPreferencesKey("compact_nav")
 private val DOWNMIX_STEREO = booleanPreferencesKey("downmix_stereo")
+private val PROJECTOR_RESOLUTION = intPreferencesKey("projector_resolution")
 private val VOLUME_BOOST = booleanPreferencesKey("volume_boost")
 private val NIGHT_MODE = booleanPreferencesKey("night_mode")
 private val RESUME_SYNC = booleanPreferencesKey("resume_sync")
@@ -642,6 +645,25 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /** Read before the player is built, because the fold is fixed into its audio sink. */
     suspend fun downmixChoiceNow(): Boolean? = prefs.data.first()[DOWNMIX_STEREO]
+
+    /** Back to Automatic: the choice unset, so the device's own default applies again. */
+    suspend fun clearDownmix() {
+        prefs.edit { it.remove(DOWNMIX_STEREO) }
+    }
+
+    /**
+     * Projector display mode: the ceiling on the video resolution the player asks for, so a
+     * projector (or a weak stick driving one) is never handed a 4K stream it can only choke on.
+     * See [com.tmplayer.player.ProjectorMode]: 0 is no ceiling, then 1080p, 720p, 480p.
+     */
+    val projectorResolution: Flow<Int> = read { it[PROJECTOR_RESOLUTION] ?: ProjectorMode.AUTO }
+
+    suspend fun setProjectorResolution(value: Int) {
+        prefs.edit { it[PROJECTOR_RESOLUTION] = value.coerceIn(ProjectorMode.AUTO, ProjectorMode.P480) }
+    }
+
+    /** Read before the player is built, because the track selector is configured once. */
+    suspend fun projectorResolutionNow(): Int = prefs.data.first()[PROJECTOR_RESOLUTION] ?: ProjectorMode.AUTO
 
     /**
      * Volume boost, the player menu's night mode: quiet dialogue lifted and loud scenes held back.
