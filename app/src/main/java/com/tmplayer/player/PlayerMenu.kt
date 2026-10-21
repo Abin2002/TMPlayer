@@ -23,6 +23,12 @@ enum class PlayerMenuEntry {
     VolumeBoost,
     /** Night mode: the range squeezed, so loud scenes are quieter and dialogue clearer. */
     NightMode,
+    /**
+     * The speaker layout: the device's default, a stereo fold, or the file's own channels.
+     * The fold is fixed into the audio sink when the player is built, so choosing one restarts
+     * the video where it is.
+     */
+    AudioChannels,
     /** A page of lengths, and the time left on one that is running. */
     SleepTimer,
     /** A-B repeat: set the start, then the end, then stop; the line says which comes next. */
@@ -67,6 +73,11 @@ enum class PhoneMenuEntry {
     PictureShape,
     VolumeBoost,
     NightMode,
+    /**
+     * The speaker layout, as on the television: the device's default, a stereo fold, or the
+     * file's own channels. Choosing one restarts the video where it is.
+     */
+    AudioChannels,
     SleepTimer,
     /** A-B repeat, as on the television: one line that says what the next press does. */
     AbLoop,
@@ -103,12 +114,14 @@ fun PhoneMenuEntry.label(
     loop: AbLoop? = null,
     bookmarks: Int = 0,
     shape: VideoScale? = null,
+    channels: String? = null,
 ): String = when (this) {
     PhoneMenuEntry.LockScreen -> L.playerLockScreen
     PhoneMenuEntry.PictureInPicture -> L.playerPictureInPicture
     PhoneMenuEntry.PictureShape -> shape?.let { L.commonWithDetail(L.playerPictureShape, it.label) } ?: L.playerPictureShape
     PhoneMenuEntry.VolumeBoost -> L.playerVolumeBoost
     PhoneMenuEntry.NightMode -> L.playerNightMode
+    PhoneMenuEntry.AudioChannels -> channels?.let { L.commonWithDetail(L.playerAudioChannels, it) } ?: L.playerAudioChannels
     PhoneMenuEntry.SleepTimer -> sleepDetail?.let { L.playerSleepTimerNow(it) } ?: L.playerSleepTimer
     PhoneMenuEntry.AbLoop -> PlayerMenu.loopLabel(loop)
     PhoneMenuEntry.NextChapter -> L.playerChapterNext
@@ -168,12 +181,16 @@ object PlayerMenu {
         paused: Boolean = false,
         bookmarks: Boolean = false,
         chapters: Boolean = false,
+        /** Whether the audio channel line is offered: switching restarts the video, which needs
+         * a message to keep the position across the restart. */
+        audioChannels: Boolean = true,
     ): List<PlayerMenuEntry> = buildList {
         add(PlayerMenuEntry.LockScreen)
         add(PlayerMenuEntry.PlaybackDetails)
         add(PlayerMenuEntry.StartOver)
         add(PlayerMenuEntry.VolumeBoost)
         add(PlayerMenuEntry.NightMode)
+        if (audioChannels) add(PlayerMenuEntry.AudioChannels)
         add(PlayerMenuEntry.SleepTimer)
         add(PlayerMenuEntry.AbLoop)
         if (chapters) {
@@ -215,12 +232,16 @@ object PlayerMenu {
         chapters: Boolean = false,
         saveFrame: Boolean = false,
         pictureShape: Boolean = false,
+        /** Whether the audio channel line is offered: switching restarts the video, which needs
+         * a message to keep the position across the restart. */
+        audioChannels: Boolean = true,
     ): List<PhoneMenuEntry> = buildList {
         add(PhoneMenuEntry.LockScreen)
         if (pictureInPicture) add(PhoneMenuEntry.PictureInPicture)
         if (pictureShape) add(PhoneMenuEntry.PictureShape)
         add(PhoneMenuEntry.VolumeBoost)
         add(PhoneMenuEntry.NightMode)
+        if (audioChannels) add(PhoneMenuEntry.AudioChannels)
         add(PhoneMenuEntry.SleepTimer)
         add(PhoneMenuEntry.AbLoop)
         if (chapters) {
