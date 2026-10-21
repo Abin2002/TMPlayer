@@ -17,6 +17,7 @@ class PlayerMenuTest {
                 PlayerMenuEntry.StartOver,
                 PlayerMenuEntry.VolumeBoost,
                 PlayerMenuEntry.NightMode,
+                PlayerMenuEntry.AudioChannels,
                 PlayerMenuEntry.SleepTimer,
                 PlayerMenuEntry.AbLoop,
                 PlayerMenuEntry.AddBookmark,
