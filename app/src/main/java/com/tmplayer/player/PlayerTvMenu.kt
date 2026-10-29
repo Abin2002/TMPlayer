@@ -84,6 +84,8 @@ class PlayerTvMenu(
     private val volumeBoost: () -> Boolean = { false },
     /** Whether Night mode is on, for the line's detail. */
     private val nightMode: () -> Boolean = { false },
+    /** Whether Auto volume level is on, for the line's detail. */
+    private val volumeLevel: () -> Boolean = { false },
     /** The audio channel layout chosen ("Automatic", "Stereo", "Original"), for the line's detail. */
     private val audioChannelsLabel: () -> String = { "" },
     /** The running sleep timer's detail ("23 minutes left"), or null when there is none. */
@@ -186,6 +188,11 @@ class PlayerTvMenu(
                 label = s.playerNightMode,
                 icon = TmIcons.VolumeDown,
                 detail = if (nightMode()) s.playerNightModeOnDetail else s.commonOff,
+            ) { choose(entry) }
+            PlayerMenuEntry.VolumeLevel -> MenuAction(
+                label = s.playerVolumeLevel,
+                icon = TmIcons.VolumeUp,
+                detail = if (volumeLevel()) s.playerVolumeLevelOnDetail else s.commonOff,
             ) { choose(entry) }
             PlayerMenuEntry.AudioChannels -> MenuAction(
                 label = s.playerAudioChannels,

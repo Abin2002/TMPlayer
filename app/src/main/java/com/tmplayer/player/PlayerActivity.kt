@@ -348,6 +348,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
     /** Night mode for sound, as the viewer left it, read before the player is built. */
     private var nightModeOn = false
 
+    /** Auto volume level, as the viewer left it, read before the player is built. */
+    private var autoLevelOn = false
+
     /**
      * Skip silence, switched under the speeds and kept as a setting. Media3 drops the quiet stretches
      * in the audio sink's own chain, so it works on the PCM the sink plays and does nothing to a
@@ -357,6 +360,9 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
 
     /** The boost's processor, owned by the current player's sink. See [VolumeBoostProcessor]. */
     private var volumeBoost: VolumeBoostProcessor? = null
+
+    /** The levelling processor, owned by the current player's sink. See [AutoLevelProcessor]. */
+    private var autoLevel: AutoLevelProcessor? = null
 
     /**
      * True while "Still watching?" is up. Playback is stopped under it and so are the downloads,
@@ -808,6 +814,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 openInAnotherApp = { savable == true },
                 volumeBoost = { volumeBoostOn },
                 nightMode = { nightModeOn },
+                volumeLevel = { autoLevelOn },
                 audioChannelsLabel = ::audioChannelsLabel,
                 sleepTimer = ::sleepTimerDetail,
                 onSleepTimer = ::setSleepTimer,
@@ -1182,6 +1189,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             huntChatSubtitle(currentItem())
             volumeBoostOn = runCatching { settings.volumeBoostNow() }.getOrDefault(false)
             nightModeOn = runCatching { settings.nightModeNow() }.getOrDefault(false)
+            autoLevelOn = runCatching { settings.autoLevelNow() }.getOrDefault(false)
             skipSilence = runCatching { settings.skipSilenceNow() }.getOrDefault(false)
             subtitleStyle = runCatching { settings.subtitleStyleNow() }.getOrDefault(SubtitleStyle())
             applySubtitleStyle()
@@ -2142,6 +2150,12 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     it.offsetUs = syncDelays.audioMs * 1000
                     audioOffset = it
                 }
+                // After the fold and before the boost, so the boost's compressor hears the
+                // two channels that will be played, already levelled.
+                val level = AutoLevelProcessor().also {
+                    it.enabled = autoLevelOn
+                    autoLevel = it
+                }
                 // After the fold, so the compressor hears the two channels that will be played.
                 val boost = VolumeBoostProcessor().also {
                     it.enabled = volumeBoostOn
@@ -2149,7 +2163,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                     volumeBoost = it
                 }
                 val processors = if (folds.isEmpty()) {
-                    arrayOf<AudioProcessor>(boost, offset)
+                    arrayOf<AudioProcessor>(level, boost, offset)
                 } else {
                     val mixer = ChannelMixingAudioProcessor()
                     folds.forEach { fold ->
@@ -2179,7 +2193,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                             },
                         )
                     }
-                    arrayOf<AudioProcessor>(mixer, boost, offset)
+                    arrayOf<AudioProcessor>(mixer, level, boost, offset)
                 }
                 // Twice Media3's passthrough allowance, and four times its AC-3 multiplier: about
                 // two seconds of bitstream instead of half a second. The stock figure is what let
@@ -4606,6 +4620,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             if (lock) item.setIcon(R.drawable.ic_lock)
             if (entry == PhoneMenuEntry.VolumeBoost) item.setCheckable(true).setChecked(volumeBoostOn)
             if (entry == PhoneMenuEntry.NightMode) item.setCheckable(true).setChecked(nightModeOn)
+            if (entry == PhoneMenuEntry.VolumeLevel) item.setCheckable(true).setChecked(autoLevelOn)
         }
         androidx.core.view.MenuCompat.setGroupDividerEnabled(items, true)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) menu.setForceShowIcon(true)
@@ -4616,6 +4631,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
                 PhoneMenuEntry.PictureShape -> showSheet { it.showShape(videoScale, ::applyScale) }
                 PhoneMenuEntry.VolumeBoost -> toggleVolumeBoost()
                 PhoneMenuEntry.NightMode -> toggleNightMode()
+                PhoneMenuEntry.VolumeLevel -> toggleAutoLevel()
                 PhoneMenuEntry.AudioChannels -> cycleAudioChannels()
                 PhoneMenuEntry.SleepTimer -> showSheet { it.showSleep(sleepTimerDetail(), sleepChoice(), ::setSleepTimer) }
                 PhoneMenuEntry.AbLoop -> pressLoop()
@@ -4653,6 +4669,7 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
             PlayerMenuEntry.MarkWatched -> toggleWatched()
             PlayerMenuEntry.VolumeBoost -> toggleVolumeBoost()
             PlayerMenuEntry.NightMode -> toggleNightMode()
+            PlayerMenuEntry.VolumeLevel -> toggleAutoLevel()
             PlayerMenuEntry.AudioChannels -> cycleAudioChannels()
             PlayerMenuEntry.AbLoop -> pressLoop()
             PlayerMenuEntry.NextChapter -> stepChapter(forward = true)
@@ -4930,6 +4947,19 @@ class PlayerActivity : FragmentActivity(), TrackPickerHost {
         volumeBoost?.night = on
         showGestureFeedback(if (on) L.playerNightModeOn else L.playerNightModeOff)
         lifecycleScope.launch { runCatching { settings.setNightMode(on) } }
+    }
+
+    /**
+     * The menus' Auto volume level: switched on the sound already playing (the processor
+     * measures first, then walks, so nothing jumps), and kept for every video. See
+     * [AutoLevelProcessor].
+     */
+    private fun toggleAutoLevel() {
+        val on = !autoLevelOn
+        autoLevelOn = on
+        autoLevel?.enabled = on
+        showGestureFeedback(if (on) L.playerVolumeLevelOn else L.playerVolumeLevelOff)
+        lifecycleScope.launch { runCatching { settings.setAutoLevel(on) } }
     }
 
     /**

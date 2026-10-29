@@ -41,6 +41,7 @@ private val DOWNMIX_STEREO = booleanPreferencesKey("downmix_stereo")
 private val PROJECTOR_RESOLUTION = intPreferencesKey("projector_resolution")
 private val VOLUME_BOOST = booleanPreferencesKey("volume_boost")
 private val NIGHT_MODE = booleanPreferencesKey("night_mode")
+private val AUTO_LEVEL = booleanPreferencesKey("auto_level")
 private val RESUME_SYNC = booleanPreferencesKey("resume_sync")
 private val RESUME_SYNC_MESSAGE = longPreferencesKey("resume_sync_message")
 private val RESUME_SYNC_KEYS = stringPreferencesKey("resume_sync_keys")
@@ -691,6 +692,20 @@ class SettingsStore(private val prefs: DataStore<Preferences>) {
 
     /** Read before the player is built, like [volumeBoostNow]. */
     suspend fun nightModeNow(): Boolean = prefs.data.first()[NIGHT_MODE] ?: false
+
+    /**
+     * Auto volume level: every video measured as it plays and brought to the same loudness,
+     * so a quiet upload and a loud one play at one level. Unlike [volumeBoost] the lift is not
+     * fixed: it is whatever the video in front of the viewer needs. Off until turned on, then kept.
+     */
+    val autoLevel: Flow<Boolean> = read { it[AUTO_LEVEL] ?: false }
+
+    suspend fun setAutoLevel(value: Boolean) {
+        prefs.edit { it[AUTO_LEVEL] = value }
+    }
+
+    /** Read before the player is built, like [volumeBoostNow]. */
+    suspend fun autoLevelNow(): Boolean = prefs.data.first()[AUTO_LEVEL] ?: false
 
     /**
      * Resume across devices ([ResumeSync]): Continue watching kept in a message in the viewer's
